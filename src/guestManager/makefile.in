@@ -1,0 +1,3 @@
+SRCS += src/guestManager/guestContext.c
+SRCS += src/guestManager/blockCache.c
+SRCS += src/guestManager/scheduler.c

@@ -22,3 +22,6 @@ Existing Git Repo?
 Importing a Subversion Repo?
   Click here
       
+
+
+git clone git@github.com:gendalfas/hyparm.git

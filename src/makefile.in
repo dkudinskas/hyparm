@@ -1,0 +1,3 @@
+SRCS += src/main.c
+
+RAW_ASMS += src/startup.s

@@ -1,0 +1,2912 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+Address of section .text set to 0x8c000000
+LOAD ../src/main.o
+LOAD ../src/common/common.o
+LOAD ../src/common/memFunctions.o
+LOAD ../src/common/stringFunctions.o
+LOAD ../src/cpuArch/cpu.o
+LOAD ../src/exceptions/exceptionHandlers.o
+LOAD ../src/hardware/hardwareLibrary.o
+LOAD ../src/hardware/sdram.o
+LOAD ../src/hardware/sramInternal.o
+LOAD ../src/hardware/timer32k.o
+LOAD ../src/hardware/prm.o
+LOAD ../src/hardware/clockManager.o
+LOAD ../src/hardware/sysControlModule.o
+LOAD ../src/hardware/irqc.o
+LOAD ../src/hardware/LED.o
+LOAD ../src/hardware/serial.o
+LOAD ../src/hardware/gptimer.o
+LOAD ../src/hardware/gpmc.o
+LOAD ../src/guestManager/guestContext.o
+LOAD ../src/guestManager/blockCache.o
+LOAD ../src/guestManager/scheduler.o
+LOAD ../src/linuxBoot/bootLinux.o
+LOAD ../src/linuxBoot/image.o
+LOAD ../src/instructionEmu/asm-dis.o
+LOAD ../src/instructionEmu/commonInstrFunctions.o
+LOAD ../src/instructionEmu/coprocInstructions.o
+LOAD ../src/instructionEmu/dataProcessInstr.o
+LOAD ../src/instructionEmu/dataMoveInstr.o
+LOAD ../src/instructionEmu/miscInstructions.o
+LOAD ../src/instructionEmu/scanner.o
+LOAD ../src/instructionEmu/decoder.o
+LOAD ../src/memoryManager/addressing.o
+LOAD ../src/memoryManager/cp15coproc.o
+LOAD ../src/memoryManager/frameAllocator.o
+LOAD ../src/memoryManager/pageTable.o
+LOAD ../src/memoryManager/mmu.o
+LOAD ../src/memoryManager/memoryProtection.o
+LOAD ../src/memoryManager/globalMemoryMapper.o
+LOAD ../src/startup.o
+LOAD ../src/cpuArch/cache.o
+LOAD ../src/linuxBoot/callKernel.o
+                0x00008000                PROVIDE (__executable_start, 0x8000)
+                0x00008000                . = 0x8000
+
+.interp
+ *(.interp)
+
+.note.gnu.build-id
+ *(.note.gnu.build-id)
+
+.hash
+ *(.hash)
+
+.gnu.hash
+ *(.gnu.hash)
+
+.dynsym
+ *(.dynsym)
+
+.dynstr
+ *(.dynstr)
+
+.gnu.version
+ *(.gnu.version)
+
+.gnu.version_d
+ *(.gnu.version_d)
+
+.gnu.version_r
+ *(.gnu.version_r)
+
+.rel.dyn
+ *(.rel.init)
+ *(.rel.text .rel.text.* .rel.gnu.linkonce.t.*)
+ *(.rel.fini)
+ *(.rel.rodata .rel.rodata.* .rel.gnu.linkonce.r.*)
+ *(.rel.data.rel.ro* .rel.gnu.linkonce.d.rel.ro.*)
+ *(.rel.data .rel.data.* .rel.gnu.linkonce.d.*)
+ *(.rel.tdata .rel.tdata.* .rel.gnu.linkonce.td.*)
+ *(.rel.tbss .rel.tbss.* .rel.gnu.linkonce.tb.*)
+ *(.rel.ctors)
+ *(.rel.dtors)
+ *(.rel.got)
+ *(.rel.bss .rel.bss.* .rel.gnu.linkonce.b.*)
+
+.rel.ifunc.dyn
+ *(.rel.ifunc.*)
+
+.rela.dyn
+ *(.rela.init)
+ *(.rela.text .rela.text.* .rela.gnu.linkonce.t.*)
+ *(.rela.fini)
+ *(.rela.rodata .rela.rodata.* .rela.gnu.linkonce.r.*)
+ *(.rela.data .rela.data.* .rela.gnu.linkonce.d.*)
+ *(.rela.tdata .rela.tdata.* .rela.gnu.linkonce.td.*)
+ *(.rela.tbss .rela.tbss.* .rela.gnu.linkonce.tb.*)
+ *(.rela.ctors)
+ *(.rela.dtors)
+ *(.rela.got)
+ *(.rela.bss .rela.bss.* .rela.gnu.linkonce.b.*)
+
+.rela.ifunc.dyn
+ *(.rela.ifunc.*)
+
+.rel.plt
+ *(.rel.plt)
+
+.rela.plt
+ *(.rela.plt)
+
+.init
+ *(.init)
+
+.plt
+ *(.plt)
+
+.text           0x8c000000    0x11b6c
+ *(.text .stub .text.* .gnu.linkonce.t.*)
+ .text          0x8c000000      0x26c ../src/main.o
+                0x8c000150                registerGuestContext
+                0x8c000160                getGuestContext
+                0x8c000170                printUsage
+                0x8c0001b8                parseCommandline
+                0x8c000000                main
+ .text          0x8c00026c       0x44 ../src/common/common.o
+                0x8c00028c                getHash
+                0x8c00026c                bs32
+ .text          0x8c0002b0      0x490 ../src/common/memFunctions.o
+                0x8c000398                memmove
+                0x8c0002b0                mallocInit
+                0x8c0005a4                mallocBytes
+                0x8c000658                dumpMallocs
+                0x8c0004c8                memset
+ .text          0x8c000740      0x194 ../src/common/stringFunctions.o
+                0x8c0008b8                stringcpy
+                0x8c000740                stringncmp
+                0x8c000794                stringToLong
+                0x8c000890                stringlen
+ .text          0x8c0008d4      0x188 ../src/cpuArch/cpu.o
+                0x8c000a20                cleanup_before_linux
+                0x8c000970                dcache_enable
+                0x8c0008e0                icache_enable
+                0x8c000a10                l2_cache_disable
+                0x8c000a00                l2_cache_enable
+                0x8c000928                icache_disable
+                0x8c0008d8                disable_interrupts
+                0x8c0008d4                enable_interrupts
+                0x8c0009b8                dcache_disable
+ .text          0x8c000a5c      0x338 ../src/exceptions/exceptionHandlers.o
+                0x8c000c78                do_undefined_hypervisor
+                0x8c000c50                do_undefined
+                0x8c000d84                do_fiq
+                0x8c000d40                do_irq
+                0x8c000ccc                do_prefetch_abort_hypervisor
+                0x8c000cf0                do_monitor_mode
+                0x8c000d18                do_monitor_mode_hypervisor
+                0x8c000ca0                do_prefetch_abort
+                0x8c000b84                do_data_abort_hypervisor
+                0x8c000abc                do_data_abort
+                0x8c000a5c                do_software_interrupt
+ .text          0x8c000d94     0x136c ../src/hardware/hardwareLibrary.o
+                0x8c000d94                initialiseHardwareLibrary
+                0x8c001e60                storeGeneric
+                0x8c001d08                initialiseDevice
+                0x8c001fc0                loadGeneric
+                0x8c001e3c                isAddressInDevice
+                0x8c001de8                attachDevice
+ .text          0x8c002100      0x16c ../src/hardware/sdram.o
+                0x8c002100                loadSdram
+                0x8c00218c                storeSdram
+ .text          0x8c00226c      0x208 ../src/hardware/sramInternal.o
+                0x8c00227c                storeSramInternal
+                0x8c00226c                loadSramInternal
+                0x8c0023c0                registerGuestHandler
+ .text          0x8c002474      0x164 ../src/hardware/timer32k.o
+                0x8c002474                loadTimer32k
+                0x8c0025b4                storeTimer32k
+                0x8c0025c4                initTimer32k
+ .text          0x8c0025d8      0x9a0 ../src/hardware/prm.o
+                0x8c002924                loadGlobalRegPrm
+                0x8c002f14                storeGlobalRegPrm
+                0x8c0025d8                initPrm
+                0x8c0026ac                loadPrm
+                0x8c002eb0                storeClockControlPrm
+                0x8c00289c                loadClockControlPrm
+                0x8c002cc8                storePrm
+ .text          0x8c002f78     0x2160 ../src/hardware/clockManager.o
+                0x8c004754                loadNeonCm
+                0x8c0046fc                loadGlobalRegCm
+                0x8c003458                loadIva2Cm
+                0x8c005010                storeNeonCm
+                0x8c0036d0                loadMpuCm
+                0x8c003c34                loadWkupCm
+                0x8c0038d0                loadCoreCm
+                0x8c004fac                storeGlobalRegCm
+                0x8c002f78                initClockManager
+                0x8c004d54                storeWkupCm
+                0x8c004804                storeClockManager
+                0x8c003678                loadOcpSystemCm
+                0x8c004b1c                storeCoreCm
+                0x8c004ab8                storeMpuCm
+                0x8c0041e4                loadCamCm
+                0x8c005074                storeUsbHostCm
+                0x8c004db8                storeClockControlCm
+                0x8c004a54                storeOcpSystemCm
+                0x8c003b3c                loadSgxCm
+                0x8c004ee4                storePerCm
+                0x8c003fd8                loadDssCm
+                0x8c0045fc                loadEmuCm
+                0x8c0031c8                loadClockManager
+                0x8c004cf0                storeSgxCm
+                0x8c004f48                storeEmuCm
+                0x8c004e80                storeCamCm
+                0x8c0047ac                loadUsbHostCm
+                0x8c003cfc                loadClockControlCm
+                0x8c0043f0                loadPerCm
+                0x8c004e1c                storeDssCm
+                0x8c0049f0                storeIva2Cm
+ .text          0x8c0050d8      0xa58 ../src/hardware/sysControlModule.o
+                0x8c0056a0                loadPadconfsWkupScm
+                0x8c005378                loadSysCtrlModule
+                0x8c0058d8                storeInterfaceScm
+                0x8c00593c                storePadconfsScm
+                0x8c0055ac                loadGeneralScm
+                0x8c005a04                storeMemWkupScm
+                0x8c0050d8                initSysControlModule
+                0x8c0059a0                storeGeneralScm
+                0x8c005750                storeSysCtrlModule
+                0x8c005648                loadMemWkupScm
+                0x8c0054fc                loadInterfaceScm
+                0x8c005554                loadPadconfsScm
+                0x8c005acc                storeGeneralWkupScm
+                0x8c005a68                storePadconfsWkupScm
+                0x8c0056f8                loadGeneralWkupScm
+ .text          0x8c005b30      0x394 ../src/hardware/irqc.o
+                0x8c005e78                maskInterrupt
+                0x8c005ddc                initialiseInterruptController
+                0x8c005eb0                resetAndNewIrq
+                0x8c005b30                intcDumpRegisters
+                0x8c005e9c                getIrqNumber
+                0x8c005e54                unmaskInterrupt
+ .text          0x8c005ec4       0x78 ../src/hardware/LED.o
+                0x8c005ec4                turnOff
+                0x8c005f00                turnOn
+ .text          0x8c005f3c      0xe90 ../src/hardware/serial.o
+                0x8c006d70                printableChar
+                0x8c006d94                serial_ERROR
+                0x8c0063a0                serial_putint
+                0x8c006794                serial_putint_nozeros
+                0x8c006d04                serial_putbyte
+                0x8c005f3c                serial_putchar
+                0x8c005fac                serial_putlong
+                0x8c005f5c                serial_putstring
+                0x8c005f94                serial_newline
+ .text          0x8c006dcc     0x10e4 ../src/hardware/gptimer.o
+                0x8c007378                deassertInterrupt
+                0x8c007464                dumpGptRegisters
+                0x8c006fa0                toggleTimer
+                0x8c006dcc                getCorrectBaseAddr
+                0x8c007094                setupMsTick
+                0x8c006eac                toggleOverflowInterrupt
+ .text          0x8c007eb0      0x1fc ../src/hardware/gpmc.o
+                0x8c007f50                loadGpmc
+                0x8c007eb0                initGpmc
+                0x8c007fd8                storeGpmc
+ .text          0x8c0080ac      0x694 ../src/guestManager/guestContext.o
+                0x8c00872c                registerMemoryProtection
+                0x8c0085f8                initGuestContext
+                0x8c008724                registerHardwareLibrary
+                0x8c008718                registerBlockCache
+                0x8c0080ac                dumpGuestContext
+                0x8c00870c                registerCrb
+ .text          0x8c008740      0x41c ../src/guestManager/blockCache.o
+                0x8c008798                addToBlockCache
+                0x8c008954                explodeCache
+                0x8c00876c                checkBlockCache
+                0x8c00885c                findEntryForAddress
+                0x8c0088a8                removeCacheEntry
+                0x8c0089bc                validateCachePreChange
+                0x8c008ab4                dumpBlockCacheEntry
+                0x8c0088dc                resolveCacheConflict
+                0x8c008740                initialiseBlockCache
+                0x8c008a44                validateCacheMultiPreChange
+                0x8c008850                getBlockCacheEntry
+ .text          0x8c008b5c        0xc ../src/guestManager/scheduler.o
+                0x8c008b5c                scheduleGuest
+ .text          0x8c008b68      0x150 ../src/linuxBoot/bootLinux.o
+                0x8c008c8c                populateDramBanks
+                0x8c008b68                do_linux_boot
+ .text          0x8c008cb8      0x234 ../src/linuxBoot/image.o
+                0x8c008e08                dumpHdrInfo
+                0x8c008cb8                getImageHeader
+ .text          0x8c008eec      0x188 ../src/instructionEmu/asm-dis.o
+                0x8c008eec                decodeInstruction
+                0x8c008fc0                dumpInstrString
+ .text          0x8c009074      0x5e8 ../src/instructionEmu/commonInstrFunctions.o
+                0x8c009334                loadGuestGPR
+                0x8c0090a8                error_function
+                0x8c0090e0                warning_function
+                0x8c009630                countBitsSet
+                0x8c009538                decodeShiftImmediate
+                0x8c009104                guestInPrivMode
+                0x8c0095cc                decodeShift
+                0x8c009118                evalCC
+                0x8c009074                invalid_instruction
+                0x8c009510                rorVal
+                0x8c009228                storeGuestGPR
+                0x8c00943c                armExpandImm12
+                0x8c00946c                shiftVal
+ .text          0x8c00965c      0x29c ../src/instructionEmu/coprocInstructions.o
+                0x8c0096b0                mrcInstruction
+                0x8c0098dc                mrc2Instruction
+                0x8c009678                mrrcInstruction
+                0x8c0097fc                stcInstruction
+                0x8c009694                cdpInstruction
+                0x8c00965c                mcrrInstruction
+                0x8c00986c                ldc2Instruction
+                0x8c0098c0                mcr2Instruction
+                0x8c009768                mcrInstruction
+                0x8c009818                ldcInstruction
+                0x8c0098a4                cdp2Instruction
+                0x8c009850                mcrr2Instruction
+                0x8c009888                stc2Instruction
+                0x8c009834                mrrc2Instruction
+ .text          0x8c0098f8      0x450 ../src/instructionEmu/dataProcessInstr.o
+                0x8c009cd8                tstInstruction
+                0x8c009b68                subInstruction
+                0x8c009b30                rsbInstruction
+                0x8c009c68                lsrInstruction
+                0x8c009ca0                rrxInstruction
+                0x8c009c20                movInstruction
+                0x8c009d10                cmpInstruction
+                0x8c009ba0                addInstruction
+                0x8c00995c                arithLogicOp
+                0x8c009b4c                rscInstruction
+                0x8c009bb0                adcInstruction
+                0x8c0098f8                invalidDataProcTrap
+                0x8c009c04                bicInstruction
+                0x8c009c30                mvnInstruction
+                0x8c009b14                andInstruction
+                0x8c009be8                eorInstruction
+                0x8c009c84                asrInstruction
+                0x8c009d2c                cmnInstruction
+                0x8c009b84                sbcInstruction
+                0x8c009cbc                rorInstruction
+                0x8c009cf4                teqInstruction
+                0x8c009bcc                orrInstruction
+                0x8c009c4c                lslInstruction
+ .text          0x8c009d48     0x1c5c ../src/instructionEmu/dataMoveInstr.o
+                0x8c00af14                popLdrInstruction
+                0x8c00a6f0                ldrInstruction
+                0x8c00af28                ldmInstruction
+                0x8c00a918                stmInstruction
+                0x8c00af04                strdInstruction
+                0x8c00b66c                strexInstruction
+                0x8c009f84                strbInstruction
+                0x8c00b460                ldrexbInstruction
+                0x8c00b5d4                ldrexhInstruction
+                0x8c00a37c                ldrhInstruction
+                0x8c00b740                strexbInstruction
+                0x8c00b8cc                strexhInstruction
+                0x8c009dac                strInstruction
+                0x8c009d48                invalidDataMoveTrap
+                0x8c00b4fc                ldrexdInstruction
+                0x8c00b814                strexdInstruction
+                0x8c00af24                popLdmInstruction
+                0x8c00b3bc                ldrdInstruction
+                0x8c00b3cc                ldrexInstruction
+                0x8c00a180                strhInstruction
+                0x8c00a538                ldrbInstruction
+ .text          0x8c00b9a4     0x1000 ../src/instructionEmu/miscInstructions.o
+                0x8c00bb7c                smcInstruction
+                0x8c00c028                uhaddsubxInstruction
+                0x8c00c4d8                smlatbInstruction
+                0x8c00c014                uhadd8Instruction
+                0x8c00c5f0                smulwtInstruction
+                0x8c00c26c                selInstruction
+                0x8c00bbcc                wfiInstruction
+                0x8c00c140                rev16Instruction
+                0x8c00bb18                ldrhtInstruction
+                0x8c00bab4                isbInstruction
+                0x8c00c398                usad8Instruction
+                0x8c00ba1c                mlaInstruction
+                0x8c00c3ac                usada8Instruction
+                0x8c00c4b8                pldInstruction
+                0x8c00baf0                mlsInstruction
+                0x8c00baa0                dsbInstruction
+                0x8c00be84                qaddsubxInstruction
+                0x8c00c53c                smlalbbInstruction
+                0x8c00bfb0                ssubaddxInstruction
+                0x8c00c654                msrInstruction
+                0x8c00be5c                qadd16Instruction
+                0x8c00beac                qsub8Instruction
+                0x8c00c35c                ssatInstruction
+                0x8c00bec0                qsubaddxInstruction
+                0x8c00bb90                clrexInstruction
+                0x8c00bed4                sadd16Instruction
+                0x8c00c980                svcInstruction
+                0x8c00c640                qdsubInstruction
+                0x8c00c230                uxtahInstruction
+                0x8c00bd74                cpsInstruction
+                0x8c00bb40                movtInstruction
+                0x8c00c154                revshInstruction
+                0x8c00c334                smmlsInstruction
+                0x8c00c5dc                smulwbInstruction
+                0x8c00bfc4                uadd16Instruction
+                0x8c00bf9c                ssub8Instruction
+                0x8c00b9a4                nopInstruction
+                0x8c00bfec                uaddsubxInstruction
+                0x8c00c0a0                uqaddsubxInstruction
+                0x8c00c2bc                smladInstruction
+                0x8c00c104                usub8Instruction
+                0x8c00bcb4                cpsidInstruction
+                0x8c00ba44                sumlalInstruction
+                0x8c00ba08                mulInstruction
+                0x8c00c604                qaddInstruction
+                0x8c00c168                rfeInstruction
+                0x8c00badc                bfiInstruction
+                0x8c00c500                smlattInstruction
+                0x8c00c4a4                clzInstruction
+                0x8c00bb54                rbitInstruction
+                0x8c00befc                saddsubxInstruction
+                0x8c00ba30                swpInstruction
+                0x8c00bb68                usbfxInstruction
+                0x8c00c0dc                uqsubaddxInstruction
+                0x8c00c2e4                smlsdInstruction
+                0x8c00bb2c                movwInstruction
+                0x8c00be70                qadd8Instruction
+                0x8c00c564                smlalbtInstruction
+                0x8c00c578                smlalttInstruction
+                0x8c00bfd8                uadd8Instruction
+                0x8c00c21c                sxtabInstruction
+                0x8c00c3c0                usatInstruction
+                0x8c00c1cc                uxtb16Instruction
+                0x8c00c410                blxInstruction
+                0x8c00c078                uqadd16Instruction
+                0x8c00c000                uhadd16Instruction
+                0x8c00c08c                uqadd8Instruction
+                0x8c00b9f4                bxInstruction
+                0x8c00c1b8                uxthInstruction
+                0x8c00c1a4                sxtbInstruction
+                0x8c00c03c                uhsub16Instruction
+                0x8c00c0c8                uqsub8Instruction
+                0x8c00c2d0                smlaldInstruction
+                0x8c00c294                smuadInstruction
+                0x8c00c818                mrsInstruction
+                0x8c00c370                ssat16Instruction
+                0x8c00c30c                smmulInstruction
+                0x8c00bee8                sadd8Instruction
+                0x8c00c4ec                smlabtInstruction
+                0x8c00bba4                yieldInstruction
+                0x8c00c618                qdaddInstruction
+                0x8c00bbe0                sevInstruction
+                0x8c00ba8c                dmbInstruction
+                0x8c00c3d4                usat16Instruction
+                0x8c00c208                sxtab16Instruction
+                0x8c00c528                smlawtInstruction
+                0x8c00c2f8                smlsldInstruction
+                0x8c00c0f0                usub16Instruction
+                0x8c00c17c                sxthInstruction
+                0x8c00c5a0                smultbInstruction
+                0x8c00c190                sxtb16Instruction
+                0x8c00c5c8                smulttInstruction
+                0x8c00c908                bInstruction
+                0x8c00c064                uhsubaddxInstruction
+                0x8c00ba6c                pliInstruction
+                0x8c00c348                srsInstruction
+                0x8c00c2a8                smusdInstruction
+                0x8c00c1e0                uxtbInstruction
+                0x8c00c5b4                smulbtInstruction
+                0x8c00bf24                shadd8Instruction
+                0x8c00c12c                revInstruction
+                0x8c00bf10                shadd16Instruction
+                0x8c00bf4c                shsub16Instruction
+                0x8c00c3e8                bxjInstruction
+                0x8c00c118                usubaddxInstruction
+                0x8c00c384                umaalInstruction
+                0x8c00bf38                shaddsubxInstruction
+                0x8c00bf88                ssub16Instruction
+                0x8c00bac8                bfcInstruction
+                0x8c00c58c                smulbbInstruction
+                0x8c00be48                pkhtbInstruction
+                0x8c00c988                undefinedInstruction
+                0x8c00c050                uhsub8Instruction
+                0x8c00bbb8                wfeInstruction
+                0x8c00c258                uxtabInstruction
+                0x8c00be98                qsub16Instruction
+                0x8c00be34                pkhbtInstruction
+                0x8c00c1f4                sxtahInstruction
+                0x8c00bf74                shsubaddxInstruction
+                0x8c00bf60                shsub8Instruction
+                0x8c00c62c                qsubInstruction
+                0x8c00c3fc                bkptInstruction
+                0x8c00c550                smlaltbInstruction
+                0x8c00c514                smlawbInstruction
+                0x8c00c320                smmlaInstruction
+                0x8c00bb04                strhtInstruction
+                0x8c00c0b4                uqsub16Instruction
+                0x8c00ba58                sumullInstruction
+                0x8c00c280                setendInstruction
+                0x8c00c244                uxtab16Instruction
+                0x8c00ba78                dbgInstruction
+                0x8c00c4c4                smlabbInstruction
+                0x8c00bbf4                cpsieInstruction
+ .text          0x8c00c9a4      0x23c ../src/instructionEmu/scanner.o
+                0x8c00caa0                protectScannedBlock
+                0x8c00c9a4                scanBlock
+ .text          0x8c00cbe0      0x808 ../src/instructionEmu/decoder.o
+                0x8c00cbe0                decodeInstr
+                0x8c00d3b0                dumpInstruction
+                0x8c00d160                decodeMedia
+                0x8c00d31c                decodeUnconditional
+                0x8c00d1f4                decodeBranchBlockTransfer
+                0x8c00d0cc                decodeLoadStoreWordByte
+                0x8c00cf70                decodeTopLevelCategory
+                0x8c00d288                decodeSvcCoproc
+                0x8c00cfcc                decodeDataProcMisc
+ .text          0x8c00d3e8      0x124 ../src/memoryManager/addressing.o
+                0x8c00d3e8                initialiseVirtualAddressing
+                0x8c00d444                createVirtualMachineGPAtoRPA
+                0x8c00d488                guestEnableVirtMem
+                0x8c00d448                initialiseGuestShadowPageTable
+ .text          0x8c00d50c      0x1a0 ../src/memoryManager/cp15coproc.o
+                0x8c00d698                crbIndex
+                0x8c00d654                getCregVal
+                0x8c00d50c                initCRB
+                0x8c00d5b8                setCregVal
+ .text          0x8c00d6ac      0x788 ../src/memoryManager/frameAllocator.o
+                0x8c00d7fc                allocFrame
+                0x8c00dc20                isFrameFree_offset
+                0x8c00dac4                isFrameFree
+                0x8c00dce4                getFreeFrames
+                0x8c00dbfc                addrToOffset
+                0x8c00dccc                getDomainOffset
+                0x8c00dbdc                newFrameAllocationTable
+                0x8c00da5c                allocFrameAddr
+                0x8c00db00                freeFrame
+                0x8c00d8f4                allocMultipleFrames
+                0x8c00db50                freeMultipleFrames
+                0x8c00dc0c                offsetToAddr
+                0x8c00dbcc                isDomainValid
+                0x8c00dc8c                freeFrame_offset
+                0x8c00d6ac                initialiseFrameTable
+                0x8c00dc4c                markFrameUsed_offset
+                0x8c00dcd4                getDomainMaxOffset
+ .text          0x8c00de34     0x2e9c ../src/memoryManager/pageTable.o
+                0x8c00e600                largeMapMemory
+                0x8c00de48                createHypervisorPageTable
+                0x8c010620                mapGuestDomain
+                0x8c01039c                isAddrInGuestPT
+                0x8c010284                removePageTableEntry
+                0x8c010294                splitSectionToSmallPages
+                0x8c00f4f0                dumpLargePage
+                0x8c00f54c                dumpSection
+                0x8c00e678                mapHypervisorMemory
+                0x8c010510                copyPageTable
+                0x8c00f8d4                getPageTableEntry
+                0x8c00f24c                dump2ndVirtAddr
+                0x8c00f458                dumpSmallPage
+                0x8c010c8c                disableHypervisorCaches
+                0x8c00f94c                copySectionEntry
+                0x8c00e510                sectionMapMemory
+                0x8c00f608                dumpSuperSection
+                0x8c00f628                setAccessBits
+                0x8c0106d4                pageTableEdit
+                0x8c00fd28                copyPageTableEntry
+                0x8c00f22c                dumpVirtAddr
+                0x8c00ffd4                copyLargeEntry
+                0x8c00fd18                copySuperSectionEntry
+                0x8c00e89c                addSmallPtEntry
+                0x8c00ed70                get1stLevelPtDescriptorAddr
+                0x8c00f84c                replicateLargeEntry
+                0x8c00eda0                addNewPageTableDescriptor
+                0x8c00de34                setGuestPhysicalPt
+                0x8c00e6d0                addSectionPtEntry
+                0x8c00f2b0                dump2ndLevel
+                0x8c010324                findVAforPA
+                0x8c00e394                createGuestOSPageTable
+                0x8c00e588                smallMapMemory
+                0x8c00f0bc                dumpPageTable
+                0x8c00edf4                addNewSmallDescriptor
+                0x8c00eaa4                addLargePtEntry
+                0x8c00e4c0                createNew1stLevelPageTable
+                0x8c00ed88                get2ndLevelPtDescriptor
+                0x8c010bcc                getPhysicalAddress
+                0x8c00ee6c                addNewLargeDescriptor
+                0x8c010ccc                pt_compile_time_check
+                0x8c00ffe4                copySmallEntry
+                0x8c010628                getPageEndAddr
+                0x8c00efb0                addNewSectionDescriptor
+ .text          0x8c010cd0      0x220 ../src/memoryManager/mmu.o
+                0x8c010cd0                mmu_compile_time_check
+                0x8c010d0c                clearCache
+                0x8c010e60                printPrefetchAbort
+                0x8c010cf4                clearTLB
+                0x8c010d1c                setDomain
+                0x8c010cec                dataBarrier
+                0x8c010cd4                mmuInit
+                0x8c010cfc                clearTLBbyMVA
+                0x8c010d38                mmuInsertPt0
+                0x8c010d74                getDFAR
+                0x8c010d64                mmuDisableVirtAddr
+                0x8c010d94                printDataAbort
+                0x8c010d84                getIFAR
+                0x8c010d14                setTTBCR
+                0x8c010d48                mmuGetPt0
+                0x8c010d50                mmuEnableVirtAddr
+                0x8c010d40                mmuInsertPt1
+                0x8c010d8c                getIFSR
+                0x8c010d7c                getDFSR
+ .text          0x8c010ef0      0x1a0 ../src/memoryManager/memoryProtection.o
+                0x8c010f3c                addProtection
+                0x8c010ef0                initialiseMemoryProtection
+                0x8c01107c                checkProtectionArray
+                0x8c011014                removeProtection
+                0x8c01108c                compile_time_check_memory_protection
+ .text          0x8c011090      0x184 ../src/memoryManager/globalMemoryMapper.o
+                0x8c011090                emulateLoadStoreGeneric
+ *fill*         0x8c011214        0xc 00000000
+ .text          0x8c011220      0x880 ../src/startup.o
+                0x8c011774                undefined_handler_privileged_mode
+                0x8c011784                prefetch_abort_handler
+                0x8c0118c0                monitor_mode_handler
+                0x8c011434                data_abort_handler
+                0x8c0112f0                swi_handler
+                0x8c011648                undefined_handler
+                0x8c011a10                fiq_handler
+                0x8c0119fc                irq_handler
+                0x8c0118b0                prefetch_abort_handler_privileged_mode
+                0x8c0119ec                monitor_mode_handler_privileged_mode
+                0x8c01157c                data_abort_handler_privileged_mode
+                0x8c011220                startup_hypervisor
+ .text          0x8c011aa0       0xc0 ../src/cpuArch/cache.o
+                0x8c011aa0                v7_flush_dcache_all
+ .text          0x8c011b60        0xc ../src/linuxBoot/callKernel.o
+                0x8c011b60                callKernel
+ *(.gnu.warning)
+ *(.glue_7t)
+ .glue_7t       0x00000000        0x0 linker stubs
+ *(.glue_7)
+ .glue_7        0x00000000        0x0 linker stubs
+ *(.vfp11_veneer)
+ .vfp11_veneer  0x00000000        0x0 linker stubs
+ *(.janus_2cc_veneer)
+ *(.v4_bx)
+ .v4_bx         0x00000000        0x0 linker stubs
+
+.fini
+ *(.fini)
+                0x8c011b6c                PROVIDE (__etext, .)
+                0x8c011b6c                PROVIDE (_etext, .)
+                0x8c011b6c                PROVIDE (etext, .)
+
+.rodata         0x8c011b6c     0x722c
+ *(.rodata .rodata.* .gnu.linkonce.r.*)
+ .rodata.str1.4
+                0x8c011b6c      0x1b5 ../src/main.o
+                                0x1b8 (size before relaxing)
+ *fill*         0x8c011d21        0x3 00
+ .rodata.str1.4
+                0x8c011d24      0x10d ../src/common/memFunctions.o
+                                0x110 (size before relaxing)
+ *fill*         0x8c011e31        0x3 00
+ .rodata.str1.4
+                0x8c011e34      0x3d4 ../src/exceptions/exceptionHandlers.o
+                                0x408 (size before relaxing)
+ .rodata.str1.4
+                0x8c012208      0x236 ../src/hardware/hardwareLibrary.o
+                                0x238 (size before relaxing)
+ *fill*         0x8c01243e        0x2 00
+ .rodata.str1.4
+                0x8c012440       0x66 ../src/hardware/sdram.o
+                                 0x88 (size before relaxing)
+ *fill*         0x8c0124a6        0x2 00
+ .rodata.str1.4
+                0x8c0124a8       0xad ../src/hardware/sramInternal.o
+                                0x118 (size before relaxing)
+ *fill*         0x8c012555        0x3 00
+ .rodata.str1.4
+                0x8c012558       0x77 ../src/hardware/timer32k.o
+                                 0xc0 (size before relaxing)
+ *fill*         0x8c0125cf        0x1 00
+ .rodata.str1.4
+                0x8c0125d0      0x20a ../src/hardware/prm.o
+                                0x278 (size before relaxing)
+ *fill*         0x8c0127da        0x2 00
+ .rodata.str1.4
+                0x8c0127dc      0x55f ../src/hardware/clockManager.o
+                                0x5d4 (size before relaxing)
+ *fill*         0x8c012d3b        0x1 00
+ .rodata.str1.4
+                0x8c012d3c      0x294 ../src/hardware/sysControlModule.o
+                                0x304 (size before relaxing)
+ .rodata.str1.4
+                0x8c012fd0      0x1c1 ../src/hardware/irqc.o
+                                0x1d0 (size before relaxing)
+ *fill*         0x8c013191        0x3 00
+ .rodata.str1.4
+                0x8c013194      0x22d ../src/hardware/gptimer.o
+                                0x238 (size before relaxing)
+ *fill*         0x8c0133c1        0x3 00
+ .rodata.str1.4
+                0x8c0133c4       0xc5 ../src/hardware/gpmc.o
+                                 0xf8 (size before relaxing)
+ *fill*         0x8c013489        0x3 00
+ .rodata.str1.4
+                0x8c01348c      0x352 ../src/guestManager/guestContext.o
+                                0x364 (size before relaxing)
+ *fill*         0x8c0137de        0x2 00
+ .rodata.str1.4
+                0x8c0137e0       0x95 ../src/guestManager/blockCache.o
+                                 0x9c (size before relaxing)
+ *fill*         0x8c013875        0x3 00
+ .rodata.str1.4
+                0x8c013878       0x29 ../src/guestManager/scheduler.o
+                                 0x2c (size before relaxing)
+ *fill*         0x8c0138a1        0x3 00
+ .rodata        0x8c0138a4        0x4 ../src/linuxBoot/bootLinux.o
+ .rodata.str1.4
+                0x8c0138a8       0x7d ../src/linuxBoot/image.o
+                                 0x80 (size before relaxing)
+ *fill*         0x8c013925        0x3 00
+ .rodata.str1.4
+                0x8c013928     0x2111 ../src/instructionEmu/asm-dis.o
+                               0x2114 (size before relaxing)
+ *fill*         0x8c015a39        0x3 00
+ .rodata.str1.4
+                0x8c015a3c      0x119 ../src/instructionEmu/commonInstrFunctions.o
+                                0x11c (size before relaxing)
+ *fill*         0x8c015b55        0x3 00
+ .rodata.str1.4
+                0x8c015b58      0x1bf ../src/instructionEmu/coprocInstructions.o
+                                0x1c0 (size before relaxing)
+ *fill*         0x8c015d17        0x1 00
+ .rodata.str1.4
+                0x8c015d18      0x27e ../src/instructionEmu/dataProcessInstr.o
+                                0x28c (size before relaxing)
+ *fill*         0x8c015f96        0x2 00
+ .rodata.str1.4
+                0x8c015f98      0x653 ../src/instructionEmu/dataMoveInstr.o
+                                0x680 (size before relaxing)
+ *fill*         0x8c0165eb        0x1 00
+ .rodata.str1.4
+                0x8c0165ec      0xb42 ../src/instructionEmu/miscInstructions.o
+                                0xb64 (size before relaxing)
+ *fill*         0x8c01712e        0x2 00
+ .rodata.str1.4
+                0x8c017130      0x110 ../src/instructionEmu/scanner.o
+ .rodata.str1.4
+                0x8c017240      0x594 ../src/instructionEmu/decoder.o
+                               0x1f14 (size before relaxing)
+ .rodata.str1.4
+                0x8c0177d4       0x6e ../src/memoryManager/addressing.o
+                                 0x7c (size before relaxing)
+ *fill*         0x8c017842        0x2 00
+ .rodata.str1.4
+                0x8c017844       0x49 ../src/memoryManager/cp15coproc.o
+                                 0x4c (size before relaxing)
+ *fill*         0x8c01788d        0x3 00
+ .rodata.str1.4
+                0x8c017890       0xcd ../src/memoryManager/frameAllocator.o
+                                 0xd0 (size before relaxing)
+ *fill*         0x8c01795d        0x3 00
+ .rodata.str1.4
+                0x8c017960      0xfd3 ../src/memoryManager/pageTable.o
+                               0x1014 (size before relaxing)
+ *fill*         0x8c018933        0x1 00
+ .rodata.str1.4
+                0x8c018934      0x20d ../src/memoryManager/mmu.o
+                                0x214 (size before relaxing)
+ *fill*         0x8c018b41        0x3 00
+ .rodata        0x8c018b44       0x40 ../src/memoryManager/mmu.o
+ .rodata.str1.4
+                0x8c018b84      0x1d0 ../src/memoryManager/memoryProtection.o
+                                0x1e8 (size before relaxing)
+ .rodata.str1.4
+                0x8c018d54       0x44 ../src/memoryManager/globalMemoryMapper.o
+ .rodata        0x8c018d98        0x0 ../src/startup.o
+
+.rodata1
+ *(.rodata1)
+
+.ARM.extab
+ *(.ARM.extab* .gnu.linkonce.armextab.*)
+                0x8c018d98                __exidx_start = .
+
+.ARM.exidx
+ *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+                0x8c018d98                __exidx_end = .
+
+.eh_frame_hdr
+ *(.eh_frame_hdr)
+
+.eh_frame
+ *(.eh_frame)
+
+.gcc_except_table
+ *(.gcc_except_table .gcc_except_table.*)
+                0x8c020d98                . = (ALIGN (0x8000) + (. & 0x7fff))
+
+.eh_frame
+ *(.eh_frame)
+
+.gcc_except_table
+ *(.gcc_except_table .gcc_except_table.*)
+
+.tdata
+ *(.tdata .tdata.* .gnu.linkonce.td.*)
+
+.tbss
+ *(.tbss .tbss.* .gnu.linkonce.tb.*)
+ *(.tcommon)
+
+.preinit_array  0x8c020d98        0x0
+                0x8c020d98                PROVIDE (__preinit_array_start, .)
+ *(.preinit_array)
+                0x8c020d98                PROVIDE (__preinit_array_end, .)
+
+.init_array     0x8c020d98        0x0
+                0x8c020d98                PROVIDE (__init_array_start, .)
+ *(SORT(.init_array.*))
+ *(.init_array)
+                0x8c020d98                PROVIDE (__init_array_end, .)
+
+.fini_array     0x8c020d98        0x0
+                0x8c020d98                PROVIDE (__fini_array_start, .)
+ *(.fini_array)
+ *(SORT(.fini_array.*))
+                0x8c020d98                PROVIDE (__fini_array_end, .)
+
+.ctors
+ *crtbegin.o(.ctors)
+ *crtbegin?.o(.ctors)
+ *(EXCLUDE_FILE(*crtend?.o *crtend.o) .ctors)
+ *(SORT(.ctors.*))
+ *(.ctors)
+
+.dtors
+ *crtbegin.o(.dtors)
+ *crtbegin?.o(.dtors)
+ *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
+ *(SORT(.dtors.*))
+ *(.dtors)
+
+.jcr
+ *(.jcr)
+
+.data.rel.ro
+ *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*)
+ *(.data.rel.ro* .gnu.linkonce.d.rel.ro.*)
+
+.dynamic
+ *(.dynamic)
+
+.got
+ *(.got.plt)
+ *(.got)
+
+.data           0x8c020d98     0x3034
+                0x8c020d98                __data_start = .
+ *(.data .data.* .gnu.linkonce.d.*)
+ .data          0x8c020d98        0x0 ../src/main.o
+ .data          0x8c020d98        0x0 ../src/common/common.o
+ .data          0x8c020d98        0x0 ../src/common/memFunctions.o
+ .data          0x8c020d98        0x0 ../src/common/stringFunctions.o
+ .data          0x8c020d98        0x0 ../src/cpuArch/cpu.o
+ .data          0x8c020d98        0x0 ../src/exceptions/exceptionHandlers.o
+ .data          0x8c020d98       0x58 ../src/hardware/hardwareLibrary.o
+                0x8c020dec                q3busName
+                0x8c020dd4                gpio1Name
+                0x8c020d9c                q0busName
+                0x8c020da8                bootRomSecureName
+                0x8c020db0                sramInternalName
+                0x8c020ddc                gptimer1Name
+                0x8c020dc4                l4CoreWakeupIntName
+                0x8c020dd0                prmName
+                0x8c020de4                q2busName
+                0x8c020de8                sdramName
+                0x8c020dc0                clockManagerName
+                0x8c020db4                l4InterconnectName
+                0x8c020dac                bootRomPublicName
+                0x8c020dc8                l3InterconnectName
+                0x8c020db8                l4IntCoreName
+                0x8c020da0                q1busName
+                0x8c020da4                onChipMemoryName
+                0x8c020dd8                wdtimer2Name
+                0x8c020d98                topLevelBusName
+                0x8c020dbc                sysCtrlModName
+                0x8c020dcc                gpmcModuleName
+                0x8c020de0                timer32kName
+ .data          0x8c020df0        0x0 ../src/hardware/sdram.o
+ .data          0x8c020df0        0x0 ../src/hardware/sramInternal.o
+ .data          0x8c020df0        0x0 ../src/hardware/timer32k.o
+ .data          0x8c020df0        0x0 ../src/hardware/prm.o
+ .data          0x8c020df0        0x0 ../src/hardware/clockManager.o
+ .data          0x8c020df0        0x0 ../src/hardware/sysControlModule.o
+ .data          0x8c020df0        0x0 ../src/hardware/irqc.o
+ .data          0x8c020df0        0x8 ../src/hardware/LED.o
+                0x8c020df0                ledPtrSet
+                0x8c020df4                ledPtrClear
+ .data          0x8c020df8        0x0 ../src/hardware/serial.o
+ .data          0x8c020df8        0x0 ../src/hardware/gptimer.o
+ .data          0x8c020df8        0x0 ../src/hardware/gpmc.o
+ .data          0x8c020df8        0x0 ../src/guestManager/guestContext.o
+ .data          0x8c020df8        0x0 ../src/guestManager/blockCache.o
+ .data          0x8c020df8        0x0 ../src/guestManager/scheduler.o
+ .data          0x8c020df8        0x0 ../src/linuxBoot/bootLinux.o
+ .data          0x8c020df8        0x0 ../src/linuxBoot/image.o
+ .data          0x8c020df8     0x16f8 ../src/instructionEmu/asm-dis.o
+                0x8c020df8                arm_coproc_opcodes
+                0x8c020f24                arm_opcodes
+ .data          0x8c0224f0        0x0 ../src/instructionEmu/commonInstrFunctions.o
+ .data          0x8c0224f0        0x0 ../src/instructionEmu/coprocInstructions.o
+ .data          0x8c0224f0        0x0 ../src/instructionEmu/dataProcessInstr.o
+ .data          0x8c0224f0        0x0 ../src/instructionEmu/dataMoveInstr.o
+ .data          0x8c0224f0        0x0 ../src/instructionEmu/miscInstructions.o
+ .data          0x8c0224f0        0x0 ../src/instructionEmu/scanner.o
+ .data          0x8c0224f0     0x18d4 ../src/instructionEmu/decoder.o
+                0x8c0233b0                mediaInstructions
+                0x8c0224f0                categories
+                0x8c022550                unconditionalInstructions
+                0x8c023310                loadStoreWordByteInstructions
+                0x8c023018                dataProcMiscInstructions_op1
+                0x8c023d74                svcCoprocInstructions
+                0x8c023c98                branchBlockTransferInstructions
+                0x8c022690                dataProcMiscInstructions_op0
+ .data          0x8c023dc4        0x0 ../src/memoryManager/addressing.o
+ .data          0x8c023dc4        0x0 ../src/memoryManager/cp15coproc.o
+ .data          0x8c023dc4        0x0 ../src/memoryManager/frameAllocator.o
+ .data          0x8c023dc4        0x0 ../src/memoryManager/pageTable.o
+ .data          0x8c023dc4        0x0 ../src/memoryManager/mmu.o
+ .data          0x8c023dc4        0x0 ../src/memoryManager/memoryProtection.o
+ .data          0x8c023dc4        0x0 ../src/memoryManager/globalMemoryMapper.o
+ .data          0x8c023dc4        0x8 ../src/startup.o
+ .data          0x8c023dcc        0x0 ../src/cpuArch/cache.o
+ .data          0x8c023dcc        0x0 ../src/linuxBoot/callKernel.o
+
+.data1
+ *(.data1)
+                0x8c023dcc                _edata = .
+                0x8c023dcc                PROVIDE (edata, .)
+                0x8c023dcc                __bss_start = .
+                0x8c023dcc                __bss_start__ = .
+
+.bss            0x8c023dcc     0x42e4
+ *(.dynbss)
+ *(.bss .bss.* .gnu.linkonce.b.*)
+ .bss           0x8c023dcc        0xc ../src/main.o
+                0x8c023dd0                initrdAddr
+                0x8c023dcc                kernAddr
+                0x8c023dd4                gContext
+ .bss           0x8c023dd8        0x0 ../src/common/common.o
+ .bss           0x8c023dd8       0x1c ../src/common/memFunctions.o
+                0x8c023de8                nrOfChunksAllocd
+                0x8c023de0                heapEnd
+                0x8c023ddc                heapSize
+                0x8c023df0                chunkListRoot
+                0x8c023dd8                heapStart
+                0x8c023dec                chunkList
+                0x8c023de4                freePtr
+ .bss           0x8c023df4        0x0 ../src/common/stringFunctions.o
+ .bss           0x8c023df4        0x0 ../src/cpuArch/cpu.o
+ .bss           0x8c023df4        0x0 ../src/exceptions/exceptionHandlers.o
+ .bss           0x8c023df4      0x9a0 ../src/hardware/hardwareLibrary.o
+                0x8c0246b4                sdram
+                0x8c024484                gpio1
+                0x8c0243a4                gpmcModule
+                0x8c023f44                onChipMemory
+                0x8c0241e4                sysCtrlMod
+                0x8c024024                bootRomPublic
+                0x8c023e64                q0bus
+                0x8c0245d4                timer32k
+                0x8c024094                sramInternal
+                0x8c024334                l3Interconnect
+                0x8c0242c4                l4CoreWakeupInt
+                0x8c024564                gptimer1
+                0x8c024414                prm
+                0x8c024724                q3bus
+                0x8c023ed4                q1bus
+                0x8c023df4                topLevelBus
+                0x8c024254                clockManager
+                0x8c024104                l4Interconnect
+                0x8c024644                q2bus
+                0x8c023fb4                bootRomSecure
+                0x8c024174                l4IntCore
+                0x8c0244f4                wdtimer2
+ .bss           0x8c024794        0x0 ../src/hardware/sdram.o
+ .bss           0x8c024794        0x0 ../src/hardware/sramInternal.o
+ .bss           0x8c024794        0x4 ../src/hardware/timer32k.o
+ .bss           0x8c024798        0x4 ../src/hardware/prm.o
+                0x8c024798                prMan
+ .bss           0x8c02479c        0x4 ../src/hardware/clockManager.o
+                0x8c02479c                clockMan
+ .bss           0x8c0247a0        0x4 ../src/hardware/sysControlModule.o
+                0x8c0247a0                sysCtrlModule
+ .bss           0x8c0247a4        0x0 ../src/hardware/irqc.o
+ .bss           0x8c0247a4        0x0 ../src/hardware/LED.o
+ .bss           0x8c0247a4        0x0 ../src/hardware/serial.o
+ .bss           0x8c0247a4        0x0 ../src/hardware/gptimer.o
+ .bss           0x8c0247a4        0x4 ../src/hardware/gpmc.o
+                0x8c0247a4                gpmc
+ .bss           0x8c0247a8        0x0 ../src/guestManager/guestContext.o
+ .bss           0x8c0247a8        0x0 ../src/guestManager/blockCache.o
+ .bss           0x8c0247a8        0x0 ../src/guestManager/scheduler.o
+ .bss           0x8c0247a8       0x14 ../src/linuxBoot/bootLinux.o
+ .bss           0x8c0247bc        0x0 ../src/linuxBoot/image.o
+ .bss           0x8c0247bc        0x0 ../src/instructionEmu/asm-dis.o
+ .bss           0x8c0247bc        0x0 ../src/instructionEmu/commonInstrFunctions.o
+ .bss           0x8c0247bc        0x0 ../src/instructionEmu/coprocInstructions.o
+ .bss           0x8c0247bc        0x0 ../src/instructionEmu/dataProcessInstr.o
+ .bss           0x8c0247bc        0x0 ../src/instructionEmu/dataMoveInstr.o
+ .bss           0x8c0247bc        0x0 ../src/instructionEmu/miscInstructions.o
+ .bss           0x8c0247bc        0x0 ../src/instructionEmu/scanner.o
+ .bss           0x8c0247bc        0x0 ../src/instructionEmu/decoder.o
+ .bss           0x8c0247bc        0x0 ../src/memoryManager/addressing.o
+ .bss           0x8c0247bc        0x0 ../src/memoryManager/cp15coproc.o
+ .bss           0x8c0247bc        0x4 ../src/memoryManager/frameAllocator.o
+                0x8c0247bc                frameTable
+ .bss           0x8c0247c0      0x404 ../src/memoryManager/pageTable.o
+                0x8c0247c4                guestSecondLvlPageTables
+                0x8c0247c0                hypervisorPtd
+ .bss           0x8c024bc4        0x0 ../src/memoryManager/mmu.o
+ .bss           0x8c024bc4        0x4 ../src/memoryManager/memoryProtection.o
+                0x8c024bc4                maxEntries
+ .bss           0x8c024bc8        0x0 ../src/memoryManager/globalMemoryMapper.o
+ .bss           0x8c024bc8     0x34e8 ../src/startup.o
+                0x8c024bc8                guestContextSpace
+ .bss           0x8c0280b0        0x0 ../src/cpuArch/cache.o
+ .bss           0x8c0280b0        0x0 ../src/linuxBoot/callKernel.o
+ *(COMMON)
+                0x8c0280b0                . = ALIGN ((. != 0x0)?0x4:0x1)
+                0x8c0280b0                _bss_end__ = .
+                0x8c0280b0                __bss_end__ = .
+                0x8c0280b0                . = ALIGN (0x4)
+                0x8c0280b0                . = ALIGN (0x4)
+                0x8c0280b0                __end__ = .
+                0x8c0280b0                _end = .
+                0x8c0280b0                PROVIDE (end, .)
+
+.stab
+ *(.stab)
+
+.stabstr
+ *(.stabstr)
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.comment        0x00000000      0x662
+ *(.comment)
+ .comment       0x00000000       0x2b ../src/main.o
+ .comment       0x0000002b       0x2b ../src/common/common.o
+ .comment       0x00000056       0x2b ../src/common/memFunctions.o
+ .comment       0x00000081       0x2b ../src/common/stringFunctions.o
+ .comment       0x000000ac       0x2b ../src/cpuArch/cpu.o
+ .comment       0x000000d7       0x2b ../src/exceptions/exceptionHandlers.o
+ .comment       0x00000102       0x2b ../src/hardware/hardwareLibrary.o
+ .comment       0x0000012d       0x2b ../src/hardware/sdram.o
+ .comment       0x00000158       0x2b ../src/hardware/sramInternal.o
+ .comment       0x00000183       0x2b ../src/hardware/timer32k.o
+ .comment       0x000001ae       0x2b ../src/hardware/prm.o
+ .comment       0x000001d9       0x2b ../src/hardware/clockManager.o
+ .comment       0x00000204       0x2b ../src/hardware/sysControlModule.o
+ .comment       0x0000022f       0x2b ../src/hardware/irqc.o
+ .comment       0x0000025a       0x2b ../src/hardware/LED.o
+ .comment       0x00000285       0x2b ../src/hardware/serial.o
+ .comment       0x000002b0       0x2b ../src/hardware/gptimer.o
+ .comment       0x000002db       0x2b ../src/hardware/gpmc.o
+ .comment       0x00000306       0x2b ../src/guestManager/guestContext.o
+ .comment       0x00000331       0x2b ../src/guestManager/blockCache.o
+ .comment       0x0000035c       0x2b ../src/guestManager/scheduler.o
+ .comment       0x00000387       0x2b ../src/linuxBoot/bootLinux.o
+ .comment       0x000003b2       0x2b ../src/linuxBoot/image.o
+ .comment       0x000003dd       0x2b ../src/instructionEmu/asm-dis.o
+ .comment       0x00000408       0x2b ../src/instructionEmu/commonInstrFunctions.o
+ .comment       0x00000433       0x2b ../src/instructionEmu/coprocInstructions.o
+ .comment       0x0000045e       0x2b ../src/instructionEmu/dataProcessInstr.o
+ .comment       0x00000489       0x2b ../src/instructionEmu/dataMoveInstr.o
+ .comment       0x000004b4       0x2b ../src/instructionEmu/miscInstructions.o
+ .comment       0x000004df       0x2b ../src/instructionEmu/scanner.o
+ .comment       0x0000050a       0x2b ../src/instructionEmu/decoder.o
+ .comment       0x00000535       0x2b ../src/memoryManager/addressing.o
+ .comment       0x00000560       0x2b ../src/memoryManager/cp15coproc.o
+ .comment       0x0000058b       0x2b ../src/memoryManager/frameAllocator.o
+ .comment       0x000005b6       0x2b ../src/memoryManager/pageTable.o
+ .comment       0x000005e1       0x2b ../src/memoryManager/mmu.o
+ .comment       0x0000060c       0x2b ../src/memoryManager/memoryProtection.o
+ .comment       0x00000637       0x2b ../src/memoryManager/globalMemoryMapper.o
+
+.debug
+ *(.debug)
+
+.line
+ *(.line)
+
+.debug_srcinfo
+ *(.debug_srcinfo)
+
+.debug_sfnames
+ *(.debug_sfnames)
+
+.debug_aranges  0x00000000      0x4c0
+ *(.debug_aranges)
+ .debug_aranges
+                0x00000000       0x20 ../src/main.o
+ .debug_aranges
+                0x00000020       0x20 ../src/common/common.o
+ .debug_aranges
+                0x00000040       0x20 ../src/common/memFunctions.o
+ .debug_aranges
+                0x00000060       0x20 ../src/common/stringFunctions.o
+ .debug_aranges
+                0x00000080       0x20 ../src/cpuArch/cpu.o
+ .debug_aranges
+                0x000000a0       0x20 ../src/exceptions/exceptionHandlers.o
+ .debug_aranges
+                0x000000c0       0x20 ../src/hardware/hardwareLibrary.o
+ .debug_aranges
+                0x000000e0       0x20 ../src/hardware/sdram.o
+ .debug_aranges
+                0x00000100       0x20 ../src/hardware/sramInternal.o
+ .debug_aranges
+                0x00000120       0x20 ../src/hardware/timer32k.o
+ .debug_aranges
+                0x00000140       0x20 ../src/hardware/prm.o
+ .debug_aranges
+                0x00000160       0x20 ../src/hardware/clockManager.o
+ .debug_aranges
+                0x00000180       0x20 ../src/hardware/sysControlModule.o
+ .debug_aranges
+                0x000001a0       0x20 ../src/hardware/irqc.o
+ .debug_aranges
+                0x000001c0       0x20 ../src/hardware/LED.o
+ .debug_aranges
+                0x000001e0       0x20 ../src/hardware/serial.o
+ .debug_aranges
+                0x00000200       0x20 ../src/hardware/gptimer.o
+ .debug_aranges
+                0x00000220       0x20 ../src/hardware/gpmc.o
+ .debug_aranges
+                0x00000240       0x20 ../src/guestManager/guestContext.o
+ .debug_aranges
+                0x00000260       0x20 ../src/guestManager/blockCache.o
+ .debug_aranges
+                0x00000280       0x20 ../src/guestManager/scheduler.o
+ .debug_aranges
+                0x000002a0       0x20 ../src/linuxBoot/bootLinux.o
+ .debug_aranges
+                0x000002c0       0x20 ../src/linuxBoot/image.o
+ .debug_aranges
+                0x000002e0       0x20 ../src/instructionEmu/asm-dis.o
+ .debug_aranges
+                0x00000300       0x20 ../src/instructionEmu/commonInstrFunctions.o
+ .debug_aranges
+                0x00000320       0x20 ../src/instructionEmu/coprocInstructions.o
+ .debug_aranges
+                0x00000340       0x20 ../src/instructionEmu/dataProcessInstr.o
+ .debug_aranges
+                0x00000360       0x20 ../src/instructionEmu/dataMoveInstr.o
+ .debug_aranges
+                0x00000380       0x20 ../src/instructionEmu/miscInstructions.o
+ .debug_aranges
+                0x000003a0       0x20 ../src/instructionEmu/scanner.o
+ .debug_aranges
+                0x000003c0       0x20 ../src/instructionEmu/decoder.o
+ .debug_aranges
+                0x000003e0       0x20 ../src/memoryManager/addressing.o
+ .debug_aranges
+                0x00000400       0x20 ../src/memoryManager/cp15coproc.o
+ .debug_aranges
+                0x00000420       0x20 ../src/memoryManager/frameAllocator.o
+ .debug_aranges
+                0x00000440       0x20 ../src/memoryManager/pageTable.o
+ .debug_aranges
+                0x00000460       0x20 ../src/memoryManager/mmu.o
+ .debug_aranges
+                0x00000480       0x20 ../src/memoryManager/memoryProtection.o
+ .debug_aranges
+                0x000004a0       0x20 ../src/memoryManager/globalMemoryMapper.o
+
+.debug_pubnames
+                0x00000000     0x2c5a
+ *(.debug_pubnames)
+ .debug_pubnames
+                0x00000000       0x95 ../src/main.o
+ .debug_pubnames
+                0x00000095       0x27 ../src/common/common.o
+ .debug_pubnames
+                0x000000bc       0xc0 ../src/common/memFunctions.o
+ .debug_pubnames
+                0x0000017c       0x4e ../src/common/stringFunctions.o
+ .debug_pubnames
+                0x000001ca       0xcb ../src/cpuArch/cpu.o
+ .debug_pubnames
+                0x00000295      0x108 ../src/exceptions/exceptionHandlers.o
+ .debug_pubnames
+                0x0000039d      0x355 ../src/hardware/hardwareLibrary.o
+ .debug_pubnames
+                0x000006f2       0x2f ../src/hardware/sdram.o
+ .debug_pubnames
+                0x00000721       0x56 ../src/hardware/sramInternal.o
+ .debug_pubnames
+                0x00000777       0x46 ../src/hardware/timer32k.o
+ .debug_pubnames
+                0x000007bd       0x9d ../src/hardware/prm.o
+ .debug_pubnames
+                0x0000085a      0x22f ../src/hardware/clockManager.o
+ .debug_pubnames
+                0x00000a89      0x16c ../src/hardware/sysControlModule.o
+ .debug_pubnames
+                0x00000bf5       0x94 ../src/hardware/irqc.o
+ .debug_pubnames
+                0x00000c89       0x47 ../src/hardware/LED.o
+ .debug_pubnames
+                0x00000cd0       0xc2 ../src/hardware/serial.o
+ .debug_pubnames
+                0x00000d92       0x90 ../src/hardware/gptimer.o
+ .debug_pubnames
+                0x00000e22       0x43 ../src/hardware/gpmc.o
+ .debug_pubnames
+                0x00000e65       0x9c ../src/guestManager/guestContext.o
+ .debug_pubnames
+                0x00000f01      0x114 ../src/guestManager/blockCache.o
+ .debug_pubnames
+                0x00001015       0x24 ../src/guestManager/scheduler.o
+ .debug_pubnames
+                0x00001039       0x3a ../src/linuxBoot/bootLinux.o
+ .debug_pubnames
+                0x00001073       0x35 ../src/linuxBoot/image.o
+ .debug_pubnames
+                0x000010a8       0x63 ../src/instructionEmu/asm-dis.o
+ .debug_pubnames
+                0x0000110b       0xf9 ../src/instructionEmu/commonInstrFunctions.o
+ .debug_pubnames
+                0x00001204      0x127 ../src/instructionEmu/coprocInstructions.o
+ .debug_pubnames
+                0x0000132b      0x1ca ../src/instructionEmu/dataProcessInstr.o
+ .debug_pubnames
+                0x000014f5      0x1c8 ../src/instructionEmu/dataMoveInstr.o
+ .debug_pubnames
+                0x000016bd      0xb18 ../src/instructionEmu/miscInstructions.o
+ .debug_pubnames
+                0x000021d5       0x38 ../src/instructionEmu/scanner.o
+ .debug_pubnames
+                0x0000220d      0x1c3 ../src/instructionEmu/decoder.o
+ .debug_pubnames
+                0x000023d0       0x8d ../src/memoryManager/addressing.o
+ .debug_pubnames
+                0x0000245d       0x49 ../src/memoryManager/cp15coproc.o
+ .debug_pubnames
+                0x000024a6      0x17b ../src/memoryManager/frameAllocator.o
+ .debug_pubnames
+                0x00002621      0x419 ../src/memoryManager/pageTable.o
+ .debug_pubnames
+                0x00002a3a      0x149 ../src/memoryManager/mmu.o
+ .debug_pubnames
+                0x00002b83       0xa9 ../src/memoryManager/memoryProtection.o
+ .debug_pubnames
+                0x00002c2c       0x2e ../src/memoryManager/globalMemoryMapper.o
+
+.debug_info     0x00000000    0x18d64
+ *(.debug_info .gnu.linkonce.wi.*)
+ .debug_info    0x00000000      0x9bd ../src/main.o
+ .debug_info    0x000009bd       0xca ../src/common/common.o
+ .debug_info    0x00000a87      0x300 ../src/common/memFunctions.o
+ .debug_info    0x00000d87      0x1c4 ../src/common/stringFunctions.o
+ .debug_info    0x00000f4b      0x482 ../src/cpuArch/cpu.o
+ .debug_info    0x000013cd      0x9b0 ../src/exceptions/exceptionHandlers.o
+ .debug_info    0x00001d7d     0x15be ../src/hardware/hardwareLibrary.o
+ .debug_info    0x0000333b      0x917 ../src/hardware/sdram.o
+ .debug_info    0x00003c52      0x902 ../src/hardware/sramInternal.o
+ .debug_info    0x00004554      0x8a1 ../src/hardware/timer32k.o
+ .debug_info    0x00004df5      0xbc2 ../src/hardware/prm.o
+ .debug_info    0x000059b7     0x1822 ../src/hardware/clockManager.o
+ .debug_info    0x000071d9     0x12de ../src/hardware/sysControlModule.o
+ .debug_info    0x000084b7      0x1c2 ../src/hardware/irqc.o
+ .debug_info    0x00008679       0xe1 ../src/hardware/LED.o
+ .debug_info    0x0000875a      0x3e0 ../src/hardware/serial.o
+ .debug_info    0x00008b3a      0x38f ../src/hardware/gptimer.o
+ .debug_info    0x00008ec9      0x9a2 ../src/hardware/gpmc.o
+ .debug_info    0x0000986b      0x894 ../src/guestManager/guestContext.o
+ .debug_info    0x0000a0ff      0x4b5 ../src/guestManager/blockCache.o
+ .debug_info    0x0000a5b4       0x71 ../src/guestManager/scheduler.o
+ .debug_info    0x0000a625      0x726 ../src/linuxBoot/bootLinux.o
+ .debug_info    0x0000ad4b      0x1cf ../src/linuxBoot/image.o
+ .debug_info    0x0000af1a      0x8aa ../src/instructionEmu/asm-dis.o
+ .debug_info    0x0000b7c4      0xc98 ../src/instructionEmu/commonInstrFunctions.o
+ .debug_info    0x0000c45c      0xb14 ../src/instructionEmu/coprocInstructions.o
+ .debug_info    0x0000cf70      0xd30 ../src/instructionEmu/dataProcessInstr.o
+ .debug_info    0x0000dca0     0x181f ../src/instructionEmu/dataMoveInstr.o
+ .debug_info    0x0000f4bf     0x2345 ../src/instructionEmu/miscInstructions.o
+ .debug_info    0x00011804      0x9cf ../src/instructionEmu/scanner.o
+ .debug_info    0x000121d3      0xdf0 ../src/instructionEmu/decoder.o
+ .debug_info    0x00012fc3      0x84f ../src/memoryManager/addressing.o
+ .debug_info    0x00013812      0x2f8 ../src/memoryManager/cp15coproc.o
+ .debug_info    0x00013b0a      0xc29 ../src/memoryManager/frameAllocator.o
+ .debug_info    0x00014733     0x2f6d ../src/memoryManager/pageTable.o
+ .debug_info    0x000176a0      0x608 ../src/memoryManager/mmu.o
+ .debug_info    0x00017ca8      0x902 ../src/memoryManager/memoryProtection.o
+ .debug_info    0x000185aa      0x7ba ../src/memoryManager/globalMemoryMapper.o
+
+.debug_abbrev   0x00000000     0x3fac
+ *(.debug_abbrev)
+ .debug_abbrev  0x00000000      0x1dd ../src/main.o
+ .debug_abbrev  0x000001dd       0x94 ../src/common/common.o
+ .debug_abbrev  0x00000271      0x10c ../src/common/memFunctions.o
+ .debug_abbrev  0x0000037d      0x10c ../src/common/stringFunctions.o
+ .debug_abbrev  0x00000489      0x195 ../src/cpuArch/cpu.o
+ .debug_abbrev  0x0000061e      0x185 ../src/exceptions/exceptionHandlers.o
+ .debug_abbrev  0x000007a3      0x2a8 ../src/hardware/hardwareLibrary.o
+ .debug_abbrev  0x00000a4b      0x17d ../src/hardware/sdram.o
+ .debug_abbrev  0x00000bc8      0x1bf ../src/hardware/sramInternal.o
+ .debug_abbrev  0x00000d87      0x1a6 ../src/hardware/timer32k.o
+ .debug_abbrev  0x00000f2d      0x260 ../src/hardware/prm.o
+ .debug_abbrev  0x0000118d      0x249 ../src/hardware/clockManager.o
+ .debug_abbrev  0x000013d6      0x213 ../src/hardware/sysControlModule.o
+ .debug_abbrev  0x000015e9       0xc5 ../src/hardware/irqc.o
+ .debug_abbrev  0x000016ae       0x79 ../src/hardware/LED.o
+ .debug_abbrev  0x00001727      0x1b8 ../src/hardware/serial.o
+ .debug_abbrev  0x000018df      0x13b ../src/hardware/gptimer.o
+ .debug_abbrev  0x00001a1a      0x1a0 ../src/hardware/gpmc.o
+ .debug_abbrev  0x00001bba      0x19e ../src/guestManager/guestContext.o
+ .debug_abbrev  0x00001d58      0x1b7 ../src/guestManager/blockCache.o
+ .debug_abbrev  0x00001f0f       0x3f ../src/guestManager/scheduler.o
+ .debug_abbrev  0x00001f4e      0x1b6 ../src/linuxBoot/bootLinux.o
+ .debug_abbrev  0x00002104       0xd2 ../src/linuxBoot/image.o
+ .debug_abbrev  0x000021d6      0x161 ../src/instructionEmu/asm-dis.o
+ .debug_abbrev  0x00002337      0x308 ../src/instructionEmu/commonInstrFunctions.o
+ .debug_abbrev  0x0000263f      0x16c ../src/instructionEmu/coprocInstructions.o
+ .debug_abbrev  0x000027ab      0x1e3 ../src/instructionEmu/dataProcessInstr.o
+ .debug_abbrev  0x0000298e      0x21f ../src/instructionEmu/dataMoveInstr.o
+ .debug_abbrev  0x00002bad      0x241 ../src/instructionEmu/miscInstructions.o
+ .debug_abbrev  0x00002dee      0x189 ../src/instructionEmu/scanner.o
+ .debug_abbrev  0x00002f77      0x216 ../src/instructionEmu/decoder.o
+ .debug_abbrev  0x0000318d      0x1a3 ../src/memoryManager/addressing.o
+ .debug_abbrev  0x00003330      0x142 ../src/memoryManager/cp15coproc.o
+ .debug_abbrev  0x00003472      0x21f ../src/memoryManager/frameAllocator.o
+ .debug_abbrev  0x00003691      0x407 ../src/memoryManager/pageTable.o
+ .debug_abbrev  0x00003a98      0x250 ../src/memoryManager/mmu.o
+ .debug_abbrev  0x00003ce8      0x19f ../src/memoryManager/memoryProtection.o
+ .debug_abbrev  0x00003e87      0x125 ../src/memoryManager/globalMemoryMapper.o
+
+.debug_line     0x00000000     0x5174
+ *(.debug_line)
+ .debug_line    0x00000000      0x194 ../src/main.o
+ .debug_line    0x00000194       0x5c ../src/common/common.o
+ .debug_line    0x000001f0      0x132 ../src/common/memFunctions.o
+ .debug_line    0x00000322       0xb6 ../src/common/stringFunctions.o
+ .debug_line    0x000003d8       0xcd ../src/cpuArch/cpu.o
+ .debug_line    0x000004a5      0x1a7 ../src/exceptions/exceptionHandlers.o
+ .debug_line    0x0000064c      0x638 ../src/hardware/hardwareLibrary.o
+ .debug_line    0x00000c84      0x142 ../src/hardware/sdram.o
+ .debug_line    0x00000dc6      0x150 ../src/hardware/sramInternal.o
+ .debug_line    0x00000f16      0x130 ../src/hardware/timer32k.o
+ .debug_line    0x00001046      0x211 ../src/hardware/prm.o
+ .debug_line    0x00001257      0x4b7 ../src/hardware/clockManager.o
+ .debug_line    0x0000170e      0x329 ../src/hardware/sysControlModule.o
+ .debug_line    0x00001a37       0xcd ../src/hardware/irqc.o
+ .debug_line    0x00001b04       0x73 ../src/hardware/LED.o
+ .debug_line    0x00001b77      0x4d3 ../src/hardware/serial.o
+ .debug_line    0x0000204a      0x1ee ../src/hardware/gptimer.o
+ .debug_line    0x00002238      0x157 ../src/hardware/gpmc.o
+ .debug_line    0x0000238f      0x20b ../src/guestManager/guestContext.o
+ .debug_line    0x0000259a      0x153 ../src/guestManager/blockCache.o
+ .debug_line    0x000026ed       0x52 ../src/guestManager/scheduler.o
+ .debug_line    0x0000273f       0xf4 ../src/linuxBoot/bootLinux.o
+ .debug_line    0x00002833       0xaa ../src/linuxBoot/image.o
+ .debug_line    0x000028dd      0x168 ../src/instructionEmu/asm-dis.o
+ .debug_line    0x00002a45      0x222 ../src/instructionEmu/commonInstrFunctions.o
+ .debug_line    0x00002c67      0x168 ../src/instructionEmu/coprocInstructions.o
+ .debug_line    0x00002dcf      0x1cf ../src/instructionEmu/dataProcessInstr.o
+ .debug_line    0x00002f9e      0x6cc ../src/instructionEmu/dataMoveInstr.o
+ .debug_line    0x0000366a      0x403 ../src/instructionEmu/miscInstructions.o
+ .debug_line    0x00003a6d      0x188 ../src/instructionEmu/scanner.o
+ .debug_line    0x00003bf5      0x2b6 ../src/instructionEmu/decoder.o
+ .debug_line    0x00003eab      0x147 ../src/memoryManager/addressing.o
+ .debug_line    0x00003ff2       0xed ../src/memoryManager/cp15coproc.o
+ .debug_line    0x000040df      0x30a ../src/memoryManager/frameAllocator.o
+ .debug_line    0x000043e9      0x9e3 ../src/memoryManager/pageTable.o
+ .debug_line    0x00004dcc      0x11e ../src/memoryManager/mmu.o
+ .debug_line    0x00004eea      0x148 ../src/memoryManager/memoryProtection.o
+ .debug_line    0x00005032      0x142 ../src/memoryManager/globalMemoryMapper.o
+
+.debug_frame    0x00000000     0x2f24
+ *(.debug_frame)
+ .debug_frame   0x00000000       0x88 ../src/main.o
+ .debug_frame   0x00000088       0x30 ../src/common/common.o
+ .debug_frame   0x000000b8       0xa8 ../src/common/memFunctions.o
+ .debug_frame   0x00000160       0x6c ../src/common/stringFunctions.o
+ .debug_frame   0x000001cc       0xb8 ../src/cpuArch/cpu.o
+ .debug_frame   0x00000284      0x118 ../src/exceptions/exceptionHandlers.o
+ .debug_frame   0x0000039c       0xb0 ../src/hardware/hardwareLibrary.o
+ .debug_frame   0x0000044c       0x50 ../src/hardware/sdram.o
+ .debug_frame   0x0000049c       0x5c ../src/hardware/sramInternal.o
+ .debug_frame   0x000004f8       0x58 ../src/hardware/timer32k.o
+ .debug_frame   0x00000550       0xd4 ../src/hardware/prm.o
+ .debug_frame   0x00000624      0x380 ../src/hardware/clockManager.o
+ .debug_frame   0x000009a4      0x1b8 ../src/hardware/sysControlModule.o
+ .debug_frame   0x00000b5c       0x80 ../src/hardware/irqc.o
+ .debug_frame   0x00000bdc       0x30 ../src/hardware/LED.o
+ .debug_frame   0x00000c0c       0xd0 ../src/hardware/serial.o
+ .debug_frame   0x00000cdc       0xb4 ../src/hardware/gptimer.o
+ .debug_frame   0x00000d90       0x64 ../src/hardware/gpmc.o
+ .debug_frame   0x00000df4       0x90 ../src/guestManager/guestContext.o
+ .debug_frame   0x00000e84      0x10c ../src/guestManager/blockCache.o
+ .debug_frame   0x00000f90       0x20 ../src/guestManager/scheduler.o
+ .debug_frame   0x00000fb0       0x30 ../src/linuxBoot/bootLinux.o
+ .debug_frame   0x00000fe0       0x50 ../src/linuxBoot/image.o
+ .debug_frame   0x00001030       0x40 ../src/instructionEmu/asm-dis.o
+ .debug_frame   0x00001070      0x128 ../src/instructionEmu/commonInstrFunctions.o
+ .debug_frame   0x00001198      0x16c ../src/instructionEmu/coprocInstructions.o
+ .debug_frame   0x00001304      0x238 ../src/instructionEmu/dataProcessInstr.o
+ .debug_frame   0x0000153c      0x2b0 ../src/instructionEmu/dataMoveInstr.o
+ .debug_frame   0x000017ec      0xca0 ../src/instructionEmu/miscInstructions.o
+ .debug_frame   0x0000248c       0x54 ../src/instructionEmu/scanner.o
+ .debug_frame   0x000024e0      0x104 ../src/instructionEmu/decoder.o
+ .debug_frame   0x000025e4       0x6c ../src/memoryManager/addressing.o
+ .debug_frame   0x00002650       0x6c ../src/memoryManager/cp15coproc.o
+ .debug_frame   0x000026bc      0x178 ../src/memoryManager/frameAllocator.o
+ .debug_frame   0x00002834      0x4d8 ../src/memoryManager/pageTable.o
+ .debug_frame   0x00002d0c      0x164 ../src/memoryManager/mmu.o
+ .debug_frame   0x00002e70       0x88 ../src/memoryManager/memoryProtection.o
+ .debug_frame   0x00002ef8       0x2c ../src/memoryManager/globalMemoryMapper.o
+
+.debug_str      0x00000000     0x47c2
+ *(.debug_str)
+ .debug_str     0x00000000      0x602 ../src/main.o
+                                0x62f (size before relaxing)
+ .debug_str     0x00000602       0x32 ../src/common/common.o
+                                 0xc2 (size before relaxing)
+ .debug_str     0x00000634      0x10c ../src/common/memFunctions.o
+                                0x1b9 (size before relaxing)
+ .debug_str     0x00000740       0x80 ../src/common/stringFunctions.o
+                                0x128 (size before relaxing)
+ .debug_str     0x000007c0       0xd7 ../src/cpuArch/cpu.o
+                                0x182 (size before relaxing)
+ .debug_str     0x00000897      0x219 ../src/exceptions/exceptionHandlers.o
+                                0x73c (size before relaxing)
+ .debug_str     0x00000ab0      0x2da ../src/hardware/hardwareLibrary.o
+                                0x7fa (size before relaxing)
+ .debug_str     0x00000d8a       0x3b ../src/hardware/sdram.o
+                                0x565 (size before relaxing)
+ .debug_str     0x00000dc5       0x57 ../src/hardware/sramInternal.o
+                                0x58f (size before relaxing)
+ .debug_str     0x00000e1c       0x5d ../src/hardware/timer32k.o
+                                0x58e (size before relaxing)
+ .debug_str     0x00000e79      0x1b3 ../src/hardware/prm.o
+                                0x6e2 (size before relaxing)
+ .debug_str     0x0000102c      0x66b ../src/hardware/clockManager.o
+                                0xba7 (size before relaxing)
+ .debug_str     0x00001697      0x77f ../src/hardware/sysControlModule.o
+                                0xca9 (size before relaxing)
+ .debug_str     0x00001e16       0xbf ../src/hardware/irqc.o
+                                0x15d (size before relaxing)
+ .debug_str     0x00001ed5       0x3b ../src/hardware/LED.o
+                                 0xca (size before relaxing)
+ .debug_str     0x00001f10       0xc2 ../src/hardware/serial.o
+                                0x17a (size before relaxing)
+ .debug_str     0x00001fd2       0xd8 ../src/hardware/gptimer.o
+                                0x183 (size before relaxing)
+ .debug_str     0x000020aa      0x13c ../src/hardware/gpmc.o
+                                0x66b (size before relaxing)
+ .debug_str     0x000021e6       0xa5 ../src/guestManager/guestContext.o
+                                0x5d3 (size before relaxing)
+ .debug_str     0x0000228b      0x14c ../src/guestManager/blockCache.o
+                                0x246 (size before relaxing)
+ .debug_str     0x000023d7       0x2e ../src/guestManager/scheduler.o
+                                 0xb7 (size before relaxing)
+ .debug_str     0x00002405      0x2e3 ../src/linuxBoot/bootLinux.o
+                                0x479 (size before relaxing)
+ .debug_str     0x000026e8       0x55 ../src/linuxBoot/image.o
+                                0x16a (size before relaxing)
+ .debug_str     0x0000273d       0xa3 ../src/instructionEmu/asm-dis.o
+                                0x5be (size before relaxing)
+ .debug_str     0x000027e0      0x193 ../src/instructionEmu/commonInstrFunctions.o
+                                0x6b5 (size before relaxing)
+ .debug_str     0x00002973      0x163 ../src/instructionEmu/coprocInstructions.o
+                                0x69c (size before relaxing)
+ .debug_str     0x00002ad6      0x19b ../src/instructionEmu/dataProcessInstr.o
+                                0x733 (size before relaxing)
+ .debug_str     0x00002c71      0x2be ../src/instructionEmu/dataMoveInstr.o
+                                0x82b (size before relaxing)
+ .debug_str     0x00002f2f      0x8f3 ../src/instructionEmu/miscInstructions.o
+                                0xf11 (size before relaxing)
+ .debug_str     0x00003822      0x106 ../src/instructionEmu/scanner.o
+                                0x68d (size before relaxing)
+ .debug_str     0x00003928      0x1a2 ../src/instructionEmu/decoder.o
+                                0x70f (size before relaxing)
+ .debug_str     0x00003aca       0xaf ../src/memoryManager/addressing.o
+                                0x5cd (size before relaxing)
+ .debug_str     0x00003b79       0x8f ../src/memoryManager/cp15coproc.o
+                                0x151 (size before relaxing)
+ .debug_str     0x00003c08      0x1d9 ../src/memoryManager/frameAllocator.o
+                                0x2b9 (size before relaxing)
+ .debug_str     0x00003de1      0x782 ../src/memoryManager/pageTable.o
+                                0xd5e (size before relaxing)
+ .debug_str     0x00004563      0x14d ../src/memoryManager/mmu.o
+                                0x2a5 (size before relaxing)
+ .debug_str     0x000046b0       0xc1 ../src/memoryManager/memoryProtection.o
+                                0x607 (size before relaxing)
+ .debug_str     0x00004771       0x51 ../src/memoryManager/globalMemoryMapper.o
+                                0x57c (size before relaxing)
+
+.debug_loc      0x00000000     0xcdf5
+ *(.debug_loc)
+ .debug_loc     0x00000000      0x113 ../src/main.o
+ .debug_loc     0x00000113       0x4f ../src/common/common.o
+ .debug_loc     0x00000162      0x2c9 ../src/common/memFunctions.o
+ .debug_loc     0x0000042b      0x1bd ../src/common/stringFunctions.o
+ .debug_loc     0x000005e8      0x18e ../src/cpuArch/cpu.o
+ .debug_loc     0x00000776      0x1b7 ../src/exceptions/exceptionHandlers.o
+ .debug_loc     0x0000092d      0x2f2 ../src/hardware/hardwareLibrary.o
+ .debug_loc     0x00000c1f      0x185 ../src/hardware/sdram.o
+ .debug_loc     0x00000da4      0x16a ../src/hardware/sramInternal.o
+ .debug_loc     0x00000f0e      0x185 ../src/hardware/timer32k.o
+ .debug_loc     0x00001093      0x620 ../src/hardware/prm.o
+ .debug_loc     0x000016b3     0x17d8 ../src/hardware/clockManager.o
+ .debug_loc     0x00002e8b      0x8a6 ../src/hardware/sysControlModule.o
+ .debug_loc     0x00003731       0x64 ../src/hardware/irqc.o
+ .debug_loc     0x00003795      0xdcb ../src/hardware/serial.o
+ .debug_loc     0x00004560      0x285 ../src/hardware/gptimer.o
+ .debug_loc     0x000047e5      0x1b7 ../src/hardware/gpmc.o
+ .debug_loc     0x0000499c      0x110 ../src/guestManager/guestContext.o
+ .debug_loc     0x00004aac      0x2fb ../src/guestManager/blockCache.o
+ .debug_loc     0x00004da7       0x5f ../src/linuxBoot/bootLinux.o
+ .debug_loc     0x00004e06       0x92 ../src/linuxBoot/image.o
+ .debug_loc     0x00004e98       0xea ../src/instructionEmu/asm-dis.o
+ .debug_loc     0x00004f82      0x6af ../src/instructionEmu/commonInstrFunctions.o
+ .debug_loc     0x00005631      0x3bd ../src/instructionEmu/coprocInstructions.o
+ .debug_loc     0x000059ee      0x75d ../src/instructionEmu/dataProcessInstr.o
+ .debug_loc     0x0000614b     0x1c5b ../src/instructionEmu/dataMoveInstr.o
+ .debug_loc     0x00007da6     0x1cae ../src/instructionEmu/miscInstructions.o
+ .debug_loc     0x00009a54      0x18c ../src/instructionEmu/scanner.o
+ .debug_loc     0x00009be0      0x46e ../src/instructionEmu/decoder.o
+ .debug_loc     0x0000a04e       0xc7 ../src/memoryManager/addressing.o
+ .debug_loc     0x0000a115      0x254 ../src/memoryManager/cp15coproc.o
+ .debug_loc     0x0000a369      0x8a4 ../src/memoryManager/frameAllocator.o
+ .debug_loc     0x0000ac0d     0x1e13 ../src/memoryManager/pageTable.o
+ .debug_loc     0x0000ca20       0xfc ../src/memoryManager/mmu.o
+ .debug_loc     0x0000cb1c      0x1b8 ../src/memoryManager/memoryProtection.o
+ .debug_loc     0x0000ccd4      0x121 ../src/memoryManager/globalMemoryMapper.o
+
+.debug_macinfo
+ *(.debug_macinfo)
+
+.debug_weaknames
+ *(.debug_weaknames)
+
+.debug_funcnames
+ *(.debug_funcnames)
+
+.debug_typenames
+ *(.debug_typenames)
+
+.debug_varnames
+ *(.debug_varnames)
+
+.debug_pubtypes
+ *(.debug_pubtypes)
+
+.debug_ranges   0x00000000     0x2b08
+ *(.debug_ranges)
+ .debug_ranges  0x00000000       0x18 ../src/main.o
+ .debug_ranges  0x00000018       0xc0 ../src/cpuArch/cpu.o
+ .debug_ranges  0x000000d8      0xe88 ../src/hardware/hardwareLibrary.o
+ .debug_ranges  0x00000f60       0x20 ../src/hardware/timer32k.o
+ .debug_ranges  0x00000f80       0x40 ../src/hardware/prm.o
+ .debug_ranges  0x00000fc0      0x1f0 ../src/hardware/serial.o
+ .debug_ranges  0x000011b0      0x108 ../src/hardware/gptimer.o
+ .debug_ranges  0x000012b8       0x78 ../src/guestManager/blockCache.o
+ .debug_ranges  0x00001330      0x170 ../src/linuxBoot/bootLinux.o
+ .debug_ranges  0x000014a0       0x98 ../src/instructionEmu/commonInstrFunctions.o
+ .debug_ranges  0x00001538       0x30 ../src/instructionEmu/coprocInstructions.o
+ .debug_ranges  0x00001568       0x88 ../src/instructionEmu/dataProcessInstr.o
+ .debug_ranges  0x000015f0      0x248 ../src/instructionEmu/dataMoveInstr.o
+ .debug_ranges  0x00001838      0x190 ../src/instructionEmu/miscInstructions.o
+ .debug_ranges  0x000019c8       0x20 ../src/instructionEmu/scanner.o
+ .debug_ranges  0x000019e8      0x220 ../src/instructionEmu/decoder.o
+ .debug_ranges  0x00001c08      0x3c0 ../src/memoryManager/frameAllocator.o
+ .debug_ranges  0x00001fc8      0xab8 ../src/memoryManager/pageTable.o
+ .debug_ranges  0x00002a80       0x70 ../src/memoryManager/mmu.o
+ .debug_ranges  0x00002af0       0x18 ../src/memoryManager/memoryProtection.o
+
+.stack          0x00080000        0x0
+                0x00080000                _stack = .
+ *(.stack)
+
+.ARM.attributes
+                0x00000000       0x31
+ *(.ARM.attributes)
+ .ARM.attributes
+                0x00000000       0x29 ../src/main.o
+ .ARM.attributes
+                0x00000029       0x29 ../src/common/common.o
+ .ARM.attributes
+                0x00000052       0x29 ../src/common/memFunctions.o
+ .ARM.attributes
+                0x0000007b       0x29 ../src/common/stringFunctions.o
+ .ARM.attributes
+                0x000000a4       0x29 ../src/cpuArch/cpu.o
+ .ARM.attributes
+                0x000000cd       0x27 ../src/exceptions/exceptionHandlers.o
+ .ARM.attributes
+                0x000000f4       0x29 ../src/hardware/hardwareLibrary.o
+ .ARM.attributes
+                0x0000011d       0x27 ../src/hardware/sdram.o
+ .ARM.attributes
+                0x00000144       0x29 ../src/hardware/sramInternal.o
+ .ARM.attributes
+                0x0000016d       0x29 ../src/hardware/timer32k.o
+ .ARM.attributes
+                0x00000196       0x27 ../src/hardware/prm.o
+ .ARM.attributes
+                0x000001bd       0x27 ../src/hardware/clockManager.o
+ .ARM.attributes
+                0x000001e4       0x27 ../src/hardware/sysControlModule.o
+ .ARM.attributes
+                0x0000020b       0x29 ../src/hardware/irqc.o
+ .ARM.attributes
+                0x00000234       0x29 ../src/hardware/LED.o
+ .ARM.attributes
+                0x0000025d       0x29 ../src/hardware/serial.o
+ .ARM.attributes
+                0x00000286       0x27 ../src/hardware/gptimer.o
+ .ARM.attributes
+                0x000002ad       0x27 ../src/hardware/gpmc.o
+ .ARM.attributes
+                0x000002d4       0x29 ../src/guestManager/guestContext.o
+ .ARM.attributes
+                0x000002fd       0x29 ../src/guestManager/blockCache.o
+ .ARM.attributes
+                0x00000326       0x27 ../src/guestManager/scheduler.o
+ .ARM.attributes
+                0x0000034d       0x29 ../src/linuxBoot/bootLinux.o
+ .ARM.attributes
+                0x00000376       0x27 ../src/linuxBoot/image.o
+ .ARM.attributes
+                0x0000039d       0x27 ../src/instructionEmu/asm-dis.o
+ .ARM.attributes
+                0x000003c4       0x29 ../src/instructionEmu/commonInstrFunctions.o
+ .ARM.attributes
+                0x000003ed       0x27 ../src/instructionEmu/coprocInstructions.o
+ .ARM.attributes
+                0x00000414       0x27 ../src/instructionEmu/dataProcessInstr.o
+ .ARM.attributes
+                0x0000043b       0x27 ../src/instructionEmu/dataMoveInstr.o
+ .ARM.attributes
+                0x00000462       0x29 ../src/instructionEmu/miscInstructions.o
+ .ARM.attributes
+                0x0000048b       0x27 ../src/instructionEmu/scanner.o
+ .ARM.attributes
+                0x000004b2       0x29 ../src/instructionEmu/decoder.o
+ .ARM.attributes
+                0x000004db       0x27 ../src/memoryManager/addressing.o
+ .ARM.attributes
+                0x00000502       0x29 ../src/memoryManager/cp15coproc.o
+ .ARM.attributes
+                0x0000052b       0x29 ../src/memoryManager/frameAllocator.o
+ .ARM.attributes
+                0x00000554       0x29 ../src/memoryManager/pageTable.o
+ .ARM.attributes
+                0x0000057d       0x29 ../src/memoryManager/mmu.o
+ .ARM.attributes
+                0x000005a6       0x29 ../src/memoryManager/memoryProtection.o
+ .ARM.attributes
+                0x000005cf       0x27 ../src/memoryManager/globalMemoryMapper.o
+ .ARM.attributes
+                0x000005f6       0x23 ../src/startup.o
+ .ARM.attributes
+                0x00000619       0x23 ../src/cpuArch/cache.o
+ .ARM.attributes
+                0x0000063c       0x23 ../src/linuxBoot/callKernel.o
+ *(.gnu.attributes)
+
+.note.gnu.arm.ident
+ *(.note.gnu.arm.ident)
+
+/DISCARD/
+ *(.note.GNU-stack)
+ *(.gnu_debuglink)
+OUTPUT(hypervisor.elf elf32-littlearm)
+
+Cross Reference Table
+
+Symbol                                            File
+adcInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+addInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+addLargePtEntry                                   ../src/memoryManager/pageTable.o
+addNewLargeDescriptor                             ../src/memoryManager/pageTable.o
+addNewPageTableDescriptor                         ../src/memoryManager/pageTable.o
+addNewSectionDescriptor                           ../src/memoryManager/pageTable.o
+addNewSmallDescriptor                             ../src/memoryManager/pageTable.o
+addProtection                                     ../src/memoryManager/memoryProtection.o
+                                                  ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/addressing.o
+                                                  ../src/instructionEmu/scanner.o
+addSectionPtEntry                                 ../src/memoryManager/pageTable.o
+addSmallPtEntry                                   ../src/memoryManager/pageTable.o
+addToBlockCache                                   ../src/guestManager/blockCache.o
+                                                  ../src/instructionEmu/scanner.o
+addrToOffset                                      ../src/memoryManager/frameAllocator.o
+allocFrame                                        ../src/memoryManager/frameAllocator.o
+                                                  ../src/memoryManager/memoryProtection.o
+                                                  ../src/memoryManager/pageTable.o
+allocFrameAddr                                    ../src/memoryManager/frameAllocator.o
+allocMultipleFrames                               ../src/memoryManager/frameAllocator.o
+                                                  ../src/memoryManager/pageTable.o
+andInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+arithLogicOp                                      ../src/instructionEmu/dataProcessInstr.o
+armExpandImm12                                    ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/dataProcessInstr.o
+arm_coproc_opcodes                                ../src/instructionEmu/asm-dis.o
+arm_opcodes                                       ../src/instructionEmu/asm-dis.o
+asrInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+attachDevice                                      ../src/hardware/hardwareLibrary.o
+bInstruction                                      ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+bfcInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+bfiInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+bicInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+bkptInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+blxInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+bootRomPublic                                     ../src/hardware/hardwareLibrary.o
+bootRomPublicName                                 ../src/hardware/hardwareLibrary.o
+bootRomSecure                                     ../src/hardware/hardwareLibrary.o
+bootRomSecureName                                 ../src/hardware/hardwareLibrary.o
+branchBlockTransferInstructions                   ../src/instructionEmu/decoder.o
+bs32                                              ../src/common/common.o
+                                                  ../src/linuxBoot/image.o
+bxInstruction                                     ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+bxjInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+callKernel                                        ../src/linuxBoot/callKernel.o
+                                                  ../src/linuxBoot/bootLinux.o
+categories                                        ../src/instructionEmu/decoder.o
+cdp2Instruction                                   ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+cdpInstruction                                    ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+checkBlockCache                                   ../src/guestManager/blockCache.o
+                                                  ../src/instructionEmu/scanner.o
+checkProtectionArray                              ../src/memoryManager/memoryProtection.o
+chunkList                                         ../src/common/memFunctions.o
+chunkListRoot                                     ../src/common/memFunctions.o
+cleanup_before_linux                              ../src/cpuArch/cpu.o
+                                                  ../src/linuxBoot/bootLinux.o
+clearCache                                        ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/addressing.o
+clearTLB                                          ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/addressing.o
+clearTLBbyMVA                                     ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/pageTable.o
+clockMan                                          ../src/hardware/clockManager.o
+clockManager                                      ../src/hardware/hardwareLibrary.o
+clockManagerName                                  ../src/hardware/hardwareLibrary.o
+clrexInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+clzInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+cmnInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+cmpInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+compile_time_check_memory_protection              ../src/memoryManager/memoryProtection.o
+copyLargeEntry                                    ../src/memoryManager/pageTable.o
+copyPageTable                                     ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/addressing.o
+copyPageTableEntry                                ../src/memoryManager/pageTable.o
+copySectionEntry                                  ../src/memoryManager/pageTable.o
+copySmallEntry                                    ../src/memoryManager/pageTable.o
+copySuperSectionEntry                             ../src/memoryManager/pageTable.o
+countBitsSet                                      ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+cpsInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+cpsidInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+cpsieInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+crbIndex                                          ../src/memoryManager/cp15coproc.o
+createGuestOSPageTable                            ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/addressing.o
+createHypervisorPageTable                         ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/addressing.o
+createNew1stLevelPageTable                        ../src/memoryManager/pageTable.o
+createVirtualMachineGPAtoRPA                      ../src/memoryManager/addressing.o
+                                                  ../src/linuxBoot/bootLinux.o
+dataBarrier                                       ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/addressing.o
+dataProcMiscInstructions_op0                      ../src/instructionEmu/decoder.o
+dataProcMiscInstructions_op1                      ../src/instructionEmu/decoder.o
+data_abort_handler                                ../src/startup.o
+data_abort_handler_privileged_mode                ../src/startup.o
+dbgInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+dcache_disable                                    ../src/cpuArch/cpu.o
+dcache_enable                                     ../src/cpuArch/cpu.o
+deassertInterrupt                                 ../src/hardware/gptimer.o
+                                                  ../src/exceptions/exceptionHandlers.o
+decodeBranchBlockTransfer                         ../src/instructionEmu/decoder.o
+decodeDataProcMisc                                ../src/instructionEmu/decoder.o
+decodeInstr                                       ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/scanner.o
+decodeInstruction                                 ../src/instructionEmu/asm-dis.o
+decodeLoadStoreWordByte                           ../src/instructionEmu/decoder.o
+decodeMedia                                       ../src/instructionEmu/decoder.o
+decodeShift                                       ../src/instructionEmu/commonInstrFunctions.o
+decodeShiftImmediate                              ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/dataProcessInstr.o
+decodeSvcCoproc                                   ../src/instructionEmu/decoder.o
+decodeTopLevelCategory                            ../src/instructionEmu/decoder.o
+decodeUnconditional                               ../src/instructionEmu/decoder.o
+disableHypervisorCaches                           ../src/memoryManager/pageTable.o
+disable_interrupts                                ../src/cpuArch/cpu.o
+dmbInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+do_data_abort                                     ../src/exceptions/exceptionHandlers.o
+                                                  ../src/startup.o
+do_data_abort_hypervisor                          ../src/exceptions/exceptionHandlers.o
+                                                  ../src/startup.o
+do_fiq                                            ../src/exceptions/exceptionHandlers.o
+                                                  ../src/startup.o
+do_irq                                            ../src/exceptions/exceptionHandlers.o
+                                                  ../src/startup.o
+do_linux_boot                                     ../src/linuxBoot/bootLinux.o
+                                                  ../src/main.o
+do_monitor_mode                                   ../src/exceptions/exceptionHandlers.o
+                                                  ../src/startup.o
+do_monitor_mode_hypervisor                        ../src/exceptions/exceptionHandlers.o
+                                                  ../src/startup.o
+do_prefetch_abort                                 ../src/exceptions/exceptionHandlers.o
+                                                  ../src/startup.o
+do_prefetch_abort_hypervisor                      ../src/exceptions/exceptionHandlers.o
+                                                  ../src/startup.o
+do_software_interrupt                             ../src/exceptions/exceptionHandlers.o
+                                                  ../src/startup.o
+do_undefined                                      ../src/exceptions/exceptionHandlers.o
+                                                  ../src/startup.o
+do_undefined_hypervisor                           ../src/exceptions/exceptionHandlers.o
+                                                  ../src/startup.o
+dsbInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+dump2ndLevel                                      ../src/memoryManager/pageTable.o
+dump2ndVirtAddr                                   ../src/memoryManager/pageTable.o
+dumpBlockCacheEntry                               ../src/guestManager/blockCache.o
+dumpGptRegisters                                  ../src/hardware/gptimer.o
+dumpGuestContext                                  ../src/guestManager/guestContext.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/hardware/hardwareLibrary.o
+                                                  ../src/exceptions/exceptionHandlers.o
+dumpHdrInfo                                       ../src/linuxBoot/image.o
+dumpInstrString                                   ../src/instructionEmu/asm-dis.o
+                                                  ../src/instructionEmu/decoder.o
+dumpInstruction                                   ../src/instructionEmu/decoder.o
+dumpLargePage                                     ../src/memoryManager/pageTable.o
+dumpMallocs                                       ../src/common/memFunctions.o
+dumpPageTable                                     ../src/memoryManager/pageTable.o
+                                                  ../src/exceptions/exceptionHandlers.o
+dumpSection                                       ../src/memoryManager/pageTable.o
+dumpSmallPage                                     ../src/memoryManager/pageTable.o
+dumpSuperSection                                  ../src/memoryManager/pageTable.o
+dumpVirtAddr                                      ../src/memoryManager/pageTable.o
+emulateLoadStoreGeneric                           ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/exceptions/exceptionHandlers.o
+enable_interrupts                                 ../src/cpuArch/cpu.o
+eorInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+error_function                                    ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/memoryManager/cp15coproc.o
+                                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/coprocInstructions.o
+evalCC                                            ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/coprocInstructions.o
+explodeCache                                      ../src/guestManager/blockCache.o
+                                                  ../src/memoryManager/addressing.o
+findEntryForAddress                               ../src/guestManager/blockCache.o
+findVAforPA                                       ../src/memoryManager/pageTable.o
+fiq_handler                                       ../src/startup.o
+frameTable                                        ../src/memoryManager/frameAllocator.o
+freeFrame                                         ../src/memoryManager/frameAllocator.o
+freeFrame_offset                                  ../src/memoryManager/frameAllocator.o
+freeMultipleFrames                                ../src/memoryManager/frameAllocator.o
+freePtr                                           ../src/common/memFunctions.o
+gContext                                          ../src/main.o
+get1stLevelPtDescriptorAddr                       ../src/memoryManager/pageTable.o
+                                                  ../src/instructionEmu/scanner.o
+get2ndLevelPtDescriptor                           ../src/memoryManager/pageTable.o
+                                                  ../src/instructionEmu/scanner.o
+getBlockCacheEntry                                ../src/guestManager/blockCache.o
+                                                  ../src/instructionEmu/scanner.o
+getCorrectBaseAddr                                ../src/hardware/gptimer.o
+getCregVal                                        ../src/memoryManager/cp15coproc.o
+                                                  ../src/instructionEmu/coprocInstructions.o
+getDFAR                                           ../src/memoryManager/mmu.o
+                                                  ../src/exceptions/exceptionHandlers.o
+getDFSR                                           ../src/memoryManager/mmu.o
+                                                  ../src/exceptions/exceptionHandlers.o
+getDomainMaxOffset                                ../src/memoryManager/frameAllocator.o
+getDomainOffset                                   ../src/memoryManager/frameAllocator.o
+getFreeFrames                                     ../src/memoryManager/frameAllocator.o
+getGuestContext                                   ../src/main.o
+                                                  ../src/memoryManager/memoryProtection.o
+                                                  ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/addressing.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/linuxBoot/bootLinux.o
+                                                  ../src/hardware/gpmc.o
+                                                  ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/clockManager.o
+                                                  ../src/hardware/prm.o
+                                                  ../src/hardware/timer32k.o
+                                                  ../src/hardware/sramInternal.o
+                                                  ../src/hardware/sdram.o
+                                                  ../src/hardware/hardwareLibrary.o
+                                                  ../src/exceptions/exceptionHandlers.o
+getHash                                           ../src/common/common.o
+                                                  ../src/instructionEmu/scanner.o
+getIFAR                                           ../src/memoryManager/mmu.o
+getIFSR                                           ../src/memoryManager/mmu.o
+getImageHeader                                    ../src/linuxBoot/image.o
+                                                  ../src/main.o
+getIrqNumber                                      ../src/hardware/irqc.o
+                                                  ../src/exceptions/exceptionHandlers.o
+getPageEndAddr                                    ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/memoryProtection.o
+getPageTableEntry                                 ../src/memoryManager/pageTable.o
+getPhysicalAddress                                ../src/memoryManager/pageTable.o
+                                                  ../src/hardware/gpmc.o
+                                                  ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/clockManager.o
+                                                  ../src/hardware/prm.o
+                                                  ../src/hardware/timer32k.o
+                                                  ../src/hardware/sramInternal.o
+                                                  ../src/hardware/sdram.o
+                                                  ../src/hardware/hardwareLibrary.o
+gpio1                                             ../src/hardware/hardwareLibrary.o
+gpio1Name                                         ../src/hardware/hardwareLibrary.o
+gpmc                                              ../src/hardware/gpmc.o
+gpmcModule                                        ../src/hardware/hardwareLibrary.o
+gpmcModuleName                                    ../src/hardware/hardwareLibrary.o
+gptimer1                                          ../src/hardware/hardwareLibrary.o
+gptimer1Name                                      ../src/hardware/hardwareLibrary.o
+guestContextSpace                                 ../src/startup.o
+guestEnableVirtMem                                ../src/memoryManager/addressing.o
+                                                  ../src/memoryManager/cp15coproc.o
+guestInPrivMode                                   ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/miscInstructions.o
+guestSecondLvlPageTables                          ../src/memoryManager/pageTable.o
+heapEnd                                           ../src/common/memFunctions.o
+heapSize                                          ../src/common/memFunctions.o
+heapStart                                         ../src/common/memFunctions.o
+hypervisorPtd                                     ../src/memoryManager/pageTable.o
+icache_disable                                    ../src/cpuArch/cpu.o
+icache_enable                                     ../src/cpuArch/cpu.o
+initCRB                                           ../src/memoryManager/cp15coproc.o
+                                                  ../src/guestManager/guestContext.o
+initClockManager                                  ../src/hardware/clockManager.o
+                                                  ../src/hardware/hardwareLibrary.o
+initGpmc                                          ../src/hardware/gpmc.o
+                                                  ../src/hardware/hardwareLibrary.o
+initGuestContext                                  ../src/guestManager/guestContext.o
+                                                  ../src/main.o
+initPrm                                           ../src/hardware/prm.o
+                                                  ../src/hardware/hardwareLibrary.o
+initSysControlModule                              ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/hardwareLibrary.o
+initTimer32k                                      ../src/hardware/timer32k.o
+                                                  ../src/hardware/hardwareLibrary.o
+initialiseBlockCache                              ../src/guestManager/blockCache.o
+                                                  ../src/guestManager/guestContext.o
+initialiseDevice                                  ../src/hardware/hardwareLibrary.o
+initialiseFrameTable                              ../src/memoryManager/frameAllocator.o
+                                                  ../src/main.o
+initialiseGuestShadowPageTable                    ../src/memoryManager/addressing.o
+                                                  ../src/memoryManager/cp15coproc.o
+initialiseHardwareLibrary                         ../src/hardware/hardwareLibrary.o
+                                                  ../src/main.o
+initialiseInterruptController                     ../src/hardware/irqc.o
+                                                  ../src/main.o
+initialiseMemoryProtection                        ../src/memoryManager/memoryProtection.o
+                                                  ../src/guestManager/guestContext.o
+initialiseVirtualAddressing                       ../src/memoryManager/addressing.o
+                                                  ../src/main.o
+initrdAddr                                        ../src/main.o
+intcDumpRegisters                                 ../src/hardware/irqc.o
+invalidDataMoveTrap                               ../src/instructionEmu/dataMoveInstr.o
+invalidDataProcTrap                               ../src/instructionEmu/dataProcessInstr.o
+invalid_instruction                               ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/coprocInstructions.o
+irq_handler                                       ../src/startup.o
+isAddrInGuestPT                                   ../src/memoryManager/pageTable.o
+                                                  ../src/hardware/sdram.o
+isAddressInDevice                                 ../src/hardware/hardwareLibrary.o
+isDomainValid                                     ../src/memoryManager/frameAllocator.o
+isFrameFree                                       ../src/memoryManager/frameAllocator.o
+isFrameFree_offset                                ../src/memoryManager/frameAllocator.o
+isbInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+kernAddr                                          ../src/main.o
+l2_cache_disable                                  ../src/cpuArch/cpu.o
+l2_cache_enable                                   ../src/cpuArch/cpu.o
+l3Interconnect                                    ../src/hardware/hardwareLibrary.o
+l3InterconnectName                                ../src/hardware/hardwareLibrary.o
+l4CoreWakeupInt                                   ../src/hardware/hardwareLibrary.o
+l4CoreWakeupIntName                               ../src/hardware/hardwareLibrary.o
+l4IntCore                                         ../src/hardware/hardwareLibrary.o
+l4IntCoreName                                     ../src/hardware/hardwareLibrary.o
+l4Interconnect                                    ../src/hardware/hardwareLibrary.o
+l4InterconnectName                                ../src/hardware/hardwareLibrary.o
+largeMapMemory                                    ../src/memoryManager/pageTable.o
+ldc2Instruction                                   ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+ldcInstruction                                    ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+ldmInstruction                                    ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ldrInstruction                                    ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ldrbInstruction                                   ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+ldrdInstruction                                   ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ldrexInstruction                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ldrexbInstruction                                 ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ldrexdInstruction                                 ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ldrexhInstruction                                 ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ldrhInstruction                                   ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ldrhtInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ledPtrClear                                       ../src/hardware/LED.o
+ledPtrSet                                         ../src/hardware/LED.o
+loadCamCm                                         ../src/hardware/clockManager.o
+loadClockControlCm                                ../src/hardware/clockManager.o
+loadClockControlPrm                               ../src/hardware/prm.o
+loadClockManager                                  ../src/hardware/clockManager.o
+                                                  ../src/hardware/hardwareLibrary.o
+loadCoreCm                                        ../src/hardware/clockManager.o
+loadDssCm                                         ../src/hardware/clockManager.o
+loadEmuCm                                         ../src/hardware/clockManager.o
+loadGeneralScm                                    ../src/hardware/sysControlModule.o
+loadGeneralWkupScm                                ../src/hardware/sysControlModule.o
+loadGeneric                                       ../src/hardware/hardwareLibrary.o
+loadGlobalRegCm                                   ../src/hardware/clockManager.o
+loadGlobalRegPrm                                  ../src/hardware/prm.o
+loadGpmc                                          ../src/hardware/gpmc.o
+                                                  ../src/hardware/hardwareLibrary.o
+loadGuestGPR                                      ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/coprocInstructions.o
+loadInterfaceScm                                  ../src/hardware/sysControlModule.o
+loadIva2Cm                                        ../src/hardware/clockManager.o
+loadMemWkupScm                                    ../src/hardware/sysControlModule.o
+loadMpuCm                                         ../src/hardware/clockManager.o
+loadNeonCm                                        ../src/hardware/clockManager.o
+loadOcpSystemCm                                   ../src/hardware/clockManager.o
+loadPadconfsScm                                   ../src/hardware/sysControlModule.o
+loadPadconfsWkupScm                               ../src/hardware/sysControlModule.o
+loadPerCm                                         ../src/hardware/clockManager.o
+loadPrm                                           ../src/hardware/prm.o
+                                                  ../src/hardware/hardwareLibrary.o
+loadSdram                                         ../src/hardware/sdram.o
+                                                  ../src/hardware/hardwareLibrary.o
+loadSgxCm                                         ../src/hardware/clockManager.o
+loadSramInternal                                  ../src/hardware/sramInternal.o
+                                                  ../src/hardware/hardwareLibrary.o
+loadStoreWordByteInstructions                     ../src/instructionEmu/decoder.o
+loadSysCtrlModule                                 ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/hardwareLibrary.o
+loadTimer32k                                      ../src/hardware/timer32k.o
+                                                  ../src/hardware/hardwareLibrary.o
+loadUsbHostCm                                     ../src/hardware/clockManager.o
+loadWkupCm                                        ../src/hardware/clockManager.o
+lslInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+lsrInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+main                                              ../src/main.o
+mallocBytes                                       ../src/common/memFunctions.o
+                                                  ../src/hardware/gpmc.o
+                                                  ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/clockManager.o
+                                                  ../src/hardware/prm.o
+                                                  ../src/main.o
+mallocInit                                        ../src/common/memFunctions.o
+                                                  ../src/main.o
+mapGuestDomain                                    ../src/memoryManager/pageTable.o
+mapHypervisorMemory                               ../src/memoryManager/pageTable.o
+markFrameUsed_offset                              ../src/memoryManager/frameAllocator.o
+maskInterrupt                                     ../src/hardware/irqc.o
+maxEntries                                        ../src/memoryManager/memoryProtection.o
+mcr2Instruction                                   ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+mcrInstruction                                    ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+mcrr2Instruction                                  ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+mcrrInstruction                                   ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+mediaInstructions                                 ../src/instructionEmu/decoder.o
+memmove                                           ../src/common/memFunctions.o
+                                                  ../src/linuxBoot/bootLinux.o
+memset                                            ../src/common/memFunctions.o
+                                                  ../src/memoryManager/memoryProtection.o
+                                                  ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/frameAllocator.o
+                                                  ../src/hardware/gpmc.o
+                                                  ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/clockManager.o
+                                                  ../src/hardware/prm.o
+                                                  ../src/main.o
+mlaInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+mlsInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+mmuDisableVirtAddr                                ../src/memoryManager/mmu.o
+mmuEnableVirtAddr                                 ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/addressing.o
+mmuGetPt0                                         ../src/memoryManager/mmu.o
+                                                  ../src/instructionEmu/scanner.o
+mmuInit                                           ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/addressing.o
+mmuInsertPt0                                      ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/addressing.o
+mmuInsertPt1                                      ../src/memoryManager/mmu.o
+mmu_compile_time_check                            ../src/memoryManager/mmu.o
+monitor_mode_handler                              ../src/startup.o
+monitor_mode_handler_privileged_mode              ../src/startup.o
+movInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+movtInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+movwInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+mrc2Instruction                                   ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+mrcInstruction                                    ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+mrrc2Instruction                                  ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+mrrcInstruction                                   ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+mrsInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+msrInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+mulInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+mvnInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+newFrameAllocationTable                           ../src/memoryManager/frameAllocator.o
+nopInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+nrOfChunksAllocd                                  ../src/common/memFunctions.o
+offsetToAddr                                      ../src/memoryManager/frameAllocator.o
+onChipMemory                                      ../src/hardware/hardwareLibrary.o
+onChipMemoryName                                  ../src/hardware/hardwareLibrary.o
+orrInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+pageTableEdit                                     ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/addressing.o
+                                                  ../src/hardware/sdram.o
+parseCommandline                                  ../src/main.o
+pkhbtInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+pkhtbInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+pldInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+pliInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+popLdmInstruction                                 ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+popLdrInstruction                                 ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/asm-dis.o
+populateDramBanks                                 ../src/linuxBoot/bootLinux.o
+prMan                                             ../src/hardware/prm.o
+prefetch_abort_handler                            ../src/startup.o
+prefetch_abort_handler_privileged_mode            ../src/startup.o
+printDataAbort                                    ../src/memoryManager/mmu.o
+                                                  ../src/exceptions/exceptionHandlers.o
+printPrefetchAbort                                ../src/memoryManager/mmu.o
+                                                  ../src/exceptions/exceptionHandlers.o
+printUsage                                        ../src/main.o
+printableChar                                     ../src/hardware/serial.o
+prm                                               ../src/hardware/hardwareLibrary.o
+prmName                                           ../src/hardware/hardwareLibrary.o
+protectScannedBlock                               ../src/instructionEmu/scanner.o
+pt_compile_time_check                             ../src/memoryManager/pageTable.o
+q0bus                                             ../src/hardware/hardwareLibrary.o
+q0busName                                         ../src/hardware/hardwareLibrary.o
+q1bus                                             ../src/hardware/hardwareLibrary.o
+q1busName                                         ../src/hardware/hardwareLibrary.o
+q2bus                                             ../src/hardware/hardwareLibrary.o
+q2busName                                         ../src/hardware/hardwareLibrary.o
+q3bus                                             ../src/hardware/hardwareLibrary.o
+q3busName                                         ../src/hardware/hardwareLibrary.o
+qadd16Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+qadd8Instruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+qaddInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+qaddsubxInstruction                               ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+qdaddInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+qdsubInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+qsub16Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+qsub8Instruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+qsubInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+qsubaddxInstruction                               ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+rbitInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+registerBlockCache                                ../src/guestManager/guestContext.o
+                                                  ../src/main.o
+registerCrb                                       ../src/guestManager/guestContext.o
+                                                  ../src/main.o
+registerGuestContext                              ../src/main.o
+                                                  ../src/startup.o
+registerGuestHandler                              ../src/hardware/sramInternal.o
+registerHardwareLibrary                           ../src/guestManager/guestContext.o
+                                                  ../src/main.o
+registerMemoryProtection                          ../src/guestManager/guestContext.o
+                                                  ../src/main.o
+removeCacheEntry                                  ../src/guestManager/blockCache.o
+removePageTableEntry                              ../src/memoryManager/pageTable.o
+removeProtection                                  ../src/memoryManager/memoryProtection.o
+replicateLargeEntry                               ../src/memoryManager/pageTable.o
+resetAndNewIrq                                    ../src/hardware/irqc.o
+                                                  ../src/exceptions/exceptionHandlers.o
+resolveCacheConflict                              ../src/guestManager/blockCache.o
+rev16Instruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+revInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+revshInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+rfeInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+rorInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+rorVal                                            ../src/instructionEmu/commonInstrFunctions.o
+rrxInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+rsbInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+rscInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sadd16Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sadd8Instruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+saddsubxInstruction                               ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sbcInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+scanBlock                                         ../src/instructionEmu/scanner.o
+                                                  ../src/linuxBoot/bootLinux.o
+                                                  ../src/exceptions/exceptionHandlers.o
+scheduleGuest                                     ../src/guestManager/scheduler.o
+                                                  ../src/exceptions/exceptionHandlers.o
+sdram                                             ../src/hardware/hardwareLibrary.o
+sdramName                                         ../src/hardware/hardwareLibrary.o
+sectionMapMemory                                  ../src/memoryManager/pageTable.o
+selInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+serial_ERROR                                      ../src/hardware/serial.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/memoryManager/memoryProtection.o
+                                                  ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/frameAllocator.o
+                                                  ../src/memoryManager/addressing.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/scanner.o
+                                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/hardware/gpmc.o
+                                                  ../src/hardware/gptimer.o
+                                                  ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/clockManager.o
+                                                  ../src/hardware/prm.o
+                                                  ../src/hardware/timer32k.o
+                                                  ../src/hardware/sramInternal.o
+                                                  ../src/hardware/sdram.o
+                                                  ../src/hardware/hardwareLibrary.o
+                                                  ../src/exceptions/exceptionHandlers.o
+                                                  ../src/common/memFunctions.o
+                                                  ../src/main.o
+serial_newline                                    ../src/hardware/serial.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/memoryManager/memoryProtection.o
+                                                  ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/cp15coproc.o
+                                                  ../src/memoryManager/addressing.o
+                                                  ../src/instructionEmu/scanner.o
+                                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/asm-dis.o
+                                                  ../src/linuxBoot/image.o
+                                                  ../src/guestManager/blockCache.o
+                                                  ../src/guestManager/guestContext.o
+                                                  ../src/hardware/gpmc.o
+                                                  ../src/hardware/gptimer.o
+                                                  ../src/hardware/irqc.o
+                                                  ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/clockManager.o
+                                                  ../src/hardware/prm.o
+                                                  ../src/hardware/timer32k.o
+                                                  ../src/hardware/sramInternal.o
+                                                  ../src/hardware/sdram.o
+                                                  ../src/hardware/hardwareLibrary.o
+                                                  ../src/exceptions/exceptionHandlers.o
+                                                  ../src/common/memFunctions.o
+                                                  ../src/main.o
+serial_putbyte                                    ../src/hardware/serial.o
+                                                  ../src/linuxBoot/image.o
+serial_putchar                                    ../src/hardware/serial.o
+serial_putint                                     ../src/hardware/serial.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/memoryManager/memoryProtection.o
+                                                  ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/addressing.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/scanner.o
+                                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/asm-dis.o
+                                                  ../src/linuxBoot/image.o
+                                                  ../src/guestManager/blockCache.o
+                                                  ../src/guestManager/guestContext.o
+                                                  ../src/hardware/gpmc.o
+                                                  ../src/hardware/gptimer.o
+                                                  ../src/hardware/irqc.o
+                                                  ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/clockManager.o
+                                                  ../src/hardware/prm.o
+                                                  ../src/hardware/timer32k.o
+                                                  ../src/hardware/sramInternal.o
+                                                  ../src/hardware/sdram.o
+                                                  ../src/hardware/hardwareLibrary.o
+                                                  ../src/common/memFunctions.o
+serial_putint_nozeros                             ../src/hardware/serial.o
+                                                  ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/pageTable.o
+                                                  ../src/guestManager/blockCache.o
+                                                  ../src/guestManager/guestContext.o
+                                                  ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/clockManager.o
+                                                  ../src/hardware/prm.o
+                                                  ../src/common/memFunctions.o
+serial_putlong                                    ../src/hardware/serial.o
+serial_putstring                                  ../src/hardware/serial.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/memoryManager/memoryProtection.o
+                                                  ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/cp15coproc.o
+                                                  ../src/memoryManager/addressing.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/scanner.o
+                                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/asm-dis.o
+                                                  ../src/linuxBoot/image.o
+                                                  ../src/guestManager/scheduler.o
+                                                  ../src/guestManager/blockCache.o
+                                                  ../src/guestManager/guestContext.o
+                                                  ../src/hardware/gpmc.o
+                                                  ../src/hardware/gptimer.o
+                                                  ../src/hardware/irqc.o
+                                                  ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/clockManager.o
+                                                  ../src/hardware/prm.o
+                                                  ../src/hardware/timer32k.o
+                                                  ../src/hardware/sramInternal.o
+                                                  ../src/hardware/sdram.o
+                                                  ../src/hardware/hardwareLibrary.o
+                                                  ../src/exceptions/exceptionHandlers.o
+                                                  ../src/common/memFunctions.o
+                                                  ../src/main.o
+setAccessBits                                     ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/memoryProtection.o
+setCregVal                                        ../src/memoryManager/cp15coproc.o
+                                                  ../src/instructionEmu/coprocInstructions.o
+setDomain                                         ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/pageTable.o
+setGuestPhysicalPt                                ../src/memoryManager/pageTable.o
+                                                  ../src/memoryManager/addressing.o
+setTTBCR                                          ../src/memoryManager/mmu.o
+                                                  ../src/memoryManager/addressing.o
+setendInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+setupMsTick                                       ../src/hardware/gptimer.o
+                                                  ../src/hardware/irqc.o
+sevInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+shadd16Instruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+shadd8Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+shaddsubxInstruction                              ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+shiftVal                                          ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/dataProcessInstr.o
+shsub16Instruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+shsub8Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+shsubaddxInstruction                              ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smallMapMemory                                    ../src/memoryManager/pageTable.o
+smcInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlabbInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlabtInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smladInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlalbbInstruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlalbtInstruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlaldInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlaltbInstruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlalttInstruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlatbInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlattInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlawbInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlawtInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlsdInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smlsldInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smmlaInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smmlsInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smmulInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smuadInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smulbbInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smulbtInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smultbInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smulttInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smulwbInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smulwtInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+smusdInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+splitSectionToSmallPages                          ../src/memoryManager/pageTable.o
+                                                  ../src/instructionEmu/scanner.o
+sramInternal                                      ../src/hardware/hardwareLibrary.o
+sramInternalName                                  ../src/hardware/hardwareLibrary.o
+srsInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ssat16Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ssatInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ssub16Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ssub8Instruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+ssubaddxInstruction                               ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+startup_hypervisor                                ../src/startup.o
+                                                  ../src/main.o
+stc2Instruction                                   ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+stcInstruction                                    ../src/instructionEmu/coprocInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+stmInstruction                                    ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+storeCamCm                                        ../src/hardware/clockManager.o
+storeClockControlCm                               ../src/hardware/clockManager.o
+storeClockControlPrm                              ../src/hardware/prm.o
+storeClockManager                                 ../src/hardware/clockManager.o
+                                                  ../src/hardware/hardwareLibrary.o
+storeCoreCm                                       ../src/hardware/clockManager.o
+storeDssCm                                        ../src/hardware/clockManager.o
+storeEmuCm                                        ../src/hardware/clockManager.o
+storeGeneralScm                                   ../src/hardware/sysControlModule.o
+storeGeneralWkupScm                               ../src/hardware/sysControlModule.o
+storeGeneric                                      ../src/hardware/hardwareLibrary.o
+storeGlobalRegCm                                  ../src/hardware/clockManager.o
+storeGlobalRegPrm                                 ../src/hardware/prm.o
+storeGpmc                                         ../src/hardware/gpmc.o
+                                                  ../src/hardware/hardwareLibrary.o
+storeGuestGPR                                     ../src/instructionEmu/commonInstrFunctions.o
+                                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/coprocInstructions.o
+storeInterfaceScm                                 ../src/hardware/sysControlModule.o
+storeIva2Cm                                       ../src/hardware/clockManager.o
+storeMemWkupScm                                   ../src/hardware/sysControlModule.o
+storeMpuCm                                        ../src/hardware/clockManager.o
+storeNeonCm                                       ../src/hardware/clockManager.o
+storeOcpSystemCm                                  ../src/hardware/clockManager.o
+storePadconfsScm                                  ../src/hardware/sysControlModule.o
+storePadconfsWkupScm                              ../src/hardware/sysControlModule.o
+storePerCm                                        ../src/hardware/clockManager.o
+storePrm                                          ../src/hardware/prm.o
+                                                  ../src/hardware/hardwareLibrary.o
+storeSdram                                        ../src/hardware/sdram.o
+                                                  ../src/hardware/hardwareLibrary.o
+storeSgxCm                                        ../src/hardware/clockManager.o
+storeSramInternal                                 ../src/hardware/sramInternal.o
+                                                  ../src/hardware/hardwareLibrary.o
+storeSysCtrlModule                                ../src/hardware/sysControlModule.o
+                                                  ../src/hardware/hardwareLibrary.o
+storeTimer32k                                     ../src/hardware/timer32k.o
+                                                  ../src/hardware/hardwareLibrary.o
+storeUsbHostCm                                    ../src/hardware/clockManager.o
+storeWkupCm                                       ../src/hardware/clockManager.o
+strInstruction                                    ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+strbInstruction                                   ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+strdInstruction                                   ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+strexInstruction                                  ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+strexbInstruction                                 ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+strexdInstruction                                 ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+strexhInstruction                                 ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+strhInstruction                                   ../src/instructionEmu/dataMoveInstr.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+strhtInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+stringToLong                                      ../src/common/stringFunctions.o
+                                                  ../src/main.o
+stringcpy                                         ../src/common/stringFunctions.o
+stringlen                                         ../src/common/stringFunctions.o
+stringncmp                                        ../src/common/stringFunctions.o
+                                                  ../src/main.o
+subInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sumlalInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sumullInstruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+svcCoprocInstructions                             ../src/instructionEmu/decoder.o
+svcInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+swi_handler                                       ../src/startup.o
+swpInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sxtab16Instruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sxtabInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sxtahInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sxtb16Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sxtbInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sxthInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+sysCtrlMod                                        ../src/hardware/hardwareLibrary.o
+sysCtrlModName                                    ../src/hardware/hardwareLibrary.o
+sysCtrlModule                                     ../src/hardware/sysControlModule.o
+teqInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+timer32k                                          ../src/hardware/hardwareLibrary.o
+timer32kName                                      ../src/hardware/hardwareLibrary.o
+toggleOverflowInterrupt                           ../src/hardware/gptimer.o
+toggleTimer                                       ../src/hardware/gptimer.o
+topLevelBus                                       ../src/hardware/hardwareLibrary.o
+topLevelBusName                                   ../src/hardware/hardwareLibrary.o
+tstInstruction                                    ../src/instructionEmu/dataProcessInstr.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+turnOff                                           ../src/hardware/LED.o
+turnOn                                            ../src/hardware/LED.o
+uadd16Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uadd8Instruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uaddsubxInstruction                               ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uhadd16Instruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uhadd8Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uhaddsubxInstruction                              ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uhsub16Instruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uhsub8Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uhsubaddxInstruction                              ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+umaalInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+unconditionalInstructions                         ../src/instructionEmu/decoder.o
+undefinedInstruction                              ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+undefined_handler                                 ../src/startup.o
+undefined_handler_privileged_mode                 ../src/startup.o
+unmaskInterrupt                                   ../src/hardware/irqc.o
+uqadd16Instruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uqadd8Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uqaddsubxInstruction                              ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uqsub16Instruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uqsub8Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uqsubaddxInstruction                              ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+usad8Instruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+usada8Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/asm-dis.o
+usat16Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+usatInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+usbfxInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+usub16Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+usub8Instruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+usubaddxInstruction                               ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uxtab16Instruction                                ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uxtabInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uxtahInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uxtb16Instruction                                 ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uxtbInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+uxthInstruction                                   ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+v7_flush_dcache_all                               ../src/cpuArch/cache.o
+                                                  ../src/cpuArch/cpu.o
+validateCacheMultiPreChange                       ../src/guestManager/blockCache.o
+                                                  ../src/memoryManager/pageTable.o
+validateCachePreChange                            ../src/guestManager/blockCache.o
+                                                  ../src/memoryManager/globalMemoryMapper.o
+                                                  ../src/instructionEmu/dataMoveInstr.o
+warning_function                                  ../src/instructionEmu/commonInstrFunctions.o
+wdtimer2                                          ../src/hardware/hardwareLibrary.o
+wdtimer2Name                                      ../src/hardware/hardwareLibrary.o
+wfeInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+wfiInstruction                                    ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o
+yieldInstruction                                  ../src/instructionEmu/miscInstructions.o
+                                                  ../src/instructionEmu/decoder.o
+                                                  ../src/instructionEmu/asm-dis.o

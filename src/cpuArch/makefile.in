@@ -1,0 +1,3 @@
+SRCS += src/cpuArch/cpu.c
+
+RAW_ASMS += src/cpuArch/cache.s
