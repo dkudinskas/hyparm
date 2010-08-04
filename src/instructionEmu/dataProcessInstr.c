@@ -297,7 +297,7 @@ u32int rorInstruction(GCONTXT * context)
 /*********************************/
 u32int tstInstruction(GCONTXT * context)
 {
-  invalidDataProcTrap("TST instr", context);
+  error_function("Unimplemented tst interpreter", context);
   return 0;
 }
 
