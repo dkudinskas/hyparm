@@ -1,7 +1,7 @@
   Global setup:
  Download and install Git
   git config --global user.name "Your Name"
-  git config --global user.email danielius.kudinskas@gmail.com
+  git config --global user.email "email"
   Add your public key
         
 Next steps:
