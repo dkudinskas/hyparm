@@ -80,16 +80,20 @@ u32int dmbInstruction(GCONTXT * context)
 
 u32int dsbInstruction(GCONTXT * context)
 {
-  dumpGuestContext(context);
-  serial_ERROR("DSB unfinished\n");
-  return 0;
+#ifdef ARM_INSTR_TRACE
+  serial_putstring("Warning: DSB (ignored)!");
+  serial_newline();
+#endif
+  return context->R15+4;
 }
 
 u32int isbInstruction(GCONTXT * context)
 {
-  dumpGuestContext(context);
-  serial_ERROR("ISB unfinished\n");
-  return 0;
+#ifdef ARM_INSTR_TRACE
+  serial_putstring("Warning: ISB (ignored)!");
+  serial_newline();
+#endif
+  return context->R15+4;
 }
 
 u32int bfcInstruction(GCONTXT * context)

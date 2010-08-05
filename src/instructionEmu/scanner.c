@@ -5,6 +5,7 @@
 #include "pageTable.h"
 
 #ifdef DUMP_SCANNER_COUNTER
+bool dumpTrace = FALSE;
 static u32int scannerReqCounter = 0;
 #endif
 
@@ -21,6 +22,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
       serial_newline();
     }
   }
+  dumpTrace = (scannerReqCounter >= 0xda23bf);
 #endif
   struct instruction32bit * decodedInstruction = 0;
   u32int * currAddress = (u32int*)blkStartAddr;

@@ -176,8 +176,8 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 {2,  &msrInstruction,       0x0120f000, 0x0fb0fff0, "MSR, s/cpsr, Rn"},
 {2,  &mrsInstruction,       0x010f0000, 0x0fbf0fff, "MRS, Rn, s/cpsr"},
 // TST instructions are all fine
-{1,  &tstInstruction,       0x01000000, 0x0fe00010, "TST Rn, Rm, #shamt"},
-{1,  &tstInstruction,       0x01000010, 0x0fe00090, "TST Rn, Rm, Rshift"},
+{0,  &tstInstruction,       0x01000000, 0x0fe00010, "TST Rn, Rm, #shamt"},
+{0,  &tstInstruction,       0x01000010, 0x0fe00090, "TST Rn, Rm, Rshift"},
 // TEQ instructions are all fine
 {0,  &teqInstruction,       0x01200000, 0x0fe00010, "TEQ Rn, Rm, #shamt"},
 {0,  &teqInstruction,       0x01200010, 0x0fe00090, "TEQ Rn, Rm, Rshift"},
