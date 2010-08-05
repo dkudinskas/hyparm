@@ -6,7 +6,7 @@ ifeq ($(USER),alex)
   GNU_ARM = /export/compilers/arm-2009q3-68-arm-none-eabi/
 else
   ifeq ($(USER),niels)
-    GNU_ARM = $(HOME)/Tools/arm-2009q1
+    GNU_ARM = $(HOME)/Tools/arm-none-eabi
   else
     GNU_ARM = $(HOME)/arm-dev/compilers/arm-2009q1
   endif
