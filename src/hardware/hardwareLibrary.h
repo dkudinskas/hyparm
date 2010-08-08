@@ -31,6 +31,8 @@
 #define SYS_CONTROL_MODULE_SIZE          0x00002000
 #define CLOCK_MANAGER                    0x48004000
 #define CLOCK_MANAGER_SIZE               0x00004000
+#define INTERRUPT_CONTROLLER             0x48200000
+#define INTERRUPT_CONTROLLER_SIZE        0x00001000
 #define L4_CORE_WAKEUP_INT               0x48300000
 #define L4_CORE_WAKEUP_INT_SIZE          0x00040FFF
 #define PRM                                0x48306000

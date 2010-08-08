@@ -8,7 +8,6 @@
 #include "blockCache.h"
 #include "addressing.h" /* For virtual addressing initialisation */
 #include "frameAllocator.h"
-#include "irqc.h"
 #include "hardwareLibrary.h"
 #include "memFunctions.h"
 
@@ -106,9 +105,6 @@ int main(int argc, char *argv[])
   {
     serial_ERROR("Hardware library initialisation failed.");
   }
-
-  /* initialise register priorities and routing as default. */
-  initialiseInterruptController();
 
   /* Setup MMU for Hypervisor */
   initialiseVirtualAddressing();

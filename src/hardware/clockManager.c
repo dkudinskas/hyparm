@@ -434,6 +434,8 @@ u32int loadWkupCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkSelWkup;
       break;
     default:
+      serial_putstring("loadWkupCm reg ");
+      serial_putint_nozeros(reg);
       serial_ERROR("loadWkupCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG

@@ -19,6 +19,7 @@ u32int strexInstruction(GCONTXT * context);
 u32int strexbInstruction(GCONTXT * context);
 u32int strexdInstruction(GCONTXT * context);
 u32int strexhInstruction(GCONTXT * context);
+u32int strhtInstruction(GCONTXT * context);
 
 u32int ldrhInstruction(GCONTXT * context);
 u32int ldrInstruction(GCONTXT * context);
@@ -31,6 +32,7 @@ u32int ldrexInstruction(GCONTXT * context);
 u32int ldrexbInstruction(GCONTXT * context);
 u32int ldrexdInstruction(GCONTXT * context);
 u32int ldrexhInstruction(GCONTXT * context);
+u32int ldrhtInstruction(GCONTXT * context);
 
 
 #endif

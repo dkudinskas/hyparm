@@ -117,20 +117,6 @@ u32int mlsInstruction(GCONTXT * context)
   return 0;
 }
 
-u32int strhtInstruction(GCONTXT * context)
-{
-  dumpGuestContext(context);
-  serial_ERROR("STRHT unfinished\n");
-  return 0;
-}
-
-u32int ldrhtInstruction(GCONTXT * context)
-{
-  dumpGuestContext(context);
-  serial_ERROR("LDRHT unfinished\n");
-  return 0;
-}
-
 u32int movwInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);

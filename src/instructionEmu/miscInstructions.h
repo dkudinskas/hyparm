@@ -25,8 +25,6 @@ u32int isbInstruction(GCONTXT * context);
 u32int bfcInstruction(GCONTXT * context);
 u32int bfiInstruction(GCONTXT * context);
 u32int mlsInstruction(GCONTXT * context);
-u32int strhtInstruction(GCONTXT * context);
-u32int ldrhtInstruction(GCONTXT * context);
 u32int movwInstruction(GCONTXT * context);
 u32int movtInstruction(GCONTXT * context);
 u32int rbitInstruction(GCONTXT * context);

@@ -63,17 +63,6 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
-#ifdef SYS_CTRL_MOD_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_newline();
-#endif
-
   if (size != WORD)
   {
     // only word access allowed in these modules
@@ -112,10 +101,47 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
     case GPMC_NAND_ADDRESS_7:
       serial_ERROR("Gpmc: load on write-only register.");
       break;
+    case GPMC_CONFIG7_0:
+      val = gpmc->gpmcConfig7_0;
+      break;
+    case GPMC_CONFIG7_1:
+      val = gpmc->gpmcConfig7_1;
+      break;
+    case GPMC_CONFIG7_2:
+      val = gpmc->gpmcConfig7_2;
+      break;
+    case GPMC_CONFIG7_3:
+      val = gpmc->gpmcConfig7_3;
+      break;
+    case GPMC_CONFIG7_4:
+      val = gpmc->gpmcConfig7_4;
+      break;
+    case GPMC_CONFIG7_5:
+      val = gpmc->gpmcConfig7_5;
+      break;
+    case GPMC_CONFIG7_6:
+      val = gpmc->gpmcConfig7_6;
+      break;
+    case GPMC_CONFIG7_7:
+      val = gpmc->gpmcConfig7_7;
+      break;
     default:
       serial_ERROR("Gpmc: load on invalid register.");
   }
   
+#ifdef GPMC_DBG
+  serial_putstring(dev->deviceName);
+  serial_putstring(" load from pAddr: 0x");
+  serial_putint(phyAddr);
+  serial_putstring(", vAddr: 0x");
+  serial_putint(address);
+  serial_putstring(" access size ");
+  serial_putint((u32int)size);
+  serial_putstring(" val = ");
+  serial_putint(val);
+  serial_newline();
+#endif
+
   return val;
 }
 

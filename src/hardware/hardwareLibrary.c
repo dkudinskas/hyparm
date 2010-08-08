@@ -7,6 +7,7 @@
 #include "sysControlModule.h"
 #include "guestContext.h"
 #include "gpmc.h"
+#include "intc.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -48,6 +49,9 @@ char * sysCtrlModName = "SysControl Module";
 // L4INT_CORE: clock manager (and DPLL)
 device clockManager;
 char * clockManagerName = "Clock Manager";
+// L4INT_CORE: interrupt controller
+device intc;
+char * intcName = "Interrupt Controller";
 // L4INT_CORE: core wakeup interconnect
 device l4CoreWakeupInt;
 char * l4CoreWakeupIntName = "L4_CORE_WAKEUP_INT";
@@ -155,7 +159,12 @@ device * initialiseHardwareLibrary()
   initialiseDevice(&clockManager, clockManagerName, FALSE,
                    CLOCK_MANAGER, (u32int)(CLOCK_MANAGER -1 + CLOCK_MANAGER_SIZE),
                    &l4IntCore, &loadClockManager, &storeClockManager);
+  // L4INT_CORE: interrupt controller
+  initialiseDevice(&intc, intcName, FALSE,
+                   INTERRUPT_CONTROLLER, (u32int)(INTERRUPT_CONTROLLER -1 + INTERRUPT_CONTROLLER_SIZE),
+                   &l4IntCore, &loadIntc, &storeIntc);
   // L4INT_CORE: core wakeup interconnect
+  initIntc();
   initialiseDevice(&l4CoreWakeupInt, l4CoreWakeupIntName, TRUE,
                    L4_CORE_WAKEUP_INT, (u32int)(L4_CORE_WAKEUP_INT-1+L4_CORE_WAKEUP_INT_SIZE),
                    &l4IntCore, &loadGeneric, &storeGeneric);

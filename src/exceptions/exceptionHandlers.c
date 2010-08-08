@@ -3,7 +3,6 @@
 #include "scanner.h"
 #include "guestContext.h"
 #include "addressing.h"
-#include "irqc.h"
 #include "gptimer.h"
 #include "mmu.h"
 #include "memoryConstants.h"
@@ -244,10 +243,11 @@ void do_irq()
  *********************/
 
   // Get the number of the highest priority active IRQ/FIQ
-  u32int activeIrqNumber = getIrqNumber();
+//  u32int activeIrqNumber = getIrqNumber();
 
   /* if tick from gp10: de-assert interrupt in gptimer */
   /* else: halt execution. no other irq's are expected! */
+/*
   if (activeIrqNumber == GPT10_IRQ)
   {
     // its a tick! schedule guests...
@@ -259,22 +259,23 @@ void do_irq()
   {
     serial_ERROR("IRQ not a tick!");
   }
-
+*/
 
 /* After the return of the subroutine, the ISR sets the NEWIRQAGR/NEWFIQAGR bit
 to enable the processing of subsequent pending IRQs/FIQs
 and to restore ARM context in the following code. */
-  resetAndNewIrq();
+ // resetAndNewIrq();
 
 /* Because the writes are posted on an Interconnect bus, to be sure
 that the preceding writes are done before enabling IRQs/FIQs,
 a Data Synchronization Barrier is used. This operation ensure that
 the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
+/*
   asm volatile("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
-
-  return;
+*/
+  serial_ERROR("Received IRQ! Implement me.");
 }
 
 

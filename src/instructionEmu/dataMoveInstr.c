@@ -3,6 +3,7 @@
 #include "defines.h"
 #include "blockCache.h"
 
+
 void invalidDataMoveTrap(char * msg, GCONTXT * gc)
 {
   serial_putstring("ERROR: ");
@@ -19,6 +20,12 @@ void invalidDataMoveTrap(char * msg, GCONTXT * gc)
     // infinite loop
   }
 }
+
+ /***********************************************************************************
+  ***********************************************************************************
+  ************************** STORE FUNCTIONS ****************************************
+  ***********************************************************************************
+  ***********************************************************************************/
 
 u32int strInstruction(GCONTXT * context)
 {
@@ -307,6 +314,15 @@ u32int strbInstruction(GCONTXT * context)
   return (context->R15 + 4);
 }
 
+
+u32int strhtInstruction(GCONTXT * context)
+{
+  dumpGuestContext(context);
+  serial_ERROR("STRHT unfinished\n");
+  return 0;
+}
+
+
 u32int strhInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
@@ -424,6 +440,316 @@ u32int strhInstruction(GCONTXT * context)
     storeGuestGPR(regDst, offsetAddress, context);
   }
   return (context->R15 + 4);
+}
+
+
+
+u32int stmInstruction(GCONTXT * context)
+{
+  u32int instr = context->endOfBlockInstr;
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("STM instruction: ");
+  serial_putint(instr);
+  serial_putstring(" @ PC=");
+  serial_putint(context->R15);
+  serial_newline();
+#endif
+
+  u32int condcode = (instr & 0xF0000000) >> 28;
+  u32int prePost =   instr & 0x01000000;
+  u32int upDown =    instr & 0x00800000;
+  u32int forceUser = instr & 0x00400000;
+  u32int writeback = instr & 0x00200000;
+
+  u32int baseReg  = (instr & 0x000F0000) >> 16;
+  u32int regList   = instr & 0x0000FFFF;
+  u32int baseAddress = loadGuestGPR(baseReg, context);
+
+  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
+  if (!evalCC(condcode, cpsrCC))
+  {
+    // condition not met! allright, we're done here. next instruction...
+    return context->R15 + 4;
+  }
+  if (forceUser != 0)
+  {
+    serial_ERROR("Invalid STM instruction - force user Sbit set");
+  }
+  int i = 0;
+ 
+  u32int address = 0;
+  if ( (upDown == 0) && (prePost != 0) ) // STM decrement before
+  {
+    // address = baseAddress - 4*(number of registers to store);
+    address = baseAddress - 4 * countBitsSet(regList);
+  }
+  else if ( (upDown == 0) && (prePost == 0) ) // STM decrement after
+  {
+    // address = baseAddress - 4*(number of registers to store) + 4;
+    address = baseAddress - 4 * countBitsSet(regList) + 4; 
+  }
+  else if ( (upDown != 0) && (prePost != 0) ) // STM increment before
+  {
+    // address = baseAddress + 4 - will be incremented as we go
+    address = baseAddress + 4;
+  }
+  else if ( (upDown != 0) && (prePost == 0) ) // STM increment after
+  {
+    // address = baseAddress - will be incremented as we go
+    address = baseAddress;
+  }
+  
+  // for i = 0 to 14
+  for (i = 0; i < 15; i++)
+  {
+    // if current register set
+    if ( ((regList >> i) & 0x1) == 0x1)
+    {
+#ifdef DATA_MOVE_TRACE
+      serial_putstring("*(");
+      serial_putint(address);
+      serial_putstring(") = ");
+      serial_putstring("R[");
+      serial_putint_nozeros(i);
+      serial_putstring("] =");
+      serial_putint(loadGuestGPR(i, context));
+      serial_newline();
+#endif
+      u32int valueLoaded = loadGuestGPR(i, context);
+      // emulating store. Validate cache if needed
+      validateCachePreChange(context->blockCache, address);
+      // *(address)= R[i];
+      context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueLoaded);
+      address = address + 4;
+    }
+  } // for ends
+  // if store PC...
+  if ( ((regList >> 15) & 0x1) == 0x1)
+  {
+    // emulating store. Validate cache if needed
+    validateCachePreChange(context->blockCache, address);
+    // *(address)= PC+8 - architectural feature due to pipeline..
+    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, 
+                                            address, (loadGuestGPR(15, context)+8));
+  }
+
+  // if writeback then baseReg = baseReg - 4 * number of registers to store;
+  if (writeback != 0)
+  {
+    if (upDown == 0)
+    {
+      // decrement
+      baseAddress = baseAddress - 4 * countBitsSet(regList);
+    }
+    else
+    {
+      // increment
+      baseAddress = baseAddress + 4 * countBitsSet(regList);
+    }
+    storeGuestGPR(baseReg, baseAddress, context);
+  }
+  return context->R15+4;
+}
+
+/* store dual */
+u32int strdInstruction(GCONTXT * context)
+{
+  serial_ERROR("STRD unfinished\n");
+  return 0;
+}
+
+
+u32int strexInstruction(GCONTXT * context)
+{
+  u32int instr = context->endOfBlockInstr;
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("STREX instruction: ");
+  serial_putint(instr);
+  serial_putstring(" @ PC=");
+  serial_putint(context->R15);
+  serial_newline();
+#endif
+
+  u32int condcode = (instr & 0xF0000000) >> 28;
+  u32int regN   = (instr & 0x000F0000) >> 16;
+  u32int regD   = (instr & 0x0000F000) >> 12;
+  u32int regT   = (instr & 0x0000000F);
+
+  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
+  if (!evalCC(condcode, cpsrCC))
+  {
+    // condition not met! allright, we're done here. next instruction...
+    return context->R15 + 4;
+  }
+  
+  if ((regN == 15) || (regD == 15) || (regT == 15))
+  {
+    serial_ERROR("STREX unpredictable case (PC used)");
+  }
+  if ((regD == regN) || (regD == regT))
+  {
+    serial_ERROR("STREX unpredictable case (invalid register use)");
+  }
+
+  u32int address = loadGuestGPR(regN, context);
+
+  u32int valToStore = loadGuestGPR(regT, context);
+
+  context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore);
+  storeGuestGPR(regD, 0, context);
+  
+  return context->R15 + 4;
+}
+
+u32int strexbInstruction(GCONTXT * context)
+{
+  u32int instr = context->endOfBlockInstr;
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("STREXB instruction: ");
+  serial_putint(instr);
+  serial_putstring(" @ PC=");
+  serial_putint(context->R15);
+  serial_newline();
+#endif
+
+  u32int condcode = (instr & 0xF0000000) >> 28;
+  u32int regN   = (instr & 0x000F0000) >> 16;
+  u32int regD   = (instr & 0x0000F000) >> 12;
+  u32int regT   = (instr & 0x0000000F);
+
+  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
+  if (!evalCC(condcode, cpsrCC))
+  {
+    // condition not met! allright, we're done here. next instruction...
+    return context->R15 + 4;
+  }
+  
+  if ((regN == 15) || (regD == 15) || (regT == 15))
+  {
+    serial_ERROR("STREX unpredictable case (PC used)");
+  }
+  if ((regD == regN) || (regD == regT))
+  {
+    serial_ERROR("STREX unpredictable case (invalid register use)");
+  }
+
+  u32int address = loadGuestGPR(regN, context);
+
+  u32int valToStore = loadGuestGPR(regT, context);
+  context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valToStore & 0xFF));
+
+  storeGuestGPR(regD, 0, context);
+  
+  return context->R15 + 4;
+}
+
+u32int strexdInstruction(GCONTXT * context)
+{
+  u32int instr = context->endOfBlockInstr;
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("STREXD instruction: ");
+  serial_putint(instr);
+  serial_putstring(" @ PC=");
+  serial_putint(context->R15);
+  serial_newline();
+#endif
+
+  u32int condcode = (instr & 0xF0000000) >> 28;
+  u32int regN   = (instr & 0x000F0000) >> 16;
+  u32int regD   = (instr & 0x0000F000) >> 12;
+  u32int regT   = (instr & 0x0000000F);
+
+  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
+  if (!evalCC(condcode, cpsrCC))
+  {
+    // condition not met! allright, we're done here. next instruction...
+    return context->R15 + 4;
+  }
+  
+  if ((regD == 15) || ((regT % 2) != 0) || (regT == 14) || (regN == 15))
+  {
+    serial_ERROR("STREXD unpredictable case (PC used)");
+  }
+  if ((regD == regN) || (regD == regT) || (regD == (regT+1)))
+  {
+    serial_ERROR("STREXD unpredictable case (PC used)");
+  }
+
+  u32int address = loadGuestGPR(regN, context);
+
+  // Create doubleword to store such that R[t] will be stored at addr and R[t2] at addr+4.
+  u32int valToStore1 = loadGuestGPR(regT, context);
+  u32int valToStore2 = loadGuestGPR(regT+1, context);
+  serial_ERROR("STREXD: assuming littlendian!\n");
+  bool littleEndian = TRUE;
+  if (littleEndian)
+  {
+    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore2);
+    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address+4, valToStore1);
+  }
+  else
+  {
+    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore1);
+    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address+4, valToStore2);
+  }
+  storeGuestGPR(regD, 0, context);
+  
+  return context->R15 + 4;
+}
+
+u32int strexhInstruction(GCONTXT * context)
+{
+  u32int instr = context->endOfBlockInstr;
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("STREXH instruction: ");
+  serial_putint(instr);
+  serial_putstring(" @ PC=");
+  serial_putint(context->R15);
+  serial_newline();
+#endif
+
+  u32int condcode = (instr & 0xF0000000) >> 28;
+  u32int regN   = (instr & 0x000F0000) >> 16;
+  u32int regD   = (instr & 0x0000F000) >> 12;
+  u32int regT   = (instr & 0x0000000F);
+
+  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
+  if (!evalCC(condcode, cpsrCC))
+  {
+    // condition not met! allright, we're done here. next instruction...
+    return context->R15 + 4;
+  }
+  
+  if ((regN == 15) || (regD == 15) || (regT == 15))
+  {
+    serial_ERROR("STREX unpredictable case (PC used)");
+  }
+  if ((regD == regN) || (regD == regT))
+  {
+    serial_ERROR("STREX unpredictable case (invalid register use)");
+  }
+
+  u32int address = loadGuestGPR(regN, context);
+
+  u32int valToStore = loadGuestGPR(regT, context);
+
+  context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, address, (valToStore & 0xFFFF));
+  storeGuestGPR(regD, 0, context);
+  
+  return context->R15 + 4;
+}
+
+
+ /***********************************************************************************
+  ***********************************************************************************
+  ************************** LOAD FUNCTIONS *****************************************
+  ***********************************************************************************
+  ***********************************************************************************/
+u32int ldrhtInstruction(GCONTXT * context)
+{
+  dumpGuestContext(context);
+  serial_ERROR("LDRHT unfinished\n");
+  return 0;
 }
 
 u32int ldrhInstruction(GCONTXT * context)
@@ -814,120 +1140,6 @@ u32int ldrInstruction(GCONTXT * context)
   }
 }
 
-u32int stmInstruction(GCONTXT * context)
-{
-  u32int instr = context->endOfBlockInstr;
-#ifdef DATA_MOVE_TRACE
-  serial_putstring("STM instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
-  serial_putint(context->R15);
-  serial_newline();
-#endif
-
-  u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int prePost =   instr & 0x01000000;
-  u32int upDown =    instr & 0x00800000;
-  u32int forceUser = instr & 0x00400000;
-  u32int writeback = instr & 0x00200000;
-
-  u32int baseReg  = (instr & 0x000F0000) >> 16;
-  u32int regList   = instr & 0x0000FFFF;
-  u32int baseAddress = loadGuestGPR(baseReg, context);
-
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
-  {
-    // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
-  }
-  if (forceUser != 0)
-  {
-    serial_ERROR("Invalid STM instruction - force user Sbit set");
-  }
-  int i = 0;
- 
-  u32int address = 0;
-  if ( (upDown == 0) && (prePost != 0) ) // STM decrement before
-  {
-    // address = baseAddress - 4*(number of registers to store);
-    address = baseAddress - 4 * countBitsSet(regList);
-  }
-  else if ( (upDown == 0) && (prePost == 0) ) // STM decrement after
-  {
-    // address = baseAddress - 4*(number of registers to store) + 4;
-    address = baseAddress - 4 * countBitsSet(regList) + 4; 
-  }
-  else if ( (upDown != 0) && (prePost != 0) ) // STM increment before
-  {
-    // address = baseAddress + 4 - will be incremented as we go
-    address = baseAddress + 4;
-  }
-  else if ( (upDown != 0) && (prePost == 0) ) // STM increment after
-  {
-    // address = baseAddress - will be incremented as we go
-    address = baseAddress;
-  }
-  
-  // for i = 0 to 14
-  for (i = 0; i < 15; i++)
-  {
-    // if current register set
-    if ( ((regList >> i) & 0x1) == 0x1)
-    {
-#ifdef DATA_MOVE_TRACE
-      serial_putstring("*(");
-      serial_putint(address);
-      serial_putstring(") = ");
-      serial_putstring("R[");
-      serial_putint_nozeros(i);
-      serial_putstring("] =");
-      serial_putint(loadGuestGPR(i, context));
-      serial_newline();
-#endif
-      u32int valueLoaded = loadGuestGPR(i, context);
-      // emulating store. Validate cache if needed
-      validateCachePreChange(context->blockCache, address);
-      // *(address)= R[i];
-      context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueLoaded);
-      address = address + 4;
-    }
-  } // for ends
-  // if store PC...
-  if ( ((regList >> 15) & 0x1) == 0x1)
-  {
-    // emulating store. Validate cache if needed
-    validateCachePreChange(context->blockCache, address);
-    // *(address)= PC+8 - architectural feature due to pipeline..
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, 
-                                            address, (loadGuestGPR(15, context)+8));
-  }
-
-  // if writeback then baseReg = baseReg - 4 * number of registers to store;
-  if (writeback != 0)
-  {
-    if (upDown == 0)
-    {
-      // decrement
-      baseAddress = baseAddress - 4 * countBitsSet(regList);
-    }
-    else
-    {
-      // increment
-      baseAddress = baseAddress + 4 * countBitsSet(regList);
-    }
-    storeGuestGPR(baseReg, baseAddress, context);
-  }
-  return context->R15+4;
-}
-
-/* store dual */
-u32int strdInstruction(GCONTXT * context)
-{
-  serial_ERROR("STRD unfinished\n");
-  return 0;
-}
-
 
 u32int popLdrInstruction(GCONTXT * context)
 {
@@ -1208,186 +1420,6 @@ u32int ldrexhInstruction(GCONTXT * context)
   u32int value = 
     ((u32int)context->hardwareLibrary->loadFunction(context->hardwareLibrary, HALFWORD, baseVal) & 0xFFFF);
   storeGuestGPR(regDest, value, context);
-  
-  return context->R15 + 4;
-}
-
-u32int strexInstruction(GCONTXT * context)
-{
-  u32int instr = context->endOfBlockInstr;
-#ifdef DATA_MOVE_TRACE
-  serial_putstring("STREX instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
-  serial_putint(context->R15);
-  serial_newline();
-#endif
-
-  u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int regN   = (instr & 0x000F0000) >> 16;
-  u32int regD   = (instr & 0x0000F000) >> 12;
-  u32int regT   = (instr & 0x0000000F);
-
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
-  {
-    // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
-  }
-  
-  if ((regN == 15) || (regD == 15) || (regT == 15))
-  {
-    serial_ERROR("STREX unpredictable case (PC used)");
-  }
-  if ((regD == regN) || (regD == regT))
-  {
-    serial_ERROR("STREX unpredictable case (invalid register use)");
-  }
-
-  u32int address = loadGuestGPR(regN, context);
-
-  u32int valToStore = loadGuestGPR(regT, context);
-
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore);
-  storeGuestGPR(regD, 0, context);
-  
-  return context->R15 + 4;
-}
-
-u32int strexbInstruction(GCONTXT * context)
-{
-  u32int instr = context->endOfBlockInstr;
-#ifdef DATA_MOVE_TRACE
-  serial_putstring("STREXB instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
-  serial_putint(context->R15);
-  serial_newline();
-#endif
-
-  u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int regN   = (instr & 0x000F0000) >> 16;
-  u32int regD   = (instr & 0x0000F000) >> 12;
-  u32int regT   = (instr & 0x0000000F);
-
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
-  {
-    // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
-  }
-  
-  if ((regN == 15) || (regD == 15) || (regT == 15))
-  {
-    serial_ERROR("STREX unpredictable case (PC used)");
-  }
-  if ((regD == regN) || (regD == regT))
-  {
-    serial_ERROR("STREX unpredictable case (invalid register use)");
-  }
-
-  u32int address = loadGuestGPR(regN, context);
-
-  u32int valToStore = loadGuestGPR(regT, context);
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valToStore & 0xFF));
-
-  storeGuestGPR(regD, 0, context);
-  
-  return context->R15 + 4;
-}
-
-u32int strexdInstruction(GCONTXT * context)
-{
-  u32int instr = context->endOfBlockInstr;
-#ifdef DATA_MOVE_TRACE
-  serial_putstring("STREXD instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
-  serial_putint(context->R15);
-  serial_newline();
-#endif
-
-  u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int regN   = (instr & 0x000F0000) >> 16;
-  u32int regD   = (instr & 0x0000F000) >> 12;
-  u32int regT   = (instr & 0x0000000F);
-
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
-  {
-    // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
-  }
-  
-  if ((regD == 15) || ((regT % 2) != 0) || (regT == 14) || (regN == 15))
-  {
-    serial_ERROR("STREXD unpredictable case (PC used)");
-  }
-  if ((regD == regN) || (regD == regT) || (regD == (regT+1)))
-  {
-    serial_ERROR("STREXD unpredictable case (PC used)");
-  }
-
-  u32int address = loadGuestGPR(regN, context);
-
-  // Create doubleword to store such that R[t] will be stored at addr and R[t2] at addr+4.
-  u32int valToStore1 = loadGuestGPR(regT, context);
-  u32int valToStore2 = loadGuestGPR(regT+1, context);
-  serial_ERROR("STREXD: assuming littlendian!\n");
-  bool littleEndian = TRUE;
-  if (littleEndian)
-  {
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore2);
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address+4, valToStore1);
-  }
-  else
-  {
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore1);
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address+4, valToStore2);
-  }
-  storeGuestGPR(regD, 0, context);
-  
-  return context->R15 + 4;
-}
-
-u32int strexhInstruction(GCONTXT * context)
-{
-  u32int instr = context->endOfBlockInstr;
-#ifdef DATA_MOVE_TRACE
-  serial_putstring("STREXH instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
-  serial_putint(context->R15);
-  serial_newline();
-#endif
-
-  u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int regN   = (instr & 0x000F0000) >> 16;
-  u32int regD   = (instr & 0x0000F000) >> 12;
-  u32int regT   = (instr & 0x0000000F);
-
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
-  {
-    // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
-  }
-  
-  if ((regN == 15) || (regD == 15) || (regT == 15))
-  {
-    serial_ERROR("STREX unpredictable case (PC used)");
-  }
-  if ((regD == regN) || (regD == regT))
-  {
-    serial_ERROR("STREX unpredictable case (invalid register use)");
-  }
-
-  u32int address = loadGuestGPR(regN, context);
-
-  u32int valToStore = loadGuestGPR(regT, context);
-
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, address, (valToStore & 0xFFFF));
-  storeGuestGPR(regD, 0, context);
   
   return context->R15 + 4;
 }

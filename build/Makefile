@@ -8,7 +8,11 @@ else
   ifeq ($(USER),niels)
     GNU_ARM = $(HOME)/Tools/arm-none-eabi
   else
-    GNU_ARM = $(HOME)/arm-dev/compilers/arm-2009q1
+    ifeq ($(USER),kudinsd6)
+      GNU_ARM = $(HOME)/ARM/compilers/arm-2009q1
+    else
+      GNU_ARM = $(HOME)/arm-dev/compilers/arm-2009q1
+    endif
   endif
 endif
 # The gcc compiler and linker
