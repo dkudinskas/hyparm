@@ -20,7 +20,7 @@ void initClockManager()
   {
     memset((void*)clockMan, 0x0, sizeof(struct ClockManager));
 #ifdef CLK_MAN_DBG
-    serial_putstring("Clock manager at 0x");
+    serial_putstring("Initializing Clock manager at 0x");
     serial_putint((u32int)clockMan);
     serial_newline();
 #endif
@@ -433,9 +433,17 @@ u32int loadWkupCm(device * dev, u32int address, u32int phyAddr)
     case CM_CLKSEL_WKUP:
       val = clockMan->cmClkSelWkup;
       break;
+    case CM_CLKSTCTRL_WKUP:
+#ifdef CLK_MAN_DBG
+      serial_putstring("CLKMAN: warn: wkupCm load from undocumented reg (offs 0x48)");
+#endif  
+      val = 0;
+      break;
     default:
       serial_putstring("loadWkupCm reg ");
       serial_putint_nozeros(reg);
+      serial_newline();
+      dumpGuestContext(getGuestContext());      
       serial_ERROR("loadWkupCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
@@ -742,28 +750,44 @@ void storeClockManager(device * dev, ACCESS_SIZE size, u32int address, u32int va
     case CORE_CM:
       storeCoreCm(dev, address, phyAddr, value);
       break;
-    case IVA2_CM:
-    case OCP_System_Reg_CM:
-    case MPU_CM:
-    case SGX_CM:
     case WKUP_CM:
-    case Clock_Control_Reg_CM:
-    case DSS_CM:
-    case CAM_CM:
+      storeWkupCm(dev, address, phyAddr, value);
+      break;
     case PER_CM:
+      storePerCm(dev, address, phyAddr, value);
+      break;
+    case IVA2_CM:
+      storeIva2Cm(dev, address, phyAddr, value);
+      break;
+    case OCP_System_Reg_CM:
+      storeOcpSystemCm(dev, address, phyAddr, value);
+      break;
+    case MPU_CM:
+      storeMpuCm(dev, address, phyAddr, value);
+      break;
+    case SGX_CM:
+      storeSgxCm(dev, address, phyAddr, value);
+      break;
+    case Clock_Control_Reg_CM:
+      storeClockControlCm(dev, address, phyAddr, value);
+      break;
+    case DSS_CM:
+      storeDssCm(dev, address, phyAddr, value);
+      break;
+    case CAM_CM:
+      storeCamCm(dev, address, phyAddr, value);
+      break;
     case EMU_CM:
+      storeEmuCm(dev, address, phyAddr, value);
+      break;
     case Global_Reg_CM:
+      storeGlobalRegCm(dev, address, phyAddr, value);
+      break;
     case NEON_CM:
+      storeNeonCm(dev, address, phyAddr, value);
+      break;
     case USBHOST_CM:
-      serial_putstring("Store to: ");
-      serial_putstring(dev->deviceName);
-      serial_putstring(" at address ");
-      serial_putint(address);
-      serial_putstring(" value ");
-      serial_putint(value);
-      serial_newline();
-      serial_putstring(dev->deviceName);
-      serial_ERROR(" unimplemented.");
+      storeUsbHostCm(dev, address, phyAddr, value);
       break;
     default:
       serial_ERROR("CM: store to invalid base module.");
@@ -876,6 +900,7 @@ void storeSgxCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+#ifdef CLK_MAN_DBG
   serial_putstring("Store to: ");
   serial_putstring(dev->deviceName);
   serial_putstring(" at address ");
@@ -883,8 +908,50 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putstring(" value ");
   serial_putint(value);
   serial_newline();
-  serial_putstring(dev->deviceName);
-  serial_ERROR(" storeWkupCm unimplemented.");
+#endif
+  u32int reg = phyAddr - WKUP_CM;
+  switch (reg)
+  {
+    case CM_FCLKEN_WKUP:
+      if (clockMan->cmFclkEnWkup != value)
+      {
+        serial_ERROR(" storeWkupCm unimplemented store to reg mFclkEnWkup");
+      }
+      break;
+    case CM_ICLKEN_WKUP:
+      if (clockMan->cmIclkEnWkup != value)
+      {
+        serial_ERROR(" storeWkupCm unimplemented store to reg cmIclkEnWkup");
+      }
+      break;
+    case CM_IDLEST_WKUP:
+      if (clockMan->cmIdleStWkup != value)
+      {
+        serial_ERROR(" storeWkupCm unimplemented store to reg cmIdleStWkup");
+      }
+      break;
+    case CM_AUTOIDLE_WKUP:
+      if (clockMan->cmAutoIdleWkup != value)
+      {
+        serial_ERROR(" storeWkupCm unimplemented store to reg cmAutoIdleWkup");
+      }
+      break;
+    case CM_CLKSEL_WKUP:
+      if (clockMan->cmClkSelWkup != value)
+      {
+        serial_ERROR(" storeWkupCm unimplemented store to reg cmClkSelWkup");
+      }
+      break;
+    case CM_CLKSTCTRL_WKUP:
+#ifdef CLK_MAN_DBG
+      serial_putstring(dev->deviceName);
+      serial_putstring(" WARN: store to undocumented register CM_CLKSTCTRL_WKUP");
+      serial_newline();
+#endif
+      break;
+    default:
+      serial_ERROR("storeWkupCm storing non existing register!");
+  } // switch ends
   return;
 }
 
@@ -935,6 +1002,7 @@ void storeCamCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+#ifdef CLK_MAN_DBG
   serial_putstring("Store to: ");
   serial_putstring(dev->deviceName);
   serial_putstring(" at address ");
@@ -942,9 +1010,61 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putstring(" value ");
   serial_putint(value);
   serial_newline();
-  serial_putstring(dev->deviceName);
-  serial_ERROR(" storePerCm unimplemented.");
-  return;
+#endif
+  u32int reg = phyAddr - PER_CM;
+  switch (reg)
+  {
+    case CM_FCLKEN_PER:
+      if (clockMan->cmFclkEnPer != value)
+      {
+        serial_ERROR(" storePerCm unimplemented store to reg cmFclkEnPer");
+      }
+      break;
+    case CM_ICLKEN_PER:
+      if (clockMan->cmIclkEnPer != value)
+      {
+        serial_ERROR(" storePerCm unimplemented store to reg cmIclkEnPer");
+      }
+      break;
+    case CM_IDLEST_PER:
+      if (clockMan->cmIdleStPer != value)
+      {
+        serial_ERROR(" storePerCm unimplemented store to reg cmIdleStPer");
+      }
+      break;
+    case CM_AUTOIDLE_PER:
+      if (clockMan->cmAutoIdlePer != value)
+      {
+        serial_ERROR(" storePerCm unimplemented store to reg cmAutoIdlePer");
+      }
+      break;
+    case CM_CLKSEL_PER:
+      if (clockMan->cmClkSelPer != value)
+      {
+        serial_ERROR(" storePerCm unimplemented store to reg cmClkSelPer");
+      }
+      break;
+    case CM_SLEEPDEP_PER:
+      if (clockMan->cmSleepDepPer != value)
+      {
+        serial_ERROR(" storePerCm unimplemented store to reg cmSleepDepPer");
+      }
+      break;
+    case CM_CLKSTCTRL_PER:
+      if (clockMan->cmClkStCtrlPer != value)
+      {
+        serial_ERROR(" storePerCm unimplemented store to reg cmClkStCtrlPer");
+      }
+      break;
+    case CM_CLKSTST_PER:
+      if (clockMan->cmClkStStPer != value)
+      {
+        serial_ERROR(" storePerCm unimplemented store to reg cmClkStStPer");
+      }
+      break;
+    default:
+      serial_ERROR("storePerCm storing non existing register!");
+  } // switch ends
 }
 
 

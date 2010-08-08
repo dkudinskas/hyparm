@@ -79,6 +79,7 @@
 #define CM_IDLEST_WKUP              0x00000020 // access monitoring, R/O
 #define CM_AUTOIDLE_WKUP            0x00000030 // autocontrol of iclk activity, RW
 #define CM_CLKSEL_WKUP              0x00000040 // source clock selection, RW
+#define CM_CLKSTCTRL_WKUP           0x00000048 // enable power state transition, RW  
 // Clock_control_reg_CM registers
 #define CM_CLKEN_PLL                0x00000000 // control DPLL3 and DPLL4 modes, RW
 #define CM_CLKEN2_PLL               0x00000004 // control DPLL5 modes, RW 

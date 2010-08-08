@@ -45,13 +45,13 @@ device l4IntCore;
 char * l4IntCoreName = "L4_INTERCONNECT_CORE";
 // L4INT_CORE: system control module
 device sysCtrlMod;
-char * sysCtrlModName = "SysControl Module";
+char * sysCtrlModName = "SYSCTRL_MOD";
 // L4INT_CORE: clock manager (and DPLL)
 device clockManager;
-char * clockManagerName = "Clock Manager";
+char * clockManagerName = "CLK_MAN";
 // L4INT_CORE: interrupt controller
 device intc;
-char * intcName = "Interrupt Controller";
+char * intcName = "INTC";
 // L4INT_CORE: core wakeup interconnect
 device l4CoreWakeupInt;
 char * l4CoreWakeupIntName = "L4_CORE_WAKEUP_INT";
@@ -65,19 +65,19 @@ char * gpmcModuleName = "GPMC";
 
 // L4_CORE_WAKEUP: power and reset manager
 device prm;
-char * prmName = "prm";
+char * prmName = "PMR";
 // L4_CORE_WAKEUP: general purpose I/O 1
 device gpio1;
-char * gpio1Name = "gpio1";
+char * gpio1Name = "GPIO1";
 // L4_CORE_WAKEUP: watchdog timer 2
 device wdtimer2;
-char * wdtimer2Name = "wdTimer2";
+char * wdtimer2Name = "WDTIMER2";
 // L4_CORE_WAKEUP: general purpose timer 1
 device gptimer1;
-char * gptimer1Name = "gptimer1";
+char * gptimer1Name = "GPTIMER1";
 // L4_CORE_WAKEUP: 32 Kiloherz synchronised timer
 device timer32k;
-char * timer32kName = "32kTimer";
+char * timer32kName = "32kTIMER";
 /********************************************************/
 // QUARTER 2
 device q2bus;

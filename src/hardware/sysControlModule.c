@@ -19,7 +19,7 @@ void initSysControlModule()
   {
     memset((void*)sysCtrlModule, 0x0, sizeof(struct SystemControlModule));
 #ifdef SYS_CTRL_MOD_DBG
-    serial_putstring("System control module at 0x");
+    serial_putstring("Initializing System control module at 0x");
     serial_putint((u32int)sysCtrlModule);
     serial_newline();
 #endif

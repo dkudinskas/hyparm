@@ -19,7 +19,7 @@ void initGpmc()
   {
     memset((void*)gpmc, 0x0, sizeof(struct Gpmc));
 #ifdef GPMC_DBG
-    serial_putstring("GPMC at 0x");
+    serial_putstring("Initializing GPMC at 0x");
     serial_putint((u32int)gpmc);
     serial_newline();
 #endif

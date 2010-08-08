@@ -20,7 +20,7 @@ void initPrm(void)
   {
     memset((void*)prMan, 0x0, sizeof(struct PowerAndResetManager));
 #ifdef PRM_DBG
-    serial_putstring("Power and reset manager at 0x");
+    serial_putstring("Initializing Power and reset manager at 0x");
     serial_putint((u32int)prMan);
     serial_newline();
 #endif

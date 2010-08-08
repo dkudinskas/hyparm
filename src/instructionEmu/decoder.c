@@ -60,9 +60,8 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 // UNIMPLEMENTED: SWP swap
 {1,  &swpInstruction,       0x01000090, 0x0fb00ff0, "SWP"},
 // UNIMPLEMENTED:
-{1,  &strhtInstruction,     0x006000b0, 0x0f7000f0, "strht%c\t%12-15r, %s"},
-{1,  &ldrhtInstruction,     0x003000b0, 0x0f3000f0, "ldr%6's%5?hbt%c\t%12-15r, %s"},
-//{1,  &ldrhtInstruction,     0x00300090, 0x0f300090, "ldr%6's%5?hbt%c\t%12-15r, %s"},
+{1,  &strhtInstruction,     0x006000b0, 0x0f7000f0, "STRHT instruction"},
+{1,  &ldrhtInstruction,     0x003000b0, 0x0f3000f0, "LDRHT instruction"},
 // store and load exclusive
 {1,  &ldrexbInstruction,    0x01d00f9f, 0x0ff00fff, "ldrexb%c\t%12-15r, [%16-19r]"},
 {1,  &ldrexdInstruction,    0x01b00f9f, 0x0ff00fff, "ldrexd%c\t%12-15r, [%16-19r]"},

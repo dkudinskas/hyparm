@@ -20,7 +20,7 @@ void initIntc(void)
   {
     memset((void*)irqController, 0x0, sizeof(struct InterruptController));
 #ifdef INTC_DBG
-    serial_putstring("INTC at 0x");
+    serial_putstring("Initializing INTC at 0x");
     serial_putint((u32int)irqController);
     serial_newline();
 #endif
@@ -395,6 +395,7 @@ void intcReset()
 {
 #ifdef INTC_DBG
   serial_putstring("INTC: soft reset.");
+  serial_newline();
 #endif
   // reset all register values to defaults
   irqController->intcSysConfig   = 0x00000000;
