@@ -3,8 +3,7 @@
 
 #include "types.h"
 
-// uncomment me to enable debug: 
-#define MALLOC_DEBUG
+// uncomment me to enable debug: #define MALLOC_DEBUG
 
 
 struct allocatedChunk

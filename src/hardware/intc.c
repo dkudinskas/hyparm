@@ -60,6 +60,33 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
         irqController->intcSysStatus = irqController->intcSysStatus & ~INTCPS_SYSSTATUS_SOFTRESET;
       }
       break;
+    case REG_INTCPS_MIR_CLEAR0:
+      serial_ERROR("INTC: load from W/O register (MIR0_CLEAR)");
+      break;
+    case REG_INTCPS_MIR_CLEAR1:
+      serial_ERROR("INTC: load from W/O register (MIR1_CLEAR)");
+      break;
+    case REG_INTCPS_MIR_CLEAR2:
+      serial_ERROR("INTC: load from W/O register (MIR2_CLEAR)");
+      break;
+    case REG_INTCPS_MIR_SET0:
+      serial_ERROR("INTC: load from W/O register (MIR0_SET)");
+      break;
+    case REG_INTCPS_MIR_SET1:
+      serial_ERROR("INTC: load from W/O register (MIR1_SET)");
+      break;
+    case REG_INTCPS_MIR_SET2:
+      serial_ERROR("INTC: load from W/O register (MIR2_SET)");
+      break;
+    case REG_INTCPS_ISR_CLEAR0:
+      serial_ERROR("INTC: load from W/O register (ISR0_CLEAR)");
+      break;
+    case REG_INTCPS_ISR_CLEAR1:
+      serial_ERROR("INTC: load from W/O register (ISR1_CLEAR)");
+      break;
+    case REG_INTCPS_ISR_CLEAR2:
+      serial_ERROR("INTC: load from W/O register (ISR2_CLEAR)");
+      break;
     case REG_INTCPS_SIR_IRQ:
     case REG_INTCPS_SIR_FIQ:
     case REG_INTCPS_CONTROL:
@@ -71,21 +98,9 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
     case REG_INTCPS_ITR0:
     case REG_INTCPS_ITR1:
     case REG_INTCPS_ITR2:
-    case REG_INTCPS_MIR0:
-    case REG_INTCPS_MIR1:
-    case REG_INTCPS_MIR2:
-    case REG_INTCPS_MIR_CLEAR0:
-    case REG_INTCPS_MIR_CLEAR1:
-    case REG_INTCPS_MIR_CLEAR2:
-    case REG_INTCPS_MIR_SET0:
-    case REG_INTCPS_MIR_SET1:
-    case REG_INTCPS_MIR_SET2:
     case REG_INTCPS_ISR_SET0:
     case REG_INTCPS_ISR_SET1:
     case REG_INTCPS_ISR_SET2:
-    case REG_INTCPS_ISR_CLEAR0:
-    case REG_INTCPS_ISR_CLEAR1:
-    case REG_INTCPS_ISR_CLEAR2:
     case REG_INTCPS_PENDING_IRQ0:
     case REG_INTCPS_PENDING_IRQ1:
     case REG_INTCPS_PENDING_IRQ2:
@@ -238,26 +253,80 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   }
 
   u32int regOffset = phyAddr - INTERRUPT_CONTROLLER;
-  u32int val = 0;
   switch (regOffset)
   {
     case REG_INTCPS_REVISION:
       serial_ERROR("Intc storing to read only register: version");
       break;
     case REG_INTCPS_SYSCONFIG:
-      if (val & INTCPS_SYSCONFIG_SOFTRESET)
+      if (value & INTCPS_SYSCONFIG_SOFTRESET)
       {
         intcReset();
-        val = val & ~INTCPS_SYSCONFIG_SOFTRESET;
+        value = value & ~INTCPS_SYSCONFIG_SOFTRESET;
       }
       // never set reset bit, all else except bit 0 is reserved
-      irqController->intcSysConfig = val & INTCPS_SYSCONFIG_AUTOIDLE;
+      irqController->intcSysConfig = value & INTCPS_SYSCONFIG_AUTOIDLE;
       break;
     case REG_INTCPS_SYSSTATUS:
       serial_ERROR("Intc storing to read only register: system status");
       break;
     case REG_INTCPS_SIR_IRQ:
+      serial_ERROR("Intc storing to read only register: active irq");
+      break;
     case REG_INTCPS_SIR_FIQ:
+      serial_ERROR("Intc storing to read only register: active fiq");
+      break;
+    case REG_INTCPS_MIR_CLEAR0:
+#ifdef INTC_DBG
+    {
+      u32int i;
+      for (i = 0; i < 32; i++)
+      {
+        if (value & (1 << i))
+        {
+          serial_putstring("INTC: clearing mask from interrupt number ");
+          serial_putint_nozeros(i);
+          serial_newline();
+        }
+      }
+    }
+#endif
+      irqController->intcMir0 &= ~value;
+      break;
+    case REG_INTCPS_MIR_CLEAR1:
+#ifdef INTC_DBG
+    {
+      u32int i;
+      for (i = 0; i < 32; i++)
+      {
+        if (value & (1 << i))
+        {
+          serial_putstring("INTC: clearing mask from interrupt number ");
+          serial_putint_nozeros(i+32);
+          serial_newline();
+        }
+      }
+    }
+#endif
+      irqController->intcMir1 &= ~value;
+      break;
+    case REG_INTCPS_MIR_CLEAR2:
+#ifdef INTC_DBG
+    {
+      u32int i;
+      for (i = 0; i < 32; i++)
+      {
+        if (value & (1 << i))
+        {
+          serial_putstring("INTC: clearing mask from interrupt number ");
+          serial_putint_nozeros(i+64);
+          serial_newline();
+        }
+      }
+    }
+#endif
+      irqController->intcMir2 &= ~value;
+      break;
     case REG_INTCPS_CONTROL:
     case REG_INTCPS_PROTECTION:
     case REG_INTCPS_IDLE:
@@ -270,9 +339,6 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case REG_INTCPS_MIR0:
     case REG_INTCPS_MIR1:
     case REG_INTCPS_MIR2:
-    case REG_INTCPS_MIR_CLEAR0:
-    case REG_INTCPS_MIR_CLEAR1:
-    case REG_INTCPS_MIR_CLEAR2:
     case REG_INTCPS_MIR_SET0:
     case REG_INTCPS_MIR_SET1:
     case REG_INTCPS_MIR_SET2:

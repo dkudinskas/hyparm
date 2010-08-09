@@ -1051,10 +1051,12 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
       }
       break;
     case CM_CLKSTCTRL_PER:
-      if (clockMan->cmClkStCtrlPer != value)
+      if (value & 0x2)
       {
-        serial_ERROR(" storePerCm unimplemented store to reg cmClkStCtrlPer");
+        serial_putstring("CMper: WARNING software forced wakeup, deliver interrupt?");
+        serial_newline();
       }
+      clockMan->cmClkStCtrlPer = value;
       break;
     case CM_CLKSTST_PER:
       if (clockMan->cmClkStStPer != value)

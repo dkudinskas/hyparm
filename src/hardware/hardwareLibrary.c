@@ -7,6 +7,7 @@
 #include "sysControlModule.h"
 #include "guestContext.h"
 #include "gpmc.h"
+#include "gpio.h"
 #include "intc.h"
 
 extern GCONTXT * getGuestContext(void);
@@ -174,9 +175,10 @@ device * initialiseHardwareLibrary()
                    PRM, (u32int)(PRM -1 + PRM_SIZE),
                    &l4CoreWakeupInt, &loadPrm, &storePrm);
   // L4_CORE_WAKEUP: general purpose I/O 1
+  initGpio();
   initialiseDevice(&gpio1, gpio1Name, FALSE,
                    GPIO1, (u32int)(GPIO1 -1 + GPIO1_SIZE),
-                   &l4CoreWakeupInt, &loadGeneric, &storeGeneric);
+                   &l4CoreWakeupInt, &loadGpio, &storeGpio);
   // L4_CORE_WAKEUP: watchdog timer 2
   initialiseDevice(&wdtimer2, wdtimer2Name, FALSE,
                    WDTIMER2, (u32int)(WDTIMER2 -1 + WDTIMER2_SIZE),

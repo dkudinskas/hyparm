@@ -46,7 +46,9 @@ M_IRQ_25 DSS_IRQ         Display subsystem module
 M_IRQ_26 MAIL_U0_MPU_IRQ Mailbox user 0 request
 M_IRQ_27 MCBSP5_IRQ      McBSP module 5
 M_IRQ_28 IVA2_MMU_IRQ    IVA2 MMU
-M_IRQ_29 GPIO1_MPU_IRQ   GPIO module 1
+*/
+#define GPIO1_IRQ   29   // GPIO module 1 
+/*
 M_IRQ_30 GPIO2_MPU_IRQ   GPIO module 2
 M_IRQ_31 GPIO3_MPU_IRQ   GPIO module 3
 M_IRQ_32 GPIO4_MPU_IRQ   GPIO module 4

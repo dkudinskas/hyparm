@@ -9,4 +9,5 @@ SRCS += src/hardware/LED.c
 SRCS += src/hardware/serial.c
 SRCS += src/hardware/gptimer.c
 SRCS += src/hardware/gpmc.c
+SRCS += src/hardware/gpio.c
 SRCS += src/hardware/intc.c
