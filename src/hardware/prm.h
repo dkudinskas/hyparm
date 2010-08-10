@@ -5,8 +5,7 @@
 #include "serial.h"
 #include "hardwareLibrary.h"
 
-// uncomment me to enable debug : 
-#define PRM_DBG
+// uncomment me to enable debug : #define PRM_DBG
 
 /* PRM module instances live at these physical addresses */
 #define IVA2_PRM                      0x48306000
@@ -37,10 +36,12 @@
 #define PRM_IRQSTATUS_IVA2       0x000000F8 // IRQ status, RW
 #define PRM_IRQENABLE_IVA2       0x000000FC // IRQ enable, RW
 // OCP_system_reg REGISTERS
-#define PRM_REVISION             0x00000004 // revision number, R/O
-#define PRM_SYSCONFIG            0x00000014 // various parameters for the i-face, RW
-#define PRM_IRQSTATUS_MPU        0x00000018 // IRQ status, RW
-#define PRM_IRQENABLE_MPU        0x0000001C // IRQ enable, RW
+#define PRM_REVISION_OCP         0x00000004 // revision number, R/O
+#define PRM_SYSCONFIG_OCP        0x00000014 // various parameters for the i-face, RW
+#define PRM_SYSCONFIG_OCP_RESERVED    0xFFFFFFFE
+#define PRM_SYSCONFIG_OCP_AUTOIDLE    0x00000001
+#define PRM_IRQSTATUS_MPU_OCP    0x00000018 // IRQ status, RW
+#define PRM_IRQENABLE_MPU_OCP    0x0000001C // IRQ enable, RW
 // MPU registers
 #define RM_RSTST_MPU             0x00000058 // reset status, RW
 #define PM_WKDEP_MPU             0x000000C8 // wakeup enable, RW
@@ -148,12 +149,14 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address);
 /* per-module loads */
 u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr);
 u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr);
+u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr);
 
 /* top store function */
-void  storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value);
 /* per-module stores */
-u32int storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value);
-u32int storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int value);
 
 
 struct PowerAndResetManager
@@ -183,6 +186,11 @@ struct PowerAndResetManager
   u32int prmClkSetup;
   u32int prmPolCtrl;
   u32int prmVoltSetup2;
+  // OCP_system_reg REGISTERS
+  u32int prmRevisionOcp;
+  u32int prmSysConfigOcp;
+  u32int prmIrqStatusMpuOcp;
+  u32int prmIrqEnableMpuOcp;
 };
 
 

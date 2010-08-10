@@ -75,6 +75,12 @@
 #define CM_CLKSTST_SGX              0x0000004C // interface clock activity status, R/O
 // WKUP_CM registers
 #define CM_FCLKEN_WKUP              0x00000000 // control fclk activity, RW
+
+#define CM_FCLKEN_WKUP_RESERVED        0xFFFFFFD6
+#define CM_FCLKEN_WKUP_WDT2            0x00000020
+#define CM_FCLKEN_WKUP_GPIO1           0x00000008
+#define CM_FCLKEN_WKUP_ENGPT1          0x00000001
+
 #define CM_ICLKEN_WKUP              0x00000010 // control iclk activity, RW
 #define CM_IDLEST_WKUP              0x00000020 // access monitoring, R/O
 #define CM_AUTOIDLE_WKUP            0x00000030 // autocontrol of iclk activity, RW

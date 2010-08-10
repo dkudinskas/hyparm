@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
   initialiseFrameTable();
 
   /* initialise guest context */
-  GCONTXT * guestContext = (GCONTXT*)mallocBytes(sizeof(GCONTXT));
+/*  GCONTXT * guestContext = (GCONTXT*)mallocBytes(sizeof(GCONTXT));
   if (guestContext == 0)
   {
     serial_ERROR("Failed to allocate guest context.");
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 #endif
   }
   registerGuestContext((u32int)guestContext);
-
+*/
   /* sets up stack addresses and exception handlers */
   startup_hypervisor();
 

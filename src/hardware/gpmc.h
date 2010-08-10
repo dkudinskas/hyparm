@@ -5,8 +5,7 @@
 #include "serial.h"
 #include "hardwareLibrary.h"
 
-// uncomment me to enable debug : 
-#define GPMC_DBG
+// uncomment me to enable debug : #define GPMC_DBG
 
 
 /************************

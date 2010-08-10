@@ -50,6 +50,11 @@ void initPrm(void)
   prMan->prmClkSetup = 0;
   prMan->prmPolCtrl = 0xA;
   prMan->prmVoltSetup2 = 0;
+  // OCP_system_reg REGISTERS
+  prMan->prmRevisionOcp     = 0x10;
+  prMan->prmSysConfigOcp    = 0x1;
+  prMan->prmIrqStatusMpuOcp = 0x0;
+  prMan->prmIrqEnableMpuOcp = 0x0;
 }
 
 /*************************************************************************
@@ -90,8 +95,10 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address)
     case Global_Reg_PRM:
       val = loadGlobalRegPrm(dev, address, phyAddr);
       break;
-    case IVA2_PRM:
     case OCP_System_Reg_PRM:
+      val = loadOcpSystemPrm(dev, address, phyAddr);
+      break;
+    case IVA2_PRM:
     case MPU_PRM:
     case CORE_PRM:
     case SGX_PRM:
@@ -218,6 +225,38 @@ u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
 }
 
 
+u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
+{
+  u32int val = 0;
+  u32int reg = phyAddr - OCP_System_Reg_PRM;
+  switch (reg)
+  {
+    case PRM_REVISION_OCP:
+      val = prMan->prmRevisionOcp;
+      break;
+    case PRM_SYSCONFIG_OCP:
+      val = prMan->prmSysConfigOcp;
+      break;
+    case PRM_IRQSTATUS_MPU_OCP:
+      val = prMan->prmIrqStatusMpuOcp;
+      break;
+    case PRM_IRQENABLE_MPU_OCP:
+      val = prMan->prmIrqEnableMpuOcp;
+      break;
+    default:
+      serial_ERROR("loadOcpSystemPrm loading non existing register!");
+  } // switch ends
+#ifdef PRM_DBG
+  serial_putstring("loadOcpSystemPrm reg ");
+  serial_putint_nozeros(reg);
+  serial_putstring(" value ");
+  serial_putint(val);
+  serial_newline(); 
+#endif
+  return val;
+}
+
+
 /*************************************************************************
  *                           Store Functions                             *
  *************************************************************************/
@@ -256,8 +295,10 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case Global_Reg_PRM:
       storeGlobalRegPrm(dev, address, phyAddr, value);
       break;
-    case IVA2_PRM:
     case OCP_System_Reg_PRM:
+      storeOcpSystemPrm(dev, address, phyAddr, value);
+      break;
+    case IVA2_PRM:
     case MPU_PRM:
     case CORE_PRM:
     case SGX_PRM:
@@ -283,7 +324,7 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   }  
 }
 
-u32int storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   serial_putstring("Store to: ");
   serial_putstring(dev->deviceName);
@@ -294,10 +335,9 @@ u32int storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int
   serial_newline();
   serial_putstring(dev->deviceName);
   serial_ERROR(" storeClockControlPrm unimplemented.");
-  return 0;
 }
 
-u32int storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   serial_putstring("Store to: ");
   serial_putstring(dev->deviceName);
@@ -308,5 +348,34 @@ u32int storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int va
   serial_newline();
   serial_putstring(dev->deviceName);
   serial_ERROR(" storeGlobalRegPrm unimplemented.");
-  return 0;
 }
+
+void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  u32int reg = phyAddr - OCP_System_Reg_PRM;
+#ifdef PRM_DBG
+  serial_putstring("storeOcpSystemPrm reg ");
+  serial_putint_nozeros(reg);
+  serial_putstring(" value ");
+  serial_putint(value);
+  serial_newline(); 
+#endif
+  switch (reg)
+  {
+    case PRM_REVISION_OCP:
+      serial_ERROR("storeOcpSystemPrm: storing to R/O register (revision).");
+      break;
+    case PRM_SYSCONFIG_OCP:
+      prMan->prmSysConfigOcp = value & PRM_SYSCONFIG_OCP_AUTOIDLE; // all other bits are reserved
+      break;
+    case PRM_IRQSTATUS_MPU_OCP:
+      serial_ERROR("storeOcpSystemPrm store to IRQSTATUS. investigate.");
+      break;
+    case PRM_IRQENABLE_MPU_OCP:
+      serial_ERROR("storeOcpSystemPrm store to IRQENABLE. investigate.");
+      break;
+    default:
+      serial_ERROR("storeOcpSystemPrm store to non existing register!");
+  } // switch ends
+}
+

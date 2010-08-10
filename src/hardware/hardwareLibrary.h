@@ -45,9 +45,18 @@
 #define GPTIMER1_SIZE                      0x00002000
 #define TIMER_32K                          0x48320000
 #define TIMER_32K_SIZE                     0x00002000
-
-
 #define Q1_L4_INT_PER                  0x49000000
+#define Q1_L4_INT_PER_SIZE             0x00100000
+#define GPIO2                            0x49050000
+#define GPIO2_SIZE                       0x00002000
+#define GPIO3                            0x49052000
+#define GPIO3_SIZE                       0x00002000
+#define GPIO4                            0x49054000
+#define GPIO4_SIZE                       0x00002000
+#define GPIO5                            0x49056000
+#define GPIO5_SIZE                       0x00002000
+#define GPIO6                            0x49058000
+#define GPIO6_SIZE                       0x00002000
 #define Q1_L4_INT_PER_SIZE             0x00100000
 #define Q1_L4_INT_RESERVED             0x49100000
 #define Q1_L4_INT_RESERVED_SIZE        0x06F00000

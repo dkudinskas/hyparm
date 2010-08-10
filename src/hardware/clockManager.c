@@ -915,7 +915,7 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_FCLKEN_WKUP:
       if (clockMan->cmFclkEnWkup != value)
       {
-        serial_ERROR(" storeWkupCm unimplemented store to reg mFclkEnWkup");
+        serial_ERROR(" storeWkupCm unimplemented store to reg cmFclkEnWkup");
       }
       break;
     case CM_ICLKEN_WKUP:

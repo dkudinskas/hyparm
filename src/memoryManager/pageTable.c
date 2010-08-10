@@ -1206,7 +1206,7 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
 
       sectionDescriptor* guestReal = (sectionDescriptor*)get1stLevelPtDescriptorAddr(guestPhysical, guestPhysicalAddr);
 
-      if(SECTION != guestReal->type)
+      if(guestReal->type != SECTION)
       {
       /*
         Hitting this means we allocated guestReal memory in small/large pages
@@ -1354,10 +1354,24 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
 
       //Leave the rest zero for now
     }
-    else if(guestPhysicalAddr == (TRANSMIT_HOLDING_REG & 0xFFF00000))
+    else if(0x49000000 == (guestPhysicalAddr & 0xFFF00000))
     {
       serial_putstring("Guest mapping Serial address space. Already mapped by Hypervisor.");
       serial_newline();
+      serial_putstring("Guest map virt: 0x");
+      serial_putint(((u32int)shadow) << 18);
+      serial_putstring(" to phy: 0x");
+      serial_putint(guestPhysicalAddr);
+      serial_putstring(". Marking no access");
+      serial_newline();
+
+      shadow->type = SECTION;
+      shadow->addr = guest->addr;
+      shadow->ap10 = PRIV_RW_USR_NO & 0x3;
+      shadow->ap2 = PRIV_RW_USR_NO >> 2;
+      shadow->domain = mapGuestDomain(guest->domain);
+
+      //Leave the rest zero for now
     }
     else if( 0x48000000 == (guestPhysicalAddr & 0xFF000000))
     {
@@ -1997,7 +2011,7 @@ void copyPageTable(descriptor* guest, descriptor* shadow)
    *and we should do the relativly more expensive test (0 != currentPTE->type)
     */
 
-    if( (SECTION == guest[i].type) || (PAGE_TABLE == guest[i].type) )
+    if( (guest[i].type == SECTION) || (guest[i].type == PAGE_TABLE) )
     {
       {
         /*
@@ -2015,7 +2029,7 @@ void copyPageTable(descriptor* guest, descriptor* shadow)
         }
       }
 
-      if(SECTION == guest[i].type)
+      if(guest[i].type == SECTION)
       {
         sectionDescriptor* guestSd = (sectionDescriptor*) &guest[i];
         sectionDescriptor* shadowSd = (sectionDescriptor*) &shadow[i];

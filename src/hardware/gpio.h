@@ -5,8 +5,7 @@
 #include "serial.h"
 #include "hardwareLibrary.h"
 
-// uncomment me to enable debug : 
-#define GPIO_DBG
+// uncomment me to enable debug : #define GPIO_DBG
 
 
 /************************
@@ -55,9 +54,9 @@
 #define GPIO_SETDATAOUT          0x094
 
 
-void initGpio(void);
+void initGpio(u32int gpioNumber);
 
-void resetGpio(void);
+void resetGpio(u32int num);
 
 
 /* top load function */

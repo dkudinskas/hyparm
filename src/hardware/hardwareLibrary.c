@@ -79,6 +79,26 @@ char * gptimer1Name = "GPTIMER1";
 // L4_CORE_WAKEUP: 32 Kiloherz synchronised timer
 device timer32k;
 char * timer32kName = "32kTIMER";
+// L4 interconnect peripherals
+device l4IntPer;
+char * l4IntPerName = "L4_INT_PER";
+// L4_INT_PER: GPIO2
+device gpio2;
+char * gpio2Name = "GPIO2";
+// L4_INT_PER: GPIO3
+device gpio3;
+char * gpio3Name = "GPIO3";
+// L4_INT_PER: GPIO4
+device gpio4;
+char * gpio4Name = "GPIO4";
+// L4_INT_PER: GPIO5
+device gpio5;
+char * gpio5Name = "GPIO5";
+// L4_INT_PER: GPIO6
+device gpio6;
+char * gpio6Name = "GPIO6";
+
+
 /********************************************************/
 // QUARTER 2
 device q2bus;
@@ -175,7 +195,7 @@ device * initialiseHardwareLibrary()
                    PRM, (u32int)(PRM -1 + PRM_SIZE),
                    &l4CoreWakeupInt, &loadPrm, &storePrm);
   // L4_CORE_WAKEUP: general purpose I/O 1
-  initGpio();
+  initGpio(1);
   initialiseDevice(&gpio1, gpio1Name, FALSE,
                    GPIO1, (u32int)(GPIO1 -1 + GPIO1_SIZE),
                    &l4CoreWakeupInt, &loadGpio, &storeGpio);
@@ -192,6 +212,37 @@ device * initialiseHardwareLibrary()
   initialiseDevice(&timer32k, timer32kName, FALSE,
                    TIMER_32K, (u32int)(TIMER_32K -1 + TIMER_32K_SIZE),
                    &l4CoreWakeupInt, &loadTimer32k, &storeTimer32k);
+
+  // L4 interconnect: L4 interconnect peripherals
+  initialiseDevice(&l4IntPer, l4IntPerName, TRUE,
+                   Q1_L4_INT_PER, (u32int)(Q1_L4_INT_PER -1 + Q1_L4_INT_PER_SIZE),
+                   &l4Interconnect, &loadGeneric, &storeGeneric);
+  // L4_INT_PER: general purpose I/O 2
+  initGpio(2);
+  initialiseDevice(&gpio2, gpio2Name, FALSE,
+                   GPIO2, (u32int)(GPIO2 -1 + GPIO2_SIZE),
+                   &l4IntPer, &loadGpio, &storeGpio);
+  // L4_INT_PER: general purpose I/O 3
+  initGpio(3);
+  initialiseDevice(&gpio3, gpio3Name, FALSE,
+                   GPIO3, (u32int)(GPIO3 -1 + GPIO3_SIZE),
+                   &l4IntPer, &loadGpio, &storeGpio);
+  // L4_INT_PER: general purpose I/O 4
+  initGpio(4);
+  initialiseDevice(&gpio4, gpio4Name, FALSE,
+                   GPIO4, (u32int)(GPIO4 -1 + GPIO4_SIZE),
+                   &l4IntPer, &loadGpio, &storeGpio);
+  // L4_INT_PER: general purpose I/O 5
+  initGpio(5);
+  initialiseDevice(&gpio5, gpio5Name, FALSE,
+                   GPIO5, (u32int)(GPIO5 -1 + GPIO5_SIZE),
+                   &l4IntPer, &loadGpio, &storeGpio);
+  // L4_INT_PER: general purpose I/O 6
+  initGpio(6);
+  initialiseDevice(&gpio6, gpio6Name, FALSE,
+                   GPIO6, (u32int)(GPIO6 -1 + GPIO6_SIZE),
+                   &l4IntPer, &loadGpio, &storeGpio);
+
   /********************************************************/
   // QUARTER 2
   initialiseDevice(&q2bus, q2busName, TRUE, QUARTER2, (u32int)(QUARTER2-1+QUARTER_SIZE),

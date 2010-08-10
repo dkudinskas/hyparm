@@ -5,8 +5,7 @@
 #include "serial.h"
 #include "hardwareLibrary.h"
 
-// uncomment me to enable debug : 
-#define SYS_CTRL_MOD_DBG
+// uncomment me to enable debug : #define SYS_CTRL_MOD_DBG
 
 
 /* instances live at these physical addresses */
