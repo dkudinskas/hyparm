@@ -69,7 +69,7 @@ void initClockManager()
   clockMan->cmClkStCtrlSgx = 0x00000000;  
   clockMan->cmClkStSt      = 0x00000000;
   // WKUP_CM registers
-  clockMan->cmFclkEnWkup   = 0x000000e9;
+  clockMan->cmFclkEnWkup   = 0x00000029;
   clockMan->cmIclkEnWkup   = 0x0000003f;
   clockMan->cmIdleStWkup   = 0x00000200;
   clockMan->cmAutoIdleWkup = 0x00000000;
@@ -913,15 +913,93 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
   switch (reg)
   {
     case CM_FCLKEN_WKUP:
+      // clear reserved bits... and check meaningful bit values
+      value = value & ~CM_FCLKEN_WKUP_RESERVED;
+      
       if (clockMan->cmFclkEnWkup != value)
       {
-        serial_ERROR(" storeWkupCm unimplemented store to reg cmFclkEnWkup");
+        if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_WDT2) == CM_FCLKEN_WKUP_WDT2) &&
+             ((value & CM_FCLKEN_WKUP_WDT2) == 0) )
+        {
+          serial_putstring("CM: warn: cmWkup disabling watchdog timer 2 functional clock.");
+          serial_newline();
+        }
+        else if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_WDT2) == 0) &&
+             ((value & CM_FCLKEN_WKUP_WDT2) == CM_FCLKEN_WKUP_WDT2) )
+        {
+          serial_putstring("CM: warn: cmWkup enabling watchdog timer 2 functional clock.");
+          serial_newline();
+        }
+        if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_GPIO1) == CM_FCLKEN_WKUP_GPIO1) &&
+             ((value & CM_FCLKEN_WKUP_GPIO1) == 0) )
+        {
+          serial_putstring("CM: warn: cmWkup disabling gpio1 functional clock.");
+          serial_newline();
+        }
+        else if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_GPIO1) == 0) &&
+             ((value & CM_FCLKEN_WKUP_GPIO1) == CM_FCLKEN_WKUP_GPIO1) )
+        {
+          serial_putstring("CM: warn: cmWkup enabling gpio1 functional clock.");
+          serial_newline();
+        }
+        if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_ENGPT1) == CM_FCLKEN_WKUP_ENGPT1) &&
+             ((value & CM_FCLKEN_WKUP_ENGPT1) == 0) )
+        {
+          serial_putstring("CM: warn: cmWkup disabling gptimer1 functional clock.");
+          serial_newline();
+        }
+        else if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_ENGPT1) == 0) &&
+             ((value & CM_FCLKEN_WKUP_ENGPT1) == CM_FCLKEN_WKUP_ENGPT1) )
+        {
+          serial_putstring("CM: warn: cmWkup enabling gptimer1 functional clock.");
+          serial_newline();
+        }
+        clockMan->cmFclkEnWkup = value;
       }
       break;
     case CM_ICLKEN_WKUP:
+      // clear reserved bits... and check meaningful bit values
+      value = value & ~CM_ICLKEN_WKUP_RESERVED;
+      
       if (clockMan->cmIclkEnWkup != value)
       {
-        serial_ERROR(" storeWkupCm unimplemented store to reg cmIclkEnWkup");
+        if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_WDT2) == CM_ICLKEN_WKUP_WDT2) &&
+             ((value & CM_ICLKEN_WKUP_WDT2) == 0) )
+        {
+          serial_putstring("CM: warn: cmWkup disabling watchdog timer 2 interface clock.");
+          serial_newline();
+        }
+        else if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_WDT2) == 0) &&
+             ((value & CM_ICLKEN_WKUP_WDT2) == CM_ICLKEN_WKUP_WDT2) )
+        {
+          serial_putstring("CM: warn: cmWkup enabling watchdog timer 2 interface clock.");
+          serial_newline();
+        }
+        if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_GPIO1) == CM_ICLKEN_WKUP_GPIO1) &&
+             ((value & CM_ICLKEN_WKUP_GPIO1) == 0) )
+        {
+          serial_putstring("CM: warn: cmWkup disabling gpio1 interface clock.");
+          serial_newline();
+        }
+        else if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_GPIO1) == 0) &&
+             ((value & CM_ICLKEN_WKUP_GPIO1) == CM_ICLKEN_WKUP_GPIO1) )
+        {
+          serial_putstring("CM: warn: cmWkup enabling gpio1 interface clock.");
+          serial_newline();
+        }
+        if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_ENGPT1) == CM_ICLKEN_WKUP_ENGPT1) &&
+             ((value & CM_ICLKEN_WKUP_ENGPT1) == 0) )
+        {
+          serial_putstring("CM: warn: cmWkup disabling gptimer1 interface clock.");
+          serial_newline();
+        }
+        else if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_ENGPT1) == 0) &&
+             ((value & CM_ICLKEN_WKUP_ENGPT1) == CM_ICLKEN_WKUP_ENGPT1) )
+        {
+          serial_putstring("CM: warn: cmWkup enabling gptimer1 interface clock.");
+          serial_newline();
+        }
+        clockMan->cmFclkEnWkup = value;
       }
       break;
     case CM_IDLEST_WKUP:
@@ -937,10 +1015,32 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
       }
       break;
     case CM_CLKSEL_WKUP:
+#define CM_CLKSEL_WKUP_GPT1            0x00000001
+      // clear reserved bits... and check meaningful bit values
+      value = value & ~CM_CLKSEL_WKUP_RESERVED1;
+      
       if (clockMan->cmClkSelWkup != value)
       {
-        serial_ERROR(" storeWkupCm unimplemented store to reg cmClkSelWkup");
+        if ( (clockMan->cmClkSelWkup & CM_CLKSEL_WKUP_RM) != (value & CM_CLKSEL_WKUP_RM) )
+        {
+          serial_putstring("CM: warn: cmWkup reset module clock set to ");
+          serial_putint_nozeros((value & CM_CLKSEL_WKUP_RM) >> 1);
+          serial_newline();
+        }
+        if ( ((clockMan->cmClkSelWkup & CM_CLKSEL_WKUP_GPT1) == 0) &&
+             ((value & CM_CLKSEL_WKUP_GPT1) == CM_CLKSEL_WKUP_GPT1) )
+        {
+          serial_putstring("CM: warn: cmWkup set gptimer1 clock to system clock");
+          serial_newline();
+        }
+        else if ( ((clockMan->cmIclkEnWkup & CM_CLKSEL_WKUP_GPT1) == CM_CLKSEL_WKUP_GPT1) &&
+             ((value & CM_CLKSEL_WKUP_GPT1) == 0) )
+        {
+          serial_putstring("CM: warn: cmWkup set gptimer1 clock to 32kHz clock");
+          serial_newline();
+        }
       }
+      clockMan->cmClkSelWkup = value;
       break;
     case CM_CLKSTCTRL_WKUP:
 #ifdef CLK_MAN_DBG

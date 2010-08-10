@@ -3,8 +3,11 @@
 
 #include "types.h"
 #include "serial.h"
+#include "hardwareLibrary.h"
 
-// uncomment me to enable debug : #define GPTIMER_DBG
+
+// uncomment me to enable debug : 
+#define GPTIMER_DBG
 
 // base addresses
 #define GPTIMER1        0x48318000
@@ -127,6 +130,40 @@
 #define TLDR1MS  0xFFFFFFE0
 
 
+void initGPTimer(void);
+
+void resetGPTimer(void);
+
+u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address);
+
+void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+
+
+struct GeneralPurposeTimer
+{
+  u32int gptTiocpCfg;
+  u32int gptTistat;
+  u32int gptTisr;
+  u32int gptTier;
+  u32int gptTwer;
+  u32int gptTclr;
+  u32int gptTcrr;
+  u32int gptTldr;
+  u32int gptTtgr;
+  u32int gptTwps;
+  u32int gptTmar;
+  u32int gptTcar1;
+  u32int gptTsicr;
+  u32int gptTcar2;
+  u32int gptTpir;
+  u32int gptTnir;
+  u32int gptTcvr;
+  u32int gptTocr;
+  u32int gptTowr;
+};
+
+
+/*
 u32int getCorrectBaseAddr(u32int gptNumber);
 
 void toggleOverflowInterrupt(u32int gptNumber, bool enable);
@@ -138,6 +175,6 @@ void setupMsTick(u32int gptNumber);
 void dumpGptRegisters(u32int gptNumber); 
 
 void deassertInterrupt(u32int gptNumber);
-
+*/
 #endif
 

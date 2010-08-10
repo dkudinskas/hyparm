@@ -5,8 +5,7 @@
 #include "serial.h"
 #include "hardwareLibrary.h"
 
-// uncomment me to enable debug : 
-#define CLK_MAN_DBG
+// uncomment me to enable debug : #define CLK_MAN_DBG
 
 
 /* CM module instances live at these physical addresses */
@@ -75,16 +74,22 @@
 #define CM_CLKSTST_SGX              0x0000004C // interface clock activity status, R/O
 // WKUP_CM registers
 #define CM_FCLKEN_WKUP              0x00000000 // control fclk activity, RW
-
 #define CM_FCLKEN_WKUP_RESERVED        0xFFFFFFD6
 #define CM_FCLKEN_WKUP_WDT2            0x00000020
 #define CM_FCLKEN_WKUP_GPIO1           0x00000008
 #define CM_FCLKEN_WKUP_ENGPT1          0x00000001
-
 #define CM_ICLKEN_WKUP              0x00000010 // control iclk activity, RW
+#define CM_ICLKEN_WKUP_RESERVED        0xFFFFFFD6
+#define CM_ICLKEN_WKUP_WDT2            0x00000020
+#define CM_ICLKEN_WKUP_GPIO1           0x00000008
+#define CM_ICLKEN_WKUP_ENGPT1          0x00000001
 #define CM_IDLEST_WKUP              0x00000020 // access monitoring, R/O
 #define CM_AUTOIDLE_WKUP            0x00000030 // autocontrol of iclk activity, RW
 #define CM_CLKSEL_WKUP              0x00000040 // source clock selection, RW
+#define CM_CLKSEL_WKUP_RESERVED1       0xffffff80
+#define CM_CLKSEL_WKUP_RESERVED2       0x00000078
+#define CM_CLKSEL_WKUP_RM              0x00000006
+#define CM_CLKSEL_WKUP_GPT1            0x00000001
 #define CM_CLKSTCTRL_WKUP           0x00000048 // enable power state transition, RW  
 // Clock_control_reg_CM registers
 #define CM_CLKEN_PLL                0x00000000 // control DPLL3 and DPLL4 modes, RW

@@ -8,6 +8,7 @@
 #include "guestContext.h"
 #include "gpmc.h"
 #include "gpio.h"
+#include "gptimer.h"
 #include "intc.h"
 
 extern GCONTXT * getGuestContext(void);
@@ -204,9 +205,10 @@ device * initialiseHardwareLibrary()
                    WDTIMER2, (u32int)(WDTIMER2 -1 + WDTIMER2_SIZE),
                    &l4CoreWakeupInt, &loadGeneric, &storeGeneric);
   // L4_CORE_WAKEUP: general purpose timer 1
+  initGPTimer();
   initialiseDevice(&gptimer1, gptimer1Name, FALSE,
                    GPTIMER1, (u32int)(GPTIMER1 -1 + GPTIMER1_SIZE),
-                   &l4CoreWakeupInt, &loadGeneric, &storeGeneric);
+                   &l4CoreWakeupInt, &loadGPTimer, &storeGPTimer);
   // L4_CORE_WAKEUP: 32 Kiloherz synchronised timer
   initTimer32k();
   initialiseDevice(&timer32k, timer32kName, FALSE,
