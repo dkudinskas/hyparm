@@ -10,6 +10,7 @@
 #include "frameAllocator.h"
 #include "hardwareLibrary.h"
 #include "memFunctions.h"
+#include "beIntc.h"
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 
@@ -94,7 +95,10 @@ int main(int argc, char *argv[])
   }
   registerBlockCache(gContext, blockCache);
 
-  /* initialise all hardware devices */
+  /* initialise physical interrupt controller */
+  initialiseInterruptController();
+
+  /* initialise virtual hardware devices */
   device * libraryPtr;
   if ((libraryPtr = initialiseHardwareLibrary()) != 0)
   {

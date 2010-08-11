@@ -5,8 +5,7 @@
 #include "mmu.h"
 #include "guestContext.h"
 
-/* Un Comment me to define addressing debug */
-// #define ADDR_DBG
+//uncomment me to enable debugging: #define ADDRESSING_DEBUG
 
 /* Need to initialise the MMU and enable virtual addressing */
 void initialiseVirtualAddressing(void);

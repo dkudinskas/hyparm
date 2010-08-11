@@ -40,10 +40,12 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
       // for now, just load the real counter value.
       volatile u32int * memPtr = (u32int*)address;
       val = *memPtr;
+#ifdef TIMER32K_DBG
       serial_putstring(dev->deviceName);
       serial_putstring(" load counter value ");
       serial_putint(val);
       serial_newline();
+#endif
     }
     else
     {

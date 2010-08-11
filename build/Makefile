@@ -47,6 +47,7 @@ INCLUDE_DIRS += -I$(DEPTH)/src/hardware/
 INCLUDE_DIRS += -I$(DEPTH)/src/instructionEmu/
 INCLUDE_DIRS += -I$(DEPTH)/src/linuxBoot/
 INCLUDE_DIRS += -I$(DEPTH)/src/memoryManager/
+INCLUDE_DIRS += -I$(DEPTH)/src/drivers/beagle/
 
 include $(DEPTH)/src/makefile.in
 include $(DEPTH)/src/common/makefile.in
@@ -57,6 +58,7 @@ include $(DEPTH)/src/guestManager/makefile.in
 include $(DEPTH)/src/linuxBoot/makefile.in
 include $(DEPTH)/src/instructionEmu/makefile.in
 include $(DEPTH)/src/memoryManager/makefile.in
+include $(DEPTH)/src/drivers/beagle/makefile.in
 
 OBJS = $(addprefix $(DEPTH)/, $(SRCS:.c=.o))
 ASM_OBJS = $(addprefix $(DEPTH)/, $(RAW_ASMS:.s=.o))

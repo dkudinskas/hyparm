@@ -1,0 +1,3 @@
+SRCS += src/drivers/beagle/beIntc.c
+SRCS += src/drivers/beagle/beGPTimer.c
+

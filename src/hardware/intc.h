@@ -9,7 +9,8 @@
 #define INTCPS_INTERRUPTS_PER_BANK 32
 #define INTCPS_NR_OF_INTERRUPTS    96
 
-// uncomment me to enable debug : #define INTC_DBG
+// uncomment me to enable debug : 
+#define INTC_DBG
 
 #define INTC_REVISION                                  0x00000004
 

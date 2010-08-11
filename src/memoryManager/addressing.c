@@ -7,8 +7,6 @@
 #include "blockCache.h"
 #include "memoryConstants.h"
 
-//uncomment me to enable debugging: #define ADDRESSING_DEBUG
-
 extern GCONTXT * getGuestContext(void); //from main.c
 extern void setGuestPhysicalPt(GCONTXT* gc);
 
@@ -34,7 +32,7 @@ void initialiseVirtualAddressing()
 void createVirtualMachineGPAtoRPA(GCONTXT* gc)
 {
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("IMPLEMENT: createVirtualMachineGPAtoRPA (addressing.c)");
+  serial_putstring("createVirtualMachineGPAtoRPA: TODO createVirtualMachineGPAtoRPA (addressing.c)");
   serial_newline();
 #endif
 
@@ -56,7 +54,7 @@ void createVirtualMachineGPAtoRPA(GCONTXT* gc)
 void initialiseGuestShadowPageTable(u32int guestPtAddr)
 {
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("PARTIAL IMPLEMENTATION: InitialiseGuestShadowPageTable,");
+  serial_putstring("initialiseGuestShadowPageTable: PARTIAL IMPLEMENTATION");
   serial_newline();
 #endif
 
@@ -67,7 +65,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   if(guestPtAddr == 0x80004000)
   {
 #ifdef ADDRESSING_DEBUG
-    serial_putstring("TTBR0 Linux identity mapping bootstrap, ignoring.");
+    serial_putstring("initialiseGuestShadowPageTable: TTBR0 Linux identity mapping bootstrap, ignoring.");
     serial_newline();
 #endif
     return;
@@ -80,7 +78,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
 
 #ifdef ADDRESSING_DEBUG
   dumpGuestContext(gContext);
-  serial_putstring("Dumping guest page table @ 0x");
+  serial_putstring("initialiseGuestShadowPageTable: Dumping guest page table @ 0x");
   serial_putint(guestPtAddr);
   serial_newline();
 
@@ -118,7 +116,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   else
   {
 #ifdef ADDRESSING_DEBUG
-    serial_putstring("set gPT ptr in gContext");
+    serial_putstring("initialiseGuestShadowPageTable: set gPT ptr in gContext");
     serial_newline();
 #endif
     //guest virtual addressing is not active, no need to spend time faulting on PT that the OS is going to add entries to before it activates
@@ -134,7 +132,7 @@ void guestEnableVirtMem()
   if(0 == gc->PT_os)
   {
 #ifdef ADDRESSING_DEBUG
-    serial_putstring("No entry in gc. We are at the identity mapping bootstrap, which we ignore hypervised. Continuing boot...");
+    serial_putstring("guestEnableVirtMem: No entry in gc. Must be identity mapping bootstrap, ignore hypervised. Continuing boot...");
     serial_newline();
 #endif
     return;
@@ -142,14 +140,13 @@ void guestEnableVirtMem()
 
 #ifdef ADDRESSING_DEBUG
   dumpGuestContext(gc);
-  serial_putstring("Dumping guest page table from addr in gc->PT_os @ 0x");
+  serial_putstring("guestEnableVirtMem: Dumping guest page table from addr in gc->PT_os @ 0x");
   serial_putint((u32int)gc->PT_os);
   serial_newline();
 
   dumpPageTable(gc->PT_os);
 
-  serial_newline();
-  serial_putstring("PT dump done");
+  serial_putstring("guestEnableVirtMem: PT dump done");
   serial_newline();
 #endif
 
@@ -161,7 +158,7 @@ void guestEnableVirtMem()
   }
 
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("Enabling guest virtual / shadow page tables");
+  serial_putstring("guestEnableVirtMem: Enabling guest virtual / shadow page tables");
   serial_newline();
 #endif
 
@@ -173,12 +170,12 @@ void guestEnableVirtMem()
   copyPageTable(gc->PT_os, sPT);
 
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("Copy PT done. Dumping shadow PT");
+  serial_putstring("guestEnableVirtMem: Copy PT done. Dumping shadow PT");
   serial_newline();
   dumpPageTable(sPT);
-  serial_putstring("shadow PT dump done.");
+  serial_putstring("guestEnableVirtMem: shadow PT dump done.");
   serial_newline();
-  serial_putstring("About to switch to sPT");
+  serial_putstring("guestEnableVirtMem: About to switch to sPT");
   serial_newline();
 #endif
 
@@ -194,7 +191,7 @@ void guestEnableVirtMem()
   clearCache(); //just to make sure
 
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("Using sPT. Continuing");
+  serial_putstring("guestEnableVirtMem: Using sPT. Continuing");
   serial_newline();
 #endif
 
@@ -219,3 +216,4 @@ void guestEnableVirtMem()
   //function ptr to the routine that handler gOS edits to its PT
   addProtection(guestPtAddr, guestPtEndAddr, &pageTableEdit, PRIV_RW_USR_RO);
 }
+

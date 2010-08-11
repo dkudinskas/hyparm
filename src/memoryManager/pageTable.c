@@ -88,6 +88,10 @@ descriptor* createHypervisorPageTable()
       serial_ERROR("Added uart1 mapping failed. Entering infinite loop.");
     }
   }
+  
+  // interrupt controller
+  const u32int interruptController = 0x48200000;
+  addSectionPtEntry(hypervisorPtd, interruptController,interruptController,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   /*
   Exception vectors
@@ -133,6 +137,11 @@ descriptor* createGuestOSPageTable()
   //We will want to use the exception handler remap feature to put the page tables in the 0xffff0000 address space later
   const u32int exceptionHandlerRedirectAddr = 0x4020ffd0;
   addSectionPtEntry(ptd, exceptionHandlerRedirectAddr, exceptionHandlerRedirectAddr, HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
+  // interrupt controller
+  const u32int interruptController = 0x48200000;
+  addSectionPtEntry(ptd, interruptController,interruptController,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
 
 #ifdef PT_SHADOW_DEBUG
   serial_putstring("New shadow PT dump @ 0x");
@@ -285,7 +294,7 @@ u32int addSectionPtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int
   switch(ptd1st->type)
   {
     case FAULT:
-    //no existing entry
+      //no existing entry
 #ifdef PT_SECTION_DEBUG
       serial_putstring("Page Type: FAULT.  Creating new section descriptor");
       serial_newline();
@@ -294,7 +303,7 @@ u32int addSectionPtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int
       return 0;
       break;
     case SECTION:
-      ;
+    {
       sectionDescriptor* sd = (sectionDescriptor*)ptd1st;
       if((sd->addr == (physical >> 20)) && (sd->sectionType == 0))
       {
@@ -315,8 +324,9 @@ u32int addSectionPtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int
         return 1;
       }
       break;
+    }
     case PAGE_TABLE:
-    //error!
+      //error!
       serial_ERROR("Attempting to add section entry over the top of existing small/large sub-table descriptor. Entering infinite loop.");
       return 1;
       break;
@@ -1356,6 +1366,7 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
     }
     else if(0x49000000 == (guestPhysicalAddr & 0xFFF00000))
     {
+/*
       serial_putstring("Guest mapping Serial address space. Already mapped by Hypervisor.");
       serial_newline();
       serial_putstring("Guest map virt: 0x");
@@ -1364,7 +1375,7 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
       serial_putint(guestPhysicalAddr);
       serial_putstring(". Marking no access");
       serial_newline();
-
+*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
@@ -1994,10 +2005,10 @@ void copyPageTable(descriptor* guest, descriptor* shadow)
   }
 
 #ifdef PT_SHADOW_DEBUG
-  serial_putstring("Dumping guest pagetable");
+  serial_putstring("copyPageTable: Dumping guest pagetable");
   serial_newline();
   dumpPageTable(guest);
-  serial_putstring("End guest pageTable dump");
+  serial_putstring("copyPageTable: End guest pageTable dump");
   serial_newline();
 #endif
 
@@ -2013,20 +2024,18 @@ void copyPageTable(descriptor* guest, descriptor* shadow)
 
     if( (guest[i].type == SECTION) || (guest[i].type == PAGE_TABLE) )
     {
+      /*
+       This (guest pagetable mapping hypervisor memory space) could cause serious problems
+       if not caught early
+      */
+      const u32int hypervisorStart = (HYPERVISOR_START_ADDR) >> 20;
+      const u32int hypervisorEnd = (HYPERVISOR_START_ADDR + (TOTAL_MACHINE_RAM/4) -1) >> 20;
+      if(i >= hypervisorStart && i <= hypervisorEnd)
       {
-        /*
-         This (guest pagetable mapping hypervisor memory space) could cause serious problems
-         if not caught early
-        */
-        const u32int hypervisorStart = (HYPERVISOR_START_ADDR) >> 20;
-        const u32int hypervisorEnd = (HYPERVISOR_START_ADDR + (TOTAL_MACHINE_RAM/4) -1) >> 20;
-        if(i >= hypervisorStart && i <= hypervisorEnd)
-        {
-          serial_putstring("guest is attemping to use hypervisor 1:1 mapped address space. 0x");
-          serial_putint(i << 20);
-          serial_newline();
-          serial_ERROR("Entering infinite loop...");
-        }
+        serial_putstring("guest is attemping to use hypervisor 1:1 mapped address space. 0x");
+        serial_putint(i << 20);
+        serial_newline();
+        serial_ERROR("Entering infinite loop...");
       }
 
       if(guest[i].type == SECTION)
@@ -2045,15 +2054,13 @@ void copyPageTable(descriptor* guest, descriptor* shadow)
 
         /** Step 1 */
         //Check the Page Table entry points to a valid 2nd level address
+        u32int baseAddr = guestPTD->addr << 10;
+        if( (baseAddr < BEAGLE_RAM_START) || (baseAddr > BEAGLE_RAM_END-3) )
         {
-          u32int baseAddr = guestPTD->addr << 10;
-          if( (baseAddr < BEAGLE_RAM_START) || (baseAddr > BEAGLE_RAM_END-3) )
-          {
           //2nd level address is not valid, don't bother creating an entry in the shadow PT
           //When the guest OS actually updates the addr for this entry.
           //We will recreate it
-            break;
-          }
+          break;
         }
 
         /** Step 2 */
