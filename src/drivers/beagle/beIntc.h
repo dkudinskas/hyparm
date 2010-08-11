@@ -8,8 +8,7 @@
 #define INTCPS_INTERRUPTS_PER_BANK 32
 #define INTCPS_NR_OF_INTERRUPTS    96
 
-// uncomment me to enable debug : 
-#define BE_INTC_DBG
+// uncomment me to enable debug : #define BE_INTC_DBG
 
 // interrupt number mappings
 /*
@@ -43,28 +42,26 @@ M_IRQ_26 MAIL_U0_MPU_IRQ Mailbox user 0 request
 M_IRQ_27 MCBSP5_IRQ      McBSP module 5
 M_IRQ_28 IVA2_MMU_IRQ    IVA2 MMU
 */
-#define GPIO1_IRQ   29
-#define GPIO2_IRQ   30
-#define GPIO3_IRQ   31
-#define GPIO4_IRQ   32
-#define GPIO5_IRQ   33
-#define GPIO6_IRQ   34
+#define GPIO1_IRQ      29
+#define GPIO2_IRQ      30
+#define GPIO3_IRQ      31
+#define GPIO4_IRQ      32
+#define GPIO5_IRQ      33
+#define GPIO6_IRQ      34
+#define RESERVED_IRQ   35
+#define WDTIMER3_IRQ   36
+#define GPT1_IRQ       37
+#define GPT2_IRQ       38
+#define GPT3_IRQ       39
+#define GPT4_IRQ       40
+#define GPT5_IRQ       41
+#define GPT6_IRQ       42
+#define GPT7_IRQ       43
+#define GPT8_IRQ       44
+#define GPT9_IRQ       45
+#define GPT10_IRQ      46
+#define GPT11_IRQ      47
 /*
-M_IRQ_35 Reserved        Reserved
-M_IRQ_36 WDT3_IRQ        Watchdog timer module 3 overflow
-M_IRQ_37 GPT1_IRQ        General-purpose timer module 1
-M_IRQ_38 GPT2_IRQ        General-purpose timer module 2
-M_IRQ_39 GPT3_IRQ        General-purpose timer module 3
-M_IRQ_40 GPT4_IRQ        General-purpose timer module 4
-M_IRQ_41 GPT5_IRQ        General-purpose timer module 5
-M_IRQ_42 GPT6_IRQ        General-purpose timer module 6
-M_IRQ_43 GPT7_IRQ        General-purpose timer module 7
-M_IRQ_44 GPT8_IRQ        General-purpose timer module 8
-M_IRQ_45 GPT9_IRQ        General-purpose timer module 9
-*/
-#define GPT10_IRQ   46  // General-purpose timer module 10
-/*
-M_IRQ_47 GPT11_IRQ       General-purpose timer module 11
 M_IRQ_48 SPI4_IRQ        McSPI module 4
 M_IRQ_49 Reserved        Reserved
 M_IRQ_50 Reserved        Reserved
