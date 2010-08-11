@@ -43,13 +43,13 @@ M_IRQ_26 MAIL_U0_MPU_IRQ Mailbox user 0 request
 M_IRQ_27 MCBSP5_IRQ      McBSP module 5
 M_IRQ_28 IVA2_MMU_IRQ    IVA2 MMU
 */
-#define GPIO1_IRQ   29   // GPIO module 1 
+#define GPIO1_IRQ   29
+#define GPIO2_IRQ   30
+#define GPIO3_IRQ   31
+#define GPIO4_IRQ   32
+#define GPIO5_IRQ   33
+#define GPIO6_IRQ   34
 /*
-M_IRQ_30 GPIO2_MPU_IRQ   GPIO module 2
-M_IRQ_31 GPIO3_MPU_IRQ   GPIO module 3
-M_IRQ_32 GPIO4_MPU_IRQ   GPIO module 4
-M_IRQ_33 GPIO5_MPU_IRQ   GPIO module 5
-M_IRQ_34 GPIO6_MPU_IRQ   GPIO module 6
 M_IRQ_35 Reserved        Reserved
 M_IRQ_36 WDT3_IRQ        Watchdog timer module 3 overflow
 M_IRQ_37 GPT1_IRQ        General-purpose timer module 1
@@ -119,11 +119,8 @@ M_IRQ_95 Reserved       Reserved
 /************************
  * REGISTER DEFINITIONS *
  ************************/
-/* Register address and bit value definitions */
-#define MPU_INTC      0x48200000 // Section 10.4.1 p1200
 
-#define REG_INTCPS_REVISION     0x00000000 // REVISION NUMBER
-
+#define REG_INTCPS_REVISION      0x00000000 // REVISION NUMBER
 
 #define REG_INTCPS_SYSCONFIG     0x00000010 // RW config register
 #define INTCPS_SYSCONFIG_RESERVED       0xFFFFFFFC // [31:2] reserved
@@ -197,38 +194,25 @@ M_IRQ_95 Reserved       Reserved
 
 void initialiseInterruptController(void);
 
+u32int intcRegRead(u32int regOffs);
+void intcRegWrite(u32int regOffs, u32int value);
+
 void unmaskInterrupt(u32int interruptNumber);
 
 void maskInterrupt(u32int interruptNumber);
 
 u32int getIrqNumber(void);
 
-void resetAndNewIrq(void);
+void acknowledgeIrq(void);
 
 void intcDumpRegisters(void);
 
 struct InterruptControllerBE
 {
-  u32int * intcRevision;
-  u32int * intcSysConfig;
-  u32int * intcSysStatus;
-  u32int * intcSirIrq;
-  u32int * intcSirFiq;
-  u32int * intcControl;
-  u32int * intcProtection;
-  u32int * intcIdle;
-  u32int * intcIrqPriority;
-  u32int * intcFiqPriority;
-  u32int * intcThreshold;
-  u32int * intcItrN;
-  u32int * intcMirN;
-  u32int * intcMirClearN;
-  u32int * intcMirSetN;
-  u32int * intcIsrSetN;
-  u32int * intcIsrClearN;
-  u32int * intcPendingIrqN;
-  u32int * intcPendingFiqN;
-  u32int * intcIlrM;
+  bool enabled;
+  u32int baseAddress;
+  u32int size;
+  /* add more if needed */
 };
 
 #endif

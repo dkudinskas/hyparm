@@ -41,23 +41,6 @@ int main(int argc, char *argv[])
   /* create the frametable from which we can alloc memory */
   initialiseFrameTable();
 
-  /* initialise guest context */
-/*  GCONTXT * guestContext = (GCONTXT*)mallocBytes(sizeof(GCONTXT));
-  if (guestContext == 0)
-  {
-    serial_ERROR("Failed to allocate guest context.");
-  }
-  else
-  {
-    memset((void*)guestContext, 0x0, sizeof(GCONTXT));
-#ifdef STARTUP_DEBUG
-    serial_putstring("Guest context at 0x");
-    serial_putint((u32int)guestContext);
-    serial_newline();
-#endif
-  }
-  registerGuestContext((u32int)guestContext);
-*/
   /* sets up stack addresses and exception handlers */
   startup_hypervisor();
 
