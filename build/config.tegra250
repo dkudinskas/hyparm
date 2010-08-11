@@ -1,6 +1,6 @@
 #
 # nVidia Tegra 250 Dev Kit specific configuration
 #
-TARGET_ASMFLAGS = -mcpu=cortex-a9
-TARGET_CCFLAGS = -DTARGET_TEGRA250
+TARGET_ASMFLAGS = --defsym TARGET_TEGRA250=1 -mcpu=cortex-a9
+TARGET_CCFLAGS = -DTARGET_TEGRA250=1
 
