@@ -35,8 +35,8 @@ DEPTH = ..
 include $(DEPTH)/build/config.$(TARGET)
 
 ASMFLAGS = $(TARGET_ASMFLAGS)
-CCFLAGS = -g -O3 -fno-common -ffixed-r8 -msoft-float -D__KERNEL__ -DTEXT_BASE=0x8C000000 -fno-builtin -ffreestanding -nostdinc -pipe -DCONFIG_ARM -D__ARM__ -marm -mabi=aapcs-linux -mno-thumb-interwork -march=armv5 -Wall -Wstrict-prototypes -fno-stack-protector -c -fno-toplevel-reorder $(TARGET_CCFLAGS)
-LINKFLAGS = -g -Ttext 0x8C000000 -e main -o $(APP_NAME).elf -Map $(APP_NAME).map --cref
+CCFLAGS = -g -O3 -fno-common -ffixed-r8 -msoft-float -D__KERNEL__ -DTEXT_BASE=$(BASE_ADDRESS) -fno-builtin -ffreestanding -nostdinc -pipe -DCONFIG_ARM -D__ARM__ -marm -mabi=aapcs-linux -mno-thumb-interwork -march=armv5 -Wall -Wstrict-prototypes -fno-stack-protector -c -fno-toplevel-reorder $(TARGET_CCFLAGS)
+LINKFLAGS = -g -Ttext $(BASE_ADDRESS) -e main -o $(APP_NAME).elf -Map $(APP_NAME).map --cref
 
 INCLUDE_DIRS += -I$(DEPTH)/src/
 INCLUDE_DIRS += -I$(DEPTH)/src/common/
