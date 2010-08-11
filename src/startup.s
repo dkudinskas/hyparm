@@ -473,7 +473,15 @@ var_data:
         .word   0x12345678
 /* WARNING: Changes to any of these interupt handler addresses may require the installation code to be modified */
 undefined_addr: @only this addr is used in code, others are here for reference
-        .word   0x4020FFE4
+        .ifdef TARGET_BEAGLE
+          .word 0x4020FFE4
+        .else
+          .ifdef TARGET_TEGRA250
+            .word 0x6000F200
+          .else
+            .err @Unknown target
+          .endif
+        .endif
 @ swi_addr:
 @         .word   0x4020FFE8
 @ prefetch_abort_addr:
