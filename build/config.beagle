@@ -1,0 +1,6 @@
+#
+# BeagleBoard specific configuration
+#
+TARGET_ASMFLAGS = -mcpu=cortex-a8
+TARGET_CCFLAGS = -DTARGET_BEAGLE
+

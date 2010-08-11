@@ -3,9 +3,17 @@
 
 #include "types.h"
 
-#define TRANSMIT_HOLDING_REG   0x49020000
+#ifdef TARGET_BEAGLE
+#define SERIAL_BASE            0x49020000
+#elif TARGET_TEGRA250
+#define SERIAL_BASE            0x70006300
+#else
+#error unknown target
+#endif
 
-#define LINE_STATUS_REG        0x49020014
+#define TRANSMIT_HOLDING_REG_OFFSET 0x00000000
+#define LINE_STATUS_REG_OFFSET 0x00000014
+
 #define LINE_STATUS_REG_TX_HOLD     0x20
 
 #define LINE_FEED              0xA

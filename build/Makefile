@@ -21,14 +21,22 @@ ASM     = $(GNU_ARM)/bin/arm-none-eabi-as
 LINK    = $(GNU_ARM)/bin/arm-none-eabi-ld
 OBJCOPY = $(GNU_ARM)/bin/arm-none-eabi-objcopy
 
+TARGET ?= beagle
+
+ifneq ($(TARGET),beagle)
+  ifneq ($(TARGET),tegra250)
+    $(error bad target $(TARGET))
+  endif
+endif
+
 APP_NAME = hypervisor
-ARM_CPU  = cortex-a8
-
-CCFLAGS = -g -O3 -fno-common -ffixed-r8 -msoft-float -D__KERNEL__ -DTEXT_BASE=0x8C000000 -fno-builtin -ffreestanding -nostdinc -pipe -DCONFIG_ARM -D__ARM__ -marm -mabi=aapcs-linux -mno-thumb-interwork -march=armv5 -Wall -Wstrict-prototypes -fno-stack-protector -c -fno-toplevel-reorder
-ASMFLAGS = -mcpu=$(ARM_CPU)
-LINKFLAGS = -g -Ttext 0x8C000000 -e main -o $(APP_NAME).elf -Map $(APP_NAME).map --cref
-
 DEPTH = ..
+
+include $(DEPTH)/build/config.$(TARGET)
+
+ASMFLAGS = $(TARGET_ASMFLAGS)
+CCFLAGS = -g -O3 -fno-common -ffixed-r8 -msoft-float -D__KERNEL__ -DTEXT_BASE=0x8C000000 -fno-builtin -ffreestanding -nostdinc -pipe -DCONFIG_ARM -D__ARM__ -marm -mabi=aapcs-linux -mno-thumb-interwork -march=armv5 -Wall -Wstrict-prototypes -fno-stack-protector -c -fno-toplevel-reorder $(TARGET_CCFLAGS)
+LINKFLAGS = -g -Ttext 0x8C000000 -e main -o $(APP_NAME).elf -Map $(APP_NAME).map --cref
 
 INCLUDE_DIRS += -I$(DEPTH)/src/
 INCLUDE_DIRS += -I$(DEPTH)/src/common/
@@ -53,18 +61,17 @@ include $(DEPTH)/src/memoryManager/makefile.in
 OBJS = $(addprefix $(DEPTH)/, $(SRCS:.c=.o))
 ASM_OBJS = $(addprefix $(DEPTH)/, $(RAW_ASMS:.s=.o))
 
-$(APP_NAME): $(RAW_ASMS) $(SRCS)
+$(APP_NAME): init_once $(RAW_ASMS) $(SRCS)
 	$(LINK) $(LINKFLAGS) $(OBJS) $(ASM_OBJS) -o $(APP_NAME).elf
 	$(OBJCOPY) -O binary $(APP_NAME).elf $(APP_NAME).bin
 
-
 # Rule to build object files from .c sources - $@ contains the current target
-$(SRCS):
+$(SRCS): init_once
 	@$(CC) $(CCFLAGS) $(INCLUDE_DIRS) -c $(DEPTH)/$@ -o $(DEPTH)/$(@:.c=.o)
 	@echo $(@:.c=.o)
 
 # Rule to build object files from .s sources - $@ contains the current target
-$(RAW_ASMS):
+$(RAW_ASMS): init_once
 	@$(ASM) $(ASMFLAGS) $(DEPTH)/$@ -o $(DEPTH)/$(@:.s=.o)
 	@echo $(@:.c=.o)
 
@@ -77,3 +84,13 @@ clean:
 backup:
 	cd ..; make backup;
 
+.PHONY: help
+help:
+	@echo TARGET=beagle,tegra250
+
+.PHONY: init_once
+init_once:
+	@echo --------------------------------------------------------------------------------
+	@echo Target: $(TARGET)
+	@echo CC: $(CC)
+	@echo --------------------------------------------------------------------------------

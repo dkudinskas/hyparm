@@ -69,7 +69,7 @@ descriptor* createHypervisorPageTable()
 
   //serial
   {
-    const u32int serial = TRANSMIT_HOLDING_REG;
+    const u32int serial = SERIAL_BASE;
     u32int result = addSmallPtEntry(hypervisorPtd, serial, serial,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
 
     if(0 != result)
@@ -115,7 +115,7 @@ descriptor* createGuestOSPageTable()
 
   //Map Serial
   {
-    const u32int serial = TRANSMIT_HOLDING_REG;
+    const u32int serial = SERIAL_BASE;
     u32int result = addSmallPtEntry(ptd, serial, serial,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
     if(result)
     {
