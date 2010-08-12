@@ -263,7 +263,5 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     default:
       serial_ERROR("GPT: store to undefined register.");
   } // switch ends
-  serial_putstring("out.");
-  serial_newline();
 }
 
