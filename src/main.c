@@ -11,6 +11,7 @@
 #include "hardwareLibrary.h"
 #include "memFunctions.h"
 #include "beIntc.h"
+#include "beGPTimer.h"
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 
@@ -80,6 +81,16 @@ int main(int argc, char *argv[])
 
   /* initialise physical interrupt controller */
   initialiseInterruptController();
+
+
+  /* TODO: init timer to get interrupt */
+dumpGptRegisters();/*
+  gptInit();
+  serial_putstring("Waiting for gpt10 overflow");
+  while (gpt10OvfIt() == 0);
+  serial_newline();
+  intcDumpRegisters();*/
+
 
   /* initialise virtual hardware devices */
   device * libraryPtr;
