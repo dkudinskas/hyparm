@@ -85,9 +85,11 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
     case GPT_REG_TIER:
       val = gptimer->gptTier & GPT_TIER_RESERVED;
       break;
+    case GPT_REG_TWER:
+      val = gptimer->gptTwer & GPT_TWER_RESERVED;
+      break;
     case GPT_REG_TISTAT:
     case GPT_REG_TISR:
-    case GPT_REG_TWER:
     case GPT_REG_TCLR:
     case GPT_REG_TCRR:
     case GPT_REG_TLDR:
@@ -215,9 +217,8 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         {
           serial_putstring("GPTimer: enabling overflow interrupt.");
           serial_newline();
-          intcDumpRegisters();
-
         }
+        
         if ( ((gptimer->gptTier & GPT_TIER_MATCH) == GPT_TIER_MATCH) &&
              ((value & GPT_TIER_MATCH) == 0) )
         {
@@ -230,14 +231,21 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
           serial_putstring("GPTimer: enabling match interrupt.");
           serial_newline();
         }
-        serial_ERROR("wait here.");
       }
       gptimer->gptTier = value;
       break;
     }
+    case GPT_REG_TWER:
+      value &= ~GPT_TWER_RESERVED;
+      if (value != gptimer->gptTwer)
+      {
+        serial_putstring("GPTimer: warning: changing wakeup enable value");
+        serial_newline();
+      }
+      gptimer->gptTwer = value;
+      break;
     case GPT_REG_TISTAT:
     case GPT_REG_TISR:
-    case GPT_REG_TWER:
     case GPT_REG_TCLR:
     case GPT_REG_TCRR:
     case GPT_REG_TLDR:
@@ -255,6 +263,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     default:
       serial_ERROR("GPT: store to undefined register.");
   } // switch ends
-
+  serial_putstring("out.");
+  serial_newline();
 }
 

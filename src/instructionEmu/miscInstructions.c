@@ -200,12 +200,11 @@ u32int cpsidInstruction(GCONTXT * context)
 u32int cpsInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
-  u32int instrCC    = 0xF0000000 & instr;
   u32int imod       = (instr & 0x000C0000) >> 18;
   u32int changeMode = (instr & 0x00020000) >> 17;
-  u32int affectA    = (instr & 0x00000080) >>  8;
-  u32int affectI    = (instr & 0x00000040) >>  7;
-  u32int affectF    = (instr & 0x00000020) >>  6;
+  u32int affectA    = (instr & 0x00000100) >>  8;
+  u32int affectI    = (instr & 0x00000080) >>  7;
+  u32int affectF    = (instr & 0x00000040) >>  6;
   u32int newMode    =  instr & 0x0000001F;
 #ifdef ARM_INSTR_TRACE
   serial_putstring("CPS instr ");
@@ -215,86 +214,88 @@ u32int cpsInstruction(GCONTXT * context)
   serial_newline();
 #endif
 
-  /* eval condition flags */
-  instrCC = instrCC >> 28;
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-  bool conditionMet = evalCC(instrCC, cpsrCC);
   if ( ((imod == 0) && (changeMode == 0)) || (imod == 1) )
   {
     serial_putint(instr);
     serial_ERROR(": CPS unpredictable case\n");
   }
-  if (conditionMet)
+
+  if (guestInPrivMode(context))
   {
-    if (guestInPrivMode(context))
+    u32int oldCpsr = context->CPSR;
+    if (imod == 0x2) // enable
     {
-      u32int oldCpsr = context->CPSR;
-      if (imod == 0x2) // enable
+      serial_putstring("IMod: enable case");
+      serial_newline();
+      if (affectA != 0)
       {
-        if (affectA != 0)
+        if ((oldCpsr & CPSR_AAB_BIT) != 0)
         {
-          if ((oldCpsr & CPSR_AAB_BIT) != 0)
-          {
-            serial_ERROR("Guest enabling async aborts globally!");
-          }
-          oldCpsr &= ~CPSR_AAB_BIT;
+          serial_ERROR("Guest enabling async aborts globally!");
         }
-        if (affectI)
-        {
-          if ( (oldCpsr & CPSR_IRQ_BIT) != 0)
-          {
-            serial_ERROR("Guest enabling irqs globally!");
-          } 
-          oldCpsr &= ~CPSR_IRQ_BIT;
-        }
-        if (affectF)
-        {
-          if ( (oldCpsr & CPSR_FIQ_BIT) != 0)
-          {
-            serial_ERROR("Guest enabling fiqs globally!");
-          } 
-          oldCpsr &= ~CPSR_FIQ_BIT;
-        }
+        oldCpsr &= ~CPSR_AAB_BIT;
       }
-      else if (imod == 3) // disable
+      if (affectI)
       {
-        if (affectA)
+        if ( (oldCpsr & CPSR_IRQ_BIT) != 0)
         {
-          if ((oldCpsr & CPSR_AAB_BIT) == 0)
-          {
-            serial_ERROR("Guest disabling async aborts globally!");
-          }
-          oldCpsr |= CPSR_AAB_BIT;
-        }
-        if (affectI)
-        {
-          if ( (oldCpsr & CPSR_IRQ_BIT) == 0)
-          {
-            serial_ERROR("Guest disabling irqs globally!");
-          } 
-          oldCpsr |= CPSR_IRQ_BIT;
-        }
-        if (affectF)
-        {
-          if ( (oldCpsr & CPSR_FIQ_BIT) == 0)
-          {
-            serial_ERROR("Guest disabling fiqs globally!");
-          } 
-          oldCpsr |= CPSR_FIQ_BIT;
-        }
+          serial_ERROR("Guest enabling irqs globally!");
+        } 
+        oldCpsr &= ~CPSR_IRQ_BIT;
       }
-      else
+      if (affectF)
       {
-        serial_ERROR("CPS invalid IMOD\n");
+        if ( (oldCpsr & CPSR_FIQ_BIT) != 0)
+        {
+          serial_ERROR("Guest enabling fiqs globally!");
+        } 
+        oldCpsr &= ~CPSR_FIQ_BIT;
       }
-      // ARE we switching modes?
-      if (changeMode)
-      {
-        oldCpsr &= ~CPSR_MODE_FIELD;
-        oldCpsr |= newMode; 
-      }
-      context->CPSR = oldCpsr;
     }
+    else if (imod == 3) // disable
+    {
+      if (affectA)
+      {
+        if ((oldCpsr & CPSR_AAB_BIT) == 0)
+        {
+          serial_ERROR("Guest disabling async aborts globally!");
+        }
+        oldCpsr |= CPSR_AAB_BIT;
+      }
+      if (affectI)
+      {
+        if ( (oldCpsr & CPSR_IRQ_BIT) == 0) // were enabled, now disabled
+        {
+          serial_ERROR("Guest disabling irqs globally!");
+        } 
+        oldCpsr |= CPSR_IRQ_BIT;
+      }
+      if (affectF)
+      {
+        if ( (oldCpsr & CPSR_FIQ_BIT) == 0)
+        {
+          serial_ERROR("Guest disabling fiqs globally!");
+        } 
+        oldCpsr |= CPSR_FIQ_BIT;
+      }
+    }
+    else
+    {
+      serial_ERROR("CPS invalid IMOD\n");
+    }
+    // ARE we switching modes?
+    if (changeMode)
+    {
+      oldCpsr &= ~CPSR_MODE_FIELD;
+      oldCpsr |= newMode;
+      serial_ERROR("guest is changing execution modes. What?!");
+    }
+    context->CPSR = oldCpsr;
+  }
+  else
+  {
+    // guest is not in privileged mode! cps should behave as a nop, but lets see what went wrong.
+    serial_ERROR("CPS instruction: executed in guest user mode.");
   }
 
   return context->R15+4;
