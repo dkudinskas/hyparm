@@ -159,7 +159,7 @@ void intcDumpRegisters()
   serial_putstring("INTC: priority threshold ");
   serial_putint(intcRegRead(REG_INTCPS_THRESHOLD));
   serial_newline();
-
+//TODO: use this for timer test
   serial_putstring("INTC: interrupt status before masking:");
   serial_newline();
   for (indexN = 0; indexN < INTCPS_NR_OF_BANKS; indexN++)

@@ -1,8 +1,14 @@
 #ifndef __BE_GPTIMER_H__
 #define __BE_GPTIMER_H__
 
+#ifndef TARGET_BEAGLE
+#error Driver for TARGET_BEAGLE included for different target
+#endif
+
 #include "types.h"
 #include "serial.h"
+
+#define GPTIMER_COUNT	12
 
 // base addresses
 #define GPTIMER1        0x48318000
@@ -124,17 +130,34 @@
 #define TNIR1MS  -768000
 #define TLDR1MS  0xFFFFFFE0
 
+void gptInit(void);
 
-u32int getCorrectBaseAddr(u32int gptNumber);
+void gptEnable(u32int id);
+
+void gptReset(u32int id);
+
+void gptWaitForReset(u32int id);
+/*
+
+u32int gptGetBaseAddr(u32int gptNumber);
 
 void toggleOverflowInterrupt(u32int gptNumber, bool enable);
 
 void toggleTimer(u32int gptNumber, bool enable);
 
 void setupMsTick(u32int gptNumber);
-
-void dumpGptRegisters(u32int gptNumber); 
-
+*/
+void dumpGptRegisters(void/*u32int gptNumber*/); 
+/*
 void deassertInterrupt(u32int gptNumber);
+
+u32int gpt10OvfIt(void);*/
+
+typedef struct
+{
+  u32int baseAddress;
+  bool enabled;
+  bool posted;
+} gptStruct;
 
 #endif
