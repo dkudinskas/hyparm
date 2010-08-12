@@ -26,16 +26,22 @@ void initialiseInterruptController()
 
   u32int i = 0, m = 0;
   // soft reset
+#ifdef BE_INTC_DBG
   serial_putstring("INTC_BE: soft reset ...");
+#endif
   u32int conf = intcRegRead(REG_INTCPS_SYSCONFIG);
   conf |= INTCPS_SYSCONFIG_SOFTRESET;
   intcRegWrite(REG_INTCPS_SYSCONFIG, conf);
 
   while (!(intcRegRead(REG_INTCPS_SYSSTATUS) & INTCPS_SYSSTATUS_SOFTRESET))
   {
+#ifdef BE_INTC_DBG
     serial_putstring(".");
+#endif
   }
+#ifdef BE_INTC_DBG
   serial_putstring(" done");
+#endif
   serial_newline();
    
   // intc autoidle
