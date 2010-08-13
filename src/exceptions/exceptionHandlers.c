@@ -12,10 +12,6 @@
 #include "beIntc.h"
 #include "beGPTimer.h"
 
-#ifdef DUMP_SCANNER_COUNTER
-extern bool dumpTrace;
-#endif
-
 extern GCONTXT * getGuestContext(void);
 
 void do_software_interrupt(u32int code)
@@ -46,17 +42,10 @@ void do_software_interrupt(u32int code)
     serial_ERROR("exceptionHandlers: In infinite loop");
   }
   gContext->R15 = nextPC;
-#if defined EXC_HDLR_DBG || defined DUMP_SCANNER_COUNTER
-#ifdef DUMP_SCANNER_COUNTER
-  if (dumpTrace)
-  {
-#endif
-    serial_putstring("exceptionHandlers: Next PC = 0x");
-    serial_putint(nextPC);
-    serial_newline();
-#ifdef DUMP_SCANNER_COUNTER
-  }
-#endif
+#ifdef EXC_HDLR_DBG
+  serial_putstring("exceptionHandlers: Next PC = 0x");
+  serial_putint(nextPC);
+  serial_newline();
 #endif
   scanBlock(gContext, nextPC);
 }

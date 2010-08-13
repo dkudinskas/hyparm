@@ -1054,6 +1054,10 @@ u32int ldrInstruction(GCONTXT * context)
     // register case
     u32int regSrc2 = instr & 0x0000000F;
     baseAddress  = loadGuestGPR(regSrc, context);
+    if (regSrc == 15)
+    {
+      baseAddress = baseAddress + 8;
+    }
     // regSrc2 == PC then UNPREDICTABLE
     if (regSrc2 == 15)
     {

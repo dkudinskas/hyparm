@@ -20,7 +20,7 @@ void initIntc(void)
   {
     memset((void*)irqController, 0x0, sizeof(struct InterruptController));
 #ifdef INTC_DBG
-    serial_putstring("Initializing INTC at 0x");
+    serial_putstring("Initializing Interrupt controller at 0x");
     serial_putint((u32int)irqController);
     serial_newline();
 #endif
