@@ -5,6 +5,7 @@
 #include "memFunctions.h" //for memset
 #include "mmu.h" // for setDomain
 #include "guestContext.h"
+#include "beGPTimer.h" /// should not be included here
 
 //Uncomment to enable all page table debugging: #define PT_DEBUG
 //Uncomment to show entries being mapped #define PT_SHORT_DEBUG
@@ -88,10 +89,13 @@ descriptor* createHypervisorPageTable()
       serial_ERROR("Added uart1 mapping failed. Entering infinite loop.");
     }
   }
-  
+
   // interrupt controller
   const u32int interruptController = 0x48200000;
   addSectionPtEntry(hypervisorPtd, interruptController,interruptController,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
+  // gptimer1 - this looks dirty
+  addSectionPtEntry(hypervisorPtd, GPTIMER1,GPTIMER1,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   /*
   Exception vectors
