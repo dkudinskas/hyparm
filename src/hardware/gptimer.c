@@ -88,11 +88,20 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
     case GPT_REG_TWER:
       val = gptimer->gptTwer & GPT_TWER_RESERVED;
       break;
+    case GPT_REG_TOCR:
+      val = gptimer->gptTocr & GPT_TOCR_RESERVED;
+      break;
+    case GPT_REG_TCLR:
+      val = gptimer->gptTclr & GPT_TCLR_RESERVED;
+      break;
+    case GPT_REG_TCRR:
+      val = gptimer->gptTcrr;
+      break;
+    case GPT_REG_TLDR:
+      val = gptimer->gptTldr;
+      break;
     case GPT_REG_TISTAT:
     case GPT_REG_TISR:
-    case GPT_REG_TCLR:
-    case GPT_REG_TCRR:
-    case GPT_REG_TLDR:
     case GPT_REG_TTGR:
     case GPT_REG_TMAR:
     case GPT_REG_TCAR1:
@@ -100,7 +109,6 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
     case GPT_REG_TPIR:
     case GPT_REG_TNIR:
     case GPT_REG_TCVR:
-    case GPT_REG_TOCR:
     case GPT_REG_TOWR:
       serial_putstring(dev->deviceName);
       serial_putstring(" load from pAddr: 0x");
@@ -190,7 +198,6 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       serial_ERROR("GPTimer writing to a R/O register (TWPS)");
       break;
     case GPT_REG_TIER:
-    {
       value = value & ~GPT_TIER_RESERVED;
       if (value != gptimer->gptTier)
       {
@@ -234,21 +241,101 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       }
       gptimer->gptTier = value;
       break;
-    }
     case GPT_REG_TWER:
       value &= ~GPT_TWER_RESERVED;
       if (value != gptimer->gptTwer)
       {
-        serial_putstring("GPTimer: warning: changing wakeup enable value");
-        serial_newline();
+        if ( ((gptimer->gptTwer & GPT_TWER_CAPTURE) == GPT_TWER_CAPTURE) &&
+             ((value & GPT_TWER_CAPTURE) == 0) )
+        {
+          serial_putstring("GPTimer: disabling capture wakeup event.");
+          serial_newline();
+        }
+        else if ( ((gptimer->gptTwer & GPT_TIER_CAPTURE) == 0) &&
+             ((value & GPT_TWER_CAPTURE) == GPT_TWER_CAPTURE) )
+        {
+          serial_putstring("GPTimer: enabling capture wakeup event.");
+          serial_newline();
+        }
+        
+        if ( ((gptimer->gptTwer & GPT_TWER_OVERFLOW) == GPT_TWER_OVERFLOW) &&
+             ((value & GPT_TIER_OVERFLOW) == 0) )
+        {
+          serial_putstring("GPTimer: disabling overflow wakeup event.");
+          serial_newline();
+        }
+        else if ( ((gptimer->gptTwer & GPT_TWER_OVERFLOW) == 0) &&
+             ((value & GPT_TWER_OVERFLOW) == GPT_TWER_OVERFLOW) )
+        {
+          serial_putstring("GPTimer: enabling overflow wakeup event.");
+          serial_newline();
+        }
+        
+        if ( ((gptimer->gptTwer & GPT_TWER_MATCH) == GPT_TWER_MATCH) &&
+             ((value & GPT_TWER_MATCH) == 0) )
+        {
+          serial_putstring("GPTimer: disabling match wakeup event.");
+          serial_newline();
+        }
+        else if ( ((gptimer->gptTwer & GPT_TWER_MATCH) == 0) &&
+             ((value & GPT_TWER_MATCH) == GPT_TWER_MATCH) )
+        {
+          serial_putstring("GPTimer: enabling match wakeup event.");
+          serial_newline();
+        }
       }
       gptimer->gptTwer = value;
       break;
+    case GPT_REG_TOCR:
+      value &= ~GPT_TOCR_RESERVED;
+      if (value != gptimer->gptTocr)
+      {
+        serial_putstring("GPTimer: setting overflow counter register to ");
+        serial_putint(value);
+        gptimer->gptTocr = value;
+      }
+      break;
+    case GPT_REG_TCLR:
+      value &= ~GPT_TCLR_RESERVED;
+      if (value != gptimer->gptTclr)
+      {
+        if ( ((gptimer->gptTclr & GPT_TCLR_START_STOP) == GPT_TCLR_START_STOP) &&
+             ((value & GPT_TCLR_START_STOP) == 0) )
+        {
+          serial_ERROR("GPTimer: stopping the counter!");
+        }
+        else if ( ((gptimer->gptTclr & GPT_TCLR_START_STOP) == 0) &&
+             ((value & GPT_TCLR_START_STOP) == GPT_TCLR_START_STOP) )
+        {
+          serial_ERROR("GPTimer: starting the counter!");
+        }
+        
+        if ( ((gptimer->gptTclr & GPT_TCLR_AUTORELOAD) == GPT_TCLR_AUTORELOAD) &&
+             ((value & GPT_TCLR_AUTORELOAD) == 0) )
+        {
+          serial_ERROR("GPTimer: disableing auto reload!!");
+        }
+        else if ( ((gptimer->gptTclr & GPT_TCLR_AUTORELOAD) == 0) &&
+             ((value & GPT_TCLR_AUTORELOAD) == GPT_TCLR_AUTORELOAD) )
+        {
+          serial_ERROR("GPTimer: enabling auto reload!");
+        }
+        serial_ERROR("halt");
+      }
+    case GPT_REG_TCRR:
+      serial_putstring("GPTimer: setting internal counter value to ");
+      serial_putint(value);
+      serial_newline();
+      value = gptimer->gptTcrr;
+      break;
+    case GPT_REG_TLDR:
+      serial_putstring("GPTimer: setting counter load value to ");
+      serial_putint(value);
+      serial_newline();
+      gptimer->gptTldr = value;
+      break;
     case GPT_REG_TISTAT:
     case GPT_REG_TISR:
-    case GPT_REG_TCLR:
-    case GPT_REG_TCRR:
-    case GPT_REG_TLDR:
     case GPT_REG_TTGR:
     case GPT_REG_TMAR:
     case GPT_REG_TCAR1:
@@ -256,7 +343,6 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPT_REG_TPIR:
     case GPT_REG_TNIR:
     case GPT_REG_TCVR:
-    case GPT_REG_TOCR:
     case GPT_REG_TOWR:
       serial_ERROR("GPT: unimplemented register store.");
       break;
