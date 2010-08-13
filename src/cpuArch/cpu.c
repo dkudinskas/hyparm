@@ -27,7 +27,10 @@ extern void v7_flush_dcache_all(u32int dev);
  ***/
 void enable_interrupts(void)
 {
-  return;
+  asm volatile("mrs %0, cpsr\n\t"
+               "bic %0, %0, #0x80\n\t"
+               "msr cpsr, %0 "
+  ::"r"(0));
 }
 int disable_interrupts(void)
 {
