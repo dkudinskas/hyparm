@@ -19,6 +19,7 @@ void do_prefetch_abort_hypervisor(void);
 void do_monitor_mode(void);
 void do_monitor_mode_hypervisor(void);
 void do_irq(void);
+void do_irq_hypervisor(void);
 void do_fiq(void);
 
 

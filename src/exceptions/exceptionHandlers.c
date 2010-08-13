@@ -9,6 +9,8 @@
 #include "scheduler.h"
 #include "globalMemoryMapper.h"
 #include "blockCache.h"
+#include "beIntc.h"
+#include "beGPTimer.h"
 
 #ifdef DUMP_SCANNER_COUNTER
 extern bool dumpTrace;
@@ -243,7 +245,28 @@ void do_irq()
  *********************/
 
   // Get the number of the highest priority active IRQ/FIQ
-//  u32int activeIrqNumber = getIrqNumber();
+  u32int activeIrqNumber = getIrqNumber();
+
+  if (activeIrqNumber == GPT1_IRQ)
+  {
+    serial_putstring("Tick interrupt from GPTIMER1 while in GUEST");
+    serial_newline();
+    scheduleGuest();
+  serial_putstring("before GPT gptClearOverflowInterrupt");
+  serial_newline();
+    gptClearOverflowInterrupt(0);
+serial_putstring("before INTC acknowledgeIrq");
+  serial_newline();
+    acknowledgeIrq();
+serial_putstring("end if");
+  serial_newline();
+  }
+  else
+  {
+    serial_putstring("Received IRQ=");
+    serial_putint(activeIrqNumber);
+    serial_ERROR(" Implement me!");
+  }
 
   /* if tick from gp10: de-assert interrupt in gptimer */
   /* else: halt execution. no other irq's are expected! */
@@ -275,7 +298,78 @@ the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
 */
-  serial_ERROR("Received IRQ! Implement me.");
+  //serial_ERROR("Received IRQ! Implement me.");
+}
+
+
+void do_irq_hypervisor()
+{
+/*********************
+ * PAGE 1205 SPRUFD  *
+ *********************/
+
+  serial_newline();
+  serial_putstring("------------------------------------------------------------");
+  serial_newline();
+  // Get the number of the highest priority active IRQ/FIQ
+  u32int activeIrqNumber = getIrqNumber();
+
+  if (activeIrqNumber == GPT1_IRQ)
+  {
+    serial_putstring("Tick interrupt from GPTIMER1 while in HYPERVISOR");
+    serial_newline();
+    scheduleGuest();
+  serial_putstring("before GPT gptClearOverflowInterrupt");
+  serial_newline();
+    gptClearOverflowInterrupt(0);
+serial_putstring("before INTC acknowledgeIrq");
+  serial_newline();
+    acknowledgeIrq();
+serial_putstring("end if");
+  serial_newline();
+  }
+  else
+  {
+    serial_putstring("Received IRQ=");
+    serial_putint(activeIrqNumber);
+    serial_ERROR(" Implement me!");
+  }
+
+  dumpGuestContext(getGuestContext());
+  serial_putstring("------------------------------------------------------------");
+  serial_newline();
+  serial_newline();
+  /* if tick from gp10: de-assert interrupt in gptimer */
+  /* else: halt execution. no other irq's are expected! */
+/*
+  if (activeIrqNumber == GPT10_IRQ)
+  {
+    // its a tick! schedule guests...
+    scheduleGuest();
+    serial_putstring(".");
+    deassertInterrupt(10);
+  }
+  else
+  {
+    serial_ERROR("IRQ not a tick!");
+  }
+*/
+
+/* After the return of the subroutine, the ISR sets the NEWIRQAGR/NEWFIQAGR bit
+to enable the processing of subsequent pending IRQs/FIQs
+and to restore ARM context in the following code. */
+ // resetAndNewIrq();
+
+/* Because the writes are posted on an Interconnect bus, to be sure
+that the preceding writes are done before enabling IRQs/FIQs,
+a Data Synchronization Barrier is used. This operation ensure that
+the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
+/*
+  asm volatile("MOV R0, #0\n\t"
+               "MCR P15, #0, R0, C7, C10, #4"
+               : : : "memory");
+*/
+  //serial_ERROR("Received IRQ! Implement me.");
 }
 
 

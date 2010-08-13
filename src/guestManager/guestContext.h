@@ -72,6 +72,8 @@ struct guestContext
   u32int guestIrqHandler;
   u32int guestFiqHandler;
   device * hardwareLibrary;
+  /* interrupt handling */
+  bool guestIrqPending;
 };
 
 

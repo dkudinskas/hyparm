@@ -130,7 +130,8 @@ _start:
         get_emulated_mode @ uses R0 as scratch, puts guestContext addr into R1
         /* use system mode to extract guest stack pointer and link register */
         MRS     R2, CPSR /* Store current mode so we can switch back to it */
-        MSR     CPSR_c,#(SYS_MODE | I_BIT | F_BIT)
+        /* MSR     CPSR_c,#(SYS_MODE | I_BIT | F_BIT) */
+        CPS     SYS_MODE
         STMIA   R1, {R13, R14}
         /* switch back to previous mode */
         MSR     CPSR_c, R2
@@ -189,7 +190,8 @@ _start:
         get_emulated_mode
         /* switch to system mode to restore SP & LR */
         MRS     R2, CPSR /* backup up current mode */
-        MSR     CPSR_c,#(SYS_MODE | I_BIT | F_BIT)
+        /* MSR     CPSR_c,#(SYS_MODE | I_BIT | F_BIT) */
+        CPS     SYS_MODE
         /* restore SP & LR from guest Context */
         LDR     SP, [R1]
         LDR     LR, [R1, #4]
@@ -207,8 +209,13 @@ _start:
         /* Get the CPSR cc flags from guestContext, and put them in the SPSR ready for the restore */
         LDR     LR,=guestContextCPSR
         LDR     LR, [LR]
-        AND     LR, #0xF0000000
-        ORR     LR, LR, #(USR_MODE | I_BIT | F_BIT)
+        /* Preserve condition flags and exception enable bits */
+        /* equivalent of AND     LR, #0xF00000c0, but immediate would be too big  */
+        BIC     LR, #0x0f000000
+        BIC     LR, #0x00ff0000
+        BIC     LR, #0x0000ff00
+        BIC     LR, #0x0000003f
+        ORR     LR, LR, #USR_MODE /* #(USR_MODE | I_BIT | F_BIT) */
         MSR     SPSR, LR
         LDM     SP, {PC}^ /* restore PC and load the SPSR into the CPSR */
         .endm
@@ -450,10 +457,33 @@ monitor_mode_handler_privileged_mode:
 
 .global irq_handler
 irq_handler:
+
+  /* Where did we come from? Code adopted from data abort handling*/
+
+  PUSH   {LR}
+  MRS    LR, SPSR
+  ANDS   LR, LR, #0x0f
+  BNE    irq_handler_privileged_mode
+
+  /* We were in USR mode, we must have been running guest code */
+
+  POP        {LR}
   STMFD SP!, {LR}
   STMFD SP!, {R0-R12}
 
   BL do_irq
+
+  LDMFD SP!, {R0-R12}
+  LDMFD SP!, {PC}^
+
+.global irq_handler_privileged_mode
+irq_handler_privileged_mode:
+
+  POP     {LR} /* we backed up the LR to hold the SPSR */
+  STMFD SP!, {LR}
+  STMFD SP!, {R0-R12}
+
+  BL do_irq_hypervisor
 
   LDMFD SP!, {R0-R12}
   LDMFD SP!, {PC}^

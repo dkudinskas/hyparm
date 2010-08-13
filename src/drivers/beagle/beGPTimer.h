@@ -124,40 +124,47 @@
 #define GPT_TOWR_RESERVED           0xFF000000
 #define GPT_TOWR_OVF_WRAPPING       0x00FFFFFF
 
+// values for 1-10 milisecond clock generation
+#define GPT_TPIR_POS_INC_1MS             232000
+#define GPT_TNIR_NEG_INC_1MS            -768000
+#define GPT_REG_TLDR_LOAD_VALUE_1MS  0xFFFFFFE0
+#define GPT_REG_TOWR_OVF_1MS               1000
+#define GPT_REG_TOWR_OVF_10MS             50000//temp
 
-/* values for 1 milisecond clock generation */
-#define TPIR1MS   232000
-#define TNIR1MS  -768000
-#define TLDR1MS  0xFFFFFFE0
+void gptClearOverflowInterrupt(u32int id);
 
-void gptInit(void);
+void gptDisableOverflowInterrupt(u32int id);
 
 void gptEnable(u32int id);
 
+void gptEnableOverflowInterrupt(u32int id);
+
+void gptInit(void);
+
 void gptReset(u32int id);
 
+void gptSet10msTick(u32int id);
+
+void gptStart(u32int id);
+
+void gptStop(u32int id);
+
+void gptWaitForOverflowInterrupt(u32int id);
+
 void gptWaitForReset(u32int id);
-/*
 
-u32int gptGetBaseAddr(u32int gptNumber);
+void gptDumpRegisters(u32int id); 
 
-void toggleOverflowInterrupt(u32int gptNumber, bool enable);
 
-void toggleTimer(u32int gptNumber, bool enable);
-
-void setupMsTick(u32int gptNumber);
-*/
-void dumpGptRegisters(void/*u32int gptNumber*/); 
 /*
 void deassertInterrupt(u32int gptNumber);
-
-u32int gpt10OvfIt(void);*/
+*/
 
 typedef struct
 {
   u32int baseAddress;
-  bool enabled;
-  bool posted;
+  //bool enabled;
+  //bool posted;
 } gptStruct;
 
 #endif

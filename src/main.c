@@ -10,6 +10,7 @@
 #include "frameAllocator.h"
 #include "hardwareLibrary.h"
 #include "memFunctions.h"
+#include "cpu.h"
 #include "beIntc.h"
 #include "beGPTimer.h"
 
@@ -82,15 +83,24 @@ int main(int argc, char *argv[])
   /* initialise physical interrupt controller */
   initialiseInterruptController();
 
-
-  /* TODO: init timer to get interrupt */
-dumpGptRegisters();/*
+  /* initialise phyiscal general-purpose timer to schedule guests */
   gptInit();
-  serial_putstring("Waiting for gpt10 overflow");
-  while (gpt10OvfIt() == 0);
-  serial_newline();
-  intcDumpRegisters();*/
+  gptEnable(0);
+  gptReset(0);
+  gptWaitForReset(0);
+  gptSet10msTick(0);
+  gptEnableOverflowInterrupt(0);
+  gptStart(0);
+  gptWaitForOverflowInterrupt(0);
+  gptClearOverflowInterrupt(0);
+  acknowledgeIrq();
 
+serial_putstring("timer test ok");
+serial_newline();
+
+// test
+enable_interrupts();
+unmaskInterrupt(GPT1_IRQ);
 
   /* initialise virtual hardware devices */
   device * libraryPtr;

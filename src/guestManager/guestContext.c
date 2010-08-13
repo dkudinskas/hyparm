@@ -195,6 +195,9 @@ void dumpGuestContext(GCONTXT * gc)
   serial_putstring("Hardware library: not core dumping just yet");
   serial_newline();
 
+  serial_putstring("Interrupt pending: ");
+  serial_puting(gc->guestIrqPending);
+  serial_newline();
 }
 
 void initGuestContext(GCONTXT * gContext)
@@ -258,6 +261,7 @@ void initGuestContext(GCONTXT * gContext)
   gContext->guestIrqHandler = 0;
   gContext->guestFiqHandler = 0;
   gContext->hardwareLibrary = 0;
+  gContext->guestIrqPending = FALSE;
 }
 
 void registerCrb(GCONTXT * gc, CREG * coprocRegBank)
