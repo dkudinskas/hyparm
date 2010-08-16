@@ -189,20 +189,20 @@ M_IRQ_95 Reserved       Reserved
 #define REG_INTCPS_ILRm           0x00000100 // RW contains the priority for the interrupts and the FIQ/IRQ steering
 
 
-void initialiseInterruptController(void);
+void initialiseIntcBE(void);
 
-u32int intcRegRead(u32int regOffs);
-void intcRegWrite(u32int regOffs, u32int value);
+u32int intcRegReadBE(u32int regOffs);
+void intcRegWriteBE(u32int regOffs, u32int value);
 
-void unmaskInterrupt(u32int interruptNumber);
+void unmaskInterruptBE(u32int interruptNumber);
 
-void maskInterrupt(u32int interruptNumber);
+void maskInterruptBE(u32int interruptNumber);
 
-u32int getIrqNumber(void);
+u32int getIrqNumberBE(void);
 
-void acknowledgeIrq(void);
+void acknowledgeIrqBE(void);
 
-void intcDumpRegisters(void);
+void intcDumpRegistersBE(void);
 
 struct InterruptControllerBE
 {

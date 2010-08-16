@@ -234,21 +234,21 @@ void do_irq()
  *********************/
 
   // Get the number of the highest priority active IRQ/FIQ
-  u32int activeIrqNumber = getIrqNumber();
+  u32int activeIrqNumber = getIrqNumberBE();
 
   if (activeIrqNumber == GPT1_IRQ)
   {
     serial_putstring("Tick interrupt from GPTIMER1 while in GUEST");
     serial_newline();
     scheduleGuest();
-  serial_putstring("before GPT gptClearOverflowInterrupt");
-  serial_newline();
-    gptClearOverflowInterrupt(0);
-serial_putstring("before INTC acknowledgeIrq");
-  serial_newline();
-    acknowledgeIrq();
-serial_putstring("end if");
-  serial_newline();
+    serial_putstring("before GPT gptClearOverflowInterrupt");
+    serial_newline();
+    gptBEClearOverflowInterrupt(0);
+    serial_putstring("before INTC acknowledgeIrq");
+    serial_newline();
+    acknowledgeIrqBE();
+    serial_putstring("end if");
+    serial_newline();
   }
   else
   {
@@ -301,21 +301,21 @@ void do_irq_hypervisor()
   serial_putstring("------------------------------------------------------------");
   serial_newline();
   // Get the number of the highest priority active IRQ/FIQ
-  u32int activeIrqNumber = getIrqNumber();
+  u32int activeIrqNumber = getIrqNumberBE();
 
   if (activeIrqNumber == GPT1_IRQ)
   {
     serial_putstring("Tick interrupt from GPTIMER1 while in HYPERVISOR");
     serial_newline();
     scheduleGuest();
-  serial_putstring("before GPT gptClearOverflowInterrupt");
-  serial_newline();
-    gptClearOverflowInterrupt(0);
-serial_putstring("before INTC acknowledgeIrq");
-  serial_newline();
-    acknowledgeIrq();
-serial_putstring("end if");
-  serial_newline();
+    serial_putstring("before GPT gptClearOverflowInterrupt");
+    serial_newline();
+    gptBEClearOverflowInterrupt(0);
+    serial_putstring("before INTC acknowledgeIrq");
+    serial_newline();
+    acknowledgeIrqBE();
+    serial_putstring("end if");
+    serial_newline();
   }
   else
   {

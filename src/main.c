@@ -81,26 +81,29 @@ int main(int argc, char *argv[])
   registerBlockCache(gContext, blockCache);
 
   /* initialise physical interrupt controller */
-  initialiseInterruptController();
+  initialiseIntcBE();
 
   /* initialise phyiscal general-purpose timer to schedule guests */
-  gptInit();
-  gptEnable(0);
-  gptReset(0);
-  gptWaitForReset(0);
-  gptSet10msTick(0);
-  gptEnableOverflowInterrupt(0);
-  gptStart(0);
-  gptWaitForOverflowInterrupt(0);
-  gptClearOverflowInterrupt(0);
-  acknowledgeIrq();
+  gptBEInit();
+  /* enable */
+  gptBEEnable(1);
+  // gptBEReset(1);
+  // gptBEWaitForReset(1);
+  gptBESet10msTick(1);
+  gptBEEnableOverflowInterrupt(1);
+  gptBEStart(1);
+  while(TRUE)
+  {
+    // test
+    gptBEWaitForOverflowInterrupt(1);
+    gptBEClearOverflowInterrupt(1);
+    acknowledgeIrqBE();
+    serial_putstring(".");
+    serial_newline();
+  }
 
-serial_putstring("timer test ok");
-serial_newline();
-
-// test
 enable_interrupts();
-unmaskInterrupt(GPT1_IRQ);
+unmaskInterruptBE(GPT1_IRQ);
 
   /* initialise virtual hardware devices */
   device * libraryPtr;

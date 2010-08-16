@@ -5,10 +5,14 @@
 #error Driver for TARGET_BEAGLE included for different target
 #endif
 
+// uncomment me to enable debug: 
+#define GPTIMER_BE_DBG
+
 #include "types.h"
 #include "serial.h"
 
-#define GPTIMER_COUNT	12
+// #define BE_GPTIMER_COUNT       12
+#define BE_GPTIMER_COUNT        1 // just use GPTIMER1 for now
 
 // base addresses
 #define GPTIMER1        0x48318000
@@ -29,8 +33,16 @@
 #define GPT_REG_TIOCP_CFG      0x010 // CONFIG register
 #define GPT_TIOCP_CFG_RESERVED      0xFFFFFCC0
 #define GPT_TIOCP_CFG_CLOCKACTIVITY 0x00000300
+#define GPT_TIOCP_CFG_CLOCKACTIVITY_NONE   0x00000000
+#define GPT_TIOCP_CFG_CLOCKACTIVITY_ICLK   0x00000100
+#define GPT_TIOCP_CFG_CLOCKACTIVITY_FCLK   0x00000200
+#define GPT_TIOCP_CFG_CLOCKACTIVITY_BOTH   0x00000300
 #define GPT_TIOCP_CFG_EMUFREE       0x00000020
 #define GPT_TIOCP_CFG_IDLEMODE      0x00000018
+#define GPT_TIOCP_CFG_IDLEMODE_FORCE  0x00000000
+#define GPT_TIOCP_CFG_IDLEMODE_NONE   0x00000008
+#define GPT_TIOCP_CFG_IDLEMODE_SMART  0x00000010
+#define GPT_TIOCP_CFG_IDLEMODE_INVAL  0x00000018
 #define GPT_TIOCP_CFG_ENABLEWAKEUP  0x00000004
 #define GPT_TIOCP_CFG_SOFTRESET     0x00000002
 #define GPT_TIOCP_CFG_AUTOIDLE      0x00000001
@@ -131,40 +143,51 @@
 #define GPT_REG_TOWR_OVF_1MS               1000
 #define GPT_REG_TOWR_OVF_10MS             50000//temp
 
-void gptClearOverflowInterrupt(u32int id);
+void gptBEClearOverflowInterrupt(u32int id);
 
-void gptDisableOverflowInterrupt(u32int id);
+void gptBEDisableOverflowInterrupt(u32int id);
 
-void gptEnable(u32int id);
+void gptBEEnable(u32int id);
 
-void gptEnableOverflowInterrupt(u32int id);
+void gptBEEnableOverflowInterrupt(u32int id);
 
-void gptInit(void);
+void gptBEInit(void);
 
-void gptReset(u32int id);
+void gptBEReset(u32int id);
 
-void gptSet10msTick(u32int id);
+void gptBESet10msTick(u32int id);
 
-void gptStart(u32int id);
+void gptBEStart(u32int id);
 
-void gptStop(u32int id);
+void gptBEStop(u32int id);
 
-void gptWaitForOverflowInterrupt(u32int id);
+void gptBEWaitForOverflowInterrupt(u32int id);
 
-void gptWaitForReset(u32int id);
+void gptBEWaitForReset(u32int id);
 
-void gptDumpRegisters(u32int id); 
+void gptBEDumpRegisters(u32int id); 
 
+inline bool gptBEidValid(u32int id);
+
+inline bool gptBEisExtended(u32int id);
+
+inline u32int gptBEregRead(u32int id, u32int reg);
+
+inline void gptBEregWrite(u32int id, u32int reg, u32int val);
+
+inline u32int gptBEgetBaseAddr(u32int id);
 
 /*
 void deassertInterrupt(u32int gptNumber);
 */
 
-typedef struct
+struct GeneralPurposeTimerBE 
 {
   u32int baseAddress;
+  bool enabled;
   //bool enabled;
   //bool posted;
-} gptStruct;
+};
+
 
 #endif

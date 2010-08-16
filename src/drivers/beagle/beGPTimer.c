@@ -1,227 +1,314 @@
 #include "beGPTimer.h"
 #include "memFunctions.h"
 
+struct GeneralPurposeTimerBE* gpts[BE_GPTIMER_COUNT];
 
-#define GPT_VALID(id)                      ((id >= 0) && (id < GPTIMER_COUNT))
-#define GPT_EXTENDED(id)                   ((id == 0) || (id == 1) || (id == 9))
-
-#define GPT_REG_PTR(id,register)           ((volatile u32int *)(gpts[id].baseAddress | (register)))
-#define GPT_REG_ENABLE(id,register,mask)   *GPT_REG_PTR(id,register) |= (mask)
-#define GPT_REG_DISABLE(id,register,mask)  *GPT_REG_PTR(id,register) &= ~(mask)
-#define GPT_REG_READ(id,register)          (*GPT_REG_PTR(id,register))
-#define GPT_REG_WRITE(id,register,value)   *GPT_REG_PTR(id,register) = (value)
-
-#define GPT_WAIT_FOR(condition,error)      { u32int c = 0; while (!(condition)) { if (++c > 0xfffffffe) { serial_ERROR(error); } } }
-
-
-gptStruct *gpts;
-
-
-void gptClearOverflowInterrupt(u32int id)
+void gptBEInit()
 {
-  GPT_REG_WRITE(id, GPT_REG_TISR, GPT_TISR_OVERFLOW);
-}
-
-void gptDisableOverflowInterrupt(u32int id)
-{
-  GPT_REG_DISABLE(id, GPT_REG_TIER, GPT_TIER_OVERFLOW);
-}
-
-void gptEnable(u32int id)
-{/*
-  if (gpts[id].enabled)
+  int index = 0;
+  for (index = 1; index <= BE_GPTIMER_COUNT; index++)
   {
+    struct GeneralPurposeTimerBE* addr 
+       = (struct GeneralPurposeTimerBE*)mallocBytes(sizeof(struct GeneralPurposeTimerBE));
+
+    if (addr == 0)
+    {
+      serial_ERROR("Failed to allocate GPT_BE.");
+    }
+    else
+    {
+      gpts[index-1] = addr;
+      memset((void*)addr, 0x0, sizeof(struct GeneralPurposeTimerBE));
+      gpts[index-1]->baseAddress = gptBEgetBaseAddr(index);
+ 
+#ifdef GPTIMER_BE_DBG
+      serial_putstring("GPT_BE: Initializing ");
+      serial_putint_nozeros(index);
+      serial_putstring(" at 0x");
+      serial_putint((u32int)gpts[index-1]);
+      serial_newline();
+#endif
+    }
+    // reset the device
+    gptBEReset(index);
+
+  } // for ends 
+}
+
+void gptBEReset(u32int id)
+{
+#ifdef GPTIMER_BE_DBG
+  serial_putstring("GPT_BE");
+  serial_putint(id);
+  serial_putstring(" software reset");
+#endif
+
+  // reset the device
+  gptBEregWrite(id, GPT_REG_TSICR, GPT_TSICR_SFTRESET);
+  // .. and put into posted mode
+  gptBEregWrite(id, GPT_REG_TSICR, gptBEregRead(id, GPT_REG_TSICR)|GPT_TSICR_POSTED); 
+
+  // now lets configure it:
+  u32int configReg = gptBEregRead(id, GPT_REG_TIOCP_CFG);
+  // set to smartidle  
+  configReg &= ~GPT_TIOCP_CFG_IDLEMODE; 
+  configReg |= GPT_TIOCP_CFG_IDLEMODE_SMART;
+  
+  // set clock activity to perserve f-clock on idle
+  configReg &= ~GPT_TIOCP_CFG_CLOCKACTIVITY;
+  configReg |= GPT_TIOCP_CFG_CLOCKACTIVITY_FCLK;
+
+  // Enable wake-up, if core clock (1)
+  if (id == 1)
+  {
+    configReg |= GPT_TIOCP_CFG_ENABLEWAKEUP;
+  }
+
+  gptBEregWrite(id, GPT_REG_TIOCP_CFG, configReg);
+#ifdef GPTIMER_BE_DBG
+  serial_putstring("... done.");
+  serial_newline();
+#endif
+}
+
+bool gptBEidValid(u32int id)
+{
+  return (id > 0) && (id <= BE_GPTIMER_COUNT);
+}
+
+bool gptBEisExtended(u32int id)
+{
+  return ((id == 1) || (id == 2) || (id == 10));
+
+}
+
+u32int gptBEregRead(u32int id, u32int reg)
+{
+  volatile u32int * regPtr = (volatile u32int *) (gpts[id-1]->baseAddress + reg);
+  return  *regPtr;
+} 
+
+void gptBEregWrite(u32int id, u32int reg, u32int val)
+{
+  volatile u32int * regPtr = (volatile u32int *) (gpts[id-1]->baseAddress + reg);
+  *regPtr = val;
+} 
+
+
+void gptBEClearOverflowInterrupt(u32int id)
+{
+  gptBEregWrite(id, GPT_REG_TISR, GPT_TISR_OVERFLOW);
+}
+
+void gptBEDisableOverflowInterrupt(u32int id)
+{
+  u32int regVal = gptBEregRead(id, GPT_REG_TIER);
+  gptBEregWrite(id, GPT_REG_TIER, regVal & ~GPT_TISR_OVERFLOW);
+}
+
+void gptBEEnableOverflowInterrupt(u32int id)
+{
+  u32int regVal = gptBEregRead(id, GPT_REG_TIER);
+  gptBEregWrite(id, GPT_REG_TIER, regVal | GPT_TISR_OVERFLOW);
+}
+
+void gptBEEnable(u32int id)
+{
+#ifdef GPTIMER_BE_DBG
+  serial_putstring("GPT_BE: enable ");
+  serial_putint_nozeros(id);
+  serial_newline();
+#endif
+
+  if (gpts[id-1]->enabled)
+  {
+#ifdef GPTIMER_BE_DBG
+    serial_putstring("gpt_BE ");
+    serial_putint_nozeros(id);
+    serial_putstring(" already enabled");
+    serial_newline();
+#endif
     return;
   }
-/ *
-  omap_dm_clk_enable(timer->fclk);
-  omap_dm_clk_enable(timer->iclk);
-* /
-  gpts[id].enabled = TRUE;*/
+  gpts[id-1]->enabled = TRUE;
+/* omap_dm_clk_enable(timer->fclk);
+   omap_dm_clk_enable(timer->iclk); */
 }
 
-void gptEnableOverflowInterrupt(u32int id)
+void gptBESet10msTick(u32int id)
 {
-  GPT_REG_ENABLE(id, GPT_REG_TIER, GPT_TIER_OVERFLOW);
-}
-
-void gptInit()
-{
-  const int mallocSize = GPTIMER_COUNT * sizeof(gptStruct);;
-  gpts = (gptStruct *)mallocBytes(mallocSize);
-  memset((void *)gpts, 0x0, mallocSize);
-#if FALSE != 0
-#error This code assumes FALSE=0
-#endif
-  gpts[ 0].baseAddress = GPTIMER1;
-  gpts[ 1].baseAddress = GPTIMER2;
-  gpts[ 2].baseAddress = GPTIMER3;
-  gpts[ 3].baseAddress = GPTIMER4;
-  gpts[ 4].baseAddress = GPTIMER5;
-  gpts[ 5].baseAddress = GPTIMER6;
-  gpts[ 6].baseAddress = GPTIMER7;
-  gpts[ 7].baseAddress = GPTIMER8;
-  gpts[ 8].baseAddress = GPTIMER9;
-  gpts[ 9].baseAddress = GPTIMER10;
-  gpts[10].baseAddress = GPTIMER11;
-  gpts[11].baseAddress = GPTIMER12;
-#if GPTIMER_COUNT != 12
-#error This code only initializes 11 timers
-#endif
-  // enable GPTIMER1
-  //gptEnable(0);
-  //gptReset(0);
-}
-
-void gptReset(u32int id)
-{
-  u32int reg;
-  GPT_REG_WRITE(id, GPT_REG_TSICR, GPT_TSICR_POSTED | GPT_TSICR_SFTRESET);
-  gptWaitForReset(id);
-  // TODO
-  //gptSetSource(id, 0/*OMAP_TIMER_SRC_32_KHZ*/);
-
-  reg = GPT_REG_READ(id, GPT_REG_TIOCP_CFG);
-  reg |= 0x02 << 3;  /* Set to smart-idle mode */
-  reg |= 0x2 << 8;   /* Set clock activity to perserve f-clock on idle */
-
-  /*
-   * Enable wake-up only for GPT1 on OMAP2 CPUs.
-   * FIXME: All timers should have wake-up enabled and clear
-   * PRCM status.
-   * /
-  if (timer == &dm_timers[0])
-{*/
-  reg |= 1 << 2;
-/*}*/
-  GPT_REG_WRITE(id, GPT_REG_TIOCP_CFG, reg);
-
-  // match hardware reset default of posted mode
-  GPT_REG_WRITE(id, GPT_REG_TSICR, GPT_TSICR_POSTED);
-  
-  // TODO
-  //gpts[id].posted = 1;
-}
-
-void gptSet10msTick(u32int id)
-{
-  if (!GPT_EXTENDED(id))
+  if (!gptBEisExtended(id))
   {
     serial_ERROR("GPTIMER: gptSetUp1msTick not supported on this timer");
   }
-  GPT_REG_WRITE(id, GPT_REG_TLDR, GPT_REG_TLDR_LOAD_VALUE_1MS);
-  GPT_REG_WRITE(id, GPT_REG_TPIR, GPT_TPIR_POS_INC_1MS);
-  GPT_REG_WRITE(id, GPT_REG_TNIR, GPT_TNIR_NEG_INC_1MS);
-  GPT_REG_WRITE(id, GPT_REG_TOWR, GPT_TOWR_OVF_WRAPPING & GPT_REG_TOWR_OVF_10MS);
+
+  gptBEregWrite(id, GPT_REG_TLDR, GPT_REG_TLDR_LOAD_VALUE_1MS);
+  gptBEregWrite(id, GPT_REG_TPIR, GPT_TPIR_POS_INC_1MS);
+  gptBEregWrite(id, GPT_REG_TNIR, GPT_TNIR_NEG_INC_1MS);
+  gptBEregWrite(id, GPT_REG_TOWR, GPT_TOWR_OVF_WRAPPING & GPT_REG_TOWR_OVF_10MS);
   // write to trigger register - thus triggering internal counter value reset to TLDR
-  GPT_REG_WRITE(id, GPT_REG_TTGR, 1); // any value...
+  gptBEregWrite(id, GPT_REG_TTGR, 1); // any value...
   // set autoreload
-  GPT_REG_ENABLE(id, GPT_REG_TCLR, GPT_TCLR_AUTORELOAD);
+  gptBEregWrite(id, GPT_REG_TCLR, (gptBEregRead(id, GPT_REG_TCLR) | GPT_TCLR_AUTORELOAD));
 }
 
-void gptStart(u32int id)
+void gptBEStart(u32int id)
 {
-  GPT_REG_ENABLE(id, GPT_REG_TCLR, GPT_TCLR_START_STOP);
+  gptBEregWrite(id, GPT_REG_TCLR, (gptBEregRead(id, GPT_REG_TCLR) | GPT_TCLR_START_STOP));
 }
 
-void gptStop(u32int id)
+void gptBEStop(u32int id)
 {
-  GPT_REG_DISABLE(id, GPT_REG_TCLR, GPT_TCLR_START_STOP);
+  gptBEregWrite(id, GPT_REG_TCLR, (gptBEregRead(id, GPT_REG_TCLR) & ~GPT_TCLR_START_STOP));
 }
 
-void gptWaitForOverflowInterrupt(u32int id)
+void gptBEWaitForOverflowInterrupt(u32int id)
 {
-  GPT_WAIT_FOR(GPT_REG_READ(id, GPT_REG_TISR) & GPT_TISR_OVERFLOW, "GPTIMER: did not get interrupt.");
+  while ( (gptBEregRead(id, GPT_REG_TISR) & GPT_TISR_OVERFLOW) != GPT_TISR_OVERFLOW)
+  {
+    // do nothing
+  }
 }
 
-void gptWaitForReset(u32int id)
+void gptBEWaitForReset(u32int id)
 {
-  GPT_WAIT_FOR(GPT_REG_READ(id, GPT_REG_TISTAT) & GPT_TISTAT_RESETDONE, "GPTIMER: failed to reset.");
+  while ( (gptBEregRead(id, GPT_REG_TISTAT) & GPT_TISTAT_RESETDONE) != GPT_TISTAT_RESETDONE)
+  {
+    // do nothing
+  }
 }
 
-void gptDumpRegisters(u32int id)
+u32int gptBEgetBaseAddr(u32int id)
 {
-  serial_putstring("-----REGDUMP for GPTimer");
-  serial_putint(id + 1);
+  u32int base = 0;
+  switch(id)
+  {
+    case 1:
+      base = GPTIMER1;
+      break;
+    case 2:
+      base = GPTIMER2;
+      break;
+    case 3:
+      base = GPTIMER3;
+      break;
+    case 4:
+      base = GPTIMER4;
+      break;
+    case 5:
+      base = GPTIMER5;
+      break;
+    case 6:
+      base = GPTIMER6;
+      break;
+    case 7:
+      base = GPTIMER7;
+      break;
+    case 8:
+      base = GPTIMER8;
+      break;
+    case 9:
+      base = GPTIMER9;
+      break;
+    case 10:
+      base = GPTIMER10;
+      break;
+    case 11:
+      base = GPTIMER11;
+      break;
+    case 12:
+      base = GPTIMER12;
+      break;
+    default:
+      serial_ERROR("GPT_BE: invalid id");
+  }
+  return base;
+}
+
+
+void gptBEDumpRegisters(u32int id)
+{
+  serial_putstring("-----REGDUMP for GPTimer backend");
+  serial_putint(id);
   serial_putstring("-----");
   serial_newline();
   
   serial_putstring("Config: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TIOCP_CFG));
+  serial_putint(gptBEregRead(id, GPT_REG_TIOCP_CFG));
   serial_newline();
 
   serial_putstring("Status: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TISTAT));
+  serial_putint(gptBEregRead(id, GPT_REG_TISTAT));
   serial_newline();
 
   serial_putstring("Interrupt Status: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TISR));
+  serial_putint(gptBEregRead(id, GPT_REG_TISR));
   serial_newline();
 
   serial_putstring("Interrupt Enable: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TIER));
+  serial_putint(gptBEregRead(id, GPT_REG_TIER));
   serial_newline();
 
   serial_putstring("Wakeup Enable: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TWER));
+  serial_putint(gptBEregRead(id, GPT_REG_TWER));
   serial_newline();
 
   serial_putstring("Control: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TCLR));
+  serial_putint(gptBEregRead(id, GPT_REG_TCLR));
   serial_newline();
 
   serial_putstring("Internal Clock Register value: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TCRR));
+  serial_putint(gptBEregRead(id, GPT_REG_TCRR));
   serial_newline();
 
   serial_putstring("Internal Load Register value: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TLDR));
+  serial_putint(gptBEregRead(id, GPT_REG_TLDR));
   serial_newline();
 
   serial_putstring("Internal Trigger Register Value: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TTGR));
+  serial_putint(gptBEregRead(id, GPT_REG_TTGR));
   serial_newline();
 
   serial_putstring("Write-posted pending: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TWPS));
+  serial_putint(gptBEregRead(id, GPT_REG_TWPS));
   serial_newline();
 
   serial_putstring("Internal Match Register Value: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TMAR));
+  serial_putint(gptBEregRead(id, GPT_REG_TMAR));
   serial_newline();
 
   serial_putstring("Capture one Value: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TCAR1));
+  serial_putint(gptBEregRead(id, GPT_REG_TCAR1));
   serial_newline();
 
   serial_putstring("Interface control: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TSICR));
+  serial_putint(gptBEregRead(id, GPT_REG_TSICR));
   serial_newline();
 
   serial_putstring("Capture two Value: ");
-  serial_putint(GPT_REG_READ(id, GPT_REG_TCAR2));
+  serial_putint(gptBEregRead(id, GPT_REG_TCAR2));
   serial_newline();
 
-  if (GPT_EXTENDED(id))
+  if (gptBEisExtended(id))
   {
     serial_putstring("Positive increment value: ");
-    serial_putint(GPT_REG_READ(id, GPT_REG_TPIR));
+    serial_putint(gptBEregRead(id, GPT_REG_TPIR));
     serial_newline();
 
     serial_putstring("Negative increment value: ");
-    serial_putint(GPT_REG_READ(id, GPT_REG_TNIR));
+    serial_putint(gptBEregRead(id, GPT_REG_TNIR));
     serial_newline();
 
     serial_putstring("Clock Value: ");
-    serial_putint(GPT_REG_READ(id, GPT_REG_TCVR));
+    serial_putint(gptBEregRead(id, GPT_REG_TCVR));
     serial_newline();
 
     serial_putstring("Overflow masker: ");
-    serial_putint(GPT_REG_READ(id, GPT_REG_TOCR));
+    serial_putint(gptBEregRead(id, GPT_REG_TOCR));
     serial_newline();
 
     serial_putstring("Overflow wrapper: ");
-    serial_putint(GPT_REG_READ(id, GPT_REG_TOWR));
+    serial_putint(gptBEregRead(id, GPT_REG_TOWR));
     serial_newline();
 
     serial_putstring("--------------------------------");
