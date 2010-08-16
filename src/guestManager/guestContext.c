@@ -196,7 +196,7 @@ void dumpGuestContext(GCONTXT * gc)
   serial_newline();
 
   serial_putstring("Interrupt pending: ");
-  serial_puting(gc->guestIrqPending);
+  serial_putint(gc->guestIrqPending);
   serial_newline();
 }
 
