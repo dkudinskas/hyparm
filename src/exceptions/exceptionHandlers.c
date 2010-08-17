@@ -237,7 +237,7 @@ void do_irq()
 //    scheduleGuest();
     gptBEClearOverflowInterrupt(1);
     acknowledgeIrqBE();
-    serial_ERROR("Tick interrupt from GPTIMER1 while in GUEST");
+    serial_putstring("?");
   }
   else
   {

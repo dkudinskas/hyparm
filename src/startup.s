@@ -200,7 +200,6 @@ _start:
         MSR     CPSR, R2
         .endm
 
-        /* WARNING: only restores a subset of things in the CPSR, will need expanding in future to support THUMB, SIMD etc */
         /* Restores the cpsr to USR mode (& cc flags) then restore pc */
         .macro restore_cpsr_pc_usr_mode
         /* get PC and save on stack */
@@ -221,50 +220,47 @@ _start:
 
 .global swi_handler
 swi_handler:
-  /* Not in macro -> other ISRs do other checks before saving r0-r14 */
-  PUSH    {LR}
-
-  /* pops LR */
-  save_r0_to_r14 
-  save_pc
-  /* we need the condition flags that were in the guest saved in ARB! */
-  save_cc_flags
-
-  /* get SVC code into @parameter1 and call C function */
-  LDR     R0, [LR, #-4]
-  AND     R0, #0xFFFFFF
-  BL      do_software_interrupt
-
-  /* handled this SWI. lets restore user state! */
-  /* uses R0,R1,R2 as scratch keep above "restore_r0_to_r12" */
-  restore_r13_r14 
-  restore_r0_to_r12
-  restore_cpsr_pc_usr_mode
+    PUSH    {LR}
+    /* pops LR */
+    save_r0_to_r14 
+    save_pc
+    /* we need the condition flags that were in the guest saved in ARB! */
+    save_cc_flags
+  
+    /* get SVC code into @parameter1 and call C function */
+    LDR     R0, [LR, #-4]
+    AND     R0, #0xFFFFFF
+    BL      do_software_interrupt
+  
+    /* handled this SWI. lets restore user state! */
+    /* uses R0,R1,R2 as scratch keep above "restore_r0_to_r12" */
+    restore_r13_r14 
+    restore_r0_to_r12
+    restore_cpsr_pc_usr_mode
 
 .global data_abort_handler
 data_abort_handler:
-  /* We can NOT assume that the data abort is guest code */
-  push   {LR}
-  /* If we aborted in FIQ then we can switch mode to get r8-12 later */
-
-  @Test SPSR -> are we from USR mode?
-  MRS    LR, SPSR
-  ANDS   LR, LR, #0x0f
-  BNE    data_abort_handler_privileged_mode /* Abort occured in Hypervisor (privileged) code */
-
-  /* We were in USR mode, we must have been running guest code */
-  save_r0_to_r14 @pops LR
-  /* Get the instr that aborted, after we fix up we probably want to re-try it */
-  save_pc_abort
-  save_cc_flags
+    /* We can NOT assume that the data abort is guest code */
+    push   {LR}
+    /* If we aborted in FIQ then we can switch mode to get r8-12 later */
+    /* Test SPSR -> are we from USR mode? */
+    MRS    LR, SPSR
+    ANDS   LR, LR, #0x0f
+    BNE    data_abort_handler_privileged_mode /* Abort occured in Hypervisor (privileged) code */
   
-  BL do_data_abort
-
-  /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
-  restore_r13_r14
-  restore_r0_to_r12
-  restore_cpsr_pc_usr_mode
-  /* End restore code */
+    /* We were in USR mode, we must have been running guest code */
+    save_r0_to_r14 /* pops LR */
+    /* Get the instr that aborted, after we fix up we probably want to re-try it */
+    save_pc_abort
+    save_cc_flags
+    
+    BL do_data_abort
+  
+    /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
+    restore_r13_r14
+    restore_r0_to_r12
+    restore_cpsr_pc_usr_mode
+    /* End restore code */
 
 .global data_abort_handler_privileged_mode
 data_abort_handler_privileged_mode:
@@ -464,16 +460,14 @@ irq_handler:
   BNE    irq_handler_privileged_mode
 
   /* We were in USR mode running guest code */
-  /* save_r0_to_r14 @pops LR */
-  /* Get the instr that aborted, after we fix up we probably want to re-try it */
-  /* save_pc_abort */
-  /* save_cc_flags */
-  
+  save_r0_to_r14 /* pops LR */
+  /* save the PC of the guest, during which we got the interrupt */
+  save_pc
+  save_cc_flags
   BL do_irq
-
-  /* restore_r13_r14 */
-  /* restore_r0_to_r12 */
-  /* restore_cpsr_pc_usr_mode */
+  restore_r13_r14
+  restore_r0_to_r12
+  restore_cpsr_pc_usr_mode
   /* End restore code */
 
 
@@ -481,7 +475,7 @@ irq_handler_privileged_mode:
 
   pop     {LR} /* we backed up the LR to hold the SPSR */
   /* link register is last pc+8. need to return to the which?? instruction */
-  sub     LR, LR, #8
+  sub     LR, LR, #4
   /* save common registers and return address. */
   push    {lr}
   push    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}

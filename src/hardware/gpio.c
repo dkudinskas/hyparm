@@ -10,19 +10,19 @@ struct Gpio * gpio[6];
 
 void initGpio(u32int gpioNumber)
 {
-  gpio[gpioNumber] = (struct Gpio*)mallocBytes(sizeof(struct Gpio));
-  if (gpio[gpioNumber] == 0)
+  gpio[gpioNumber-1] = (struct Gpio*)mallocBytes(sizeof(struct Gpio));
+  if (gpio[gpioNumber-1] == 0)
   {
     serial_ERROR("Failed to allocate Gpio.");
   }
   else
   {
-    memset((void*)gpio[gpioNumber], 0x0, sizeof(struct Gpio));
+    memset((void*)gpio[gpioNumber-1], 0x0, sizeof(struct Gpio));
 #ifdef GPIO_DBG
     serial_putstring("Initializing GPIO");
     serial_putint_nozeros(gpioNumber);
     serial_putstring(" at 0x");
-    serial_putint((u32int)gpio[gpioNumber]);
+    serial_putint((u32int)gpio[gpioNumber-1]);
     serial_newline();
 #endif
   }
@@ -33,35 +33,35 @@ void initGpio(u32int gpioNumber)
 void resetGpio(u32int num)
 {
   // reset registers to default values
-  gpio[num]->gpioRevision        = 0x00000025;
-  gpio[num]->gpioSysConfig       = 0x00000000;
-  gpio[num]->gpioSysStatus       = 0x00000001;
-  gpio[num]->gpioIrqStatus1      = 0x00000000;
-  gpio[num]->gpioIrqEnable1      = 0x00000000;
-  gpio[num]->gpioWakeupEnable    = 0x00000000;
-  gpio[num]->gpioIrqStatus2      = 0x00000000;
-  gpio[num]->gpioIrqEnable2      = 0x00000000;
-  gpio[num]->gpioCtrl            = 0x00000002;
-  gpio[num]->gpioOE              = 0x00000000;
-  gpio[num]->gpioDataIn          = 0x00000000;
-  gpio[num]->gpioDataOut         = 0x00000000;
-  gpio[num]->gpioLvlDetect0      = 0x00000000;
-  gpio[num]->gpioLvlDetect1      = 0x00000000;
-  gpio[num]->gpioRisingDetect    = 0x00000000;
-  gpio[num]->gpioFallingDetect   = 0x00000000;
-  gpio[num]->gpioDebounceEnable  = 0x00000000;
-  gpio[num]->gpioDebouncingTime  = 0x00000000;
-  gpio[num]->gpioClearIrqEnable1 = 0x00000000;
-  gpio[num]->gpioSetIrqEnable1   = 0x00000000;
-  gpio[num]->gpioClearIrqEnable2 = 0x00000000;
-  gpio[num]->gpioSetIrqEnable2   = 0x00000000;
-  gpio[num]->gpioClearWkuEnable  = 0x00000000;
-  gpio[num]->gpioSetWkuEnable    = 0x00000000;
-  gpio[num]->gpioClearDataOut    = 0x00000000;
-  gpio[num]->gpioSetDataOut      = 0x00000000;
+  gpio[num-1]->gpioRevision        = 0x00000025;
+  gpio[num-1]->gpioSysConfig       = 0x00000000;
+  gpio[num-1]->gpioSysStatus       = 0x00000001;
+  gpio[num-1]->gpioIrqStatus1      = 0x00000000;
+  gpio[num-1]->gpioIrqEnable1      = 0x00000000;
+  gpio[num-1]->gpioWakeupEnable    = 0x00000000;
+  gpio[num-1]->gpioIrqStatus2      = 0x00000000;
+  gpio[num-1]->gpioIrqEnable2      = 0x00000000;
+  gpio[num-1]->gpioCtrl            = 0x00000002;
+  gpio[num-1]->gpioOE              = 0x00000000;
+  gpio[num-1]->gpioDataIn          = 0x00000000;
+  gpio[num-1]->gpioDataOut         = 0x00000000;
+  gpio[num-1]->gpioLvlDetect0      = 0x00000000;
+  gpio[num-1]->gpioLvlDetect1      = 0x00000000;
+  gpio[num-1]->gpioRisingDetect    = 0x00000000;
+  gpio[num-1]->gpioFallingDetect   = 0x00000000;
+  gpio[num-1]->gpioDebounceEnable  = 0x00000000;
+  gpio[num-1]->gpioDebouncingTime  = 0x00000000;
+  gpio[num-1]->gpioClearIrqEnable1 = 0x00000000;
+  gpio[num-1]->gpioSetIrqEnable1   = 0x00000000;
+  gpio[num-1]->gpioClearIrqEnable2 = 0x00000000;
+  gpio[num-1]->gpioSetIrqEnable2   = 0x00000000;
+  gpio[num-1]->gpioClearWkuEnable  = 0x00000000;
+  gpio[num-1]->gpioSetWkuEnable    = 0x00000000;
+  gpio[num-1]->gpioClearDataOut    = 0x00000000;
+  gpio[num-1]->gpioSetDataOut      = 0x00000000;
   
   // set reset complete bit
-  gpio[num]->gpioSysStatus = GPIO_SYSSTATUS_RESETDONE;
+  gpio[num-1]->gpioSysStatus = GPIO_SYSSTATUS_RESETDONE;
 }
 
 
@@ -78,27 +78,27 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
   switch (phyAddr & 0xFFFFF000)
   {
     case GPIO1:
-      gpioNum = 1;
+      gpioNum = 0;
       regOffset = phyAddr - GPIO1;
       break;
     case GPIO2:
-      gpioNum = 2;
+      gpioNum = 1;
       regOffset = phyAddr - GPIO2;
       break;
     case GPIO3:
-      gpioNum = 3;
+      gpioNum = 2;
       regOffset = phyAddr - GPIO3;
       break;
     case GPIO4:
-      gpioNum = 4;
+      gpioNum = 3;
       regOffset = phyAddr - GPIO4;
       break;
     case GPIO5:
-      gpioNum = 5;
+      gpioNum = 4;
       regOffset = phyAddr - GPIO5;
       break;
     case GPIO6:
-      gpioNum = 6;
+      gpioNum = 5;
       regOffset = phyAddr - GPIO6;
       break;
     default:
@@ -199,27 +199,27 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   switch (phyAddr & 0xFFFFF000)
   {
     case GPIO1:
-      gpioNum = 1;
+      gpioNum = 0;
       regOffset = phyAddr - GPIO1;
       break;
     case GPIO2:
-      gpioNum = 2;
+      gpioNum = 1;
       regOffset = phyAddr - GPIO2;
       break;
     case GPIO3:
-      gpioNum = 3;
+      gpioNum = 2;
       regOffset = phyAddr - GPIO3;
       break;
     case GPIO4:
-      gpioNum = 4;
+      gpioNum = 3;
       regOffset = phyAddr - GPIO4;
       break;
     case GPIO5:
-      gpioNum = 5;
+      gpioNum = 4;
       regOffset = phyAddr - GPIO5;
       break;
     case GPIO6:
-      gpioNum = 6;
+      gpioNum = 5;
       regOffset = phyAddr - GPIO6;
       break;
     default:

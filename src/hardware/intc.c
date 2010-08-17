@@ -468,7 +468,7 @@ void intcReset()
   irqController->intcSysStatus   = 0x00000000;
   irqController->intcSirIrq      = 0xFFFFFFE0;
   irqController->intcSirFiq      = 0xFFFFFFE0;
-  irqController->intcControl     = 0x00000000;;
+  irqController->intcControl     = 0x00000000;
   irqController->intcProtection  = 0x00000000;
   irqController->intcIdle        = 0x00000000;
   irqController->intcIrqPriority = 0xFFFFFFC0;

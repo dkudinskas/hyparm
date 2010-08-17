@@ -145,6 +145,8 @@ descriptor* createGuestOSPageTable()
   // interrupt controller
   const u32int interruptController = 0x48200000;
   addSectionPtEntry(ptd, interruptController,interruptController,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+  // gptimer1
+  addSectionPtEntry(ptd, GPTIMER1,GPTIMER1,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
 
 #ifdef PT_SHADOW_DEBUG

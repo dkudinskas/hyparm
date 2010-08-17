@@ -8,7 +8,8 @@
 #define INTCPS_INTERRUPTS_PER_BANK 32
 #define INTCPS_NR_OF_INTERRUPTS    96
 
-// uncomment me to enable debug : #define BE_INTC_DBG
+// uncomment me to enable debug : 
+#define BE_INTC_DBG
 
 // interrupt number mappings
 /*
