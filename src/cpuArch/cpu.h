@@ -66,7 +66,7 @@
 int cleanup_before_linux(void);
 
 void enable_interrupts(void);
-int disable_interrupts(void);
+void disable_interrupts(void);
 
 void icache_enable(void);
 void icache_disable(void);

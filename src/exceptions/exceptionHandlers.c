@@ -229,26 +229,15 @@ void do_monitor_mode_hypervisor(void)
 
 void do_irq()
 {
-/*********************
- * PAGE 1205 SPRUFD  *
- *********************/
-
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
 
   if (activeIrqNumber == GPT1_IRQ)
   {
-    serial_putstring("Tick interrupt from GPTIMER1 while in GUEST");
-    serial_newline();
-    scheduleGuest();
-    serial_putstring("before GPT gptClearOverflowInterrupt");
-    serial_newline();
-    gptBEClearOverflowInterrupt(0);
-    serial_putstring("before INTC acknowledgeIrq");
-    serial_newline();
+//    scheduleGuest();
+    gptBEClearOverflowInterrupt(1);
     acknowledgeIrqBE();
-    serial_putstring("end if");
-    serial_newline();
+    serial_ERROR("Tick interrupt from GPTIMER1 while in GUEST");
   }
   else
   {
@@ -257,65 +246,29 @@ void do_irq()
     serial_ERROR(" Implement me!");
   }
 
-  /* if tick from gp10: de-assert interrupt in gptimer */
-  /* else: halt execution. no other irq's are expected! */
-/*
-  if (activeIrqNumber == GPT10_IRQ)
-  {
-    // its a tick! schedule guests...
-    scheduleGuest();
-    serial_putstring(".");
-    deassertInterrupt(10);
-  }
-  else
-  {
-    serial_ERROR("IRQ not a tick!");
-  }
-*/
-
-/* After the return of the subroutine, the ISR sets the NEWIRQAGR/NEWFIQAGR bit
-to enable the processing of subsequent pending IRQs/FIQs
-and to restore ARM context in the following code. */
- // resetAndNewIrq();
-
-/* Because the writes are posted on an Interconnect bus, to be sure
-that the preceding writes are done before enabling IRQs/FIQs,
-a Data Synchronization Barrier is used. This operation ensure that
-the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
-/*
+  /* Because the writes are posted on an Interconnect bus, to be sure
+   * that the preceding writes are done before enabling IRQs/FIQs,
+   * a Data Synchronization Barrier is used. This operation ensure that
+   * the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
   asm volatile("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
-*/
-  //serial_ERROR("Received IRQ! Implement me.");
+
+  return;
 }
 
 
 void do_irq_hypervisor()
 {
-/*********************
- * PAGE 1205 SPRUFD  *
- *********************/
-
-  serial_newline();
-  serial_putstring("------------------------------------------------------------");
-  serial_newline();
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
 
   if (activeIrqNumber == GPT1_IRQ)
   {
-    serial_putstring("Tick interrupt from GPTIMER1 while in HYPERVISOR");
-    serial_newline();
-    scheduleGuest();
-    serial_putstring("before GPT gptClearOverflowInterrupt");
-    serial_newline();
-    gptBEClearOverflowInterrupt(0);
-    serial_putstring("before INTC acknowledgeIrq");
-    serial_newline();
+    serial_putchar('!');
+//    scheduleGuest();
+    gptBEClearOverflowInterrupt(1);
     acknowledgeIrqBE();
-    serial_putstring("end if");
-    serial_newline();
   }
   else
   {
@@ -324,41 +277,15 @@ void do_irq_hypervisor()
     serial_ERROR(" Implement me!");
   }
 
-  dumpGuestContext(getGuestContext());
-  serial_putstring("------------------------------------------------------------");
-  serial_newline();
-  serial_newline();
-  /* if tick from gp10: de-assert interrupt in gptimer */
-  /* else: halt execution. no other irq's are expected! */
-/*
-  if (activeIrqNumber == GPT10_IRQ)
-  {
-    // its a tick! schedule guests...
-    scheduleGuest();
-    serial_putstring(".");
-    deassertInterrupt(10);
-  }
-  else
-  {
-    serial_ERROR("IRQ not a tick!");
-  }
-*/
-
-/* After the return of the subroutine, the ISR sets the NEWIRQAGR/NEWFIQAGR bit
-to enable the processing of subsequent pending IRQs/FIQs
-and to restore ARM context in the following code. */
- // resetAndNewIrq();
-
-/* Because the writes are posted on an Interconnect bus, to be sure
-that the preceding writes are done before enabling IRQs/FIQs,
-a Data Synchronization Barrier is used. This operation ensure that
-the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
-/*
+  /* Because the writes are posted on an Interconnect bus, to be sure
+   * that the preceding writes are done before enabling IRQs/FIQs,
+   * a Data Synchronization Barrier is used. This operation ensure that
+   * the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
   asm volatile("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
-*/
-  //serial_ERROR("Received IRQ! Implement me.");
+
+  return;
 }
 
 

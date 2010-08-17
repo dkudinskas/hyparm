@@ -22,9 +22,9 @@ void gptBEInit()
       gpts[index-1]->baseAddress = gptBEgetBaseAddr(index);
  
 #ifdef GPTIMER_BE_DBG
-      serial_putstring("GPT_BE: Initializing ");
+      serial_putstring("GPT_BE");
       serial_putint_nozeros(index);
-      serial_putstring(" at 0x");
+      serial_putstring(": Initializing at 0x");
       serial_putint((u32int)gpts[index-1]);
       serial_newline();
 #endif
@@ -39,8 +39,8 @@ void gptBEReset(u32int id)
 {
 #ifdef GPTIMER_BE_DBG
   serial_putstring("GPT_BE");
-  serial_putint(id);
-  serial_putstring(" software reset");
+  serial_putint_nozeros(id);
+  serial_putstring(": software reset");
 #endif
 
   // reset the device
@@ -103,29 +103,30 @@ void gptBEClearOverflowInterrupt(u32int id)
 void gptBEDisableOverflowInterrupt(u32int id)
 {
   u32int regVal = gptBEregRead(id, GPT_REG_TIER);
-  gptBEregWrite(id, GPT_REG_TIER, regVal & ~GPT_TISR_OVERFLOW);
+  gptBEregWrite(id, GPT_REG_TIER, regVal & ~GPT_TIER_OVERFLOW);
 }
 
 void gptBEEnableOverflowInterrupt(u32int id)
 {
   u32int regVal = gptBEregRead(id, GPT_REG_TIER);
-  gptBEregWrite(id, GPT_REG_TIER, regVal | GPT_TISR_OVERFLOW);
+  gptBEregWrite(id, GPT_REG_TIER, regVal | GPT_TIER_OVERFLOW);
 }
 
 void gptBEEnable(u32int id)
 {
 #ifdef GPTIMER_BE_DBG
-  serial_putstring("GPT_BE: enable ");
+  serial_putstring("GPT_BE");
   serial_putint_nozeros(id);
+  serial_putstring(": enable.");
   serial_newline();
 #endif
 
   if (gpts[id-1]->enabled)
   {
 #ifdef GPTIMER_BE_DBG
-    serial_putstring("gpt_BE ");
+    serial_putstring("gpt_BE");
     serial_putint_nozeros(id);
-    serial_putstring(" already enabled");
+    serial_putstring(": already enabled");
     serial_newline();
 #endif
     return;
@@ -228,9 +229,10 @@ u32int gptBEgetBaseAddr(u32int id)
 
 void gptBEDumpRegisters(u32int id)
 {
-  serial_putstring("-----REGDUMP for GPTimer backend");
+  serial_putstring("----- REGDUMP GPT");
   serial_putint(id);
-  serial_putstring("-----");
+  serial_putstring("_BE");
+  serial_putstring(" -----");
   serial_newline();
   
   serial_putstring("Config: ");

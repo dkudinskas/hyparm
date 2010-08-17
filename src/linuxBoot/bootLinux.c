@@ -61,7 +61,7 @@ void do_linux_boot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAdd
   setup_commandline_tag(commandline);
   if (builtInInitrd)
   {
-    setup_initrd_tag (initrdAddr, initrdAddr + BOARD_INITRD_LEN);
+    setup_initrd_tag(initrdAddr, initrdAddr + BOARD_INITRD_LEN);
   }
   setup_end_tag();
 

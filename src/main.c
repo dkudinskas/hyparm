@@ -80,31 +80,6 @@ int main(int argc, char *argv[])
   }
   registerBlockCache(gContext, blockCache);
 
-  /* initialise physical interrupt controller */
-  initialiseIntcBE();
-
-  /* initialise phyiscal general-purpose timer to schedule guests */
-  gptBEInit();
-  /* enable */
-  gptBEEnable(1);
-  // gptBEReset(1);
-  // gptBEWaitForReset(1);
-  gptBESet10msTick(1);
-  gptBEEnableOverflowInterrupt(1);
-  gptBEStart(1);
-  while(TRUE)
-  {
-    // test
-    gptBEWaitForOverflowInterrupt(1);
-    gptBEClearOverflowInterrupt(1);
-    acknowledgeIrqBE();
-    serial_putstring(".");
-    serial_newline();
-  }
-
-enable_interrupts();
-unmaskInterruptBE(GPT1_IRQ);
-
   /* initialise virtual hardware devices */
   device * libraryPtr;
   if ((libraryPtr = initialiseHardwareLibrary()) != 0)
@@ -127,17 +102,7 @@ unmaskInterruptBE(GPT1_IRQ);
   if ( ret < 0 )
   {
     printUsage();
-
-#ifdef STARTUP_DEBUG
-    serial_putstring("Hypervisor startup aborted.");
-    serial_newline();
-#endif
-
-    /* Reset board? */
-    while(TRUE)
-    {
-      /* Do Nothing */
-    }
+    serial_ERROR("Hypervisor startup aborted.");
   }
 
 #ifdef STARTUP_DEBUG
@@ -153,6 +118,30 @@ unmaskInterruptBE(GPT1_IRQ);
 #ifdef STARTUP_DEBUG
   dumpHdrInfo(&imageHeader);
 #endif
+
+  /* initialise physical interrupt controller */
+  intcBEInit();
+
+  /* initialise phyiscal general-purpose timer to schedule guests */
+  gptBEInit();
+  /* enable a regular 10ms interrupt (for scheduling guests) */
+  gptBEEnable(1);
+  gptBESet10msTick(1);
+  gptBEEnableOverflowInterrupt(1);
+  gptBEStart(1);
+/*
+  // THIS IS TEST CODE, that the timer works properly
+  while(TRUE)
+  {
+    // test
+    gptBEWaitForOverflowInterrupt(1);
+    gptBEClearOverflowInterrupt(1);
+    acknowledgeIrqBE();
+    serial_putstring(".");
+  }
+ */
+  unmaskInterruptBE(GPT1_IRQ);
+  enable_interrupts();
 
   // does not return
   do_linux_boot(&imageHeader, kernAddr, initrdAddr);

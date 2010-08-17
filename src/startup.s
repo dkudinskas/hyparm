@@ -1,17 +1,19 @@
 /* Standard definitions */
 
-	.equ	I_BIT,          0x80      /* when set, IRQ is disabled */
-	.equ	F_BIT,          0x40      /* when set, FIQ is disabled */
+  .equ  A_BIT,          0x100     /* when set, async aborts are disabled */
+  .equ  I_BIT,          0x80      /* when set, IRQ is disabled */
+  .equ  F_BIT,          0x40      /* when set, FIQ is disabled */
 
-	.equ	USR_MODE,       0x10
-	.equ	FIQ_MODE,       0x11
-	.equ	IRQ_MODE,       0x12
-	.equ	SVC_MODE,       0x13
-	.equ	ABT_MODE,       0x17
-	.equ	UND_MODE,       0x1B
-	.equ	SYS_MODE,       0x1F
+  .equ  USR_MODE,       0x10
+  .equ  FIQ_MODE,       0x11
+  .equ  IRQ_MODE,       0x12
+  .equ  SVC_MODE,       0x13
+  .equ  ABT_MODE,       0x17
+  .equ  UND_MODE,       0x1B
+  .equ  SYS_MODE,       0x1F
 
-	.align	5
+  .align  5
+
 .global startup_hypervisor
 .func   startup_hypervisor
 startup_hypervisor:
@@ -20,32 +22,32 @@ _start:
 
 /* Initialize stacks for all modes */
   /* set IRQ stack */
-	MSR     CPSR_c,#(IRQ_MODE | I_BIT | F_BIT)
-	LDR     sp,=irqStack
+  MSR     CPSR_c,#(IRQ_MODE | I_BIT | F_BIT)
+  LDR     sp,=irqStack
 
   /* set FIQ stack */
-	MSR     CPSR_c,#(FIQ_MODE | I_BIT | F_BIT)
-	LDR     sp,=fiqStack
+  MSR     CPSR_c,#(FIQ_MODE | I_BIT | F_BIT)
+  LDR     sp,=fiqStack
 
   /* set SVC stack */
-	MSR     CPSR_c,#(SVC_MODE | I_BIT | F_BIT)
-	LDR     sp,=serviceStack
+  MSR     CPSR_c,#(SVC_MODE | I_BIT | F_BIT)
+  LDR     sp,=serviceStack
 
   /* set ABT stack */
-	MSR     CPSR_c,#(ABT_MODE | I_BIT | F_BIT)
-	LDR     sp,=abortStack
+  MSR     CPSR_c,#(ABT_MODE | I_BIT | F_BIT)
+  LDR     sp,=abortStack
 
   /* set UND stack */
-	MSR     CPSR_c,#(UND_MODE | I_BIT | F_BIT)
-	LDR     sp,=undefinedStack
+  MSR     CPSR_c,#(UND_MODE | I_BIT | F_BIT)
+  LDR     sp,=undefinedStack
 
   /* set user/system stack */
-	MSR     CPSR_c,#(SYS_MODE | I_BIT | F_BIT)
-	/* since we will start the guest thinking its in SVC mode, choose this stack*/
-	LDR     sp,=guestStackSVC
+  MSR     CPSR_c,#(SYS_MODE | I_BIT | F_BIT)
+  /* since we will start the guest thinking its in SVC mode, choose this stack*/
+  LDR     sp,=guestStackSVC
 
   /* switch back to svc mode */
-	MSR     CPSR_c,#(SVC_MODE | I_BIT | F_BIT)
+  MSR     CPSR_c,#(SVC_MODE | I_BIT | F_BIT)
 
   /* save to-be-dirty registers */
   PUSH    {R1, R2, R3, R4, lr}
@@ -127,14 +129,13 @@ _start:
         POP     {lr}
 
         /* store SP & LR to the correct places.*/
-        get_emulated_mode @ uses R0 as scratch, puts guestContext addr into R1
+        get_emulated_mode /* uses R0 as scratch, puts guestContext addr into R1 */
         /* use system mode to extract guest stack pointer and link register */
         MRS     R2, CPSR /* Store current mode so we can switch back to it */
-        /* MSR     CPSR_c,#(SYS_MODE | I_BIT | F_BIT) */
         CPS     SYS_MODE
         STMIA   R1, {R13, R14}
         /* switch back to previous mode */
-        MSR     CPSR_c, R2
+        MSR     CPSR, R2
 
         /* store r8-r12, guest mode still in R0 */
         /* evaluate guest mode - was guest in FIQ? */
@@ -161,6 +162,7 @@ _start:
         .endm
 
         .macro save_cc_flags
+        /* saving condition flags, but no other (AIF) bits */
         LDR     R0, =guestContextCPSR
         LDR     R1, [R0]
         AND     R1, #0x0FFFFFFF
@@ -190,13 +192,12 @@ _start:
         get_emulated_mode
         /* switch to system mode to restore SP & LR */
         MRS     R2, CPSR /* backup up current mode */
-        /* MSR     CPSR_c,#(SYS_MODE | I_BIT | F_BIT) */
         CPS     SYS_MODE
         /* restore SP & LR from guest Context */
         LDR     SP, [R1]
         LDR     LR, [R1, #4]
         /* switch back to previous mode */
-        MSR     CPSR_c, R2
+        MSR     CPSR, R2
         .endm
 
         /* WARNING: only restores a subset of things in the CPSR, will need expanding in future to support THUMB, SIMD etc */
@@ -209,13 +210,10 @@ _start:
         /* Get the CPSR cc flags from guestContext, and put them in the SPSR ready for the restore */
         LDR     LR,=guestContextCPSR
         LDR     LR, [LR]
-        /* Preserve condition flags and exception enable bits */
-        /* equivalent of AND     LR, #0xF00000c0, but immediate would be too big  */
-        BIC     LR, #0x0f000000
-        BIC     LR, #0x00ff0000
-        BIC     LR, #0x0000ff00
-        BIC     LR, #0x0000003f
-        ORR     LR, LR, #USR_MODE /* #(USR_MODE | I_BIT | F_BIT) */
+        /* Preserve condition flags */
+        AND     LR, LR, #0xf0000000
+        /* set user mode, disable async abts and fiqs, but enable irqs */
+        ORR     LR, LR, #(USR_MODE | A_BIT | F_BIT)
         MSR     SPSR, LR
         LDM     SP, {PC}^ /* restore PC and load the SPSR into the CPSR */
         .endm
@@ -238,7 +236,6 @@ swi_handler:
   BL      do_software_interrupt
 
   /* handled this SWI. lets restore user state! */
-  
   /* uses R0,R1,R2 as scratch keep above "restore_r0_to_r12" */
   restore_r13_r14 
   restore_r0_to_r12
@@ -247,8 +244,6 @@ swi_handler:
 .global data_abort_handler
 data_abort_handler:
   /* We can NOT assume that the data abort is guest code */
-  /* Assuming Data Abort SP is valid at our own peril!*/
-
   push   {LR}
   /* If we aborted in FIQ then we can switch mode to get r8-12 later */
 
@@ -457,36 +452,46 @@ monitor_mode_handler_privileged_mode:
 
 .global irq_handler
 irq_handler:
+  /* disable further interrupts */
+  CPSID  i
 
-  /* Where did we come from? Code adopted from data abort handling*/
-
-  PUSH   {LR}
+  /* need to check if we came from guest mode, or were inside the hypervisor */
+  push   {LR}
+  /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
   ANDS   LR, LR, #0x0f
+  /* Abort occured in Hypervisor (privileged) code? */
   BNE    irq_handler_privileged_mode
 
-  /* We were in USR mode, we must have been running guest code */
-
-  POP        {LR}
-  STMFD SP!, {LR}
-  STMFD SP!, {R0-R12}
-
+  /* We were in USR mode running guest code */
+  /* save_r0_to_r14 @pops LR */
+  /* Get the instr that aborted, after we fix up we probably want to re-try it */
+  /* save_pc_abort */
+  /* save_cc_flags */
+  
   BL do_irq
 
-  LDMFD SP!, {R0-R12}
-  LDMFD SP!, {PC}^
+  /* restore_r13_r14 */
+  /* restore_r0_to_r12 */
+  /* restore_cpsr_pc_usr_mode */
+  /* End restore code */
 
-.global irq_handler_privileged_mode
+
 irq_handler_privileged_mode:
 
-  POP     {LR} /* we backed up the LR to hold the SPSR */
-  STMFD SP!, {LR}
-  STMFD SP!, {R0-R12}
+  pop     {LR} /* we backed up the LR to hold the SPSR */
+  /* link register is last pc+8. need to return to the which?? instruction */
+  sub     LR, LR, #8
+  /* save common registers and return address. */
+  push    {lr}
+  push    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
 
-  BL do_irq_hypervisor
+  BL      do_irq_hypervisor
 
-  LDMFD SP!, {R0-R12}
-  LDMFD SP!, {PC}^
+  pop     {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
+  ldm     sp!, {pc}^
+
+
 
 .global fiq_handler
 fiq_handler:

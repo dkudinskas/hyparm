@@ -3,7 +3,7 @@
 
 struct InterruptControllerBE * intcBE;
 
-void initialiseIntcBE()
+void intcBEInit()
 {
   intcBE = (struct InterruptControllerBE*)mallocBytes(sizeof(struct InterruptControllerBE));
   if (intcBE == 0)
@@ -41,8 +41,8 @@ void initialiseIntcBE()
   }
 #ifdef BE_INTC_DBG
   serial_putstring(" done");
-#endif
   serial_newline();
+#endif
    
   // intc autoidle
   intcRegWriteBE(REG_INTCPS_SYSCONFIG, INTCPS_SYSCONFIG_AUTOIDLE);

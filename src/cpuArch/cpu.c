@@ -25,16 +25,19 @@ extern void v7_flush_dcache_all(u32int dev);
 /***
  * we have no support for interrupts just yet
  ***/
-void enable_interrupts(void)
+void enable_interrupts()
 {
   asm volatile("mrs %0, cpsr\n\t"
                "bic %0, %0, #0x80\n\t"
                "msr cpsr, %0 "
   ::"r"(0));
 }
-int disable_interrupts(void)
+void disable_interrupts()
 {
-  return 0;
+  asm volatile("mrs %0, cpsr\n\t"
+               "orr %0, %0, #0x80\n\t"
+               "msr cpsr, %0 "
+  ::"r"(0));
 }
 
 /***
@@ -154,5 +157,6 @@ int cleanup_before_linux()
   asm("mcr p15, 0, %0, c7, c10, 4": :"r"(i));
 
   l2_cache_enable();
+  enable_interrupts();
   return 0;
 }
