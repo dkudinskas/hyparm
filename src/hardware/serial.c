@@ -1,4 +1,5 @@
 #include "serial.h"
+#include "cpu.h"
 
 void __attribute__((noinline)) serial_putchar(char c)
 {
@@ -144,6 +145,8 @@ int printableChar(char c)
 void serial_ERROR(char * msg)
 {
   serial_putstring(msg);
+  // i know its wrong to do it here, but this function will be removed eventually anyway
+  disable_interrupts();
   while(TRUE)
   {
     // HALT EXECUTION HERE

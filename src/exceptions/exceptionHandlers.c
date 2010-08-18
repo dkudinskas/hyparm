@@ -11,6 +11,7 @@
 #include "blockCache.h"
 #include "beIntc.h"
 #include "beGPTimer.h"
+#include "cpu.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -21,6 +22,7 @@ void do_software_interrupt(u32int code)
   serial_putint(code);
   serial_newline();
 #endif
+  enable_interrupts();
   /* parse the instruction to find the start address of next block */
   /* scan next block! */
   GCONTXT * gContext = getGuestContext();
@@ -52,6 +54,7 @@ void do_software_interrupt(u32int code)
 
 void do_data_abort()
 {
+  enable_interrupts();
   switch(getDFSR().fs3_0)
   {
     case perm_section:
