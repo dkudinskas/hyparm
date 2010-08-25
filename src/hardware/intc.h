@@ -46,26 +46,25 @@ M_IRQ_26 MAIL_U0_MPU_IRQ Mailbox user 0 request
 M_IRQ_27 MCBSP5_IRQ      McBSP module 5
 M_IRQ_28 IVA2_MMU_IRQ    IVA2 MMU
 */
-#define GPIO1_IRQ   29   // GPIO module 1 
-/*
-M_IRQ_30 GPIO2_MPU_IRQ   GPIO module 2
-M_IRQ_31 GPIO3_MPU_IRQ   GPIO module 3
-M_IRQ_32 GPIO4_MPU_IRQ   GPIO module 4
-M_IRQ_33 GPIO5_MPU_IRQ   GPIO module 5
-M_IRQ_34 GPIO6_MPU_IRQ   GPIO module 6
-M_IRQ_35 Reserved        Reserved
-M_IRQ_36 WDT3_IRQ        Watchdog timer module 3 overflow
-M_IRQ_37 GPT1_IRQ        General-purpose timer module 1
-M_IRQ_38 GPT2_IRQ        General-purpose timer module 2
-M_IRQ_39 GPT3_IRQ        General-purpose timer module 3
-M_IRQ_40 GPT4_IRQ        General-purpose timer module 4
-M_IRQ_41 GPT5_IRQ        General-purpose timer module 5
-M_IRQ_42 GPT6_IRQ        General-purpose timer module 6
-M_IRQ_43 GPT7_IRQ        General-purpose timer module 7
-M_IRQ_44 GPT8_IRQ        General-purpose timer module 8
-M_IRQ_45 GPT9_IRQ        General-purpose timer module 9
-*/
-#define GPT10_IRQ   46  // General-purpose timer module 10
+#define GPIO1_IRQ      29
+#define GPIO2_IRQ      30
+#define GPIO3_IRQ      31
+#define GPIO4_IRQ      32
+#define GPIO5_IRQ      33
+#define GPIO6_IRQ      34
+// M_IRQ_35 Reserved
+#define WDTIMER3_IRQ   36
+#define GPT1_IRQ       37
+#define GPT2_IRQ       38
+#define GPT3_IRQ       39
+#define GPT4_IRQ       40
+#define GPT5_IRQ       41
+#define GPT6_IRQ       42
+#define GPT7_IRQ       43
+#define GPT8_IRQ       44
+#define GPT9_IRQ       45
+#define GPT10_IRQ      46
+#define GPT11_IRQ      47
 /*
 M_IRQ_47 GPT11_IRQ       General-purpose timer module 11
 M_IRQ_48 SPI4_IRQ        McSPI module 4
@@ -228,101 +227,101 @@ M_IRQ_95 Reserved       Reserved
 #define INTCPS_PENDING_FIQ2_PENDINGFIQ  0xFFFFFFFF // [31:0] fiq status after masking
 
 #define REG_INTCPS_ILR0           0x00000100 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR1           0x00000104 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR2           0x00000108 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR3           0x0000010c // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR4           0x00000110 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR5           0x00000114 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR6           0x00000118 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR7           0x0000011c // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR8           0x00000120 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR9           0x00000124 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR10          0x00000128 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR11          0x0000012C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR12          0x00000130 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR13          0x00000134 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR14          0x00000138 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR15          0x0000013C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR16          0x00000140 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR17          0x00000144 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR18          0x00000148 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR19          0x0000014C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR20          0x00000150 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR21          0x00000154 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR22          0x00000158 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR23          0x0000015C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR24          0x00000160 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR25          0x00000164 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR26          0x00000168 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR27          0x0000016C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR28          0x00000170 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR29          0x00000174 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR30          0x00000178 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR31          0x0000017C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR32          0x00000180 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR33          0x00000184 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR34          0x00000188 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR35          0x0000018C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR36          0x00000190 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR37          0x00000194 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR38          0x00000198 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR39          0x0000019C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR40          0x000001A0 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR41          0x000001A4 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR42          0x000001A8 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR43          0x000001AC // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR44          0x000001B0 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR45          0x000001B4 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR46          0x000001B8 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR47          0x000001BC // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR48          0x000001C0 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR49          0x000001C4 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR50          0x000001C8 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR51          0x000001CC // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR52          0x000001D0 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR53          0x000001D4 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR54          0x000001D8 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR55          0x000001DC // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR56          0x000001E0 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR57          0x000001E4 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR58          0x000001E8 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR59          0x000001EC // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR60          0x000001F0 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR61          0x000001F4 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR62          0x000001F8 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR63          0x000001FC // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR64          0x00000200 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR65          0x00000204 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR66          0x00000208 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR67          0x0000020C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR68          0x00000210 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR69          0x00000214 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR70          0x00000218 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR71          0x0000021C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR72          0x00000220 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR73          0x00000224 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR74          0x00000228 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR75          0x0000022C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR76          0x00000230 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR77          0x00000234 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR78          0x00000238 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR79          0x0000023C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR80          0x00000240 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR81          0x00000244 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR82          0x00000248 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR83          0x0000024C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR84          0x00000250 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR85          0x00000254 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR86          0x00000258 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR87          0x0000025C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR88          0x00000260 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR89          0x00000264 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR90          0x00000268 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR91          0x0000026C // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR92          0x00000270 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR93          0x00000274 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR94          0x00000278 // RW contains the priority for the interrupts and the FIQ/IRQ steering
-#define REG_INTCPS_ILR95          0x0000027C // RW contains the priority for the interrupts and the FIQ/IRQ steering
+#define REG_INTCPS_ILR1           0x00000104 // 
+#define REG_INTCPS_ILR2           0x00000108 // 
+#define REG_INTCPS_ILR3           0x0000010c // 
+#define REG_INTCPS_ILR4           0x00000110 // 
+#define REG_INTCPS_ILR5           0x00000114 // 
+#define REG_INTCPS_ILR6           0x00000118 // 
+#define REG_INTCPS_ILR7           0x0000011c // 
+#define REG_INTCPS_ILR8           0x00000120 // 
+#define REG_INTCPS_ILR9           0x00000124 // 
+#define REG_INTCPS_ILR10          0x00000128 // 
+#define REG_INTCPS_ILR11          0x0000012C // 
+#define REG_INTCPS_ILR12          0x00000130 // 
+#define REG_INTCPS_ILR13          0x00000134 // 
+#define REG_INTCPS_ILR14          0x00000138 // 
+#define REG_INTCPS_ILR15          0x0000013C // 
+#define REG_INTCPS_ILR16          0x00000140 // 
+#define REG_INTCPS_ILR17          0x00000144 // 
+#define REG_INTCPS_ILR18          0x00000148 // 
+#define REG_INTCPS_ILR19          0x0000014C // 
+#define REG_INTCPS_ILR20          0x00000150 // 
+#define REG_INTCPS_ILR21          0x00000154 // 
+#define REG_INTCPS_ILR22          0x00000158 // 
+#define REG_INTCPS_ILR23          0x0000015C // 
+#define REG_INTCPS_ILR24          0x00000160 // 
+#define REG_INTCPS_ILR25          0x00000164 // 
+#define REG_INTCPS_ILR26          0x00000168 // 
+#define REG_INTCPS_ILR27          0x0000016C // 
+#define REG_INTCPS_ILR28          0x00000170 // 
+#define REG_INTCPS_ILR29          0x00000174 // 
+#define REG_INTCPS_ILR30          0x00000178 // 
+#define REG_INTCPS_ILR31          0x0000017C // 
+#define REG_INTCPS_ILR32          0x00000180 // 
+#define REG_INTCPS_ILR33          0x00000184 // 
+#define REG_INTCPS_ILR34          0x00000188 // 
+#define REG_INTCPS_ILR35          0x0000018C // 
+#define REG_INTCPS_ILR36          0x00000190 // 
+#define REG_INTCPS_ILR37          0x00000194 // 
+#define REG_INTCPS_ILR38          0x00000198 // 
+#define REG_INTCPS_ILR39          0x0000019C // 
+#define REG_INTCPS_ILR40          0x000001A0 // 
+#define REG_INTCPS_ILR41          0x000001A4 // 
+#define REG_INTCPS_ILR42          0x000001A8 // 
+#define REG_INTCPS_ILR43          0x000001AC // 
+#define REG_INTCPS_ILR44          0x000001B0 // 
+#define REG_INTCPS_ILR45          0x000001B4 // 
+#define REG_INTCPS_ILR46          0x000001B8 // 
+#define REG_INTCPS_ILR47          0x000001BC // 
+#define REG_INTCPS_ILR48          0x000001C0 // 
+#define REG_INTCPS_ILR49          0x000001C4 // 
+#define REG_INTCPS_ILR50          0x000001C8 // 
+#define REG_INTCPS_ILR51          0x000001CC // 
+#define REG_INTCPS_ILR52          0x000001D0 // 
+#define REG_INTCPS_ILR53          0x000001D4 // 
+#define REG_INTCPS_ILR54          0x000001D8 // 
+#define REG_INTCPS_ILR55          0x000001DC // 
+#define REG_INTCPS_ILR56          0x000001E0 // 
+#define REG_INTCPS_ILR57          0x000001E4 // 
+#define REG_INTCPS_ILR58          0x000001E8 // 
+#define REG_INTCPS_ILR59          0x000001EC // 
+#define REG_INTCPS_ILR60          0x000001F0 // 
+#define REG_INTCPS_ILR61          0x000001F4 // 
+#define REG_INTCPS_ILR62          0x000001F8 // 
+#define REG_INTCPS_ILR63          0x000001FC // 
+#define REG_INTCPS_ILR64          0x00000200 // 
+#define REG_INTCPS_ILR65          0x00000204 // 
+#define REG_INTCPS_ILR66          0x00000208 // 
+#define REG_INTCPS_ILR67          0x0000020C // 
+#define REG_INTCPS_ILR68          0x00000210 // 
+#define REG_INTCPS_ILR69          0x00000214 // 
+#define REG_INTCPS_ILR70          0x00000218 // 
+#define REG_INTCPS_ILR71          0x0000021C // 
+#define REG_INTCPS_ILR72          0x00000220 // 
+#define REG_INTCPS_ILR73          0x00000224 // 
+#define REG_INTCPS_ILR74          0x00000228 // 
+#define REG_INTCPS_ILR75          0x0000022C // 
+#define REG_INTCPS_ILR76          0x00000230 // 
+#define REG_INTCPS_ILR77          0x00000234 // 
+#define REG_INTCPS_ILR78          0x00000238 // 
+#define REG_INTCPS_ILR79          0x0000023C // 
+#define REG_INTCPS_ILR80          0x00000240 // 
+#define REG_INTCPS_ILR81          0x00000244 // 
+#define REG_INTCPS_ILR82          0x00000248 // 
+#define REG_INTCPS_ILR83          0x0000024C // 
+#define REG_INTCPS_ILR84          0x00000250 // 
+#define REG_INTCPS_ILR85          0x00000254 // 
+#define REG_INTCPS_ILR86          0x00000258 // 
+#define REG_INTCPS_ILR87          0x0000025C // 
+#define REG_INTCPS_ILR88          0x00000260 // 
+#define REG_INTCPS_ILR89          0x00000264 // 
+#define REG_INTCPS_ILR90          0x00000268 // 
+#define REG_INTCPS_ILR91          0x0000026C // 
+#define REG_INTCPS_ILR92          0x00000270 // 
+#define REG_INTCPS_ILR93          0x00000274 // 
+#define REG_INTCPS_ILR94          0x00000278 // 
+#define REG_INTCPS_ILR95          0x0000027C // 
 
 
 void initIntc(void);
@@ -336,6 +335,23 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address);
 /* top store function */
 void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value);
 
+void maskInterrupt(u32int interruptNumber);
+
+bool isGuestIrqMasked(u32int interruptNumber);
+
+void unmaskInterrupt(u32int interruptNumber);
+
+u32int getIrqNumber(void);
+
+void setInterrupt(u32int irqNum);
+
+void acknowledgeIrq(void);
+
+bool isIrqPending(void);
+
+void intcDumpRegisters(void);
+
+u32int prioritySortIrqs(void);
 
 struct InterruptController
 {

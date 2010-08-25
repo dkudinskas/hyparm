@@ -5,14 +5,13 @@
 #error Driver for TARGET_BEAGLE included for different target
 #endif
 
-// uncomment me to enable debug: 
-#define GPTIMER_BE_DBG
+// uncomment me to enable debug: #define GPTIMER_BE_DBG
 
 #include "types.h"
 #include "serial.h"
 
 // #define BE_GPTIMER_COUNT       12
-#define BE_GPTIMER_COUNT        1 // just use GPTIMER1 for now
+#define BE_GPTIMER_COUNT        2 // just use GPTIMER1 and GPTIMER2 for now
 
 // base addresses
 #define GPTIMER1        0x48318000
@@ -141,7 +140,17 @@
 #define GPT_TNIR_NEG_INC_1MS            -768000
 #define GPT_REG_TLDR_LOAD_VALUE_1MS  0xFFFFFFE0
 #define GPT_REG_TOWR_OVF_1MS               1000
-#define GPT_REG_TOWR_OVF_10MS            100000//temp
+#define GPT_REG_TOWR_OVF_10MS            100000 //temp
+
+void gptBEInit(u32int id);
+
+void gptBEReset(u32int id);
+
+
+u32int loadFromGPTimer(u32int id, u32int reg);
+
+void storeToGPTimer(u32int id, u32int reg, u32int value);
+
 
 void gptBEClearOverflowInterrupt(u32int id);
 
@@ -150,10 +159,6 @@ void gptBEDisableOverflowInterrupt(u32int id);
 void gptBEEnable(u32int id);
 
 void gptBEEnableOverflowInterrupt(u32int id);
-
-void gptBEInit(void);
-
-void gptBEReset(u32int id);
 
 void gptBESet10msTick(u32int id);
 
@@ -167,6 +172,8 @@ void gptBEWaitForReset(u32int id);
 
 void gptBEDumpRegisters(u32int id); 
 
+u32int getInternalCounterVal(u32int clkId);
+
 inline bool gptBEidValid(u32int id);
 
 inline bool gptBEisExtended(u32int id);
@@ -176,10 +183,6 @@ inline u32int gptBEregRead(u32int id, u32int reg);
 inline void gptBEregWrite(u32int id, u32int reg, u32int val);
 
 inline u32int gptBEgetBaseAddr(u32int id);
-
-/*
-void deassertInterrupt(u32int gptNumber);
-*/
 
 struct GeneralPurposeTimerBE 
 {

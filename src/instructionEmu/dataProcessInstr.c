@@ -21,19 +21,13 @@ void invalidDataProcTrap(char * msg, GCONTXT * gc)
 u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
 {
   u32int instr = context->endOfBlockInstr;
-  int instrCC = (instr >> 28) & 0xF;
+  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
   u32int nextPC = context->R15;
   u32int regDest = (instr & 0x0000F000) >> 12;
 
   if (regDest != 0xF)
   {
     invalidDataProcTrap(instrString, context);
-  }
-  // set-flags case is tricky! depends on guest mode.
-  u32int setFlags = (instr & 0x00100000);
-  if (setFlags)
-  {
-    error_function("unimplemented arithLogicOp set flags case", context);
   }
 
 #ifdef DATA_PROC_TRACE
@@ -44,10 +38,12 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
   serial_newline();
 #endif
   
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
+  int instrCC = (instr >> 28) & 0xF;
   bool conditionMet = evalCC(instrCC, cpsrCC);
   if (conditionMet)
   {
+    // set-flags case is tricky! depends on guest mode.
+    u32int setFlags = (instr & 0x00100000);
     // source operand1
     u32int regSrc = (instr & 0x000F0000) >> 16;
     // source operand2 - register or immediate?    
@@ -110,6 +106,51 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
         error_function("unpredictable instruction <dataProc> PC, Rn, Rm, Rs", context);
       }
     }
+
+    if (setFlags)
+    {
+      if (regDest == 0xF)
+      {
+        if ( ((context->CPSR & CPSR_MODE_FIELD) == CPSR_MODE_USER) ||
+             ((context->CPSR & CPSR_MODE_FIELD) == CPSR_MODE_SYSTEM) )
+        {
+          // there are no SPSR's in usr or sys modes!
+          serial_ERROR("arithLogicOp: exception return in guest usr/sys mode! bug.");
+        }
+        else
+        {
+          // copy SPSR to CPSR
+          switch (context->CPSR & CPSR_MODE_FIELD)
+          {
+            case CPSR_MODE_FIQ:
+              context->CPSR = context->SPSR_FIQ;
+              break;
+            case CPSR_MODE_IRQ:
+              context->CPSR = context->SPSR_IRQ;
+              break;
+            case CPSR_MODE_SVC:
+              context->CPSR = context->SPSR_SVC;
+              break;
+            case CPSR_MODE_ABORT:
+              context->CPSR = context->SPSR_ABT;
+              break;
+            case CPSR_MODE_UNDEF:
+              context->CPSR = context->SPSR_UND;
+              break;
+            case CPSR_MODE_USER:
+            case CPSR_MODE_SYSTEM:
+            default: 
+              serial_ERROR("arithLogicOp: invalid SPSR read for current guest mode.");
+          } 
+        }
+      }
+      else
+      {
+        dumpGuestContext(context);
+        serial_ERROR("unimplemented arithLogicOp set flags case");
+      }
+    }
+
     context->R15 = nextPC;
     return nextPC;
   }

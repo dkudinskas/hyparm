@@ -161,6 +161,10 @@ void dumpGuestContext(GCONTXT * gc)
   serial_putint((u32int)gc->PT_physical);
   serial_newline();
 
+  serial_putstring("gc high exception vector flag: ");
+  serial_putint(gc->guestHighVectorSet);
+  serial_newline();
+
   serial_putstring("gc  registered exception vector: ");
   serial_newline();
 
@@ -253,6 +257,7 @@ void initGuestContext(GCONTXT * gContext)
   gContext->PT_os = 0;
   gContext->PT_shadow = 0;
   gContext->memProt = 0;
+  gContext->guestHighVectorSet = FALSE;
   gContext->guestUndefinedHandler = 0;
   gContext->guestSwiHandler = 0;
   gContext->guestPrefAbortHandler = 0;

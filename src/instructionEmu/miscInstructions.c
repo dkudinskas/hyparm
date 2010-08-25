@@ -1,5 +1,6 @@
 #include "miscInstructions.h"
 #include "commonInstrFunctions.h"
+#include "intc.h"
 
 u32int nopInstruction(GCONTXT * context)
 {
@@ -225,8 +226,10 @@ u32int cpsInstruction(GCONTXT * context)
     u32int oldCpsr = context->CPSR;
     if (imod == 0x2) // enable
     {
+#ifdef ARM_INSTR_TRACE
       serial_putstring("IMod: enable case");
       serial_newline();
+#endif
       if (affectA != 0)
       {
         if ((oldCpsr & CPSR_AAB_BIT) != 0)
@@ -239,7 +242,15 @@ u32int cpsInstruction(GCONTXT * context)
       {
         if ( (oldCpsr & CPSR_IRQ_BIT) != 0)
         {
-          serial_ERROR("Guest enabling irqs globally!");
+#ifdef ARM_INSTR_TRACE
+          serial_putstring("Guest enabling irqs globally!");
+          serial_newline();
+#endif
+          // chech interrupt controller if there is an interrupt pending
+          if(isIrqPending())
+          {
+            context->guestIrqPending = TRUE;
+          }
         } 
         oldCpsr &= ~CPSR_IRQ_BIT;
       }
@@ -266,7 +277,11 @@ u32int cpsInstruction(GCONTXT * context)
       {
         if ( (oldCpsr & CPSR_IRQ_BIT) == 0) // were enabled, now disabled
         {
-          serial_ERROR("Guest disabling irqs globally!");
+          // chech interrupt controller if there is an interrupt pending
+          if(context->guestIrqPending == TRUE)
+          {
+            context->guestIrqPending = FALSE;
+          }
         } 
         oldCpsr |= CPSR_IRQ_BIT;
       }
@@ -1053,11 +1068,6 @@ u32int msrInstruction(GCONTXT * context)
     value = armExpandImm12(immediate);
   }
     
-  // [3:0] field mask:
-  // - bit 0: set control field (mode bits/interrupt bits)
-  // - bit 1: set extension field (??? [15:8] of cpsr)
-  // - bit 2: set status field (??? [23:16] of cpsr)
-  // - bit 3: set condition flags of cpsr
   u32int oldValue = 0;
   if (cpsrOrSpsr == 0)
   {
@@ -1067,46 +1077,89 @@ u32int msrInstruction(GCONTXT * context)
   else
   {
     // SPSR! which?... depends what mode we are in...
-    error_function("MSR writing SPSR unimplemented!", context);
+    switch (context->CPSR & CPSR_MODE_FIELD)
+    {
+      case CPSR_MODE_FIQ:
+        oldValue = context->SPSR_FIQ;
+        break;
+      case CPSR_MODE_IRQ:
+        oldValue = context->SPSR_IRQ;
+        break;
+      case CPSR_MODE_SVC:
+        oldValue = context->SPSR_SVC;
+        break;
+      case CPSR_MODE_ABORT:
+        oldValue = context->SPSR_ABT;
+        break;
+      case CPSR_MODE_UNDEF:
+        oldValue = context->SPSR_UND;
+        break;
+      case CPSR_MODE_USER:
+      case CPSR_MODE_SYSTEM:
+      default: 
+        serial_ERROR("MSR: invalid SPSR write for current guest mode.");
+    } 
   }
+
+  // [3:0] field mask:
+  // - bit 0: set control field (mode bits/interrupt bits)
+  // - bit 1: set extension field (??? [15:8] of cpsr)
+  // - bit 2: set status field (??? [23:16] of cpsr)
+  // - bit 3: set condition flags of cpsr
+
+  // control field [7-0] set.
   if ( ((fieldMsk & 0x1) == 0x1) && (guestInPrivMode(context)) )
   {
-    // check for fiq toggle!
-    if ((oldValue & CPSR_FIQ_BIT) != (value & CPSR_FIQ_BIT))
-    {
-      error_function("MSR toggle FIQ bit.", context);
-    } 
-    // check for fiq toggle!
-    if ((oldValue & CPSR_IRQ_BIT) != (value & CPSR_IRQ_BIT))
-    {
-      error_function("MSR toggle IRQ bit.", context);
-    } 
     // check for thumb toggle!
     if ((oldValue & CPSR_THUMB_BIT) != (value & CPSR_THUMB_BIT))
     {
       error_function("MSR toggle THUMB bit.", context);
     } 
     // separate the field we're gonna update from new value 
-    u32int appliedValue = (value & (CPSR_MODE_FIELD | CPSR_THUMB_BIT | CPSR_FIQ_BIT | CPSR_IRQ_BIT));
+    u32int appliedValue = (value & 0x000000FF);
     // clear old fields!
-    oldValue &= ~(CPSR_MODE_FIELD | CPSR_THUMB_BIT | CPSR_FIQ_BIT | CPSR_IRQ_BIT);
+    oldValue &= 0xFFFFFF00;
     // update old value...
     oldValue |= appliedValue;
   }
   if ( ((fieldMsk & 0x2) == 0x2) && (guestInPrivMode(context)) )
   {
-    error_function("MSR setting reserved fields in CPSR (extention?)", context);
+    // extension field: async abt, endianness, IT[7:2]
+    // check for async abt toggle!
+    if ((oldValue & CPSR_AAB_BIT) != (value & CPSR_AAB_BIT))
+    {
+      dumpGuestContext(context);
+      serial_ERROR("MSR toggle async abort disable bit.");
+    } 
+    // check for endiannes toggle!
+    if ((oldValue & CPSR_ENDIANNESS) != (value & CPSR_ENDIANNESS))
+    {
+      serial_ERROR("MSR toggle endianess bit.");
+    } 
+    // separate the field we're gonna update from new value 
+    u32int appliedValue = (value & 0x0000FF00);
+    // clear old fields!
+    oldValue &= 0xFFFF00FF;
+    // update old value...
+    oldValue |= appliedValue;
   }
   if ( ((fieldMsk & 0x4) == 0x4) && (guestInPrivMode(context)) )
   {
-    error_function("MSR setting reserved fields in CPSR (status field)", context);
-  }
-  if ((fieldMsk & 0x4) == 0x8)
-  {
+    // status field: reserved and GE[3:0]
     // separate the field we're gonna update from new value 
-    u32int appliedValue = (value & CPSR_CC_FIELD);
+    u32int appliedValue = (value & 0x00FF0000);
     // clear old fields!
-    oldValue &= ~(CPSR_CC_FIELD);
+    oldValue &= 0xFF00FFFF;
+    // update old value...
+    oldValue |= appliedValue;
+  }
+  if ((fieldMsk & 0x8) == 0x8)
+  {
+    // condition flags, q, it, J. Dont need to be priv to change those thus no check
+    // separate the field we're gonna update from new value 
+    u32int appliedValue = (value & 0xFF000000);
+    // clear old fields!
+    oldValue &= 0x00FFFFFF;
     // update old value...
     oldValue |= appliedValue;
   }
@@ -1130,7 +1183,28 @@ u32int msrInstruction(GCONTXT * context)
   else
   {
     // SPSR! which?... depends what mode we are in...
-    error_function("MSR writing SPSR unimplemented!", context);
+    switch (context->CPSR & CPSR_MODE_FIELD)
+    {
+      case CPSR_MODE_FIQ:
+        context->SPSR_FIQ = oldValue;
+        break;
+      case CPSR_MODE_IRQ:
+        context->SPSR_IRQ = oldValue;
+        break;
+      case CPSR_MODE_SVC:
+        context->SPSR_SVC = oldValue;
+        break;
+      case CPSR_MODE_ABORT:
+        context->SPSR_ABT = oldValue;
+        break;
+      case CPSR_MODE_UNDEF:
+        context->SPSR_UND = oldValue;
+        break;
+      case CPSR_MODE_USER:
+      case CPSR_MODE_SYSTEM:
+      default: 
+        serial_ERROR("MSR: invalid SPSR write for current guest mode.");
+    } 
   }
 #ifdef ARM_INSTR_TRACE
   serial_newline();

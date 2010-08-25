@@ -69,25 +69,17 @@ descriptor* createHypervisorPageTable()
   setDomain(GUEST_ACCESS_DOMAIN, client);
 
   //serial
+  const u32int serial = SERIAL_BASE;
+  if(addSmallPtEntry(hypervisorPtd, serial, serial,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0) != 0)
   {
-    const u32int serial = SERIAL_BASE;
-    u32int result = addSmallPtEntry(hypervisorPtd, serial, serial,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
-
-    if(0 != result)
-    {
-      serial_ERROR("Added serial mapping failed. Entering infinite loop.");
-    }
+    serial_ERROR("Added serial mapping failed. Entering infinite loop.");
   }
 
   // uart1
+  const u32int uart1 = 0x4806a000;
+  if(addSmallPtEntry(hypervisorPtd, uart1, uart1,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0) != 0)
   {
-    const u32int uart1 = 0x4806a000;
-    u32int result = addSmallPtEntry(hypervisorPtd, uart1, uart1,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
-
-    if(0 != result)
-    {
-      serial_ERROR("Added uart1 mapping failed. Entering infinite loop.");
-    }
+    serial_ERROR("Added uart1 mapping failed. Entering infinite loop.");
   }
 
   // interrupt controller
@@ -96,6 +88,13 @@ descriptor* createHypervisorPageTable()
 
   // gptimer1 - this looks dirty
   addSectionPtEntry(hypervisorPtd, GPTIMER1,GPTIMER1,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
+  // gptimer2
+  const u32int gptimer2Addr = 0x49032000;
+  if(addSmallPtEntry(hypervisorPtd,gptimer2Addr,gptimer2Addr,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0) != 0)
+  {
+    serial_ERROR("Added gptimer2 mapping failed. Entering infinite loop.");
+  }
 
   /*
   Exception vectors
@@ -122,13 +121,10 @@ descriptor* createGuestOSPageTable()
   mapHypervisorMemory(ptd);
 
   //Map Serial
+  const u32int serial = SERIAL_BASE;
+  if(addSmallPtEntry(ptd, serial, serial,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0) != 0)
   {
-    const u32int serial = SERIAL_BASE;
-    u32int result = addSmallPtEntry(ptd, serial, serial,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
-    if(result)
-    {
-      serial_ERROR("Added serial mapping failed. Entering infinite loop");
-    }
+    serial_ERROR("Added serial mapping failed. Entering infinite loop");
   }
 
   /*  Map Exception vectors */
@@ -145,8 +141,16 @@ descriptor* createGuestOSPageTable()
   // interrupt controller
   const u32int interruptController = 0x48200000;
   addSectionPtEntry(ptd, interruptController,interruptController,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
   // gptimer1
   addSectionPtEntry(ptd, GPTIMER1,GPTIMER1,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
+  //Map gptimer2
+  const u32int gptimer2Addr = 0x49032000;
+  if(addSmallPtEntry(ptd, gptimer2Addr, gptimer2Addr,HYPERVISOR_ACCESS_DOMAIN,HYPERVISOR_ACCESS_BITS, 0, 0, 0) != 0)
+  {
+    serial_ERROR("Added gptimer2 mapping failed. Entering infinite loop");
+  }
 
 
 #ifdef PT_SHADOW_DEBUG

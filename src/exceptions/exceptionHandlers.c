@@ -12,6 +12,8 @@
 #include "beIntc.h"
 #include "beGPTimer.h"
 #include "cpu.h"
+#include "guestInterrupts.h"
+#include "intc.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -22,6 +24,7 @@ void do_software_interrupt(u32int code)
   serial_putint(code);
   serial_newline();
 #endif
+  // interrupts are disabled in hypervisor execution
   enable_interrupts();
   /* parse the instruction to find the start address of next block */
   /* scan next block! */
@@ -43,18 +46,27 @@ void do_software_interrupt(u32int code)
     dumpGuestContext(gContext);
     serial_ERROR("exceptionHandlers: In infinite loop");
   }
+
   gContext->R15 = nextPC;
+
+  // check if there is an interrupt pending!
+  if (gContext->guestIrqPending == TRUE)
+  {
+    deliverInterrupt();
+  }
+
 #ifdef EXC_HDLR_DBG
   serial_putstring("exceptionHandlers: Next PC = 0x");
   serial_putint(nextPC);
   serial_newline();
 #endif
-  scanBlock(gContext, nextPC);
+  scanBlock(gContext, gContext->R15);
 }
 
 void do_data_abort()
 {
-  enable_interrupts();
+  // interrupts are disabled in hypervisor execution
+//  enable_interrupts();
   switch(getDFSR().fs3_0)
   {
     case perm_section:
@@ -234,19 +246,27 @@ void do_irq()
 {
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
-
-  if (activeIrqNumber == GPT1_IRQ)
+  switch(activeIrqNumber)
   {
-//    scheduleGuest();
-    gptBEClearOverflowInterrupt(1);
-    acknowledgeIrqBE();
-    serial_putstring("?");
-  }
-  else
-  {
-    serial_putstring("Received IRQ=");
-    serial_putint(activeIrqNumber);
-    serial_ERROR(" Implement me!");
+    case GPT1_IRQ:
+      scheduleGuest();
+      gptBEClearOverflowInterrupt(1);
+      acknowledgeIrqBE();
+      break;
+    case GPT2_IRQ:
+    {
+      if(!isGuestIrqMasked(activeIrqNumber))
+      {
+        tickEvent(activeIrqNumber);
+      }
+      gptBEClearOverflowInterrupt(2);
+      acknowledgeIrqBE();
+      break;
+    }
+    default:
+      serial_putstring("Received IRQ=");
+      serial_putint(activeIrqNumber);
+      serial_ERROR(" Implement me!");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -265,19 +285,24 @@ void do_irq_hypervisor()
 {
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
-
-  if (activeIrqNumber == GPT1_IRQ)
+  switch(activeIrqNumber)
   {
-    serial_putchar('!');
-//    scheduleGuest();
-    gptBEClearOverflowInterrupt(1);
-    acknowledgeIrqBE();
-  }
-  else
-  {
-    serial_putstring("Received IRQ=");
-    serial_putint(activeIrqNumber);
-    serial_ERROR(" Implement me!");
+    case GPT1_IRQ:
+      gptBEClearOverflowInterrupt(1);
+      acknowledgeIrqBE();
+      break;
+    case GPT2_IRQ:
+      if(!isGuestIrqMasked(activeIrqNumber))
+      {
+        tickEvent(activeIrqNumber);
+      }
+      gptBEClearOverflowInterrupt(2);
+      acknowledgeIrqBE();
+      break;
+    default:
+      serial_putstring("Received IRQ=");
+      serial_putint(activeIrqNumber);
+      serial_ERROR(" Implement me!");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure

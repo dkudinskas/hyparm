@@ -63,6 +63,8 @@ struct guestContext
   bool virtAddrEnabled;
   /* Virtual Addressing end */
   MEMPROT* memProt;
+  /* vector address in vmem */
+  bool guestHighVectorSet;
   /* exception vector */
   u32int guestUndefinedHandler;
   u32int guestSwiHandler;

@@ -208,7 +208,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
 /* function to load a register value, evaluates modes. */
 u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
 {
-  u32int guestMode = (context->CPSR) & CPSR_MODE_FIELD;
+  u32int guestMode = context->CPSR & CPSR_MODE_FIELD;
   u32int value = 0;
 
   if ( ((regSrc >= 0) && (regSrc < 8)) || (regSrc == 15) )
