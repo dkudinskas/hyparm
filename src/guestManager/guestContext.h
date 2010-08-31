@@ -9,6 +9,8 @@
 #include "memoryProtection.h"
 #include "hardwareLibrary.h"
 
+#define BLOCK_HISOTRY_SIZE     5
+
 struct guestContext;
 typedef struct guestContext GCONTXT;
 
@@ -55,6 +57,7 @@ struct guestContext
   u32int (*hdlFunct)(GCONTXT * context);
   CREG * coprocRegBank;
   BCENTRY * blockCache;
+  u32int blockHistory[BLOCK_HISOTRY_SIZE];
   /* Virtual Addressing */
   descriptor* PT_physical; //guest physical to real physical PT
   descriptor* PT_os; //guest OS to guest Physical PT

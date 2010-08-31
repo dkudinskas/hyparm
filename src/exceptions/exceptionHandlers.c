@@ -47,6 +47,13 @@ void do_software_interrupt(u32int code)
     serial_ERROR("exceptionHandlers: In infinite loop");
   }
 
+  int i = 0;
+  for (i = BLOCK_HISOTRY_SIZE-1; i > 0; i--)
+  {
+    gContext->blockHistory[i] = gContext->blockHistory[i-1];
+  }
+    gContext->blockHistory[0] = nextPC; 
+
   gContext->R15 = nextPC;
 
   // check if there is an interrupt pending!
@@ -207,6 +214,7 @@ void do_prefetch_abort_hypervisor(void)
   serial_newline();
 
   printPrefetchAbort();
+  dumpGuestContext(getGuestContext());
 
   serial_ERROR("Entering Infinite Loop.");
   //Never returns

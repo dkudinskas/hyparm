@@ -202,6 +202,20 @@ void dumpGuestContext(GCONTXT * gc)
   serial_putstring("Interrupt pending: ");
   serial_putint(gc->guestIrqPending);
   serial_newline();
+
+  serial_putstring("Block cache at: ");
+  serial_putint((u32int)gc->blockCache);
+  serial_newline();
+  int i = 0;
+  serial_putstring("Block Trace: ");
+  serial_newline();
+  for (i = BLOCK_HISOTRY_SIZE-1; i >= 0; i--)
+  {
+    serial_putint_nozeros(i);
+    serial_putstring(": ");
+    serial_putint(gc->blockHistory[i]);
+    serial_newline();
+  }
 }
 
 void initGuestContext(GCONTXT * gContext)
@@ -267,6 +281,11 @@ void initGuestContext(GCONTXT * gContext)
   gContext->guestFiqHandler = 0;
   gContext->hardwareLibrary = 0;
   gContext->guestIrqPending = FALSE;
+  int i = 0;
+  for (i = 0; i < BLOCK_HISOTRY_SIZE; i++)
+  {
+    gContext->blockHistory[i] = 0;
+  }
 }
 
 void registerCrb(GCONTXT * gc, CREG * coprocRegBank)
