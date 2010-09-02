@@ -22,6 +22,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     }
   }
 #endif
+
   struct instruction32bit * decodedInstruction = 0;
   u32int * currAddress = (u32int*)blkStartAddr;
   u32int instruction = *currAddress;
@@ -30,7 +31,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
 
   bool inBlockCache = checkBlockCache(blkStartAddr, bcIndex, gc->blockCache);
-
   if (inBlockCache)
   {
     BCENTRY * bcEntry = getBlockCacheEntry(bcIndex, gc->blockCache);
@@ -113,7 +113,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   // add the block we just scanned to block cache
   addToBlockCache(blkStartAddr, gc->endOfBlockInstr, (u32int)currAddress, 
                   bcIndex, (u32int)gc->hdlFunct, gc->blockCache);
-
 
   protectScannedBlock(blkStartAddr, (u32int)currAddress);
   // and we're done.

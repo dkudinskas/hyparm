@@ -2381,14 +2381,14 @@ void pageTableEdit(u32int address, u32int newVal)
 
   /** Remove, or change entry type (Remove & Add) */
   //Changing pte type if not from !Fault to Fault, is a remove then add operation
-  if( (oldGuestEntry->type != newGuestEntry->type) && (FAULT != oldGuestEntry->type) )
+  if ((oldGuestEntry->type != newGuestEntry->type) && (oldGuestEntry->type != FAULT) )
   {
 #ifdef PT_SHADOW_DEBUG
     serial_putstring("pageTableEdit: remove/change type case");
     serial_newline();
 #endif
     //Need to do special things if its a PAGE_TABLE entry or a LARGE_PAGE
-    if( firstLevelEntry && (PAGE_TABLE == oldGuestEntry->type) )
+    if (firstLevelEntry && (oldGuestEntry->type == PAGE_TABLE))
     {
       //issues with memory protection needing to be removed & flushing of all the sub mappings
       removePageTableEntry((pageTableDescriptor*)shadowEntry);
@@ -2396,7 +2396,9 @@ void pageTableEdit(u32int address, u32int newVal)
     else
     {
       //Need to flush block cache at these addresses first
-      validateCacheMultiPreChange(gc->blockCache, virtualAddr, getPageEndAddr(gc->PT_shadow,  virtualAddr));
+      // but which addresses to flush? shadow entries might have been fragmented to pages from a section...
+      // so flush address range that the guest mapped originally.
+      validateCacheMultiPreChange(gc->blockCache, virtualAddr, getPageEndAddr(gc->PT_os,  virtualAddr));
 
       if(!firstLevelEntry && (LARGE_PAGE == oldGuestEntry->type) )
       {
@@ -2413,7 +2415,7 @@ void pageTableEdit(u32int address, u32int newVal)
   }
 
   /** Add */
-  if( (FAULT != newGuestEntry->type) && (oldGuestEntry->type != newGuestEntry->type) )
+  if( (newGuestEntry->type != FAULT) && (oldGuestEntry->type != newGuestEntry->type) )
   {
 #ifdef PT_SHADOW_DEBUG
     serial_putstring("pageTableEdit: Add entry case");
@@ -2480,7 +2482,7 @@ void pageTableEdit(u32int address, u32int newVal)
 #endif
 
     //So both entries are of the same types, SECTION or PAGE_TABLE
-    if( firstLevelEntry && (SECTION == oldGuestEntry->type))
+    if( firstLevelEntry && (oldGuestEntry->type == SECTION))
     {
       sectionDescriptor* oldSd = (sectionDescriptor*)oldGuestEntry;
       sectionDescriptor* newSd = (sectionDescriptor*)newGuestEntry;
@@ -2494,7 +2496,7 @@ void pageTableEdit(u32int address, u32int newVal)
         copySectionEntry(newSd, shadowSd);
       }
 
-      if(1 == newSd->sectionType)
+      if(newSd->sectionType == 1)
       {
         //Assums the initial case when the sd is written/copied that we stop on attempts to add supersections
         //So don't need to check the old value

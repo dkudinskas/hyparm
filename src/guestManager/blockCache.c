@@ -233,6 +233,13 @@ void validateCachePreChange(BCENTRY * bcache, u32int address)
 // finds and clears block cache entries within the given address range
 void validateCacheMultiPreChange(BCENTRY * bcache, u32int startAddress, u32int endAddress)
 {
+#ifdef BLOCK_CACHE_DEBUG
+  serial_putstring("blockCache: validateCacheMultiPreChange start ");
+  serial_putint(startAddress);
+  serial_putstring(" end ");
+  serial_putint(endAddress);
+  serial_newline();
+#endif
   u32int i;
   for (i = 0; i < BLOCK_CACHE_SIZE; i++)
   {

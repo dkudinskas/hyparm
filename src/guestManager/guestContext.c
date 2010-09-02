@@ -137,14 +137,20 @@ void dumpGuestContext(GCONTXT * gc)
       serial_newline();
       return;
   }
-  serial_putstring("gc endOfBlockInstr: ");
-  serial_putint(gc->endOfBlockInstr);
-  serial_newline();
+
   serial_putstring("gc R15: ");
   serial_putint(gc->R15);
   serial_newline();
   serial_putstring("gc CPSR: ");
   serial_putint(gc->CPSR);
+  serial_newline();
+
+
+  serial_putstring("gc endOfBlockInstr: ");
+  serial_putint(gc->endOfBlockInstr);
+  serial_newline();
+  serial_putstring("gc handler function addr: ");
+  serial_putint((u32int)gc->hdlFunct);
   serial_newline();
 
   /* Virtual Memory */

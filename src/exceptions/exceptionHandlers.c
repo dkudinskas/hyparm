@@ -52,7 +52,7 @@ void do_software_interrupt(u32int code)
   {
     gContext->blockHistory[i] = gContext->blockHistory[i-1];
   }
-    gContext->blockHistory[0] = nextPC; 
+  gContext->blockHistory[0] = nextPC; 
 
   gContext->R15 = nextPC;
 
