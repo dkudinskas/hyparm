@@ -2,24 +2,20 @@
 SHELL = /bin/sh
 
 # GNU-ARM tools directory
-ifeq ($(USER),alex)
-  GNU_ARM = /export/compilers/arm-2009q3-68-arm-none-eabi/
-else
-  ifeq ($(USER),niels)
-    GNU_ARM = $(HOME)/Tools/arm-none-eabi
+ifeq ($(CROSS_COMPILE),)
+  ifeq ($(USER),kudinsd6)
+    GNU_ARM = $(HOME)/ARM/compilers/arm-2009q1/bin/arm-none-eabi-
   else
-    ifeq ($(USER),kudinsd6)
-      GNU_ARM = $(HOME)/ARM/compilers/arm-2009q1
-    else
-      GNU_ARM = $(HOME)/arm-dev/compilers/arm-2009q1
-    endif
+    GNU_ARM = $(HOME)/arm-dev/compilers/arm-2009q1/bin/arm-none-eabi-
   endif
+else
+  GNU_ARM = $(CROSS_COMPILE)
 endif
 # The gcc compiler and linker
-CC      = $(GNU_ARM)/bin/arm-none-eabi-gcc
-ASM     = $(GNU_ARM)/bin/arm-none-eabi-as
-LINK    = $(GNU_ARM)/bin/arm-none-eabi-ld
-OBJCOPY = $(GNU_ARM)/bin/arm-none-eabi-objcopy
+CC      = $(GNU_ARM)gcc
+ASM     = $(GNU_ARM)as
+LINK    = $(GNU_ARM)ld
+OBJCOPY = $(GNU_ARM)objcopy
 
 TARGET ?= beagle
 
