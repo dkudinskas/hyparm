@@ -3,36 +3,31 @@
 
 struct GeneralPurposeTimerBE* gpts[BE_GPTIMER_COUNT];
 
-void gptBEInit()
+void gptBEInit(u32int id)
 {
-  int index = 0;
-  for (index = 1; index <= BE_GPTIMER_COUNT; index++)
-  {
-    struct GeneralPurposeTimerBE* addr 
-       = (struct GeneralPurposeTimerBE*)mallocBytes(sizeof(struct GeneralPurposeTimerBE));
+  struct GeneralPurposeTimerBE* addr 
+     = (struct GeneralPurposeTimerBE*)mallocBytes(sizeof(struct GeneralPurposeTimerBE));
 
-    if (addr == 0)
-    {
-      serial_ERROR("Failed to allocate GPT_BE.");
-    }
-    else
-    {
-      gpts[index-1] = addr;
-      memset((void*)addr, 0x0, sizeof(struct GeneralPurposeTimerBE));
-      gpts[index-1]->baseAddress = gptBEgetBaseAddr(index);
+  if (addr == 0)
+  {
+    serial_ERROR("Failed to allocate GPT_BE.");
+  }
+  else
+  {
+    gpts[id-1] = addr;
+    memset((void*)addr, 0x0, sizeof(struct GeneralPurposeTimerBE));
+    gpts[id-1]->baseAddress = gptBEgetBaseAddr(id);
  
 #ifdef GPTIMER_BE_DBG
-      serial_putstring("GPT_BE");
-      serial_putint_nozeros(index);
-      serial_putstring(": Initializing at 0x");
-      serial_putint((u32int)gpts[index-1]);
-      serial_newline();
+    serial_putstring("GPT_BE");
+    serial_putint_nozeros(id);
+    serial_putstring(": Initializing at 0x");
+    serial_putint((u32int)gpts[id-1]);
+    serial_newline();
 #endif
-    }
-    // reset the device
-    gptBEReset(index);
-
-  } // for ends 
+  }
+  // reset the device
+  gptBEReset(id);
 }
 
 void gptBEReset(u32int id)
@@ -82,6 +77,37 @@ bool gptBEisExtended(u32int id)
 
 }
 
+
+u32int loadFromGPTimer(u32int id, u32int reg)
+{
+  u32int value = gptBEregRead(id, reg);
+#ifdef GPTIMER_BE_DBG
+  serial_putstring("GPT");
+  serial_putint_nozeros(id);
+  serial_putstring("_BE: load from register ");
+  serial_putint(reg);
+  serial_putstring(" value ");
+  serial_putint(value);
+  serial_newline();
+#endif
+  return value;
+}
+
+void storeToGPTimer(u32int id, u32int reg, u32int value)
+{
+  gptBEregWrite(id, reg, value);
+#ifdef GPTIMER_BE_DBG
+  serial_putstring("GPT");
+  serial_putint_nozeros(id);
+  serial_putstring("_BE: store to register ");
+  serial_putint(reg);
+  serial_putstring(" value ");
+  serial_putint(value);
+  serial_newline();
+#endif
+}
+
+
 u32int gptBEregRead(u32int id, u32int reg)
 {
   volatile u32int * regPtr = (volatile u32int *) (gpts[id-1]->baseAddress + reg);
@@ -121,17 +147,19 @@ void gptBEEnable(u32int id)
   serial_newline();
 #endif
 
-  if (gpts[id-1]->enabled)
+  if (gpts[id-1]->enabled == FALSE)
   {
+    gpts[id-1]->enabled = TRUE;
+  }
 #ifdef GPTIMER_BE_DBG
+  else
+  {
     serial_putstring("gpt_BE");
     serial_putint_nozeros(id);
     serial_putstring(": already enabled");
     serial_newline();
-#endif
-    return;
   }
-  gpts[id-1]->enabled = TRUE;
+#endif
 /* omap_dm_clk_enable(timer->fclk);
    omap_dm_clk_enable(timer->iclk); */
 }
@@ -227,10 +255,16 @@ u32int gptBEgetBaseAddr(u32int id)
 }
 
 
+u32int getInternalCounterVal(u32int clkId)
+{
+  return gptBEregRead(clkId, GPT_REG_TCRR);
+}
+
+
 void gptBEDumpRegisters(u32int id)
 {
   serial_putstring("----- REGDUMP GPT");
-  serial_putint(id);
+  serial_putint_nozeros(id);
   serial_putstring("_BE");
   serial_putstring(" -----");
   serial_newline();
@@ -313,7 +347,7 @@ void gptBEDumpRegisters(u32int id)
     serial_putint(gptBEregRead(id, GPT_REG_TOWR));
     serial_newline();
 
-    serial_putstring("--------------------------------");
+    serial_putstring("-----------------------");
     serial_newline();
   }
 }

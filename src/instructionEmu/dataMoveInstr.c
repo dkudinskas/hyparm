@@ -3,7 +3,6 @@
 #include "defines.h"
 #include "blockCache.h"
 
-
 void invalidDataMoveTrap(char * msg, GCONTXT * gc)
 {
   serial_putstring("ERROR: ");
@@ -1168,21 +1167,15 @@ u32int ldmInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
-  u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int prePost =   instr & 0x01000000;
-  u32int upDown =    instr & 0x00800000;
-  u32int forceUser = instr & 0x00400000;
-  u32int writeback = instr & 0x00200000;
-  u32int baseReg  = (instr & 0x000F0000) >> 16;
-  u32int regList   = instr & 0x0000FFFF;
+  u32int condcode    = (instr & 0xF0000000) >> 28;
+  u32int prePost     = instr & 0x01000000;
+  u32int upDown      = instr & 0x00800000;
+  u32int forceUser   = instr & 0x00400000;
+  u32int writeback   = instr & 0x00200000;
+  u32int baseReg     = (instr & 0x000F0000) >> 16;
+  u32int regList     = instr & 0x0000FFFF;
   u32int baseAddress = loadGuestGPR(baseReg, context);
 
-  
-  if (forceUser != 0)
-  {
-    serial_ERROR("UNIMPLEMENTED LDM instruction - force user Sbit set");
-  }
   if ( (baseReg == 15) || (countBitsSet(regList) == 0) )
   {
     serial_ERROR("LDM UNPREDICTABLE: base=PC or no registers in list");
@@ -1195,6 +1188,24 @@ u32int ldmInstruction(GCONTXT * context)
     return context->R15 + 4;
   }
 
+  u32int savedCPSR = 0;
+  bool cpySpsr = FALSE;
+  if (forceUser != 0)
+  {
+    // ok, is this exception return, or LDM user mode?
+    if ((instr & 0x00008000) != 0)
+    {
+      // force user bit set and PC in list: exception return
+      cpySpsr = TRUE;
+    }
+    else
+    {
+      // force user bit set and no PC in list: LDM user mode registers
+      savedCPSR = context->CPSR;
+      context->CPSR = (context->CPSR & ~0x1f) | CPSR_MODE_USER;
+    }
+  }
+  
   int i = 0;
   u32int address = 0;
   if ( (upDown == 0) && (prePost != 0) ) // LDM decrement before
@@ -1261,6 +1272,43 @@ u32int ldmInstruction(GCONTXT * context)
     }
     storeGuestGPR(baseReg, baseAddress, context);
   }
+
+  if (forceUser != 0)
+  {
+    // do we need to copy spsr? or return from userland?
+    if (cpySpsr)
+    {
+      // ok, exception return option: restore SPSR to CPSR
+      // SPSR! which?... depends what mode we are in...
+      switch (context->CPSR & CPSR_MODE_FIELD)
+      {
+        case CPSR_MODE_FIQ:
+          context->CPSR = context->SPSR_FIQ;
+          break;
+        case CPSR_MODE_IRQ:
+          context->CPSR = context->SPSR_IRQ;
+          break;
+        case CPSR_MODE_SVC:
+          context->CPSR = context->SPSR_SVC;
+          break;
+        case CPSR_MODE_ABORT:
+          context->CPSR = context->SPSR_ABT;
+          break;
+        case CPSR_MODE_UNDEF:
+          context->CPSR = context->SPSR_UND;
+          break;
+        case CPSR_MODE_USER:
+        case CPSR_MODE_SYSTEM:
+        default: 
+          serial_ERROR("LDM: exception return form sys/usr mode!");
+      }
+    }
+    else
+    {
+      context->CPSR = savedCPSR;
+    } 
+  }
+
   if (isPCinRegList)
   {
     return context->R15;

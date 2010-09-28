@@ -137,14 +137,20 @@ void dumpGuestContext(GCONTXT * gc)
       serial_newline();
       return;
   }
-  serial_putstring("gc endOfBlockInstr: ");
-  serial_putint(gc->endOfBlockInstr);
-  serial_newline();
+
   serial_putstring("gc R15: ");
   serial_putint(gc->R15);
   serial_newline();
   serial_putstring("gc CPSR: ");
   serial_putint(gc->CPSR);
+  serial_newline();
+
+
+  serial_putstring("gc endOfBlockInstr: ");
+  serial_putint(gc->endOfBlockInstr);
+  serial_newline();
+  serial_putstring("gc handler function addr: ");
+  serial_putint((u32int)gc->hdlFunct);
   serial_newline();
 
   /* Virtual Memory */
@@ -159,6 +165,10 @@ void dumpGuestContext(GCONTXT * gc)
   serial_newline();
   serial_putstring("gc guest physical Page Table: 0x");
   serial_putint((u32int)gc->PT_physical);
+  serial_newline();
+
+  serial_putstring("gc high exception vector flag: ");
+  serial_putint(gc->guestHighVectorSet);
   serial_newline();
 
   serial_putstring("gc  registered exception vector: ");
@@ -198,6 +208,20 @@ void dumpGuestContext(GCONTXT * gc)
   serial_putstring("Interrupt pending: ");
   serial_putint(gc->guestIrqPending);
   serial_newline();
+
+  serial_putstring("Block cache at: ");
+  serial_putint((u32int)gc->blockCache);
+  serial_newline();
+  int i = 0;
+  serial_putstring("Block Trace: ");
+  serial_newline();
+  for (i = BLOCK_HISOTRY_SIZE-1; i >= 0; i--)
+  {
+    serial_putint_nozeros(i);
+    serial_putstring(": ");
+    serial_putint(gc->blockHistory[i]);
+    serial_newline();
+  }
 }
 
 void initGuestContext(GCONTXT * gContext)
@@ -253,6 +277,7 @@ void initGuestContext(GCONTXT * gContext)
   gContext->PT_os = 0;
   gContext->PT_shadow = 0;
   gContext->memProt = 0;
+  gContext->guestHighVectorSet = FALSE;
   gContext->guestUndefinedHandler = 0;
   gContext->guestSwiHandler = 0;
   gContext->guestPrefAbortHandler = 0;
@@ -262,6 +287,11 @@ void initGuestContext(GCONTXT * gContext)
   gContext->guestFiqHandler = 0;
   gContext->hardwareLibrary = 0;
   gContext->guestIrqPending = FALSE;
+  int i = 0;
+  for (i = 0; i < BLOCK_HISOTRY_SIZE; i++)
+  {
+    gContext->blockHistory[i] = 0;
+  }
 }
 
 void registerCrb(GCONTXT * gc, CREG * coprocRegBank)

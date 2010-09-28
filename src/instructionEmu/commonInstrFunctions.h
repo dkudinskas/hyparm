@@ -19,6 +19,14 @@
 #define CPSR_FIQ_BIT       0x00000040
 #define CPSR_IRQ_BIT       0x00000080
 #define CPSR_AAB_BIT       0x00000100
+/* random flags.. */
+#define CPSR_CUM_SAT_FLAG     0x08000000
+#define CPSR_IF_THEN_0_1      0x06000000
+#define CPSR_JAZELLE_MODE     0x01000000
+#define CPSR_RESERVED         0x00f00000
+#define CPSR_GTE_FLAGS_SIMD   0x000f0000
+#define CPSR_IF_THEN_2_7      0x0000fc00
+#define CPSR_ENDIANNESS       0x00000200 
 /* ARM instruction condition field / values */
 #define CPSR_CC_FIELD      0xF0000000
 #define CC_EQ   0x0  // equals

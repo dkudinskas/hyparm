@@ -22,15 +22,15 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     }
   }
 #endif
+
   struct instruction32bit * decodedInstruction = 0;
   u32int * currAddress = (u32int*)blkStartAddr;
   u32int instruction = *currAddress;
 
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
-  
-  bool inBlockCache = checkBlockCache(blkStartAddr, bcIndex, gc->blockCache);
 
+  bool inBlockCache = checkBlockCache(blkStartAddr, bcIndex, gc->blockCache);
   if (inBlockCache)
   {
     BCENTRY * bcEntry = getBlockCacheEntry(bcIndex, gc->blockCache);
@@ -71,6 +71,10 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   {
     // we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
     u32int cacheIndex = instruction & 0x00FFFFFF;
+    if ((cacheIndex < 0) || (cacheIndex >= BLOCK_CACHE_SIZE))
+    {
+      serial_ERROR("scanner: block cache index in SWI out of range.");
+    }
 #ifdef SCANNER_DEBUG
     serial_putstring("scanner: EOB instruction is SWI @ ");
     serial_putint((u32int)currAddress);
@@ -109,7 +113,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   // add the block we just scanned to block cache
   addToBlockCache(blkStartAddr, gc->endOfBlockInstr, (u32int)currAddress, 
                   bcIndex, (u32int)gc->hdlFunct, gc->blockCache);
-
 
   protectScannedBlock(blkStartAddr, (u32int)currAddress);
   // and we're done.

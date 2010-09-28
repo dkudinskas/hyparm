@@ -181,9 +181,7 @@ void guestEnableVirtMem()
 
 
   /* Quick prototyping code for now. needs doing properly at some point */
-//  validateCacheMultiPreChange(gc->blockCache, 0x80100000, (HYPERVISOR_START_ADDR -1));
   explodeCache(gc->blockCache);
-
 
   dataBarrier();  //anything in caches needs to be written back now
   setTTBCR((u32int)sPT); //swap shadow PT

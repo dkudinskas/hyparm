@@ -140,6 +140,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value);
 
 struct GeneralPurposeTimer
 {
+  // registers
   u32int gptTiocpCfg;
   u32int gptTistat;
   u32int gptTisr;
@@ -159,6 +160,8 @@ struct GeneralPurposeTimer
   u32int gptTcvr;
   u32int gptTocr;
   u32int gptTowr;
+  // internal variables...
+  u32int shadowValue;
 };
 
 #endif

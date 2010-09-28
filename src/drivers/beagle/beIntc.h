@@ -8,8 +8,7 @@
 #define INTCPS_INTERRUPTS_PER_BANK 32
 #define INTCPS_NR_OF_INTERRUPTS    96
 
-// uncomment me to enable debug : 
-#define BE_INTC_DBG
+// uncomment me to enable debug : #define BE_INTC_DBG
 
 // interrupt number mappings
 /*
@@ -49,7 +48,7 @@ M_IRQ_28 IVA2_MMU_IRQ    IVA2 MMU
 #define GPIO4_IRQ      32
 #define GPIO5_IRQ      33
 #define GPIO6_IRQ      34
-#define RESERVED_IRQ   35
+// M_IRQ_35 Reserved
 #define WDTIMER3_IRQ   36
 #define GPT1_IRQ       37
 #define GPT2_IRQ       38

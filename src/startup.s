@@ -56,10 +56,30 @@ _start:
   LDR     R0,=guestContextSpace
   BL      registerGuestContext
 
+  /* Fix RAM exception vectors on BeagleBoard */
+  .ifdef TARGET_BEAGLE
+    LDR   R4, [pc, #0x20]
+    LDR   R3, [pc, #0x20]
+    STR   R3, [R4], #4
+    STR   R3, [R4], #4
+    STR   R3, [R4], #4
+    STR   R3, [R4], #4
+    STR   R3, [R4], #4
+    STR   R3, [R4], #4
+    STR   R3, [R4], #4
+    ADD   pc, pc, #0x4
+    /* next 2 lines are data */
+    .word 0x4020FFC8
+    LDR   pc, [pc, #0x14]
+  .endif
+
   /* Batch installation of interupt handlers */
   /* This section of code is order dependant */
-  LDR     R4,=undefined_addr @First interupt handler address
-  LDR     R4, [R4]
+  .ifndef TARGET_BEAGLE
+    /* On the BeagleBoard R4 is already correct */
+    LDR   R4,=undefined_addr @First interupt handler address
+    LDR   R4, [R4]
+  .endif
   LDR     R3,=undefined_handler
   STR     R3, [R4], #4       @auto increment to the next handler address
   LDR     R3,=swi_handler

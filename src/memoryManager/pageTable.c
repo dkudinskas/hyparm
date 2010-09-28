@@ -69,25 +69,17 @@ descriptor* createHypervisorPageTable()
   setDomain(GUEST_ACCESS_DOMAIN, client);
 
   //serial
+  const u32int serial = SERIAL_BASE;
+  if(addSmallPtEntry(hypervisorPtd, serial, serial,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0) != 0)
   {
-    const u32int serial = SERIAL_BASE;
-    u32int result = addSmallPtEntry(hypervisorPtd, serial, serial,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
-
-    if(0 != result)
-    {
-      serial_ERROR("Added serial mapping failed. Entering infinite loop.");
-    }
+    serial_ERROR("Added serial mapping failed. Entering infinite loop.");
   }
 
   // uart1
+  const u32int uart1 = 0x4806a000;
+  if(addSmallPtEntry(hypervisorPtd, uart1, uart1,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0) != 0)
   {
-    const u32int uart1 = 0x4806a000;
-    u32int result = addSmallPtEntry(hypervisorPtd, uart1, uart1,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
-
-    if(0 != result)
-    {
-      serial_ERROR("Added uart1 mapping failed. Entering infinite loop.");
-    }
+    serial_ERROR("Added uart1 mapping failed. Entering infinite loop.");
   }
 
   // interrupt controller
@@ -96,6 +88,13 @@ descriptor* createHypervisorPageTable()
 
   // gptimer1 - this looks dirty
   addSectionPtEntry(hypervisorPtd, GPTIMER1,GPTIMER1,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
+  // gptimer2
+  const u32int gptimer2Addr = 0x49032000;
+  if(addSmallPtEntry(hypervisorPtd,gptimer2Addr,gptimer2Addr,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0) != 0)
+  {
+    serial_ERROR("Added gptimer2 mapping failed. Entering infinite loop.");
+  }
 
   /*
   Exception vectors
@@ -122,13 +121,10 @@ descriptor* createGuestOSPageTable()
   mapHypervisorMemory(ptd);
 
   //Map Serial
+  const u32int serial = SERIAL_BASE;
+  if(addSmallPtEntry(ptd, serial, serial,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0) != 0)
   {
-    const u32int serial = SERIAL_BASE;
-    u32int result = addSmallPtEntry(ptd, serial, serial,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
-    if(result)
-    {
-      serial_ERROR("Added serial mapping failed. Entering infinite loop");
-    }
+    serial_ERROR("Added serial mapping failed. Entering infinite loop");
   }
 
   /*  Map Exception vectors */
@@ -145,8 +141,16 @@ descriptor* createGuestOSPageTable()
   // interrupt controller
   const u32int interruptController = 0x48200000;
   addSectionPtEntry(ptd, interruptController,interruptController,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
   // gptimer1
   addSectionPtEntry(ptd, GPTIMER1,GPTIMER1,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
+  //Map gptimer2
+  const u32int gptimer2Addr = 0x49032000;
+  if(addSmallPtEntry(ptd, gptimer2Addr, gptimer2Addr,HYPERVISOR_ACCESS_DOMAIN,HYPERVISOR_ACCESS_BITS, 0, 0, 0) != 0)
+  {
+    serial_ERROR("Added gptimer2 mapping failed. Entering infinite loop");
+  }
 
 
 #ifdef PT_SHADOW_DEBUG
@@ -2377,14 +2381,14 @@ void pageTableEdit(u32int address, u32int newVal)
 
   /** Remove, or change entry type (Remove & Add) */
   //Changing pte type if not from !Fault to Fault, is a remove then add operation
-  if( (oldGuestEntry->type != newGuestEntry->type) && (FAULT != oldGuestEntry->type) )
+  if ((oldGuestEntry->type != newGuestEntry->type) && (oldGuestEntry->type != FAULT) )
   {
 #ifdef PT_SHADOW_DEBUG
     serial_putstring("pageTableEdit: remove/change type case");
     serial_newline();
 #endif
     //Need to do special things if its a PAGE_TABLE entry or a LARGE_PAGE
-    if( firstLevelEntry && (PAGE_TABLE == oldGuestEntry->type) )
+    if (firstLevelEntry && (oldGuestEntry->type == PAGE_TABLE))
     {
       //issues with memory protection needing to be removed & flushing of all the sub mappings
       removePageTableEntry((pageTableDescriptor*)shadowEntry);
@@ -2392,7 +2396,9 @@ void pageTableEdit(u32int address, u32int newVal)
     else
     {
       //Need to flush block cache at these addresses first
-      validateCacheMultiPreChange(gc->blockCache, virtualAddr, getPageEndAddr(gc->PT_shadow,  virtualAddr));
+      // but which addresses to flush? shadow entries might have been fragmented to pages from a section...
+      // so flush address range that the guest mapped originally.
+      validateCacheMultiPreChange(gc->blockCache, virtualAddr, getPageEndAddr(gc->PT_os,  virtualAddr));
 
       if(!firstLevelEntry && (LARGE_PAGE == oldGuestEntry->type) )
       {
@@ -2409,7 +2415,7 @@ void pageTableEdit(u32int address, u32int newVal)
   }
 
   /** Add */
-  if( (FAULT != newGuestEntry->type) && (oldGuestEntry->type != newGuestEntry->type) )
+  if( (newGuestEntry->type != FAULT) && (oldGuestEntry->type != newGuestEntry->type) )
   {
 #ifdef PT_SHADOW_DEBUG
     serial_putstring("pageTableEdit: Add entry case");
@@ -2476,7 +2482,7 @@ void pageTableEdit(u32int address, u32int newVal)
 #endif
 
     //So both entries are of the same types, SECTION or PAGE_TABLE
-    if( firstLevelEntry && (SECTION == oldGuestEntry->type))
+    if( firstLevelEntry && (oldGuestEntry->type == SECTION))
     {
       sectionDescriptor* oldSd = (sectionDescriptor*)oldGuestEntry;
       sectionDescriptor* newSd = (sectionDescriptor*)newGuestEntry;
@@ -2490,7 +2496,7 @@ void pageTableEdit(u32int address, u32int newVal)
         copySectionEntry(newSd, shadowSd);
       }
 
-      if(1 == newSd->sectionType)
+      if(newSd->sectionType == 1)
       {
         //Assums the initial case when the sd is written/copied that we stop on attempts to add supersections
         //So don't need to check the old value
