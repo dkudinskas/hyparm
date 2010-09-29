@@ -3,8 +3,8 @@
 
 void __attribute__((noinline)) serial_putchar(char c)
 {
-  unsigned long int *const thr = (unsigned long int*)(SERIAL_BASE + TRANSMIT_HOLDING_REG_OFFSET);
-  volatile unsigned long int *const lsr = (unsigned long int*)(SERIAL_BASE + LINE_STATUS_REG_OFFSET);
+  unsigned char *const thr = (unsigned char*)(SERIAL_BASE + TRANSMIT_HOLDING_REG_OFFSET);
+  volatile unsigned char *const lsr = (unsigned char*)(SERIAL_BASE + LINE_STATUS_REG_OFFSET);
 
   while (0 == (*lsr & LINE_STATUS_REG_TX_HOLD))
   {
