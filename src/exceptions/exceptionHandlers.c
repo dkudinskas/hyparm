@@ -68,6 +68,7 @@ void do_software_interrupt(u32int code)
   serial_newline();
 #endif
   scanBlock(gContext, gContext->R15);
+  disable_interrupts();
 }
 
 void do_data_abort()

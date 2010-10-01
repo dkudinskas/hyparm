@@ -2,15 +2,7 @@
 SHELL = /bin/sh
 
 # GNU-ARM tools directory
-ifeq ($(CROSS_COMPILE),)
-  ifeq ($(USER),kudinsd6)
-    GNU_ARM = $(HOME)/ARM/compilers/arm-2009q1/bin/arm-none-eabi-
-  else
-    GNU_ARM = $(HOME)/arm-dev/compilers/arm-2009q1/bin/arm-none-eabi-
-  endif
-else
-  GNU_ARM = $(CROSS_COMPILE)
-endif
+GNU_ARM = $(CROSS_COMPILE)
 # The gcc compiler and linker
 CC      = $(GNU_ARM)gcc
 ASM     = $(GNU_ARM)as

@@ -221,7 +221,7 @@ _start:
         .endm
 
         /* Restores the cpsr to USR mode (& cc flags) then restore pc */
-        .macro restore_cpsr_pc_usr_mode
+        .macro restore_cpsr_pc_usr_mode_irq
         /* get PC and save on stack */
         LDR     LR, =guestContextR15
         LDR     LR, [LR]
@@ -236,7 +236,31 @@ _start:
         MSR     SPSR, LR
         LDM     SP, {PC}^ /* restore PC and load the SPSR into the CPSR */
         .endm
-        
+
+
+        /* Restores the cpsr to USR mode (& cc flags) then restore pc */
+        .macro restore_cpsr_pc_usr_mode
+        /* fixup spsr first */
+        PUSH    {R0}
+        LDR     LR,=guestContextCPSR
+        /* Preserve condition flags */
+        LDR     LR, [LR]
+        AND     R0, LR, #0xf0000000
+        /* Preserve exception flags */
+        AND     LR, LR, #0x1C0
+        ORR     R0, LR, R0
+        /* set user mode */
+        ORR     R0, R0, #(USR_MODE)
+        MSR     SPSR, R0
+        POP     {R0}
+        /* get PC and save on stack */
+        LDR     LR, =guestContextR15
+        LDR     LR, [LR]
+        STM     SP, {LR} /* Store the PC on the stack for the final restore PC & CPSR instruction, no indexing */
+        /* restore PC and load the SPSR into the CPSR */
+        LDM     SP, {PC}^
+        .endm
+
 
 .global swi_handler
 swi_handler:
@@ -280,8 +304,7 @@ data_abort_handler:
     restore_r13_r14
     restore_r0_to_r12
     restore_cpsr_pc_usr_mode
-    /* End restore code */
-
+    
 .global data_abort_handler_privileged_mode
 data_abort_handler_privileged_mode:
   /* Not from USR mode -> Our Hypervisor has caused this as we were running in a priviledged mode */
@@ -487,7 +510,7 @@ irq_handler:
   BL do_irq
   restore_r13_r14
   restore_r0_to_r12
-  restore_cpsr_pc_usr_mode
+  restore_cpsr_pc_usr_mode_irq
   /* End restore code */
 
 

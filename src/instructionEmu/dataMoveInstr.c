@@ -591,10 +591,20 @@ u32int strexInstruction(GCONTXT * context)
   }
 
   u32int address = loadGuestGPR(regN, context);
-
   u32int valToStore = loadGuestGPR(regT, context);
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("STREX instruction: address = ");
+  serial_putint(address);
+  serial_putstring(" valToStore ");
+  serial_putint(valToStore);
+  serial_putstring(", valueFrom ");
+  serial_putint(regT);
+  serial_newline();
+  }
+#endif
 
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore);
+  // operation succeeded updating memory, flag regD (0 - updated, 1 - fail)
   storeGuestGPR(regD, 0, context);
   
   return context->R15 + 4;
@@ -1353,9 +1363,19 @@ u32int ldrexInstruction(GCONTXT * context)
   {
     serial_ERROR("LDREX unpredictable case (PC used).");
   }
+
   u32int baseVal = loadGuestGPR(baseReg, context);
   u32int value = 
       context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal);
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("LDREX instruction: baseVal = ");
+  serial_putint(baseVal);
+  serial_putstring(" loaded ");
+  serial_putint(value);
+  serial_putstring(", store to ");
+  serial_putint(regDest);
+  serial_newline();
+#endif
   storeGuestGPR(regDest, value, context);
   
   return context->R15 + 4;

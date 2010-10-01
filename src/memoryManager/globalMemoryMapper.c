@@ -76,6 +76,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
     serial_putstring(" instruction ");
     serial_putint(instr);
     serial_newline(); 
+    dumpGuestContext(context);
     serial_ERROR("Load/Store generic unimplemented\n");
   } 
   // restore end of block instruction 
