@@ -155,9 +155,11 @@ u32int smcInstruction(GCONTXT * context)
 
 u32int clrexInstruction(GCONTXT * context)
 {
-  dumpGuestContext(context);
-  serial_ERROR("CLREX unfinished\n");
-  return 0;
+#ifdef ARM_INSTR_TRACE
+  serial_putstring("Warning: CLREX!");
+  serial_newline();
+#endif
+  return context->R15+4;
 }
 
 u32int yieldInstruction(GCONTXT * context)
