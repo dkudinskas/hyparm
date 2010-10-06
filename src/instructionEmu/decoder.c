@@ -62,15 +62,15 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 // UNIMPLEMENTED:
 {1,  &strhtInstruction,     0x006000b0, 0x0f7000f0, "STRHT instruction"},
 {1,  &ldrhtInstruction,     0x003000b0, 0x0f3000f0, "LDRHT instruction"},
-// store and load exclusive
-{1,  &ldrexbInstruction,    0x01d00f9f, 0x0ff00fff, "ldrexb%c\t%12-15r, [%16-19r]"},
-{1,  &ldrexdInstruction,    0x01b00f9f, 0x0ff00fff, "ldrexd%c\t%12-15r, [%16-19r]"},
-{1,  &ldrexhInstruction,    0x01f00f9f, 0x0ff00fff, "ldrexh%c\t%12-15r, [%16-19r]"},
-{1,  &strexbInstruction,    0x01c00f90, 0x0ff00ff0, "strexb%c\t%12-15r, %0-3r, [%16-19r]"},
-{1,  &strexdInstruction,    0x01a00f90, 0x0ff00ff0, "strexd%c\t%12-15r, %0-3r, [%16-19r]"},
-{1,  &strexhInstruction,    0x01e00f90, 0x0ff00ff0, "strexh%c\t%12-15r, %0-3r, [%16-19r]"},
-{1,  &ldrexInstruction,     0x01900f9f, 0x0ff00fff, "ldrex%c\tr%12-15d, [%16-19r]"},
-{1,  &strexInstruction,     0x01800f90, 0x0ff00ff0, "strex%c\t%12-15r, %0-3r, [%16-19r]"},
+// store and load exclusive: must be emulated - user mode faults
+{1,  &ldrexbInstruction,    0x01d00f9f, 0x0ff00fff, "LDREXB"},
+{1,  &ldrexdInstruction,    0x01b00f9f, 0x0ff00fff, "LDREXD"},
+{1,  &ldrexhInstruction,    0x01f00f9f, 0x0ff00fff, "LDREXH"},
+{1,  &strexbInstruction,    0x01c00f90, 0x0ff00ff0, "STREXB"},
+{1,  &strexdInstruction,    0x01a00f90, 0x0ff00ff0, "STREXD"},
+{1,  &strexhInstruction,    0x01e00f90, 0x0ff00ff0, "STREXH"},
+{1,  &ldrexInstruction,     0x01900f9f, 0x0ff00fff, "LDREX"},
+{1,  &strexInstruction,     0x01800f90, 0x0ff00ff0, "STREX"},
 // SMULL - signed multiply, PC cannot be used as any destination
 {0,  &sumullInstruction,    0x00800090, 0x0fa000f0, "SMULL"},
 // SMLAL - signed multiply and accumulate, PC cannot be used as any destination 

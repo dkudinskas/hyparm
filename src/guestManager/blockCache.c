@@ -70,17 +70,32 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAd
   serial_putint(hypInstruction);
   serial_newline();
 #endif
-  if (bcAddr[index].valid == TRUE)
+  if ((bcAddr[index].valid == TRUE) && (bcAddr[index].endAddress != blkEndAddr) )
   {
     // somebody has been sleeping in our cache location!
     resolveCacheConflict(index, bcAddr);
+    // now that we resolved the conflict, we can store the new entry data...
+    bcAddr[index].startAddress = blkStartAddr;
+    bcAddr[index].endAddress = blkEndAddr;
+    bcAddr[index].hyperedInstruction = hypInstruction;
+    bcAddr[index].hdlFunct = hdlFunct;
+    bcAddr[index].valid = TRUE;
   }
-  // now that we resolved the conflict, we can store the new entry data...
-  bcAddr[index].startAddress = blkStartAddr;
-  bcAddr[index].endAddress = blkEndAddr;
-  bcAddr[index].hyperedInstruction = hypInstruction;
-  bcAddr[index].hdlFunct = hdlFunct;
-  bcAddr[index].valid = TRUE;
+  else if ((bcAddr[index].valid == TRUE) && (bcAddr[index].endAddress == blkEndAddr) )
+  {
+    /* NOTE: if entry valid, but blkEndAddress is the same as new block to add      *
+     * then the block starts at another address but ends on the same instruction    *
+     * and by chance - has the same index. just modify existing entry, don't remove */
+    bcAddr[index].startAddress = blkStartAddr;
+  }
+  else
+  {
+    bcAddr[index].startAddress = blkStartAddr;
+    bcAddr[index].endAddress = blkEndAddr;
+    bcAddr[index].hyperedInstruction = hypInstruction;
+    bcAddr[index].hdlFunct = hdlFunct;
+    bcAddr[index].valid = TRUE;
+  }    
 }
 
 BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr)

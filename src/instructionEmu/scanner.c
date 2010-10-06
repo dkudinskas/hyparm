@@ -93,10 +93,10 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     // save end of block instruction and handler function pointer close to us...
     gc->endOfBlockInstr = instruction;
     gc->hdlFunct = decodedInstruction->hdlFunct;
+    // replace end of block instruction with hypercall of the appropriate code
+    *currAddress = (INSTR_SWI | bcIndex);
   }
 
-  // replace end of block instruction with hypercall of the appropriate code
-  *currAddress = (INSTR_SWI | bcIndex);
   
 #ifdef SCANNER_DEBUG
   serial_putstring("scanner: EOB @ ");
