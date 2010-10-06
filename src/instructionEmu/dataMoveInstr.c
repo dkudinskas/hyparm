@@ -553,8 +553,155 @@ u32int stmInstruction(GCONTXT * context)
 /* store dual */
 u32int strdInstruction(GCONTXT * context)
 {
-  serial_ERROR("STRD unfinished\n");
-  return 0;
+  u32int instr = context->endOfBlockInstr;
+
+  u32int condcode  = (instr & 0xF0000000) >> 28;
+  u32int prePost   =  instr & 0x01000000;
+  u32int upDown    =  instr & 0x00800000;
+  u32int regOrImm  =  instr & 0x00400000;
+  u32int writeback =  instr & 0x00200000;  // 0 = reg, !0 = imm
+  u32int regDst    = (instr & 0x000F0000) >> 16;
+  u32int regSrc    = (instr & 0x0000F000) >> 12;
+  u32int regSrc2   = regSrc+1;
+
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("STRD instruction: ");
+  serial_putint(instr);
+  serial_putstring(" @ PC=");
+  serial_putint(context->R15);
+  serial_newline();
+#endif
+
+  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
+  if (!evalCC(condcode, cpsrCC))
+  {
+    // condition not met! allright, we're done here. next instruction...
+    return context->R15 + 4;
+  }
+  if ((regSrc % 2) == 1)
+  {
+    serial_ERROR("STRD undefined case: regSrc must be even number!");
+  }
+
+  u32int offsetAddress = 0;
+  u32int baseAddress   = loadGuestGPR(regDst, context);
+  u32int valueToStore  = loadGuestGPR(regSrc, context);
+  u32int valueToStore2 = loadGuestGPR(regSrc2, context);
+
+  u32int wback = (prePost == 0) || (writeback != 0);
+
+  // P = 0 and W == 1 then STR as if user mode
+  if ((prePost == 0) && (writeback != 0))
+  {
+    serial_ERROR("STRD unpredictable case (P=0 AND W=1)!");
+  }
+
+  if (wback && ((regDst == 15) || (regDst == regSrc) || (regDst == regSrc2)) )
+  {
+    serial_ERROR("STRD unpredictable register selection!");
+  }
+  if (regSrc2 == 15)
+  {
+    serial_ERROR("STRD: unpredictable case, regSrc2 = PC!");
+  }
+
+  if (regOrImm != 0)
+  {
+    // immediate case
+    u32int imm4h = (instr & 0x00000f00) >> 4;
+    u32int imm4l = (instr & 0x0000000f);
+    u32int imm32 = imm4h | imm4l;
+
+    // offsetAddress = if increment then base + imm32 else base - imm32
+    if (upDown != 0)
+    {
+      offsetAddress = baseAddress + imm32;
+    }
+    else
+    {
+      offsetAddress = baseAddress - imm32;
+    }
+#ifdef DATA_MOVE_TRACE
+    serial_putstring("imm32=");
+    serial_putint_nozeros(imm32);
+    serial_putstring(" baseAddress=");
+    serial_putint(baseAddress);
+    serial_putstring(" valueToStore=");
+    serial_putint(valueToStore);
+    serial_putstring(" offsetAddress=");
+    serial_putint(offsetAddress);
+    serial_newline();
+#endif
+  } // Immediate case ends
+  else
+  {
+    // register case
+    u32int regDst2 = instr & 0x0000000F;
+    u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
+    // regDest2 == PC then UNPREDICTABLE
+    if (regDst2 == 15)
+    {
+      serial_ERROR("STR reg Rm == PC UNPREDICTABLE case!");
+    }
+
+    // if increment then base + offset else base - offset
+    if (upDown != 0)
+    {
+      // increment
+      offsetAddress = baseAddress + offsetRegisterValue;
+    }
+    else
+    {
+      // decrement
+      offsetAddress = baseAddress - offsetRegisterValue;
+    }
+#ifdef DATA_MOVE_TRACE
+    serial_putstring("Rm=");
+    serial_putint_nozeros(regDst2);
+    serial_putstring(" baseAddress=");
+    serial_putint(baseAddress);
+    serial_putstring(" valueToStore=");
+    serial_putint(valueToStore);
+    serial_putstring(" offsetRegisterValue=");
+    serial_putint(offsetRegisterValue);
+    serial_newline();
+#endif
+  } // Register case ends
+
+  u32int address = 0;
+  // if preIndex then use offsetAddress else baseAddress
+  if (prePost != 0)
+  {
+    address = offsetAddress;
+  }
+  else
+  {
+    address = baseAddress;
+  }
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("store address = ");
+  serial_putint(address);
+  serial_newline();
+#endif
+  // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
+  valueToStore = (regSrc == 15) ? (valueToStore+8) : valueToStore;
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("store val1 = ");
+  serial_putint(valueToStore);
+  serial_putstring(" store val2 = ");
+  serial_putint(valueToStore2);
+  serial_newline();
+#endif
+
+  context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
+  context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address+4, valueToStore2);
+
+  if (wback)
+  {
+    // Rn = offsetAddr;
+    storeGuestGPR(regDst, offsetAddress, context);
+  }
+  return (context->R15 + 4);
 }
 
 

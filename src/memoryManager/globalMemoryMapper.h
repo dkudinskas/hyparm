@@ -19,9 +19,15 @@
 #define STR_REG_MASKED  0x06000000
 #define STR_IMM_MASK    0x0e500000
 #define STR_IMM_MASKED  0x04000000
+// dual word store
+#define STRD_REG_MASK   0x0e500ff0
+#define STRD_REG_MASKED 0x000000f0
+#define STRD_IMM_MASK   0x0e5000f0
+#define STRD_IMM_MASKED 0x004000f0
 // multiple word store
 #define STM_MASK        0x0e100000
 #define STM_MASKED      0x08000000
+
 
 // halfword load
 #define LDRH_IMM_MASK   0x0e500090

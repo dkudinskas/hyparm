@@ -40,6 +40,14 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
     // STRH Rd, [Rn, Rm/#imm12]
     strhInstruction(context);
   }
+  else if ( ((instr & STRD_IMM_MASK) == STRD_IMM_MASKED) ||
+            ((instr & STRD_REG_MASK) == STRD_REG_MASKED) )
+  {
+    // storing to a protected area.. adjust block cache if needed
+    validateCachePreChange(context->blockCache, address);
+    // STRD Rd, [Rn, Rm/#imm12]
+    strdInstruction(context);
+  }
   else if ((instr & STM_MASK) == STM_MASKED)
   {
     // more tricky with cache validation! since we do this in the stmInstruction
