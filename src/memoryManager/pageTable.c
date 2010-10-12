@@ -152,7 +152,6 @@ descriptor* createGuestOSPageTable()
     serial_ERROR("Added gptimer2 mapping failed. Entering infinite loop");
   }
 
-
 #ifdef PT_SHADOW_DEBUG
   serial_putstring("New shadow PT dump @ 0x");
   serial_putint((u32int)ptd);
@@ -1383,7 +1382,7 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
       serial_putint(((u32int)shadow) << 18);
       serial_putstring(" to phy: 0x");
       serial_putint(guestPhysicalAddr);
-      serial_putstring(". Marking no access");
+      serial_putstring(". Serial lives here. Marking no access");
       serial_newline();
 */
       shadow->type = SECTION;
@@ -1391,7 +1390,6 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
       shadow->ap2 = PRIV_RW_USR_NO >> 2;
       shadow->domain = mapGuestDomain(guest->domain);
-
       //Leave the rest zero for now
     }
     else if( 0x48000000 == (guestPhysicalAddr & 0xFF000000))

@@ -1115,7 +1115,8 @@ u32int msrInstruction(GCONTXT * context)
     // check for thumb toggle!
     if ((oldValue & CPSR_THUMB_BIT) != (value & CPSR_THUMB_BIT))
     {
-      error_function("MSR toggle THUMB bit.", context);
+      dumpGuestContext(context);
+      serial_ERROR("MSR toggle THUMB bit.");
     } 
     // separate the field we're gonna update from new value 
     u32int appliedValue = (value & 0x000000FF);
@@ -1277,6 +1278,7 @@ u32int mrsInstruction(GCONTXT * context)
     } // spsr case ends
     storeGuestGPR(regDest, value, context);
   } // condition met ends
+
   nextPC = context->R15 + 4;
   return nextPC;
 }

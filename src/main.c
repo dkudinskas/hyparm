@@ -122,33 +122,11 @@ int main(int argc, char *argv[])
   /* initialise physical interrupt controller */
   intcBEInit();
 
-  /* initialise phyiscal GPT1 to schedule guests */
-//  gptBEInit(1);
-  /* enable a regular 10ms interrupt (for scheduling guests) */
-//  gptBEEnable(1);
-//  gptBESet10msTick(1);
-//  gptBEEnableOverflowInterrupt(1);
-//  gptBEStart(1);
-/*
-  // THIS IS TEST CODE, that the timer works properly
-  while(TRUE)
-  {
-    // test
-    gptBEWaitForOverflowInterrupt(1);
-    gptBEClearOverflowInterrupt(1);
-    acknowledgeIrqBE();
-    serial_putstring(".");
-  }
-*/
-//  unmaskInterruptBE(GPT1_IRQ);
-
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
 
-  /* enable global interrupts */
-  enable_interrupts();
   // does not return
-  do_linux_boot(&imageHeader, kernAddr, initrdAddr);
+  doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
 }
 
 void registerGuestContext(u32int gcAddr)

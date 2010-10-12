@@ -1437,28 +1437,30 @@ u32int ldmInstruction(GCONTXT * context)
     {
       // ok, exception return option: restore SPSR to CPSR
       // SPSR! which?... depends what mode we are in...
+      u32int modeSpsr = 0;
       switch (context->CPSR & CPSR_MODE_FIELD)
       {
         case CPSR_MODE_FIQ:
-          context->CPSR = context->SPSR_FIQ;
+          modeSpsr = context->SPSR_FIQ;
           break;
         case CPSR_MODE_IRQ:
-          context->CPSR = context->SPSR_IRQ;
+          modeSpsr = context->SPSR_IRQ;
           break;
         case CPSR_MODE_SVC:
-          context->CPSR = context->SPSR_SVC;
+          modeSpsr = context->SPSR_SVC;
           break;
         case CPSR_MODE_ABORT:
-          context->CPSR = context->SPSR_ABT;
+          modeSpsr = context->SPSR_ABT;
           break;
         case CPSR_MODE_UNDEF:
-          context->CPSR = context->SPSR_UND;
+          modeSpsr = context->SPSR_UND;
           break;
         case CPSR_MODE_USER:
         case CPSR_MODE_SYSTEM:
         default: 
           serial_ERROR("LDM: exception return form sys/usr mode!");
       }
+      context->CPSR = modeSpsr;
     }
     else
     {

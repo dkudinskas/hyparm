@@ -24,8 +24,6 @@ void do_software_interrupt(u32int code)
   serial_putint(code);
   serial_newline();
 #endif
-  // interrupts are disabled in hypervisor execution
-  enable_interrupts();
   /* parse the instruction to find the start address of next block */
   /* scan next block! */
   GCONTXT * gContext = getGuestContext();
@@ -62,13 +60,13 @@ void do_software_interrupt(u32int code)
     deliverInterrupt();
   }
 
+  dumpLinuxFunctionInfo(gContext->R15);
 #ifdef EXC_HDLR_DBG
   serial_putstring("exceptionHandlers: Next PC = 0x");
   serial_putint(nextPC);
   serial_newline();
 #endif
   scanBlock(gContext, gContext->R15);
-  disable_interrupts();
 }
 
 void do_data_abort()
@@ -331,3 +329,109 @@ void do_fiq(void)
   serial_ERROR("Received FIQ! Implement me.");
 }
 
+void dumpLinuxFunctionInfo(u32int nextPC)
+{
+  switch(nextPC)
+  {
+    case 0xc00086e0:
+      serial_putstring("LINUX: start_kernel");
+      serial_newline();
+      break;
+    case 0xc0008324:
+      serial_putstring("LINUX: smp_setup_processor_id");
+      serial_newline();
+      break;
+    case 0xc001324c:
+      serial_putstring("LINUX: tick_init");
+      serial_newline();
+      break;
+    case 0xc000e540:
+      serial_putstring("LINUX: setup_arch");
+      serial_newline();
+      break;
+    case 0xc0011b28:
+      serial_putstring("LINUX: sched_init");
+      serial_newline();
+      break;
+    case 0xc006d004:
+      serial_putstring("LINUX: __build_all_zonelists");
+      serial_newline();
+      break;
+    case 0xc001437c:
+      serial_putstring("LINUX: page_alloc_init");
+      serial_newline();
+      break;
+    case 0xc005141c:
+      serial_putstring("LINUX: parse_args");
+      serial_newline();
+      break;
+    case 0xc0008824:
+      serial_putstring("LINUX: bug. interrupts where enabled *very very* early.");
+      serial_newline();
+      break;
+    case 0xc0012924:
+      serial_putstring("LINUX: sort_main_extable");
+      serial_newline();
+      break;
+    case 0xc000ebe8:
+      serial_putstring("LINUX: trap_init");
+      serial_newline();
+      break;
+    case 0xc0012910:
+      serial_putstring("LINUX: rcu_init");
+      serial_newline();
+      break;
+    case 0xc000e120:
+      serial_putstring("LINUX: init_IRQ");
+      serial_newline();
+      break;
+    case 0xc0012868:
+      serial_putstring("LINUX: pidhash_init");
+      serial_newline();
+      break;
+    case 0xc001256c:
+      serial_putstring("LINUX: init_timers");
+      serial_newline();
+      break;
+    case 0xc0012d74:
+      serial_putstring("LINUX: hrtimers_init");
+      serial_newline();
+      break;
+    case 0xc0012240:
+      serial_putstring("LINUX: softirq_init");
+      serial_newline();
+      break;
+    case 0xc0012f28:
+      serial_putstring("LINUX: timekeeping_init");
+      serial_newline();
+      break;
+    case 0xc000eb84:
+      serial_putstring("LINUX: time_init");
+      serial_newline();
+      break;
+    case 0xc0058320:
+      serial_putstring("LINUX: sched_clock_init");
+      serial_newline();
+      break;
+    case 0xc0008868:
+      serial_putstring("LINUX: enable interrupts!");
+      serial_newline();
+      break;
+    case 0xc000886c:
+      serial_putstring("LINUX: jump to console_init.");
+      serial_newline();
+      break;
+    case 0xc00177a4:
+      serial_putstring("LINUX: console_init");
+      serial_newline();
+      break;
+    case 0xc016ee94:
+      serial_putstring("LINUX: PANIC!!!");
+      serial_newline();
+      break;
+    case 0xc0014c80:
+      serial_putstring("LINUX: vmalloc_init");
+      serial_newline();
+      break;
+  }
+}

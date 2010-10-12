@@ -120,58 +120,58 @@ _start:
   MOV     PC, LR
 .endfunc
 
-      /* Alex - Macroed Interupt Service Handler code for reuse between handlers*/
+    /* Alex - Macroed Interupt Service Handler code for reuse between handlers*/
 
-        /* Loads guest mode into R0, loads addr into R1 */
-        .macro get_emulated_mode
-        /* WARNING: changing registers will break dependant code */
-        LDR     R0, =guestContextCPSR
-        LDR     R0, [R0]
-        ANDS    R0, R0, #0x1F
-        LDREQ   R1, =guestContextR13_USR /* system mode - same register set as usr */
-        CMP     R0, #0x10
-        LDREQ   R1, =guestContextR13_USR
-        CMP     R0, #0x11
-        LDREQ   R1, =guestContextR13_FIQ
-        CMP     R0, #0x12
-        LDREQ   R1, =guestContextR13_IRQ
-        CMP     R0, #0x13
-        LDREQ   R1, =guestContextR13_SVC
-        CMP     R0, #0x17
-        LDREQ   R1, =guestContextR13_ABT
-        CMP     R0, #0x1B
-        LDREQ   R1, =guestContextR13_UND
-        .endm
+    /* Loads guest mode into R0, loads addr into R1 */
+    .macro get_emulated_mode
+    /* WARNING: changing registers will break dependant code */
+    LDR     R0, =guestContextCPSR
+    LDR     R0, [R0]
+    ANDS    R0, R0, #0x1F
+    LDREQ   R1, =guestContextR13_USR /* system mode - same register set as usr */
+    CMP     R0, #0x10
+    LDREQ   R1, =guestContextR13_USR
+    CMP     R0, #0x11
+    LDREQ   R1, =guestContextR13_FIQ
+    CMP     R0, #0x12
+    LDREQ   R1, =guestContextR13_IRQ
+    CMP     R0, #0x13
+    LDREQ   R1, =guestContextR13_SVC
+    CMP     R0, #0x17
+    LDREQ   R1, =guestContextR13_ABT
+    CMP     R0, #0x1B
+    LDREQ   R1, =guestContextR13_UND
+    .endm
 
-        .macro save_r0_to_r14
-        LDR     lr,=guestContextSpace
-        STMIA   lr, {R0-R7}
-        POP     {lr}
+    .macro save_r0_to_r14
+    LDR     lr,=guestContextSpace
+    STMIA   lr, {R0-R7}
+    POP     {lr}
 
-        /* store SP & LR to the correct places.*/
-        get_emulated_mode /* uses R0 as scratch, puts guestContext addr into R1 */
-        /* use system mode to extract guest stack pointer and link register */
-        MRS     R2, CPSR /* Store current mode so we can switch back to it */
-        CPS     SYS_MODE
-        STMIA   R1, {R13, R14}
-        /* switch back to previous mode */
-        MSR     CPSR, R2
+    /* store SP & LR to the correct places.*/
+    get_emulated_mode /* uses R0 as scratch, puts guestContext addr into R1 */
+    /* use system mode to extract guest stack pointer and link register */
+    MRS     R2, CPSR /* Store current mode so we can switch back to it */
+    CPS     SYS_MODE
+    STMIA   R1, {R13, R14}
+    /* switch back to previous mode */
+    MSR     CPSR, R2
 
-        /* store r8-r12, guest mode still in R0 */
-        /* evaluate guest mode - was guest in FIQ? */
-        CMP     R0, #0x11 /* 10001b - FIQ mode bits */
-        LDRNE   R1, =guestContextR8
-        LDREQ   R1, =guestContextR8_FIQ /* FIQ has its own R8-R12 registers */
-        STMIA   R1, {R8-R12}
-        .endm
+    /* store r8-r12, guest mode still in R0 */
+    /* evaluate guest mode - was guest in FIQ? */
+    CMP     R0, #0x11 /* 10001b - FIQ mode bits */
+    LDRNE   R1, =guestContextR8
+    LDREQ   R1, =guestContextR8_FIQ /* FIQ has its own R8-R12 registers */
+    STMIA   R1, {R8-R12}
+    .endm
 
-        .macro save_pc
-        /* store guest PC */
-        MOV     R0, LR
-        SUB     R0, R0, #4
-        LDR     R1, =guestContextR15
-        STR     R0, [R1]
-        .endm
+    .macro save_pc
+    /* store guest PC */
+    MOV     R0, LR
+    SUB     R0, R0, #4
+    LDR     R1, =guestContextR15
+    STR     R0, [R1]
+    .endm
 
         .macro save_pc_abort
         /* store guest PC */
@@ -265,11 +265,62 @@ _start:
 .global swi_handler
 swi_handler:
     PUSH    {LR}
-    /* pops LR */
-    save_r0_to_r14 
-    save_pc
-    /* we need the condition flags that were in the guest saved in ARB! */
-    save_cc_flags
+    LDR     lr,=guestContextSpace
+    STMIA   lr, {R0-R7}
+    POP     {LR}
+
+    /* store SP & LR to the correct places.*/
+    LDR     R0, =guestContextCPSR
+    LDR     R0, [R0]
+    ANDS    R0, R0, #0x1F
+    LDREQ   R1, =guestContextR13_USR /* system mode - same register set as usr */
+    BEQ     continue1
+    CMP     R0, #0x13
+    LDREQ   R1, =guestContextR13_SVC
+    BEQ     continue1
+    CMP     R0, #0x10
+    LDREQ   R1, =guestContextR13_USR
+    BEQ     continue1
+    CMP     R0, #0x11
+    LDREQ   R1, =guestContextR13_FIQ
+    BEQ     continue1
+    CMP     R0, #0x12
+    LDREQ   R1, =guestContextR13_IRQ
+    BEQ     continue1
+    CMP     R0, #0x17
+    LDREQ   R1, =guestContextR13_ABT
+    BEQ     continue1
+    CMP     R0, #0x1B
+    LDREQ   R1, =guestContextR13_UND
+continue1:
+    /* use system mode to extract guest stack pointer and link register */
+    MRS     R2, CPSR /* Store current mode so we can switch back to it */
+    CPS     SYS_MODE
+    STMIA   R1, {R13, R14}
+    /* switch back to previous mode */
+    MSR     CPSR, R2
+
+    /* store r8-r12, guest mode still in R0 */
+    /* evaluate guest mode - was guest in FIQ? */
+    CMP     R0, #0x11 /* 10001b - FIQ mode bits */
+    LDRNE   R1, =guestContextR8
+    LDREQ   R1, =guestContextR8_FIQ /* FIQ has its own R8-R12 registers */
+    STMIA   R1, {R8-R12}
+     
+    /* store guest PC */
+    MOV     R0, LR
+    SUB     R0, R0, #4
+    LDR     R1, =guestContextR15
+    STR     R0, [R1]
+
+    /* saving condition flags, but no other bits */
+    LDR     R0, =guestContextCPSR
+    LDR     R1, [R0]
+    AND     R1, #0x0FFFFFFF
+    MRS     R2, SPSR
+    AND     R2, #0xF0000000
+    ORR     R1, R1, R2
+    STR     R1, [R0]
   
     /* get SVC code into @parameter1 and call C function */
     LDR     R0, [LR, #-4]
@@ -277,10 +328,71 @@ swi_handler:
     BL      do_software_interrupt
   
     /* handled this SWI. lets restore user state! */
-    /* uses R0,R1,R2 as scratch keep above "restore_r0_to_r12" */
-    restore_r13_r14 
-    restore_r0_to_r12
-    restore_cpsr_pc_usr_mode
+    /* Use guest CPSR to work out which mode we are meant to be emulating */
+    LDR     R0, =guestContextCPSR
+    LDR     R0, [R0]
+    ANDS    R0, R0, #0x1F
+    LDREQ   R1, =guestContextR13_USR /* system mode - same register set as usr */
+    BEQ     continue2
+    CMP     R0, #0x13
+    LDREQ   R1, =guestContextR13_SVC
+    BEQ     continue2
+    CMP     R0, #0x10
+    LDREQ   R1, =guestContextR13_USR
+    BEQ     continue2
+    CMP     R0, #0x11
+    LDREQ   R1, =guestContextR13_FIQ
+    BEQ     continue2
+    CMP     R0, #0x12
+    LDREQ   R1, =guestContextR13_IRQ
+    BEQ     continue2
+    CMP     R0, #0x17
+    LDREQ   R1, =guestContextR13_ABT
+    BEQ     continue2
+    CMP     R0, #0x1B
+    LDREQ   R1, =guestContextR13_UND
+continue2:
+    /* switch to system mode to restore SP & LR */
+    MRS     R2, CPSR /* backup up current mode */
+    CPS     SYS_MODE
+    /* restore SP & LR from guest Context */
+    LDR     SP, [R1]
+    LDR     LR, [R1, #4]
+    /* switch back to previous mode */
+    MSR     CPSR, R2
+
+    /* general purpose registers common to all modes, using LR as scratch */
+    LDR     LR,=guestContextR0
+    LDMIA   LR, {R0-R7}
+    /* now either R8-12_FIQ or R8_12_common */
+    LDR     LR, =guestContextCPSR
+    LDR     LR, [LR]
+    AND     LR, LR, #0x1F
+    CMP     LR, #0x11 /* 10001b - FIQ mode bits */
+    LDRNE   LR, =guestContextR8 /* Not FIQ, restore normal R8-R12 */
+    LDREQ   LR, =guestContextR8_FIQ /* FIQ has its own R8-R12 registers, restore from them instead */
+    LDMIA   LR, {R8-R12}
+
+    /* Restores the cpsr to USR mode (& cc flags) then restore pc */
+    /* fixup spsr first */
+    PUSH    {R0}
+    LDR     LR,=guestContextCPSR
+    /* Preserve condition flags */
+    LDR     LR, [LR]
+    AND     R0, LR, #0xf0000000
+    /* Preserve exception flags */
+    AND     LR, LR, #0x1C0
+    ORR     R0, LR, R0
+    /* set user mode */
+    ORR     R0, R0, #(USR_MODE)
+    MSR     SPSR, R0
+    POP     {R0}
+    /* get PC and save on stack */
+    LDR     LR, =guestContextR15
+    LDR     LR, [LR]
+    STM     SP, {LR} /* Store the PC on the stack for the final restore PC & CPSR instruction, no indexing */
+    /* restore PC and load the SPSR into the CPSR */
+    LDM     SP, {PC}^
 
 .global data_abort_handler
 data_abort_handler:

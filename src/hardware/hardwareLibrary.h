@@ -31,6 +31,12 @@
 #define SYS_CONTROL_MODULE_SIZE          0x00002000
 #define CLOCK_MANAGER                    0x48004000
 #define CLOCK_MANAGER_SIZE               0x00004000
+#define SDMA                             0x48056000
+#define SDMA_SIZE                        0x00002000
+#define UART1                            0x4806a000
+#define UART1_SIZE                       0x00002000
+#define UART2                            0x4806c000
+#define UART2_SIZE                       0x00002000
 #define INTERRUPT_CONTROLLER             0x48200000
 #define INTERRUPT_CONTROLLER_SIZE        0x00001000
 #define L4_CORE_WAKEUP_INT               0x48300000
@@ -47,6 +53,8 @@
 #define TIMER_32K_SIZE                     0x00002000
 #define Q1_L4_INT_PER                  0x49000000
 #define Q1_L4_INT_PER_SIZE             0x00100000
+#define UART3                            0x49020000
+#define UART3_SIZE                       0x00002000
 #define GPIO2                            0x49050000
 #define GPIO2_SIZE                       0x00002000
 #define GPIO3                            0x49052000

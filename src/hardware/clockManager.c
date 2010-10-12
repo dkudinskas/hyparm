@@ -239,6 +239,7 @@ u32int loadIva2Cm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStIva2Reg;
       break;
     default:
+      dumpGuestContext(getGuestContext());
       serial_ERROR("loadIva2Cm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
@@ -261,6 +262,7 @@ u32int loadOcpSystemCm(device * dev, u32int address, u32int phyAddr)
   serial_putint(address);
   serial_newline();
   serial_putstring(dev->deviceName);
+  dumpGuestContext(getGuestContext());
   serial_ERROR(" loadOcpSystemCm unimplemented.");
   return 0;
 }
@@ -297,6 +299,7 @@ u32int loadMpuCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStMpuReg;
       break;
     default:
+      dumpGuestContext(getGuestContext());
       serial_ERROR("loadMpuCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
@@ -358,6 +361,7 @@ u32int loadCoreCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStSTCore;
       break;
     default:
+      dumpGuestContext(getGuestContext());
       serial_ERROR("loadCoreCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
@@ -399,6 +403,7 @@ u32int loadSgxCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStSt;
       break;
     default:
+      dumpGuestContext(getGuestContext());
       serial_ERROR("loadSgxCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
@@ -469,6 +474,15 @@ u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr)
     case CM_CLKEN2_PLL: 
       val = clockMan->cmClkEn2Pll;
       break;
+    case CM_UNDOCUMENTED:
+      val = 0;
+#ifdef CLK_MAN_DBG
+      serial_putstring("loadWkupCm warning: loading from undocumented reg ");
+      serial_putint_nozeros(reg);
+      serial_putstring(" returning zero");
+      serial_newline(); 
+#endif
+      break; 
     case CM_IDLEST_CKGEN:
       val = clockMan->cmIdleStCkGen;
       break;
@@ -500,6 +514,10 @@ u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkoutCtrl; 
       break;
     default:
+      dumpGuestContext(getGuestContext());
+      serial_putstring("loadClockControlCm reg ");
+      serial_putint_nozeros(reg);
+      serial_newline();
       serial_ERROR("loadClockControlCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
@@ -543,6 +561,7 @@ u32int loadDssCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStDss;
       break;
     default:
+      dumpGuestContext(getGuestContext());
       serial_ERROR("loadDssCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
@@ -587,6 +606,7 @@ u32int loadCamCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStCam;
       break;
     default:
+      dumpGuestContext(getGuestContext());
       serial_ERROR("loadCamCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
@@ -631,6 +651,7 @@ u32int loadPerCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStPer;
       break;
     default:
+      dumpGuestContext(getGuestContext());
       serial_ERROR("loadPerCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
@@ -666,6 +687,7 @@ u32int loadEmuCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkSel3Emu;
       break;
     default:
+      dumpGuestContext(getGuestContext());
       serial_ERROR("loadEmuCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
@@ -687,6 +709,8 @@ u32int loadGlobalRegCm(device * dev, u32int address, u32int phyAddr)
   serial_putint(address);
   serial_newline();
   serial_putstring(dev->deviceName);
+  serial_newline();
+  dumpGuestContext(getGuestContext());
   serial_ERROR(" loadGlobalRegCm unimplemented.");
   return 0;
 }
@@ -701,6 +725,7 @@ u32int loadNeonCm(device * dev, u32int address, u32int phyAddr)
   serial_putint(address);
   serial_newline();
   serial_putstring(dev->deviceName);
+  dumpGuestContext(getGuestContext());
   serial_ERROR(" loadNeonCm unimplemented.");
   return 0;
 }
@@ -715,6 +740,7 @@ u32int loadUsbHostCm(device * dev, u32int address, u32int phyAddr)
   serial_putint(address);
   serial_newline();
   serial_putstring(dev->deviceName);
+  dumpGuestContext(getGuestContext());
   serial_ERROR(" loadUsbHostCm unimplemented.");
   return 0;
 }
@@ -790,6 +816,7 @@ void storeClockManager(device * dev, ACCESS_SIZE size, u32int address, u32int va
       storeUsbHostCm(dev, address, phyAddr, value);
       break;
     default:
+      dumpGuestContext(getGuestContext());
       serial_ERROR("CM: store to invalid base module.");
   } // switch ends
 } // storeClockManager
@@ -805,6 +832,7 @@ void storeIva2Cm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
+  serial_newline();
   serial_ERROR(" storeIva2Cm unimplemented.");
   return;
 }
@@ -858,10 +886,15 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_ICLKEN1_CORE:
       if (clockMan->cmIclkEn1Core != value)
       {
-        serial_ERROR(" storeCoreCm unimplemented.");
+        serial_ERROR(" storeCoreCm CM_ICLKEN1_CORE unimplemented.");
       }
       break;
     case CM_FCLKEN1_CORE:
+      if (clockMan->cmFclkEn1Core != value)
+      {
+        serial_ERROR(" storeCoreCm CM_FCLKEN1_CORE unimplemented.");
+      }
+      break;
     case CM_FCLKEN3_CORE:
     case CM_ICLKEN2_CORE:
     case CM_ICLKEN3_CORE:
@@ -1058,16 +1091,68 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+#ifdef CLK_MAN_DBG
   serial_putstring("Store to: ");
   serial_putstring(dev->deviceName);
-  serial_putstring(" at address ");
+  serial_putstring(" at VA ");
   serial_putint(address);
+  serial_putstring(" at PA ");
+  serial_putint(phyAddr);
   serial_putstring(" value ");
   serial_putint(value);
   serial_newline();
-  serial_putstring(dev->deviceName);
-  serial_ERROR(" storeClockControlCm unimplemented.");
-  return;
+#endif
+
+  u32int reg = phyAddr - Clock_Control_Reg_CM;
+  switch (reg)
+  {
+    case CM_CLKEN_PLL:
+      serial_putstring("Store to CM_CLKEN_PLL val ");
+      serial_putint(value);
+      serial_newline();
+      clockMan->cmClkEnPll = value;
+      break;
+    case CM_AUTOIDLE_PLL:
+      serial_putstring("Store to CM_AUTOIDLE_PLL val ");
+      serial_putint(value);
+      serial_newline();
+      clockMan->cmAutoIdlePll = value;
+      break;
+    case CM_CLKEN2_PLL:
+    case CM_IDLEST_CKGEN:
+    case CM_IDLEST2_CKGEN:
+    case CM_AUTOIDLE2_PLL:
+    case CM_CLKSEL1_PLL:
+    case CM_CLKSEL2_PLL:
+    case CM_CLKSEL3_PLL:
+    case CM_CLKSEL4_PLL:
+    case CM_CLKSEL5_PLL:
+    case CM_CLKOUT_CTRL:
+      serial_putstring("Store to: ");
+      serial_putstring(dev->deviceName);
+      serial_putstring(" at VA ");
+      serial_putint(address);
+      serial_putstring(" at PA ");
+      serial_putint(phyAddr);
+      serial_putstring(" value ");
+      serial_putint(value);
+      serial_newline();
+      dumpGuestContext(getGuestContext());
+      serial_ERROR("storeClockControlCm store to unimplemented register register!");
+      break;
+    default:
+      serial_putstring("Store to: ");
+      serial_putstring(dev->deviceName);
+      serial_putstring(" at VA ");
+      serial_putint(address);
+      serial_putstring(" at PA ");
+      serial_putint(phyAddr);
+      serial_putstring(" value ");
+      serial_putint(value);
+      serial_newline();
+      dumpGuestContext(getGuestContext());
+      serial_ERROR("storeClockControlCm storing non existing register!");
+  } // switch ends
 }
 
 void storeDssCm(device * dev, u32int address, u32int phyAddr, u32int value)
@@ -1194,6 +1279,7 @@ void storeGlobalRegCm(device * dev, u32int address, u32int phyAddr, u32int value
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
+  dumpGuestContext(getGuestContext());
   serial_ERROR(" storeGlobalRegCm unimplemented.");
   return;
 }
@@ -1209,6 +1295,7 @@ void storeNeonCm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
+  dumpGuestContext(getGuestContext());
   serial_ERROR(" storeNeonCm unimplemented.");
   return;
 }
@@ -1224,6 +1311,7 @@ void storeUsbHostCm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
+  dumpGuestContext(getGuestContext());
   serial_ERROR(" storeUsbHostCm unimplemented.");
   return;
 }

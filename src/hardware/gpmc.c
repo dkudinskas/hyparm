@@ -36,13 +36,21 @@ void initGpmc()
   gpmc->gpmcConfig = 0x00000000; // OMAP reference manual: 0x00000a00
   gpmc->gpmcStatus = 0x00000001;
 
+  gpmc->gpmcConfig1_0 = 0x00001800; // dev size 16bits, nand flash like device
   gpmc->gpmcConfig7_0 = 0x00000f00; // CS0 off; OMAP reference manual: 0x00000f40 (turns CS0 on)
+  gpmc->gpmcConfig1_1 = 0x00001000; // dev size 16bits, nor flash like device
   gpmc->gpmcConfig7_1 = 0x00000f00;
+  gpmc->gpmcConfig1_2 = 0x00001000; // dev size 16bits, nor flash like device
   gpmc->gpmcConfig7_2 = 0x00000f00;
+  gpmc->gpmcConfig1_3 = 0x00001000; // dev size 16bits, nor flash like device
   gpmc->gpmcConfig7_3 = 0x00000f00;
+  gpmc->gpmcConfig1_4 = 0x00001000; // dev size 16bits, nor flash like device
   gpmc->gpmcConfig7_4 = 0x00000f00;
+  gpmc->gpmcConfig1_5 = 0x00001000; // dev size 16bits, nor flash like device
   gpmc->gpmcConfig7_5 = 0x00000f00;
+  gpmc->gpmcConfig1_6 = 0x00001000; // dev size 16bits, nor flash like device
   gpmc->gpmcConfig7_6 = 0x00000f00;
+  gpmc->gpmcConfig1_7 = 0x00001000; // dev size 16bits, nor flash like device
   gpmc->gpmcConfig7_7 = 0x00000f00;
 
   gpmc->gpmcPrefetchConfig1 = 0x00000000; // OMAP reference manual: 0x00004000
@@ -101,31 +109,64 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
     case GPMC_NAND_ADDRESS_7:
       serial_ERROR("Gpmc: load on write-only register.");
       break;
+    case GPMC_CONFIG1_0:
+      val = gpmc->gpmcConfig1_0;
+      break;
     case GPMC_CONFIG7_0:
       val = gpmc->gpmcConfig7_0;
+      break;
+    case GPMC_CONFIG1_1:
+      val = gpmc->gpmcConfig1_1;
       break;
     case GPMC_CONFIG7_1:
       val = gpmc->gpmcConfig7_1;
       break;
+    case GPMC_CONFIG1_2:
+      val = gpmc->gpmcConfig1_2;
+      break;
     case GPMC_CONFIG7_2:
       val = gpmc->gpmcConfig7_2;
+      break;
+    case GPMC_CONFIG1_3:
+      val = gpmc->gpmcConfig1_3;
       break;
     case GPMC_CONFIG7_3:
       val = gpmc->gpmcConfig7_3;
       break;
+    case GPMC_CONFIG1_4:
+      val = gpmc->gpmcConfig1_4;
+      break;
     case GPMC_CONFIG7_4:
       val = gpmc->gpmcConfig7_4;
+      break;
+    case GPMC_CONFIG1_5:
+      val = gpmc->gpmcConfig1_5;
       break;
     case GPMC_CONFIG7_5:
       val = gpmc->gpmcConfig7_5;
       break;
+    case GPMC_CONFIG1_6:
+      val = gpmc->gpmcConfig1_6;
+      break;
     case GPMC_CONFIG7_6:
       val = gpmc->gpmcConfig7_6;
+      break;
+    case GPMC_CONFIG1_7:
+      val = gpmc->gpmcConfig1_7;
       break;
     case GPMC_CONFIG7_7:
       val = gpmc->gpmcConfig7_7;
       break;
     default:
+      dumpGuestContext(gc);
+      serial_putstring(dev->deviceName);
+      serial_putstring(" load from pAddr: 0x");
+      serial_putint(phyAddr);
+      serial_putstring(", vAddr: 0x");
+      serial_putint(address);
+      serial_putstring(" access size ");
+      serial_putint((u32int)size);
+      serial_newline();
       serial_ERROR("Gpmc: load on invalid register.");
   }
   

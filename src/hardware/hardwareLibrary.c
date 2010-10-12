@@ -10,6 +10,8 @@
 #include "gpio.h"
 #include "gptimer.h"
 #include "intc.h"
+#include "uart.h"
+#include "sdma.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -51,6 +53,15 @@ char * sysCtrlModName = "SYSCTRL_MOD";
 // L4INT_CORE: clock manager (and DPLL)
 device clockManager;
 char * clockManagerName = "CLK_MAN";
+// L4INT_CORE: SDMA
+device sdmaModule;
+char * sdmaModuleName = "SDMA";
+// L4INT_CORE: UART1
+device uart1;
+char * uart1Name = "UART1";
+// L4INT_CORE: UART2
+device uart2;
+char * uart2Name = "UART2";
 // L4INT_CORE: interrupt controller
 device intc;
 char * intcName = "INTC";
@@ -83,6 +94,9 @@ char * timer32kName = "32kTIMER";
 // L4 interconnect peripherals
 device l4IntPer;
 char * l4IntPerName = "L4_INT_PER";
+// L4_INT_PER: UART3
+device uart3;
+char * uart3Name = "UART3";
 // L4_INT_PER: GPIO2
 device gpio2;
 char * gpio2Name = "GPIO2";
@@ -181,6 +195,21 @@ device * initialiseHardwareLibrary()
   initialiseDevice(&clockManager, clockManagerName, FALSE,
                    CLOCK_MANAGER, (u32int)(CLOCK_MANAGER -1 + CLOCK_MANAGER_SIZE),
                    &l4IntCore, &loadClockManager, &storeClockManager);
+  // L4INT_CORE: uart1
+  initSdma();
+  initialiseDevice(&sdmaModule, sdmaModuleName, FALSE,
+                   SDMA, (u32int)(SDMA -1 + SDMA_SIZE),
+                   &l4IntCore, &loadSdma, &storeSdma);
+  // L4INT_CORE: uart1
+  initUart(1);
+  initialiseDevice(&uart1, uart1Name, FALSE,
+                   UART1, (u32int)(UART1 -1 + UART1_SIZE),
+                   &l4IntCore, &loadUart, &storeUart);
+  // L4INT_CORE: uart2
+  initUart(2);
+  initialiseDevice(&uart2, uart2Name, FALSE,
+                   UART2, (u32int)(UART2 - 1 + UART2_SIZE),
+                   &l4IntCore, &loadUart, &storeUart);
   // L4INT_CORE: interrupt controller
   initialiseDevice(&intc, intcName, FALSE,
                    INTERRUPT_CONTROLLER, (u32int)(INTERRUPT_CONTROLLER -1 + INTERRUPT_CONTROLLER_SIZE),
@@ -219,6 +248,11 @@ device * initialiseHardwareLibrary()
   initialiseDevice(&l4IntPer, l4IntPerName, TRUE,
                    Q1_L4_INT_PER, (u32int)(Q1_L4_INT_PER -1 + Q1_L4_INT_PER_SIZE),
                    &l4Interconnect, &loadGeneric, &storeGeneric);
+  // L4INT_PER: uart3
+  initUart(3);
+  initialiseDevice(&uart3, uart3Name, FALSE,
+                   UART3, (u32int)(UART3 -1 + UART3_SIZE),
+                   &l4IntPer, &loadUart, &storeUart);
   // L4_INT_PER: general purpose I/O 2
   initGpio(2);
   initialiseDevice(&gpio2, gpio2Name, FALSE,

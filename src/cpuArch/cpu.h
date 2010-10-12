@@ -63,10 +63,10 @@
 
 #define arch_align_stack(x) (x)
 
-int cleanup_before_linux(void);
+int cleanupBeforeLinux(void);
 
-void enable_interrupts(void);
-void disable_interrupts(void);
+void enableInterrupts(void);
+void disableInterrupts(void);
 
 void icache_enable(void);
 void icache_disable(void);

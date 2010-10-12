@@ -326,7 +326,9 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       break;
     case GPT_REG_TCRR:
     {
-      storeToGPTimer(2, regOffs, value);
+      // make sure we dont throw irq's too often...
+      u32int adjustedValue = value << 8;
+      storeToGPTimer(2, regOffs, adjustedValue);
 #ifdef GPTIMER_DBG
       serial_putstring(dev->deviceName);
       serial_putstring(": store to internal clock register value 0x");
@@ -338,7 +340,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPT_REG_TLDR:
     {
       // make sure we dont throw irq's too often...
-      u32int adjustedValue = value << 8;
+      u32int adjustedValue = value << 10;
       storeToGPTimer(2, regOffs, adjustedValue);
 #ifdef GPTIMER_DBG
       serial_putstring(dev->deviceName);

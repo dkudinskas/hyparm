@@ -22,6 +22,7 @@ void do_irq(void);
 void do_irq_hypervisor(void);
 void do_fiq(void);
 
+void dumpLinuxFunctionInfo(u32int nextPC);
 
 #endif
 

@@ -20,7 +20,7 @@ static struct RamConfig dramBanks[NR_DRAM_BANKS];
 
 static int builtInInitrd = 0;
 
-void do_linux_boot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
+void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
 {
   int hdrSize = sizeof(image_header_t);
   ulong load = loadAddr + hdrSize;
@@ -71,7 +71,7 @@ void do_linux_boot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAdd
 #endif
   scanBlock(getGuestContext(), hdrEntryPoint);
 
-  cleanup_before_linux();
+  cleanupBeforeLinux();
 
   /* does not return */
   callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, hdrEntryPoint);

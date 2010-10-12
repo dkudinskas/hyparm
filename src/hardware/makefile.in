@@ -11,3 +11,5 @@ SRCS += src/hardware/gptimer.c
 SRCS += src/hardware/gpmc.c
 SRCS += src/hardware/gpio.c
 SRCS += src/hardware/intc.c
+SRCS += src/hardware/uart.c
+SRCS += src/hardware/sdma.c

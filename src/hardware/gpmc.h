@@ -205,13 +205,21 @@ struct Gpmc
   u32int gpmcConfig;
   u32int gpmcStatus;
 
+  u32int gpmcConfig1_0;
   u32int gpmcConfig7_0;
+  u32int gpmcConfig1_1;
   u32int gpmcConfig7_1;
+  u32int gpmcConfig1_2;
   u32int gpmcConfig7_2;
+  u32int gpmcConfig1_3;
   u32int gpmcConfig7_3;
+  u32int gpmcConfig1_4;
   u32int gpmcConfig7_4;
+  u32int gpmcConfig1_5;
   u32int gpmcConfig7_5;
+  u32int gpmcConfig1_6;
   u32int gpmcConfig7_6;
+  u32int gpmcConfig1_7;
   u32int gpmcConfig7_7;
 
   u32int gpmcPrefetchConfig1;

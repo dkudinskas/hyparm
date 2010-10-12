@@ -94,6 +94,7 @@
 // Clock_control_reg_CM registers
 #define CM_CLKEN_PLL                0x00000000 // control DPLL3 and DPLL4 modes, RW
 #define CM_CLKEN2_PLL               0x00000004 // control DPLL5 modes, RW 
+#define CM_UNDOCUMENTED             0x00000010 // undocumented register?
 #define CM_IDLEST_CKGEN             0x00000020 // monitor master clock, R/O
 #define CM_IDLEST2_CKGEN            0x00000024 // monitor master clock, R/O
 #define CM_AUTOIDLE_PLL             0x00000030 // auto control DPLL3 and DPLL4, RW

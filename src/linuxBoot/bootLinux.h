@@ -45,7 +45,7 @@
  */
 #define ATAG_CMDLINE  0x54410009
 
-void do_linux_boot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)  __attribute__((noreturn));
+void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)  __attribute__((noreturn));
 
 void populateDramBanks(void);
 
