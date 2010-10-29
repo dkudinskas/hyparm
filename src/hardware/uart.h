@@ -58,10 +58,6 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address);
 
 void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value);
 
-u32int getUartNumber(u32int phyAddr);
-
-u32int getUartBaseAddr(u32int id);
-
 struct Uart
 {
   u32int mdr1;
