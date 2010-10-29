@@ -1,20 +1,17 @@
 # Shell to use
 SHELL = /bin/sh
 
-# GNU-ARM tools directory
-GNU_ARM = $(CROSS_COMPILE)
 # The gcc compiler and linker
-CC      = $(GNU_ARM)gcc
-ASM     = $(GNU_ARM)as
-LINK    = $(GNU_ARM)ld
-OBJCOPY = $(GNU_ARM)objcopy
+CC      = $(CROSS_COMPILE)gcc
+AS      = $(CROSS_COMPILE)as
+LD      = $(CROSS_COMPILE)ld
+OBJCOPY = $(CROSS_COMPILE)objcopy
+OBJDUMP = $(CROSS_COMPILE)objdump
 
 TARGET ?= beagle
 
-ifneq ($(TARGET),beagle)
-  ifneq ($(TARGET),tegra250)
-    $(error bad target $(TARGET))
-  endif
+ifeq ($(wildcard config.$(TARGET)),) 
+  $(error Cannot find config.$(TARGET))
 endif
 
 APP_NAME = hypervisor
@@ -27,7 +24,7 @@ ASMFLAGS = $(TARGET_ASMFLAGS)
 # -fno-common forces the compiler to put global variables in one data section in the ELF file
 CCFLAGS = -g -O3 -fno-common -ffixed-r8 -msoft-float -D__KERNEL__ -DTEXT_BASE=$(TARGET_BASE_ADDRESS) -fno-builtin -ffreestanding -nostdinc -pipe -DCONFIG_ARM -D__ARM__ -marm -mabi=aapcs-linux -mno-thumb-interwork -Wall -Wstrict-prototypes -Winline -fno-stack-protector -c -fno-toplevel-reorder $(TARGET_CCFLAGS)
 
-LINKFLAGS = -g -Ttext $(TARGET_BASE_ADDRESS) -e main -o $(APP_NAME).elf -Map $(APP_NAME).map --cref
+LDFLAGS = -g -Ttext $(TARGET_BASE_ADDRESS) -e main -o $(APP_NAME).elf -Map $(APP_NAME).map --cref
 
 INCLUDE_DIRS += -I$(DEPTH)/src/
 INCLUDE_DIRS += -I$(DEPTH)/src/common/
@@ -54,9 +51,20 @@ include $(DEPTH)/src/drivers/beagle/makefile.in
 OBJS = $(addprefix $(DEPTH)/, $(SRCS:.c=.o))
 ASM_OBJS = $(addprefix $(DEPTH)/, $(RAW_ASMS:.s=.o))
 
-$(APP_NAME): init_once $(RAW_ASMS) $(SRCS)
-	$(LINK) $(LINKFLAGS) $(OBJS) $(ASM_OBJS) -o $(APP_NAME).elf
+.PHONY: binary
+binary: $(APP_NAME).bin
+
+.PHONY: dump
+dump: $(APP_NAME).dump
+
+$(APP_NAME).elf: init_once $(RAW_ASMS) $(SRCS)
+	$(LD) $(LDFLAGS) $(OBJS) $(ASM_OBJS) -o $(APP_NAME).elf
+
+$(APP_NAME).bin: $(APP_NAME).elf
 	$(OBJCOPY) -O binary $(APP_NAME).elf $(APP_NAME).bin
+
+$(APP_NAME).dump: $(APP_NAME).elf
+	$(OBJDUMP) -d $(APP_NAME).elf > $(APP_NAME).dump
 
 # Rule to build object files from .c sources - $@ contains the current target
 $(SRCS): init_once
@@ -65,13 +73,12 @@ $(SRCS): init_once
 
 # Rule to build object files from .s sources - $@ contains the current target
 $(RAW_ASMS): init_once
-	@$(ASM) $(ASMFLAGS) $(DEPTH)/$@ -o $(DEPTH)/$(@:.s=.o)
-	@echo $(@:.c=.o)
+	@$(AS) $(ASMFLAGS) $(DEPTH)/$@ -o $(DEPTH)/$(@:.s=.o)
+	@echo $(@:.s=.o)
 
 .PHONY: clean
-.IGNORE: clean
 clean:
-	@rm $(OBJS) $(ASM_OBJS) $(APP_NAME).elf $(APP_NAME).map $(APP_NAME).bin 2>/dev/null
+	@rm $(OBJS) $(ASM_OBJS) $(APP_NAME).dump $(APP_NAME).elf $(APP_NAME).map $(APP_NAME).bin 2>/dev/null || :
 
 .PHONY: backup
 backup:
@@ -85,5 +92,6 @@ help:
 init_once:
 	@echo --------------------------------------------------------------------------------
 	@echo Target: $(TARGET)
-	@echo CC: $(CC)
+	@echo CROSS_COMPILE = $(CROSS_COMPILE)
 	@echo --------------------------------------------------------------------------------
+
