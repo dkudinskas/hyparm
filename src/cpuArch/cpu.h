@@ -59,14 +59,14 @@
 
 #define isb() __asm__ __volatile__ ("" : : : "memory")
 
+/*
+ * NOP must be encoded as 'MOV r0,r0' in ARM code and 'MOV r8,r8' in Thumb code, see ARMv7-A/R ARM C.2
+ */
 #define nop() __asm__ __volatile__("mov\tr0,r0\t@ nop\n\t");
 
 #define arch_align_stack(x) (x)
 
 int cleanupBeforeLinux(void);
-
-void enableInterrupts(void);
-void disableInterrupts(void);
 
 void icache_enable(void);
 void icache_disable(void);
@@ -74,5 +74,78 @@ void dcache_enable(void);
 void dcache_disable(void);
 void l2_cache_enable(void);
 void l2_cache_disable(void);
+
+
+#ifdef CONFIG_CPU_ARCH_ARMV7_A
+
+#define CONFIG_CPU_ARCH_ARMV7
+
+#endif
+
+
+#if (defined(CONFIG_CPU_ARCH_ARMV6) || defined(CONFIG_CPU_ARCH_ARMV7))
+
+#define enableInterrupts() \
+  { \
+    __asm__ __volatile__ ("CPSIE i"); \
+  }
+
+#define disableInterrupts() \
+  { \
+    __asm__ __volatile__ ("CPSID i"); \
+  }
+
+#elif defined(CONFIG_CPU_ARCH_ARMV5)
+
+#define enableInterrupts() \
+  { \
+    __asm__ __volatile__ ("MRS %0, cpsr; BIC %0, %0, #0x80; MSR cpsr, %0"::"r"(0)); \
+  }
+
+#define disableInterrupts() \
+  { \
+    __asm__ __volatile__ ("MRS %0, cpsr; ORR %0, %0, #0x80; MSR cpsr, %0"::"r"(0)); \
+  }
+
+#else
+
+#error Unsupported CPU architecture!
+
+#endif
+
+
+#if defined(CONFIG_CPU_ARCH_ARMV7)
+
+/*
+ * Infinite loop waiting for interrupts (even if they are masked)
+ */
+#define infiniteIdleLoop() \
+  { \
+    while (TRUE) \
+    { \
+      __asm__ __volatile__ ("WFI"); \
+    } \
+  }
+
+#elif (defined(CONFIG_CPU_ARCH_ARMV5T) || defined(CONFIG_CPU_ARCH_ARMV6))
+
+/*
+ * Infinite loop entering debug mode, which puts the processor in a low-power state
+ * TODO: must be in halting mode for this to work (usually true)
+ */
+#define infiniteIdleLoop() \
+  { \
+    while (TRUE) \
+    { \
+      __asm__ __volatile__ ("BKPT 0xbad"); \
+    } \
+  }
+
+#else
+
+#error Unsupported CPU architecture!
+
+#endif
+
 
 #endif

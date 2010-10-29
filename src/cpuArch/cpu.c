@@ -22,23 +22,6 @@ extern void v7_flush_dcache_all(u32int dev);
  * CPU specific code
  */
 
-/***
- * we have no support for interrupts just yet
- ***/
-void enableInterrupts()
-{
-  asm volatile("mrs %0, cpsr\n\t"
-               "bic %0, %0, #0x80\n\t"
-               "msr cpsr, %0 "
-  ::"r"(0));
-}
-void disableInterrupts()
-{
-  asm volatile("mrs %0, cpsr\n\t"
-               "orr %0, %0, #0x80\n\t"
-               "msr cpsr, %0 "
-  ::"r"(0));
-}
 
 /***
  * CACHE functions
