@@ -415,11 +415,7 @@ struct opcode32 * decodeInstruction(u32int instr)
     // could not match the instruction in coproc as well! lunch time...
     serial_putstring("decodeInstruction: undefined instruction found: ");
     serial_putint((u32int)instr);
-    serial_newline();
-    while (TRUE)
-    {
-      // DO NOTHING
-    }
+    serial_ERROR("");
   }
 
   // to make compiler happy
@@ -467,10 +463,6 @@ void dumpInstrString(u32int instr)
   // could not match the instruction in coproc as well! lunch time...
   serial_putstring("decoder: dumpInstr: undefined instruction found: ");
   serial_putint((u32int)instr);
-  serial_newline();
-  while (TRUE)
-  {
-    // DO NOTHING
-  }
+  serial_ERROR("");
 }
 

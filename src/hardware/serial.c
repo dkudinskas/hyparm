@@ -147,8 +147,5 @@ void serial_ERROR(char * msg)
   serial_putstring(msg);
   // i know its wrong to do it here, but this function will be removed eventually anyway
   disableInterrupts();
-  while(TRUE)
-  {
-    // HALT EXECUTION HERE
-  }
+  infiniteIdleLoop();
 }
