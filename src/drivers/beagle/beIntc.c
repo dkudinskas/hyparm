@@ -1,6 +1,9 @@
 #include "beIntc.h"
 #include "memFunctions.h"
 
+static inline u32int intcRegReadBE(u32int regOffs);
+static inline void intcRegWriteBE(u32int regOffs, u32int value);
+
 struct InterruptControllerBE * intcBE;
 
 void intcBEInit()
@@ -66,14 +69,13 @@ void intcBEInit()
 }
 
 
-u32int intcRegReadBE(u32int regOffs)
+static inline u32int intcRegReadBE(u32int regOffs)
 {
-  u32int * regPtr = (u32int*)(intcBE->baseAddress | regOffs);
-  volatile u32int value = *regPtr;
-  return value;
+  volatile u32int * regPtr = (u32int*)(intcBE->baseAddress | regOffs);
+  return *regPtr;
 }
 
-void intcRegWriteBE(u32int regOffs, u32int value)
+static inline void intcRegWriteBE(u32int regOffs, u32int value)
 {
   volatile u32int * regPtr = (u32int*)(intcBE->baseAddress | regOffs);
   *regPtr = value;

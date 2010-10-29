@@ -191,9 +191,6 @@ M_IRQ_95 Reserved       Reserved
 
 void intcBEInit(void);
 
-inline u32int intcRegReadBE(u32int regOffs);
-inline void intcRegWriteBE(u32int regOffs, u32int value);
-
 void unmaskInterruptBE(u32int interruptNumber);
 
 void maskInterruptBE(u32int interruptNumber);
