@@ -1,6 +1,12 @@
 #include "beGPTimer.h"
 #include "memFunctions.h"
 
+static inline bool gptBEidValid(u32int id);
+static inline bool gptBEisExtended(u32int id);
+static inline u32int gptBEgetBaseAddr(u32int id);
+static inline u32int gptBEregRead(u32int id, u32int reg);
+static inline void gptBEregWrite(u32int id, u32int reg, u32int val);
+
 struct GeneralPurposeTimerBE* gpts[BE_GPTIMER_COUNT];
 
 void gptBEInit(u32int id)
@@ -66,17 +72,15 @@ void gptBEReset(u32int id)
 #endif
 }
 
-bool gptBEidValid(u32int id)
+static inline bool gptBEidValid(u32int id)
 {
   return (id > 0) && (id <= BE_GPTIMER_COUNT);
 }
 
-bool gptBEisExtended(u32int id)
+static inline bool gptBEisExtended(u32int id)
 {
   return ((id == 1) || (id == 2) || (id == 10));
-
 }
-
 
 u32int loadFromGPTimer(u32int id, u32int reg)
 {
@@ -108,13 +112,13 @@ void storeToGPTimer(u32int id, u32int reg, u32int value)
 }
 
 
-u32int gptBEregRead(u32int id, u32int reg)
+static inline u32int gptBEregRead(u32int id, u32int reg)
 {
   volatile u32int * regPtr = (volatile u32int *) (gpts[id-1]->baseAddress + reg);
   return  *regPtr;
 } 
 
-void gptBEregWrite(u32int id, u32int reg, u32int val)
+static inline void gptBEregWrite(u32int id, u32int reg, u32int val)
 {
   volatile u32int * regPtr = (volatile u32int *) (gpts[id-1]->baseAddress + reg);
   *regPtr = val;
@@ -207,7 +211,7 @@ void gptBEWaitForReset(u32int id)
   }
 }
 
-u32int gptBEgetBaseAddr(u32int id)
+static inline u32int gptBEgetBaseAddr(u32int id)
 {
   u32int base = 0;
   switch(id)

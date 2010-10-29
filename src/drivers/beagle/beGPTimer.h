@@ -174,16 +174,6 @@ void gptBEDumpRegisters(u32int id);
 
 u32int getInternalCounterVal(u32int clkId);
 
-inline bool gptBEidValid(u32int id);
-
-inline bool gptBEisExtended(u32int id);
-
-inline u32int gptBEregRead(u32int id, u32int reg);
-
-inline void gptBEregWrite(u32int id, u32int reg, u32int val);
-
-inline u32int gptBEgetBaseAddr(u32int id);
-
 struct GeneralPurposeTimerBE 
 {
   u32int baseAddress;
