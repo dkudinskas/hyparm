@@ -3,7 +3,7 @@
 
 image_header_t getImageHeader(ulong uImageAddr)
 {
-  int nmIndex;
+  u32int nmIndex;
   image_header_t * hdrPtr = (image_header_t *)uImageAddr;
   image_header_t imgHdr;
 

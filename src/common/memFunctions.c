@@ -158,7 +158,7 @@ u32int mallocBytes(u32int size)
 
 void dumpMallocs()
 {
-  int i = 0;
+  u32int i = 0;
   memchunkListElem * listPtr = chunkListRoot;
   serial_putstring("Dumping malloc internal structures:");
   serial_putstring("***********************************");
@@ -183,3 +183,4 @@ void dumpMallocs()
   }
   serial_ERROR("done");
 }
+
