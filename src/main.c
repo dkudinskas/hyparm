@@ -13,6 +13,7 @@
 #include "cpu.h"
 #include "beIntc.h"
 #include "beGPTimer.h"
+#include "beCM.h"
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 
@@ -34,6 +35,9 @@ GCONTXT * gContext;
 
 int main(int argc, char *argv[])
 {
+  /* save power: cut the clocks to the display subsystem */
+  cmDisableDssClocks();
+
   int ret = 0;
   kernAddr = 0;
   initrdAddr = 0;
