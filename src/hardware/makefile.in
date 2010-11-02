@@ -1,0 +1,15 @@
+SRCS += src/hardware/hardwareLibrary.c
+SRCS += src/hardware/sdram.c
+SRCS += src/hardware/sramInternal.c
+SRCS += src/hardware/timer32k.c
+SRCS += src/hardware/prm.c
+SRCS += src/hardware/clockManager.c
+SRCS += src/hardware/sysControlModule.c
+SRCS += src/hardware/LED.c
+SRCS += src/hardware/serial.c
+SRCS += src/hardware/gptimer.c
+SRCS += src/hardware/gpmc.c
+SRCS += src/hardware/gpio.c
+SRCS += src/hardware/intc.c
+SRCS += src/hardware/uart.c
+SRCS += src/hardware/sdma.c

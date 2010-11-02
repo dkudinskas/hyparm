@@ -1,0 +1,38 @@
+  Global setup:
+ Download and install Git
+  git config --global user.name "Your Name"
+  git config --global user.email "email"
+  Add your public key
+        
+Next steps:
+  mkdir hyparm
+  cd hyparm
+  git init
+  touch README
+  git add README
+  git commit -m 'first commit'
+  git remote add origin git@github.com:gendalfas/hyparm.git
+  git push origin master
+      
+Existing Git Repo?
+  cd existing_git_repo
+  git remote add origin git@github.com:gendalfas/hyparm.git
+  git push origin master
+      
+Importing a Subversion Repo?
+  Click here
+      
+ssh-keygen -t rsa -C "tekkub@gmail.com"
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/tekkub/.ssh/id_rsa):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/tekkub/.ssh/id_rsa.
+Your public key has been saved in /home/tekkub/.ssh/id_rsa.pub.
+The key fingerprint is:
+01:0f:f4:3b:ca:85:d6:17:a1:7d:f0:68:9d:f0:a2:db tekkub@gmail.com
+
+
+
+git clone git@github.com:gendalfas/hyparm.git
+git pull git@github.com:gendalfas/hyparm.git master

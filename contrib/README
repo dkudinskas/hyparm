@@ -1,0 +1,7 @@
+eclipse-code-formatter-profile.xml
+
+  An Eclipse code formatter profile that enforces most of the formatting
+  rules used in the hypervisor C source files. Use this profile when
+  editing those files with Eclipse. Do not use this to reformat entire C
+  files, as not all of our rules can be expressed in terms of an Eclipse
+  code formatter profile.
