@@ -36,5 +36,3 @@ The key fingerprint is:
 
 git clone git@github.com:gendalfas/hyparm.git
 git pull git@github.com:gendalfas/hyparm.git master
-
-extra content
