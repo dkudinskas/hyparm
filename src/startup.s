@@ -56,8 +56,8 @@ _start:
   LDR     R0,=guestContextSpace
   BL      registerGuestContext
 
-  /* Fix RAM exception vectors on BeagleBoard */
-  .ifdef TARGET_BEAGLE
+  /* Fix RAM exception vectors on TI OMAP 35xx */
+  .ifdef CONFIG_CPU_TI_OMAP_35XX
     LDR   R4, [pc, #0x20]
     LDR   R3, [pc, #0x20]
     STR   R3, [R4], #4
@@ -75,8 +75,8 @@ _start:
 
   /* Batch installation of interupt handlers */
   /* This section of code is order dependant */
-  .ifndef TARGET_BEAGLE
-    /* On the BeagleBoard R4 is already correct */
+  .ifndef CONFIG_CPU_TI_OMAP_35XX
+    /* On the TI OMAP 35xx R4 is already correct */
     LDR   R4,=undefined_addr @First interupt handler address
     LDR   R4, [R4]
   .endif

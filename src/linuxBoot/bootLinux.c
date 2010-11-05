@@ -6,7 +6,7 @@
 #include "addressing.h"
 
 extern GCONTXT * getGuestContext(void);
-extern inline void callKernel(int, int, u32int, u32int) __attribute__((noreturn));
+extern void callKernel(int, int, u32int, u32int) __attribute__((noreturn));
 
 static void setup_start_tag(void);
 static void setup_revision_tag(void);

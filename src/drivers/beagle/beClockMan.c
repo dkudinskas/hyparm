@@ -130,3 +130,9 @@ void setClockSource(u32int clockID, bool sysClock)
     clkManRegWriteBE(PER_CM, CM_CLKSEL_PER, regVal);
   } // else ends
 }
+
+void cmDisableDssClocks()
+{
+  clkManRegWriteBE(DSS_CM, CM_FCLKEN_DSS, 0);
+  clkManRegWriteBE(DSS_CM, CM_ICLKEN_DSS, 0);
+}

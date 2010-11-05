@@ -5,6 +5,9 @@
 
 extern GCONTXT * getGuestContext(void);
 
+static inline u32int getUartNumber(u32int phyAddr);
+static inline u32int getUartBaseAddr(u32int id);
+
 struct Uart * uart[3];
 
 void initUart(u32int uartID)
@@ -229,7 +232,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 
 }
 
-inline u32int getUartNumber(u32int phyAddr)
+static inline u32int getUartNumber(u32int phyAddr)
 {
   if ((phyAddr >= UART1) && (phyAddr < (UART1+UART1_SIZE)))
   {
@@ -249,7 +252,7 @@ inline u32int getUartNumber(u32int phyAddr)
   }
 }
 
-inline u32int getUartBaseAddr(u32int id)
+static inline u32int getUartBaseAddr(u32int id)
 {
   switch(id)
   {
@@ -264,3 +267,4 @@ inline u32int getUartBaseAddr(u32int id)
   }
   return -1;
 }
+

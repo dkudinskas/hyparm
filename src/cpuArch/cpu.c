@@ -22,23 +22,6 @@ extern void v7_flush_dcache_all(u32int dev);
  * CPU specific code
  */
 
-/***
- * we have no support for interrupts just yet
- ***/
-void enableInterrupts()
-{
-  asm volatile("mrs %0, cpsr\n\t"
-               "bic %0, %0, #0x80\n\t"
-               "msr cpsr, %0 "
-  ::"r"(0));
-}
-void disableInterrupts()
-{
-  asm volatile("mrs %0, cpsr\n\t"
-               "orr %0, %0, #0x80\n\t"
-               "msr cpsr, %0 "
-  ::"r"(0));
-}
 
 /***
  * CACHE functions
@@ -51,7 +34,7 @@ static inline unsigned int get_cr(void)
   return val;
 }
 
-static inline void set_cr(unsigned int val)
+static inline void set_cr(u32int val)
 {
   asm volatile("mcr p15, 0, %0, c1, c0, 0  @ set CR"
     : : "r" (val) : "cc");
@@ -130,8 +113,6 @@ void l2_cache_disable()
 
 int cleanupBeforeLinux()
 {
-  unsigned int i;
-
   /*
    * this function is called just before we call linux
    * it prepares the processor for linux
@@ -152,9 +133,8 @@ int cleanupBeforeLinux()
   /* invalidate L2 cache also */
   v7_flush_dcache_all(BOARD_DEVICE_TYPE);
 
-  i = 0;
   /* mem barrier to sync up things */
-  asm("mcr p15, 0, %0, c7, c10, 4": :"r"(i));
+  asm("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
 
   l2_cache_enable();
   enableInterrupts();

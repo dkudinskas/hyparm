@@ -35,6 +35,9 @@ GCONTXT * gContext;
 
 int main(int argc, char *argv[])
 {
+  /* save power: cut the clocks to the display subsystem */
+  cmDisableDssClocks();
+
   int ret = 0;
   kernAddr = 0;
   initrdAddr = 0;
@@ -128,9 +131,9 @@ int main(int argc, char *argv[])
 
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
+/*
   setClockSource(2, FALSE);
   toggleTimerFclk(2, TRUE);
-/*
   gptBEEnableOverflowInterrupt(2);
   gptBESet10msTick(2);
   unmaskInterruptBE(GPT2_IRQ);

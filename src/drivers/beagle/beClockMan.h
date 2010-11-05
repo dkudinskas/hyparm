@@ -7,6 +7,15 @@
 // uncomment me to enable debug : 
 #define BE_CLK_MAN_DBG
 
+/*
+ * This driver is for the CM Module of the TI OMAP 35xx only.
+ * Sanity check!
+ */
+#ifndef CONFIG_CPU_TI_OMAP_35XX
+#error Incompatible driver 
+#endif
+
+
 /************************
  * REGISTER DEFINITIONS *
  ************************/
@@ -240,7 +249,6 @@
 #define CM_CLKSTST_USBHOST          0x0000004C // interface clock activity status, R/O
 
 
-
 void clkManBEInit(void);
 
 inline u32int clkManRegReadBE(u32int module, u32int regOffs);
@@ -248,6 +256,8 @@ inline void clkManRegWriteBE(u32int module, u32int regOffs, u32int value);
 
 void setClockSource(u32int clockID, bool sysClock);
 void toggleTimerFclk(u32int clockID, bool enable);
+
+void cmDisableDssClocks(void);
 
 struct ClockManagerBE
 {

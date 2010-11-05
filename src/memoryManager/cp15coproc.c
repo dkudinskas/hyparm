@@ -117,7 +117,7 @@ void initCRB(CREG * crb)
 
 void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr, u32int val)
 {
-  int index = crbIndex(CRn, opc1, CRm, opc2);
+  u32int index = crbIndex(CRn, opc1, CRm, opc2);
   u32int oldVal = crbPtr[index].value;
   crbPtr[index].value = val;
 
@@ -178,7 +178,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
 u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr)
 {
   CREG reg;
-  int index = crbIndex(CRn, opc1, CRm, opc2);
+  u32int index = crbIndex(CRn, opc1, CRm, opc2);
   reg = crbPtr[index];
 
 #ifdef COPROC_DEBUG
