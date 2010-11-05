@@ -160,8 +160,6 @@ void gptBEEnable(u32int id)
     serial_newline();
   }
 #endif
-/* omap_dm_clk_enable(timer->fclk);
-   omap_dm_clk_enable(timer->iclk); */
 }
 
 void gptBESet10msTick(u32int id)

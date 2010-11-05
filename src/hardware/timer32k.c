@@ -7,6 +7,7 @@
 extern GCONTXT * getGuestContext(void);
 
 static u32int timer32SysconfReg = 0;
+static u32int counterVal = 0;
 
 u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
 {
@@ -40,6 +41,7 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
       // for now, just load the real counter value.
       volatile u32int * memPtr = (u32int*)address;
       val = *memPtr;
+      val = val >> 12;
 #ifdef TIMER32K_DBG
       serial_putstring(dev->deviceName);
       serial_putstring(" load counter value ");
@@ -78,4 +80,6 @@ void initTimer32k()
 {
   // sysconf value is emulated. Reset to zero
   timer32SysconfReg = 0;
+  volatile u32int * memPtr = (u32int*)(TIMER32K_BASE+REG_TIMER_32K_COUNTER);
+  counterVal = *memPtr;
 }

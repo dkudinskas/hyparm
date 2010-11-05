@@ -69,36 +69,28 @@ descriptor* createHypervisorPageTable()
   setDomain(GUEST_ACCESS_DOMAIN, client);
 
   //serial
-  const u32int serial = SERIAL_BASE;
-  if(addSmallPtEntry(hypervisorPtd, serial, serial,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0) != 0)
-  {
-    serial_ERROR("Added serial mapping failed. Entering infinite loop.");
-  }
-
+  smallMapMemory(hypervisorPtd, UART3, (UART3 + UART3_SIZE -1),
+                               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
   // uart1
-  const u32int uart1 = 0x4806a000;
-  if(addSmallPtEntry(hypervisorPtd, uart1, uart1,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0) != 0)
-  {
-    serial_ERROR("Added uart1 mapping failed. Entering infinite loop.");
-  }
-
+  smallMapMemory(hypervisorPtd, UART1, (UART1 + UART1_SIZE -1), 
+                               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
+  // clock manager
+  smallMapMemory(hypervisorPtd, CLOCK_MANAGER, (CLOCK_MANAGER+CLOCK_MANAGER_SIZE-1),
+                               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
   // interrupt controller
-  const u32int interruptController = 0x48200000;
-  addSectionPtEntry(hypervisorPtd, interruptController,interruptController,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+  smallMapMemory(hypervisorPtd, INTERRUPT_CONTROLLER, (INTERRUPT_CONTROLLER+INTERRUPT_CONTROLLER_SIZE-1),
+                          HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   // gptimer1 - this looks dirty
-  addSectionPtEntry(hypervisorPtd, GPTIMER1,GPTIMER1,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+  smallMapMemory(hypervisorPtd, GPTIMER1, (GPTIMER1+GPTIMER1_SIZE-1),
+                          HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   // gptimer2
-  const u32int gptimer2Addr = 0x49032000;
-  if(addSmallPtEntry(hypervisorPtd,gptimer2Addr,gptimer2Addr,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0) != 0)
-  {
-    serial_ERROR("Added gptimer2 mapping failed. Entering infinite loop.");
-  }
+  smallMapMemory(hypervisorPtd, GPTIMER2, (GPTIMER2+GPTIMER2_SIZE-1),
+                          HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   /*
   Exception vectors
-
   For some reason these do not seem to work unless mapped in as sections?!
   */
 

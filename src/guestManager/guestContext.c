@@ -228,6 +228,8 @@ void initGuestContext(GCONTXT * gContext)
 {
   serial_putstring("Initializing guest context @ address ");
   serial_putint( (u32int)(&gContext) );
+  serial_putstring(" blockTrace @ ");
+  serial_putint( (u32int)(&gContext->blockHistory[0]) );
   serial_newline();
 
   /* zero context!!! */

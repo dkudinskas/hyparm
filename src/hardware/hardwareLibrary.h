@@ -55,6 +55,8 @@
 #define Q1_L4_INT_PER_SIZE             0x00100000
 #define UART3                            0x49020000
 #define UART3_SIZE                       0x00002000
+#define GPTIMER2                         0x49032000
+#define GPTIMER2_SIZE                    0x00002000
 #define GPIO2                            0x49050000
 #define GPIO2_SIZE                       0x00002000
 #define GPIO3                            0x49052000

@@ -13,6 +13,7 @@
 #include "cpu.h"
 #include "beIntc.h"
 #include "beGPTimer.h"
+#include "beClockMan.h"
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 
@@ -122,8 +123,19 @@ int main(int argc, char *argv[])
   /* initialise physical interrupt controller */
   intcBEInit();
 
+  /* initialise physical clock manager */
+  clkManBEInit();
+
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
+  setClockSource(2, FALSE);
+  toggleTimerFclk(2, TRUE);
+/*
+  gptBEEnableOverflowInterrupt(2);
+  gptBESet10msTick(2);
+  unmaskInterruptBE(GPT2_IRQ);
+  enableInterrupts();
+  gptBEStart(2);*/
 
   // does not return
   doLinuxBoot(&imageHeader, kernAddr, initrdAddr);

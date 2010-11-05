@@ -139,8 +139,8 @@
 #define GPT_TPIR_POS_INC_1MS             232000
 #define GPT_TNIR_NEG_INC_1MS            -768000
 #define GPT_REG_TLDR_LOAD_VALUE_1MS  0xFFFFFFE0
-#define GPT_REG_TOWR_OVF_1MS               1000
-#define GPT_REG_TOWR_OVF_10MS            100000 //temp
+#define GPT_REG_TOWR_OVF_1MS                  1
+#define GPT_REG_TOWR_OVF_10MS              1000
 
 void gptBEInit(u32int id);
 

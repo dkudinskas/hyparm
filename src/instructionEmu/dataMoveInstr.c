@@ -1180,7 +1180,11 @@ u32int ldrInstruction(GCONTXT * context)
   // P = 0 and W == 1 then LDR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
+    dumpGuestContext(context);
     serial_ERROR("LDR as user mode unimplemented.");
+    // 1. get guest PT entry for this addr.
+    // 2. check permissions: if usr can read, continue
+    // 3. if usr cannot read, panic?
   }
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))

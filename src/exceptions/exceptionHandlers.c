@@ -14,6 +14,7 @@
 #include "cpu.h"
 #include "guestInterrupts.h"
 #include "intc.h"
+#include "be32kTimer.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -431,6 +432,26 @@ void dumpLinuxFunctionInfo(u32int nextPC)
       break;
     case 0xc0014c80:
       serial_putstring("LINUX: vmalloc_init");
+      serial_newline();
+      break;
+    case 0xc0015494:
+      serial_putstring("LINUX: vfs_caches_init_early");
+      serial_newline();
+      break;
+    case 0xc000f1f0:
+      serial_putstring("LINUX: mem_init");
+      serial_newline();
+      break;
+    case 0xc0014ee4:
+      serial_putstring("kmem_cache_init");
+      serial_newline();
+      break;
+    case 0xc00172ec:
+      serial_putstring("idr_init_cache");
+      serial_newline();
+      break;
+    case 0xc001ad78:
+      serial_putstring("calibrate_delay");
       serial_newline();
       break;
   }
