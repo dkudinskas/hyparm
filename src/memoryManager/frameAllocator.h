@@ -48,7 +48,7 @@ u32int getDomainMaxOffset(u8int domain);
 //bitmap frame table manipulation
 u8int markFrameUsed_offset(u32int offset);
 u8int freeFrame_offset(u32int offset);
-u8int isFrameFree_offset(u32int offset);
+u8int isFrameUsed_offset(u32int offset);
 u32int getFreeFrames(u32int numFrames, u8int domain);
 
 //Initialisor, no protection against this being called twice.

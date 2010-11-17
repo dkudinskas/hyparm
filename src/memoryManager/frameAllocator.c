@@ -147,7 +147,7 @@ u32int* allocMultipleFrames(u32int numFrames, u8int domain)
 
 /**
 * Allocate a single frame given the physical address
-* return 0 if frame allocation succeeds
+* return 0 if frame allocation fails
 * else returns the address
 **/
 u32int* allocFrameAddr(u32int phyAddr)
@@ -161,7 +161,7 @@ u32int* allocFrameAddr(u32int phyAddr)
   u32int offset = addrToOffset(phyAddr);
 
   u32int* returnVal = 0;  //assume failure
-  if(!isFrameFree_offset(offset))
+  if(!isFrameUsed_offset(offset))
   {
     markFrameUsed_offset(offset);
     returnVal = (u32int*) phyAddr;
@@ -182,7 +182,7 @@ u32int* allocFrameAddr(u32int phyAddr)
 u8int isFrameFree(u32int addr)
 {
   u32int offset = addrToOffset(addr);
-  return isFrameFree_offset(offset);
+  return isFrameUsed_offset(offset);
 }
 
 /**
@@ -357,7 +357,7 @@ u32int* offsetToAddr(u32int offset)
 * returns zero if frame is not in use
 * non-zero if frame is in use
 **/
-u8int isFrameFree_offset(u32int offset)
+u8int isFrameUsed_offset(u32int offset)
 {
   //check offset isn't out of bounds
   if(offset > FRAME_TABLE_ENTRIES)
