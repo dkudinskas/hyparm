@@ -75,6 +75,10 @@ void dcache_disable(void);
 void l2_cache_enable(void);
 void l2_cache_disable(void);
 
+#define iCacheFlushByMVA(vAddress) \
+  { \
+    __asm__ __volatile__ ("MCR p15, 0, %0, c7, c5, 1": :"r" (vAddress) ); \
+  }
 
 #ifdef CONFIG_CPU_ARCH_ARMV7_A
 

@@ -95,6 +95,9 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     gc->hdlFunct = decodedInstruction->hdlFunct;
     // replace end of block instruction with hypercall of the appropriate code
     *currAddress = (INSTR_SWI | bcIndex);
+    // if guest instruction stream is mapped with caching enabled, must maintain
+    // i and d cache coherency
+    // iCacheFlushByMVA((u32int)currAddress);
   }
 
   
