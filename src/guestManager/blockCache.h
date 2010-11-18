@@ -4,7 +4,7 @@
 #include "types.h"
 #include "common.h"
 
-#define BLOCK_CACHE_SIZE    512
+#define BLOCK_CACHE_SIZE    128
 
 // uncomment me for block cache debug: #define BLOCK_CACHE_DEBUG
 

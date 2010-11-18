@@ -1177,15 +1177,6 @@ u32int ldrInstruction(GCONTXT * context)
   u32int offsetAddress = 0;
   u32int baseAddress = 0;
 
-  // P = 0 and W == 1 then LDR as if user mode
-  if ((preOrPost == 0) && (writeBack != 0))
-  {
-    dumpGuestContext(context);
-    serial_ERROR("LDR as user mode unimplemented.");
-    // 1. get guest PT entry for this addr.
-    // 2. check permissions: if usr can read, continue
-    // 3. if usr cannot read, panic?
-  }
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -1262,6 +1253,41 @@ u32int ldrInstruction(GCONTXT * context)
   {
     dumpGuestContext(context);
     serial_ERROR("LDR Rd [Rn, Rm/#imm] unaligned address!\n");
+  }
+
+  // P = 0 and W == 1 then LDR as if user mode
+  if ((preOrPost == 0) && (writeBack != 0))
+  {
+    // 1. get guest PT entry for this addr.
+    descriptor* ptd = context->virtAddrEnabled ? context->PT_shadow : context->PT_physical;
+    sectionDescriptor* ptEntry = (sectionDescriptor*)getPageTableEntry(ptd, address);
+    u8int accPerm = ptEntry->ap10 | (ptEntry->ap2 << 2);
+    serial_putstring("LDRT: address ");
+    serial_putint(address);
+    serial_newline();
+    serial_putstring("LDRT: ptEntry ");
+    serial_putint((u32int)ptEntry);
+    serial_newline();
+    serial_putstring("LDRT: accPerm ");
+    serial_putint_nozeros((u32int)accPerm);
+    serial_newline();
+    // 2. check permissions: if usr cannot read, panic
+    if (accPerm == 0b000)
+    {
+      dumpGuestContext(context);
+      serial_ERROR("LDRT: PT entry AP: USR N/A PRIV N/A");
+    }
+    if (accPerm == 0b001)
+    {
+      dumpGuestContext(context);
+      serial_ERROR("LDRT: PT entry AP: USR N/A PRIV R/W");
+    }
+    if (accPerm == 0b101)
+    {
+      dumpGuestContext(context);
+      serial_ERROR("LDRT: PT entry AP: USR N/A PRIV R/O");
+    }
+    // 3. check permissions: if usr can read, continue
   }
 
   // DO the actual load from memory

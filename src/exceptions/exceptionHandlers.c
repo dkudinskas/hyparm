@@ -443,15 +443,59 @@ void dumpLinuxFunctionInfo(u32int nextPC)
       serial_newline();
       break;
     case 0xc0014ee4:
-      serial_putstring("kmem_cache_init");
+      serial_putstring("LINUX: kmem_cache_init");
       serial_newline();
       break;
     case 0xc00172ec:
-      serial_putstring("idr_init_cache");
+      serial_putstring("LINUX: idr_init_cache");
       serial_newline();
       break;
     case 0xc001ad78:
-      serial_putstring("calibrate_delay");
+      serial_putstring("LINUX: calibrate_delay");
+      serial_newline();
+      break;
+    case 0xc0008378:
+      serial_putstring("LINUX: kernel_init");
+      serial_newline();
+      break;
+    case 0xc0011aa0:
+      serial_putstring("LINUX: sched_init_smp");
+      serial_newline();
+      break;
+    case 0xc001275c:
+      serial_putstring("LINUX: init_workqueues");
+      serial_newline();
+      break;
+    case 0xc0012700:
+      serial_putstring("LINUX: usermodehelper_init");
+      serial_newline();
+      break;
+    case 0xc0018cc4:
+      serial_putstring("LINUX: driver_init");
+      serial_newline();
+      break;
+    case 0xc0066744:
+      serial_putstring("LINUX: init_irq_proc");
+      serial_newline();
+      break;
+    case 0xc001f240:
+      serial_putstring("LINUX: do_one_initcall");
+      serial_newline();
+      break;
+    case 0xc004fd34:
+      serial_putstring("LINUX: flush_scheduled_work");
+      serial_newline();
+      break;
+    case 0xc008a214:
+      serial_putstring("LINUX: sys_access");
+      serial_newline();
+      break;
+    case 0xc0008f94:
+      serial_putstring("LINUX: prepare_namespace");
+      serial_newline();
+      break;
+    case 0xc001f3dc:
+      serial_putstring("LINUX: init_post");
       serial_newline();
       break;
   }

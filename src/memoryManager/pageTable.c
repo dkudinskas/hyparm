@@ -2413,7 +2413,7 @@ void pageTableEdit(u32int address, u32int newVal)
 #endif
     if(firstLevelEntry)
     {
-      if(SECTION == newGuestEntry->type)
+      if(newGuestEntry->type == SECTION)
       {
         copySectionEntry((sectionDescriptor*)newGuestEntry, (sectionDescriptor*)shadowEntry);
       }
