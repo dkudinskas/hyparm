@@ -16,9 +16,31 @@ u32int nopInstruction(GCONTXT * context)
 
 u32int bxInstruction(GCONTXT * context)
 {
-  dumpGuestContext(context);
-  serial_ERROR("BX unfinished\n");
-  return 0;
+  u32int instr = context->endOfBlockInstr;
+  
+  u32int nextPC = 0;
+
+  u32int instrCC = (instr >> 28) & 0xF;
+  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
+
+  if (!evalCC(instrCC, cpsrCC))
+  {
+      nextPC = context->R15 + 4;
+      return nextPC;
+  }
+
+  //check if switching to thumb mode
+  u32int regDest = (instr & 0x0000000F);
+  u32int addr = loadGuestGPR(regDest, context);
+
+  if (addr & 0x1)
+  {
+    dumpGuestContext(context);
+    serial_ERROR("BX Rm switching to Thumb. Unimplemented\n");
+  }
+
+  nextPC = addr & 0xFFFFFFFE;
+  return nextPC;
 }
 
 u32int mulInstruction(GCONTXT * context)
