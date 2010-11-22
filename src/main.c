@@ -37,6 +37,8 @@ int main(int argc, char *argv[])
 {
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
+  
+  indicator = FALSE;
 
   int ret = 0;
   kernAddr = 0;

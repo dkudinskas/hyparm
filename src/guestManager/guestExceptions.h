@@ -36,5 +36,6 @@ void tickEvent(u32int irqNumber);
 
 void deliverInterrupt(void);
 
+void deliverAbort(void);
 
 #endif

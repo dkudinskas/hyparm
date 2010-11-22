@@ -16,7 +16,7 @@
 struct crbEntry
 {
   u32int value;
-  u8int  valid;
+  bool   valid;
 };
 
 typedef struct crbEntry CREG;

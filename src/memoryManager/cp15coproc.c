@@ -120,6 +120,8 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   u32int index = crbIndex(CRn, opc1, CRm, opc2);
   u32int oldVal = crbPtr[index].value;
   crbPtr[index].value = val;
+  // if we are writting to this register, it's probably valid already!
+  crbPtr[index].valid = TRUE;
 
 #ifdef COPROC_DEBUG
   serial_putstring("setCreg (CRn=");

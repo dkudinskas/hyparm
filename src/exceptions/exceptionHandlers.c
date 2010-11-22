@@ -12,7 +12,7 @@
 #include "beIntc.h"
 #include "beGPTimer.h"
 #include "cpu.h"
-#include "guestInterrupts.h"
+#include "guestExceptions.h"
 #include "intc.h"
 #include "be32kTimer.h"
 
@@ -55,8 +55,13 @@ void do_software_interrupt(u32int code)
 
   gContext->R15 = nextPC;
 
-  // check if there is an interrupt pending!
-  if (gContext->guestIrqPending == TRUE)
+  // deliver interrupts
+  if (gContext->guestAbtPending)
+  {
+    dumpGuestContext(gContext);
+    serial_ERROR("Exception handlers: guest abort in SWI handler! implement.");
+  }
+  else if (gContext->guestIrqPending)
   {
     deliverInterrupt();
   }
@@ -72,8 +77,8 @@ void do_software_interrupt(u32int code)
 
 void do_data_abort()
 {
-  // interrupts are disabled in hypervisor execution
-//  enable_interrupts();
+  // make sure interrupts are disabled while we deal with data abort.
+  disableInterrupts();
   switch(getDFSR().fs3_0)
   {
     case perm_section:
@@ -84,7 +89,17 @@ void do_data_abort()
 
       // ATM dont expect anything else to permission fault except load/stores
       emulateLoadStoreGeneric(gc, getDFAR());
-      gc->R15 = gc->R15 + 4;
+      if (!gc->guestAbtPending)
+      {
+        // ONLY move to the next instruction, if the guest hasn't aborted... 
+        gc->R15 = gc->R15 + 4;
+      }
+      else
+      {
+        // deliver the abort!
+        deliverAbort();
+        scanBlock(gc, gc->R15);
+      }
       break;
     }
     case translation_section:
@@ -104,6 +119,7 @@ void do_data_abort()
       dumpGuestContext(getGuestContext());
       serial_ERROR("Entering infinite loop");
   }
+  enableInterrupts();
 }
 
 void do_data_abort_hypervisor()

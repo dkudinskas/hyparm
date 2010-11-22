@@ -21,5 +21,5 @@ u32int getHash(u32int key)
   key = key ^ (key >> 4);
   key = key * 2057; // key = (key + (key << 3)) + (key << 11);
   key = key ^ (key >> 16);
-  return key;  
+  return key >> 2;
 }

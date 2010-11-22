@@ -1,4 +1,4 @@
-#include "guestInterrupts.h"
+#include "guestExceptions.h"
 #include "guestContext.h"
 #include "intc.h"
 #include "cpu.h"
@@ -51,6 +51,36 @@ void deliverInterrupt(void)
     else
     {
       context->R15 = 0x00000018;
+    }
+  }
+  else
+  {
+    serial_ERROR("deliverInterrupt: IRQ to be delivered with guest vmem off.");
+  }
+  // now prepared the global guest environment. scanner will scan correct code.
+}
+
+void deliverAbort()
+{
+  GCONTXT * context = getGuestContext();
+  // 1. reset abt pending flag
+  context->guestAbtPending = FALSE;
+  // 2. copy CPSR into SPSR_ABT
+  context->SPSR_ABT = context->CPSR;
+  // 3. put guest CPSR in ABT mode
+  context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_ABT;
+  // 4. set LR to PC+8
+  context->R14_IRQ = context->R15 + 8;
+  // 5. set PC to guest irq handler address
+  if (context->virtAddrEnabled)
+  {
+    if (context->guestHighVectorSet)
+    {
+      context->R15 = 0xffff0010;
+    }
+    else
+    {
+      context->R15 = 0x00000010;
     }
   }
   else

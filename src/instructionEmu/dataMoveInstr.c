@@ -2,6 +2,8 @@
 #include "commonInstrFunctions.h"
 #include "defines.h"
 #include "blockCache.h"
+#include "cp15coproc.h"
+#include "mmu.h"
 
 void invalidDataMoveTrap(char * msg, GCONTXT * gc)
 {
@@ -1259,14 +1261,25 @@ u32int ldrInstruction(GCONTXT * context)
   if ((preOrPost == 0) && (writeBack != 0))
   {
     // 1. get guest PT entry for this addr.
-    descriptor* ptd = context->virtAddrEnabled ? context->PT_shadow : context->PT_physical;
-    sectionDescriptor* ptEntry = (sectionDescriptor*)getPageTableEntry(ptd, address);
+    sectionDescriptor* ptEntry = (sectionDescriptor*)getPageTableEntry(context->PT_os, address);
+    if (ptEntry->type == FAULT)
+    {
+      // 1. set CP15 Data Fault Status Register to translation fault
+      u32int dfsr = (translation_section & 0xF) | ((translation_section & 0x10) << 6);
+      dfsr |= GUEST_ACCESS_DOMAIN << 4;
+      setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
+      // 2. set CP15 Data Fault Address Register to 'address'
+      setCregVal(6, 0, 0, 0, context->coprocRegBank, address);
+      // 3. set guest abort pending flag, return
+      context->guestAbtPending = TRUE;
+      return context->R15;
+    }
     u8int accPerm = ptEntry->ap10 | (ptEntry->ap2 << 2);
     serial_putstring("LDRT: address ");
     serial_putint(address);
     serial_newline();
     serial_putstring("LDRT: ptEntry ");
-    serial_putint((u32int)ptEntry);
+    serial_putint((u32int)*((u32int*)ptEntry));
     serial_newline();
     serial_putstring("LDRT: accPerm ");
     serial_putint_nozeros((u32int)accPerm);

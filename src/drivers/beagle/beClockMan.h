@@ -4,8 +4,7 @@
 #include "types.h"
 #include "serial.h"
 
-// uncomment me to enable debug : 
-#define BE_CLK_MAN_DBG
+// uncomment me to enable debug : #define BE_CLK_MAN_DBG
 
 /*
  * This driver is for the CM Module of the TI OMAP 35xx only.
