@@ -70,7 +70,7 @@ void deliverAbort()
   // 3. put guest CPSR in ABT mode
   context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_ABT;
   // 4. set LR to PC+8
-  context->R14_IRQ = context->R15 + 8;
+  context->R14_ABT = context->R15 + 8;
   // 5. set PC to guest irq handler address
   if (context->virtAddrEnabled)
   {
