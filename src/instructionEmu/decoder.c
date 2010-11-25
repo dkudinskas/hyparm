@@ -213,8 +213,10 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 // RRX: shift right and extend, Rd can be PC
 {1,  &rrxInstruction,       0x01a0f060, 0x0feffff0, "RRX PC, Rm"},
 {0,  &rrxInstruction,       0x01a00060, 0x0fef0ff0, "RRX Rd, Rm"},
-// UNIMPLEMENTED
-{1,  &rorInstruction,       0x01a00070, 0x0fef00f0, "ROR unimplemented"},
+// ROR: reg case destination unpredictable. imm case dest can be PC.
+{0,  &rorInstruction,       0x01a00070, 0x0fef00f0, "ROR Rd, Rm, Rn"},
+{1,  &rorInstruction,       0x01a0f060, 0x0feff070, "ROR PC, Rm, #imm"},
+{0,  &rorInstruction,       0x01a00060, 0x0fef0070, "ROR Rd, Rm, #imm"},
 // BIC with Rd = PC end block, other are fine.
 {1,  &bicInstruction,       0x01c0f000, 0x0fe0f010, "BIC PC, Rn, Rm, #shamt"},
 {1,  &bicInstruction,       0x01c0f010, 0x0fe0f090, "BIC PC, Rn, Rm, Rshamt"},
