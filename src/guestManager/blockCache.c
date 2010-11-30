@@ -5,6 +5,12 @@
 static u32int collisionCounter = 0;
 #endif
 
+#define NUMBER_OF_BITMAPS       16
+#define MEMORY_PER_BITMAP       0x10000000
+#define MEMORY_PER_BITMAP_BIT  (MEMORY_PER_BITMAP / 32) // should be 8 megabytes
+
+static u32int execBitMap[NUMBER_OF_BITMAPS];
+
 void initialiseBlockCache(BCENTRY * bcache)
 {
   int i = 0;
@@ -24,6 +30,11 @@ void initialiseBlockCache(BCENTRY * bcache)
     bcache[i].hyperedInstruction = 0;
     bcache[i].valid = FALSE;
     bcache[i].hdlFunct = 0;
+  }
+  
+  for (i = 0; i < NUMBER_OF_BITMAPS; i++)
+  {
+    execBitMap[i] = 0;
   }
 }
 
@@ -95,7 +106,10 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAd
     bcAddr[index].hyperedInstruction = hypInstruction;
     bcAddr[index].hdlFunct = hdlFunct;
     bcAddr[index].valid = TRUE;
-  }    
+  }
+  
+  // set bitmap entry to executed
+  setExecBitMap(blkEndAddr);
 }
 
 BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr)
@@ -233,15 +247,22 @@ void explodeCache(BCENTRY * bcache)
       removeCacheEntry(bcache, i);
     }
   }
+  for (i = 0; i < NUMBER_OF_BITMAPS; i++)
+  {
+    execBitMap[i] = 0;
+  }
 }
 
 // finds block cache entries that include a given address, clears them
 void validateCachePreChange(BCENTRY * bcache, u32int address)
 {
-  u32int cacheIndex = 0;
-  while( (cacheIndex = findEntryForAddress(bcache, address)) != -1 )
+  if (isBitmapSetForAddress(address))
   {
-    removeCacheEntry(bcache, cacheIndex);
+    u32int cacheIndex = 0;
+    while( (cacheIndex = findEntryForAddress(bcache, address)) != -1 )
+    {
+      removeCacheEntry(bcache, cacheIndex);
+    }
   }
 }
 
@@ -291,5 +312,29 @@ void dumpBlockCacheEntry(u32int index, BCENTRY * bcache)
   serial_putstring(" hdlFunct = ");
   serial_putint(bcache[index].hdlFunct);
   serial_newline();
+}
+
+void setExecBitMap(u32int addr)
+{
+  u32int index = addr / MEMORY_PER_BITMAP; 
+  u32int bitNumber = (addr & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
+
+  execBitMap[index] = execBitMap[index] | (1 << bitNumber);
+}
+
+void clearExecBitMap(u32int addr)
+{
+  u32int index = addr / MEMORY_PER_BITMAP; 
+  u32int bitNumber = (addr & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
+
+  execBitMap[index] = execBitMap[index] & ~(1 << bitNumber);
+}
+
+bool isBitmapSetForAddress(u32int addr)
+{
+  u32int index = addr / MEMORY_PER_BITMAP; 
+  u32int bitNumber = (addr & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
+  u32int bitResult = execBitMap[index] & (1 << bitNumber); 
+  return (bitResult != 0);
 }
 

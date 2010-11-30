@@ -44,4 +44,10 @@ void validateCacheMultiPreChange(BCENTRY * bcache, u32int startAddress, u32int e
 
 void dumpBlockCacheEntry(u32int index, BCENTRY * bcache);
 
+void setExecBitMap(u32int addr);
+
+void clearExecBitMap(u32int addr);
+
+bool isBitmapSetForAddress(u32int addr);
+
 #endif
