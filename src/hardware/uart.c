@@ -38,6 +38,28 @@ void resetUart(u32int uartID)
 {
   u32int uID = uartID-1;
   // reset to default register values
+  uart[uID]->loopback    = FALSE;
+  uart[uID]->dll         = 0x00000000;
+  uart[uID]->rhr         = 0x00000000;
+  uart[uID]->thr         = 0x00000000;
+  uart[uID]->dlh         = 0x00000000;
+  uart[uID]->ier         = 0x00000000;
+  uart[uID]->iir         = 0x00000001;
+  uart[uID]->fcr         = 0x00000000;
+  uart[uID]->efr         = 0x00000000;
+  uart[uID]->lcr         = 0x00000000;
+  setUartMode(uartID);
+  uart[uID]->mcr         = 0x00000000;
+  uart[uID]->xon1        = 0x00000000;
+  uart[uID]->lsr         = 0x00000060;
+  uart[uID]->icr         = 0x00000000;
+  uart[uID]->xon2        = 0x00000000;
+  uart[uID]->msr         = 0x00000000;
+  uart[uID]->tcr         = 0x0000000F;
+  uart[uID]->xoff1       = 0x00000000;
+  uart[uID]->spr         = 0x00000000;
+  uart[uID]->tlr         = 0x00000000;
+  uart[uID]->xoff2       = 0x00000000;
   uart[uID]->mdr1        = 0x00000007;
   uart[uID]->mdr2        = 0x00000000;
   uart[uID]->uasr        = 0x00000000;
@@ -72,10 +94,127 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
 
   switch (regOffs)
   {
+    case UART_DLL_REG:
+    {
+      if (getUartMode(uID+1) == operational)
+      {
+        // load RHR
+        serial_ERROR("UART load RHR unimplemented");
+      }
+      else
+      {
+        // load DLL
+        value = uart[uID]->dll;
+      }
+      break;
+    }
+    case UART_DLH_REG:
+      if (getUartMode(uID+1) == operational)
+      {
+        // load IER
+        value = uart[uID]->ier;
+      }
+      else
+      {
+        // load DLH
+        value = uart[uID]->dlh;
+      }
+      break;
+    case UART_IIR_REG:
+      if (getUartMode(uID+1) == configB)
+      {
+        // load EFR
+        value = uart[uID]->efr;
+      }
+      else
+      {
+        // load IIR
+        value = uart[uID]->iir;
+      }
+      break;
+    case UART_LCR_REG:
+      value = uart[uID]->lcr;
+      break;
+    case UART_MCR_REG:
+      if (getUartMode(uID+1) == configB)
+      {
+        // load XON1_ADDR1
+        serial_ERROR("UART load XON1_ADDR1 unimplemented");
+      }
+      else
+      {
+        // load MCR
+        value = uart[uID]->mcr;
+      }
+      break;
+    case UART_LSR_REG:
+      if (getUartMode(uID+1) == configB)
+      {
+        // load XON2_ADDR2
+        serial_ERROR("UART load XON2_ADDR2 unimplemented");
+      }
+      else
+      {
+        // load LSR
+        value = uart[uID]->lsr;
+      }
+      break;
+    case UART_MSR_REG:
+      if (getUartMode(uID+1) == configB)
+      {
+        // store TCR/XOFF1
+        serial_ERROR("UART store TCR/XOFF1 unimplemented");
+      }
+      else
+      {
+        // store MSR/TCR
+        if ( ((uart[uID]->efr & UART_EFR_ENHANCED_EN) == 0) ||
+             ((uart[uID]->mcr & UART_MCR_TCR_TLR) == 0) )
+        {
+          // sub-operational/sub-configA MSR_SPR mode, load modem status
+          value = uart[uID]->msr;
+        }
+        else
+        {
+          // sub-operational/sub-configA TCR_TLR mode, load xmission control
+          serial_ERROR("UART store TCR unimplemented");
+        }
+      }
+      break;
+      serial_ERROR("UART load MSR/TCR/XOFF1 unimplemented");
+      break;
+    case UART_SPR_REG:
+      if (getUartMode(uID+1) == configB)
+      {
+        // store TLR/XOFF2
+        serial_ERROR("UART load TLR/XOFF2 unimplemented");
+      }
+      else
+      {
+        // store SPR/TLR
+        if ( ((uart[uID]->efr & UART_EFR_ENHANCED_EN) == 0) ||
+             ((uart[uID]->mcr & UART_MCR_TCR_TLR) == 0) )
+        {
+          // sub-operational/sub-configA MSR_SPR mode, load scratchpad reg
+          value = uart[uID]->spr;
+        }
+        else
+        {
+          // sub-operational/sub-configA TCR_TLR mode, store TLR reg
+          serial_ERROR("UART store TLR unimplemented");
+        }
+      }
+      break;
+      serial_ERROR("UART load SPR/TLR/XOFF2 unimplemented");
+      break;
     case UART_MDR1_REG:
       value = uart[uID]->mdr1;
       break;
     case UART_MDR2_REG:
+    case UART_SFLSR_REG:
+    case UART_RESUME_REG:
+    case UART_SFREGL_REG:
+    case UART_SFREGH_REG:
     case UART_UASR_REG:
     case UART_SCR_REG:
     case UART_SSR_REG:
@@ -84,13 +223,17 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
     case UART_SYSS_REG:
     case UART_WER_REG:
       dumpGuestContext(getGuestContext());
-      serial_putstring("loadUart reg ");
+      serial_putstring("loadUart");
+      serial_putint_nozeros(uID+1);
+      serial_putstring(" reg ");
       serial_putint_nozeros(regOffs);
       serial_newline();
       serial_ERROR("UART: load from unimplemented register.");
     default:
       dumpGuestContext(getGuestContext());
-      serial_putstring("loadUart reg ");
+      serial_putstring("loadUart");
+      serial_putint_nozeros(uID+1);
+      serial_putstring(" reg ");
       serial_putint_nozeros(regOffs);
       serial_newline();
       serial_ERROR("UART: load from undefined register.");
@@ -141,6 +284,177 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 #endif
   switch (regOffs)
   {
+    case UART_DLL_REG:
+    {
+      if (getUartMode(uID+1) == operational)
+      {
+        // store THR
+        serial_ERROR("UART store THR unimplemented");
+      }
+      else
+      {
+        // store DLL
+        // can only be written before sleep mode is enabled
+        if ((uart[uID]->ier & UART_IER_SLEEP_MODE) != 0)
+        {
+          dumpGuestContext(gc);
+          serial_ERROR("UART writing DLL with sleep mode enabled!");
+        }
+        else
+        {
+          uart[uID]->dll = value;
+        }
+      }
+      break;
+    }
+    case UART_DLH_REG:
+      if (getUartMode(uID+1) == operational)
+      {
+        // store IER
+        // bits [4:7] Can be written only when EFR_REG[4] = 1
+        if ((uart[uID]->efr && UART_EFR_ENHANCED_EN) == 0)
+        {
+          // enchaned features disabled. only write bottom four bits
+          uart[uID]->ier = (uart[uID]->ier & 0xFFFFFFF0) | (value & 0xF);
+        }
+        else
+        {
+          // enchaned features enabled. write all 8 bits
+          uart[uID]->ier = (uart[uID]->ier & 0xFFFFFF00) | (value & 0xFF);
+        }
+      }
+      else
+      {
+        // store DLH
+        // can only be written before sleep mode is enabled
+        if ((uart[uID]->ier & UART_IER_SLEEP_MODE) != 0)
+        {
+          dumpGuestContext(gc);
+          serial_ERROR("UART writing DLH with sleep mode enabled!");
+        }
+        else
+        {
+          uart[uID]->dlh = value;
+        }
+      }
+      break;
+    case UART_FCR_REG:
+      if (getUartMode(uID+1) == configB)
+      {
+        // store EFR
+        uart[uID]->efr = value;
+      }
+      else
+      {
+        // store FCR
+        if ( ((value & UART_FCR_FIFO_EN) == UART_FCR_FIFO_EN) &&
+             ((uart[uID]->fcr & UART_FCR_FIFO_EN) == 0) )
+        {
+          // turning OFF RX/TX fifos.
+          serial_putstring("UART: warning: rx/tx fifos on!");
+          serial_newline();
+        }
+        else if ( ((uart[uID]->fcr & UART_FCR_FIFO_EN) == UART_FCR_FIFO_EN) &&
+                  ((value & UART_FCR_FIFO_EN) == 0) )
+        {
+          // turning ON RX/TX fifos.
+          serial_putstring("UART: warning: rx/tx fifos off!");
+          serial_newline();
+        }
+        // set new FCR value
+        uart[uID]->fcr = value;
+        // set 2 bits in IIR...
+        u32int iirFcrMirrorBits = ((uart[uID]->fcr & UART_FCR_FIFO_EN) == 0) 
+                                                  ? 0 : UART_IIR_FCR_MIRROR; 
+        uart[uID]->iir = (uart[uID]->iir & ~UART_IIR_FCR_MIRROR) | iirFcrMirrorBits;
+      }
+      break;
+    case UART_LCR_REG:
+      uart[uID]->lcr = value;
+      setUartMode(uID+1);
+      break;
+    case UART_MCR_REG:
+      if (getUartMode(uID+1) == configB)
+      {
+        // store XON1_ADDR1
+        serial_ERROR("UART store XON1_ADDR1 unimplemented");
+      }
+      else
+      {
+        // store MCR
+        
+        // must check if UART is being put to loopback mode
+        if ( ((value & UART_MCR_LOOPBACK_EN) == UART_MCR_LOOPBACK_EN) &&
+             ((uart[uID]->mcr & UART_MCR_LOOPBACK_EN) == 0) )
+        {
+          // putting UART in loopback mode!
+          uart[uID]->loopback = TRUE;
+          // adjust MSR register
+          serial_putstring("UART");
+          serial_putint_nozeros(uID+1);
+          serial_putstring(" loopback mode hack, magic number to MSR");
+          serial_newline();          
+          uart[uID]->msr = 0x96;
+        }
+        else if ( ((uart[uID]->mcr & UART_MCR_LOOPBACK_EN) == UART_MCR_LOOPBACK_EN) &&
+                  ((value & UART_MCR_LOOPBACK_EN) == 0) )
+        {
+          // switching off loopback mode!
+          uart[uID]->loopback = FALSE;
+        }
+        
+        // bits [4:7] Can be written only when EFR_REG[4] = 1
+        if ((uart[uID]->efr && UART_EFR_ENHANCED_EN) == 0)
+        {
+          // enchaned features disabled. only write bottom four bits
+          uart[uID]->mcr = (uart[uID]->mcr & 0xFFFFFFE0) | (value & 0x1F);
+        }
+        else
+        {
+          // enchaned features enabled. write all 8 bits
+          uart[uID]->mcr = (uart[uID]->mcr & 0xFFFFFFC0) | (value & 0x3F);
+        }
+      }
+      break;
+    case UART_LSR_REG:
+      if (getUartMode(uID+1) == configB)
+      {
+        // store XON2_ADDR2
+        serial_ERROR("UART store XON2_ADDR2 unimplemented");
+      }
+      else
+      {
+        /* OK, LINUX thinks there is some register here, but undocumented in SPRUF!
+         * #define UART_ICR        0x05     Index Control Register 
+         * http://lxr.linux.no/linux+v2.6.28.1/include/linux/serial_reg.h#L233 */
+        uart[uID]->icr = value;
+      }
+      break;
+    case UART_MSR_REG:
+      serial_ERROR("UART store MSR/TCR/XOFF1 unimplemented");
+      break;
+    case UART_SPR_REG:
+      if (getUartMode(uID+1) == configB)
+      {
+        // store TLR/XOFF2
+        serial_ERROR("UART store TLR/XOFF2 unimplemented");
+      }
+      else
+      {
+        // store SPR/TLR
+        if ( ((uart[uID]->efr & UART_EFR_ENHANCED_EN) == 0) ||
+             ((uart[uID]->mcr & UART_MCR_TCR_TLR) == 0) )
+        {
+          // sub-operational/sub-configA MSR_SPR mode, store scratchpad reg
+          uart[uID]->spr = value;
+        }
+        else
+        {
+          // sub-operational/sub-configA TCR_TLR mode, store TLR reg
+          serial_ERROR("UART store TLR unimplemented");
+        }
+      }
+      break;
     case UART_MDR1_REG:
     {
       serial_putstring(dev->deviceName);
@@ -212,9 +526,15 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       serial_ERROR(" storing to R/O register (MVR)");
       break;
     case UART_MDR2_REG:
+    case UART_SFLSR_REG:
+    case UART_RESUME_REG:
+    case UART_SFREGL_REG:
+    case UART_SFREGH_REG:
     case UART_WER_REG:
       dumpGuestContext(getGuestContext());
-      serial_putstring("storeUart reg ");
+      serial_putstring("storeUart");
+      serial_putint_nozeros(uID+1);
+      serial_putstring(" reg ");
       serial_putint_nozeros(regOffs);
       serial_putstring(" value ");
       serial_putint(value);
@@ -222,7 +542,9 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       serial_ERROR("UART: store to unimplemented register.");
     default:
       dumpGuestContext(getGuestContext());
-      serial_putstring("storeUart reg ");
+      serial_putstring("storeUart");
+      serial_putint_nozeros(uID+1);
+      serial_putstring(" reg ");
       serial_putint_nozeros(regOffs);
       serial_putstring(" value ");
       serial_putint(value);
@@ -268,3 +590,45 @@ static inline u32int getUartBaseAddr(u32int id)
   return -1;
 }
 
+  
+void setUartMode(u32int uartID)
+{
+#ifdef UART_DBG
+  serial_putstring("UART");
+  serial_putint_nozeros(uartID);
+  serial_putstring(": set mode to ");
+#endif
+  u32int uID = uartID-1;
+  if ((uart[uID]->lcr & UART_LCR_DIV_EN) == UART_LCR_DIV_EN)
+  {
+    if ((uart[uID]->lcr & 0xBF) != 0xBF)
+    {
+      uart[uID]->mode = configA;
+#ifdef UART_DBG
+      serial_putstring("configA");
+#endif
+    }
+    else
+    {
+      uart[uID]->mode = configB;
+#ifdef UART_DBG
+      serial_putstring("configB");
+#endif
+    }
+  }
+  else
+  {
+    uart[uID]->mode = operational;
+#ifdef UART_DBG
+      serial_putstring("operational");
+#endif
+  }
+#ifdef UART_DBG
+  serial_newline(); 
+#endif
+}
+
+uartMode getUartMode(u32int uartID)
+{
+  return uart[uartID-1]->mode;
+}
