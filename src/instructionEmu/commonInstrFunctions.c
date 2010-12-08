@@ -23,6 +23,10 @@ void error_function(char * msg, GCONTXT * context)
   {
     dumpGuestContext(context);
   }
+  else
+  {
+    dumpGuestContext(getGuestContext());
+  }
   while(TRUE)
   {
     // DEAD loop

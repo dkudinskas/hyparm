@@ -39,6 +39,13 @@ void resetUart(u32int uartID)
   u32int uID = uartID-1;
   // reset to default register values
   uart[uID]->loopback    = FALSE;
+  int i = 0;
+  for (i = 0; i < RX_FIFO_SIZE; i++)
+  {
+    uart[uID]->rxFifo[i] = 0;
+  }
+  uart[uID]->rxFifoPtr = 0;
+
   uart[uID]->dll         = 0x00000000;
   uart[uID]->rhr         = 0x00000000;
   uart[uID]->thr         = 0x00000000;
@@ -99,7 +106,37 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       if (getUartMode(uID+1) == operational)
       {
         // load RHR
-        serial_ERROR("UART load RHR unimplemented");
+        // check LSR RX bit. if zero, return nil.
+        if ((uart[uID]->lsr & UART_LSR_RX_FIFO_E) == 0)
+        {
+          value = 0;
+        }
+        else
+        {
+          // there's stuff in the FIFO! get char from RHR
+          value = uart[uID]->rhr;
+          // adjust our fifo: all RX elements shift one position left
+          int i = 0;
+          for (i = 0; i < RX_FIFO_SIZE-1; i++)
+          {
+            uart[uID]->rxFifo[i] = uart[uID]->rxFifo[i+1]; 
+          }
+          // adjust FIFO ptr
+          uart[uID]->rxFifoPtr--;
+          // if we had previously overrun, clear LSR overrun bit
+          uart[uID]->lsr &= ~UART_LSR_RX_OE;
+          // set new RHR: if FIFO now empty, RHR zero and lsr bit cleared.
+          // otherwise, FIFO char 0 is new RHR
+          if (uart[uID]->rxFifoPtr == 0)
+          {
+            uart[uID]->rhr = 0; 
+            uart[uID]->lsr &= ~UART_LSR_RX_FIFO_E;
+          }
+          else
+          {
+            uart[uID]->rhr = uart[uID]->rxFifo[0];
+          }
+        }
       }
       else
       {
@@ -289,7 +326,36 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       if (getUartMode(uID+1) == operational)
       {
         // store THR
-        serial_ERROR("UART store THR unimplemented");
+        if (uart[uID]->loopback)
+        {
+          // do we have space in RX FIFO?
+          if (uart[uID]->rxFifoPtr >= RX_FIFO_SIZE)
+          {
+            // can't receive anymore. drop value, set overrun LSR status bit
+            uart[uID]->lsr |= UART_LSR_RX_OE;
+          }
+          else
+          {
+            // character goes straight back into RX
+            if (uart[uID]->rxFifoPtr == 0)
+            {
+              // first char in FIFO, is also RHR
+              uart[uID]->rhr = (u8int)(value & 0xFF);
+            }
+            uart[uID]->rxFifo[uart[uID]->rxFifoPtr] = (u8int)(value & 0xFF);
+            // set LSR rx status bit to indicate RX data
+            uart[uID]->lsr |= UART_LSR_RX_FIFO_E;
+            // increment FIFO pointer
+            uart[uID]->rxFifoPtr++;
+          }
+        }
+        else
+        {
+          // don't need to adjust TX bits in LSR, as we will always
+          // finish transmitting this character first, before going back to guest
+          // therefore, the non-existant TX FIFO is trully always empty.
+          serial_putchar((u8int)value);
+        }
       }
       else
       {
@@ -322,6 +388,15 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
           // enchaned features enabled. write all 8 bits
           uart[uID]->ier = (uart[uID]->ier & 0xFFFFFF00) | (value & 0xFF);
         }
+        if ((value & UART_IER_SLEEP_MODE) != 0)
+        {
+#ifdef UART_DBG
+          serial_putstring("UART");
+          serial_putint_nozeros(uID+1);
+          serial_putstring(": sent to sleep mode!");
+          serial_newline();
+#endif
+        }
       }
       else
       {
@@ -351,15 +426,35 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
              ((uart[uID]->fcr & UART_FCR_FIFO_EN) == 0) )
         {
           // turning OFF RX/TX fifos.
+#ifdef UART_DBG
           serial_putstring("UART: warning: rx/tx fifos on!");
           serial_newline();
+#endif
         }
         else if ( ((uart[uID]->fcr & UART_FCR_FIFO_EN) == UART_FCR_FIFO_EN) &&
                   ((value & UART_FCR_FIFO_EN) == 0) )
         {
           // turning ON RX/TX fifos.
+#ifdef UART_DBG
           serial_putstring("UART: warning: rx/tx fifos off!");
           serial_newline();
+#endif
+        }
+        if ((value & UART_FCR_RX_FIFO_CLR) != 0)
+        {
+          // clear our RX FIFO.
+          int i = 0;
+          for (i = 0; i < RX_FIFO_SIZE; i++)
+          {
+            uart[uID]->rxFifo[i] = 0;
+            uart[uID]->rxFifoPtr = 0;
+            uart[uID]->rhr = 0;
+            uart[uID]->lsr &= ~UART_LSR_RX_BI;
+            uart[uID]->lsr &= ~UART_LSR_RX_FE;
+            uart[uID]->lsr &= ~UART_LSR_RX_PE;
+            uart[uID]->lsr &= ~UART_LSR_RX_OE;
+            uart[uID]->lsr &= ~UART_LSR_RX_FIFO_E;
+          }
         }
         // set new FCR value
         uart[uID]->fcr = value;
@@ -390,16 +485,24 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
           // putting UART in loopback mode!
           uart[uID]->loopback = TRUE;
           // adjust MSR register
+#ifdef UART_DBG
           serial_putstring("UART");
           serial_putint_nozeros(uID+1);
           serial_putstring(" loopback mode hack, magic number to MSR");
           serial_newline();          
+#endif
           uart[uID]->msr = 0x96;
         }
         else if ( ((uart[uID]->mcr & UART_MCR_LOOPBACK_EN) == UART_MCR_LOOPBACK_EN) &&
                   ((value & UART_MCR_LOOPBACK_EN) == 0) )
         {
           // switching off loopback mode!
+#ifdef UART_DBG
+          serial_putstring("UART");
+          serial_putint_nozeros(uID+1);
+          serial_putstring(" loopback mode off.");
+          serial_newline();          
+#endif
           uart[uID]->loopback = FALSE;
         }
         

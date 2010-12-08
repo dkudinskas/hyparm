@@ -60,6 +60,14 @@
 #define UART_MCR_DTR            0x00000001 // Force DTR output (used in loopback) to active (low)
 #define UART_XON1_ADDR1_REG   0x00000010 // XON1 character, R/W
 #define UART_LSR_REG          0x00000014 // line status, R/O
+#define UART_LSR_RX_FIFO_STS    0x00000080 // break indication in RX
+#define UART_LSR_TX_SR_E        0x00000040 // THR (and fifo) and shift registers are empty
+#define UART_LSR_TX_FIFO_E      0x00000020 // THR (and fifo) is empty
+#define UART_LSR_RX_BI          0x00000010 // RX break detected
+#define UART_LSR_RX_FE          0x00000008 // RX frame error detected
+#define UART_LSR_RX_PE          0x00000004 // RX parity error detected
+#define UART_LSR_RX_OE          0x00000002 // RX overrun error detected
+#define UART_LSR_RX_FIFO_E      0x00000001 // 0: no data in RX fifo, 1: at least one char in RX FIFO
 #define UART_XON2_ADDR2_REG   0x00000014 // XON2 character, R/W
 #define UART_ICR_REG          0x00000014 // W/O ? UNDOCUMENTED reg, found in linux 
 #define UART_MSR_REG          0x00000018 // modem status, R/O
@@ -125,6 +133,9 @@
 #define UART_SYSS_REG_RSTDONE    0x00000001
 #define UART_WER_REG          0x0000005C // Wake-up enable register, R/W
 
+
+#define RX_FIFO_SIZE    64
+
 /* possible modes of operation: operational, configA and configB. */
 /* all modes have possible submodes to differentiate register access */
 enum UART_REG_ACCESS_MODE
@@ -152,6 +163,8 @@ struct Uart
 {
   uartMode mode;
   bool loopback;
+  u8int rxFifo[RX_FIFO_SIZE];
+  u32int rxFifoPtr;
   u32int dll;
   u32int rhr;
   u32int thr;

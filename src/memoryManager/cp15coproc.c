@@ -203,6 +203,17 @@ u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPt
   }
   else
   {
+    serial_putstring("getCreg (CRn=");
+    serial_putint(CRn);
+    serial_putstring(" opc1=");
+    serial_putint(opc1);
+    serial_putstring(" CRm=");
+    serial_putint(CRm);
+    serial_putstring(" opc2=");
+    serial_putint(opc2);
+    serial_putstring(") Value = ");
+    serial_putint(reg.value);
+    serial_newline();
     error_function("Undefined CP15 register!", 0);
     return 0;
   }
