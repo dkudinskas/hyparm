@@ -250,9 +250,6 @@
 
 void clkManBEInit(void);
 
-inline u32int clkManRegReadBE(u32int module, u32int regOffs);
-inline void clkManRegWriteBE(u32int module, u32int regOffs, u32int value);
-
 void setClockSource(u32int clockID, bool sysClock);
 void toggleTimerFclk(u32int clockID, bool enable);
 
