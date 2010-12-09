@@ -224,11 +224,6 @@ u32int strbInstruction(GCONTXT * context)
     // condition not met! allright, we're done here. next instruction...
     return context->R15 + 4;
   }
-  // P = 0 and W == 1 then STR as if user mode
-  if ((preOrPost == 0) && (writeBack != 0))
-  {
-    serial_ERROR("STRB as user mode unimplemented.");
-  }
   if (regSrc == 15)
   {
     serial_ERROR("STRB source register PC UNPREDICTABLE case.");
@@ -295,6 +290,42 @@ u32int strbInstruction(GCONTXT * context)
   else
   {
     address = baseAddress;
+  }
+
+  // P = 0 and W == 1 then STR as if user mode
+  if ((preOrPost == 0) && (writeBack != 0))
+  {
+    // 1. get guest PT entry for this addr.
+    sectionDescriptor* ptEntry = (sectionDescriptor*)getPageTableEntry(context->PT_os, address);
+    if (ptEntry->type == FAULT)
+    {
+      // 1. set CP15 Data Fault Status Register to translation fault
+      u32int dfsr = (translation_section & 0xF) | ((translation_section & 0x10) << 6);
+      dfsr |= GUEST_ACCESS_DOMAIN << 4;
+      setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
+      // 2. set CP15 Data Fault Address Register to 'address'
+      setCregVal(6, 0, 0, 0, context->coprocRegBank, address);
+      // 3. set guest abort pending flag, return
+      context->guestAbtPending = TRUE;
+      return context->R15;
+    }
+    u8int accPerm = ptEntry->ap10 | (ptEntry->ap2 << 2);
+    // 2. check permissions: if usr cannot read, panic
+    if (accPerm != 0b011)
+    {
+      serial_putstring("STRBT: address ");
+      serial_putint(address);
+      serial_newline();
+      serial_putstring("STRBT: ptEntry ");
+      serial_putint((u32int)*((u32int*)ptEntry));
+      serial_newline();
+      serial_putstring("STRBT: accPerm ");
+      serial_putint_nozeros((u32int)accPerm);
+      serial_newline();
+      dumpGuestContext(context);
+      serial_ERROR("STRBT: PT entry doesn't allow user write access! throw guest abt!");
+    }
+    // if usr can write, continue
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
