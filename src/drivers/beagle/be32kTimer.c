@@ -1,4 +1,5 @@
 #include "be32kTimer.h"
+#include "debug.h"
 
 static u32int baseVA = 0;
 
@@ -15,7 +16,7 @@ void beInitTimer32k(void)
   baseVA = findVAforPA(TIMER32K_BASE);
   if (baseVA == 0)
   {
-    serial_ERROR("could not find VA for 32kTimer PA");
+    DIE_NOW(0, "could not find VA for 32kTimer PA");
   }
 }
 
@@ -24,7 +25,7 @@ u32int getCounterVal(void)
   u32int addr = findVAforPA(TIMER32K_BASE+REG_TIMER_32K_COUNTER);
   if (addr == 0)
   {
-    serial_ERROR("could not find VA for 32kTimer PA");
+    DIE_NOW(0, "could not find VA for 32kTimer PA");
   }
   else
   {

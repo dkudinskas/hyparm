@@ -1,4 +1,5 @@
 #include "serial.h"
+#include "debug.h"
 #include <stdio.h>
 #include "types.h"
 
@@ -80,22 +81,5 @@ void serial_putbyte(u8int nr)
 
 int printableChar(char c)
 {
-  printf("\n\nSerial.c\nprintableChar method not implemented!\nIn infinite loop\n\n");
-
-  while(TRUE)
-  {
-    /* infinite loop */
-  }
-
-  return 0; //make compiler happy
-}
-
-void serial_ERROR(char * msg)
-{
-  serial_putstring(msg);
-  printf("\n");
-  while(TRUE)
-  {
-    // HALT EXECUTION HERE
-  }
+  DIE_NOW(0, "printableChar not implemented!");
 }

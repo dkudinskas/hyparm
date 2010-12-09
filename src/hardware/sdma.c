@@ -2,6 +2,7 @@
 #include "pageTable.h" // for getPhysicalAddress()
 #include "guestContext.h"
 #include "memFunctions.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 struct Sdma * sdma;
@@ -12,7 +13,7 @@ void initSdma()
   sdma = (struct Sdma*)mallocBytes(sizeof(struct Sdma));
   if (sdma == 0)
   {
-    serial_ERROR("Failed to allocate sdma.");
+    DIE_NOW(0, "Failed to allocate sdma.");
   }
   else
   {
@@ -106,7 +107,7 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int address)
       serial_putstring("loadSdma reg ");
       serial_putint_nozeros(regOffs);
       serial_newline();
-      serial_ERROR("SDMA: load from unimplemented register.");
+      DIE_NOW(0, "SDMA: load from unimplemented register.");
       break;
   } // switch ends
 
@@ -153,7 +154,7 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int address)
       serial_putstring(" reg ");
       serial_putint(regOffs);
       serial_newline();
-      serial_ERROR("SDMA: load from unimplemented register.");
+      DIE_NOW(0, "SDMA: load from unimplemented register.");
       break;
     default:
       dumpGuestContext(getGuestContext());
@@ -162,7 +163,7 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int address)
       serial_putstring(" reg ");
       serial_putint(regOffs);
       serial_newline();
-      serial_ERROR("SDMA: load from undefined register.");
+      DIE_NOW(0, "SDMA: load from undefined register.");
   }
 }
 
@@ -189,12 +190,12 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   switch (regOffs)
   {
     case SDMA_REVISION:
-      serial_ERROR("SDMA storing to revision register (read only)");
+      DIE_NOW(0, "SDMA storing to revision register (read only)");
       break;
     case SDMA_GCR:
       if (sdma->gcr != value)
       {
-        serial_ERROR("SDMA storing value to GCR!");
+        DIE_NOW(0, "SDMA storing value to GCR!");
       }
       sdma->gcr = value;
       found = TRUE;
@@ -219,7 +220,7 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       serial_putstring(" value ");
       serial_putint(value);
       serial_newline();
-      serial_ERROR("SDMA: store to unimplemented register.");
+      DIE_NOW(0, "SDMA: store to unimplemented register.");
       break;
   } // switch ends
 
@@ -312,7 +313,7 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       serial_putstring(" value ");
       serial_putint(value);
       serial_newline();
-      serial_ERROR("SDMA: store to undefined register.");
+      DIE_NOW(0, "SDMA: store to undefined register.");
   }
 }
 

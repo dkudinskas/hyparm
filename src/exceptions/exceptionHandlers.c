@@ -15,6 +15,7 @@
 #include "guestExceptions.h"
 #include "intc.h"
 #include "be32kTimer.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -43,7 +44,7 @@ void do_software_interrupt(u32int code)
     serial_putstring("exceptionHandlers: Dumping gc");
     serial_newline();
     dumpGuestContext(gContext);
-    serial_ERROR("exceptionHandlers: In infinite loop");
+    DIE_NOW(0, "exceptionHandlers: In infinite loop");
   }
 
   int i = 0;
@@ -59,7 +60,7 @@ void do_software_interrupt(u32int code)
   if (gContext->guestAbtPending)
   {
     dumpGuestContext(gContext);
-    serial_ERROR("Exception handlers: guest abort in SWI handler! implement.");
+    DIE_NOW(0, "Exception handlers: guest abort in SWI handler! implement.");
   }
   else if (gContext->guestIrqPending)
   {
@@ -105,19 +106,19 @@ void do_data_abort()
     case translation_section:
       printDataAbort();
       dumpGuestContext(getGuestContext());
-      serial_ERROR("Translation section data abort.");
+      DIE_NOW(0, "Translation section data abort.");
       break;
     case translation_page:
       printDataAbort();
       dumpGuestContext(getGuestContext());
-      serial_ERROR("Translation page data abort.");
+      DIE_NOW(0, "Translation page data abort.");
       break;
     default:
       serial_putstring("Unimplemented user data abort.");
       serial_newline();
       printDataAbort();
       dumpGuestContext(getGuestContext());
-      serial_ERROR("Entering infinite loop");
+      DIE_NOW(0, "Entering infinite loop");
   }
   enableInterrupts();
 }
@@ -153,11 +154,11 @@ void do_data_abort_hypervisor()
           serial_newline();
           dumpPageTable(gc->PT_os);
         }
-        serial_ERROR("Entering infinite loop");
+        DIE_NOW(0, "Entering infinite loop");
       }
       else
       {
-        serial_ERROR("Translation fault for area not in RAM! Entering Infinite Loop...");
+        DIE_NOW(0, "Translation fault for area not in RAM! Entering Infinite Loop...");
         /*
         I imagine there will be a few areas that we will need to map for the hypervisor only
         But not right now.
@@ -172,12 +173,12 @@ void do_data_abort_hypervisor()
       GCONTXT* gContext = getGuestContext();
       dumpGuestContext(gContext);
 
-      serial_ERROR("Entering infinite loop");
+      DIE_NOW(0, "Entering infinite loop");
       break;
   }
 
 
-  serial_ERROR("At end of hypervisor data abort handler. Stopping");
+  DIE_NOW(0, "At end of hypervisor data abort handler. Stopping");
 
   serial_putstring("Exiting data abort handler");
   serial_newline();
@@ -194,7 +195,7 @@ void do_undefined(void)
   GCONTXT* gContext = getGuestContext();
   dumpGuestContext(gContext);
 
-  serial_ERROR("Entering infinite loop.");
+  DIE_NOW(0, "Entering infinite loop.");
 }
 
 void do_undefined_hypervisor(void)
@@ -206,7 +207,7 @@ void do_undefined_hypervisor(void)
   GCONTXT* gContext = getGuestContext();
   dumpGuestContext(gContext);
 
-  serial_ERROR("Entering infinite loop.");
+  DIE_NOW(0, "Entering infinite loop.");
 }
 
 void do_prefetch_abort(void)
@@ -220,7 +221,7 @@ void do_prefetch_abort(void)
   GCONTXT* gContext = getGuestContext();
   dumpGuestContext(gContext);
 
-  serial_ERROR("Entering Infinite Loop.");
+  DIE_NOW(0, "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -232,7 +233,7 @@ void do_prefetch_abort_hypervisor(void)
   printPrefetchAbort();
   dumpGuestContext(getGuestContext());
 
-  serial_ERROR("Entering Infinite Loop.");
+  DIE_NOW(0, "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -247,7 +248,7 @@ void do_monitor_mode(void)
 
   /* Does the omap 3 implement monitor/secure mode? */
 
-  serial_ERROR("Entering Infinite Loop.");
+  DIE_NOW(0, "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -262,7 +263,7 @@ void do_monitor_mode_hypervisor(void)
 
   /* Does the omap 3 implement monitor/secure mode? */
 
-  serial_ERROR("Entering Infinite Loop.");
+  DIE_NOW(0, "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -290,7 +291,7 @@ void do_irq()
     default:
       serial_putstring("Received IRQ=");
       serial_putint(activeIrqNumber);
-      serial_ERROR(" Implement me!");
+      DIE_NOW(0, " Implement me!");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -326,7 +327,7 @@ void do_irq_hypervisor()
     default:
       serial_putstring("Received IRQ=");
       serial_putint(activeIrqNumber);
-      serial_ERROR(" Implement me!");
+      DIE_NOW(0, " Implement me!");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -343,7 +344,7 @@ void do_irq_hypervisor()
 
 void do_fiq(void)
 {
-  serial_ERROR("Received FIQ! Implement me.");
+  DIE_NOW(0, "Received FIQ! Implement me.");
 }
 
 void dumpLinuxFunctionInfo(u32int nextPC)

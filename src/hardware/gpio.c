@@ -3,6 +3,7 @@
 #include "pageTable.h" // for getPhysicalAddress()
 #include "guestContext.h"
 #include "memFunctions.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -13,7 +14,7 @@ void initGpio(u32int gpioNumber)
   gpio[gpioNumber-1] = (struct Gpio*)mallocBytes(sizeof(struct Gpio));
   if (gpio[gpioNumber-1] == 0)
   {
-    serial_ERROR("Failed to allocate Gpio.");
+    DIE_NOW(0, "Failed to allocate Gpio.");
   }
   else
   {
@@ -102,7 +103,7 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
       regOffset = phyAddr - GPIO6;
       break;
     default:
-      serial_ERROR("GPIO: loadGpio - invalid gpio number for base address");
+      DIE_NOW(0, "GPIO: loadGpio - invalid gpio number for base address");
   }
 
   u32int val = 0;
@@ -152,10 +153,10 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
     case GPIO_SETDATAOUT:
       serial_putstring("GPIO: load from unimplemented register ");
       serial_putint_nozeros(regOffset);
-      serial_ERROR(", panic.");
+      DIE_NOW(0, ", panic.");
       break;
     default:
-      serial_ERROR("Gpio: load on invalid register.");
+      DIE_NOW(0, "Gpio: load on invalid register.");
   }
 #ifdef GPIO_DBG
   serial_putstring(dev->deviceName);
@@ -223,13 +224,13 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       regOffset = phyAddr - GPIO6;
       break;
     default:
-      serial_ERROR("GPIO: storeGpio - invalid gpio number for base address");
+      DIE_NOW(0, "GPIO: storeGpio - invalid gpio number for base address");
   }
 
   switch (regOffset)
   {
     case GPIO_REVISION:
-      serial_ERROR("GPIO: storing to a R/O reg (revision)");
+      DIE_NOW(0, "GPIO: storing to a R/O reg (revision)");
       break;
     case GPIO_SYSCONFIG:
       if ((value & GPIO_SYSCONFIG_SOFTRESET) == GPIO_SYSCONFIG_SOFTRESET)
@@ -246,40 +247,40 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       }
       break;
     case GPIO_SYSSTATUS:
-      serial_ERROR("GPIO: storing to a R/O reg (sysStatus)");
+      DIE_NOW(0, "GPIO: storing to a R/O reg (sysStatus)");
       break;
     case GPIO_IRQSTATUS1:
       if (value != 0xffffffff)
       {
-        serial_ERROR("GPIO: clearing random interrupts. have a look!...");
+        DIE_NOW(0, "GPIO: clearing random interrupts. have a look!...");
       }
       gpio[gpioNum]->gpioIrqStatus1 = gpio[gpioNum]->gpioIrqStatus1 & ~value;
       break;
     case GPIO_IRQENABLE1:
       if (value != 0)
       {
-        serial_ERROR("GPIO: enabling interrupt! have a look at this...");
+        DIE_NOW(0, "GPIO: enabling interrupt! have a look at this...");
       }
       gpio[gpioNum]->gpioIrqEnable1 = value;
       break;
     case GPIO_IRQSTATUS2:
       if (value != 0xffffffff)
       {
-        serial_ERROR("GPIO: clearing random interrupts. have a look!...");
+        DIE_NOW(0, "GPIO: clearing random interrupts. have a look!...");
       }
       gpio[gpioNum]->gpioIrqStatus2 = gpio[gpioNum]->gpioIrqStatus2 & ~value;
       break;
     case GPIO_IRQENABLE2:
       if (value != 0)
       {
-        serial_ERROR("GPIO: enabling interrupt! have a look at this...");
+        DIE_NOW(0, "GPIO: enabling interrupt! have a look at this...");
       }
       gpio[gpioNum]->gpioIrqEnable2 = value;
       break;
     case GPIO_CTRL:
       if ((value & GPIO_CTRL_DISABLEMOD) == GPIO_CTRL_DISABLEMOD)
       {
-        serial_ERROR("GPIO: disabling module! investigate.");
+        DIE_NOW(0, "GPIO: disabling module! investigate.");
       }
       gpio[gpioNum]->gpioCtrl = value & ~GPIO_CTRL_RESERVED;
       break;
@@ -303,10 +304,10 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPIO_SETDATAOUT:
       serial_putstring("GPIO: store to unimplemented register ");
       serial_putint_nozeros(regOffset);
-      serial_ERROR(", panic.");
+      DIE_NOW(0, ", panic.");
       break;
     default:
-      serial_ERROR("Gpio: store to invalid register.");
+      DIE_NOW(0, "Gpio: store to invalid register.");
   }
 }
 

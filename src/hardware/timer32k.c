@@ -3,6 +3,7 @@
 #include "pageTable.h" // for getPhysicalAddress()
 #include "guestContext.h"
 #include "dataMoveInstr.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -56,7 +57,7 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
       serial_putint(phyAddr);
       serial_putstring(", virtual address: 0x");
       serial_putint(address);
-      serial_ERROR(" invalid register!");
+      DIE_NOW(0, " invalid register!");
     }
   }
   else
@@ -66,14 +67,14 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
     serial_putint(phyAddr);
     serial_putstring(", virtual address: 0x");
     serial_putint(address);
-    serial_ERROR(" invalid register access size (non32bit)");
+    DIE_NOW(0, " invalid register access size (non32bit)");
   }
   return val;
 }
 
 void storeTimer32k(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 {
-  serial_ERROR("32k timer store unimplemented.");
+  DIE_NOW(0, "32k timer store unimplemented.");
 }
 
 void initTimer32k()

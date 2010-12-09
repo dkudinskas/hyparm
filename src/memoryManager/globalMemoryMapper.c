@@ -1,6 +1,7 @@
 #include "globalMemoryMapper.h"
 #include "guestContext.h"
 #include "dataMoveInstr.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void); //from main.c
 
@@ -85,7 +86,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
     serial_putint(instr);
     serial_newline(); 
     dumpGuestContext(context);
-    serial_ERROR("Load/Store generic unimplemented\n");
+    DIE_NOW(0, "Load/Store generic unimplemented\n");
   } 
   // restore end of block instruction 
   context->endOfBlockInstr = eobInstrBackup;

@@ -6,6 +6,7 @@
 #include "memoryProtection.h"
 #include "blockCache.h"
 #include "memoryConstants.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void); //from main.c
 extern void setGuestPhysicalPt(GCONTXT* gc);
@@ -92,7 +93,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
 
   if(gContext->virtAddrEnabled)
   {
-    serial_ERROR("guest OS page table switch, with guest OS PT enabled?");
+    DIE_NOW(0, "guest OS page table switch, with guest OS PT enabled?");
 
     //probably want to dump the current virtual addressing entries to work out what is going on
 
@@ -153,7 +154,7 @@ void guestEnableVirtMem()
   if(gc->virtAddrEnabled)
   {
 #ifdef ADDRESSING_DEBUG
-    serial_ERROR("guest virtual addressing is already enabled");
+    DIE_NOW(0, "guest virtual addressing is already enabled");
 #endif
   }
 

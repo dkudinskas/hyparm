@@ -140,12 +140,3 @@ int printableChar(char c)
     return 0;
   }
 }
-
-
-void serial_ERROR(char * msg)
-{
-  serial_putstring(msg);
-  // i know its wrong to do it here, but this function will be removed eventually anyway
-  disableInterrupts();
-  infiniteIdleLoop();
-}

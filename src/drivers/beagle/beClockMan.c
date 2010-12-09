@@ -1,6 +1,7 @@
 #include "beClockMan.h"
 #include "memFunctions.h"
 #include "types.h"
+#include "debug.h"
 
 struct ClockManagerBE * clkManBE;
 
@@ -12,7 +13,7 @@ void clkManBEInit()
   clkManBE = (struct ClockManagerBE*)mallocBytes(sizeof(struct ClockManagerBE));
   if (clkManBE == 0)
   {
-    serial_ERROR("Failed to allocate CLK_MAN_BE.");
+    DIE_NOW(0, "Failed to allocate CLK_MAN_BE.");
   }
   else
   {
@@ -79,9 +80,9 @@ void toggleTimerFclk(u32int clockID, bool enable)
       case 7:
       case 8:
       case 9:
-        serial_ERROR("CLK_MAN_BE: toggleTimerFclk() unimplemented for clock ID");
+        DIE_NOW(0, "CLK_MAN_BE: toggleTimerFclk() unimplemented for clock ID");
       default:
-        serial_ERROR("CLK_MAN_BE: setclockSource() invalid clock ID");
+        DIE_NOW(0, "CLK_MAN_BE: setclockSource() invalid clock ID");
     }
     clkManRegWriteBE(PER_CM, CM_FCLKEN_PER, regVal);
   } // else ends
@@ -126,9 +127,9 @@ void setClockSource(u32int clockID, bool sysClock)
       case 7:
       case 8:
       case 9:
-        serial_ERROR("CLK_MAN_BE: setclockSource() unimplemented for clock ID");
+        DIE_NOW(0, "CLK_MAN_BE: setclockSource() unimplemented for clock ID");
       default:
-        serial_ERROR("CLK_MAN_BE: setclockSource() invalid clock ID");
+        DIE_NOW(0, "CLK_MAN_BE: setclockSource() invalid clock ID");
     }
     clkManRegWriteBE(PER_CM, CM_CLKSEL_PER, regVal);
   } // else ends

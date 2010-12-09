@@ -1,21 +1,15 @@
 #include "dataProcessInstr.h"
 #include "commonInstrFunctions.h"
+#include "debug.h"
 
 void invalidDataProcTrap(char * msg, GCONTXT * gc)
 {
-  serial_putstring("ERROR: ");
-  serial_putstring(msg);
-  serial_putstring(" ");
   serial_putint(gc->endOfBlockInstr);
   serial_putstring(" @ ");
   serial_putint(gc->R15);
   serial_putstring(" should not have trapped!");
   serial_newline();
-  dumpGuestContext(gc);
-  while(TRUE)
-  {
-    // infinite loop
-  }
+  DIE_NOW(gc, msg);
 }
 
 u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
@@ -62,7 +56,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
           }
           break;
         default:
-          error_function("invalid arithLogicOp opType", context);
+          DIE_NOW(context, "invalid arithLogicOp opType");
       }
     }
     else
@@ -91,19 +85,19 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
             // cant be shifted - mov shifted reg is a pseudo instr
             if (shamt != 0)
             {
-              error_function("MOV PC, Rn cant be shifted - that is a pseudo instr", context);
+              DIE_NOW(context, "MOV PC, Rn cant be shifted - that is a pseudo instr");
             }
             nextPC = loadGuestGPR(regSrc2, context);
             break;
           default:
-            error_function("invalid arithLogicOp opType", context);
+            DIE_NOW(context, "invalid arithLogicOp opType");
         }
       }
       else
       {
         // If shift amount is in register and any of the register
         // operands are PC then instruction unpredictable
-        error_function("unpredictable instruction <dataProc> PC, Rn, Rm, Rs", context);
+        DIE_NOW(context, "unpredictable instruction <dataProc> PC, Rn, Rm, Rs");
       }
     }
 
@@ -115,7 +109,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
              ((context->CPSR & CPSR_MODE_FIELD) == CPSR_MODE_SYSTEM) )
         {
           // there are no SPSR's in usr or sys modes!
-          serial_ERROR("arithLogicOp: exception return in guest usr/sys mode! bug.");
+          DIE_NOW(0, "arithLogicOp: exception return in guest usr/sys mode! bug.");
         }
         else
         {
@@ -140,14 +134,14 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
             case CPSR_MODE_USER:
             case CPSR_MODE_SYSTEM:
             default: 
-              serial_ERROR("arithLogicOp: invalid SPSR read for current guest mode.");
+              DIE_NOW(0, "arithLogicOp: invalid SPSR read for current guest mode.");
           } 
         }
       }
       else
       {
         dumpGuestContext(context);
-        serial_ERROR("unimplemented arithLogicOp set flags case");
+        DIE_NOW(0, "unimplemented arithLogicOp set flags case");
       }
     }
 
@@ -168,8 +162,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
 /*********************************/
 u32int andInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented AND trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented AND trap");
 }
 
 
@@ -178,8 +171,7 @@ u32int andInstruction(GCONTXT * context)
 /*********************************/
 u32int rsbInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented RSB trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented RSB trap");
 }
 
 
@@ -188,8 +180,7 @@ u32int rsbInstruction(GCONTXT * context)
 /*********************************/
 u32int rscInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented RSC trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented RSC trap");
 }
 
 
@@ -198,8 +189,7 @@ u32int rscInstruction(GCONTXT * context)
 /*********************************/
 u32int subInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented SUB trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented SUB trap");
 }
 
 
@@ -208,8 +198,7 @@ u32int subInstruction(GCONTXT * context)
 /*********************************/
 u32int sbcInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented SBC trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented SBC trap");
 }
 
 
@@ -228,8 +217,7 @@ u32int addInstruction(GCONTXT * context)
 /*********************************/
 u32int adcInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented ADC trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented ADC trap");
 }
 
 
@@ -238,8 +226,7 @@ u32int adcInstruction(GCONTXT * context)
 /*********************************/
 u32int orrInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented ORR trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented ORR trap");
 }
 
 
@@ -248,8 +235,7 @@ u32int orrInstruction(GCONTXT * context)
 /*********************************/
 u32int eorInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented EOR trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented EOR trap");
 }
 
 
@@ -258,8 +244,7 @@ u32int eorInstruction(GCONTXT * context)
 /*********************************/
 u32int bicInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented BIC trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented BIC trap");
 }
 
 
@@ -278,8 +263,7 @@ u32int movInstruction(GCONTXT * context)
 /*********************************/
 u32int mvnInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented MVN trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented MVN trap");
 }
 
 
@@ -288,8 +272,7 @@ u32int mvnInstruction(GCONTXT * context)
 /*********************************/
 u32int lslInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented LSL trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented LSL trap");
 }
 
 
@@ -298,8 +281,7 @@ u32int lslInstruction(GCONTXT * context)
 /*********************************/
 u32int lsrInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented LSR trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented LSR trap");
 }
 
 
@@ -308,8 +290,7 @@ u32int lsrInstruction(GCONTXT * context)
 /*********************************/
 u32int asrInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented ASR trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented ASR trap");
 }
 
 
@@ -318,8 +299,7 @@ u32int asrInstruction(GCONTXT * context)
 /*********************************/
 u32int rrxInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented RRX trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented RRX trap");
 }
 
 
@@ -328,8 +308,7 @@ u32int rrxInstruction(GCONTXT * context)
 /*********************************/
 u32int rorInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented ROR trap", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented ROR trap");
 }
 
 
@@ -338,8 +317,7 @@ u32int rorInstruction(GCONTXT * context)
 /*********************************/
 u32int tstInstruction(GCONTXT * context)
 {
-  error_function("Unimplemented tst interpreter", context);
-  return 0;
+  DIE_NOW(context, "Unimplemented tst interpreter");
 }
 
 

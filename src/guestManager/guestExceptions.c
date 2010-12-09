@@ -2,6 +2,7 @@
 #include "guestContext.h"
 #include "intc.h"
 #include "cpu.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -24,7 +25,7 @@ void tickEvent(u32int irqNumber)
   }
   else
   {
-    serial_ERROR("GuestInterrupts: tickEvent from unknown source timer.");
+    DIE_NOW(0, "GuestInterrupts: tickEvent from unknown source timer.");
   }
 }
 
@@ -55,7 +56,7 @@ void deliverInterrupt(void)
   }
   else
   {
-    serial_ERROR("deliverInterrupt: IRQ to be delivered with guest vmem off.");
+    DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
   }
   // now prepared the global guest environment. scanner will scan correct code.
 }
@@ -85,7 +86,7 @@ void deliverAbort()
   }
   else
   {
-    serial_ERROR("deliverInterrupt: IRQ to be delivered with guest vmem off.");
+    DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
   }
   // now prepared the global guest environment. scanner will scan correct code.
 }

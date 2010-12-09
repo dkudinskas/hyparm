@@ -6,6 +6,7 @@
 #include "mmu.h" // for setDomain
 #include "guestContext.h"
 #include "beGPTimer.h" /// should not be included here
+#include "debug.h"
 
 //Uncomment to enable all page table debugging: #define PT_DEBUG
 //Uncomment to show entries being mapped #define PT_SHORT_DEBUG
@@ -116,7 +117,7 @@ descriptor* createGuestOSPageTable()
   const u32int serial = SERIAL_BASE;
   if(addSmallPtEntry(ptd, serial, serial,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0) != 0)
   {
-    serial_ERROR("Added serial mapping failed. Entering infinite loop");
+    DIE_NOW(0, "Added serial mapping failed. Entering infinite loop");
   }
 
   /*  Map Exception vectors */
@@ -141,7 +142,7 @@ descriptor* createGuestOSPageTable()
   const u32int gptimer2Addr = 0x49032000;
   if(addSmallPtEntry(ptd, gptimer2Addr, gptimer2Addr,HYPERVISOR_ACCESS_DOMAIN,HYPERVISOR_ACCESS_BITS, 0, 0, 0) != 0)
   {
-    serial_ERROR("Added gptimer2 mapping failed. Entering infinite loop");
+    DIE_NOW(0, "Added gptimer2 mapping failed. Entering infinite loop");
   }
 
 #ifdef PT_SHADOW_DEBUG
@@ -163,13 +164,13 @@ descriptor* createNew1stLevelPageTable(u8int domain)
   if(0 == (u32int)ptd)
   {
     //ERROR
-    serial_ERROR("Frame alloc for 1st level page table failed. Entering Infinite Loop.");
+    DIE_NOW(0, "Frame alloc for 1st level page table failed. Entering Infinite Loop.");
   }
 
   //test ptd is correctly aligned
   if(((u32int)ptd & ~CHUNKS_FOR_PAGE_TABLE) != (u32int)ptd)
   {
-    serial_ERROR("New 1st level page table is not correctly aligned. Entering infinite loop.");
+    DIE_NOW(0, "New 1st level page table is not correctly aligned. Entering infinite loop.");
   }
 
 #ifdef PT_SHORT_DEBUG
@@ -308,7 +309,7 @@ u32int addSectionPtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int
       sectionDescriptor* sd = (sectionDescriptor*)ptd1st;
       if((sd->addr == (physical >> 20)) && (sd->sectionType == 0))
       {
-        serial_ERROR("pageTable.c Attempting to re-add section entry with same mapping. Entering infinite loop");
+        DIE_NOW(0, "pageTable.c Attempting to re-add section entry with same mapping. Entering infinite loop");
 
         return 0; //probably ok to continue if it's the same mapping
       }
@@ -321,25 +322,25 @@ u32int addSectionPtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int
         serial_putint(*(u32int*)ptd1st);
         serial_putstring(", descriptor: 0x");
         serial_putint(*(u32int*)ptd1st);
-        serial_ERROR(", is already mapped.");
+        DIE_NOW(0, ", is already mapped.");
         return 1;
       }
       break;
     }
     case PAGE_TABLE:
       //error!
-      serial_ERROR("Attempting to add section entry over the top of existing small/large sub-table descriptor. Entering infinite loop.");
+      DIE_NOW(0, "Attempting to add section entry over the top of existing small/large sub-table descriptor. Entering infinite loop.");
       return 1;
       break;
     case RESERVED:
     default:
-      serial_ERROR("Reserved Page table entry! Entering infinite loop.");
+      DIE_NOW(0, "Reserved Page table entry! Entering infinite loop.");
       return 1;
       break;
   }//switch
 
   //if we get here then we have not explicitly returned and want to stop here for debugging
-  serial_ERROR("Entering infinite loop. addSectionPtEntry");
+  DIE_NOW(0, "Entering infinite loop. addSectionPtEntry");
   return 1;
 }
 
@@ -395,7 +396,7 @@ u32int addSmallPtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int d
         serial_putstring("For virtual address: 0x");
         serial_putint(virtual);
         serial_newline();
-        serial_ERROR("Error.");
+        DIE_NOW(0, "Error.");
 #endif
         return result;
       }
@@ -415,7 +416,7 @@ u32int addSmallPtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int d
       serial_putint(*(u32int*)ptd1st);
       serial_putstring(", is a section/supersection.");
       serial_newline();
-      serial_ERROR("Entering infinite loop.");
+      DIE_NOW(0, "Entering infinite loop.");
       break;
     case RESERVED:
     default:
@@ -424,7 +425,7 @@ u32int addSmallPtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int d
       serial_putint((u32int) ptd1st);
       serial_putstring("at address: 0x");
       serial_putint(*(u32int*)ptd1st);
-      serial_ERROR("Entering infinite loop.");
+      DIE_NOW(0, "Entering infinite loop.");
   }//switch
 
   /* At this point we know its a small / large page table descriptor */
@@ -471,7 +472,7 @@ u32int addSmallPtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int d
       serial_putstring(", attempt to overwrite existing entry for PhysicalAddr: 0x");
       serial_putint(physical);
       serial_newline();
-      serial_ERROR("Entering infinte loop");
+      DIE_NOW(0, "Entering infinte loop");
       return 1;
     }
   }
@@ -536,7 +537,7 @@ u32int addLargePtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int d
       serial_putint(*(u32int*)ptd1st);
       serial_putstring(", is a section/supersection.");
       serial_newline();
-      serial_ERROR("Entering infinite loop.");
+      DIE_NOW(0, "Entering infinite loop.");
       return 1;
       break;
     case RESERVED:
@@ -547,7 +548,7 @@ u32int addLargePtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int d
       serial_putstring("at address: 0x");
       serial_putint(*(u32int*)ptd1st);
 
-      serial_ERROR("Entering infinite loop.");
+      DIE_NOW(0, "Entering infinite loop.");
       return 1;
       break;
   }//switch
@@ -596,7 +597,7 @@ u32int addLargePtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int d
       serial_putstring(", attempt to overwrite existing entry for PhysicalAddr: 0x");
       serial_putint(physical);
       serial_newline();
-      serial_ERROR("Entering infinte loop");
+      DIE_NOW(0, "Entering infinte loop");
       return 1;
     }
   }
@@ -660,7 +661,7 @@ u32int addNewPageTableDescriptor(descriptor* ptd1st, u32int physical, u8int doma
 
   if(0 == (u32int)ptBaseAddr)
   {
-    serial_ERROR("Memory allocation fail for the 2nd level descriptor table.");
+    DIE_NOW(0, "Memory allocation fail for the 2nd level descriptor table.");
     return 1;
   }
 
@@ -806,7 +807,7 @@ void dumpPageTable(descriptor* ptd)
         serial_newline();
         break;
       default:
-        serial_ERROR("dumpPageTables: INVALID pt entry type.");
+        DIE_NOW(0, "dumpPageTables: INVALID pt entry type.");
     }//switch
     currentPtd++;
   }
@@ -839,7 +840,7 @@ void dump2ndVirtAddr(u32int virtual, u32int i, u32int pageSize)
       virtual += i << 10; // 10 bits -> 1KB
       break;
     default:
-      serial_ERROR("dump2ndVirtAddr: invalid page size.");
+      DIE_NOW(0, "dump2ndVirtAddr: invalid page size.");
   } 
   serial_putint(virtual);
   serial_putstring(" ");
@@ -882,9 +883,9 @@ void dump2ndLevel(pageTableDescriptor* ptd, u32int virtual)
           dumpSmallPage((smallDescriptor*)currentPtd);
           break;
         case SMALL_PAGE_3: // 0b11: tiny page  (1KB)
-          serial_ERROR("dump2ndLevel: can't handle small_page 1KB yet.");
+          DIE_NOW(0, "dump2ndLevel: can't handle small_page 1KB yet.");
         default:
-          serial_ERROR("dump2ndLevel: INVALID pt entry type.");
+          DIE_NOW(0, "dump2ndLevel: INVALID pt entry type.");
       }
       currentPtd++;
     }
@@ -989,7 +990,7 @@ void dumpSuperSection(void* sd)
   serial_putstring("SUPERSECTION");
   serial_newline();
 
-  serial_ERROR("UNIMPLEMENTED: dumpSuperSection (pageTable.c)");
+  DIE_NOW(0, "UNIMPLEMENTED: dumpSuperSection (pageTable.c)");
 }
 #endif
 
@@ -1033,7 +1034,7 @@ ACCESS_TYPE setAccessBits(descriptor* ptd, u32int virtual, ACCESS_TYPE newAccess
       if(sd->sectionType != 0)
       {
         //error supersection
-        serial_ERROR("setting accessBits for a SuperSection is not implemented. Entering infinite loop...");
+        DIE_NOW(0, "setting accessBits for a SuperSection is not implemented. Entering infinite loop...");
       }
       else
       {
@@ -1098,18 +1099,18 @@ ACCESS_TYPE setAccessBits(descriptor* ptd, u32int virtual, ACCESS_TYPE newAccess
           break;
         case FAULT: //fall through
         default:
-          serial_ERROR("Error: Attempt to set accessBits for page type: FAULT, in 2nd level page table");
+          DIE_NOW(0, "Error: Attempt to set accessBits for page type: FAULT, in 2nd level page table");
           return 8;
           break;
       }//switch PAGE_TABLE
       break;
     case FAULT:
-      serial_ERROR("Error: Attempt to set accessBits for page type: FAULT!");
+      DIE_NOW(0, "Error: Attempt to set accessBits for page type: FAULT!");
       return 8;
       break;
       //else fall through
     case RESERVED:
-      serial_ERROR("Error: Attempt to set accessBits for page type: RESERVED!");
+      DIE_NOW(0, "Error: Attempt to set accessBits for page type: RESERVED!");
       //fall through
     default:
       return 8; //error
@@ -1143,7 +1144,7 @@ descriptor* getPageTableEntry(descriptor* ptd, u32int address)
 {
   if(0 == ptd)
   {
-    serial_ERROR("ptd is 0; getPageTableEntry (pageTable.c)");
+    DIE_NOW(0, "ptd is 0; getPageTableEntry (pageTable.c)");
   }
 
   descriptor* pte1st = get1stLevelPtDescriptorAddr(ptd, address);
@@ -1153,7 +1154,7 @@ descriptor* getPageTableEntry(descriptor* ptd, u32int address)
     {
       if( ((sectionDescriptor*)pte1st)->sectionType == 1)
       {
-        serial_ERROR("SUPERSECTION not implemented");
+        DIE_NOW(0, "SUPERSECTION not implemented");
         return 0;
       }
       else
@@ -1241,7 +1242,7 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
 
         if(FAULT == guestReal->type)
         {
-          serial_ERROR("Underlying address space is not mapped. copySectionEntry (pageTable.c) Entering infinite loop");
+          DIE_NOW(0, "Underlying address space is not mapped. copySectionEntry (pageTable.c) Entering infinite loop");
         }
       }
 #ifdef PT_SHADOW_DEBUG
@@ -1414,7 +1415,7 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
           u32int result = addSmallPtEntry(shadowPTD, virtAddr, startAddr, mapGuestDomain(guest->domain), PRIV_RW_USR_NO, 0, 0, 0b000);
           if(result)
           {
-            serial_ERROR("Hack failed: copySectionEntry (pageTable.c)");
+            DIE_NOW(0, "Hack failed: copySectionEntry (pageTable.c)");
             break;
           }
           startAddr += SMALL_PAGE_SIZE;
@@ -1596,7 +1597,7 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
       serial_putstring("Guest Physical Address: 0x");
       serial_putint(guestPhysicalAddr);
       serial_newline();
-      serial_ERROR("Entering infinite loop...");
+      DIE_NOW(0, "Entering infinite loop...");
     }
   }
 
@@ -1610,7 +1611,7 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
 
 void copySuperSectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
 {
-  serial_ERROR("UNIMPLEMENTED: copySuperSectionEntry (pageTable.c)");
+  DIE_NOW(0, "UNIMPLEMENTED: copySuperSectionEntry (pageTable.c)");
 }
 
 void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow)
@@ -1620,7 +1621,7 @@ void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow)
   u32int *newFrame = allocFrame(HYPERVISOR_FA_DOMAIN);
   if (newFrame == 0x0)
   {
-    serial_ERROR("frameAllocator returned null ptr. copyPageTableEntry (pageTable.c)");
+    DIE_NOW(0, "frameAllocator returned null ptr. copyPageTableEntry (pageTable.c)");
   }
 
 #ifdef PT_SHADOW_DEBUG
@@ -1703,7 +1704,7 @@ void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow)
     u32int res = addProtection(virtAddr, virtAddr+1023, 0, PRIV_RW_USR_RO);
     if (res > 7)
     {
-      serial_ERROR("copyPageTableEntry: failed to add memory protection.");
+      DIE_NOW(0, "copyPageTableEntry: failed to add memory protection.");
     }
 
   }
@@ -1718,7 +1719,7 @@ void copyLargeEntry(largeDescriptor* guest, largeDescriptor* shadow)
   serial_putint(*(u32int*)shadow);
   serial_newline();
 #endif
-  serial_ERROR("UNIMPLEMENTED: copyLargeEntry (pageTable.c)");
+  DIE_NOW(0, "UNIMPLEMENTED: copyLargeEntry (pageTable.c)");
 }
 
 void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow)
@@ -1775,7 +1776,7 @@ void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow)
           case LARGE_PAGE:
           case FAULT:
           default:
-            serial_ERROR("copySmallEntry: hostPA second level entry unimplemented.");
+            DIE_NOW(0, "copySmallEntry: hostPA second level entry unimplemented.");
         }
         break;
       }
@@ -1789,7 +1790,7 @@ void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow)
         serial_putstring(" is ");
         serial_putint(*(u32int*)hostPAentry);
         serial_newline();
-        serial_ERROR("copySmallEntry: invalid entry found translating guestPA to hostPA.");
+        DIE_NOW(0, "copySmallEntry: invalid entry found translating guestPA to hostPA.");
     }
 
 
@@ -1825,7 +1826,7 @@ void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow)
         shadow->ap10 = PRIV_RW_USR_RW & 0x3;
         break;
       case AP_RESERVED:
-        serial_ERROR("copySmallEntry: access protection reserved case hit.");
+        DIE_NOW(0, "copySmallEntry: access protection reserved case hit.");
         break;
     }
 
@@ -1868,13 +1869,13 @@ void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow)
     serial_putstring("copySmallEntry: guestPA = ");
     serial_putint(guestPA);
     serial_newline();
-    serial_ERROR("copySmallEntry: mapping non-ram physical address, unimplemented.");
+    DIE_NOW(0, "copySmallEntry: mapping non-ram physical address, unimplemented.");
   }
 }
 
 void removePageTableEntry(pageTableDescriptor* shadow)
 {
-  serial_ERROR("UNIMPLEMENTED: removePageTableEntry (pageTable.c)");
+  DIE_NOW(0, "UNIMPLEMENTED: removePageTableEntry (pageTable.c)");
 }
 
 
@@ -1996,12 +1997,12 @@ void copyPageTable(descriptor* guest, descriptor* shadow)
 {
   if(0 == shadow)
   {
-    serial_ERROR("Shadow pageTable is null. copyPageTable (pageTable.c) Entering infinite loop...");
+    DIE_NOW(0, "Shadow pageTable is null. copyPageTable (pageTable.c) Entering infinite loop...");
   }
 
   if(0 == guest)
   {
-    serial_ERROR("guest pageTable is null. copyPageTable (pageTable.c) Entering infinite loop...");
+    DIE_NOW(0, "guest pageTable is null. copyPageTable (pageTable.c) Entering infinite loop...");
   }
 
 #ifdef PT_SHADOW_DEBUG
@@ -2035,7 +2036,7 @@ void copyPageTable(descriptor* guest, descriptor* shadow)
         serial_putstring("guest is attemping to use hypervisor 1:1 mapped address space. 0x");
         serial_putint(i << 20);
         serial_newline();
-        serial_ERROR("Entering infinite loop...");
+        DIE_NOW(0, "Entering infinite loop...");
       }
 
       if(guest[i].type == SECTION)
@@ -2071,7 +2072,7 @@ void copyPageTable(descriptor* guest, descriptor* shadow)
           u32int* newFrame = allocFrame(HYPERVISOR_FA_DOMAIN);
           if(0 == newFrame)
           {
-            serial_ERROR("Could not allocate new frame in copyPageTable (pageTable.c)");
+            DIE_NOW(0, "Could not allocate new frame in copyPageTable (pageTable.c)");
           }
 
           memset(newFrame, 0, SECOND_LEVEL_PAGE_TABLE_SIZE);
@@ -2172,7 +2173,7 @@ u32int getPageEndAddr(descriptor* ptd, u32int address)
       if(1 == sd->sectionType)
       {
         //SUPERSECTION
-        serial_ERROR("UNIMPLEMENTED: getPageEndAddr for SUPERSECTION. Entering infinite loop");
+        DIE_NOW(0, "UNIMPLEMENTED: getPageEndAddr for SUPERSECTION. Entering infinite loop");
         return 0; // error
       }
       else
@@ -2278,10 +2279,10 @@ void pageTableEdit(u32int address, u32int newVal)
     switch (pteAddr->type)
     { 
       case FAULT:
-        serial_ERROR("pageTableEdit: fault entry hit - ?");
+        DIE_NOW(0, "pageTableEdit: fault entry hit - ?");
         break;
       case PAGE_TABLE:
-        serial_ERROR("pageTableEdit: second level entry hit - unimplemented.");
+        DIE_NOW(0, "pageTableEdit: second level entry hit - unimplemented.");
         break;
       case SECTION:
       {
@@ -2296,7 +2297,7 @@ void pageTableEdit(u32int address, u32int newVal)
         break;
       }
       case RESERVED:
-        serial_ERROR("pageTableEdit: reserved entry hit - ?");
+        DIE_NOW(0, "pageTableEdit: reserved entry hit - ?");
         break;
       default:
         break;
@@ -2490,7 +2491,7 @@ void pageTableEdit(u32int address, u32int newVal)
       {
         //Assums the initial case when the sd is written/copied that we stop on attempts to add supersections
         //So don't need to check the old value
-        serial_ERROR("UNIMPLEMENTED: pageTableEdit SUPERSECTIONS");
+        DIE_NOW(0, "UNIMPLEMENTED: pageTableEdit SUPERSECTIONS");
         //Only difference is that we may have an extended base address
         //There is no domain field.
       }
@@ -2501,7 +2502,7 @@ void pageTableEdit(u32int address, u32int newVal)
         //need domain emulation support?
         //To start just need to check that the domain the guest tries to use is not used by the Hypervisor
         //and that it is set to "client mode" so we can do memory access control
-        serial_ERROR("UNIMPLEMENTED: pageTableEdit, edit case: section, change of domain field");
+        DIE_NOW(0, "UNIMPLEMENTED: pageTableEdit, edit case: section, change of domain field");
       }
 
       //Access permission changes
@@ -2543,7 +2544,7 @@ void pageTableEdit(u32int address, u32int newVal)
       {
         //If we hit this then I need to rethink how we check for memory protection being set on a page before modification
         //As the guestOS is now using the field!
-        serial_ERROR("pageTableEdit: edit case: pageTable, Use of implementation defined field. Check what guestOS does with this as the Hypervisor uses it!");
+        DIE_NOW(0, "pageTableEdit: edit case: pageTable, Use of implementation defined field. Check what guestOS does with this as the Hypervisor uses it!");
       }
 
       //Other fields are: NS(Non secure), C(caching), B(Bufferable),S(shareable),TEX, nG
@@ -2571,7 +2572,7 @@ void pageTableEdit(u32int address, u32int newVal)
         //need domain emulation support?
         //To start just need to check that the domain the guest tries to use is not used by the Hypervisor
         //and that it is set to "client mode" so we can do memory access control
-        serial_ERROR("UNIMPLEMENTED: pageTableEdit, edit case: pageTable, change of domain field");
+        DIE_NOW(0, "UNIMPLEMENTED: pageTableEdit, edit case: pageTable, change of domain field");
       }
 
       /* Carefull of this one, field is used by the hypervisor */
@@ -2579,7 +2580,7 @@ void pageTableEdit(u32int address, u32int newVal)
       {
         //If we hit this then I need to rethink how we check for memory protection being set on a page before modification
         //As the guestOS is now using the field!
-        serial_ERROR("pageTableEdit: edit case: pageTable, Use of implementation defined field. Check what guestOS does with this as the Hypervisor uses it!");
+        DIE_NOW(0, "pageTableEdit: edit case: pageTable, Use of implementation defined field. Check what guestOS does with this as the Hypervisor uses it!");
       }
 
       //Other fields are: NS(Non secure).
@@ -2590,7 +2591,7 @@ void pageTableEdit(u32int address, u32int newVal)
     else if(LARGE_PAGE == newGuestEntry->type)
     {
       largeDescriptor* ld = (largeDescriptor*) address;
-      serial_ERROR("UNIMPLEMENTED: pageTableEdit: edit large page case");
+      DIE_NOW(0, "UNIMPLEMENTED: pageTableEdit: edit large page case");
       //Large pages need to be copied 16times.
       replicateLargeEntry(ld);
 
@@ -2605,7 +2606,7 @@ void pageTableEdit(u32int address, u32int newVal)
     else
     {
       //Small Page
-      serial_ERROR("UNIMPLEMENTED: pageTableEdit, edit Small page case");
+      DIE_NOW(0, "UNIMPLEMENTED: pageTableEdit, edit Small page case");
     }
   }
 
@@ -2624,7 +2625,7 @@ u32int getPhysicalAddress(descriptor* ptd, u32int virtualAddress)
       sectionDescriptor* sd = (sectionDescriptor*)pte1st;
       if(1 == sd->sectionType)
       {
-        serial_ERROR("UNIMPLEMENTED: supersection getPhysicalAddress (pageTable.c)");
+        DIE_NOW(0, "UNIMPLEMENTED: supersection getPhysicalAddress (pageTable.c)");
       }
       else
       {

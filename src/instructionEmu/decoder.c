@@ -5,6 +5,7 @@
 #include "dataProcessInstr.h"
 #include "dataMoveInstr.h"
 #include "asm-dis.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -547,7 +548,7 @@ struct instruction32bit * decodeInstr(u32int instr)
     case UNDEFINED_CATEGORY:
     default:
       dumpGuestContext(getGuestContext());
-      serial_ERROR("decoder: UNDEFINED category");
+      DIE_NOW(0, "decoder: UNDEFINED category");
   }
 
   return 0;
@@ -615,7 +616,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
     }
   }
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeDataProcMisc unimplemented");
+  DIE_NOW(0, "decoder: decodeDataProcMisc unimplemented");
   return 0;
 }
 
@@ -642,7 +643,7 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
     }
   }
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeBranchBlockTransfer unimplemented");
+  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
   return 0;
 }
 
@@ -669,7 +670,7 @@ struct instruction32bit * decodeMedia(u32int instr)
     }
   }
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeMedia unimplemented");
+  DIE_NOW(0, "decoder: decodeMedia unimplemented");
   return 0;
 }
 
@@ -696,7 +697,7 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
     }
   }
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeBranchBlockTransfer unimplemented");
+  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
   return 0;
 }
 
@@ -723,7 +724,7 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
     }
   }
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeSvcCoproc unimplemented");
+  DIE_NOW(0, "decoder: decodeSvcCoproc unimplemented");
   return 0;
 }
 
@@ -750,7 +751,7 @@ struct instruction32bit * decodeUnconditional(u32int instr)
   }
   
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeUnconditional unimplemented");
+  DIE_NOW(0, "decoder: decodeUnconditional unimplemented");
   return 0;
 }
 

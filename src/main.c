@@ -14,6 +14,7 @@
 #include "beIntc.h"
 #include "beGPTimer.h"
 #include "beClockMan.h"
+#include "debug.h"
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
   CREG * coprocRegBank = (CREG*)mallocBytes(MAX_CRB_SIZE * sizeof(CREG));
   if (coprocRegBank == 0)
   {
-    serial_ERROR("Failed to allocate coprocessor register bank.");
+    DIE_NOW(0, "Failed to allocate coprocessor register bank.");
   }
   else
   {
@@ -71,7 +72,7 @@ int main(int argc, char *argv[])
   BCENTRY * blockCache = (BCENTRY*)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   if (blockCache == 0)
   {
-    serial_ERROR("Failed to allocate basic block cache.");
+    DIE_NOW(0, "Failed to allocate basic block cache.");
   }
   else
   {
@@ -93,7 +94,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    serial_ERROR("Hardware library initialisation failed.");
+    DIE_NOW(0, "Hardware library initialisation failed.");
   }
 
   /* Setup MMU for Hypervisor */
@@ -106,7 +107,7 @@ int main(int argc, char *argv[])
   if ( ret < 0 )
   {
     printUsage();
-    serial_ERROR("Hypervisor startup aborted.");
+    DIE_NOW(0, "Hypervisor startup aborted.");
   }
 
 #ifdef STARTUP_DEBUG

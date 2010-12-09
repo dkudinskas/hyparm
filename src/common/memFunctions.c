@@ -1,5 +1,6 @@
 #include "memFunctions.h"
 #include "serial.h"
+#include "debug.h"
 
 u32int heapStart;
 u32int heapSize;
@@ -133,12 +134,12 @@ u32int mallocBytes(u32int size)
 
   if ((size & 0x3) != 0)
   {
-    serial_ERROR("mallocBytes not word aligned.");
+    DIE_NOW(0, "mallocBytes not word aligned.");
   }
 
   if ((freePtr + size) >= heapEnd)
   {
-    serial_ERROR("malloc out of heap space.");
+    DIE_NOW(0, "malloc out of heap space.");
   }
 
   chunkList->nextChunk = (memchunkListElem*)(((u32int)chunkList) + sizeof(memchunkListElem));
@@ -181,6 +182,6 @@ void dumpMallocs()
     serial_newline();
     listPtr = listPtr->nextChunk;
   }
-  serial_ERROR("done");
+  DIE_NOW(0, "done");
 }
 

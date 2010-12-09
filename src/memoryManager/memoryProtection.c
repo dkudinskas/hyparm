@@ -5,6 +5,7 @@
 #include "common.h" //for memset
 #include "guestContext.h"
 #include "assert.h"
+#include "debug.h"
 
 //uncomment to enable Memory Protection debug: #define MEM_PROT_DEBUG
 
@@ -24,7 +25,7 @@ MEMPROT* initialiseMemoryProtection(void)
 
   if(0 == addr)
   {
-    serial_ERROR("Unable to allocate memory for initialiseProtectionArray() in memoryProtection.c");
+    DIE_NOW(0, "Unable to allocate memory for initialiseProtectionArray() in memoryProtection.c");
   }
 
   u32int arraySpace = FRAME_TABLE_CHUNK_SIZE;
@@ -80,7 +81,7 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
     serial_putint(startAddr);
     serial_putstring(", is greater than the end addr: 0x");
     serial_putint(endAddr);
-    serial_ERROR("Entering infinite loop.");
+    DIE_NOW(0, "Entering infinite loop.");
   }
 
   //Simple way to find out if we cross PT entries
@@ -96,7 +97,7 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
 
   if(0 == pageEndAddr)
   {
-    serial_ERROR("ERROR: invalid getPageEndAddr return value. Entering infinite loop");
+    DIE_NOW(0, "ERROR: invalid getPageEndAddr return value. Entering infinite loop");
   }
 
   if(endAddr <= pageEndAddr)
@@ -132,13 +133,13 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
       if(result > 7)
       {
         //Last addEntry failed, remove all Multi entries (could be the first)
-        serial_ERROR("setAccessBits failed, while loop");
+        DIE_NOW(0, "setAccessBits failed, while loop");
       }
       pageStartAddr = pageEndAddr+1;
       pageEndAddr = getPageEndAddr(ptd, pageStartAddr);
       if(0 == pageEndAddr)
       {
-        serial_ERROR("ERROR: invalid getPageEndAddr return value. Entering infinite loop");
+        DIE_NOW(0, "ERROR: invalid getPageEndAddr return value. Entering infinite loop");
       }
     }//loop
 
@@ -148,7 +149,7 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
   if(result > 7)
   {
       //Last addEntry failed, remove the previous ones
-    serial_ERROR("setAccessBits failed");
+    DIE_NOW(0, "setAccessBits failed");
   }
   return result;
 }
@@ -173,7 +174,7 @@ u32int removeProtection(u32int startAddr)
   u32int result = setAccessBits(ptd, startAddr, PRIV_RW_USR_RW);
   if( result > 7)
   {
-    serial_ERROR("removeProtection Failed. Infinite Loop");
+    DIE_NOW(0, "removeProtection Failed. Infinite Loop");
     return result;
   }
   return 0;
@@ -186,7 +187,7 @@ returns the function ptr of found.
 */
 memProtPtr checkProtectionArray(u32int address)
 {
-  serial_ERROR("UNIMPLEMENTED: checkProtectionArray");
+  DIE_NOW(0, "UNIMPLEMENTED: checkProtectionArray");
   return 0;
 }
 

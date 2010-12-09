@@ -1,5 +1,6 @@
 #include "beIntc.h"
 #include "memFunctions.h"
+#include "debug.h"
 
 static inline u32int intcRegReadBE(u32int regOffs);
 static inline void intcRegWriteBE(u32int regOffs, u32int value);
@@ -11,7 +12,7 @@ void intcBEInit()
   intcBE = (struct InterruptControllerBE*)mallocBytes(sizeof(struct InterruptControllerBE));
   if (intcBE == 0)
   {
-    serial_ERROR("Failed to allocate INTC_BE.");
+    DIE_NOW(0, "Failed to allocate INTC_BE.");
   }
   else
   {
@@ -89,7 +90,7 @@ void unmaskInterruptBE(u32int interruptNumber)
 
   if ((interruptNumber < 0) || (interruptNumber >= INTCPS_NR_OF_INTERRUPTS))
   {
-    serial_ERROR("INTC_BE: mask interrupt number out of range.");
+    DIE_NOW(0, "INTC_BE: mask interrupt number out of range.");
   }
   bankNumber = interruptNumber / INTCPS_INTERRUPTS_PER_BANK;
   bitMask = 1 << (interruptNumber % INTCPS_INTERRUPTS_PER_BANK);
@@ -103,7 +104,7 @@ void maskInterruptBE(u32int interruptNumber)
 
   if ((interruptNumber < 0) || (interruptNumber >= INTCPS_NR_OF_INTERRUPTS))
   {
-    serial_ERROR("INTC_BE: mask interrupt number out of range.");
+    DIE_NOW(0, "INTC_BE: mask interrupt number out of range.");
   }
   bankNumber = interruptNumber / INTCPS_INTERRUPTS_PER_BANK;
   bitMask = 1 << (interruptNumber % INTCPS_INTERRUPTS_PER_BANK);

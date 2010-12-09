@@ -2,6 +2,7 @@
 #include "pageTable.h" // for getPhysicalAddress()
 #include "guestContext.h"
 #include "memFunctions.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -17,7 +18,7 @@ void initUart(u32int uartID)
   uart[uID] = (struct Uart*)mallocBytes(sizeof(struct Uart));
   if (uart[uID] == 0)
   {
-    serial_ERROR("Failed to allocate uart.");
+    DIE_NOW(0, "Failed to allocate uart.");
   }
   else
   {
@@ -83,7 +84,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
 {
   if (size != BYTE)
   {
-    serial_ERROR("UART: loadUart invalid access size - byte");
+    DIE_NOW(0, "UART: loadUart invalid access size - byte");
   }
 
   //We care about the real pAddr of the entry, not its vAddr
@@ -93,7 +94,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)
   {
-    serial_ERROR("loadUart: invalid UART id.");
+    DIE_NOW(0, "loadUart: invalid UART id.");
   }
   uID--; // array starts at 0
   u32int value = 0;
@@ -176,7 +177,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       if (getUartMode(uID+1) == configB)
       {
         // load XON1_ADDR1
-        serial_ERROR("UART load XON1_ADDR1 unimplemented");
+        DIE_NOW(0, "UART load XON1_ADDR1 unimplemented");
       }
       else
       {
@@ -188,7 +189,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       if (getUartMode(uID+1) == configB)
       {
         // load XON2_ADDR2
-        serial_ERROR("UART load XON2_ADDR2 unimplemented");
+        DIE_NOW(0, "UART load XON2_ADDR2 unimplemented");
       }
       else
       {
@@ -200,7 +201,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       if (getUartMode(uID+1) == configB)
       {
         // store TCR/XOFF1
-        serial_ERROR("UART store TCR/XOFF1 unimplemented");
+        DIE_NOW(0, "UART store TCR/XOFF1 unimplemented");
       }
       else
       {
@@ -214,17 +215,17 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
         else
         {
           // sub-operational/sub-configA TCR_TLR mode, load xmission control
-          serial_ERROR("UART store TCR unimplemented");
+          DIE_NOW(0, "UART store TCR unimplemented");
         }
       }
       break;
-      serial_ERROR("UART load MSR/TCR/XOFF1 unimplemented");
+      DIE_NOW(0, "UART load MSR/TCR/XOFF1 unimplemented");
       break;
     case UART_SPR_REG:
       if (getUartMode(uID+1) == configB)
       {
         // store TLR/XOFF2
-        serial_ERROR("UART load TLR/XOFF2 unimplemented");
+        DIE_NOW(0, "UART load TLR/XOFF2 unimplemented");
       }
       else
       {
@@ -238,11 +239,11 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
         else
         {
           // sub-operational/sub-configA TCR_TLR mode, store TLR reg
-          serial_ERROR("UART store TLR unimplemented");
+          DIE_NOW(0, "UART store TLR unimplemented");
         }
       }
       break;
-      serial_ERROR("UART load SPR/TLR/XOFF2 unimplemented");
+      DIE_NOW(0, "UART load SPR/TLR/XOFF2 unimplemented");
       break;
     case UART_MDR1_REG:
       value = uart[uID]->mdr1;
@@ -265,7 +266,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       serial_putstring(" reg ");
       serial_putint_nozeros(regOffs);
       serial_newline();
-      serial_ERROR("UART: load from unimplemented register.");
+      DIE_NOW(0, "UART: load from unimplemented register.");
     default:
       dumpGuestContext(getGuestContext());
       serial_putstring("loadUart");
@@ -273,7 +274,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       serial_putstring(" reg ");
       serial_putint_nozeros(regOffs);
       serial_newline();
-      serial_ERROR("UART: load from undefined register.");
+      DIE_NOW(0, "UART: load from undefined register.");
   } // switch ends
   
 #ifdef UART_DBG
@@ -294,7 +295,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 {
   if (size != BYTE)
   {
-    serial_ERROR("UART: storeUart invalid access size - byte");
+    DIE_NOW(0, "UART: storeUart invalid access size - byte");
   }
 
   //We care about the real pAddr of the entry, not its vAddr
@@ -304,7 +305,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)
   {
-    serial_ERROR("storeUart: invalid UART id.");
+    DIE_NOW(0, "storeUart: invalid UART id.");
   }
   uID--; // array starts at 0
   u32int regOffs = phyAddr - getUartBaseAddr(uID+1);
@@ -364,7 +365,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         if ((uart[uID]->ier & UART_IER_SLEEP_MODE) != 0)
         {
           dumpGuestContext(gc);
-          serial_ERROR("UART writing DLL with sleep mode enabled!");
+          DIE_NOW(0, "UART writing DLL with sleep mode enabled!");
         }
         else
         {
@@ -405,7 +406,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         if ((uart[uID]->ier & UART_IER_SLEEP_MODE) != 0)
         {
           dumpGuestContext(gc);
-          serial_ERROR("UART writing DLH with sleep mode enabled!");
+          DIE_NOW(0, "UART writing DLH with sleep mode enabled!");
         }
         else
         {
@@ -472,7 +473,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       if (getUartMode(uID+1) == configB)
       {
         // store XON1_ADDR1
-        serial_ERROR("UART store XON1_ADDR1 unimplemented");
+        DIE_NOW(0, "UART store XON1_ADDR1 unimplemented");
       }
       else
       {
@@ -523,7 +524,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       if (getUartMode(uID+1) == configB)
       {
         // store XON2_ADDR2
-        serial_ERROR("UART store XON2_ADDR2 unimplemented");
+        DIE_NOW(0, "UART store XON2_ADDR2 unimplemented");
       }
       else
       {
@@ -534,13 +535,13 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       }
       break;
     case UART_MSR_REG:
-      serial_ERROR("UART store MSR/TCR/XOFF1 unimplemented");
+      DIE_NOW(0, "UART store MSR/TCR/XOFF1 unimplemented");
       break;
     case UART_SPR_REG:
       if (getUartMode(uID+1) == configB)
       {
         // store TLR/XOFF2
-        serial_ERROR("UART store TLR/XOFF2 unimplemented");
+        DIE_NOW(0, "UART store TLR/XOFF2 unimplemented");
       }
       else
       {
@@ -554,7 +555,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         else
         {
           // sub-operational/sub-configA TCR_TLR mode, store TLR reg
-          serial_ERROR("UART store TLR unimplemented");
+          DIE_NOW(0, "UART store TLR unimplemented");
         }
       }
       break;
@@ -614,19 +615,19 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       break;
     case UART_SYSS_REG:
       serial_putstring(dev->deviceName);
-      serial_ERROR(" storing to R/O register (SYSS_REG)");
+      DIE_NOW(0, " storing to R/O register (SYSS_REG)");
       break;
     case UART_UASR_REG:
       serial_putstring(dev->deviceName);
-      serial_ERROR(" storing to R/O register (autobaud status)");
+      DIE_NOW(0, " storing to R/O register (autobaud status)");
       break;
     case UART_SSR_REG:
       serial_putstring(dev->deviceName);
-      serial_ERROR(" storing to R/O register (SSR)");
+      DIE_NOW(0, " storing to R/O register (SSR)");
       break;
     case UART_MVR_REG:
       serial_putstring(dev->deviceName);
-      serial_ERROR(" storing to R/O register (MVR)");
+      DIE_NOW(0, " storing to R/O register (MVR)");
       break;
     case UART_MDR2_REG:
     case UART_SFLSR_REG:
@@ -642,7 +643,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       serial_putstring(" value ");
       serial_putint(value);
       serial_newline();
-      serial_ERROR("UART: store to unimplemented register.");
+      DIE_NOW(0, "UART: store to unimplemented register.");
     default:
       dumpGuestContext(getGuestContext());
       serial_putstring("storeUart");
@@ -652,7 +653,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       serial_putstring(" value ");
       serial_putint(value);
       serial_newline();
-      serial_ERROR("UART: store to undefined register.");
+      DIE_NOW(0, "UART: store to undefined register.");
   } // switch ends
 
 }
@@ -688,7 +689,7 @@ static inline u32int getUartBaseAddr(u32int id)
     case 3:
       return UART3;
     default:
-      serial_ERROR("getUartBaseAddr: invalid base id.");
+      DIE_NOW(0, "getUartBaseAddr: invalid base id.");
   }
   return -1;
 }

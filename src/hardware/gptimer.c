@@ -6,6 +6,7 @@
 #include "memFunctions.h"
 #include "beIntc.h"
 #include "beGPTimer.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -17,7 +18,7 @@ void initGPTimer()
   gptimer = (struct GeneralPurposeTimer*)mallocBytes(sizeof(struct GeneralPurposeTimer));
   if (gptimer == 0)
   {
-    serial_ERROR("Failed to allocate general purpose timer.");
+    DIE_NOW(0, "Failed to allocate general purpose timer.");
   }
   else
   {
@@ -62,7 +63,7 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
 {
   if (size == BYTE)
   {
-    serial_ERROR("GPT: loadGPTimer invalid access size - byte");
+    DIE_NOW(0, "GPT: loadGPTimer invalid access size - byte");
   }
 
   //We care about the real pAddr of the entry, not its vAddr
@@ -248,7 +249,7 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
 #endif
       break;
     default:
-      serial_ERROR("GPT: load from undefined register.");
+      DIE_NOW(0, "GPT: load from undefined register.");
   } // switch ends
   
  return val;
@@ -258,7 +259,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 {
   if (size == BYTE)
   {
-    serial_ERROR("GPT: storeGPTimer invalid access size - byte");
+    DIE_NOW(0, "GPT: storeGPTimer invalid access size - byte");
   }
 
   //We care about the real pAddr of the entry, not its vAddr
@@ -450,7 +451,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 #endif
       break;
     default:
-      serial_ERROR("GPT: store to undefined register.");
+      DIE_NOW(0, "GPT: store to undefined register.");
   } // switch ends
 
 }

@@ -3,6 +3,7 @@
 #include "common.h"
 #include "serial.h"
 #include "memoryConstants.h"
+#include "debug.h"
 
 #ifdef FRAME_TABLE_ALLOC_TEST
 #include "frameAllocatorTest.h"
@@ -51,7 +52,7 @@ void initialiseFrameTable()
     if(0 == allocFrameAddr(addr))
     {
       //we are seriously screwed if this fails, so fall over quickly
-      serial_ERROR("ERROR: Frame Table Initialisation failed... Entering infinite loop");
+      DIE_NOW(0, "ERROR: Frame Table Initialisation failed... Entering infinite loop");
     }
     //increment in CHUNK_SIZE bits
     addr += FRAME_TABLE_CHUNK_SIZE;
@@ -69,7 +70,7 @@ void initialiseFrameTable()
     if(0 == retVal)
     {
       //we are seriously screwed if this fails, so fall over quickly
-      serial_ERROR("ERROR: Frame Table Initialisation failed... Entering infinite loop");
+      DIE_NOW(0, "ERROR: Frame Table Initialisation failed... Entering infinite loop");
     }
     //increment in CHUNK_SIZE bits
     addr += FRAME_TABLE_CHUNK_SIZE;
@@ -308,7 +309,7 @@ void newFrameAllocationTable()
 #ifdef FRAME_ALLOC_DBG
   if(0 == frameTable)
   {
-    serial_ERROR("memset zeroed bss section. Frame Allocator:newFrameAllocationTable()");
+    DIE_NOW(0, "memset zeroed bss section. Frame Allocator:newFrameAllocationTable()");
   }
 #endif
 }
@@ -483,7 +484,7 @@ u32int getFreeFrames(u32int numFrames, u8int domain)
 {
   if(numFrames > 32)
   {
-    serial_ERROR("Implement getFreeFrames for cases of more than 32 frames. Entering infinite loop");
+    DIE_NOW(0, "Implement getFreeFrames for cases of more than 32 frames. Entering infinite loop");
     /*
     Research suggests maintaining a linked list of free space, containing a start + end offset?
     When we want a frame we search the list and provide the "best" match slot, or chop an existing one.
@@ -585,6 +586,6 @@ u32int getFreeFrames(u32int numFrames, u8int domain)
 
   //No free frames found
   //Highest value is most likly to be invalid.  By the time we have to worry about 64bit address spaces this will have been rewritten
-  serial_ERROR("Frame Allocator: Out of free frames/memory to allocate.");
+  DIE_NOW(0, "Frame Allocator: Out of free frames/memory to allocate.");
   return -1;
 }

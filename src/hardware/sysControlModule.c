@@ -3,6 +3,7 @@
 #include "pageTable.h" // for getPhysicalAddress()
 #include "guestContext.h"
 #include "memFunctions.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -13,7 +14,7 @@ void initSysControlModule()
   sysCtrlModule = (struct SystemControlModule*)mallocBytes(sizeof(struct SystemControlModule));
   if (sysCtrlModule == 0)
   {
-    serial_ERROR("Failed to allocate system control module.");
+    DIE_NOW(0, "Failed to allocate system control module.");
   }
   else
   {
@@ -173,7 +174,7 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int address)
   if (size != WORD)
   {
     // only word access allowed in these modules
-    serial_ERROR("SysControlModule: invalid access size.");
+    DIE_NOW(0, "SysControlModule: invalid access size.");
   }
 
   u32int val = 0;
@@ -204,7 +205,7 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int address)
   }
   else
   {
-    serial_ERROR("SysControlModule: invalid base module.");
+    DIE_NOW(0, "SysControlModule: invalid base module.");
   }   
 
   return val;
@@ -219,7 +220,7 @@ u32int loadInterfaceScm(device * dev, u32int address, u32int phyAddr)
   serial_putint(address);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" loadInterfaceScm unimplemented.");
+  DIE_NOW(0, " loadInterfaceScm unimplemented.");
   return 0;
 }
 
@@ -233,7 +234,7 @@ u32int loadPadconfsScm(device * dev, u32int address, u32int phyAddr)
   serial_putint(address);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" loadPadconfsScm unimplemented.");
+  DIE_NOW(0, " loadPadconfsScm unimplemented.");
   return 0;
 }
 
@@ -254,7 +255,7 @@ u32int loadGeneralScm(device * dev, u32int address, u32int phyAddr)
       serial_putstring("loadGeneralScm: unimplemented reg addr 0x");
       serial_putint(phyAddr);
       serial_newline();
-      serial_ERROR("loadGeneralScm loading non existing/unimplemented register!");
+      DIE_NOW(0, "loadGeneralScm loading non existing/unimplemented register!");
   } // switch ends
 #ifdef SYS_CTRL_MOD_DBG
   serial_putstring("loadGeneralScm reg ");
@@ -276,7 +277,7 @@ u32int loadMemWkupScm(device * dev, u32int address, u32int phyAddr)
   serial_putint(address);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" loadMemWkupScm unimplemented.");
+  DIE_NOW(0, " loadMemWkupScm unimplemented.");
   return 0;
 }
 
@@ -290,7 +291,7 @@ u32int loadPadconfsWkupScm(device * dev, u32int address, u32int phyAddr)
   serial_putint(address);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" loadPadconfsWkupScm unimplemented.");
+  DIE_NOW(0, " loadPadconfsWkupScm unimplemented.");
   return 0;
 }
 
@@ -304,7 +305,7 @@ u32int loadGeneralWkupScm(device * dev, u32int address, u32int phyAddr)
   serial_putint(address);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" loadGeneralWkupScm unimplemented.");
+  DIE_NOW(0, " loadGeneralWkupScm unimplemented.");
   return 0;
 }
 
@@ -365,7 +366,7 @@ void storeSysCtrlModule(device * dev, ACCESS_SIZE size, u32int address, u32int v
     serial_putint(value);
     serial_newline();
     serial_putstring(dev->deviceName);
-    serial_ERROR(" invalid base module.");
+    DIE_NOW(0, " invalid base module.");
   }   
 
 }
@@ -381,7 +382,7 @@ void storeInterfaceScm(device * dev, u32int address, u32int phyAddr, u32int valu
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storeInterfaceScm unimplemented.");
+  DIE_NOW(0, " storeInterfaceScm unimplemented.");
 }
 
 
@@ -395,7 +396,7 @@ void storePadconfsScm(device * dev, u32int address, u32int phyAddr, u32int value
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storePadconfsScm unimplemented.");
+  DIE_NOW(0, " storePadconfsScm unimplemented.");
 }
 
 
@@ -409,7 +410,7 @@ void storeGeneralScm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storeGeneralScm unimplemented.");
+  DIE_NOW(0, " storeGeneralScm unimplemented.");
 }
 
 
@@ -423,7 +424,7 @@ void storeMemWkupScm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storeMemWkupScm unimplemented.");
+  DIE_NOW(0, " storeMemWkupScm unimplemented.");
 }
 
 
@@ -437,7 +438,7 @@ void storePadconfsWkupScm(device * dev, u32int address, u32int phyAddr, u32int v
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storePadconfsWkupScm unimplemented.");
+  DIE_NOW(0, " storePadconfsWkupScm unimplemented.");
 }
 
 
@@ -451,5 +452,5 @@ void storeGeneralWkupScm(device * dev, u32int address, u32int phyAddr, u32int va
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storeGeneralWkupScm unimplemented.");
+  DIE_NOW(0, " storeGeneralWkupScm unimplemented.");
 }

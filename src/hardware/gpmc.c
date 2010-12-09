@@ -3,6 +3,7 @@
 #include "pageTable.h" // for getPhysicalAddress()
 #include "guestContext.h"
 #include "memFunctions.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -13,7 +14,7 @@ void initGpmc()
   gpmc = (struct Gpmc*)mallocBytes(sizeof(struct Gpmc));
   if (gpmc == 0)
   {
-    serial_ERROR("Failed to allocate GPMC.");
+    DIE_NOW(0, "Failed to allocate GPMC.");
   }
   else
   {
@@ -74,7 +75,7 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
   if (size != WORD)
   {
     // only word access allowed in these modules
-    serial_ERROR("Gpmc: invalid access size.");
+    DIE_NOW(0, "Gpmc: invalid access size.");
   }
 
   u32int regOffset = phyAddr - Q1_L3_GPMC;
@@ -107,7 +108,7 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
     case GPMC_NAND_ADDRESS_6:
     case GPMC_NAND_COMMAND_7:
     case GPMC_NAND_ADDRESS_7:
-      serial_ERROR("Gpmc: load on write-only register.");
+      DIE_NOW(0, "Gpmc: load on write-only register.");
       break;
     case GPMC_CONFIG1_0:
       val = gpmc->gpmcConfig1_0;
@@ -167,7 +168,7 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
       serial_putstring(" access size ");
       serial_putint((u32int)size);
       serial_newline();
-      serial_ERROR("Gpmc: load on invalid register.");
+      DIE_NOW(0, "Gpmc: load on invalid register.");
   }
   
 #ifdef GPMC_DBG
@@ -223,10 +224,10 @@ void storeGpmc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       gpmc->gpmcSysConfig = value & GPMC_SYSCONFIG_MASK;
       break;
     case GPMC_SYSSTATUS:
-      serial_ERROR("Gpmc: store to read-only register.");
+      DIE_NOW(0, "Gpmc: store to read-only register.");
       break;
     default:
-      serial_ERROR("Gpmc: store to invalid register.");
+      DIE_NOW(0, "Gpmc: store to invalid register.");
   }
 }
 

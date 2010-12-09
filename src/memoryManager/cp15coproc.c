@@ -1,5 +1,6 @@
 #include "cp15coproc.h"
 #include "commonInstrFunctions.h"
+#include "debug.h"
 #include "addressing.h"
 
 extern GCONTXT * getGuestContext(void);
@@ -214,7 +215,7 @@ u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPt
     serial_putstring(") Value = ");
     serial_putint(reg.value);
     serial_newline();
-    error_function("Undefined CP15 register!", 0);
+    DIE_NOW(0, "Undefined CP15 register!");
     return 0;
   }
 }

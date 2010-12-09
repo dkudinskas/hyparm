@@ -4,6 +4,7 @@
 #include "coprocInstructions.h"
 #include "dataProcessInstr.h"
 #include "dataMoveInstr.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -415,7 +416,7 @@ struct opcode32 * decodeInstruction(u32int instr)
     // could not match the instruction in coproc as well! lunch time...
     serial_putstring("decodeInstruction: undefined instruction found: ");
     serial_putint((u32int)instr);
-    serial_ERROR("");
+    DIE_NOW(0, "");
   }
 
   // to make compiler happy
@@ -463,6 +464,6 @@ void dumpInstrString(u32int instr)
   // could not match the instruction in coproc as well! lunch time...
   serial_putstring("decoder: dumpInstr: undefined instruction found: ");
   serial_putint((u32int)instr);
-  serial_ERROR("");
+  DIE_NOW(0, "");
 }
 

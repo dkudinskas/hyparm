@@ -3,6 +3,7 @@
 #include "common.h"
 #include "mmu.h"
 #include "pageTable.h"
+#include "debug.h"
 
 #ifdef DUMP_SCANNER_COUNTER
 static u32int scannerReqCounter = 0;
@@ -73,7 +74,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     u32int cacheIndex = instruction & 0x00FFFFFF;
     if ((cacheIndex < 0) || (cacheIndex >= BLOCK_CACHE_SIZE))
     {
-      serial_ERROR("scanner: block cache index in SWI out of range.");
+      DIE_NOW(0, "scanner: block cache index in SWI out of range.");
     }
 #ifdef SCANNER_DEBUG
     serial_putstring("scanner: EOB instruction is SWI @ ");
@@ -133,7 +134,7 @@ void protectScannedBlock(u32int startAddress, u32int endAddress)
     {
       if ((startAddress & 0xFFF00000) != (endAddress & 0xFFF00000))
       {
-        serial_ERROR("protectScannedBlock: Basic block crosses section boundary!");
+        DIE_NOW(0, "protectScannedBlock: Basic block crosses section boundary!");
       }
       splitSectionToSmallPages(ptBase, startAddress);
       addProtection(startAddress, endAddress, 0, PRIV_RW_USR_RO);
@@ -148,7 +149,7 @@ void protectScannedBlock(u32int startAddress, u32int endAddress)
           serial_putstring("Page size: 64KB (large), 0x");
           serial_putint(ptEntryLvl2);
           serial_newline();
-          serial_ERROR("Unimplemented.");
+          DIE_NOW(0, "Unimplemented.");
           break;
         case SMALL_PAGE:
           if ((ptEntryLvl2 & 0x30) != 0x20)
@@ -160,10 +161,10 @@ void protectScannedBlock(u32int startAddress, u32int endAddress)
           serial_putstring("Page invalid, 0x");
           serial_putint(ptEntryLvl2);
           serial_newline();
-          serial_ERROR("Unimplemented.");
+          DIE_NOW(0, "Unimplemented.");
           break;
         default:
-          serial_ERROR("Unrecognized second level entry");
+          DIE_NOW(0, "Unrecognized second level entry");
           serial_newline();
           break;
       }
@@ -173,13 +174,13 @@ void protectScannedBlock(u32int startAddress, u32int endAddress)
       serial_putstring("Entry for basic block: invalid, 0x");
       serial_putint(*(u32int*)ptEntryAddr);
       serial_newline();
-      serial_ERROR("Unimplemented.");
+      DIE_NOW(0, "Unimplemented.");
       break;
     case RESERVED:
-      serial_ERROR("Entry for basic block: reserved. Error.");
+      DIE_NOW(0, "Entry for basic block: reserved. Error.");
       break;
     default:
-      serial_ERROR("Unrecognized second level entry. Error.");
+      DIE_NOW(0, "Unrecognized second level entry. Error.");
   }
 }
 

@@ -12,6 +12,7 @@
 #include "intc.h"
 #include "uart.h"
 #include "sdma.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -327,7 +328,7 @@ void initialiseDevice(device * dev, char * devName, bool isBus,
       serial_putstring(devName);
       serial_putstring(" to device ");
       serial_putstring(parent->deviceName);
-      serial_ERROR("ERROR.");
+      DIE_NOW(0, "ERROR.");
     }
   }
   dev->loadFunction = ldFn;
@@ -412,7 +413,7 @@ void storeGeneric(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     serial_putstring(" value ");
     serial_putint(value);
     serial_newline();
-    serial_ERROR("No child of current device holds load address in range.");
+    DIE_NOW(0, "No child of current device holds load address in range.");
   }
   else
   {
@@ -426,7 +427,7 @@ void storeGeneric(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     serial_putstring(" value ");
     serial_putint(value);
     serial_newline();
-    serial_ERROR("End device didn't implement custom store function!");
+    DIE_NOW(0, "End device didn't implement custom store function!");
   }
 
 }
@@ -464,7 +465,7 @@ u32int loadGeneric(device * dev, ACCESS_SIZE size, u32int address)
     serial_putint(phyAddr);
     serial_newline();
     dumpGuestContext(gc);
-    serial_ERROR("No child of current device holds load address in range.");
+    DIE_NOW(0, "No child of current device holds load address in range.");
   }
   else
   {
@@ -476,7 +477,7 @@ u32int loadGeneric(device * dev, ACCESS_SIZE size, u32int address)
     serial_putstring(" physical ");
     serial_putint(phyAddr);
     serial_newline();
-    serial_ERROR("End device didn't implement custom load function!");
+    DIE_NOW(0, "End device didn't implement custom load function!");
   }
 
   return 0;

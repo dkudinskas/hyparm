@@ -1,5 +1,6 @@
 #include "beGPTimer.h"
 #include "memFunctions.h"
+#include "debug.h"
 
 static inline bool gptBEidValid(u32int id);
 static inline bool gptBEisExtended(u32int id);
@@ -16,7 +17,7 @@ void gptBEInit(u32int id)
 
   if (addr == 0)
   {
-    serial_ERROR("Failed to allocate GPT_BE.");
+    DIE_NOW(0, "Failed to allocate GPT_BE.");
   }
   else
   {
@@ -170,7 +171,7 @@ void gptBESet10msTick(u32int id)
 {
   if (!gptBEisExtended(id))
   {
-    serial_ERROR("GPTIMER: gptSetUp1msTick not supported on this timer");
+    DIE_NOW(0, "GPTIMER: gptSetUp1msTick not supported on this timer");
   }
 
   gptBEregWrite(id, GPT_REG_TLDR, GPT_REG_TLDR_LOAD_VALUE_1MS);
@@ -251,7 +252,7 @@ static inline u32int gptBEgetBaseAddr(u32int id)
       base = GPTIMER12;
       break;
     default:
-      serial_ERROR("GPT_BE: invalid id");
+      DIE_NOW(0, "GPT_BE: invalid id");
   }
   return base;
 }
