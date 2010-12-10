@@ -8,19 +8,11 @@
 
 void invalidDataMoveTrap(char * msg, GCONTXT * gc)
 {
-  serial_putstring("ERROR: ");
-  serial_putstring(msg);
-  serial_putstring(" ");
   serial_putint(gc->endOfBlockInstr);
   serial_putstring(" @ ");
   serial_putint(gc->R15);
   serial_putstring(" should not have trapped!");
-  serial_newline();
-  dumpGuestContext(gc);
-  while(TRUE)
-  {
-    // infinite loop
-  }
+  DIE_NOW(gc, msg);
 }
 
  /***********************************************************************************
