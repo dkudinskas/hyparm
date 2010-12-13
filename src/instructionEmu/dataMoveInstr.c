@@ -8,30 +8,38 @@
 
 void invalidDataMoveTrap(char * msg, GCONTXT * gc)
 {
+  serial_putstring("ERROR: ");
+  serial_putstring(msg);
+  serial_putstring(" ");
   serial_putint(gc->endOfBlockInstr);
   serial_putstring(" @ ");
   serial_putint(gc->R15);
   serial_putstring(" should not have trapped!");
-  DIE_NOW(gc, msg);
+  serial_newline();
+  dumpGuestContext(gc);
+  while(TRUE)
+  {
+    // infinite loop
+  }
 }
 
  /***********************************************************************************
-  ***********************************************************************************
-  ************************** STORE FUNCTIONS ****************************************
-  ***********************************************************************************
-  ***********************************************************************************/
+***********************************************************************************
+************************** STORE FUNCTIONS ****************************************
+***********************************************************************************
+***********************************************************************************/
 
 u32int strInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
 
   u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int regOrImm  =  instr & 0x02000000; // 1 = reg, 0 = imm
-  u32int preOrPost =  instr & 0x01000000; // 1 = pre, 0 = post
-  u32int incOrDec  =  instr & 0x00800000; // 1 = inc, 0 = dec
-  u32int writeBack =  instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
-  u32int regDst    = (instr & 0x000F0000) >> 16; // Base Destination address 
-  u32int regSrc    = (instr & 0x0000F000) >> 12; // Source value from this register...
+  u32int regOrImm = instr & 0x02000000; // 1 = reg, 0 = imm
+  u32int preOrPost = instr & 0x01000000; // 1 = pre, 0 = post
+  u32int incOrDec = instr & 0x00800000; // 1 = inc, 0 = dec
+  u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
+  u32int regDst = (instr & 0x000F0000) >> 16; // Base Destination address
+  u32int regSrc = (instr & 0x0000F000) >> 12; // Source value from this register...
 
 #ifdef DATA_MOVE_TRACE
   serial_putstring("strInstr: ");
@@ -51,13 +59,13 @@ u32int strInstruction(GCONTXT * context)
 #endif
 
   u32int offsetAddress = 0;
-  u32int baseAddress  = loadGuestGPR(regDst, context);
+  u32int baseAddress = loadGuestGPR(regDst, context);
   u32int valueToStore = loadGuestGPR(regSrc, context);
 
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
-    // condition not met! allright, we're done here. next instruction...
+// condition not met! allright, we're done here. next instruction...
 #ifdef DATA_MOVE_TRACE
     serial_putstring("strInstr: ");
     serial_putstring("condition not met");
@@ -139,7 +147,7 @@ u32int strInstruction(GCONTXT * context)
 
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
-    u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5), 
+    u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5),
                                             ((instr & 0xF80)>>7), &shiftAmount);
     u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
 
@@ -200,12 +208,12 @@ u32int strbInstruction(GCONTXT * context)
   u32int instr = context->endOfBlockInstr;
   
   u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int regOrImm  =  instr & 0x02000000; // 1 = reg, 0 = imm
-  u32int preOrPost =  instr & 0x01000000; // 1 = pre, 0 = post
-  u32int incOrDec  =  instr & 0x00800000; // 1 = inc, 0 = dec
-  u32int writeBack =  instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
-  u32int regDst    = (instr & 0x000F0000) >> 16; // Base Destination address 
-  u32int regSrc    = (instr & 0x0000F000) >> 12; // Source value from this register...
+  u32int regOrImm = instr & 0x02000000; // 1 = reg, 0 = imm
+  u32int preOrPost = instr & 0x01000000; // 1 = pre, 0 = post
+  u32int incOrDec = instr & 0x00800000; // 1 = inc, 0 = dec
+  u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
+  u32int regDst = (instr & 0x000F0000) >> 16; // Base Destination address
+  u32int regSrc = (instr & 0x0000F000) >> 12; // Source value from this register...
 
   u32int offsetAddress = 0;
   u32int baseAddress = 0;
@@ -217,11 +225,6 @@ u32int strbInstruction(GCONTXT * context)
     // condition not met! allright, we're done here. next instruction...
     return context->R15 + 4;
   }
-  // P = 0 and W == 1 then STR as if user mode
-  if ((preOrPost == 0) && (writeBack != 0))
-  {
-    DIE_NOW(0, "STRB as user mode unimplemented.");
-  }
   if (regSrc == 15)
   {
     DIE_NOW(0, "STRB source register PC UNPREDICTABLE case.");
@@ -231,7 +234,7 @@ u32int strbInstruction(GCONTXT * context)
   {
     // immediate case
     u32int imm32 = instr & 0x00000FFF;
-    baseAddress  = loadGuestGPR(regDst, context);
+    baseAddress = loadGuestGPR(regDst, context);
     valueToStore = loadGuestGPR(regSrc, context) & 0xFF;
 
     // offsetAddress = if increment then base + imm32 else base - imm32
@@ -248,7 +251,7 @@ u32int strbInstruction(GCONTXT * context)
   {
     // register case
     u32int regDst2 = instr & 0x0000000F;
-    baseAddress  = loadGuestGPR(regDst, context);
+    baseAddress = loadGuestGPR(regDst, context);
     u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
     valueToStore = loadGuestGPR(regSrc, context) & 0xFF;
     // regDest2 == PC then UNPREDICTABLE
@@ -259,7 +262,7 @@ u32int strbInstruction(GCONTXT * context)
 
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
-    u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5), 
+    u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5),
                                             ((instr & 0xF80)>>7), &shiftAmount);
     u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
 
@@ -288,6 +291,42 @@ u32int strbInstruction(GCONTXT * context)
   else
   {
     address = baseAddress;
+  }
+
+  // P = 0 and W == 1 then STR as if user mode
+  if ((preOrPost == 0) && (writeBack != 0))
+  {
+    // 1. get guest PT entry for this addr.
+    sectionDescriptor* ptEntry = (sectionDescriptor*)getPageTableEntry(context->PT_os, address);
+    if (ptEntry->type == FAULT)
+    {
+      // 1. set CP15 Data Fault Status Register to translation fault
+      u32int dfsr = (translation_section & 0xF) | ((translation_section & 0x10) << 6);
+      dfsr |= GUEST_ACCESS_DOMAIN << 4;
+      setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
+      // 2. set CP15 Data Fault Address Register to 'address'
+      setCregVal(6, 0, 0, 0, context->coprocRegBank, address);
+      // 3. set guest abort pending flag, return
+      context->guestAbtPending = TRUE;
+      return context->R15;
+    }
+    u8int accPerm = ptEntry->ap10 | (ptEntry->ap2 << 2);
+    // 2. check permissions: if usr cannot read, panic
+    if (accPerm != 0b011)
+    {
+      serial_putstring("STRBT: address ");
+      serial_putint(address);
+      serial_newline();
+      serial_putstring("STRBT: ptEntry ");
+      serial_putint((u32int)*((u32int*)ptEntry));
+      serial_newline();
+      serial_putstring("STRBT: accPerm ");
+      serial_putint_nozeros((u32int)accPerm);
+      serial_newline();
+      dumpGuestContext(context);
+      DIE_NOW(0, "STRBT: PT entry doesn't allow user write access! throw guest abt!");
+    }
+    // if usr can write, continue
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
@@ -321,13 +360,13 @@ u32int strhInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
   
-  u32int condcode  = (instr & 0xF0000000) >> 28;
-  u32int preOrPost =  instr & 0x01000000; // 1 = pre, 0 = post
-  u32int incOrDec  =  instr & 0x00800000; // 1 = inc, 0 = dec
-  u32int regOrImm  =  instr & 0x00400000; // 1 = reg, 0 = imm
-  u32int writeBack =  instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
-  u32int regDst    = (instr & 0x000F0000) >> 16; // Destination address 
-  u32int regSrc    = (instr & 0x0000F000) >> 12; // Source value from this register...
+  u32int condcode = (instr & 0xF0000000) >> 28;
+  u32int preOrPost = instr & 0x01000000; // 1 = pre, 0 = post
+  u32int incOrDec = instr & 0x00800000; // 1 = inc, 0 = dec
+  u32int regOrImm = instr & 0x00400000; // 1 = reg, 0 = imm
+  u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
+  u32int regDst = (instr & 0x000F0000) >> 16; // Destination address
+  u32int regSrc = (instr & 0x0000F000) >> 12; // Source value from this register...
 
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -352,12 +391,12 @@ u32int strhInstruction(GCONTXT * context)
   if (regOrImm != 0)
   {
     // immediate case
-    u32int imm4Top    = instr & 0x00000F00;
+    u32int imm4Top = instr & 0x00000F00;
     u32int imm4Bottom = instr & 0x0000000F;
     u32int imm32 = (imm4Top >> 4) | imm4Bottom; // imm field to +/- offset
     
-    baseAddress   = loadGuestGPR(regDst, context);
-    valueToStore  = loadGuestGPR(regSrc, context);
+    baseAddress = loadGuestGPR(regDst, context);
+    valueToStore = loadGuestGPR(regSrc, context);
 
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
@@ -450,13 +489,13 @@ u32int stmInstruction(GCONTXT * context)
 #endif
 
   u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int prePost =   instr & 0x01000000;
-  u32int upDown =    instr & 0x00800000;
+  u32int prePost = instr & 0x01000000;
+  u32int upDown = instr & 0x00800000;
   u32int forceUser = instr & 0x00400000;
   u32int writeback = instr & 0x00200000;
 
-  u32int baseReg  = (instr & 0x000F0000) >> 16;
-  u32int regList   = instr & 0x0000FFFF;
+  u32int baseReg = (instr & 0x000F0000) >> 16;
+  u32int regList = instr & 0x0000FFFF;
   u32int baseAddress = loadGuestGPR(baseReg, context);
 
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
@@ -480,7 +519,7 @@ u32int stmInstruction(GCONTXT * context)
   else if ( (upDown == 0) && (prePost == 0) ) // STM decrement after
   {
     // address = baseAddress - 4*(number of registers to store) + 4;
-    address = baseAddress - 4 * countBitsSet(regList) + 4; 
+    address = baseAddress - 4 * countBitsSet(regList) + 4;
   }
   else if ( (upDown != 0) && (prePost != 0) ) // STM increment before
   {
@@ -523,7 +562,7 @@ u32int stmInstruction(GCONTXT * context)
     // emulating store. Validate cache if needed
     validateCachePreChange(context->blockCache, address);
     // *(address)= PC+8 - architectural feature due to pipeline..
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, 
+    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD,
                                             address, (loadGuestGPR(15, context)+8));
   }
 
@@ -550,14 +589,14 @@ u32int strdInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
 
-  u32int condcode  = (instr & 0xF0000000) >> 28;
-  u32int prePost   =  instr & 0x01000000;
-  u32int upDown    =  instr & 0x00800000;
-  u32int regOrImm  =  instr & 0x00400000;
-  u32int writeback =  instr & 0x00200000;  // 0 = reg, !0 = imm
-  u32int regDst    = (instr & 0x000F0000) >> 16;
-  u32int regSrc    = (instr & 0x0000F000) >> 12;
-  u32int regSrc2   = regSrc+1;
+  u32int condcode = (instr & 0xF0000000) >> 28;
+  u32int prePost = instr & 0x01000000;
+  u32int upDown = instr & 0x00800000;
+  u32int regOrImm = instr & 0x00400000;
+  u32int writeback = instr & 0x00200000; // 0 = reg, !0 = imm
+  u32int regDst = (instr & 0x000F0000) >> 16;
+  u32int regSrc = (instr & 0x0000F000) >> 12;
+  u32int regSrc2 = regSrc+1;
 
 #ifdef DATA_MOVE_TRACE
   serial_putstring("STRD instruction: ");
@@ -579,8 +618,8 @@ u32int strdInstruction(GCONTXT * context)
   }
 
   u32int offsetAddress = 0;
-  u32int baseAddress   = loadGuestGPR(regDst, context);
-  u32int valueToStore  = loadGuestGPR(regSrc, context);
+  u32int baseAddress = loadGuestGPR(regDst, context);
+  u32int valueToStore = loadGuestGPR(regSrc, context);
   u32int valueToStore2 = loadGuestGPR(regSrc2, context);
 
   u32int wback = (prePost == 0) || (writeback != 0);
@@ -597,7 +636,7 @@ u32int strdInstruction(GCONTXT * context)
   }
   if (regSrc2 == 15)
   {
-   DIE_NOW(0, "STRD: unpredictable case, regSrc2 = PC!");
+    DIE_NOW(0, "STRD: unpredictable case, regSrc2 = PC!");
   }
 
   if (regOrImm != 0)
@@ -712,9 +751,9 @@ u32int strexInstruction(GCONTXT * context)
 #endif
 
   u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int regN   = (instr & 0x000F0000) >> 16;
-  u32int regD   = (instr & 0x0000F000) >> 12;
-  u32int regT   = (instr & 0x0000000F);
+  u32int regN = (instr & 0x000F0000) >> 16;
+  u32int regD = (instr & 0x0000F000) >> 12;
+  u32int regT = (instr & 0x0000000F);
 
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -764,9 +803,9 @@ u32int strexbInstruction(GCONTXT * context)
 #endif
 
   u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int regN   = (instr & 0x000F0000) >> 16;
-  u32int regD   = (instr & 0x0000F000) >> 12;
-  u32int regT   = (instr & 0x0000000F);
+  u32int regN = (instr & 0x000F0000) >> 16;
+  u32int regD = (instr & 0x0000F000) >> 12;
+  u32int regT = (instr & 0x0000000F);
 
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -806,9 +845,9 @@ u32int strexdInstruction(GCONTXT * context)
 #endif
 
   u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int regN   = (instr & 0x000F0000) >> 16;
-  u32int regD   = (instr & 0x0000F000) >> 12;
-  u32int regT   = (instr & 0x0000000F);
+  u32int regN = (instr & 0x000F0000) >> 16;
+  u32int regD = (instr & 0x0000F000) >> 12;
+  u32int regT = (instr & 0x0000000F);
 
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -860,9 +899,9 @@ u32int strexhInstruction(GCONTXT * context)
 #endif
 
   u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int regN   = (instr & 0x000F0000) >> 16;
-  u32int regD   = (instr & 0x0000F000) >> 12;
-  u32int regT   = (instr & 0x0000000F);
+  u32int regN = (instr & 0x000F0000) >> 16;
+  u32int regD = (instr & 0x0000F000) >> 12;
+  u32int regT = (instr & 0x0000000F);
 
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -892,10 +931,10 @@ u32int strexhInstruction(GCONTXT * context)
 
 
  /***********************************************************************************
-  ***********************************************************************************
-  ************************** LOAD FUNCTIONS *****************************************
-  ***********************************************************************************
-  ***********************************************************************************/
+***********************************************************************************
+************************** LOAD FUNCTIONS *****************************************
+***********************************************************************************
+***********************************************************************************/
 u32int ldrhtInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
@@ -907,13 +946,13 @@ u32int ldrhInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
   
-  u32int condcode  = (instr & 0xF0000000) >> 28;
-  u32int preOrPost =  instr & 0x01000000; // 1 = pre, 0 = post
-  u32int incOrDec  =  instr & 0x00800000; // 1 = inc, 0 = dec
-  u32int regOrImm  =  instr & 0x00400000; // 1 = reg, 0 = imm
-  u32int writeBack =  instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
-  u32int regSrc    = (instr & 0x000F0000) >> 16; // Source value from this register... 
-  u32int regDst    = (instr & 0x0000F000) >> 12; // Destination address
+  u32int condcode = (instr & 0xF0000000) >> 28;
+  u32int preOrPost = instr & 0x01000000; // 1 = pre, 0 = post
+  u32int incOrDec = instr & 0x00800000; // 1 = inc, 0 = dec
+  u32int regOrImm = instr & 0x00400000; // 1 = reg, 0 = imm
+  u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
+  u32int regSrc = (instr & 0x000F0000) >> 16; // Source value from this register...
+  u32int regDst = (instr & 0x0000F000) >> 12; // Destination address
 
   // P = 0 and W == 1 then LDRHT (as if user mode)
   if ((preOrPost == 0) && (writeBack != 0))
@@ -940,7 +979,7 @@ u32int ldrhInstruction(GCONTXT * context)
   if (regOrImm != 0)
   {
     // immediate case
-    u32int imm4Top    = instr & 0x00000F00;
+    u32int imm4Top = instr & 0x00000F00;
     u32int imm4Bottom = instr & 0x0000000F;
     u32int imm32 = (imm4Top >> 4) | imm4Bottom; // imm field to +/- offset
     
@@ -1014,7 +1053,7 @@ u32int ldrhInstruction(GCONTXT * context)
   } // reg case done
 
 
-  u32int valueLoaded = 
+  u32int valueLoaded =
     context->hardwareLibrary->loadFunction(context->hardwareLibrary, HALFWORD, address);
         
   // put loaded val to reg
@@ -1053,17 +1092,17 @@ u32int ldrbInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
   
-  u32int condcode =  (instr & 0xF0000000) >> 28;
-  u32int regOrImm  =  instr & 0x02000000; // 1 = reg, 0 = imm
-  u32int preOrPost =  instr & 0x01000000; // 1 = pre, 0 = post
-  u32int incOrDec  =  instr & 0x00800000; // 1 = inc, 0 = dec
-  u32int writeBack =  instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
-  u32int regSrc    = (instr & 0x000F0000) >> 16; // Base Load address 
-  u32int regDst    = (instr & 0x0000F000) >> 12; // Destination - load to this 
+  u32int condcode = (instr & 0xF0000000) >> 28;
+  u32int regOrImm = instr & 0x02000000; // 1 = reg, 0 = imm
+  u32int preOrPost = instr & 0x01000000; // 1 = pre, 0 = post
+  u32int incOrDec = instr & 0x00800000; // 1 = inc, 0 = dec
+  u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
+  u32int regSrc = (instr & 0x000F0000) >> 16; // Base Load address
+  u32int regDst = (instr & 0x0000F000) >> 12; // Destination - load to this
 
   u32int offset = 0;
   u32int offsetAddress = 0;
-  u32int baseAddress   = loadGuestGPR(regSrc, context);
+  u32int baseAddress = loadGuestGPR(regSrc, context);
 
   // P = 0 and W == 1 then LDRB as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
@@ -1104,7 +1143,7 @@ u32int ldrbInstruction(GCONTXT * context)
 
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
-    u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5), 
+    u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5),
                                             ((instr & 0xF80)>>7), &shiftAmount);
     u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
 
@@ -1136,7 +1175,7 @@ u32int ldrbInstruction(GCONTXT * context)
   }
 
   // DO the actual load from memory
-  u32int valueLoaded = 
+  u32int valueLoaded =
       context->hardwareLibrary->loadFunction(context->hardwareLibrary, BYTE, address) & 0xFF;
 
   // put loaded val to reg
@@ -1161,13 +1200,13 @@ u32int ldrInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
   
-  u32int condcode =  (instr & 0xF0000000) >> 28;
-  u32int regOrImm  =  instr & 0x02000000; // 1 = reg, 0 = imm
-  u32int preOrPost =  instr & 0x01000000; // 1 = pre, 0 = post
-  u32int incOrDec  =  instr & 0x00800000; // 1 = inc, 0 = dec
-  u32int writeBack =  instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
-  u32int regSrc    = (instr & 0x000F0000) >> 16; // Base Load address 
-  u32int regDst    = (instr & 0x0000F000) >> 12; // Destination - load to this 
+  u32int condcode = (instr & 0xF0000000) >> 28;
+  u32int regOrImm = instr & 0x02000000; // 1 = reg, 0 = imm
+  u32int preOrPost = instr & 0x01000000; // 1 = pre, 0 = post
+  u32int incOrDec = instr & 0x00800000; // 1 = inc, 0 = dec
+  u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
+  u32int regSrc = (instr & 0x000F0000) >> 16; // Base Load address
+  u32int regDst = (instr & 0x0000F000) >> 12; // Destination - load to this
 
   u32int offsetAddress = 0;
   u32int baseAddress = 0;
@@ -1183,7 +1222,7 @@ u32int ldrInstruction(GCONTXT * context)
   {
     // immediate case
     u32int imm32 = instr & 0x00000FFF;
-    baseAddress  = loadGuestGPR(regSrc, context);
+    baseAddress = loadGuestGPR(regSrc, context);
 
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
@@ -1199,7 +1238,7 @@ u32int ldrInstruction(GCONTXT * context)
   {
     // register case
     u32int regSrc2 = instr & 0x0000000F;
-    baseAddress  = loadGuestGPR(regSrc, context);
+    baseAddress = loadGuestGPR(regSrc, context);
     if (regSrc == 15)
     {
       baseAddress = baseAddress + 8;
@@ -1213,7 +1252,7 @@ u32int ldrInstruction(GCONTXT * context)
 
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
-    u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5), 
+    u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5),
                                             ((instr & 0xF80)>>7), &shiftAmount);
     u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
 
@@ -1297,7 +1336,7 @@ u32int ldrInstruction(GCONTXT * context)
   }
 
   // DO the actual load from memory
-  u32int valueLoaded = 
+  u32int valueLoaded =
       context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
 
   // LDR loading to PC should load a word-aligned value
@@ -1360,19 +1399,19 @@ u32int ldmInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-  u32int condcode    = (instr & 0xF0000000) >> 28;
-  u32int prePost     = instr & 0x01000000;
-  u32int upDown      = instr & 0x00800000;
-  u32int forceUser   = instr & 0x00400000;
-  u32int writeback   = instr & 0x00200000;
-  u32int baseReg     = (instr & 0x000F0000) >> 16;
-  u32int regList     = instr & 0x0000FFFF;
+  u32int condcode = (instr & 0xF0000000) >> 28;
+  u32int prePost = instr & 0x01000000;
+  u32int upDown = instr & 0x00800000;
+  u32int forceUser = instr & 0x00400000;
+  u32int writeback = instr & 0x00200000;
+  u32int baseReg = (instr & 0x000F0000) >> 16;
+  u32int regList = instr & 0x0000FFFF;
   u32int baseAddress = loadGuestGPR(baseReg, context);
 
   if ( (baseReg == 15) || (countBitsSet(regList) == 0) )
   {
     DIE_NOW(0, "LDM UNPREDICTABLE: base=PC or no registers in list");
-  } 
+  }
 
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -1409,7 +1448,7 @@ u32int ldmInstruction(GCONTXT * context)
   else if ( (upDown == 0) && (prePost == 0) ) // LDM decrement after
   {
     // address = baseAddress - 4*(number of registers to load) + 4;
-    address = baseAddress - 4 * countBitsSet(regList) + 4; 
+    address = baseAddress - 4 * countBitsSet(regList) + 4;
   }
   else if ( (upDown != 0) && (prePost != 0) ) // LDM increment before
   {
@@ -1434,7 +1473,7 @@ u32int ldmInstruction(GCONTXT * context)
         isPCinRegList = TRUE;
       }
       // R[i] = *(address);
-      u32int valueLoaded = 
+      u32int valueLoaded =
         context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
       storeGuestGPR(i, valueLoaded, context);
 #ifdef DATA_MOVE_TRACE
@@ -1493,7 +1532,7 @@ u32int ldmInstruction(GCONTXT * context)
           break;
         case CPSR_MODE_USER:
         case CPSR_MODE_SYSTEM:
-        default: 
+        default:
           DIE_NOW(0, "LDM: exception return form sys/usr mode!");
       }
       context->CPSR = modeSpsr;
@@ -1501,7 +1540,7 @@ u32int ldmInstruction(GCONTXT * context)
     else
     {
       context->CPSR = savedCPSR;
-    } 
+    }
   }
 
   if (isPCinRegList)
@@ -1534,8 +1573,8 @@ u32int ldrexInstruction(GCONTXT * context)
 #endif
 
   u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int baseReg  = (instr & 0x000F0000) >> 16;
-  u32int regDest  = (instr & 0x0000F000) >> 12;
+  u32int baseReg = (instr & 0x000F0000) >> 16;
+  u32int regDest = (instr & 0x0000F000) >> 12;
 
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -1550,7 +1589,7 @@ u32int ldrexInstruction(GCONTXT * context)
   }
 
   u32int baseVal = loadGuestGPR(baseReg, context);
-  u32int value = 
+  u32int value =
       context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal);
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDREX instruction: baseVal = ");
@@ -1579,8 +1618,8 @@ u32int ldrexbInstruction(GCONTXT * context)
 #endif
 
   u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int baseReg  = (instr & 0x000F0000) >> 16;
-  u32int regDest  = (instr & 0x0000F000) >> 12;
+  u32int baseReg = (instr & 0x000F0000) >> 16;
+  u32int regDest = (instr & 0x0000F000) >> 12;
 
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -1603,11 +1642,11 @@ u32int ldrexbInstruction(GCONTXT * context)
 
 
 /*****************************************************************
- * Load Register Exclusive Doubleword                            *
- * derives an address from a base register value, loads a 64-bit *
- * doubleword from memory, writes it to two registers and        *
- * marks the physical address as exclusive access                *
- *****************************************************************/
+* Load Register Exclusive Doubleword *
+* derives an address from a base register value, loads a 64-bit *
+* doubleword from memory, writes it to two registers and *
+* marks the physical address as exclusive access *
+*****************************************************************/
 u32int ldrexdInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
@@ -1620,8 +1659,8 @@ u32int ldrexdInstruction(GCONTXT * context)
 #endif
 
   u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int baseReg  = (instr & 0x000F0000) >> 16;
-  u32int regDest  = (instr & 0x0000F000) >> 12;
+  u32int baseReg = (instr & 0x000F0000) >> 16;
+  u32int regDest = (instr & 0x0000F000) >> 12;
   
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -1629,16 +1668,16 @@ u32int ldrexdInstruction(GCONTXT * context)
     // condition not met! allright, we're done here. next instruction...
     return context->R15 + 4;
   }
-  // must not be PC, destination must be even and not link register  
+  // must not be PC, destination must be even and not link register
   if ((baseReg == 15) || ((regDest % 2) != 0) || (regDest == 14))
   {
     DIE_NOW(0, "LDREXH unpredictable case (invalid registers).");
   }
-  u32int baseVal  = loadGuestGPR(baseReg, context);
+  u32int baseVal = loadGuestGPR(baseReg, context);
 
-  u32int value = 
+  u32int value =
       context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal);
-  u32int value2 = 
+  u32int value2 =
       context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal+4);
   storeGuestGPR(regDest, value, context);
   storeGuestGPR(regDest+1, value2, context);
@@ -1658,8 +1697,8 @@ u32int ldrexhInstruction(GCONTXT * context)
 #endif
 
   u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int baseReg  = (instr & 0x000F0000) >> 16;
-  u32int regDest  = (instr & 0x0000F000) >> 12;
+  u32int baseReg = (instr & 0x000F0000) >> 16;
+  u32int regDest = (instr & 0x0000F000) >> 12;
 
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -1674,10 +1713,9 @@ u32int ldrexhInstruction(GCONTXT * context)
   }
   u32int baseVal = loadGuestGPR(baseReg, context);
   // halfword zero extended to word...
-  u32int value = 
+  u32int value =
     ((u32int)context->hardwareLibrary->loadFunction(context->hardwareLibrary, HALFWORD, baseVal) & 0xFFFF);
   storeGuestGPR(regDest, value, context);
   
   return context->R15 + 4;
 }
-
