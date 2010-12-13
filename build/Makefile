@@ -78,10 +78,6 @@ $(RAW_ASMS): init_once
 clean:
 	@rm $(OBJS) $(ASM_OBJS) $(APP_NAME).dump $(APP_NAME).elf $(APP_NAME).map $(APP_NAME).bin 2>/dev/null || :
 
-.PHONY: backup
-backup:
-	cd ..; make backup;
-
 .PHONY: help
 help:
 	@echo TARGET=beagle,tegra250
