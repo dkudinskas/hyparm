@@ -23,7 +23,7 @@ void invalidDataMoveTrap(char * msg, GCONTXT * gc)
   }
 }
 
- /***********************************************************************************
+/***********************************************************************************
 ***********************************************************************************
 ************************** STORE FUNCTIONS ****************************************
 ***********************************************************************************
@@ -73,12 +73,7 @@ u32int strInstruction(GCONTXT * context)
 #endif
     return context->R15 + 4;
   }
-  // P = 0 and W == 1 then STR as if user mode
-  if ((preOrPost == 0) && (writeBack != 0))
-  {
-    DIE_NOW(0, "STR as user mode unimplemented.");
-  }
-  
+
   if (regOrImm == 0)
   {
 #ifdef DATA_MOVE_TRACE
@@ -183,6 +178,17 @@ u32int strInstruction(GCONTXT * context)
     dumpGuestContext(context);
     DIE_NOW(0, "STR Rd [Rn, Rm/#imm] unaligned address!\n");
   }
+
+  // P = 0 and W == 1 then STR as if user mode
+  if ((preOrPost == 0) && (writeBack != 0))
+  {
+    bool abort = shouldAbort(FALSE, TRUE, address);
+    if (abort)
+    {
+      return context->R15;
+    }
+  }
+
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
   valueToStore = (regSrc == 15) ? (valueToStore+8) : valueToStore;
 
@@ -296,35 +302,10 @@ u32int strbInstruction(GCONTXT * context)
   // P = 0 and W == 1 then STR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
-    // 1. get guest PT entry for this addr.
-    sectionDescriptor* ptEntry = (sectionDescriptor*)getPageTableEntry(context->PT_os, address);
-    if (ptEntry->type == FAULT)
+    bool abort = shouldAbort(FALSE, TRUE, address);
+    if (abort)
     {
-      // 1. set CP15 Data Fault Status Register to translation fault
-      u32int dfsr = (translation_section & 0xF) | ((translation_section & 0x10) << 6);
-      dfsr |= GUEST_ACCESS_DOMAIN << 4;
-      setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
-      // 2. set CP15 Data Fault Address Register to 'address'
-      setCregVal(6, 0, 0, 0, context->coprocRegBank, address);
-      // 3. set guest abort pending flag, return
-      context->guestAbtPending = TRUE;
       return context->R15;
-    }
-    u8int accPerm = ptEntry->ap10 | (ptEntry->ap2 << 2);
-    // 2. check permissions: if usr cannot read, panic
-    if (accPerm != 0b011)
-    {
-      serial_putstring("STRBT: address ");
-      serial_putint(address);
-      serial_newline();
-      serial_putstring("STRBT: ptEntry ");
-      serial_putint((u32int)*((u32int*)ptEntry));
-      serial_newline();
-      serial_putstring("STRBT: accPerm ");
-      serial_putint_nozeros((u32int)accPerm);
-      serial_newline();
-      dumpGuestContext(context);
-      DIE_NOW(0, "STRBT: PT entry doesn't allow user write access! throw guest abt!");
     }
     // if usr can write, continue
   }
@@ -1055,7 +1036,7 @@ u32int ldrhInstruction(GCONTXT * context)
 
   u32int valueLoaded =
     context->hardwareLibrary->loadFunction(context->hardwareLibrary, HALFWORD, address);
-        
+
   // put loaded val to reg
   storeGuestGPR(regDst, valueLoaded, context);
 
@@ -1104,14 +1085,9 @@ u32int ldrbInstruction(GCONTXT * context)
   u32int offsetAddress = 0;
   u32int baseAddress = loadGuestGPR(regSrc, context);
 
-  // P = 0 and W == 1 then LDRB as if user mode
-  if ((preOrPost == 0) && (writeBack != 0))
-  {
-    DIE_NOW(0, "LDRB as user mode unimplemented.");
-  }
   if (regDst == 15)
   {
-    DIE_NOW(0, "LDRB: cannot load a single byte into Pc!");
+    DIE_NOW(0, "LDRB: cannot load a single byte into PC!");
   }
   
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
@@ -1172,6 +1148,16 @@ u32int ldrbInstruction(GCONTXT * context)
   else
   {
     address = baseAddress;
+  }
+
+  // P = 0 and W == 1 then LDRB as if user mode
+  if ((preOrPost == 0) && (writeBack != 0))
+  {
+    bool abort = shouldAbort(FALSE, FALSE, address);
+    if (abort)
+    {
+      return context->R15;
+    }
   }
 
   // DO the actual load from memory
@@ -1292,47 +1278,11 @@ u32int ldrInstruction(GCONTXT * context)
   // P = 0 and W == 1 then LDR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
-    // 1. get guest PT entry for this addr.
-    sectionDescriptor* ptEntry = (sectionDescriptor*)getPageTableEntry(context->PT_os, address);
-    if (ptEntry->type == FAULT)
+    bool abort = shouldAbort(FALSE, FALSE, address);
+    if (abort)
     {
-      // 1. set CP15 Data Fault Status Register to translation fault
-      u32int dfsr = (translation_section & 0xF) | ((translation_section & 0x10) << 6);
-      dfsr |= GUEST_ACCESS_DOMAIN << 4;
-      setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
-      // 2. set CP15 Data Fault Address Register to 'address'
-      setCregVal(6, 0, 0, 0, context->coprocRegBank, address);
-      // 3. set guest abort pending flag, return
-      context->guestAbtPending = TRUE;
       return context->R15;
     }
-    u8int accPerm = ptEntry->ap10 | (ptEntry->ap2 << 2);
-    serial_putstring("LDRT: address ");
-    serial_putint(address);
-    serial_newline();
-    serial_putstring("LDRT: ptEntry ");
-    serial_putint((u32int)*((u32int*)ptEntry));
-    serial_newline();
-    serial_putstring("LDRT: accPerm ");
-    serial_putint_nozeros((u32int)accPerm);
-    serial_newline();
-    // 2. check permissions: if usr cannot read, panic
-    if (accPerm == 0b000)
-    {
-      dumpGuestContext(context);
-      DIE_NOW(0, "LDRT: PT entry AP: USR N/A PRIV N/A");
-    }
-    if (accPerm == 0b001)
-    {
-      dumpGuestContext(context);
-      DIE_NOW(0, "LDRT: PT entry AP: USR N/A PRIV R/W");
-    }
-    if (accPerm == 0b101)
-    {
-      dumpGuestContext(context);
-      DIE_NOW(0, "LDRT: PT entry AP: USR N/A PRIV R/O");
-    }
-    // 3. check permissions: if usr can read, continue
   }
 
   // DO the actual load from memory
@@ -1557,8 +1507,155 @@ u32int ldmInstruction(GCONTXT * context)
 /* load dual */
 u32int ldrdInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "LDRD unfinished\n");
-  return 0;
+  u32int instr = context->endOfBlockInstr;
+
+  u32int condcode  = (instr & 0xF0000000) >> 28;
+  u32int prePost   = instr & 0x01000000;
+  u32int upDown    = instr & 0x00800000;
+  u32int regOrImm  = instr & 0x00400000; // 0 = reg, 1 = imm
+  u32int writeback = instr & 0x00200000;
+
+  u32int regSrc = (instr & 0x000F0000) >> 16;
+  u32int regDst = (instr & 0x0000F000) >> 12;
+  u32int regDst2 = regDst+1;
+
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("LDRD instruction: ");
+  serial_putint(instr);
+  serial_putstring(" @ PC=");
+  serial_putint(context->R15);
+  serial_newline();
+#endif
+
+  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
+  if (!evalCC(condcode, cpsrCC))
+  {
+    // condition not met! allright, we're done here. next instruction...
+    return context->R15 + 4;
+  }
+
+  if ((regDst % 2) == 1)
+  {
+    DIE_NOW(0, "LDRD undefined case: regDst must be even number!");
+  }
+
+  u32int offsetAddress = 0;
+  u32int baseAddress = loadGuestGPR(regSrc, context);
+
+  u32int wback = (prePost == 0) || (writeback != 0);
+
+  // P = 0 and W == 1 then STR as if user mode
+  if ((prePost == 0) && (writeback != 0))
+  {
+    DIE_NOW(context, "LDRD unpredictable case (P=0 AND W=1)!");
+  }
+
+  if (wback && ((regDst == 15) || (regSrc == regDst) || (regSrc == regDst2)) )
+  {
+    DIE_NOW(context, "LDRD unpredictable register selection!");
+  }
+  if (regDst2 == 15)
+  {
+    DIE_NOW(context, "LDRD: unpredictable case, regDst2 = PC!");
+  }
+
+  if (regOrImm != 0)
+  {
+    // immediate case
+    u32int imm4h = (instr & 0x00000f00) >> 4;
+    u32int imm4l = (instr & 0x0000000f);
+    u32int imm32 = imm4h | imm4l;
+
+    // offsetAddress = if increment then base + imm32 else base - imm32
+    if (upDown != 0)
+    {
+      offsetAddress = baseAddress + imm32;
+    }
+    else
+    {
+      offsetAddress = baseAddress - imm32;
+    }
+#ifdef DATA_MOVE_TRACE
+    serial_putstring("imm32=");
+    serial_putint_nozeros(imm32);
+    serial_putstring(" baseAddress=");
+    serial_putint(baseAddress);
+    serial_putstring(" offsetAddress=");
+    serial_putint(offsetAddress);
+    serial_newline();
+#endif
+  } // Immediate case ends
+  else
+  {
+    // register case
+    u32int regSrc2 = instr & 0x0000000F;
+    u32int offsetRegisterValue = loadGuestGPR(regSrc2, context);
+    // regDest2 == PC then UNPREDICTABLE
+    if (regSrc2 == 15)
+    {
+      DIE_NOW(0, "STR reg Rm == PC UNPREDICTABLE case!");
+    }
+
+    // if increment then base + offset else base - offset
+    if (upDown != 0)
+    {
+      // increment
+      offsetAddress = baseAddress + offsetRegisterValue;
+    }
+    else
+    {
+      // decrement
+      offsetAddress = baseAddress - offsetRegisterValue;
+    }
+#ifdef DATA_MOVE_TRACE
+    serial_putstring("Rm=");
+    serial_putint_nozeros(regSrc2);
+    serial_putstring(" baseAddress=");
+    serial_putint(baseAddress);
+    serial_putstring(" offsetRegisterValue=");
+    serial_putint(offsetRegisterValue);
+    serial_newline();
+#endif
+  } // Register case ends
+
+  u32int address = 0;
+  // if preIndex then use offsetAddress else baseAddress
+  if (prePost != 0)
+  {
+    address = offsetAddress;
+  }
+  else
+  {
+    address = baseAddress;
+  }
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("LDRD: load address = ");
+  serial_putint(address);
+  serial_newline();
+#endif
+
+  u32int valueLoaded = 
+    context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
+  u32int valueLoaded2 = 
+    context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address+4);
+  // put loaded values to their registers
+  storeGuestGPR(regDst,  valueLoaded,  context);
+  storeGuestGPR(regDst2, valueLoaded2, context);
+
+#ifdef DATA_MOVE_TRACE
+  serial_putstring("LDRD: valueLoaded1 = ");
+  serial_putint(valueLoaded);
+  serial_putstring(" valueLoaded2 = ");
+  serial_putint(valueLoaded2);
+  serial_newline();
+#endif
+
+  if (wback)
+  {
+    // Rn = offsetAddr;
+    storeGuestGPR(regSrc, offsetAddress, context);
+  }
+  return (context->R15 + 4);
 }
 
 u32int ldrexInstruction(GCONTXT * context)

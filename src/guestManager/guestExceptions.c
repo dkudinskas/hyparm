@@ -90,3 +90,31 @@ void deliverAbort()
   }
   // now prepared the global guest environment. scanner will scan correct code.
 }
+
+void throwAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
+{
+#ifdef GUEST_EXCEPTIONS_DBG
+  serial_putstring("throwAbort(");
+  serial_putint(address);
+  serial_putstring(", faultType ");
+  serial_putint_nozeros(faultType);
+  serial_putstring(", isWrite ");
+  serial_putint(isWrite);
+  serial_putstring(", dom ");
+  serial_putint(isWrite);
+  serial_newline();
+#endif
+  GCONTXT* context = getGuestContext();
+  // set CP15 Data Fault Status Register
+  u32int dfsr = (faultType & 0xF) | ((faultType & 0x10) << 6);
+  dfsr |= domain << 4;
+  if (isWrite)
+  {
+    dfsr |= 0x800; // write-not-read bit
+  }
+  setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
+  // set CP15 Data Fault Address Register to 'address'
+  setCregVal(6, 0, 0, 0, context->coprocRegBank, address);
+  // set guest abort pending flag, return
+  context->guestAbtPending = TRUE;
+}

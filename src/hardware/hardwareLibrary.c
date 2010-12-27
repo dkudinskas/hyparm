@@ -413,7 +413,7 @@ void storeGeneric(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     serial_putstring(" value ");
     serial_putint(value);
     serial_newline();
-    DIE_NOW(0, "No child of current device holds load address in range.");
+    DIE_NOW(gc, "No child of current device holds load address in range.");
   }
   else
   {
@@ -427,7 +427,7 @@ void storeGeneric(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     serial_putstring(" value ");
     serial_putint(value);
     serial_newline();
-    DIE_NOW(0, "End device didn't implement custom store function!");
+    DIE_NOW(gc, "End device didn't implement custom store function!");
   }
 
 }
@@ -464,8 +464,7 @@ u32int loadGeneric(device * dev, ACCESS_SIZE size, u32int address)
     serial_putstring(" physical ");
     serial_putint(phyAddr);
     serial_newline();
-    dumpGuestContext(gc);
-    DIE_NOW(0, "No child of current device holds load address in range.");
+    DIE_NOW(gc, "No child of current device holds load address in range.");
   }
   else
   {
@@ -477,7 +476,7 @@ u32int loadGeneric(device * dev, ACCESS_SIZE size, u32int address)
     serial_putstring(" physical ");
     serial_putint(phyAddr);
     serial_newline();
-    DIE_NOW(0, "End device didn't implement custom load function!");
+    DIE_NOW(gc, "End device didn't implement custom load function!");
   }
 
   return 0;

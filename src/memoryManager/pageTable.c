@@ -1222,11 +1222,11 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
       {
       /*
         Hitting this means we allocated guestReal memory in small/large pages
-        or converted it the guestPhysical PT to smaller entries for purposes of memory protection perf
+        or converted it the guestPhysical PT to smaller entries for memory protection
         Need to check if any protection is still in place, if not convert back to section map?
 
         This should be performed by the removeProtection code?
-        And therefore make this just a check for contiguous memoyr
+        And therefore make this just a check for contiguous memory
       */
 #ifdef PT_SHADOW_DEBUG
         serial_putstring("PARTIAL_IMPLEMENTATION: guestPhysical contiguous memory check copySectionEntry (pageTable.c). continuing");
@@ -1240,9 +1240,9 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
         */
         guestReal = (sectionDescriptor*)get2ndLevelPtDescriptor((pageTableDescriptor*)guestReal, guestPhysicalAddr);
 
-        if(FAULT == guestReal->type)
+        if(guestReal->type == FAULT)
         {
-          DIE_NOW(0, "Underlying address space is not mapped. copySectionEntry (pageTable.c) Entering infinite loop");
+          DIE_NOW(gc, "Underlying address space is not mapped. copySectionEntry (pageTable.c) Entering infinite loop");
         }
       }
 #ifdef PT_SHADOW_DEBUG
@@ -1256,38 +1256,41 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
       shadow->addr = guestReal->addr;
 
       /* Access control bit mapping */
-#ifdef PT_SHADOW_DEBUG
-      serial_putstring("Setting shadow Access control bits: ");
-#endif
-      if(guest->ap2 == 1)
+      u32int accessPermissions = (guest->ap2 << 2) | guest->ap10;
+      switch(accessPermissions)
       {
-#ifdef PT_SHADOW_DEBUG
-        serial_putstring("USR read only.");
-        serial_newline();
-#endif
-        shadow->ap2 = PRIV_RW_USR_RO >> 2;
-        shadow->ap10 = PRIV_RW_USR_RO & 0x3;
-      }
-      else
-      {
-        if(guest->ap10 == 0x0)
-        {
-#ifdef PT_SHADOW_DEBUG
-          serial_putstring("USR No access");
-          serial_newline();
-#endif
+        case PRIV_NO_USR_NO:
           shadow->ap2 = PRIV_RW_USR_NO >> 2;
           shadow->ap10 = PRIV_RW_USR_NO & 0x3;
-        }
-        else
-        {
-#ifdef PT_SHADOW_DEBUG
-          serial_putstring("USR R/W access");
-          serial_newline();
-#endif
+          break;
+        case PRIV_RW_USR_NO:
+          shadow->ap2 = PRIV_RW_USR_NO >> 2;
+          shadow->ap10 = PRIV_RW_USR_NO & 0x3;
+          break;
+        case PRIV_RW_USR_RO:
+          shadow->ap2 = PRIV_RW_USR_RO >> 2;
+          shadow->ap10 = PRIV_RW_USR_RO & 0x3;
+          break;
+        case PRIV_RW_USR_RW:
           shadow->ap2 = PRIV_RW_USR_RW >> 2;
           shadow->ap10 = PRIV_RW_USR_RW & 0x3;
-        }
+          break;
+        case PRIV_RO_USR_NO:
+          shadow->ap2 = PRIV_RW_USR_NO >> 2;
+          shadow->ap10 = PRIV_RW_USR_NO & 0x3;
+          break;
+          break;
+        case DEPRECATED:
+          shadow->ap2 = PRIV_RW_USR_RO >> 2;
+          shadow->ap10 = PRIV_RW_USR_RO & 0x3;
+          break;
+        case PRIV_RO_USR_RO:
+          shadow->ap2 = PRIV_RW_USR_RO >> 2;
+          shadow->ap10 = PRIV_RW_USR_RO & 0x3;
+          break;
+        case AP_RESERVED:
+        default:
+          DIE_NOW(gc, "Invalid PT entry access permission bits.");
       }
 
       /* Check/map guest domain for access control */
