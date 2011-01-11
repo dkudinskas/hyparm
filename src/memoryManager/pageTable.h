@@ -116,6 +116,10 @@ void copyLargeEntry(largeDescriptor* guest, largeDescriptor* shadow);
 void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow);
 void removePageTableEntry(pageTableDescriptor* shadow);
 
+void removePT2Metadata(void);
+
+void invalidateSPT1(descriptor* spt);
+
 void splitSectionToSmallPages(descriptor* ptd, u32int vAddr);
 
 u8int mapGuestDomain(u8int guestDomain);

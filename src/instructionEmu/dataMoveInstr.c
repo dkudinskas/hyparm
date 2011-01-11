@@ -1209,6 +1209,10 @@ u32int ldrInstruction(GCONTXT * context)
     // immediate case
     u32int imm32 = instr & 0x00000FFF;
     baseAddress = loadGuestGPR(regSrc, context);
+    if (regSrc == 15)
+    {
+      baseAddress = baseAddress + 8;
+    }
 
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
@@ -1484,6 +1488,10 @@ u32int ldmInstruction(GCONTXT * context)
         case CPSR_MODE_SYSTEM:
         default:
           DIE_NOW(0, "LDM: exception return form sys/usr mode!");
+      }
+      if ((modeSpsr & CPSR_MODE_FIELD) == CPSR_MODE_USER)
+      {
+        DIE_NOW(context, "LDM: exception return to user mode!");
       }
       context->CPSR = modeSpsr;
     }

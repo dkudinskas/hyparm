@@ -64,7 +64,7 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
 #endif
 
   GCONTXT* gc = getGuestContext();
-  //MEMPROT* memProt = gc->memProt;
+
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
 
 #ifdef MEM_PROT_DEBUG
@@ -95,7 +95,7 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
   serial_newline();
 #endif
 
-  if(0 == pageEndAddr)
+  if(pageEndAddr == 0)
   {
     DIE_NOW(0, "ERROR: invalid getPageEndAddr return value. Entering infinite loop");
   }

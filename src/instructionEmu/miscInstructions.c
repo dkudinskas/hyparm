@@ -1139,6 +1139,11 @@ u32int msrInstruction(GCONTXT * context)
       dumpGuestContext(context);
       DIE_NOW(0, "MSR toggle THUMB bit.");
     } 
+    // is new CPSR - user mode?
+    if ((value & CPSR_MODE_FIELD) == CPSR_MODE_USER)
+    {
+      DIE_NOW(context, "MSR switching CPSR to user mode\n");
+    }
     // separate the field we're gonna update from new value 
     u32int appliedValue = (value & 0x000000FF);
     // clear old fields!
@@ -1351,34 +1356,6 @@ u32int bInstruction(GCONTXT * context)
     if (link)
     {
       storeGuestGPR(14, context->R15+4, context);
-/*
-      // it was branch and link... what context is the guest in?
-      u32int guestMode = context->CPSR & CPSR_MODE_FIELD;
-      switch(guestMode)
-      {
-        case CPSR_MODE_USER:
-        case CPSR_MODE_SYSTEM:
-          context->R14_USR = context->R15+4;
-          break;
-        case CPSR_MODE_FIQ:
-          context->R14_FIQ = context->R15+4;
-          break;
-        case CPSR_MODE_IRQ:
-          context->R14_IRQ = context->R15+4;
-          break;
-        case CPSR_MODE_SVC:
-          context->R14_SVC = context->R15+4;
-          break;
-        case CPSR_MODE_ABORT:
-          context->R14_ABT = context->R15+4;
-          break;
-        case CPSR_MODE_UNDEF:
-          context->R14_UND = context->R15+4;
-          break;
-        default:
-          invalid_instruction(instr, "bInstruction evaluate: invalid CPSR mode!");
-      } // switch ends
-*/
     }
   }
   else

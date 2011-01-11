@@ -104,19 +104,16 @@ void do_data_abort()
     }
     case translation_section:
       printDataAbort();
-      dumpGuestContext(getGuestContext());
       DIE_NOW(0, "Translation section data abort.");
       break;
     case translation_page:
       printDataAbort();
-      dumpGuestContext(getGuestContext());
       DIE_NOW(0, "Translation page data abort.");
       break;
     default:
       serial_putstring("Unimplemented user data abort.");
       serial_newline();
       printDataAbort();
-      dumpGuestContext(getGuestContext());
       DIE_NOW(0, "Entering infinite loop");
   }
   enableInterrupts();
@@ -141,18 +138,6 @@ void do_data_abort_hypervisor()
       {
         serial_putstring("Fault inside physical RAM range.  hypervisor_page_fault (exceptionHandlers.c)");
         serial_newline();
-        GCONTXT* gc = getGuestContext();
-        dumpGuestContext(gc);
-
-        if(gc->virtAddrEnabled)
-        {
-          serial_putstring("Dumping SHADOW PAGE TABLE");
-          serial_newline();
-          dumpPageTable(gc->PT_shadow);
-          serial_putstring("Dumping GUEST OS PAGE TABLE");
-          serial_newline();
-          dumpPageTable(gc->PT_os);
-        }
         DIE_NOW(0, "Entering infinite loop");
       }
       else
@@ -167,11 +152,6 @@ void do_data_abort_hypervisor()
     default:
       serial_putstring("UNIMPLEMENTED data abort type. (exceptionHandlers.c).");
       serial_newline();
-
-
-      GCONTXT* gContext = getGuestContext();
-      dumpGuestContext(gContext);
-
       DIE_NOW(0, "Entering infinite loop");
       break;
   }

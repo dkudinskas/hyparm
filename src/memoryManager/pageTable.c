@@ -1333,54 +1333,22 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
     }
     else if( 0x00000000 == (guestPhysicalAddr & 0xFFF0000))
     {
-      //First time we access this we will fault
-/*
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(((u32int)shadow) << 18);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". Low address handler space. Marking no access");
-      serial_newline();
-*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
       shadow->ap2 = PRIV_RW_USR_NO >> 2;
       shadow->domain = mapGuestDomain(guest->domain);
-
-      //Leave the rest zero for now
     }
     else if( 0x40200000 == (guestPhysicalAddr & 0xFFF00000))
     {
-      //First time we access this we will fault
-/*
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(((u32int)shadow) << 18);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". Internal SRAM. Marking no access");
-      serial_newline();
-*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
       shadow->ap2 = PRIV_RW_USR_NO >> 2;
       shadow->domain = mapGuestDomain(guest->domain);
-
-      //Leave the rest zero for now
     }
     else if(0x49000000 == (guestPhysicalAddr & 0xFFF00000))
     {
-/*
-      serial_putstring("Guest mapping Serial address space. Already mapped by Hypervisor.");
-      serial_newline();
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(((u32int)shadow) << 18);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". Serial lives here. Marking no access");
-      serial_newline();
-*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
@@ -1390,21 +1358,10 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
     }
     else if( 0x48000000 == (guestPhysicalAddr & 0xFF000000))
     {
-      //First time we access this we will fault
       u32int virtAddr = (u32int)shadow << 18;
-/*
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(virtAddr);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". L4 Interconnect space. Mapping no access");
-      serial_newline();
-*/
       /* HACK: Map in small pages for granularity
-
       A proper memory protection solution would do the PT reconfiguration for use
       When the addProtection is called.
-
       For now map in in 4KB chunks
       */
       u32int startAddr = 0x48300000;
@@ -1436,39 +1393,17 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
         shadow->ap2 = PRIV_RW_USR_NO >> 2;
         shadow->domain = mapGuestDomain(guest->domain);
       }
-
-      //Leave the rest zero for now
     }
     else if(0x54000000 == (guestPhysicalAddr & 0xFF000000 ))
     {
-      //First time we access this we will fault
-/*
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(((u32int)shadow) << 18);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". L4-emu Interconnect space. Marking no access");
-      serial_newline();
-*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
       shadow->ap2 = PRIV_RW_USR_NO >> 2;
       shadow->domain = mapGuestDomain(guest->domain);
-
-      //Leave the rest zero for now
     }
     else if(0x55000000 == (guestPhysicalAddr & 0xFF000000 ))
     {
-      //First time we access this we will fault
-/*
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(((u32int)shadow) << 18);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". ??? space. Marking no access");
-      serial_newline();
-*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
@@ -1479,117 +1414,51 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
     }
     else if(0x56000000 == (guestPhysicalAddr & 0xFF000000 ))
     {
-      //First time we access this we will fault
-/*
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(((u32int)shadow) << 18);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". ??? space. Marking no access");
-      serial_newline();
-*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
       shadow->ap2 = PRIV_RW_USR_NO >> 2;
       shadow->domain = mapGuestDomain(guest->domain);
-
-      //Leave the rest zero for now
     }
     else if(0x57000000 == (guestPhysicalAddr & 0xFF000000 ))
     {
-      //First time we access this we will fault
-/*
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(((u32int)shadow) << 18);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". ??? space. Marking no access");
-      serial_newline();
-*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
       shadow->ap2 = PRIV_RW_USR_NO >> 2;
       shadow->domain = mapGuestDomain(guest->domain);
-
-      //Leave the rest zero for now
     }
     else if(0x68000000 == (guestPhysicalAddr & 0xFF000000 ))
     {
-      //First time we access this we will fault
-/*
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(((u32int)shadow) << 18);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". L3 Interconnect space. Marking no access");
-      serial_newline();
-*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
       shadow->ap2 = PRIV_RW_USR_NO >> 2;
       shadow->domain = mapGuestDomain(guest->domain);
-
-      //Leave the rest zero for now
     }
     else if(0x6C000000 == (guestPhysicalAddr & 0xFF000000 ))
     {
-      //First time we access this we will fault
-/*
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(((u32int)shadow) << 18);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". SMS register space. Marking no access");
-      serial_newline();
-*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
       shadow->ap2 = PRIV_RW_USR_NO >> 2;
       shadow->domain = mapGuestDomain(guest->domain);
-
-      //Leave the rest zero for now
     }
     else if(0x6D000000 == (guestPhysicalAddr & 0xFF000000 ))
     {
-      //First time we access this we will fault
-/*
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(((u32int)shadow) << 18);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". SDRC space. Marking no access");
-      serial_newline();
-*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
       shadow->ap2 = PRIV_RW_USR_NO >> 2;
       shadow->domain = mapGuestDomain(guest->domain);
-
-      //Leave the rest zero for now
     }
     else if(0x6E000000 == (guestPhysicalAddr & 0xFF000000 ))
     {
-      //First time we access this we will fault
-/*
-      serial_putstring("Guest map virt: 0x");
-      serial_putint(((u32int)shadow) << 18);
-      serial_putstring(" to phy: 0x");
-      serial_putint(guestPhysicalAddr);
-      serial_putstring(". GMPC registers. Marking no access");
-      serial_newline();
-*/
       shadow->type = SECTION;
       shadow->addr = guest->addr;
       shadow->ap10 = PRIV_RW_USR_NO & 0x3;
       shadow->ap2 = PRIV_RW_USR_NO >> 2;
       shadow->domain = mapGuestDomain(guest->domain);
-
-      //Leave the rest zero for now
     }
     else
     {
@@ -1621,12 +1490,12 @@ void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow)
 {
   GCONTXT* gc = getGuestContext();
 
+  // STEP 1: allocate a new frame for a new second level page table.
   u32int *newFrame = allocFrame(HYPERVISOR_FA_DOMAIN);
   if (newFrame == 0x0)
   {
     DIE_NOW(0, "frameAllocator returned null ptr. copyPageTableEntry (pageTable.c)");
   }
-
 #ifdef PT_SHADOW_DEBUG
   serial_putstring("copyPageTableEntry: guest ");
   serial_putint((*(u32int*)guest));
@@ -1637,10 +1506,11 @@ void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow)
   serial_newline();
 #endif
 
+  // STEP 2: zero the new shadow second level page table
   memset(newFrame, 0, SECOND_LEVEL_PAGE_TABLE_SIZE);
 
+  // STEP 3: fill in the given 1st level shadow page table entry with correct data 
   shadow->addr = (u32int)newFrame >> 10;
-
   //This is just a copy of the high level descriptor
   shadow->type = PAGE_TABLE;
   shadow->domain = mapGuestDomain(guest->domain);
@@ -1657,59 +1527,64 @@ void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow)
   guestSecondLvlPageTables[metaArrayIndex] = phyAddr;
   
 #ifdef PT_SHADOW_DEBUG
-  serial_putstring("copyPageTableEntry: guest 2nd level PT physAddr ");
+  serial_putstring("copyPageTableEntry: guest 2nd level PT PA ");
   serial_putint(phyAddr);
+  serial_putstring(" VA ");
+  serial_putint((guest->addr << 10));
   serial_newline();
 #endif
+
+  // STEP 4: copy entries from guest 2nd level PT to shadow 2nd level PT
+  // STEP 4a: get guest 2nd level page table address (it is physical) from
+  // first level entry
+  u32int guestPageTableAddr = guest->addr << 10;
   
-  if( (phyAddr >= BEAGLE_RAM_START) && (phyAddr < BEAGLE_RAM_END) )
+  // STEP 4b: map this physical address 1-2-1 to virtual address (in 1st lvl SPT)
+  // for that: calculate address in the shadow page table of the entry
+  // where we must add a 1-2-1 mapping
+  u32int entryAddress = guestPageTableAddr >> 20;
+  entryAddress = entryAddress * 4 + (u32int)gc->PT_shadow;
+#ifdef PT_SHADOW_DEBUG
+  serial_putstring("copyPageTableEntry: 1-2-1 entry address ");
+  serial_putint(entryAddress);
+  serial_newline();
+#endif
+  // save old entry from that address whatever it is, and make a new entry
+  u32int oldEntry = *((u32int*)entryAddress);
+  u32int newEntry = ((guest->addr << 10) & 0xFFF00000) | 0x805E2;
+  *(u32int*)entryAddress = newEntry;
+
+  // STEP 4c: copy entries from guest 2nd lvl PT to shadow 2nd lvl PT
+  descriptor* guestPte  = (descriptor*)((guest->addr << 10));
+  descriptor* shadowPte  = (descriptor*)newFrame;
+  u32int i = 0;
+  for (i=0; i < SECOND_LEVEL_PAGE_TABLE_ENTRIES; i++)
   {
-
-    // this addr is physical. if we want to do operations on it, we need a 1-2-1 mapping
-    u32int guestPageTableAddr = guest->addr << 10;
-    
-    // calculate address in the shadow page table of the entry
-    // where we must add 1-2-1 mapping
-    u32int entryAddress = guestPageTableAddr >> 20;
-    entryAddress = entryAddress * 4 + (u32int)gc->PT_shadow;
-    // save old entry from that address whatever it is, and make a new entry
-    u32int oldEntry = *((u32int*)entryAddress);
-
-    u32int newEntry = ((guest->addr << 10) & 0xFFF00000) | 0x805E2;
-
-    *(u32int*)entryAddress = newEntry;
-
-    descriptor* guestPte  = (descriptor*)((guest->addr << 10));
-    descriptor* shadowPte  = (descriptor*)newFrame;
-    u32int i = 0;
-
-    for(i=0; i < SECOND_LEVEL_PAGE_TABLE_ENTRIES; i++)
+    if (guestPte[i].type != FAULT)
     {
-      if(guestPte[i].type != FAULT)
+      if(guestPte[i].type == LARGE_PAGE)
       {
-        if(guestPte[i].type == LARGE_PAGE)
-        {
-          copyLargeEntry((largeDescriptor*)&guestPte[i], (largeDescriptor*)&shadowPte[i]);
-        }
-        else
-        {
-          copySmallEntry((smallDescriptor*)&guestPte[i], (smallDescriptor*)&shadowPte[i]);
-        }
+        copyLargeEntry((largeDescriptor*)&guestPte[i], (largeDescriptor*)&shadowPte[i]);
+      }
+      else
+      {
+        copySmallEntry((smallDescriptor*)&guestPte[i], (smallDescriptor*)&shadowPte[i]);
       }
     }
-    *(u32int*)entryAddress = oldEntry;
-    
-    // done copying table. Now find all virtual mappings to this physical addr
-    // and add protection.
-    // TODO: this only finds first VA mapping ot PA. this can be many-2-one, so find all..
-    u32int virtAddr = findVAforPA(phyAddr);
+  }
+  
+  // STEP 4d: remove temporary 1-2-1 mapping restore old entry in 1st lvl sPT
+  *(u32int*)entryAddress = oldEntry;
 
-    u32int res = addProtection(virtAddr, virtAddr+1023, 0, PRIV_RW_USR_RO);
-    if (res > 7)
-    {
-      DIE_NOW(0, "copyPageTableEntry: failed to add memory protection.");
-    }
+  // STEP 5: done copying. Now find all virtual mappings to this physical addr
+  // and add protection.
+  // TODO: this only finds first VA mapping ot PA. this can be many-2-one, so find all..
+  u32int virtAddr = findVAforPA(phyAddr);
 
+  u32int res = addProtection(virtAddr, virtAddr+1023, 0, PRIV_RW_USR_RO);
+  if (res > 7)
+  {
+    DIE_NOW(0, "copyPageTableEntry: failed to add memory protection.");
   }
 }
 
@@ -1923,7 +1798,7 @@ u32int findVAforPA(u32int physAddr)
   u32int mask = 0xFFF00000;
   u32int masked = physAddr & mask;
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-
+  
   int i = 0;
   
   for (i = 0; i <= PAGE_TABLE_ENTRIES; i++)
@@ -1998,12 +1873,12 @@ Note this is a VERY expensive operation!
 */
 void copyPageTable(descriptor* guest, descriptor* shadow)
 {
-  if(0 == shadow)
+  if(shadow == 0)
   {
     DIE_NOW(0, "Shadow pageTable is null. copyPageTable (pageTable.c) Entering infinite loop...");
   }
 
-  if(0 == guest)
+  if(guest == 0)
   {
     DIE_NOW(0, "guest pageTable is null. copyPageTable (pageTable.c) Entering infinite loop...");
   }
@@ -2018,23 +1893,25 @@ void copyPageTable(descriptor* guest, descriptor* shadow)
 
   //loop over the guest PT
   u32int i;
-  for(i=0; i < PAGE_TABLE_ENTRIES; i++)
+  for (i=0; i < PAGE_TABLE_ENTRIES; i++)
   {
-   /** Page table spec does not mandate that bits 31-2 are clear
-    *This could fail if the guest OS does not clear the entry when removing it
-   *(i.e. rather than writing 32bit zero to the entry, the OS just clears/sets the type bit field to 0b00)
-   *and we should do the relativly more expensive test (0 != currentPTE->type)
-    */
+    /******************************************************************************
+     * Page table spec does not mandate that bits 31-2 are clear
+     * This could fail if the guest OS does not clear the entry when removing it
+     * (i.e. rather than writing 32bit zero to the entry
+     * the OS just clears/sets the type bit field to 0b00)
+     * and we should do the relativly more expensive test (currentPTE->type != 0)
+     *****************************************************************************/
 
-    if( (guest[i].type == SECTION) || (guest[i].type == PAGE_TABLE) )
+    if ((guest[i].type == SECTION) || (guest[i].type == PAGE_TABLE))
     {
       /*
-       This (guest pagetable mapping hypervisor memory space) could cause serious problems
-       if not caught early
+       This (guest page table mapping hypervisor memory space) could
+       cause serious problems if not caught early
       */
       const u32int hypervisorStart = (HYPERVISOR_START_ADDR) >> 20;
       const u32int hypervisorEnd = (HYPERVISOR_START_ADDR + (TOTAL_MACHINE_RAM/4) -1) >> 20;
-      if(i >= hypervisorStart && i <= hypervisorEnd)
+      if ((hypervisorStart <= i) && (i <= hypervisorEnd))
       {
         serial_putstring("guest is attemping to use hypervisor 1:1 mapped address space. 0x");
         serial_putint(i << 20);
@@ -2050,75 +1927,16 @@ void copyPageTable(descriptor* guest, descriptor* shadow)
         //Supersection check is done inside copySectionEntry
         copySectionEntry(guestSd, shadowSd);
       }
-      else
+      else if (guest[i].type == PAGE_TABLE)
       {
-        //We are looking at small / large pages
-        pageTableDescriptor* guestPTD = (pageTableDescriptor*) &guest[i];
-        pageTableDescriptor* shadowPTD = (pageTableDescriptor*) &shadow[i];
+        pageTableDescriptor* guestSd  = (pageTableDescriptor*) &guest[i];
+        pageTableDescriptor* shadowSd = (pageTableDescriptor*) &shadow[i];
 
-        /** Step 1 */
-        //Check the Page Table entry points to a valid 2nd level address
-        u32int baseAddr = guestPTD->addr << 10;
-        if( (baseAddr < BEAGLE_RAM_START) || (baseAddr > BEAGLE_RAM_END-3) )
-        {
-          //2nd level address is not valid, don't bother creating an entry in the shadow PT
-          //When the guest OS actually updates the addr for this entry.
-          //We will recreate it
-          break;
-        }
-
-        /** Step 2 */
-        //Check for existance of shadow 2nd level PT at this virtual address
-        if(FAULT == shadowPTD->type)
-        {
-          //Doesn't already exist, need to create a new one
-          u32int* newFrame = allocFrame(HYPERVISOR_FA_DOMAIN);
-          if(0 == newFrame)
-          {
-            DIE_NOW(0, "Could not allocate new frame in copyPageTable (pageTable.c)");
-          }
-
-          memset(newFrame, 0, SECOND_LEVEL_PAGE_TABLE_SIZE);
-          shadowPTD = (pageTableDescriptor*) newFrame;
-        }
-
-        /** Step 3 */
-        //We have a shadow 2nd level page table to add entries to
-
-        //Has the guest actually created the 2nd level table?
-        if( (guestPTD->addr >= BEAGLE_RAM_START) &&
-             (guestPTD->addr < BEAGLE_RAM_END -1 - SECOND_LEVEL_PAGE_TABLE_SIZE) )
-        {
-          //2nd level guest pte is in range
-
-          //Loop over the 2nd level guest page table
-          u32int j;
-          for(j=0; j < SECOND_LEVEL_PAGE_TABLE_ENTRIES; j++)
-          {
-            if(FAULT == guestPTD[j].type)
-            {
-            //easier to check for a fault first (most likly case?)
-              break;
-            }
-            if(LARGE_PAGE == guestPTD[j].type)
-            {
-              largeDescriptor* guestLd = (largeDescriptor*) &(guestPTD[j]);
-              largeDescriptor* shadowLd = (largeDescriptor*) &(shadowPTD[j]);
-              copyLargeEntry(shadowLd, guestLd);
-            }
-            else
-            {
-              //Must be small
-              smallDescriptor* guestSd = (smallDescriptor*) &(guestPTD[j]);
-              smallDescriptor* shadowSd = (smallDescriptor*) &(shadowPTD[j]);
-              copySmallEntry(shadowSd, guestSd);
-            }
-          }//for loop 2nd level page table
-        }
+        copyPageTableEntry(guestSd, shadowSd);
       }//else !SECTION
     }// if !FAULT
 #ifdef PT_SHADOW_DEBUG
-    else if(RESERVED == guest[i].type)
+    else if (guest[i].type == RESERVED)
     {
       //Not going to copy this entry.  The guest will never get to read the sPT, so no need to.
       //Whatever reason the guest is using the RESERVED entry for!
@@ -2171,7 +1989,7 @@ u32int getPageEndAddr(descriptor* ptd, u32int address)
   switch(pte1st->type)
   {
     case SECTION:
-      ;//GCC label before statement bug
+    {
       sectionDescriptor* sd = (sectionDescriptor*)pte1st;
       if(1 == sd->sectionType)
       {
@@ -2187,27 +2005,30 @@ u32int getPageEndAddr(descriptor* ptd, u32int address)
         return address;
       }
       break;
+    }
     case PAGE_TABLE:
-      ;
+    {
       descriptor* pte2nd = get2ndLevelPtDescriptor((pageTableDescriptor*)pte1st, address);
 
       switch(pte2nd->type)
       {
         case LARGE_PAGE:
-          ;
+        {
           mask = 0xFFFF0000;
           address = address & mask;
           address += LARGE_PAGE_SIZE -1;
           return address;
           break;
+        }
         case SMALL_PAGE: //fall through
         case SMALL_PAGE_3:
-          ;
+        {
           mask = 0xFFFFF000;
           address = address & mask;
           address += SMALL_PAGE_SIZE -1;
           return address;
           break;
+        }
         case FAULT: //fall through
         default:
 #ifdef PT_SHORT_DEBUG
@@ -2218,6 +2039,7 @@ u32int getPageEndAddr(descriptor* ptd, u32int address)
           break;
       }
       break;
+    }
     case FAULT: //fall through
     case RESERVED: //fall through
     default:
@@ -2341,6 +2163,11 @@ void pageTableEdit(u32int address, u32int newVal)
     //Now have the first 12bits of the virtual address bits 31:20
     //and the bits 19:12 of the virtual address are from bits 10:2 of the fault address
     virtualAddr = (i << 20) | ((address & 0x3FC) << 10);
+#ifdef PT_SHADOW_DEBUG
+    serial_putstring("pageTableEdit: formed VA of gPT2: ");
+    serial_putint(virtualAddr);
+    serial_newline();
+#endif
   }
   // virtualAddr points to the shadow 1st level page table entry for the faulting addr
   // get this entry from the shadow table
@@ -2387,7 +2214,7 @@ void pageTableEdit(u32int address, u32int newVal)
       //issues with memory protection needing to be removed & flushing of all the sub mappings
       removePageTableEntry((pageTableDescriptor*)shadowEntry);
     }
-    else
+    else if (firstLevelEntry && (oldGuestEntry->type == SECTION))
     {
       //Need to flush block cache at these addresses first
       // but which addresses to flush? shadow entries might have been fragmented to pages from a section...
@@ -2405,6 +2232,13 @@ void pageTableEdit(u32int address, u32int newVal)
         //Small & section types aren't complicated
         *(u32int*)shadowEntry = 0;
       }
+    }
+    else
+    {
+      // new type is different from old type, but old type is neither
+      // page table, nor section. Must be changing reserved to fault type
+      // in that case, just zero entry
+      *(u32int*)shadowEntry = 0;
     }
   }
 
@@ -2451,10 +2285,21 @@ void pageTableEdit(u32int address, u32int newVal)
   {
     /** Change entry details */
     //early exit if OS is not actually updating anything
-    if(*(u32int*)oldGuestEntry == newVal)
+    if (*(u32int*)oldGuestEntry == newVal)
     {
 #ifdef PT_SHADOW_DEBUG
       serial_putstring("Init (zeroing entry) @ 0x");
+      serial_putint(address);
+      serial_putstring(", Virtual Page : 0x");
+      serial_putint(virtualAddr);
+      serial_newline();
+#endif
+      return;
+    }
+    if (newVal == 0)
+    {
+#ifdef PT_SHADOW_DEBUG
+      serial_putstring("pageTableEdit: zeroing entry @ 0x");
       serial_putint(address);
       serial_putstring(", Virtual Page : 0x");
       serial_putint(virtualAddr);
@@ -2700,4 +2545,31 @@ void pt_compile_time_check(void)
   COMPILE_TIME_ASSERT(1 == LARGE_PAGE, __pageType_large_page_enum_has_changed_);
   COMPILE_TIME_ASSERT(2 == SMALL_PAGE, __pageType_small_page_enum_has_changed_);
   COMPILE_TIME_ASSERT(3 == SMALL_PAGE_3, __pageType_small_page_3_enum_has_changed_);
+}
+
+/**
+ * simple method, just to clear up our guestSecondLvlPageTables array
+ * called when PT1 is changed - new base page table data...
+ **/
+void removePT2Metadata(void)
+{
+  // zero metadata array
+  int i = 0;
+  for (i = 0; i < 256; i++)
+  {
+    guestSecondLvlPageTables[i] = 0;
+  }
+}
+
+/**
+ * this function invalidates all entries in a given shadow 1st level page table
+ * frees up used malloc memory // TODO
+ **/ 
+void invalidateSPT1(descriptor* spt)
+{
+  u32int i = 0;
+  for (i = 0; i < PAGE_TABLE_ENTRIES; i++)
+  {  
+    spt[i].type = FAULT;
+  }
 }

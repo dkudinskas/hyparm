@@ -55,11 +55,12 @@ void createVirtualMachineGPAtoRPA(GCONTXT* gc)
 void initialiseGuestShadowPageTable(u32int guestPtAddr)
 {
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("initialiseGuestShadowPageTable: PARTIAL IMPLEMENTATION");
+  serial_putstring("initialiseGuestShadowPageTable: new pt addr ");
+  serial_putint(guestPtAddr);
   serial_newline();
 #endif
 
-  GCONTXT* gContext = getGuestContext();
+  GCONTXT* context = getGuestContext();
 
   //This needs changing to, or similar
   //if(gc->decompressionDone)
@@ -76,9 +77,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   //Perhaps to check that the table ptr has been updated and is not still the identity map?
   guestPtAddr = guestPtAddr &  0xFFFFC000;
 
-
 #ifdef ADDRESSING_DEBUG
-  dumpGuestContext(gContext);
   serial_putstring("initialiseGuestShadowPageTable: Dumping guest page table @ 0x");
   serial_putint(guestPtAddr);
   serial_newline();
@@ -91,26 +90,70 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   serial_newline();
 #endif
 
-  if(gContext->virtAddrEnabled)
+  if(context->virtAddrEnabled)
   {
-    DIE_NOW(0, "guest OS page table switch, with guest OS PT enabled?");
+    // 1. explode block cache
+    explodeCache(context->blockCache);
+    
+    // 2. create a new shadow page table. Mapping in hypervisor address space
+    descriptor* newShadowPt = createGuestOSPageTable();
+    serial_putstring("new shadow page table @ ");
+    serial_putint((u32int)newShadowPt);
+    serial_newline();
+  
+    // 3a: remove metadata about old sPT1
+    removePT2Metadata();
 
-    //probably want to dump the current virtual addressing entries to work out what is going on
-
-    //We need to do something now, because the sPT should be active immediatly
-
-    //destroy existing shadow PT
-
-    //shadowPT destruction will probably have memoryProtection implications
-
-    //create new one
-    descriptor* sPT =  createGuestOSPageTable();
-    gContext->PT_shadow = sPT;
-    gContext->PT_os = (descriptor*)guestPtAddr;
-
-    // cache/tlb flush?
+    // 3b: map new page table address to a 1-2-1 virtual address 
+    // (now we can safely tamper with sPT, as it will be discarded soon)
+    sectionMapMemory(context->PT_shadow, (guestPtAddr & 0xFFF00000),
+                 (guestPtAddr & 0xFFF00000)+(SECTION_SIZE-1), 
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000);
+    // 3c: copy new gPT1 entries to new sPT1
+    copyPageTable((descriptor*)guestPtAddr, newShadowPt);
+#ifdef ADDRESSING_DEBUG
+    serial_putstring("initialiseGuestShadowPageTable: Copy PT done.");
+    serial_newline();
+    serial_putstring("initialiseGuestShadowPageTable: About to switch to sPT");
+    serial_newline();
+#endif
+    
+    // 4. anything in caches needs to be written back now
+    dataBarrier();
+    
+    // 5. tell CP15 of this new base PT
+    setTTBCR((u32int)newShadowPt);
+    serial_putstring("initialiseGuestShadowPageTable: set new ttbcr to ");
+    serial_putint((u32int)newShadowPt);
+    serial_newline();
+    
+    // 6. clean tlb and cache entries
     clearTLB();
     clearCache();
+   
+    // 7. update guest context entries
+    // 7a. update 1st level shadow page table pointer
+    descriptor* oldShadowPt = context->PT_shadow; 
+    context->PT_shadow = newShadowPt;
+    // 7b. in this new 1st level sPT, find VA for 1st lvl gPT
+    u32int ptGuestVirtual = findVAforPA(guestPtAddr);
+    serial_putstring("initialiseGuestShadowPageTable: VA for guestPtAddr 0x");
+    serial_putint(ptGuestVirtual);
+    serial_newline();
+    context->PT_os_real = (descriptor*)guestPtAddr;
+    context->PT_os = (descriptor*)ptGuestVirtual;
+    serial_putstring("initialiseGuestShadowPageTable: updated guest context");
+    serial_newline();
+  
+    // 8. add protection to guest page table.  
+    u32int guestPtVirtualEndAddr = ptGuestVirtual + PAGE_TABLE_SIZE - 1;
+    //function ptr to the routine that handler gOS edits to its PT
+    addProtection(ptGuestVirtual, guestPtVirtualEndAddr, &pageTableEdit, PRIV_RW_USR_RO);
+    serial_putstring("initialiseGuestShadowPageTable: protected guest page table");
+    serial_newline();
+  
+    // 9. clean old shadow page table
+    invalidateSPT1(oldShadowPt);
 
     //now running with new shadow page tables
   }
@@ -121,7 +164,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
     serial_newline();
 #endif
     //guest virtual addressing is not active, no need to spend time faulting on PT that the OS is going to add entries to before it activates
-    gContext->PT_os = (descriptor*)guestPtAddr;
+    context->PT_os = (descriptor*)guestPtAddr;
   }
 }
 
