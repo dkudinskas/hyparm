@@ -2391,8 +2391,6 @@ void pageTableEdit(u32int address, u32int newVal)
 
     if (firstLevelEntry)
     {
-      serial_putstring("pageTableEdit, EDIT entry case, first level entry");
-      serial_newline();
       // first level entry
       if (oldGuestEntry->type == SECTION)
       {
