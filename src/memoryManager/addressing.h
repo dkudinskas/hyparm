@@ -19,4 +19,6 @@ void createVirtualMachineGPAtoRPA(GCONTXT* gc);
 void initialiseGuestShadowPageTable(u32int guestPtAddr);
 void guestEnableVirtMem(void);
 
+void changeGuestDomainAccessControl(u32int oldVal, u32int newVal);
+
 #endif

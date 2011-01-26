@@ -70,6 +70,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
     serial_putstring("initialiseGuestShadowPageTable: TTBR0 Linux identity mapping bootstrap, ignoring.");
     serial_newline();
 #endif
+    DIE_NOW(context, "initialiseGuestShadowPageTable");
     return;
   }
 
@@ -123,9 +124,6 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
     
     // 5. tell CP15 of this new base PT
     setTTBCR((u32int)newShadowPt);
-    serial_putstring("initialiseGuestShadowPageTable: set new ttbcr to ");
-    serial_putint((u32int)newShadowPt);
-    serial_newline();
     
     // 6. clean tlb and cache entries
     clearTLB();
@@ -137,20 +135,13 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
     context->PT_shadow = newShadowPt;
     // 7b. in this new 1st level sPT, find VA for 1st lvl gPT
     u32int ptGuestVirtual = findVAforPA(guestPtAddr);
-    serial_putstring("initialiseGuestShadowPageTable: VA for guestPtAddr 0x");
-    serial_putint(ptGuestVirtual);
-    serial_newline();
     context->PT_os_real = (descriptor*)guestPtAddr;
     context->PT_os = (descriptor*)ptGuestVirtual;
-    serial_putstring("initialiseGuestShadowPageTable: updated guest context");
-    serial_newline();
   
     // 8. add protection to guest page table.  
     u32int guestPtVirtualEndAddr = ptGuestVirtual + PAGE_TABLE_SIZE - 1;
     //function ptr to the routine that handler gOS edits to its PT
     addProtection(ptGuestVirtual, guestPtVirtualEndAddr, &pageTableEdit, PRIV_RW_USR_RO);
-    serial_putstring("initialiseGuestShadowPageTable: protected guest page table");
-    serial_newline();
   
     // 9. clean old shadow page table
     invalidateSPT1(oldShadowPt);
@@ -257,5 +248,77 @@ void guestEnableVirtMem()
 
   //function ptr to the routine that handler gOS edits to its PT
   addProtection(guestPtAddr, guestPtEndAddr, &pageTableEdit, PRIV_RW_USR_RO);
+}
+
+
+void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
+{
+  GCONTXT* context = getGuestContext();
+  if(context->virtAddrEnabled)
+  {
+    // loop through DACR entries checking which entry was changed
+    u32int i = 0;
+    for (i = 0; i < 16; i++)
+    {
+
+      // look for domains that had their configuration changed.
+      if ( ((oldVal >> (i*2)) & 0x3) != ((newVal >> (i*2)) & 0x3) )
+      {
+#ifdef ADDRESSING_DEBUG
+        serial_putstring("changeGuestDomainAccessControl: changing config for dom ");
+        serial_putint(i);
+        serial_newline();
+#endif
+        // for every entry changed, loop through all page table entries
+        u32int y = 0;
+        for (y = 0; y < PAGE_TABLE_ENTRIES; y++)
+        {
+          // if page table entry is assigned to that domain remap AP bits 
+          sectionDescriptor* ptEntry = (sectionDescriptor*)&context->PT_os[y];
+          if ((ptEntry->type == FAULT) || (ptEntry->type == RESERVED))
+          {
+            // invalid entry, leave.
+            continue;
+          }
+          if (ptEntry->domain == i)
+          {
+#ifdef ADDRESSING_DEBUG
+            serial_putstring("page table entry ");
+            serial_putint(y);
+            serial_putstring(" = ");
+            serial_putint(*(u32int*)ptEntry);
+            serial_putstring(" needs AP bits remapped.");
+            serial_newline();
+#endif
+            if (ptEntry->type == SECTION)
+            {
+              u32int guestAP = ((ptEntry->ap2 << 2) | ptEntry->ap10); 
+              u32int apNew = mapAccessPermissionBits(guestAP, ptEntry->domain);
+              sectionDescriptor* shadowPtEntry = (sectionDescriptor*)&context->PT_shadow[y];
+              shadowPtEntry->ap2  = (apNew >> 2) & 0x1;
+              shadowPtEntry->ap10 =  apNew & 0x3;
+            }
+            else if (ptEntry->type == PAGE_TABLE)
+            {
+              // ignore for now?
+#ifdef ADDRESSING_DEBUG
+              serial_putstring("changeGuestDomainAccessControl: remap AP for page table entry ");
+              serial_newline();
+              DIE_NOW(context, "changeGuestDomainAccessControl unimplemented.");
+#endif
+            }
+          }
+
+        } // for loop - all page table entries
+                
+      } // if - domain config changed
+
+    } // for loop - through all domain entries
+  }
+  else
+  {
+    // virtual memory turned off. doesnt effect anything.
+    return;
+  }
 }
 

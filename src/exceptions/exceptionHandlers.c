@@ -170,11 +170,7 @@ void do_undefined(void)
   serial_putstring("exceptionHandlers: undefined handler, Implement me!");
   serial_newline();
 
-  /* show us the context */
-  GCONTXT* gContext = getGuestContext();
-  dumpGuestContext(gContext);
-
-  DIE_NOW(0, "Entering infinite loop.");
+  DIE_NOW(getGuestContext(), "Entering infinite loop.");
 }
 
 void do_undefined_hypervisor(void)
@@ -182,11 +178,7 @@ void do_undefined_hypervisor(void)
   serial_putstring("exceptionHandlers: Undefined handler (Privileged/Hypervisor), Implement me!");
   serial_newline();
 
-  /* Show us the context */
-  GCONTXT* gContext = getGuestContext();
-  dumpGuestContext(gContext);
-
-  DIE_NOW(0, "Entering infinite loop.");
+  DIE_NOW(getGuestContext(), "Entering infinite loop.");
 }
 
 void do_prefetch_abort(void)
@@ -196,11 +188,7 @@ void do_prefetch_abort(void)
 
   printPrefetchAbort();
 
-  /* show us the context */
-  GCONTXT* gContext = getGuestContext();
-  dumpGuestContext(gContext);
-
-  DIE_NOW(0, "Entering Infinite Loop.");
+  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -210,9 +198,8 @@ void do_prefetch_abort_hypervisor(void)
   serial_newline();
 
   printPrefetchAbort();
-  dumpGuestContext(getGuestContext());
 
-  DIE_NOW(0, "Entering Infinite Loop.");
+  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -221,13 +208,9 @@ void do_monitor_mode(void)
   serial_putstring("exceptionHandlers: monitor/secure mode handler, Implement me!");
   serial_newline();
 
-  /* show us the context */
-  GCONTXT* gContext = getGuestContext();
-  dumpGuestContext(gContext);
-
   /* Does the omap 3 implement monitor/secure mode? */
 
-  DIE_NOW(0, "Entering Infinite Loop.");
+  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -236,13 +219,9 @@ void do_monitor_mode_hypervisor(void)
   serial_putstring("exceptionHandlers: monitor/secure mode handler(privileged/Hypervisor), Implement me!");
   serial_newline();
 
-  /* show us the context */
-  GCONTXT* gContext = getGuestContext();
-  dumpGuestContext(gContext);
-
   /* Does the omap 3 implement monitor/secure mode? */
 
-  DIE_NOW(0, "Entering Infinite Loop.");
+  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -323,5 +302,5 @@ void do_irq_hypervisor()
 
 void do_fiq(void)
 {
-  DIE_NOW(0, "Received FIQ! Implement me.");
+  DIE_NOW(getGuestContext(), "Received FIQ! Implement me.");
 }

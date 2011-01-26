@@ -118,7 +118,9 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   addToBlockCache(blkStartAddr, gc->endOfBlockInstr, (u32int)currAddress, 
                   bcIndex, (u32int)gc->hdlFunct, gc->blockCache);
 
-  protectScannedBlock(blkStartAddr, (u32int)currAddress);
+  // DAN: NASTY HAX, need to fix page table management stuff
+  // will do when i don't want to kill myself
+//  protectScannedBlock(blkStartAddr, (u32int)currAddress);
   // and we're done.
 }
 

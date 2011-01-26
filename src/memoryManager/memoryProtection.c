@@ -213,7 +213,7 @@ bool shouldAbort(bool privAccess, bool isWrite, u32int address)
   u32int dacr = getCregVal(3, 0, 0, 0, &context->coprocRegBank[0]);
   u32int dom  = (u32int)ptEntry->domain;
     
-  u32int domBits = (dacr >> dom) & 0x3;
+  u32int domBits = (dacr >> (dom*2)) & 0x3;
 
   switch (domBits)
   {

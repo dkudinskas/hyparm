@@ -62,6 +62,7 @@ void mmuInsertPt1(descriptor* addr);
 descriptor* mmuGetPt0(void);
 void mmuEnableVirtAddr(void);
 void mmuDisableVirtAddr(void);
+bool isMmuEnabled(void);
 
 void clearCache(void);
 void clearTLB(void);

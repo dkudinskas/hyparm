@@ -170,9 +170,18 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     //Interupt handler remap
     if( (0 == (oldVal & 0x2000)) && (0 != (val & 0x2000)) )
     {
+#ifdef COPROC_DEBUG
       serial_putstring("CP15: high interrupt vector set.");
       serial_newline();
+#endif
       (getGuestContext())->guestHighVectorSet = TRUE; 
+    }
+  }
+  else if (CRn == 3 && opc1 == 0 && CRm==0 && opc2==0)
+  {
+    if (oldVal != val)
+    {
+      changeGuestDomainAccessControl(oldVal, val);
     }
   }
 }
