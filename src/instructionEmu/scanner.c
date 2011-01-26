@@ -118,9 +118,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   addToBlockCache(blkStartAddr, gc->endOfBlockInstr, (u32int)currAddress, 
                   bcIndex, (u32int)gc->hdlFunct, gc->blockCache);
 
-  // DAN: NASTY HAX, need to fix page table management stuff
-  // will do when i don't want to kill myself
-//  protectScannedBlock(blkStartAddr, (u32int)currAddress);
+  protectScannedBlock(blkStartAddr, (u32int)currAddress);
   // and we're done.
 }
 
@@ -138,7 +136,6 @@ void protectScannedBlock(u32int startAddress, u32int endAddress)
       {
         DIE_NOW(0, "protectScannedBlock: Basic block crosses section boundary!");
       }
-      splitSectionToSmallPages(ptBase, startAddress);
       addProtection(startAddress, endAddress, 0, PRIV_RW_USR_RO);
       break;
     }

@@ -2333,6 +2333,11 @@ void pageTableEdit(u32int address, u32int newVal)
   // CASE 2: add. follows 'change type' as change type is 'remove then add'
   if( (newGuestEntry->type != FAULT) && (oldGuestEntry->type != newGuestEntry->type) )
   {
+#ifdef PT_SHADOW_DEBUG
+    serial_putstring("pageTableEdit: add entry case");
+    serial_newline();
+#endif
+
     if(firstLevelEntry)
     {
       if(newGuestEntry->type == SECTION)
@@ -2386,11 +2391,14 @@ void pageTableEdit(u32int address, u32int newVal)
 
     if (firstLevelEntry)
     {
+      serial_putstring("pageTableEdit, EDIT entry case, first level entry");
+      serial_newline();
       // first level entry
       if (oldGuestEntry->type == SECTION)
       {
         sectionDescriptor* oldSd = (sectionDescriptor*)oldGuestEntry;
         sectionDescriptor* newSd = (sectionDescriptor*)newGuestEntry;
+        // WARNING:  shadow descriptor type might not correspond to guest descriptor type!!! 
         sectionDescriptor* shadowSd = (sectionDescriptor*)shadowEntry;
         if( (oldSd->sectionType != newSd->sectionType) || (oldSd->addr != newSd->addr) )
         {
@@ -2423,41 +2431,44 @@ void pageTableEdit(u32int address, u32int newVal)
           DIE_NOW(0, "pageTableEdit: edit case: pageTable, Use of implementation defined field. Check what guestOS does with this as the Hypervisor uses it!");
         }
 
-        // Access control bit mapping: check if guess is not editing the PTE
-        // that holds guests page table!
-        bool containsPTEntry = FALSE;
-        if ((virtualAddr & 0xFFF00000) == ((u32int)gc->PT_os & 0xFFF00000))
+        if ((oldSd->ap10 != newSd->ap10) || (oldSd->ap2 != newSd->ap2))
         {
-          // 1st level page table lives in this section!
-          containsPTEntry = TRUE;
-        }
-        // maybe second level page tables live in this section?
-        u32int guestPhysicalAddr = getPhysicalAddress(gc->PT_os, virtualAddr);
-        u32int metaArrayIndex = 0;
-        while (guestSecondLvlPageTables[metaArrayIndex] != 0)
-        {
-          u32int pAddrPt2 = guestSecondLvlPageTables[metaArrayIndex];
-          if( (pAddrPt2 >= guestPhysicalAddr) 
-          && ((pAddrPt2 + SECOND_LEVEL_PAGE_TABLE_SIZE -1) <= (guestPhysicalAddr + SECTION_SIZE-1)) )
+          // Access control bit mapping: check if guess is not editing the PTE
+          // that holds guests page table!
+          bool containsPTEntry = FALSE;
+          if ((virtualAddr & 0xFFF00000) == ((u32int)gc->PT_os & 0xFFF00000))
           {
+            // 1st level page table lives in this section!
             containsPTEntry = TRUE;
-            break;
           }
-          metaArrayIndex++;
-        }
-
-        if (containsPTEntry)
-        {
-          shadowSd->ap2  = (PRIV_RW_USR_RO >> 2) & 0x1;
-          shadowSd->ap10 =  PRIV_RW_USR_RO & 0x3;
-        }
-        else
-        {
-          u32int apBits = mapAccessPermissionBits(((newSd->ap2 << 2) | newSd->ap10), newSd->domain);
-          shadowSd->ap2  = (apBits >> 2) & 0x1;
-          shadowSd->ap10 =  apBits & 0x3;
-        }
-      }
+          // maybe second level page tables live in this section?
+          u32int guestPhysicalAddr = getPhysicalAddress(gc->PT_os, virtualAddr);
+          u32int metaArrayIndex = 0;
+          while (guestSecondLvlPageTables[metaArrayIndex] != 0)
+          {
+            u32int pAddrPt2 = guestSecondLvlPageTables[metaArrayIndex];
+            if( (pAddrPt2 >= guestPhysicalAddr) 
+            && ((pAddrPt2 + SECOND_LEVEL_PAGE_TABLE_SIZE -1) <= (guestPhysicalAddr + SECTION_SIZE-1)) )
+            {
+              containsPTEntry = TRUE;
+              break;
+            }
+            metaArrayIndex++;
+          }
+  
+          if (containsPTEntry)
+          {
+            shadowSd->ap2  = (PRIV_RW_USR_RO >> 2) & 0x1;
+            shadowSd->ap10 =  PRIV_RW_USR_RO & 0x3;
+          }
+          else
+          {
+            u32int apBits = mapAccessPermissionBits(((newSd->ap2 << 2) | newSd->ap10), newSd->domain);
+            shadowSd->ap2  = (apBits >> 2) & 0x1;
+            shadowSd->ap10 =  apBits & 0x3;
+          }
+        } // if AP bits have been changed
+      } // edit details of: SECTION
       else if (oldGuestEntry->type == PAGE_TABLE)
       {
         pageTableDescriptor* newPtd = (pageTableDescriptor*)newGuestEntry;
@@ -2494,12 +2505,12 @@ void pageTableEdit(u32int address, u32int newVal)
       }
     }
     
-  } 
+  }
 
   clearTLBbyMVA(address);
 }
 
-/* Given a virtual address, retrieves the underlying physical address */
+// Given a virtual address, retrieves the underlying physical address
 u32int getPhysicalAddress(descriptor* ptd, u32int virtualAddress)
 {
   descriptor* pte1st = get1stLevelPtDescriptorAddr(ptd, virtualAddress);
