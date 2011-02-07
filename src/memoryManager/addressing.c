@@ -6,6 +6,7 @@
 #include "memoryProtection.h"
 #include "blockCache.h"
 #include "memoryConstants.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void); //from main.c
 extern void setGuestPhysicalPt(GCONTXT* gc);
@@ -54,11 +55,12 @@ void createVirtualMachineGPAtoRPA(GCONTXT* gc)
 void initialiseGuestShadowPageTable(u32int guestPtAddr)
 {
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("initialiseGuestShadowPageTable: PARTIAL IMPLEMENTATION");
+  serial_putstring("initialiseGuestShadowPageTable: new pt addr ");
+  serial_putint(guestPtAddr);
   serial_newline();
 #endif
 
-  GCONTXT* gContext = getGuestContext();
+  GCONTXT* context = getGuestContext();
 
   //This needs changing to, or similar
   //if(gc->decompressionDone)
@@ -68,6 +70,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
     serial_putstring("initialiseGuestShadowPageTable: TTBR0 Linux identity mapping bootstrap, ignoring.");
     serial_newline();
 #endif
+    DIE_NOW(context, "initialiseGuestShadowPageTable");
     return;
   }
 
@@ -75,9 +78,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   //Perhaps to check that the table ptr has been updated and is not still the identity map?
   guestPtAddr = guestPtAddr &  0xFFFFC000;
 
-
 #ifdef ADDRESSING_DEBUG
-  dumpGuestContext(gContext);
   serial_putstring("initialiseGuestShadowPageTable: Dumping guest page table @ 0x");
   serial_putint(guestPtAddr);
   serial_newline();
@@ -90,26 +91,60 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   serial_newline();
 #endif
 
-  if(gContext->virtAddrEnabled)
+  if(context->virtAddrEnabled)
   {
-    serial_ERROR("guest OS page table switch, with guest OS PT enabled?");
+    // 1. explode block cache
+    explodeCache(context->blockCache);
+    
+    // 2. create a new shadow page table. Mapping in hypervisor address space
+    descriptor* newShadowPt = createGuestOSPageTable();
+    serial_putstring("new shadow page table @ ");
+    serial_putint((u32int)newShadowPt);
+    serial_newline();
+  
+    // 3a: remove metadata about old sPT1
+    removePT2Metadata();
 
-    //probably want to dump the current virtual addressing entries to work out what is going on
-
-    //We need to do something now, because the sPT should be active immediatly
-
-    //destroy existing shadow PT
-
-    //shadowPT destruction will probably have memoryProtection implications
-
-    //create new one
-    descriptor* sPT =  createGuestOSPageTable();
-    gContext->PT_shadow = sPT;
-    gContext->PT_os = (descriptor*)guestPtAddr;
-
-    // cache/tlb flush?
+    // 3b: map new page table address to a 1-2-1 virtual address 
+    // (now we can safely tamper with sPT, as it will be discarded soon)
+    sectionMapMemory(context->PT_shadow, (guestPtAddr & 0xFFF00000),
+                 (guestPtAddr & 0xFFF00000)+(SECTION_SIZE-1), 
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000);
+    // 3c: copy new gPT1 entries to new sPT1
+    copyPageTable((descriptor*)guestPtAddr, newShadowPt);
+#ifdef ADDRESSING_DEBUG
+    serial_putstring("initialiseGuestShadowPageTable: Copy PT done.");
+    serial_newline();
+    serial_putstring("initialiseGuestShadowPageTable: About to switch to sPT");
+    serial_newline();
+#endif
+    
+    // 4. anything in caches needs to be written back now
+    dataBarrier();
+    
+    // 5. tell CP15 of this new base PT
+    setTTBCR((u32int)newShadowPt);
+    
+    // 6. clean tlb and cache entries
     clearTLB();
     clearCache();
+   
+    // 7. update guest context entries
+    // 7a. update 1st level shadow page table pointer
+    descriptor* oldShadowPt = context->PT_shadow; 
+    context->PT_shadow = newShadowPt;
+    // 7b. in this new 1st level sPT, find VA for 1st lvl gPT
+    u32int ptGuestVirtual = findVAforPA(guestPtAddr);
+    context->PT_os_real = (descriptor*)guestPtAddr;
+    context->PT_os = (descriptor*)ptGuestVirtual;
+  
+    // 8. add protection to guest page table.  
+    u32int guestPtVirtualEndAddr = ptGuestVirtual + PAGE_TABLE_SIZE - 1;
+    //function ptr to the routine that handler gOS edits to its PT
+    addProtection(ptGuestVirtual, guestPtVirtualEndAddr, &pageTableEdit, PRIV_RW_USR_RO);
+  
+    // 9. clean old shadow page table
+    invalidateSPT1(oldShadowPt);
 
     //now running with new shadow page tables
   }
@@ -120,7 +155,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
     serial_newline();
 #endif
     //guest virtual addressing is not active, no need to spend time faulting on PT that the OS is going to add entries to before it activates
-    gContext->PT_os = (descriptor*)guestPtAddr;
+    context->PT_os = (descriptor*)guestPtAddr;
   }
 }
 
@@ -153,7 +188,7 @@ void guestEnableVirtMem()
   if(gc->virtAddrEnabled)
   {
 #ifdef ADDRESSING_DEBUG
-    serial_ERROR("guest virtual addressing is already enabled");
+    DIE_NOW(0, "guest virtual addressing is already enabled");
 #endif
   }
 
@@ -213,5 +248,77 @@ void guestEnableVirtMem()
 
   //function ptr to the routine that handler gOS edits to its PT
   addProtection(guestPtAddr, guestPtEndAddr, &pageTableEdit, PRIV_RW_USR_RO);
+}
+
+
+void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
+{
+  GCONTXT* context = getGuestContext();
+  if(context->virtAddrEnabled)
+  {
+    // loop through DACR entries checking which entry was changed
+    u32int i = 0;
+    for (i = 0; i < 16; i++)
+    {
+
+      // look for domains that had their configuration changed.
+      if ( ((oldVal >> (i*2)) & 0x3) != ((newVal >> (i*2)) & 0x3) )
+      {
+#ifdef ADDRESSING_DEBUG
+        serial_putstring("changeGuestDomainAccessControl: changing config for dom ");
+        serial_putint(i);
+        serial_newline();
+#endif
+        // for every entry changed, loop through all page table entries
+        u32int y = 0;
+        for (y = 0; y < PAGE_TABLE_ENTRIES; y++)
+        {
+          // if page table entry is assigned to that domain remap AP bits 
+          sectionDescriptor* ptEntry = (sectionDescriptor*)&context->PT_os[y];
+          if ((ptEntry->type == FAULT) || (ptEntry->type == RESERVED))
+          {
+            // invalid entry, leave.
+            continue;
+          }
+          if (ptEntry->domain == i)
+          {
+#ifdef ADDRESSING_DEBUG
+            serial_putstring("page table entry ");
+            serial_putint(y);
+            serial_putstring(" = ");
+            serial_putint(*(u32int*)ptEntry);
+            serial_putstring(" needs AP bits remapped.");
+            serial_newline();
+#endif
+            if (ptEntry->type == SECTION)
+            {
+              u32int guestAP = ((ptEntry->ap2 << 2) | ptEntry->ap10); 
+              u32int apNew = mapAccessPermissionBits(guestAP, ptEntry->domain);
+              sectionDescriptor* shadowPtEntry = (sectionDescriptor*)&context->PT_shadow[y];
+              shadowPtEntry->ap2  = (apNew >> 2) & 0x1;
+              shadowPtEntry->ap10 =  apNew & 0x3;
+            }
+            else if (ptEntry->type == PAGE_TABLE)
+            {
+              // ignore for now?
+#ifdef ADDRESSING_DEBUG
+              serial_putstring("changeGuestDomainAccessControl: remap AP for page table entry ");
+              serial_newline();
+              DIE_NOW(context, "changeGuestDomainAccessControl unimplemented.");
+#endif
+            }
+          }
+
+        } // for loop - all page table entries
+                
+      } // if - domain config changed
+
+    } // for loop - through all domain entries
+  }
+  else
+  {
+    // virtual memory turned off. doesnt effect anything.
+    return;
+  }
 }
 

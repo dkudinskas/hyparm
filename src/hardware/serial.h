@@ -30,6 +30,4 @@ void serial_putint_nozeros(u32int nr);
 void serial_putbyte(u8int nr);
 int printableChar(char c);
 
-__attribute((noreturn)) void serial_ERROR(char * msg);
-
 #endif

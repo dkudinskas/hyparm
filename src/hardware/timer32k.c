@@ -3,10 +3,12 @@
 #include "pageTable.h" // for getPhysicalAddress()
 #include "guestContext.h"
 #include "dataMoveInstr.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
 static u32int timer32SysconfReg = 0;
+static u32int counterVal = 0;
 
 u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
 {
@@ -40,6 +42,7 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
       // for now, just load the real counter value.
       volatile u32int * memPtr = (u32int*)address;
       val = *memPtr;
+      val = val >> 12;
 #ifdef TIMER32K_DBG
       serial_putstring(dev->deviceName);
       serial_putstring(" load counter value ");
@@ -54,7 +57,7 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
       serial_putint(phyAddr);
       serial_putstring(", virtual address: 0x");
       serial_putint(address);
-      serial_ERROR(" invalid register!");
+      DIE_NOW(0, " invalid register!");
     }
   }
   else
@@ -64,18 +67,20 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
     serial_putint(phyAddr);
     serial_putstring(", virtual address: 0x");
     serial_putint(address);
-    serial_ERROR(" invalid register access size (non32bit)");
+    DIE_NOW(0, " invalid register access size (non32bit)");
   }
   return val;
 }
 
 void storeTimer32k(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 {
-  serial_ERROR("32k timer store unimplemented.");
+  DIE_NOW(0, "32k timer store unimplemented.");
 }
 
 void initTimer32k()
 {
   // sysconf value is emulated. Reset to zero
   timer32SysconfReg = 0;
+  volatile u32int * memPtr = (u32int*)(TIMER32K_BASE+REG_TIMER_32K_COUNTER);
+  counterVal = *memPtr;
 }

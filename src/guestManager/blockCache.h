@@ -4,7 +4,7 @@
 #include "types.h"
 #include "common.h"
 
-#define BLOCK_CACHE_SIZE    512
+#define BLOCK_CACHE_SIZE    128
 
 // uncomment me for block cache debug: #define BLOCK_CACHE_DEBUG
 
@@ -43,5 +43,11 @@ void validateCachePreChange(BCENTRY * bcache, u32int address);
 void validateCacheMultiPreChange(BCENTRY * bcache, u32int startAddress, u32int endAddress);
 
 void dumpBlockCacheEntry(u32int index, BCENTRY * bcache);
+
+void setExecBitMap(u32int addr);
+
+void clearExecBitMap(u32int addr);
+
+bool isBitmapSetForAddress(u32int addr);
 
 #endif

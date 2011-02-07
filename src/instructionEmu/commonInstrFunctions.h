@@ -60,12 +60,6 @@
 /* a function to serve as a dead-loop if we decode something invalid */
 void invalid_instruction(u32int instr, char * msg);
 
-/* generic error function */
-void error_function(char * msg, GCONTXT * context);
-
-/* generic error function */
-void warning_function(char * msg);
-
 /* a function to evaluate if guest is in priviledge mode or user mode */
 bool guestInPrivMode(GCONTXT * context);
 

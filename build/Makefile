@@ -20,10 +20,8 @@ DEPTH = ..
 include $(DEPTH)/build/config.$(TARGET)
 
 ASMFLAGS = $(TARGET_ASMFLAGS)
-
 # -fno-common forces the compiler to put global variables in one data section in the ELF file
 CCFLAGS = -g -O3 -fno-common -ffixed-r8 -msoft-float -D__KERNEL__ -DTEXT_BASE=$(TARGET_BASE_ADDRESS) -fno-builtin -ffreestanding -nostdinc -pipe -DCONFIG_ARM -D__ARM__ -marm -mabi=aapcs-linux -mno-thumb-interwork -Wall -Wstrict-prototypes -Winline -fno-stack-protector -c -fno-toplevel-reorder $(TARGET_CCFLAGS)
-
 LDFLAGS = -g -Ttext $(TARGET_BASE_ADDRESS) -e main -o $(APP_NAME).elf -Map $(APP_NAME).map --cref
 
 INCLUDE_DIRS += -I$(DEPTH)/src/
@@ -79,10 +77,6 @@ $(RAW_ASMS): init_once
 .PHONY: clean
 clean:
 	@rm $(OBJS) $(ASM_OBJS) $(APP_NAME).dump $(APP_NAME).elf $(APP_NAME).map $(APP_NAME).bin 2>/dev/null || :
-
-.PHONY: backup
-backup:
-	cd ..; make backup;
 
 .PHONY: help
 help:

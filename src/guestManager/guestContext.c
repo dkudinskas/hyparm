@@ -209,6 +209,10 @@ void dumpGuestContext(GCONTXT * gc)
   serial_putint(gc->guestIrqPending);
   serial_newline();
 
+  serial_putstring("Abort pending: ");
+  serial_putint(gc->guestAbtPending);
+  serial_newline();
+
   serial_putstring("Block cache at: ");
   serial_putint((u32int)gc->blockCache);
   serial_newline();
@@ -228,6 +232,8 @@ void initGuestContext(GCONTXT * gContext)
 {
   serial_putstring("Initializing guest context @ address ");
   serial_putint( (u32int)(&gContext) );
+  serial_putstring(" blockTrace @ ");
+  serial_putint( (u32int)(&gContext->blockHistory[0]) );
   serial_newline();
 
   /* zero context!!! */
@@ -287,6 +293,7 @@ void initGuestContext(GCONTXT * gContext)
   gContext->guestFiqHandler = 0;
   gContext->hardwareLibrary = 0;
   gContext->guestIrqPending = FALSE;
+  gContext->guestAbtPending = FALSE;
   int i = 0;
   for (i = 0; i < BLOCK_HISOTRY_SIZE; i++)
   {

@@ -5,6 +5,7 @@
 #include "pageTable.h" // for getPhysicalAddress()
 #include "guestContext.h"
 #include "beIntc.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -15,7 +16,7 @@ void initIntc(void)
   irqController = (struct InterruptController*)mallocBytes(sizeof(struct InterruptController));
   if (irqController == 0)
   {
-    serial_ERROR("Failed to allocate INTC.");
+    DIE_NOW(0, "Failed to allocate INTC.");
   }
   else
   {
@@ -40,7 +41,7 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
   if (size != WORD)
   {
     // only word access allowed in these modules
-    serial_ERROR("Intc: invalid access size.");
+    DIE_NOW(0, "Intc: invalid access size.");
   }
 
   u32int regOffset = phyAddr - INTERRUPT_CONTROLLER;
@@ -62,31 +63,31 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
       }
       break;
     case REG_INTCPS_MIR_CLEAR0:
-      serial_ERROR("INTC: load from W/O register (MIR0_CLEAR)");
+      DIE_NOW(0, "INTC: load from W/O register (MIR0_CLEAR)");
       break;
     case REG_INTCPS_MIR_CLEAR1:
-      serial_ERROR("INTC: load from W/O register (MIR1_CLEAR)");
+      DIE_NOW(0, "INTC: load from W/O register (MIR1_CLEAR)");
       break;
     case REG_INTCPS_MIR_CLEAR2:
-      serial_ERROR("INTC: load from W/O register (MIR2_CLEAR)");
+      DIE_NOW(0, "INTC: load from W/O register (MIR2_CLEAR)");
       break;
     case REG_INTCPS_MIR_SET0:
-      serial_ERROR("INTC: load from W/O register (MIR0_SET)");
+      DIE_NOW(0, "INTC: load from W/O register (MIR0_SET)");
       break;
     case REG_INTCPS_MIR_SET1:
-      serial_ERROR("INTC: load from W/O register (MIR1_SET)");
+      DIE_NOW(0, "INTC: load from W/O register (MIR1_SET)");
       break;
     case REG_INTCPS_MIR_SET2:
-      serial_ERROR("INTC: load from W/O register (MIR2_SET)");
+      DIE_NOW(0, "INTC: load from W/O register (MIR2_SET)");
       break;
     case REG_INTCPS_ISR_CLEAR0:
-      serial_ERROR("INTC: load from W/O register (ISR0_CLEAR)");
+      DIE_NOW(0, "INTC: load from W/O register (ISR0_CLEAR)");
       break;
     case REG_INTCPS_ISR_CLEAR1:
-      serial_ERROR("INTC: load from W/O register (ISR1_CLEAR)");
+      DIE_NOW(0, "INTC: load from W/O register (ISR1_CLEAR)");
       break;
     case REG_INTCPS_ISR_CLEAR2:
-      serial_ERROR("INTC: load from W/O register (ISR2_CLEAR)");
+      DIE_NOW(0, "INTC: load from W/O register (ISR2_CLEAR)");
       break;
     case REG_INTCPS_PENDING_IRQ0:
       val = irqController->intcPendingIrq0;
@@ -229,10 +230,10 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
       serial_putstring("register number ");
       serial_putint(regOffset);
       serial_newline();
-      serial_ERROR("PANIC");
+      DIE_NOW(0, "PANIC");
       break;
     default:
-      serial_ERROR("Intc: load on invalid register.");
+      DIE_NOW(0, "Intc: load on invalid register.");
   }
   
 #ifdef INTC_DBG
@@ -275,14 +276,14 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   if (size != WORD)
   {
     // only word access allowed in these modules
-    serial_ERROR("Intc: invalid access size.");
+    DIE_NOW(0, "Intc: invalid access size.");
   }
 
   u32int regOffset = phyAddr - INTERRUPT_CONTROLLER;
   switch (regOffset)
   {
     case REG_INTCPS_REVISION:
-      serial_ERROR("Intc storing to read only register: version");
+      DIE_NOW(0, "Intc storing to read only register: version");
       break;
     case REG_INTCPS_SYSCONFIG:
       if (value & INTCPS_SYSCONFIG_SOFTRESET)
@@ -298,13 +299,13 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       irqController->intcSysConfig = value & INTCPS_SYSCONFIG_AUTOIDLE;
       break;
     case REG_INTCPS_SYSSTATUS:
-      serial_ERROR("Intc storing to read only register: system status");
+      DIE_NOW(0, "Intc storing to read only register: system status");
       break;
     case REG_INTCPS_SIR_IRQ:
-      serial_ERROR("Intc storing to read only register: active irq");
+      DIE_NOW(0, "Intc storing to read only register: active irq");
       break;
     case REG_INTCPS_SIR_FIQ:
-      serial_ERROR("Intc storing to read only register: active fiq");
+      DIE_NOW(0, "Intc storing to read only register: active fiq");
       break;
     case REG_INTCPS_MIR_CLEAR0:
 #ifdef INTC_DBG
@@ -497,10 +498,10 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       serial_putstring("register number ");
       serial_putint(regOffset);
       serial_newline();
-      serial_ERROR("PANIC");
+      DIE_NOW(0, "PANIC");
       break;
     default:
-      serial_ERROR("Intc: store on invalid register.");
+      DIE_NOW(0, "Intc: store on invalid register.");
   }
 }
 
@@ -648,7 +649,7 @@ void maskInterrupt(u32int interruptNumber)
 
   if ((interruptNumber < 0) || (interruptNumber >= INTCPS_NR_OF_INTERRUPTS))
   {
-    serial_ERROR("INTC: mask interrupt number out of range.");
+    DIE_NOW(0, "INTC: mask interrupt number out of range.");
   }
   
   bankNumber = interruptNumber / INTCPS_INTERRUPTS_PER_BANK;
@@ -666,7 +667,7 @@ void maskInterrupt(u32int interruptNumber)
       irqController->intcMir2 |= bitMask;
       break;  
     default:
-      serial_ERROR("INTC: mask interrupt from invalid interrupt bank");
+      DIE_NOW(0, "INTC: mask interrupt from invalid interrupt bank");
   }
 
 }
@@ -678,7 +679,7 @@ void unmaskInterrupt(u32int interruptNumber)
 
   if ((interruptNumber < 0) || (interruptNumber >= INTCPS_NR_OF_INTERRUPTS))
   {
-    serial_ERROR("INTC: unmask interrupt number out of range.");
+    DIE_NOW(0, "INTC: unmask interrupt number out of range.");
   }
   bankNumber = interruptNumber / INTCPS_INTERRUPTS_PER_BANK;
   bitMask = 1 << (interruptNumber % INTCPS_INTERRUPTS_PER_BANK);
@@ -694,7 +695,7 @@ void unmaskInterrupt(u32int interruptNumber)
       irqController->intcMir2 &= ~bitMask;
       break;  
     default:
-      serial_ERROR("INTC: unmask interrupt from invalid interrupt bank");
+      DIE_NOW(0, "INTC: unmask interrupt from invalid interrupt bank");
   }
 }
 
@@ -705,7 +706,7 @@ bool isGuestIrqMasked(u32int interruptNumber)
 
   if ((interruptNumber < 0) || (interruptNumber >= INTCPS_NR_OF_INTERRUPTS))
   {
-    serial_ERROR("INTC: isMasked interrupt number out of range.");
+    DIE_NOW(0, "INTC: isMasked interrupt number out of range.");
   }
   bankNumber = interruptNumber / INTCPS_INTERRUPTS_PER_BANK;
   bitMask = 1 << (interruptNumber % INTCPS_INTERRUPTS_PER_BANK);
@@ -721,7 +722,7 @@ bool isGuestIrqMasked(u32int interruptNumber)
       return ((irqController->intcMir2 & bitMask) == 1);
       break;  
     default:
-      serial_ERROR("INTC: unmask interrupt from invalid interrupt bank");
+      DIE_NOW(0, "INTC: unmask interrupt from invalid interrupt bank");
   }
   // keep compiler quiet
   return TRUE;
@@ -729,7 +730,7 @@ bool isGuestIrqMasked(u32int interruptNumber)
 
 u32int getIrqNumber(void)
 {
-  serial_ERROR("INTC: getIrqNumber - implement priority sorting of queued IRQS");
+  DIE_NOW(0, "INTC: getIrqNumber - implement priority sorting of queued IRQS");
   return (irqController->intcSirIrq & INTCPS_SIR_IRQ_ACTIVEIRQ);
 }
 
@@ -741,7 +742,7 @@ void setInterrupt(u32int irqNum)
 
   if ((irqNum < 0) || (irqNum >= INTCPS_NR_OF_INTERRUPTS))
   {
-    serial_ERROR("INTC: setInterrupt interrupt number out of range.");
+    DIE_NOW(0, "INTC: setInterrupt interrupt number out of range.");
   }
   bankNumber = irqNum / INTCPS_INTERRUPTS_PER_BANK;
   bitMask = 1 << (irqNum % INTCPS_INTERRUPTS_PER_BANK);
@@ -757,7 +758,7 @@ void setInterrupt(u32int irqNum)
       irqController->intcMir2 |= bitMask;
       break;
     default:
-      serial_ERROR("INTC: setInterrupt in invalid interrupt bank");
+      DIE_NOW(0, "INTC: setInterrupt in invalid interrupt bank");
   }
 
   // 2. check mask, set signal after masking if needed.
@@ -776,7 +777,7 @@ void setInterrupt(u32int irqNum)
         irqController->intcPendingIrq2 |= bitMask;
         break;
       default:
-        serial_ERROR("INTC: setInterrupt in invalid interrupt bank");
+        DIE_NOW(0, "INTC: setInterrupt in invalid interrupt bank");
     }
   }
   // 3. leave priority sorting for now. it will be done when IRQ number gets read.

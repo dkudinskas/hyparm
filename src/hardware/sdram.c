@@ -3,6 +3,7 @@
 #include "pageTable.h" // for getPhysicalAddress()
 #include "guestContext.h"
 #include "dataMoveInstr.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -52,7 +53,7 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address)
       serial_putint(phyAddr);
       serial_putstring(", virtual address: 0x");
       serial_putint(address);
-      serial_ERROR(" invalid access size.");
+      DIE_NOW(0, " invalid access size.");
   }
   return val;
 }
@@ -116,6 +117,6 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       serial_putstring(" value ");
       serial_putint(value);
       serial_newline();
-      serial_ERROR(" invalid access size.");
+      DIE_NOW(0, " invalid access size.");
   }
 }

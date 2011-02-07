@@ -1,4 +1,5 @@
 #include "commonInstrFunctions.h"
+#include "debug.h"
 #include "serial.h"
 
 extern GCONTXT * getGuestContext(void); //from main.c
@@ -12,31 +13,6 @@ void invalid_instruction(u32int instr, char * msg)
   serial_putstring(msg);
   serial_newline();
 }
-
-/* generic error function */
-void error_function(char * msg, GCONTXT * context)
-{
-  serial_putstring("ERROR: ");
-  serial_putstring(msg);
-  serial_newline();
-  if (context != 0)
-  {
-    dumpGuestContext(context);
-  }
-  while(TRUE)
-  {
-    // DEAD loop
-  }
-}
-
-/* generic error function */
-void warning_function(char * msg)
-{
-  serial_putstring("WARNING: ");
-  serial_putstring(msg);
-  serial_newline();
-}
-
 
 bool guestInPrivMode(GCONTXT * context)
 {
@@ -284,7 +260,7 @@ u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int * carryFlag)
   // RRX can only shift right by 1
   if ((shiftType == SHIFT_TYPE_RRX) && (shamt != 1))
   {
-    error_function("shiftVal() type rrx, but shamt not 1!", 0);
+    DIE_NOW(0, "shiftVal() type rrx, but shamt not 1!");
   }
 
   u32int retVal = 0;
@@ -309,7 +285,7 @@ u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int * carryFlag)
        case SHIFT_TYPE_ASR:
        case SHIFT_TYPE_RRX:
        default:
-        error_function("shiftVal(): unimplemented shiftType.", 0);
+        DIE_NOW(0,"shiftVal(): unimplemented shiftType.");
      } // switch
   } // else
   return retVal;
@@ -371,7 +347,7 @@ u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int * shamt)
       }
 
     default:
-      error_function("decodeShiftImmediate: voodoo dolls everywhere!", 0);
+      DIE_NOW(0,"decodeShiftImmediate: voodoo dolls everywhere!");
   } // switch ends
 
   // compiler happy!
@@ -393,7 +369,7 @@ u32int decodeShift(u32int instrShiftType)
     case 3:
       return SHIFT_TYPE_ROR;
     default:
-      error_function("voodoo dolls everywhere!", 0);
+      DIE_NOW(0,"voodoo dolls everywhere!");
   } // switch ends
 
   // compiler happy!

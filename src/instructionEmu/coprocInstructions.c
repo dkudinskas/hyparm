@@ -1,24 +1,22 @@
 #include "coprocInstructions.h"
 #include "commonInstrFunctions.h"
+#include "debug.h"
 #include "serial.h"
 #include "cp15coproc.h"
 
 u32int mcrrInstruction(GCONTXT * context)
 {
-  error_function("MCRR instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "MCRR instruction unimplemented");
 }
 
 u32int mrrcInstruction(GCONTXT * context)
 {
-  error_function("MRRC instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "MRRC instruction unimplemented");
 }
 
 u32int cdpInstruction(GCONTXT * context)
 {
-  error_function("CDP instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "CDP instruction unimplemented");
 }
 
 u32int mrcInstruction(GCONTXT * context)
@@ -53,7 +51,7 @@ u32int mrcInstruction(GCONTXT * context)
       u32int regDestNr = (instr & 0x0000F000) >> 12;
       if (regDestNr == 0xF)
       {
-        error_function("unimplemented load from CP15 to PC", context);
+        DIE_NOW(context, "unimplemented load from CP15 to PC");
       }
       storeGuestGPR(regDestNr, cregVal, context);
     }
@@ -112,56 +110,47 @@ u32int mcrInstruction(GCONTXT * context)
 
 u32int stcInstruction(GCONTXT * context)
 {
-  error_function("STC instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "STC instruction unimplemented");
 }
 
 u32int ldcInstruction(GCONTXT * context)
 {
-  error_function("LDC instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "LDC instruction unimplemented");
 }
 
 /* V6 coprocessor instructions.  */
 u32int mrrc2Instruction(GCONTXT * context)
 {
-  error_function("MRRC2 instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "MRRC2 instruction unimplemented");
 }
 
 u32int mcrr2Instruction(GCONTXT * context)
 {
-  error_function("MCRR2 instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "MCRR2 instruction unimplemented");
 }
 
 /* V5 coprocessor instructions.  */
 u32int ldc2Instruction(GCONTXT * context)
 {
-  error_function("LDC2 instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "LDC2 instruction unimplemented");
 }
 
 u32int stc2Instruction(GCONTXT * context)
 {
-  error_function("STC2 instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "STC2 instruction unimplemented");
 }
 
 u32int cdp2Instruction(GCONTXT * context)
 {
-  error_function("CDP2 instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "CDP2 instruction unimplemented");
 }
 
 u32int mcr2Instruction(GCONTXT * context)
 {
-  error_function("MCR2 instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "MCR2 instruction unimplemented");
 }
 
 u32int mrc2Instruction(GCONTXT * context)
 {
-  error_function("MRC2 instruction unimplemented", context);
-  return 0;
+  DIE_NOW(context, "MRC2 instruction unimplemented");
 }

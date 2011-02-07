@@ -10,14 +10,6 @@ TESTDIR = test/
 all:
 	cd $(BUILDDIR); make;
 
-.PHONY: backup
-backup:
-	@echo "Making a backup..."
-	@tar -cvf hypervisorBackup.tar *
-	@cp -v hypervisorBackup.tar ~/Dropbox/
-	@echo " done."
-
-
 .PHONY: clean
 clean:
 	cd $(BUILDDIR); make clean;

@@ -64,6 +64,7 @@ void copyPageTable(descriptor* guest, descriptor* shadow);
 
 ACCESS_TYPE setAccessBits(descriptor* ptd, u32int virtual, ACCESS_TYPE newAccessBits);
 
+
 void pageTableEdit(u32int address, u32int newVal);
 
 descriptor* getPageTableEntry(descriptor* ptd, u32int address);
@@ -102,7 +103,7 @@ void largeMapMemory(descriptor* ptd, u32int startAddr, u32int endAddr, u8int dom
 void sectionMapMemory(descriptor* ptd, u32int startAddr, u32int endAddr, u8int domain, u8int accessBits, u8int c, u8int b, u8int tex);
 void smallMapMemory(descriptor* ptd, u32int startAddr, u32int endAddr, u8int domain, u8int accessBits, u8int c, u8int b, u8int tex);
 
-u32int addNewPageTableDescriptor(descriptor* ptd1st, u32int physical, u8int domain);
+void addNewPageTableDescriptor(descriptor* ptd1st, u32int physical, u8int domain);
 void addNewSectionDescriptor(sectionDescriptor* sd, u32int physical, u8int domain, u8int accessBits, u8int c, u8int b, u8int tex);
 void addNewSmallDescriptor(smallDescriptor* sd, u32int physical, u8int accessBits, u8int c, u8int b, u8int tex);
 void addNewLargeDescriptor(largeDescriptor* sd, u32int physical, u8int accessBits, u8int c, u8int b, u8int tex);
@@ -114,11 +115,19 @@ void copySuperSectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow);
 void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow);
 void copyLargeEntry(largeDescriptor* guest, largeDescriptor* shadow);
 void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow);
+
 void removePageTableEntry(pageTableDescriptor* shadow);
+void removeSectionEntry(sectionDescriptor* shadow);
+void removeLargePageEntry(largeDescriptor* shadow);
+void removeSmallPageEntry(smallDescriptor* shadow);
+void removePT2Metadata(void);
+
+void invalidateSPT1(descriptor* spt);
 
 void splitSectionToSmallPages(descriptor* ptd, u32int vAddr);
 
 u8int mapGuestDomain(u8int guestDomain);
+u32int mapAccessPermissionBits(u32int guestAP, u32int domain);
 
 void dumpPageTable(descriptor* ptd);
 void dumpSection(sectionDescriptor* sd);
@@ -179,7 +188,7 @@ struct pTSectionDescriptor
   u16int ap2:1; //15 - bit 2 of the access permission field
   u16int s:1; //16
   u16int nG:1; //17
-  u16int sectionType:1; //18 - set to 0 for a section
+  u16int sectionType:1; //18 - set to 0 for a section, 1 for a supersection
   u16int ns:1; //19
   u16int addr:12; //31-20
 };

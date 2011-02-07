@@ -1,5 +1,5 @@
 #include "sramInternal.h"
-
+#include "debug.h"
 #include "sdram.h"
 #include "memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "pageTable.h" // for getPhysicalAddress()
@@ -9,7 +9,7 @@ extern GCONTXT * getGuestContext(void);
 
 u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int address)
 {
-  serial_ERROR("SRAM_INTERNAL load unimplemented.");
+  DIE_NOW(0, "SRAM_INTERNAL load unimplemented.");
   u32int val = 0;
 
   //We care about the real physical address of the entry, not its virtual address
@@ -54,7 +54,7 @@ u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int address)
       serial_putint(phyAddr);
       serial_putstring(", virtual address: 0x");
       serial_putint(address);
-      serial_ERROR(" invalid access size.");
+      DIE_NOW(0, " invalid access size.");
   }
   return val;
 }
@@ -101,7 +101,7 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int address, u32int va
       {
         serial_putstring(dev->deviceName);
         serial_putstring(": register guest exception handler address, halfword access ");
-        serial_ERROR("UNIMPLEMENTED");
+        DIE_NOW(0, "UNIMPLEMENTED");
       } 
       // store the value...
       u16int * memPtr = (u16int*)address;
@@ -114,7 +114,7 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int address, u32int va
       {
         serial_putstring(dev->deviceName);
         serial_putstring(": register guest exception handler address, byte access ");
-        serial_ERROR("UNIMPLEMENTED");
+        DIE_NOW(0, "UNIMPLEMENTED");
       } 
       // store the value...
       u8int * memPtr = (u8int*)address;
@@ -132,7 +132,7 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int address, u32int va
       serial_putstring(" value ");
       serial_putint(value);
       serial_newline();
-      serial_ERROR(" invalid access size.");
+      DIE_NOW(0, " invalid access size.");
   }
 }
 

@@ -1,13 +1,23 @@
-#ifndef __CLOCK_MAANGER_H__
-#define __CLOCK_MAANGER_H__
+#ifndef __BE_CLK_MAN_H__
+#define __BE_CLK_MAN_H__
 
 #include "types.h"
 #include "serial.h"
-#include "hardwareLibrary.h"
 
-// uncomment me to enable debug : #define CLK_MAN_DBG
+// uncomment me to enable debug : #define BE_CLK_MAN_DBG
+
+/*
+ * This driver is for the CM Module of the TI OMAP 35xx only.
+ * Sanity check!
+ */
+#ifndef CONFIG_CPU_TI_OMAP_35XX
+#error Incompatible driver 
+#endif
 
 
+/************************
+ * REGISTER DEFINITIONS *
+ ************************/
 /* CM module instances live at these physical addresses */
 #define IVA2_CM                      0x48004000
 #define OCP_System_Reg_CM            0x48004800
@@ -238,142 +248,17 @@
 #define CM_CLKSTST_USBHOST          0x0000004C // interface clock activity status, R/O
 
 
-void initClockManager(void);
+void clkManBEInit(void);
 
-/* top load function */
-u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int address);
+void setClockSource(u32int clockID, bool sysClock);
+void toggleTimerFclk(u32int clockID, bool enable);
 
-u32int loadIva2Cm(device * dev, u32int address, u32int phyAddr);
-u32int loadOcpSystemCm(device * dev, u32int address, u32int phyAddr);
-u32int loadMpuCm(device * dev, u32int address, u32int phyAddr);
-u32int loadCoreCm(device * dev, u32int address, u32int phyAddr);
-u32int loadSgxCm(device * dev, u32int address, u32int phyAddr);
-u32int loadWkupCm(device * dev, u32int address, u32int phyAddr);
-u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr);
-u32int loadDssCm(device * dev, u32int address, u32int phyAddr);
-u32int loadCamCm(device * dev, u32int address, u32int phyAddr);
-u32int loadPerCm(device * dev, u32int address, u32int phyAddr);
-u32int loadEmuCm(device * dev, u32int address, u32int phyAddr);
-u32int loadGlobalRegCm(device * dev, u32int address, u32int phyAddr);
-u32int loadNeonCm(device * dev, u32int address, u32int phyAddr);
-u32int loadUsbHostCm(device * dev, u32int address, u32int phyAddr);
+void cmDisableDssClocks(void);
 
-
-/* top store function */
-void storeClockManager(device * dev, ACCESS_SIZE size, u32int address, u32int value);
-
-void storeIva2Cm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeOcpSystemCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeMpuCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeSgxCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeDssCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeCamCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeEmuCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeGlobalRegCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeNeonCm(device * dev, u32int address, u32int phyAddr, u32int value);
-void storeUsbHostCm(device * dev, u32int address, u32int phyAddr, u32int value);
-
-struct ClockManager
+struct ClockManagerBE
 {
-  // registers
-  // IVA2_CM registers
-  u32int cmFClkEnIva2Reg;
-  u32int cmClkEnPllIva2Reg;
-  u32int cmIdleStIva2Reg;
-  u32int cmIdleStPllIva2Reg;
-  u32int cmAutoidlePllIva2Reg;
-  u32int cmClkSel1PllIva2Reg;
-  u32int cmClkSel2PllIva2Reg;
-  u32int cmClkStCtrlIva2Reg;
-  u32int cmClkStStIva2Reg;
-  // MPU_CM registers
-  u32int cmClkEnPllMpuReg;
-  u32int cmIdleStMpuReg;
-  u32int cmIdleStPllMpuReg;
-  u32int cmAutoidlePllMpuReg;
-  u32int cmClkSel1PllMpuReg;
-  u32int cmClkSel2PllMpuReg;
-  u32int cmClkStCtrlMpuReg;
-  u32int cmClkStStMpuReg;
-  // CORE_CM registers
-  u32int cmFclkEn1Core;
-  u32int cmFclkEn3Core;
-  u32int cmIclkEn1Core;
-  u32int cmIclkEn2Core;
-  u32int cmIclkEn3Core;
-  u32int cmIdleSt1Core;
-  u32int cmIdleSt2Core;
-  u32int cmIdleSt3Core;
-  u32int cmAutoIdle1Core;
-  u32int cmAutoIdle2Core;
-  u32int cmAutoIdle3Core;
-  u32int cmClkSelCore;
-  u32int cmClkStCtrl;
-  u32int cmClkStSTCore;
-  // SGX_CM registers
-  u32int cmFclkEnSgx;
-  u32int cmIclkEnSgx;
-  u32int cmIdleStSgx;
-  u32int cmClkSelSgx;
-  u32int cmSleepDepSgx;
-  u32int cmClkStCtrlSgx;  
-  u32int cmClkStSt;
-  // WKUP_CM registers
-  u32int cmFclkEnWkup;
-  u32int cmIclkEnWkup;
-  u32int cmIdleStWkup;
-  u32int cmAutoIdleWkup;
-  u32int cmClkSelWkup;
-  // Clock_control_reg_CM registers
-  u32int cmClkEnPll;
-  u32int cmClkEn2Pll;
-  u32int cmIdleStCkGen;
-  u32int cmIdleSt2CkGen;
-  u32int cmAutoIdlePll;
-  u32int cmAutoIdle2Pll;
-  u32int cmClkSel1Pll;
-  u32int cmClkSel2Pll;
-  u32int cmClkSel3Pll;
-  u32int cmClkSel4Pll;
-  u32int cmClkSel5Pll;
-  u32int cmClkoutCtrl;
-  // EMU_CM registers
-  u32int cmClkSel1Emu;
-  u32int cmClkStCtrlEmu;
-  u32int cmClkStStEmu;
-  u32int cmClkSel2Emu;
-  u32int cmClkSel3Emu;
-  // DSS_CM registers
-  u32int cmFclkEnDss;
-  u32int cmIclkEnDss;
-  u32int cmIdleStDss;
-  u32int cmAutoIdleDss;
-  u32int cmClkSelDss; 
-  u32int cmSleepDepDss;
-  u32int cmClkStCtrlDss;
-  u32int cmClkStStDss;
-  // CAM_CM registers
-  u32int cmFclkEnCam;
-  u32int cmIclkEnCam;
-  u32int cmIdleStCam;
-  u32int cmAutoIdleCam;
-  u32int cmClkSelCam;
-  u32int cmSleepDepCam;
-  u32int cmClkStCtrlCam;
-  u32int cmClkStStCam;
-  // PER_CM registers
-  u32int cmFclkEnPer;
-  u32int cmIclkEnPer;
-  u32int cmIdleStPer;
-  u32int cmAutoIdlePer; 
-  u32int cmClkSelPer;
-  u32int cmSleepDepPer;
-  u32int cmClkStCtrlPer;
-  u32int cmClkStStPer;
+  // add stuff if needed
+  u32int initialized;
 };
 
 #endif

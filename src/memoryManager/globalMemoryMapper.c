@@ -1,6 +1,7 @@
 #include "globalMemoryMapper.h"
 #include "guestContext.h"
 #include "dataMoveInstr.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void); //from main.c
 
@@ -72,6 +73,12 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
     // LDRH Rd, [Rn, Rm/#imm12]
     ldrhInstruction(context);
   }
+  else if ( ((instr & LDRD_IMM_MASK) == LDRD_IMM_MASKED) ||
+            ((instr & LDRD_REG_MASK) == LDRD_REG_MASKED) )
+  {
+    // LDRD Rd, [Rn, Rm/#imm12]
+    ldrdInstruction(context);
+  }
   else if ((instr & LDM_MASK) == LDM_MASKED)
   {
     // LDM, Rn, {reg list}
@@ -84,8 +91,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
     serial_putstring(" instruction ");
     serial_putint(instr);
     serial_newline(); 
-    dumpGuestContext(context);
-    serial_ERROR("Load/Store generic unimplemented\n");
+    DIE_NOW(context, "Load/Store generic unimplemented\n");
   } 
   // restore end of block instruction 
   context->endOfBlockInstr = eobInstrBackup;

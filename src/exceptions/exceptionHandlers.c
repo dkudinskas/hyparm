@@ -12,8 +12,10 @@
 #include "beIntc.h"
 #include "beGPTimer.h"
 #include "cpu.h"
-#include "guestInterrupts.h"
+#include "guestExceptions.h"
 #include "intc.h"
+#include "be32kTimer.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -42,7 +44,7 @@ void do_software_interrupt(u32int code)
     serial_putstring("exceptionHandlers: Dumping gc");
     serial_newline();
     dumpGuestContext(gContext);
-    serial_ERROR("exceptionHandlers: In infinite loop");
+    DIE_NOW(0, "exceptionHandlers: In infinite loop");
   }
 
   int i = 0;
@@ -54,13 +56,17 @@ void do_software_interrupt(u32int code)
 
   gContext->R15 = nextPC;
 
-  // check if there is an interrupt pending!
-  if (gContext->guestIrqPending == TRUE)
+  // deliver interrupts
+  if (gContext->guestAbtPending)
+  {
+    dumpGuestContext(gContext);
+    DIE_NOW(0, "Exception handlers: guest abort in SWI handler! implement.");
+  }
+  else if (gContext->guestIrqPending)
   {
     deliverInterrupt();
   }
 
-  dumpLinuxFunctionInfo(gContext->R15);
 #ifdef EXC_HDLR_DBG
   serial_putstring("exceptionHandlers: Next PC = 0x");
   serial_putint(nextPC);
@@ -71,8 +77,8 @@ void do_software_interrupt(u32int code)
 
 void do_data_abort()
 {
-  // interrupts are disabled in hypervisor execution
-//  enable_interrupts();
+  // make sure interrupts are disabled while we deal with data abort.
+  disableInterrupts();
   switch(getDFSR().fs3_0)
   {
     case perm_section:
@@ -83,26 +89,34 @@ void do_data_abort()
 
       // ATM dont expect anything else to permission fault except load/stores
       emulateLoadStoreGeneric(gc, getDFAR());
-      gc->R15 = gc->R15 + 4;
+      if (!gc->guestAbtPending)
+      {
+        // ONLY move to the next instruction, if the guest hasn't aborted... 
+        gc->R15 = gc->R15 + 4;
+      }
+      else
+      {
+        // deliver the abort!
+        deliverAbort();
+        scanBlock(gc, gc->R15);
+      }
       break;
     }
     case translation_section:
       printDataAbort();
-      dumpGuestContext(getGuestContext());
-      serial_ERROR("Translation section data abort.");
+      DIE_NOW(0, "Translation section data abort.");
       break;
     case translation_page:
       printDataAbort();
-      dumpGuestContext(getGuestContext());
-      serial_ERROR("Translation page data abort.");
+      DIE_NOW(0, "Translation page data abort.");
       break;
     default:
       serial_putstring("Unimplemented user data abort.");
       serial_newline();
       printDataAbort();
-      dumpGuestContext(getGuestContext());
-      serial_ERROR("Entering infinite loop");
+      DIE_NOW(0, "Entering infinite loop");
   }
+  enableInterrupts();
 }
 
 void do_data_abort_hypervisor()
@@ -124,23 +138,11 @@ void do_data_abort_hypervisor()
       {
         serial_putstring("Fault inside physical RAM range.  hypervisor_page_fault (exceptionHandlers.c)");
         serial_newline();
-        GCONTXT* gc = getGuestContext();
-        dumpGuestContext(gc);
-
-        if(gc->virtAddrEnabled)
-        {
-          serial_putstring("Dumping SHADOW PAGE TABLE");
-          serial_newline();
-          dumpPageTable(gc->PT_shadow);
-          serial_putstring("Dumping GUEST OS PAGE TABLE");
-          serial_newline();
-          dumpPageTable(gc->PT_os);
-        }
-        serial_ERROR("Entering infinite loop");
+        DIE_NOW(0, "Entering infinite loop");
       }
       else
       {
-        serial_ERROR("Translation fault for area not in RAM! Entering Infinite Loop...");
+        DIE_NOW(0, "Translation fault for area not in RAM! Entering Infinite Loop...");
         /*
         I imagine there will be a few areas that we will need to map for the hypervisor only
         But not right now.
@@ -150,17 +152,12 @@ void do_data_abort_hypervisor()
     default:
       serial_putstring("UNIMPLEMENTED data abort type. (exceptionHandlers.c).");
       serial_newline();
-
-
-      GCONTXT* gContext = getGuestContext();
-      dumpGuestContext(gContext);
-
-      serial_ERROR("Entering infinite loop");
+      DIE_NOW(0, "Entering infinite loop");
       break;
   }
 
 
-  serial_ERROR("At end of hypervisor data abort handler. Stopping");
+  DIE_NOW(0, "At end of hypervisor data abort handler. Stopping");
 
   serial_putstring("Exiting data abort handler");
   serial_newline();
@@ -173,11 +170,7 @@ void do_undefined(void)
   serial_putstring("exceptionHandlers: undefined handler, Implement me!");
   serial_newline();
 
-  /* show us the context */
-  GCONTXT* gContext = getGuestContext();
-  dumpGuestContext(gContext);
-
-  serial_ERROR("Entering infinite loop.");
+  DIE_NOW(getGuestContext(), "Entering infinite loop.");
 }
 
 void do_undefined_hypervisor(void)
@@ -185,11 +178,7 @@ void do_undefined_hypervisor(void)
   serial_putstring("exceptionHandlers: Undefined handler (Privileged/Hypervisor), Implement me!");
   serial_newline();
 
-  /* Show us the context */
-  GCONTXT* gContext = getGuestContext();
-  dumpGuestContext(gContext);
-
-  serial_ERROR("Entering infinite loop.");
+  DIE_NOW(getGuestContext(), "Entering infinite loop.");
 }
 
 void do_prefetch_abort(void)
@@ -199,11 +188,7 @@ void do_prefetch_abort(void)
 
   printPrefetchAbort();
 
-  /* show us the context */
-  GCONTXT* gContext = getGuestContext();
-  dumpGuestContext(gContext);
-
-  serial_ERROR("Entering Infinite Loop.");
+  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -213,9 +198,8 @@ void do_prefetch_abort_hypervisor(void)
   serial_newline();
 
   printPrefetchAbort();
-  dumpGuestContext(getGuestContext());
 
-  serial_ERROR("Entering Infinite Loop.");
+  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -224,13 +208,9 @@ void do_monitor_mode(void)
   serial_putstring("exceptionHandlers: monitor/secure mode handler, Implement me!");
   serial_newline();
 
-  /* show us the context */
-  GCONTXT* gContext = getGuestContext();
-  dumpGuestContext(gContext);
-
   /* Does the omap 3 implement monitor/secure mode? */
 
-  serial_ERROR("Entering Infinite Loop.");
+  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -239,13 +219,9 @@ void do_monitor_mode_hypervisor(void)
   serial_putstring("exceptionHandlers: monitor/secure mode handler(privileged/Hypervisor), Implement me!");
   serial_newline();
 
-  /* show us the context */
-  GCONTXT* gContext = getGuestContext();
-  dumpGuestContext(gContext);
-
   /* Does the omap 3 implement monitor/secure mode? */
 
-  serial_ERROR("Entering Infinite Loop.");
+  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
   //Never returns
 }
 
@@ -273,7 +249,7 @@ void do_irq()
     default:
       serial_putstring("Received IRQ=");
       serial_putint(activeIrqNumber);
-      serial_ERROR(" Implement me!");
+      DIE_NOW(0, " Implement me!");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -309,7 +285,7 @@ void do_irq_hypervisor()
     default:
       serial_putstring("Received IRQ=");
       serial_putint(activeIrqNumber);
-      serial_ERROR(" Implement me!");
+      DIE_NOW(0, " Implement me!");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -326,112 +302,5 @@ void do_irq_hypervisor()
 
 void do_fiq(void)
 {
-  serial_ERROR("Received FIQ! Implement me.");
-}
-
-void dumpLinuxFunctionInfo(u32int nextPC)
-{
-  switch(nextPC)
-  {
-    case 0xc00086e0:
-      serial_putstring("LINUX: start_kernel");
-      serial_newline();
-      break;
-    case 0xc0008324:
-      serial_putstring("LINUX: smp_setup_processor_id");
-      serial_newline();
-      break;
-    case 0xc001324c:
-      serial_putstring("LINUX: tick_init");
-      serial_newline();
-      break;
-    case 0xc000e540:
-      serial_putstring("LINUX: setup_arch");
-      serial_newline();
-      break;
-    case 0xc0011b28:
-      serial_putstring("LINUX: sched_init");
-      serial_newline();
-      break;
-    case 0xc006d004:
-      serial_putstring("LINUX: __build_all_zonelists");
-      serial_newline();
-      break;
-    case 0xc001437c:
-      serial_putstring("LINUX: page_alloc_init");
-      serial_newline();
-      break;
-    case 0xc005141c:
-      serial_putstring("LINUX: parse_args");
-      serial_newline();
-      break;
-    case 0xc0008824:
-      serial_putstring("LINUX: bug. interrupts where enabled *very very* early.");
-      serial_newline();
-      break;
-    case 0xc0012924:
-      serial_putstring("LINUX: sort_main_extable");
-      serial_newline();
-      break;
-    case 0xc000ebe8:
-      serial_putstring("LINUX: trap_init");
-      serial_newline();
-      break;
-    case 0xc0012910:
-      serial_putstring("LINUX: rcu_init");
-      serial_newline();
-      break;
-    case 0xc000e120:
-      serial_putstring("LINUX: init_IRQ");
-      serial_newline();
-      break;
-    case 0xc0012868:
-      serial_putstring("LINUX: pidhash_init");
-      serial_newline();
-      break;
-    case 0xc001256c:
-      serial_putstring("LINUX: init_timers");
-      serial_newline();
-      break;
-    case 0xc0012d74:
-      serial_putstring("LINUX: hrtimers_init");
-      serial_newline();
-      break;
-    case 0xc0012240:
-      serial_putstring("LINUX: softirq_init");
-      serial_newline();
-      break;
-    case 0xc0012f28:
-      serial_putstring("LINUX: timekeeping_init");
-      serial_newline();
-      break;
-    case 0xc000eb84:
-      serial_putstring("LINUX: time_init");
-      serial_newline();
-      break;
-    case 0xc0058320:
-      serial_putstring("LINUX: sched_clock_init");
-      serial_newline();
-      break;
-    case 0xc0008868:
-      serial_putstring("LINUX: enable interrupts!");
-      serial_newline();
-      break;
-    case 0xc000886c:
-      serial_putstring("LINUX: jump to console_init.");
-      serial_newline();
-      break;
-    case 0xc00177a4:
-      serial_putstring("LINUX: console_init");
-      serial_newline();
-      break;
-    case 0xc016ee94:
-      serial_putstring("LINUX: PANIC!!!");
-      serial_newline();
-      break;
-    case 0xc0014c80:
-      serial_putstring("LINUX: vmalloc_init");
-      serial_newline();
-      break;
-  }
+  DIE_NOW(getGuestContext(), "Received FIQ! Implement me.");
 }

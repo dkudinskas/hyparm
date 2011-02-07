@@ -1,4 +1,4 @@
-SRCS += src/drivers/beagle/beCM.c
 SRCS += src/drivers/beagle/beIntc.c
 SRCS += src/drivers/beagle/beGPTimer.c
-
+SRCS += src/drivers/beagle/beClockMan.c
+SRCS += src/drivers/beagle/be32kTimer.c

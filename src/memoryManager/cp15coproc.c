@@ -1,5 +1,6 @@
 #include "cp15coproc.h"
 #include "commonInstrFunctions.h"
+#include "debug.h"
 #include "addressing.h"
 
 extern GCONTXT * getGuestContext(void);
@@ -120,6 +121,8 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   u32int index = crbIndex(CRn, opc1, CRm, opc2);
   u32int oldVal = crbPtr[index].value;
   crbPtr[index].value = val;
+  // if we are writting to this register, it's probably valid already!
+  crbPtr[index].valid = TRUE;
 
 #ifdef COPROC_DEBUG
   serial_putstring("setCreg (CRn=");
@@ -167,9 +170,18 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     //Interupt handler remap
     if( (0 == (oldVal & 0x2000)) && (0 != (val & 0x2000)) )
     {
+#ifdef COPROC_DEBUG
       serial_putstring("CP15: high interrupt vector set.");
       serial_newline();
+#endif
       (getGuestContext())->guestHighVectorSet = TRUE; 
+    }
+  }
+  else if (CRn == 3 && opc1 == 0 && CRm==0 && opc2==0)
+  {
+    if (oldVal != val)
+    {
+      changeGuestDomainAccessControl(oldVal, val);
     }
   }
 }
@@ -201,7 +213,18 @@ u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPt
   }
   else
   {
-    error_function("Undefined CP15 register!", 0);
+    serial_putstring("getCreg (CRn=");
+    serial_putint(CRn);
+    serial_putstring(" opc1=");
+    serial_putint(opc1);
+    serial_putstring(" CRm=");
+    serial_putint(CRm);
+    serial_putstring(" opc2=");
+    serial_putint(opc2);
+    serial_putstring(") Value = ");
+    serial_putint(reg.value);
+    serial_newline();
+    DIE_NOW(0, "Undefined CP15 register!");
     return 0;
   }
 }

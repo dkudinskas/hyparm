@@ -1,6 +1,7 @@
 #include "miscInstructions.h"
 #include "commonInstrFunctions.h"
 #include "intc.h"
+#include "debug.h"
 
 u32int nopInstruction(GCONTXT * context)
 {
@@ -16,43 +17,63 @@ u32int nopInstruction(GCONTXT * context)
 
 u32int bxInstruction(GCONTXT * context)
 {
-  dumpGuestContext(context);
-  serial_ERROR("BX unfinished\n");
-  return 0;
+  u32int instr = context->endOfBlockInstr;
+  
+  u32int nextPC = 0;
+
+  u32int instrCC = (instr >> 28) & 0xF;
+  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
+
+  if (!evalCC(instrCC, cpsrCC))
+  {
+      nextPC = context->R15 + 4;
+      return nextPC;
+  }
+
+  //check if switching to thumb mode
+  u32int regDest = (instr & 0x0000000F);
+  u32int addr = loadGuestGPR(regDest, context);
+
+  if (addr & 0x1)
+  {
+    dumpGuestContext(context);
+    DIE_NOW(0, "BX Rm switching to Thumb. Unimplemented\n");
+  }
+
+  nextPC = addr & 0xFFFFFFFE;
+  return nextPC;
 }
 
 u32int mulInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("MUL unfinished\n");
-  return 0;
+  DIE_NOW(0, "MUL unfinished\n");
 }
 
 u32int mlaInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("MLA unfinished\n");
-  return 0;
+  DIE_NOW(0, "MLA unfinished\n");
 }
 
 u32int swpInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SWP unfinished\n");
+  DIE_NOW(0, "SWP unfinished\n");
   return 0;
 }
 
 u32int sumlalInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SUMLAL unfinished\n");
+  DIE_NOW(0, "SUMLAL unfinished\n");
   return 0;
 }
 
 u32int sumullInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SUMULL unfinished\n");
+  DIE_NOW(0, "SUMULL unfinished\n");
   return 0;
 }
 
@@ -68,14 +89,14 @@ u32int pliInstruction(GCONTXT * context)
 u32int dbgInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("DBG unfinished\n");
+  DIE_NOW(0, "DBG unfinished\n");
   return 0;
 }
 
 u32int dmbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("DBM unfinished\n");
+  DIE_NOW(0, "DBM unfinished\n");
   return 0;
 }
 
@@ -100,56 +121,56 @@ u32int isbInstruction(GCONTXT * context)
 u32int bfcInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("BFC unfinished\n");
+  DIE_NOW(0, "BFC unfinished\n");
   return 0;
 }
 
 u32int bfiInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("BFI unfinished\n");
+  DIE_NOW(0, "BFI unfinished\n");
   return 0;
 }
 
 u32int mlsInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("MLS unfinished\n");
+  DIE_NOW(0, "MLS unfinished\n");
   return 0;
 }
 
 u32int movwInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("MOVW unfinished\n");
+  DIE_NOW(0, "MOVW unfinished\n");
   return 0;
 }
 
 u32int movtInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("MOVT unfinished\n");
+  DIE_NOW(0, "MOVT unfinished\n");
   return 0;
 }
 
 u32int rbitInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("RBIT unfinished\n");
+  DIE_NOW(0, "RBIT unfinished\n");
   return 0;
 }
 
 u32int usbfxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("USBFX unfinished\n");
+  DIE_NOW(0, "USBFX unfinished\n");
   return 0;
 }
 
 u32int smcInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMC unfinished\n");
+  DIE_NOW(0, "SMC unfinished\n");
   return 0;
 }
 
@@ -165,28 +186,28 @@ u32int clrexInstruction(GCONTXT * context)
 u32int yieldInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("YIELD unfinished\n");
+  DIE_NOW(0, "YIELD unfinished\n");
   return 0;
 }
 
 u32int wfeInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("WFE unfinished\n");
+  DIE_NOW(0, "WFE unfinished\n");
   return 0;
 }
 
 u32int wfiInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("WFI unfinished\n");
+  DIE_NOW(0, "WFI unfinished\n");
   return 0;
 }
 
 u32int sevInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SEV unfinished\n");
+  DIE_NOW(0, "SEV unfinished\n");
   return 0;
 }
 
@@ -220,7 +241,7 @@ u32int cpsInstruction(GCONTXT * context)
   if ( ((imod == 0) && (changeMode == 0)) || (imod == 1) )
   {
     serial_putint(instr);
-    serial_ERROR(": CPS unpredictable case\n");
+    DIE_NOW(0, ": CPS unpredictable case\n");
   }
 
   if (guestInPrivMode(context))
@@ -236,7 +257,7 @@ u32int cpsInstruction(GCONTXT * context)
       {
         if ((oldCpsr & CPSR_AAB_BIT) != 0)
         {
-          serial_ERROR("Guest enabling async aborts globally!");
+          DIE_NOW(0, "Guest enabling async aborts globally!");
         }
         oldCpsr &= ~CPSR_AAB_BIT;
       }
@@ -260,7 +281,7 @@ u32int cpsInstruction(GCONTXT * context)
       {
         if ( (oldCpsr & CPSR_FIQ_BIT) != 0)
         {
-          serial_ERROR("Guest enabling fiqs globally!");
+          DIE_NOW(0, "Guest enabling fiqs globally!");
         } 
         oldCpsr &= ~CPSR_FIQ_BIT;
       }
@@ -271,7 +292,7 @@ u32int cpsInstruction(GCONTXT * context)
       {
         if ((oldCpsr & CPSR_AAB_BIT) == 0)
         {
-          serial_ERROR("Guest disabling async aborts globally!");
+          DIE_NOW(0, "Guest disabling async aborts globally!");
         }
         oldCpsr |= CPSR_AAB_BIT;
       }
@@ -291,28 +312,28 @@ u32int cpsInstruction(GCONTXT * context)
       {
         if ( (oldCpsr & CPSR_FIQ_BIT) == 0)
         {
-          serial_ERROR("Guest disabling fiqs globally!");
+          DIE_NOW(0, "Guest disabling fiqs globally!");
         } 
         oldCpsr |= CPSR_FIQ_BIT;
       }
     }
     else
     {
-      serial_ERROR("CPS invalid IMOD\n");
+      DIE_NOW(0, "CPS invalid IMOD\n");
     }
     // ARE we switching modes?
     if (changeMode)
     {
       oldCpsr &= ~CPSR_MODE_FIELD;
       oldCpsr |= newMode;
-      serial_ERROR("guest is changing execution modes. What?!");
+      DIE_NOW(0, "guest is changing execution modes. What?!");
     }
     context->CPSR = oldCpsr;
   }
   else
   {
     // guest is not in privileged mode! cps should behave as a nop, but lets see what went wrong.
-    serial_ERROR("CPS instruction: executed in guest user mode.");
+    DIE_NOW(0, "CPS instruction: executed in guest user mode.");
   }
 
   return context->R15+4;
@@ -321,524 +342,524 @@ u32int cpsInstruction(GCONTXT * context)
 u32int pkhbtInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("PKHBT unfinished\n");
+  DIE_NOW(0, "PKHBT unfinished\n");
   return 0;
 }
 
 u32int pkhtbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("PKHTB unfinished\n");
+  DIE_NOW(0, "PKHTB unfinished\n");
   return 0;
 }
 
 u32int qadd16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("QADD16 unfinished\n");
+  DIE_NOW(0, "QADD16 unfinished\n");
   return 0;
 }
 
 u32int qadd8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("QADD8 unfinished\n");
+  DIE_NOW(0, "QADD8 unfinished\n");
   return 0;
 }
 
 u32int qaddsubxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("QADDSUBX unfinished\n");
+  DIE_NOW(0, "QADDSUBX unfinished\n");
   return 0;
 }
 
 u32int qsub16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("QSUB16 unfinished\n");
+  DIE_NOW(0, "QSUB16 unfinished\n");
   return 0;
 }
 
 u32int qsub8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("QSUB8 unfinished\n");
+  DIE_NOW(0, "QSUB8 unfinished\n");
   return 0;
 }
 
 u32int qsubaddxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("QSUBADDX unfinished\n");
+  DIE_NOW(0, "QSUBADDX unfinished\n");
   return 0;
 }
 
 u32int sadd16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SADD16 unfinished\n");
+  DIE_NOW(0, "SADD16 unfinished\n");
   return 0;
 }
 
 u32int sadd8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SADD8 unfinished\n");
+  DIE_NOW(0, "SADD8 unfinished\n");
   return 0;
 }
 
 u32int saddsubxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SADDADDX unfinished\n");
+  DIE_NOW(0, "SADDADDX unfinished\n");
   return 0;
 }
 
 u32int shadd16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SHADD16 unfinished\n");
+  DIE_NOW(0, "SHADD16 unfinished\n");
   return 0;
 }
 
 u32int shadd8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SHADD8 unfinished\n");
+  DIE_NOW(0, "SHADD8 unfinished\n");
   return 0;
 }
 
 u32int shaddsubxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SHADDSUBX unfinished\n");
+  DIE_NOW(0, "SHADDSUBX unfinished\n");
   return 0;
 }
 
 u32int shsub16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SHSUB16 unfinished\n");
+  DIE_NOW(0, "SHSUB16 unfinished\n");
   return 0;
 }
 
 u32int shsub8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SHSUB8 unfinished\n");
+  DIE_NOW(0, "SHSUB8 unfinished\n");
   return 0;
 }
 
 u32int shsubaddxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SHSUBADDX unfinished\n");
+  DIE_NOW(0, "SHSUBADDX unfinished\n");
   return 0;
 }
 
 u32int ssub16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SSUB16 unfinished\n");
+  DIE_NOW(0, "SSUB16 unfinished\n");
   return 0;
 }
 
 u32int ssub8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SSUB8 unfinished\n");
+  DIE_NOW(0, "SSUB8 unfinished\n");
   return 0;
 }
 
 u32int ssubaddxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SSUBADDX unfinished\n");
+  DIE_NOW(0, "SSUBADDX unfinished\n");
   return 0;
 }
 
 u32int uadd16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UADD16 unfinished\n");
+  DIE_NOW(0, "UADD16 unfinished\n");
   return 0;
 }
 
 u32int uadd8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UADD8 unfinished\n");
+  DIE_NOW(0, "UADD8 unfinished\n");
   return 0;
 }
 
 u32int uaddsubxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UADDSUBX unfinished\n");
+  DIE_NOW(0, "UADDSUBX unfinished\n");
   return 0;
 }
 
 u32int uhadd16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UHADD16 unfinished\n");
+  DIE_NOW(0, "UHADD16 unfinished\n");
   return 0;
 }
 
 u32int uhadd8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UHADD8 unfinished\n");
+  DIE_NOW(0, "UHADD8 unfinished\n");
   return 0;
 }
 
 u32int uhaddsubxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UHADDSUBX unfinished\n");
+  DIE_NOW(0, "UHADDSUBX unfinished\n");
   return 0;
 }
 
 u32int uhsub16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UHSUB16 unfinished\n");
+  DIE_NOW(0, "UHSUB16 unfinished\n");
   return 0;
 }
 
 u32int uhsub8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UHSUB8 unfinished\n");
+  DIE_NOW(0, "UHSUB8 unfinished\n");
   return 0;
 }
 
 u32int uhsubaddxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UHSUBADDX unfinished\n");
+  DIE_NOW(0, "UHSUBADDX unfinished\n");
   return 0;
 }
 
 u32int uqadd16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UQADD16 unfinished\n");
+  DIE_NOW(0, "UQADD16 unfinished\n");
   return 0;
 }
 
 u32int uqadd8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UQADD8 unfinished\n");
+  DIE_NOW(0, "UQADD8 unfinished\n");
   return 0;
 }
 
 u32int uqaddsubxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UQADDSUBX unfinished\n");
+  DIE_NOW(0, "UQADDSUBX unfinished\n");
   return 0;
 }
 
 u32int uqsub16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UQSUB16 unfinished\n");
+  DIE_NOW(0, "UQSUB16 unfinished\n");
   return 0;
 }
 u32int uqsub8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UQSUB8 unfinished\n");
+  DIE_NOW(0, "UQSUB8 unfinished\n");
   return 0;
 }
 
 u32int uqsubaddxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UQSUBADDX unfinished\n");
+  DIE_NOW(0, "UQSUBADDX unfinished\n");
   return 0;
 }
 
 u32int usub16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("USUB16 unfinished\n");
+  DIE_NOW(0, "USUB16 unfinished\n");
   return 0;
 }
 
 u32int usub8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("USUB8 unfinished\n");
+  DIE_NOW(0, "USUB8 unfinished\n");
   return 0;
 }
 
 u32int usubaddxInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("USUBADDX unfinished\n");
+  DIE_NOW(0, "USUBADDX unfinished\n");
   return 0;
 }
 
 u32int revInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("REV unfinished\n");
+  DIE_NOW(0, "REV unfinished\n");
   return 0;
 }
 
 u32int rev16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("REV16 unfinished\n");
+  DIE_NOW(0, "REV16 unfinished\n");
   return 0;
 }
 
 u32int revshInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("REVSH unfinished\n");
+  DIE_NOW(0, "REVSH unfinished\n");
   return 0;
 }
 
 u32int rfeInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("RFE unfinished\n");
+  DIE_NOW(0, "RFE unfinished\n");
   return 0;
 }
 
 u32int sxthInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SXTH unfinished\n");
+  DIE_NOW(0, "SXTH unfinished\n");
   return 0;
 }
 
 u32int sxtb16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SXTB16 unfinished\n");
+  DIE_NOW(0, "SXTB16 unfinished\n");
   return 0;
 }
 
 u32int sxtbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SXTB unfinished\n");
+  DIE_NOW(0, "SXTB unfinished\n");
   return 0;
 }
 
 u32int uxthInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UXTHunfinished\n");
+  DIE_NOW(0, "UXTHunfinished\n");
   return 0;
 }
 
 u32int uxtb16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UXTB16 unfinished\n");
+  DIE_NOW(0, "UXTB16 unfinished\n");
   return 0;
 }
 
 u32int uxtbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UXTB unfinished\n");
+  DIE_NOW(0, "UXTB unfinished\n");
   return 0;
 }
 
 u32int sxtahInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SXTAH unfinished\n");
+  DIE_NOW(0, "SXTAH unfinished\n");
   return 0;
 }
 
 u32int sxtab16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SXTAB16 unfinished\n");
+  DIE_NOW(0, "SXTAB16 unfinished\n");
   return 0;
 }
 
 u32int sxtabInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SXTAB unfinished\n");
+  DIE_NOW(0, "SXTAB unfinished\n");
   return 0;
 }
 
 u32int uxtahInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UXTAH unfinished\n");
+  DIE_NOW(0, "UXTAH unfinished\n");
   return 0;
 }
 
 u32int uxtab16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UXTAB16 unfinished\n");
+  DIE_NOW(0, "UXTAB16 unfinished\n");
   return 0;
 }
 
 u32int uxtabInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UXTAB unfinished\n");
+  DIE_NOW(0, "UXTAB unfinished\n");
   return 0;
 }
 
 u32int selInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SEL unfinished\n");
+  DIE_NOW(0, "SEL unfinished\n");
   return 0;
 }
 
 u32int setendInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SETEND unfinished\n");
+  DIE_NOW(0, "SETEND unfinished\n");
   return 0;
 }
 
 u32int smuadInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMUAD unfinished\n");
+  DIE_NOW(0, "SMUAD unfinished\n");
   return 0;
 }
 
 u32int smusdInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMUSD unfinished\n");
+  DIE_NOW(0, "SMUSD unfinished\n");
   return 0;
 }
 
 u32int smladInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLAD unfinished\n");
+  DIE_NOW(0, "SMLAD unfinished\n");
   return 0;
 }
 
 u32int smlaldInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLALD unfinished\n");
+  DIE_NOW(0, "SMLALD unfinished\n");
   return 0;
 }
 
 u32int smlsdInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLSD unfinished\n");
+  DIE_NOW(0, "SMLSD unfinished\n");
   return 0;
 }
 
 u32int smlsldInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLSLD unfinished\n");
+  DIE_NOW(0, "SMLSLD unfinished\n");
   return 0;
 }
 
 u32int smmulInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMMUL unfinished\n");
+  DIE_NOW(0, "SMMUL unfinished\n");
   return 0;
 }
 
 u32int smmlaInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMMLA unfinished\n");
+  DIE_NOW(0, "SMMLA unfinished\n");
   return 0;
 }
 
 u32int smmlsInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMMLS unfinished\n");
+  DIE_NOW(0, "SMMLS unfinished\n");
   return 0;
 }
 
 u32int srsInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SRS unfinished\n");
+  DIE_NOW(0, "SRS unfinished\n");
   return 0;
 }
 
 u32int ssatInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SSAT unfinished\n");
+  DIE_NOW(0, "SSAT unfinished\n");
   return 0;
 }
 
 u32int ssat16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("ssat16 unfinished\n");
+  DIE_NOW(0, "ssat16 unfinished\n");
   return 0;
 }
 
 u32int umaalInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("UMAAL unfinished\n");
+  DIE_NOW(0, "UMAAL unfinished\n");
   return 0;
 }
 
 u32int usad8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("USAD8 unfinished\n");
+  DIE_NOW(0, "USAD8 unfinished\n");
   return 0;
 }
 
 u32int usada8Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("USADA unfinished\n");
+  DIE_NOW(0, "USADA unfinished\n");
   return 0;
 }
 
 u32int usatInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("USAT unfinished\n");
+  DIE_NOW(0, "USAT unfinished\n");
   return 0;
 }
 
 u32int usat16Instruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("USAT16 unfinished\n");
+  DIE_NOW(0, "USAT16 unfinished\n");
   return 0;
 }
 
 u32int bxjInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("BXJ unfinished\n");
+  DIE_NOW(0, "BXJ unfinished\n");
   return 0;
 }
 
 u32int bkptInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("BKPT unfinished\n");
+  DIE_NOW(0, "BKPT unfinished\n");
   return 0;
 }
 
@@ -848,7 +869,7 @@ u32int blxInstruction(GCONTXT * context)
   if ((instr & 0xfe000000) == 0xfa000000)
   {
     dumpGuestContext(context);
-    serial_ERROR("BLX #imm24 switching to Thumb. Unimplemented.\n");
+    DIE_NOW(0, "BLX #imm24 switching to Thumb. Unimplemented.\n");
   }
 
   u32int nextPC = 0;
@@ -868,7 +889,7 @@ u32int blxInstruction(GCONTXT * context)
   if (thumbMode)
   {
     dumpGuestContext(context);
-    serial_ERROR("BLX Rm switching to Thumb. Unimplemented.\n");
+    DIE_NOW(0, "BLX Rm switching to Thumb. Unimplemented.\n");
   }
 
   // link register
@@ -881,7 +902,7 @@ u32int blxInstruction(GCONTXT * context)
 u32int clzInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("CLZ unfinished\n");
+  DIE_NOW(0, "CLZ unfinished\n");
   return 0;
 }
 
@@ -897,140 +918,140 @@ u32int pldInstruction(GCONTXT * context)
 u32int smlabbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLABB unfinished\n");
+  DIE_NOW(0, "SMLABB unfinished\n");
   return 0;
 }
 
 u32int smlatbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLATB unfinished\n");
+  DIE_NOW(0, "SMLATB unfinished\n");
   return 0;
 }
 
 u32int smlabtInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLABT unfinished\n");
+  DIE_NOW(0, "SMLABT unfinished\n");
   return 0;
 }
 
 u32int smlattInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLATT unfinished\n");
+  DIE_NOW(0, "SMLATT unfinished\n");
   return 0;
 }
 
 u32int smlawbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLAWB unfinished\n");
+  DIE_NOW(0, "SMLAWB unfinished\n");
   return 0;
 }
 
 u32int smlawtInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLAWT unfinished\n");
+  DIE_NOW(0, "SMLAWT unfinished\n");
   return 0;
 }
 
 u32int smlalbbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLALBB unfinished\n");
+  DIE_NOW(0, "SMLALBB unfinished\n");
   return 0;
 }
 
 u32int smlaltbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLALTB unfinished\n");
+  DIE_NOW(0, "SMLALTB unfinished\n");
   return 0;
 }
 
 u32int smlalbtInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLALBT unfinished\n");
+  DIE_NOW(0, "SMLALBT unfinished\n");
   return 0;
 }
 
 u32int smlalttInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMLALTT unfinished\n");
+  DIE_NOW(0, "SMLALTT unfinished\n");
   return 0;
 }
 
 u32int smulbbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMULBB unfinished\n");
+  DIE_NOW(0, "SMULBB unfinished\n");
   return 0;
 }
 
 u32int smultbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMULTB unfinished\n");
+  DIE_NOW(0, "SMULTB unfinished\n");
   return 0;
 }
 
 u32int smulbtInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMULBT unfinished\n");
+  DIE_NOW(0, "SMULBT unfinished\n");
   return 0;
 }
 
 u32int smulttInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMULTT unfinished\n");
+  DIE_NOW(0, "SMULTT unfinished\n");
   return 0;
 }
 
 u32int smulwbInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMULWD unfinished\n");
+  DIE_NOW(0, "SMULWD unfinished\n");
   return 0;
 }
 
 u32int smulwtInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("SMULWT unfinished\n");
+  DIE_NOW(0, "SMULWT unfinished\n");
   return 0;
 }
 
 u32int qaddInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("QADD unfinished\n");
+  DIE_NOW(0, "QADD unfinished\n");
   return 0;
 }
 
 u32int qdaddInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("QDADD unfinished\n");
+  DIE_NOW(0, "QDADD unfinished\n");
   return 0;
 }
 
 u32int qsubInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("QSUB unfinished\n");
+  DIE_NOW(0, "QSUB unfinished\n");
   return 0;
 }
 
 u32int qdsubInstruction(GCONTXT * context)
 {
   dumpGuestContext(context);
-  serial_ERROR("QDSUB unfinished\n");
+  DIE_NOW(0, "QDSUB unfinished\n");
   return 0;
 }
 
@@ -1099,7 +1120,7 @@ u32int msrInstruction(GCONTXT * context)
       case CPSR_MODE_USER:
       case CPSR_MODE_SYSTEM:
       default: 
-        serial_ERROR("MSR: invalid SPSR write for current guest mode.");
+        DIE_NOW(0, "MSR: invalid SPSR write for current guest mode.");
     } 
   }
 
@@ -1116,8 +1137,13 @@ u32int msrInstruction(GCONTXT * context)
     if ((oldValue & CPSR_THUMB_BIT) != (value & CPSR_THUMB_BIT))
     {
       dumpGuestContext(context);
-      serial_ERROR("MSR toggle THUMB bit.");
+      DIE_NOW(0, "MSR toggle THUMB bit.");
     } 
+    // is new CPSR - user mode?
+    if ((value & CPSR_MODE_FIELD) == CPSR_MODE_USER)
+    {
+      DIE_NOW(context, "MSR switching CPSR to user mode\n");
+    }
     // separate the field we're gonna update from new value 
     u32int appliedValue = (value & 0x000000FF);
     // clear old fields!
@@ -1132,12 +1158,12 @@ u32int msrInstruction(GCONTXT * context)
     if ((oldValue & CPSR_AAB_BIT) != (value & CPSR_AAB_BIT))
     {
       dumpGuestContext(context);
-      serial_ERROR("MSR toggle async abort disable bit.");
+      DIE_NOW(0, "MSR toggle async abort disable bit.");
     } 
     // check for endiannes toggle!
     if ((oldValue & CPSR_ENDIANNESS) != (value & CPSR_ENDIANNESS))
     {
-      serial_ERROR("MSR toggle endianess bit.");
+      DIE_NOW(0, "MSR toggle endianess bit.");
     } 
     // separate the field we're gonna update from new value 
     u32int appliedValue = (value & 0x0000FF00);
@@ -1206,7 +1232,7 @@ u32int msrInstruction(GCONTXT * context)
       case CPSR_MODE_USER:
       case CPSR_MODE_SYSTEM:
       default: 
-        serial_ERROR("MSR: invalid SPSR write for current guest mode.");
+        DIE_NOW(0, "MSR: invalid SPSR write for current guest mode.");
     } 
   }
 #ifdef ARM_INSTR_TRACE
@@ -1330,34 +1356,6 @@ u32int bInstruction(GCONTXT * context)
     if (link)
     {
       storeGuestGPR(14, context->R15+4, context);
-/*
-      // it was branch and link... what context is the guest in?
-      u32int guestMode = context->CPSR & CPSR_MODE_FIELD;
-      switch(guestMode)
-      {
-        case CPSR_MODE_USER:
-        case CPSR_MODE_SYSTEM:
-          context->R14_USR = context->R15+4;
-          break;
-        case CPSR_MODE_FIQ:
-          context->R14_FIQ = context->R15+4;
-          break;
-        case CPSR_MODE_IRQ:
-          context->R14_IRQ = context->R15+4;
-          break;
-        case CPSR_MODE_SVC:
-          context->R14_SVC = context->R15+4;
-          break;
-        case CPSR_MODE_ABORT:
-          context->R14_ABT = context->R15+4;
-          break;
-        case CPSR_MODE_UNDEF:
-          context->R14_UND = context->R15+4;
-          break;
-        default:
-          invalid_instruction(instr, "bInstruction evaluate: invalid CPSR mode!");
-      } // switch ends
-*/
     }
   }
   else

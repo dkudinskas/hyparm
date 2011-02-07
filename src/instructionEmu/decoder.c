@@ -5,6 +5,7 @@
 #include "dataProcessInstr.h"
 #include "dataMoveInstr.h"
 #include "asm-dis.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -118,8 +119,9 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 {1,  &smlaltbInstruction,   0x014000a0, 0x0ff000f0, "smlaltb%c\t%12-15r, %16-19r, %0-3r, %8-11r"},
 {1,  &smlalbtInstruction,   0x014000c0, 0x0ff000f0, "smlalbt%c\t%12-15r, %16-19r, %0-3r, %8-11r"},
 {1,  &smlalttInstruction,   0x014000e0, 0x0ff000f0, "smlaltt%c\t%12-15r, %16-19r, %0-3r, %8-11r"},
+// SMULBB: multiply signed bottom halfwords of ops. Rd can't be PC.
+{0,  &smulbbInstruction,    0x01600080, 0x0ff0f0f0, "SMULBB Rd, Rn, RM"},
 // signed 16 bit multiply, 32 bit result
-{1,  &smulbbInstruction,    0x01600080, 0x0ff0f0f0, "smulbb%c\t%16-19r, %0-3r, %8-11r"},
 {1,  &smultbInstruction,    0x016000a0, 0x0ff0f0f0, "smultb%c\t%16-19r, %0-3r, %8-11r"},
 {1,  &smulbtInstruction,    0x016000c0, 0x0ff0f0f0, "smulbt%c\t%16-19r, %0-3r, %8-11r"},
 {1,  &smulttInstruction,    0x016000e0, 0x0ff0f0f0, "smultt%c\t%16-19r, %0-3r, %8-11r"},
@@ -213,8 +215,10 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 // RRX: shift right and extend, Rd can be PC
 {1,  &rrxInstruction,       0x01a0f060, 0x0feffff0, "RRX PC, Rm"},
 {0,  &rrxInstruction,       0x01a00060, 0x0fef0ff0, "RRX Rd, Rm"},
-// UNIMPLEMENTED
-{1,  &rorInstruction,       0x01a00070, 0x0fef00f0, "ROR unimplemented"},
+// ROR: reg case destination unpredictable. imm case dest can be PC.
+{0,  &rorInstruction,       0x01a00070, 0x0fef00f0, "ROR Rd, Rm, Rn"},
+{1,  &rorInstruction,       0x01a0f060, 0x0feff070, "ROR PC, Rm, #imm"},
+{0,  &rorInstruction,       0x01a00060, 0x0fef0070, "ROR Rd, Rm, #imm"},
 // BIC with Rd = PC end block, other are fine.
 {1,  &bicInstruction,       0x01c0f000, 0x0fe0f010, "BIC PC, Rn, Rm, #shamt"},
 {1,  &bicInstruction,       0x01c0f010, 0x0fe0f090, "BIC PC, Rn, Rm, Rshamt"},
@@ -544,7 +548,7 @@ struct instruction32bit * decodeInstr(u32int instr)
     case UNDEFINED_CATEGORY:
     default:
       dumpGuestContext(getGuestContext());
-      serial_ERROR("decoder: UNDEFINED category");
+      DIE_NOW(0, "decoder: UNDEFINED category");
   }
 
   return 0;
@@ -612,7 +616,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
     }
   }
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeDataProcMisc unimplemented");
+  DIE_NOW(0, "decoder: decodeDataProcMisc unimplemented");
   return 0;
 }
 
@@ -639,7 +643,7 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
     }
   }
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeBranchBlockTransfer unimplemented");
+  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
   return 0;
 }
 
@@ -666,7 +670,7 @@ struct instruction32bit * decodeMedia(u32int instr)
     }
   }
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeMedia unimplemented");
+  DIE_NOW(0, "decoder: decodeMedia unimplemented");
   return 0;
 }
 
@@ -693,7 +697,7 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
     }
   }
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeBranchBlockTransfer unimplemented");
+  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
   return 0;
 }
 
@@ -720,7 +724,7 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
     }
   }
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeSvcCoproc unimplemented");
+  DIE_NOW(0, "decoder: decodeSvcCoproc unimplemented");
   return 0;
 }
 
@@ -747,7 +751,7 @@ struct instruction32bit * decodeUnconditional(u32int instr)
   }
   
   dumpGuestContext(getGuestContext());
-  serial_ERROR("decoder: decodeUnconditional unimplemented");
+  DIE_NOW(0, "decoder: decodeUnconditional unimplemented");
   return 0;
 }
 

@@ -3,6 +3,7 @@
 #include "pageTable.h" // for getPhysicalAddress()
 #include "guestContext.h"
 #include "memFunctions.h"
+#include "debug.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -14,7 +15,7 @@ void initClockManager()
   clockMan = (struct ClockManager*)mallocBytes(sizeof(struct ClockManager));
   if (clockMan == 0)
   {
-    serial_ERROR("Failed to allocate clock manager.");
+    DIE_NOW(0, "Failed to allocate clock manager.");
   }
   else
   {
@@ -147,7 +148,7 @@ u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int address)
   if (size != WORD)
   {
     // only word access allowed in these modules
-    serial_ERROR("CM: invalid access size.");
+    DIE_NOW(0, "CM: invalid access size.");
   }
 
   u32int val = 0;
@@ -198,7 +199,7 @@ u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int address)
       val = loadUsbHostCm(dev, address, phyAddr);
       break;
     default:
-      serial_ERROR("CM: invalid base module.");
+      DIE_NOW(0, "CM: invalid base module.");
   } // switch ends  
 
   return val;
@@ -240,7 +241,7 @@ u32int loadIva2Cm(device * dev, u32int address, u32int phyAddr)
       break;
     default:
       dumpGuestContext(getGuestContext());
-      serial_ERROR("loadIva2Cm loading non existing register!");
+      DIE_NOW(0, "loadIva2Cm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
   serial_putstring("loadIva2Cm reg ");
@@ -263,7 +264,7 @@ u32int loadOcpSystemCm(device * dev, u32int address, u32int phyAddr)
   serial_newline();
   serial_putstring(dev->deviceName);
   dumpGuestContext(getGuestContext());
-  serial_ERROR(" loadOcpSystemCm unimplemented.");
+  DIE_NOW(0, " loadOcpSystemCm unimplemented.");
   return 0;
 }
 
@@ -300,7 +301,7 @@ u32int loadMpuCm(device * dev, u32int address, u32int phyAddr)
       break;
     default:
       dumpGuestContext(getGuestContext());
-      serial_ERROR("loadMpuCm loading non existing register!");
+      DIE_NOW(0, "loadMpuCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
   serial_putstring("loadMpuCm reg ");
@@ -362,7 +363,7 @@ u32int loadCoreCm(device * dev, u32int address, u32int phyAddr)
       break;
     default:
       dumpGuestContext(getGuestContext());
-      serial_ERROR("loadCoreCm loading non existing register!");
+      DIE_NOW(0, "loadCoreCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
   serial_putstring("loadCoreCm reg ");
@@ -404,7 +405,7 @@ u32int loadSgxCm(device * dev, u32int address, u32int phyAddr)
       break;
     default:
       dumpGuestContext(getGuestContext());
-      serial_ERROR("loadSgxCm loading non existing register!");
+      DIE_NOW(0, "loadSgxCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
   serial_putstring("loadSgxCm reg ");
@@ -449,7 +450,7 @@ u32int loadWkupCm(device * dev, u32int address, u32int phyAddr)
       serial_putint_nozeros(reg);
       serial_newline();
       dumpGuestContext(getGuestContext());      
-      serial_ERROR("loadWkupCm loading non existing register!");
+      DIE_NOW(0, "loadWkupCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
   serial_putstring("loadWkupCm reg ");
@@ -518,7 +519,7 @@ u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr)
       serial_putstring("loadClockControlCm reg ");
       serial_putint_nozeros(reg);
       serial_newline();
-      serial_ERROR("loadClockControlCm loading non existing register!");
+      DIE_NOW(0, "loadClockControlCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
   serial_putstring("loadClockControlCm reg ");
@@ -562,7 +563,7 @@ u32int loadDssCm(device * dev, u32int address, u32int phyAddr)
       break;
     default:
       dumpGuestContext(getGuestContext());
-      serial_ERROR("loadDssCm loading non existing register!");
+      DIE_NOW(0, "loadDssCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
   serial_putstring("loadDssCm reg ");
@@ -607,7 +608,7 @@ u32int loadCamCm(device * dev, u32int address, u32int phyAddr)
       break;
     default:
       dumpGuestContext(getGuestContext());
-      serial_ERROR("loadCamCm loading non existing register!");
+      DIE_NOW(0, "loadCamCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
   serial_putstring("loadCamCm reg ");
@@ -652,7 +653,7 @@ u32int loadPerCm(device * dev, u32int address, u32int phyAddr)
       break;
     default:
       dumpGuestContext(getGuestContext());
-      serial_ERROR("loadPerCm loading non existing register!");
+      DIE_NOW(0, "loadPerCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
   serial_putstring("loadPerCm reg ");
@@ -688,7 +689,7 @@ u32int loadEmuCm(device * dev, u32int address, u32int phyAddr)
       break;
     default:
       dumpGuestContext(getGuestContext());
-      serial_ERROR("loadEmuCm loading non existing register!");
+      DIE_NOW(0, "loadEmuCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
   serial_putstring("loadEmuCm reg ");
@@ -711,7 +712,7 @@ u32int loadGlobalRegCm(device * dev, u32int address, u32int phyAddr)
   serial_putstring(dev->deviceName);
   serial_newline();
   dumpGuestContext(getGuestContext());
-  serial_ERROR(" loadGlobalRegCm unimplemented.");
+  DIE_NOW(0, " loadGlobalRegCm unimplemented.");
   return 0;
 }
 
@@ -726,7 +727,7 @@ u32int loadNeonCm(device * dev, u32int address, u32int phyAddr)
   serial_newline();
   serial_putstring(dev->deviceName);
   dumpGuestContext(getGuestContext());
-  serial_ERROR(" loadNeonCm unimplemented.");
+  DIE_NOW(0, " loadNeonCm unimplemented.");
   return 0;
 }
 
@@ -741,7 +742,7 @@ u32int loadUsbHostCm(device * dev, u32int address, u32int phyAddr)
   serial_newline();
   serial_putstring(dev->deviceName);
   dumpGuestContext(getGuestContext());
-  serial_ERROR(" loadUsbHostCm unimplemented.");
+  DIE_NOW(0, " loadUsbHostCm unimplemented.");
   return 0;
 }
 
@@ -817,7 +818,7 @@ void storeClockManager(device * dev, ACCESS_SIZE size, u32int address, u32int va
       break;
     default:
       dumpGuestContext(getGuestContext());
-      serial_ERROR("CM: store to invalid base module.");
+      DIE_NOW(0, "CM: store to invalid base module.");
   } // switch ends
 } // storeClockManager
 
@@ -833,7 +834,7 @@ void storeIva2Cm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_newline();
   serial_putstring(dev->deviceName);
   serial_newline();
-  serial_ERROR(" storeIva2Cm unimplemented.");
+  DIE_NOW(0, " storeIva2Cm unimplemented.");
   return;
 }
 
@@ -848,7 +849,7 @@ void storeOcpSystemCm(device * dev, u32int address, u32int phyAddr, u32int value
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storeOcpSystemCm unimplemented.");
+  DIE_NOW(0, " storeOcpSystemCm unimplemented.");
   return;
 }
 
@@ -863,7 +864,7 @@ void storeMpuCm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storeMpuCm unimplemented.");
+  DIE_NOW(0, " storeMpuCm unimplemented.");
   return;
 }
 
@@ -886,13 +887,13 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_ICLKEN1_CORE:
       if (clockMan->cmIclkEn1Core != value)
       {
-        serial_ERROR(" storeCoreCm CM_ICLKEN1_CORE unimplemented.");
+        DIE_NOW(0, " storeCoreCm CM_ICLKEN1_CORE unimplemented.");
       }
       break;
     case CM_FCLKEN1_CORE:
       if (clockMan->cmFclkEn1Core != value)
       {
-        serial_ERROR(" storeCoreCm CM_FCLKEN1_CORE unimplemented.");
+        DIE_NOW(0, " storeCoreCm CM_FCLKEN1_CORE unimplemented.");
       }
       break;
     case CM_FCLKEN3_CORE:
@@ -907,10 +908,10 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_CLKSEL_CORE:
     case CM_CLKSTCTRL_CORE:
     case CM_CLKSTST_CORE:
-      serial_ERROR(" storeCoreCm unimplemented.");
+      DIE_NOW(0, " storeCoreCm unimplemented.");
       break;
     default:
-      serial_ERROR("storeCoreCm storing non existing register!");
+      DIE_NOW(0, "storeCoreCm storing non existing register!");
   } // switch ends
   return;
 }
@@ -926,7 +927,7 @@ void storeSgxCm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storeSgxCm unimplemented.");
+  DIE_NOW(0, " storeSgxCm unimplemented.");
   return;
 }
 
@@ -1038,13 +1039,13 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_IDLEST_WKUP:
       if (clockMan->cmIdleStWkup != value)
       {
-        serial_ERROR(" storeWkupCm unimplemented store to reg cmIdleStWkup");
+        DIE_NOW(0, " storeWkupCm unimplemented store to reg cmIdleStWkup");
       }
       break;
     case CM_AUTOIDLE_WKUP:
       if (clockMan->cmAutoIdleWkup != value)
       {
-        serial_ERROR(" storeWkupCm unimplemented store to reg cmAutoIdleWkup");
+        DIE_NOW(0, " storeWkupCm unimplemented store to reg cmAutoIdleWkup");
       }
       break;
     case CM_CLKSEL_WKUP:
@@ -1083,7 +1084,7 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
 #endif
       break;
     default:
-      serial_ERROR("storeWkupCm storing non existing register!");
+      DIE_NOW(0, "storeWkupCm storing non existing register!");
   } // switch ends
   return;
 }
@@ -1138,7 +1139,7 @@ void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int va
       serial_putint(value);
       serial_newline();
       dumpGuestContext(getGuestContext());
-      serial_ERROR("storeClockControlCm store to unimplemented register register!");
+      DIE_NOW(0, "storeClockControlCm store to unimplemented register register!");
       break;
     default:
       serial_putstring("Store to: ");
@@ -1151,7 +1152,7 @@ void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int va
       serial_putint(value);
       serial_newline();
       dumpGuestContext(getGuestContext());
-      serial_ERROR("storeClockControlCm storing non existing register!");
+      DIE_NOW(0, "storeClockControlCm storing non existing register!");
   } // switch ends
 }
 
@@ -1165,7 +1166,7 @@ void storeDssCm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storeDssCm unimplemented.");
+  DIE_NOW(0, " storeDssCm unimplemented.");
   return;
 }
 
@@ -1180,7 +1181,7 @@ void storeCamCm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storeCamCm unimplemented.");
+  DIE_NOW(0, " storeCamCm unimplemented.");
   return;
 }
 
@@ -1202,37 +1203,37 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_FCLKEN_PER:
       if (clockMan->cmFclkEnPer != value)
       {
-        serial_ERROR(" storePerCm unimplemented store to reg cmFclkEnPer");
+        DIE_NOW(0, " storePerCm unimplemented store to reg cmFclkEnPer");
       }
       break;
     case CM_ICLKEN_PER:
       if (clockMan->cmIclkEnPer != value)
       {
-        serial_ERROR(" storePerCm unimplemented store to reg cmIclkEnPer");
+        DIE_NOW(0, " storePerCm unimplemented store to reg cmIclkEnPer");
       }
       break;
     case CM_IDLEST_PER:
       if (clockMan->cmIdleStPer != value)
       {
-        serial_ERROR(" storePerCm unimplemented store to reg cmIdleStPer");
+        DIE_NOW(0, " storePerCm unimplemented store to reg cmIdleStPer");
       }
       break;
     case CM_AUTOIDLE_PER:
       if (clockMan->cmAutoIdlePer != value)
       {
-        serial_ERROR(" storePerCm unimplemented store to reg cmAutoIdlePer");
+        DIE_NOW(0, " storePerCm unimplemented store to reg cmAutoIdlePer");
       }
       break;
     case CM_CLKSEL_PER:
       if (clockMan->cmClkSelPer != value)
       {
-        serial_ERROR(" storePerCm unimplemented store to reg cmClkSelPer");
+        DIE_NOW(0, " storePerCm unimplemented store to reg cmClkSelPer");
       }
       break;
     case CM_SLEEPDEP_PER:
       if (clockMan->cmSleepDepPer != value)
       {
-        serial_ERROR(" storePerCm unimplemented store to reg cmSleepDepPer");
+        DIE_NOW(0, " storePerCm unimplemented store to reg cmSleepDepPer");
       }
       break;
     case CM_CLKSTCTRL_PER:
@@ -1246,11 +1247,11 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_CLKSTST_PER:
       if (clockMan->cmClkStStPer != value)
       {
-        serial_ERROR(" storePerCm unimplemented store to reg cmClkStStPer");
+        DIE_NOW(0, " storePerCm unimplemented store to reg cmClkStStPer");
       }
       break;
     default:
-      serial_ERROR("storePerCm storing non existing register!");
+      DIE_NOW(0, "storePerCm storing non existing register!");
   } // switch ends
 }
 
@@ -1265,7 +1266,7 @@ void storeEmuCm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_putint(value);
   serial_newline();
   serial_putstring(dev->deviceName);
-  serial_ERROR(" storeEmuCm unimplemented.");
+  DIE_NOW(0, " storeEmuCm unimplemented.");
   return;
 }
 
@@ -1280,7 +1281,7 @@ void storeGlobalRegCm(device * dev, u32int address, u32int phyAddr, u32int value
   serial_newline();
   serial_putstring(dev->deviceName);
   dumpGuestContext(getGuestContext());
-  serial_ERROR(" storeGlobalRegCm unimplemented.");
+  DIE_NOW(0, " storeGlobalRegCm unimplemented.");
   return;
 }
 
@@ -1296,7 +1297,7 @@ void storeNeonCm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_newline();
   serial_putstring(dev->deviceName);
   dumpGuestContext(getGuestContext());
-  serial_ERROR(" storeNeonCm unimplemented.");
+  DIE_NOW(0, " storeNeonCm unimplemented.");
   return;
 }
 
@@ -1312,6 +1313,6 @@ void storeUsbHostCm(device * dev, u32int address, u32int phyAddr, u32int value)
   serial_newline();
   serial_putstring(dev->deviceName);
   dumpGuestContext(getGuestContext());
-  serial_ERROR(" storeUsbHostCm unimplemented.");
+  DIE_NOW(0, " storeUsbHostCm unimplemented.");
   return;
 }

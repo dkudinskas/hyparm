@@ -9,7 +9,7 @@
 #include "memoryProtection.h"
 #include "hardwareLibrary.h"
 
-#define BLOCK_HISOTRY_SIZE     10
+#define BLOCK_HISOTRY_SIZE     5
 
 struct guestContext;
 typedef struct guestContext GCONTXT;
@@ -79,6 +79,7 @@ struct guestContext
   device * hardwareLibrary;
   /* interrupt handling */
   bool guestIrqPending;
+  bool guestAbtPending;
 };
 
 

@@ -226,14 +226,24 @@ void mmuDisableVirtAddr()
   asm volatile("mrc p15, 0, %0, c1, c0, 0\n\t"
                "BIC %0, %0, #5\n\t" //enable MMU & Caching
                "mcr p15, 0, %0, c1, c0, 0\n\t"
-//               "mcr p15, 0, %0, c7, c5, 4\n\t" //ISB
   :"=r"(tempReg)
   :
   : "memory"
      );
 }
 
-
+bool isMmuEnabled()
+{
+  u32int tempReg = 0;
+  //This may need a bit of investigation/logic to ensure the bit masks we set are correct
+  asm volatile("mrc p15, 0, %0, c1, c0, 0\n\t"
+  :"=r"(tempReg)
+  :
+  : "memory");
+  
+  return (tempReg & 0x1) ? TRUE : FALSE;
+         
+}
 
 u32int getDFAR()
 {

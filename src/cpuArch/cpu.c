@@ -1,12 +1,3 @@
-/*
-#include <common.h>
-#include <command.h>
-#include <asm/system.h>
-#include <asm/cache.h>
-#ifndef CONFIG_L2_OFF
-#include <asm/arch/sys_proto.h>
-#endif
-*/
 #include "cpu.h"
 
 static inline unsigned int get_cr(void);
@@ -17,11 +8,6 @@ static void cache_disable(u32int cache_bit);
 static void cache_flush(void);
 
 extern void v7_flush_dcache_all(u32int dev);
-
-/*
- * CPU specific code
- */
-
 
 /***
  * CACHE functions

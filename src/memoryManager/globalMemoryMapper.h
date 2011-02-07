@@ -40,6 +40,11 @@
 // word load
 #define LDR_MASK        0x0c500000
 #define LDR_MASKED      0x04100000
+// dual word load
+#define LDRD_REG_MASK   0x0e500ff0
+#define LDRD_REG_MASKED 0x000000d0
+#define LDRD_IMM_MASK   0x0e5000f0
+#define LDRD_IMM_MASKED 0x004000d0
 // load multiple
 #define LDM_MASK        0x0e100000
 #define LDM_MASKED      0x08100000

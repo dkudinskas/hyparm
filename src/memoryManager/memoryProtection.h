@@ -3,6 +3,8 @@
 #include "types.h"
 #include "pageTable.h" // for ACCESS_TYPE enum
 
+// uncomment me for memory protection debug: #define MEM_PROT_DBG
+
 //function ptr definition
 typedef void (*memProtPtr)(u32int, u32int);
 
@@ -42,5 +44,7 @@ memProtPtr checkProtectionArray(u32int address);
 u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TYPE protection);
 u32int removeProtection(u32int startAddr);
 
+// returns abort flag if access is denied
+bool shouldAbort(bool privAccess, bool isWrite, u32int address);
 
 #endif
