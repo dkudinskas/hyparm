@@ -14,6 +14,7 @@ TARGET_CCFLAGS = \
   -DTARGET_BEAGLE=1 \
   -DCONFIG_CPU_ARCH_ARMV7_A=1 \
   -DCONFIG_CPU_TI_OMAP_35XX=1 \
-  -DCONFIG_DECODER_TABLE_SEARCH=1 \
-  -mcpu=cortex-a8
+  -DCONFIG_DECODER_AUTO=1 \
+  -mcpu=cortex-a8 \
+  -Wno-unused-label
 

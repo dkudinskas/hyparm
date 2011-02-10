@@ -1,5 +1,4 @@
 #include "decoder.h"
-#include "types.h"
 #include "miscInstructions.h"
 #include "coprocInstructions.h"
 #include "dataProcessInstr.h"

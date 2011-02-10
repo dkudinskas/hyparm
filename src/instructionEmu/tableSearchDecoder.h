@@ -1,9 +1,7 @@
-#ifndef __DECODER_H__
-#define __DECODER_H__
+#ifndef __TABLE_SEARCH_DECODER_H__
+#define __TABLE_SEARCH_DECODER_H__
 
 #include "serial.h"
-#include "types.h"
-#include "guestContext.h"
 
 // Uncomment me for decoder debug: #define DECODER_DEBUG  
 
@@ -28,7 +26,7 @@ struct TopLevelCategory
 struct instruction32bit
 {
   s16int replaceCode;
-  u32int (*hdlFunct)(GCONTXT * context);
+  instructionHandler hdlFunct;
   u32int value;            /* If arch == 0 then value is a sentinel.  */
   u32int mask;             /* Recognise insn if (op & mask) == value.  */
   const char * instructionString; /* How to disassemble this insn.  */
