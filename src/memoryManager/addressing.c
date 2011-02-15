@@ -198,7 +198,7 @@ void guestEnableVirtMem()
 #endif
 
   //create a new shadow page table. Mapping in hypervisor address space
-  descriptor* sPT =  createGuestOSPageTable();
+  descriptor* sPT = createGuestOSPageTable();
   gc->PT_shadow = sPT;
 
   //map all the guest OS pt entries into the shadow PT, using the GuestPhysical to ReadPhysical PT map
@@ -247,7 +247,7 @@ void guestEnableVirtMem()
   u32int guestPtEndAddr = guestPtAddr + PAGE_TABLE_SIZE;
 
   //function ptr to the routine that handler gOS edits to its PT
-  addProtection(guestPtAddr, guestPtEndAddr, &pageTableEdit, PRIV_RW_USR_RO);
+  addProtection(guestPtAddr, guestPtEndAddr-1, &pageTableEdit, PRIV_RW_USR_RO);
 }
 
 

@@ -181,6 +181,11 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   {
     if (oldVal != val)
     {
+      serial_putstring("CP15: Domain Access Control Register write val ");
+      serial_putint(val);
+      serial_putstring(" old DACR ");
+      serial_putint(oldVal);
+      serial_newline();
       changeGuestDomainAccessControl(oldVal, val);
     }
   }

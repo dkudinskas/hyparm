@@ -1,6 +1,7 @@
 #include "guestContext.h"
 #include "miscInstructions.h"
 #include "commonInstrFunctions.h"
+#include "sdram.h"
 
 void dumpGuestContext(GCONTXT * gc)
 {
@@ -226,6 +227,7 @@ void dumpGuestContext(GCONTXT * gc)
     serial_putint(gc->blockHistory[i]);
     serial_newline();
   }
+  dumpSdramStats();
 }
 
 void initGuestContext(GCONTXT * gContext)

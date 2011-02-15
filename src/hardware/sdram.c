@@ -4,8 +4,75 @@
 #include "guestContext.h"
 #include "dataMoveInstr.h"
 #include "debug.h"
+#include "memFunctions.h"
 
 extern GCONTXT * getGuestContext(void);
+
+struct SdramController * sdram;
+
+void initSdram(void)
+{
+  sdram = (struct SdramController *)mallocBytes(sizeof(struct SdramController));
+  if (sdram == 0)
+  {
+    DIE_NOW(0, "Failed to allocate SDRAM instance");
+  }
+  else
+  {
+    memset((void*)sdram, 0x0, sizeof(struct SdramController));
+#ifdef SDRAM_DBG
+    serial_putstring("Sdram instance at 0x");
+    serial_putint((u32int)sdram);
+    serial_newline();
+#endif
+  }
+
+  sdram->enabled = 1;
+
+
+#ifdef SDRAM_STORE_COUNTER
+  u32int * storeTrace = (u32int*)mallocBytes(MEGABYTE_COUNT * sizeof(u32int));
+  if (storeTrace == 0)
+  {
+    DIE_NOW(0, "Failed to allocate store trace.");
+  }
+  else
+  {
+    memset((void*)storeTrace, 0x0, MEGABYTE_COUNT*sizeof(u32int));
+    serial_putstring("Store trace at 0x");
+    serial_putint((u32int)storeTrace);
+    serial_newline();
+  }
+  sdram->storeCounters = storeTrace;
+  
+  u32int y = 0;
+  for (y = 0; y < MEGABYTE_COUNT; y++)
+  {
+    sdram->storeCounters[y] = 0;
+  }
+#endif
+}
+
+void dumpSdramStats()
+{
+#ifdef SDRAM_STORE_COUNTER
+  serial_putstring("Store trace: ");
+  serial_newline();
+
+  u32int i = 0;
+  for (i = 0; i < MEGABYTE_COUNT; i++)
+  {
+    if (sdram->storeCounters[i] != 0)
+    {
+      serial_putint(i << 20);
+      serial_putstring(": ");
+      serial_putint(sdram->storeCounters[i]);
+      serial_newline();
+    }
+  }
+#endif
+}
+
 
 u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address)
 {
@@ -78,6 +145,11 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   serial_newline();
 #endif
 
+#ifdef SDRAM_STORE_COUNTER
+  u32int index = (address >> 20) & 0xFFF;
+  sdram->storeCounters[index] = sdram->storeCounters[index] + 1;
+#endif
+  
   switch (size)
   {
     case WORD:

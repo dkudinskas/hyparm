@@ -26,15 +26,13 @@ void do_software_interrupt(u32int code)
   serial_putint(code);
   serial_newline();
 #endif
-  /* parse the instruction to find the start address of next block */
-  /* scan next block! */
+  // parse the instruction to find the start address of next block
   GCONTXT * gContext = getGuestContext();
   u32int nextPC = 0;
   u32int (*instrHandler)(GCONTXT * context);
 
-  /* get evaluate function addr */
+  // get interpreter function pointer and call it
   instrHandler = gContext->hdlFunct;
-  /* evaluate replaced instruction and get next pc */
   nextPC = instrHandler(gContext);
 
   if (nextPC == 0)
@@ -72,6 +70,7 @@ void do_software_interrupt(u32int code)
   serial_putint(nextPC);
   serial_newline();
 #endif
+
   scanBlock(gContext, gContext->R15);
 }
 
@@ -131,7 +130,7 @@ void do_data_abort_hypervisor()
   {
     case translation_section:
     case translation_page:
-      ;
+    {
       //Mostly likely trying to access a page of physical memory, just map it.
       u32int memAddr = getDFAR();
       if( (memAddr >= BEAGLE_RAM_START) && (memAddr <= BEAGLE_RAM_END) )
@@ -149,6 +148,7 @@ void do_data_abort_hypervisor()
         */
       }
       break;
+    }
     default:
       serial_putstring("UNIMPLEMENTED data abort type. (exceptionHandlers.c).");
       serial_newline();
