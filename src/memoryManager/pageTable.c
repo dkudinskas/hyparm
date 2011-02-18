@@ -34,6 +34,7 @@ extern GCONTXT * getGuestContext(void);
 descriptor* hypervisorPtd;
 
 ptMetaData guestSecondLvlPageTables[256];
+ptMetaData shadowSecondLvlPageTables[256];
 
 /* Don't want to make the hypervisorPtd global */
 void setGuestPhysicalPt(GCONTXT* gc)
@@ -50,6 +51,12 @@ descriptor* createHypervisorPageTable()
     guestSecondLvlPageTables[i].valid = 0;
     guestSecondLvlPageTables[i].pAddr = 0;
     guestSecondLvlPageTables[i].vAddr = 0;
+  }
+  for (i = 0; i < 256; i++)
+  {
+    shadowSecondLvlPageTables[i].valid = 0;
+    shadowSecondLvlPageTables[i].pAddr = 0;
+    shadowSecondLvlPageTables[i].vAddr = 0;
   }
 
   //alloc some space for our 1st Level page table
@@ -627,18 +634,38 @@ descriptor* get2ndLevelPtDescriptor(pageTableDescriptor* ptd1st, u32int virtual)
 #endif
   u32int baseAddr = *(u32int*)ptd1st & 0xFFFFFC00; // base addr bits 31:10 -> bits 31:10
   u32int index = (virtual & 0x000FF000) >> 10; //virt addr bits 19:12 -> bits 9:2
-  u32int descrAddr = baseAddr | index;
 
-  // now we have the PHYSICAL address of the 2nd level PT.
-  // need virtual addr so we can access it.
-  descrAddr = findVAforPA(descrAddr);
+  u32int i = 0;
+  while (shadowSecondLvlPageTables[i].valid == 1)
+  {
+    if (shadowSecondLvlPageTables[i].pAddr == baseAddr)
+    {
+      // found virtual address of shadow second level page table
+      u32int descrAddr = shadowSecondLvlPageTables[i].vAddr | index;
+      return (descriptor*)descrAddr;
+    }
+    i++;
+  }
 
-#ifdef PT_SMALL_DEBUG
-  serial_putstring("get2ndLevelPtDescriptor: virtual addr ptr to pt2 ");
-  serial_putint(descrAddr);
+  i = 0;
+  while (guestSecondLvlPageTables[i].valid == 1)
+  {
+    if (guestSecondLvlPageTables[i].pAddr == baseAddr)
+    {
+      // found virtual address of shadow second level page table
+      u32int descrAddr = guestSecondLvlPageTables[i].vAddr | index;
+      return (descriptor*)descrAddr;
+    }
+    i++;
+  }
+
+  serial_putstring("get2ndLevelPtDescriptor: baseAddr = ");
+  serial_putint(baseAddr);
+  serial_putstring(" shadow PT2 @ ");
+  serial_putint(shadowSecondLvlPageTables[i].pAddr);
   serial_newline();
-#endif
-  return (descriptor*)descrAddr;
+  DIE_NOW(0, "get2ndLevelPtDescriptor: no VA match.");
+  return 0; // compiler happy
 }
 
 /*
@@ -678,6 +705,22 @@ void addNewPageTableDescriptor(descriptor* ptd1st, u32int physical, u8int domain
   serial_putint((u32int)ptd1st);
   serial_putstring(", value: 0x");
   serial_putint(*(u32int*)ptd1st);
+  serial_newline();
+#endif
+
+  u32int i = 0;
+  while (shadowSecondLvlPageTables[i].valid == 1)
+  {
+    i++;
+  }
+  shadowSecondLvlPageTables[i].valid = 1;
+  shadowSecondLvlPageTables[i].pAddr = (u32int)ptBaseAddr;
+  shadowSecondLvlPageTables[i].vAddr = (u32int)ptBaseAddr;
+#ifdef PT_SHADOW_DEBUG
+  serial_putstring("addNewPageTableDescriptor: shadow 2nd level PT PA ");
+  serial_putint(shadowSecondLvlPageTables[i].pAddr);
+  serial_putstring(" VA ");
+  serial_putint(shadowSecondLvlPageTables[i].vAddr);
   serial_newline();
 #endif
 }
@@ -1118,20 +1161,6 @@ descriptor* getPageTableEntry(descriptor* ptd, u32int address)
     {
       descriptor* pte2nd = get2ndLevelPtDescriptor((pageTableDescriptor*)pte1st, address);
       return pte2nd;
-/*      switch(pte2nd->type)
-      {
-        case LARGE_PAGE:
-          return pte2nd;
-          break;
-        case SMALL_PAGE: //fall through
-        case SMALL_PAGE_3:
-          return pte2nd;
-          break;
-        case FAULT:
-        default:
-          return pte2nd;
-          break;
-      }*/
       break;
     }
     case FAULT: //fall through
@@ -1456,20 +1485,36 @@ void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow)
   //If the guest addr ptr to the 2nd level pt is valid, then copy it
   u32int phyAddr = getPhysicalAddress(gc->PT_physical, (guest->addr << 10));
   
-  u32int metaArrayIndex = 0;
-  while (guestSecondLvlPageTables[metaArrayIndex].valid != 0)
+  u32int index = 0;
+  while (guestSecondLvlPageTables[index].valid != 0)
   {
-    metaArrayIndex++;
+    index++;
   }
-  guestSecondLvlPageTables[metaArrayIndex].valid = 1;
-  guestSecondLvlPageTables[metaArrayIndex].pAddr = phyAddr;
-  guestSecondLvlPageTables[metaArrayIndex].vAddr = findVAforPA(phyAddr); // variable not used yet
+  guestSecondLvlPageTables[index].valid = 1;
+  guestSecondLvlPageTables[index].pAddr = phyAddr;
+  guestSecondLvlPageTables[index].vAddr = findVAforPA(phyAddr); // variable not used yet
   
-#ifdef PT_SHADOW_DEBUG
+//#ifdef PT_SHADOW_DEBUG
   serial_putstring("copyPageTableEntry: guest 2nd level PT PA ");
-  serial_putint(guestSecondLvlPageTables[metaArrayIndex].pAddr);
+  serial_putint(guestSecondLvlPageTables[index].pAddr);
   serial_putstring(" VA ");
-  serial_putint(guestSecondLvlPageTables[metaArrayIndex].vAddr);
+  serial_putint(guestSecondLvlPageTables[index].vAddr);
+  serial_newline();
+//#endif
+
+  index = 0;
+  while (shadowSecondLvlPageTables[index].valid != 0)
+  {
+    index++;
+  }
+  shadowSecondLvlPageTables[index].valid = 1;
+  shadowSecondLvlPageTables[index].pAddr = getPhysicalAddress(gc->PT_shadow, (u32int)newFrame);
+  shadowSecondLvlPageTables[index].vAddr = (u32int)newFrame; // variable not used yet
+#ifdef PT_SHADOW_DEBUG
+  serial_putstring("copyPageTableEntry: shadow 2nd level PT PA ");
+  serial_putint(shadowSecondLvlPageTables[index].pAddr);
+  serial_putstring(" VA ");
+  serial_putint(shadowSecondLvlPageTables[index].vAddr);
   serial_newline();
 #endif
 
@@ -1532,9 +1577,7 @@ void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow)
   if (shadowDescriptor->type == SECTION)
   {
     // split section up to small pages, so we protect only guest PT's 
-//    serial_putstring("copyPageTableEntry: shadow entry - section type, split it up.");
-//    serial_newline();
-//    splitSectionToSmallPages(gc->PT_shadow, virtAddr);
+    splitSectionToSmallPages(gc->PT_shadow, virtAddr);
   }
   u32int res = addProtection(virtAddr, virtAddr+SECOND_LEVEL_PAGE_TABLE_SIZE-1, 0, PRIV_RW_USR_RO);
   if (res > 7)
@@ -2556,6 +2599,12 @@ void removePT2Metadata(void)
     guestSecondLvlPageTables[i].pAddr = 0;
     guestSecondLvlPageTables[i].vAddr = 0;
   }
+  for (i = 0; i < 256; i++)
+  {
+    shadowSecondLvlPageTables[i].valid = 0;
+    shadowSecondLvlPageTables[i].pAddr = 0;
+    shadowSecondLvlPageTables[i].vAddr = 0;
+  }
 }
 
 /**
@@ -2634,7 +2683,6 @@ u32int mapAccessPermissionBits(u32int guestAP, u32int guestDomain)
   return shadowAPbits;
 }
 
-
 // Access control bit mapping when guest is editing a section entry
 // Checks if guess is not editing an entry that contains guest page tables
 void mapAPBitsSection(u32int vAddr, sectionDescriptor* guestNewSD, descriptor* shadowSD)
@@ -2700,13 +2748,10 @@ void mapAPBitsSection(u32int vAddr, sectionDescriptor* guestNewSD, descriptor* s
     if (shadowSD->type == SECTION)
     {
       // split section up to small pages, so we protect only guest PT's 
-//      splitSectionToSmallPages(context->PT_shadow, vAddr);
-      sectionDescriptor* shadow = (sectionDescriptor*)shadowSD;
-      shadow->ap2  = (PRIV_RW_USR_RO >> 2) & 0x1;
-      shadow->ap10 =  PRIV_RW_USR_RO & 0x3;
+      splitSectionToSmallPages(context->PT_shadow, vAddr);
     }
-    else
-     if (shadowSD->type == PAGE_TABLE)
+
+    if (shadowSD->type == PAGE_TABLE)
     {
       pageTableDescriptor* shadow = (pageTableDescriptor*)shadowSD;
       u32int pageTableVA = findVAforPA(shadow->addr << 10);

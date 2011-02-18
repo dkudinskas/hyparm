@@ -164,7 +164,7 @@ void guestEnableVirtMem()
 {
   GCONTXT* gc = getGuestContext();
 
-  if(0 == gc->PT_os)
+  if(gc->PT_os == 0)
   {
 #ifdef ADDRESSING_DEBUG
     serial_putstring("guestEnableVirtMem: No entry in gc. Must be identity mapping bootstrap, ignore hypervised. Continuing boot...");
@@ -200,6 +200,9 @@ void guestEnableVirtMem()
   //create a new shadow page table. Mapping in hypervisor address space
   descriptor* sPT = createGuestOSPageTable();
   gc->PT_shadow = sPT;
+
+  // remove metadata about old sPT1
+  removePT2Metadata();
 
   //map all the guest OS pt entries into the shadow PT, using the GuestPhysical to ReadPhysical PT map
   copyPageTable(gc->PT_os, sPT);
@@ -246,6 +249,14 @@ void guestEnableVirtMem()
   u32int guestPtAddr = (u32int)gc->PT_os;
   u32int guestPtEndAddr = guestPtAddr + PAGE_TABLE_SIZE;
 
+  // get the shadow entry for where guest PT lives in
+  descriptor* shadowEntry = get1stLevelPtDescriptorAddr(gc->PT_shadow, guestPtAddr);
+  // if the shadow entry is a section, split it up to pages for better protection
+  if (shadowEntry->type == SECTION)
+  {
+    splitSectionToSmallPages(gc->PT_shadow, guestPtAddr);
+  }
+
   //function ptr to the routine that handler gOS edits to its PT
   addProtection(guestPtAddr, guestPtEndAddr-1, &pageTableEdit, PRIV_RW_USR_RO);
 }
@@ -283,7 +294,7 @@ void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
           if (ptEntry->domain == i)
           {
 #ifdef ADDRESSING_DEBUG
-            serial_putstring("page table entry ");
+            serial_putstring("changeGuestDomainAccessControl: page table entry ");
             serial_putint(y);
             serial_putstring(" = ");
             serial_putint(*(u32int*)ptEntry);
@@ -292,11 +303,13 @@ void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
 #endif
             if (ptEntry->type == SECTION)
             {
-              u32int guestAP = ((ptEntry->ap2 << 2) | ptEntry->ap10); 
-              u32int apNew = mapAccessPermissionBits(guestAP, ptEntry->domain);
-              sectionDescriptor* shadowPtEntry = (sectionDescriptor*)&context->PT_shadow[y];
-              shadowPtEntry->ap2  = (apNew >> 2) & 0x1;
-              shadowPtEntry->ap10 =  apNew & 0x3;
+              descriptor* shadowPtEntry = &(context->PT_shadow[y]);
+              mapAPBitsSection(y*1024*1024, ptEntry, shadowPtEntry);
+#ifdef ADDRESSING_DEBUG
+              serial_putstring("changeGuestDomainAccessControl: remapped to ");
+              serial_putint(*(u32int*)ptEntry);
+              serial_newline();
+#endif
             }
             else if (ptEntry->type == PAGE_TABLE)
             {
