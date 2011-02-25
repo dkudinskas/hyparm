@@ -102,6 +102,7 @@ void do_data_abort()
       break;
     }
     case translation_section:
+      deliverAbort();
       printDataAbort();
       DIE_NOW(0, "Translation section data abort.");
       break;

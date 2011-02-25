@@ -93,52 +93,50 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
 
   if(context->virtAddrEnabled)
   {
-    // 1. explode block cache
+    // explode block cache
     explodeCache(context->blockCache);
     
-    // 2. create a new shadow page table. Mapping in hypervisor address space
+    // create a new shadow page table. Mapping in hypervisor address space
     descriptor* newShadowPt = createGuestOSPageTable();
-    serial_putstring("new shadow page table @ ");
-    serial_putint((u32int)newShadowPt);
-    serial_newline();
   
-    // 3a: remove metadata about old sPT1
+    // remove metadata about old sPT1
     removePT2Metadata();
 
-    // 3b: map new page table address to a 1-2-1 virtual address 
+    // update guest context entries
+    // map new page table address to a 1-2-1 virtual address 
     // (now we can safely tamper with sPT, as it will be discarded soon)
     sectionMapMemory(context->PT_shadow, (guestPtAddr & 0xFFF00000),
                  (guestPtAddr & 0xFFF00000)+(SECTION_SIZE-1), 
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000);
-    // 3c: copy new gPT1 entries to new sPT1
-    copyPageTable((descriptor*)guestPtAddr, newShadowPt);
+    // in this new 1st level sPT, find guestVirtual address for 1st lvl gPT address
+    // update 1st level shadow page table pointer    
+    context->PT_os_real = (descriptor*)guestPtAddr;
+    context->PT_os = (descriptor*)guestPtAddr;
+    u32int ptGuestVirtual = findGuestVAforPA(guestPtAddr);
+    context->PT_os = (descriptor*)ptGuestVirtual;
+
+    // update 1st level shadow page table pointer
+    descriptor* oldShadowPt = context->PT_shadow;
+    context->PT_shadow = newShadowPt;
+    
+    // copy new gPT1 entries to new sPT1
+    copyPageTable((descriptor*)guestPtAddr, context->PT_shadow);
 #ifdef ADDRESSING_DEBUG
     serial_putstring("initialiseGuestShadowPageTable: Copy PT done.");
     serial_newline();
-    serial_putstring("initialiseGuestShadowPageTable: About to switch to sPT");
-    serial_newline();
 #endif
-    
-    // 4. anything in caches needs to be written back now
+
+    // anything in caches needs to be written back now
     dataBarrier();
     
-    // 5. tell CP15 of this new base PT
-    setTTBCR((u32int)newShadowPt);
+    // tell CP15 of this new base PT
+    setTTBCR((u32int)context->PT_shadow);
     
-    // 6. clean tlb and cache entries
+    // clean tlb and cache entries
     clearTLB();
     clearCache();
-   
-    // 7. update guest context entries
-    // 7a. update 1st level shadow page table pointer
-    descriptor* oldShadowPt = context->PT_shadow; 
-    context->PT_shadow = newShadowPt;
-    // 7b. in this new 1st level sPT, find VA for 1st lvl gPT
-    u32int ptGuestVirtual = findVAforPA(guestPtAddr);
-    context->PT_os_real = (descriptor*)guestPtAddr;
-    context->PT_os = (descriptor*)ptGuestVirtual;
-  
-    // 8. add protection to guest page table.  
+    
+    // add protection to guest page table.
     u32int guestPtVirtualEndAddr = ptGuestVirtual + PAGE_TABLE_SIZE - 1;
     //function ptr to the routine that handler gOS edits to its PT
     addProtection(ptGuestVirtual, guestPtVirtualEndAddr, &pageTableEdit, PRIV_RW_USR_RO);

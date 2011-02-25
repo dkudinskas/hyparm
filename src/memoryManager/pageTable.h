@@ -77,6 +77,7 @@ bool isAddrInGuestPT(u32int vaddr);
 void dumpPageTable(descriptor* ptd);
 
 u32int findVAforPA(u32int physAddr);
+u32int findGuestVAforPA(u32int physAddr);
 
 
 enum enum_pageType

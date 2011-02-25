@@ -161,6 +161,9 @@ void dumpGuestContext(GCONTXT * gc)
   serial_putstring("gc guest OS Page Table: 0x");
   serial_putint((u32int)gc->PT_os);
   serial_newline();
+  serial_putstring("gc guest OS Page Table (real): 0x");
+  serial_putint((u32int)gc->PT_os_real);
+  serial_newline();
   serial_putstring("gc guest OS shadow Page Table: 0x");
   serial_putint((u32int)gc->PT_shadow);
   serial_newline();
