@@ -328,3 +328,11 @@ bool shouldAbort(bool privAccess, bool isWrite, u32int address)
   // compiler happy
   return FALSE;
 }
+
+// true if translation data abort should be forwarded to the guest
+bool forwardTranslationAbort(u32int dfar)
+{
+  serial_putstring("WARN: forwardTranslationAbort unimplemented.");
+  serial_newline();
+  return TRUE;
+}

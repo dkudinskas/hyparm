@@ -47,4 +47,7 @@ u32int removeProtection(u32int startAddr);
 // returns abort flag if access is denied
 bool shouldAbort(bool privAccess, bool isWrite, u32int address);
 
+// true if translation data abort should be forwarded to the guest
+bool forwardTranslationAbort(u32int dfar);
+
 #endif

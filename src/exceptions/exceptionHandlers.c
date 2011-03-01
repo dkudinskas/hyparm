@@ -62,7 +62,10 @@ void do_software_interrupt(u32int code)
   }
   else if (gContext->guestIrqPending)
   {
-    deliverInterrupt();
+    if ((gContext->CPSR & CPSR_IRQ_DIS) == 0)
+    {
+      deliverInterrupt();
+    }
   }
 
 #ifdef EXC_HDLR_DBG
@@ -83,7 +86,8 @@ void do_data_abort()
     case perm_section:
     case perm_page:
     {
-      /* Check if the addr we have faulted on is caused by a memory protection the hypervisor has enabled */
+      // Check if the addr we have faulted on is caused by 
+      // a memory protection the hypervisor has enabled
       GCONTXT* gc = getGuestContext();
 
       // ATM dont expect anything else to permission fault except load/stores
@@ -102,10 +106,18 @@ void do_data_abort()
       break;
     }
     case translation_section:
-      deliverAbort();
-      printDataAbort();
-      DIE_NOW(0, "Translation section data abort.");
+    {
+      GCONTXT* gc = getGuestContext();
+      u32int dfar = getDFAR();
+      DFSR dfsr = getDFSR();
+      if (forwardTranslationAbort(dfar))
+      {
+        throwAbort(dfar, translation_section, dfsr.WnR, dfsr.domain);
+        deliverAbort();
+        scanBlock(gc, gc->R15);
+      }
       break;
+    }
     case translation_page:
       printDataAbort();
       DIE_NOW(0, "Translation page data abort.");

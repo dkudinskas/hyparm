@@ -58,7 +58,9 @@ void deliverInterrupt(void)
   {
     DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
   }
-  // now prepared the global guest environment. scanner will scan correct code.
+  // only thing left is to mask subsequent interrupts
+  context->CPSR |= CPSR_IRQ_DIS;
+  context->CPSR |= CPSR_FIQ_DIS;
 }
 
 void deliverAbort()
@@ -88,11 +90,14 @@ void deliverAbort()
   {
     DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
   }
-  // now prepared the global guest environment. scanner will scan correct code.
+  // only thing left is to mask subsequent interrupts
+  context->CPSR |= CPSR_IRQ_DIS;
+  context->CPSR |= CPSR_FIQ_DIS;
 }
 
 void throwAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
 {
+  GCONTXT* context = getGuestContext();
 #ifdef GUEST_EXCEPTIONS_DBG
   serial_putstring("throwAbort(");
   serial_putint(address);
@@ -102,9 +107,11 @@ void throwAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
   serial_putint(isWrite);
   serial_putstring(", dom ");
   serial_putint(isWrite);
+  serial_putstring(" @pc=");
+  serial_putint(context->R15);
+  serial_putstring(")");
   serial_newline();
 #endif
-  GCONTXT* context = getGuestContext();
   // set CP15 Data Fault Status Register
   u32int dfsr = (faultType & 0xF) | ((faultType & 0x10) << 6);
   dfsr |= domain << 4;
