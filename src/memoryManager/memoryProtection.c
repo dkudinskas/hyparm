@@ -226,86 +226,103 @@ bool shouldAbort(bool privAccess, bool isWrite, u32int address)
     case 1:
     {
       // client access: need to check page table entry access control bits
-      if (ptEntry->type == FAULT)
+      switch (ptEntry->type)
       {
-#ifdef MEM_PROT_DBG
-        serial_putstring("shouldAbort(): dacr 1, ptEntry type fault!");
-        serial_newline();
-#endif
-        throwAbort(address, translation_section, isWrite, ptEntry->domain);
-        return TRUE;
-      }
-      u8int accPerm = ptEntry->ap10 | (ptEntry->ap2 << 2);
-      switch (accPerm)
-      {
-        case PRIV_NO_USR_NO:      //priv no access, usr no access
+        case FAULT:
         {
-          throwAbort(address, perm_section, isWrite, ptEntry->domain);
+#ifdef MEM_PROT_DBG
+          serial_putstring("shouldAbort(): dacr 1, ptEntry type fault!");
+          serial_newline();
+#endif
+          throwAbort(address, translation_section, isWrite, ptEntry->domain);
           return TRUE;
         }
-        case PRIV_RW_USR_NO:      //priv read/write, usr no access
+        case SECTION:
         {
-          if (privAccess)
+          u8int accPerm = ptEntry->ap10 | (ptEntry->ap2 << 2);
+          switch (accPerm)
           {
-            return FALSE;
-          }
-          else
-          {
-            throwAbort(address, perm_section, isWrite, ptEntry->domain);
-            return TRUE;
-          }
-        }
-        case PRIV_RW_USR_RO:      // priv read/write, usr read only
+            case PRIV_NO_USR_NO:      //priv no access, usr no access
+            {
+              throwAbort(address, perm_section, isWrite, ptEntry->domain);
+              return TRUE;
+            }
+            case PRIV_RW_USR_NO:      //priv read/write, usr no access
+            {
+              if (privAccess)
+              {
+                return FALSE;
+              }
+              else
+              {
+                throwAbort(address, perm_section, isWrite, ptEntry->domain);
+                return TRUE;
+              }
+            }
+            case PRIV_RW_USR_RO:      // priv read/write, usr read only
+            {
+              if ((!privAccess) && (isWrite))
+              {
+                throwAbort(address, perm_section, isWrite, ptEntry->domain);
+                return TRUE;
+              }
+              else
+              {
+                return FALSE;
+              }
+            }
+            case PRIV_RW_USR_RW:       // priv read/write, usr read/write
+            {
+              return FALSE;
+            }
+            case AP_RESERVED:         // reserved!
+            {
+              DIE_NOW(context, "shouldAbort(): RESERVED access bits in PT entry!");
+            }
+            case PRIV_RO_USR_NO:      // priv read only, usr no access
+            {
+              if (!privAccess)
+              {
+                throwAbort(address, perm_section, isWrite, ptEntry->domain);
+                return TRUE;
+              }
+              else if (isWrite)
+              {
+                throwAbort(address, perm_section, isWrite, ptEntry->domain);
+                return TRUE;
+              }
+              else
+              {
+                return FALSE;
+              }
+            }
+            case DEPRECATED:          // priv read only, usr read only
+            case PRIV_RO_USR_RO:      // priv read only, usr read only
+            {
+              if (isWrite)
+              {
+                throwAbort(address, perm_section, isWrite, ptEntry->domain);
+                return TRUE;
+              }
+              else
+              {
+                return FALSE;
+              }
+            }
+          } // AP bits switch ends
+          break;
+        } // case SECTION: ends
+        case PAGE_TABLE:
         {
-          if ((!privAccess) && (isWrite))
-          {
-            throwAbort(address, perm_section, isWrite, ptEntry->domain);
-            return TRUE;
-          }
-          else
-          {
-            return FALSE;
-          }
+          DIE_NOW(context, "should abort: guest 1st lvl pt entry: 2nd lvl PT!");
+          break;
         }
-        case PRIV_RW_USR_RW:       // priv read/write, usr read/write
+        case RESERVED:
         {
-          return FALSE;
+          DIE_NOW(context, "should abort: guest 1st lvl pt entry: reserved!");
+          break;
         }
-        case AP_RESERVED:         // reserved!
-        {
-          DIE_NOW(context, "shouldAbort(): RESERVED access bits in PT entry!");
-        }
-        case PRIV_RO_USR_NO:      // priv read only, usr no access
-        {
-          if (!privAccess)
-          {
-            throwAbort(address, perm_section, isWrite, ptEntry->domain);
-            return TRUE;
-          }
-          else if (isWrite)
-          {
-            throwAbort(address, perm_section, isWrite, ptEntry->domain);
-            return TRUE;
-          }
-          else
-          {
-            return FALSE;
-          }
-        }
-        case DEPRECATED:          // priv read only, usr read only
-        case PRIV_RO_USR_RO:      // priv read only, usr read only
-        {
-          if (isWrite)
-          {
-            throwAbort(address, perm_section, isWrite, ptEntry->domain);
-            return TRUE;
-          }
-          else
-          {
-            return FALSE;
-          }
-        }
-      } // AP bits switch ends
+      }
       break;
     } // client access: ends
     case 2:

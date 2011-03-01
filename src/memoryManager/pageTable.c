@@ -98,7 +98,9 @@ descriptor* createHypervisorPageTable()
 
   //add section mapping for 0x14000 (base exception vectors)
   const u32int exceptionHandlerAddr = 0x14000;
-  addSectionPtEntry(hypervisorPtd, exceptionHandlerAddr,exceptionHandlerAddr,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+  smallMapMemory(hypervisorPtd, exceptionHandlerAddr, 
+                (exceptionHandlerAddr+SMALL_PAGE_SIZE-1),
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   //add section mapping for 0x40200000 (redirected exception vectors)
   //We will want to use the exception handler remap feature to put the page tables in the 0xffff0000 address space later
@@ -123,7 +125,8 @@ descriptor* createGuestOSPageTable()
 
   //add section mapping for 0x14000 (base exception vectors)
   const u32int exceptionHandlerAddr = 0x14000;
-  addSectionPtEntry(ptd, exceptionHandlerAddr,exceptionHandlerAddr,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+  smallMapMemory(ptd, exceptionHandlerAddr, (exceptionHandlerAddr+SMALL_PAGE_SIZE-1),
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   //add section mapping for 0x40200000 (redirected exception vectors)
   //We will want to use the exception handler remap feature to put the page tables in the 0xffff0000 address space later
@@ -1444,40 +1447,62 @@ void copySuperSectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
 void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow)
 {
   GCONTXT* gc = getGuestContext();
-
-  // STEP 1: allocate a new frame for a new second level page table.
-  u32int *newFrame = allocFrame(HYPERVISOR_FA_DOMAIN);
-  if (newFrame == 0x0)
+  u32int *newFrame = 0;
+  if (shadow->type == FAULT)
   {
-    DIE_NOW(0, "frameAllocator returned null ptr. copyPageTableEntry (pageTable.c)");
-  }
+    // STEP 1: allocate a new frame for a new second level page table.
+    newFrame = allocFrame(HYPERVISOR_FA_DOMAIN);
+    if (newFrame == 0x0)
+    {
+      DIE_NOW(0, "frameAllocator returned null ptr. copyPageTableEntry (pageTable.c)");
+    }
 #ifdef PT_SHADOW_DEBUG
-  serial_putstring("copyPageTableEntry: guest=");
-  serial_putint((*(u32int*)guest));
-  serial_putstring(" @ ");
-  serial_putint((u32int)guest);
-  serial_putstring("; shadow ");
-  serial_putint((*(u32int*)shadow));
-  serial_putstring(" @ ");
-  serial_putint((u32int)shadow);
-  serial_putstring(" newFrameAddr ");
-  serial_putint((u32int)newFrame);
-  serial_newline();
+    serial_putstring("copyPageTableEntry: guest=");
+    serial_putint((*(u32int*)guest));
+    serial_putstring(" @ ");
+    serial_putint((u32int)guest);
+    serial_putstring("; shadow ");
+    serial_putint((*(u32int*)shadow));
+    serial_putstring(" @ ");
+    serial_putint((u32int)shadow);
+    serial_putstring(" newFrameAddr ");
+    serial_putint((u32int)newFrame);
+    serial_newline();
 #endif
+  
+    // STEP 2: zero the new shadow second level page table
+    memset(newFrame, 0, SECOND_LEVEL_PAGE_TABLE_SIZE);
+  
+    // STEP 3: fill in the given 1st level shadow page table entry with correct data 
+    shadow->addr = (u32int)newFrame >> 10;
+    //This is just a copy of the high level descriptor
+    shadow->type = PAGE_TABLE;
+    shadow->domain = mapGuestDomain(guest->domain);
+    shadow->ns = guest->ns;
 
-  // STEP 2: zero the new shadow second level page table
-  memset(newFrame, 0, SECOND_LEVEL_PAGE_TABLE_SIZE);
-
-  // STEP 3: fill in the given 1st level shadow page table entry with correct data 
-  shadow->addr = (u32int)newFrame >> 10;
-  //This is just a copy of the high level descriptor
-  shadow->type = PAGE_TABLE;
-  shadow->domain = mapGuestDomain(guest->domain);
-  shadow->ns = guest->ns;
-
+    u32int in = 0;
+    while (shadowSecondLvlPageTables[in].valid != 0)
+    {
+      in++;
+    }
+    shadowSecondLvlPageTables[in].valid = 1;
+    shadowSecondLvlPageTables[in].pAddr = getPhysicalAddress(gc->PT_shadow, (u32int)newFrame);
+    shadowSecondLvlPageTables[in].vAddr = (u32int)newFrame; // variable not used yet
+#ifdef PT_SHADOW_DEBUG
+    serial_putstring("copyPageTableEntry: shadow 2nd level PT PA ");
+    serial_putint(shadowSecondLvlPageTables[in].pAddr);
+    serial_putstring(" VA ");
+    serial_putint(shadowSecondLvlPageTables[in].vAddr);
+    serial_newline();
+#endif
+  }
+  else
+  {
+    newFrame = (u32int*)(shadow->addr << 10);
+  }
+  
   //If the guest addr ptr to the 2nd level pt is valid, then copy it
   u32int phyAddr = getPhysicalAddress(gc->PT_physical, (guest->addr << 10));
-  
   u32int index = 0;
   while (guestSecondLvlPageTables[index].valid != 0)
   {
@@ -1492,22 +1517,6 @@ void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow)
   serial_putint(guestSecondLvlPageTables[index].pAddr);
   serial_putstring(" VA ");
   serial_putint(guestSecondLvlPageTables[index].vAddr);
-  serial_newline();
-#endif
-
-  index = 0;
-  while (shadowSecondLvlPageTables[index].valid != 0)
-  {
-    index++;
-  }
-  shadowSecondLvlPageTables[index].valid = 1;
-  shadowSecondLvlPageTables[index].pAddr = getPhysicalAddress(gc->PT_shadow, (u32int)newFrame);
-  shadowSecondLvlPageTables[index].vAddr = (u32int)newFrame; // variable not used yet
-#ifdef PT_SHADOW_DEBUG
-  serial_putstring("copyPageTableEntry: shadow 2nd level PT PA ");
-  serial_putint(shadowSecondLvlPageTables[index].pAddr);
-  serial_putstring(" VA ");
-  serial_putint(shadowSecondLvlPageTables[index].vAddr);
   serial_newline();
 #endif
 
@@ -1534,7 +1543,8 @@ void copyPageTableEntry(pageTableDescriptor* guest, pageTableDescriptor* shadow)
 
   // STEP 4c: copy entries from guest 2nd lvl PT to shadow 2nd lvl PT
   descriptor* guestPte  = (descriptor*)((guest->addr << 10));
-  descriptor* shadowPte  = (descriptor*)newFrame;
+  descriptor* shadowPte = (descriptor*)newFrame;
+  
   u32int i = 0;
   for (i=0; i < SECOND_LEVEL_PAGE_TABLE_ENTRIES; i++)
   {

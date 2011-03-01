@@ -106,22 +106,19 @@ void do_data_abort()
       break;
     }
     case translation_section:
+    case translation_page:
     {
       GCONTXT* gc = getGuestContext();
-      u32int dfar = getDFAR();
       DFSR dfsr = getDFSR();
-      if (forwardTranslationAbort(dfar))
+      bool isPrivAccess = (gc->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
+      
+      if ( shouldAbort(isPrivAccess, dfsr.WnR, getDFAR()) )
       {
-        throwAbort(dfar, translation_section, dfsr.WnR, dfsr.domain);
         deliverAbort();
         scanBlock(gc, gc->R15);
       }
       break;
     }
-    case translation_page:
-      printDataAbort();
-      DIE_NOW(0, "Translation page data abort.");
-      break;
     default:
       serial_putstring("Unimplemented user data abort.");
       serial_newline();
