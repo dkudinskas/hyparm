@@ -557,9 +557,41 @@ prefetch_abort_handler:
 
 .global prefetchAbortHandlerPrivilegedMode
 prefetchAbortHandlerPrivilegedMode:
+  /* Not from USR mode -> our Hypervisor has caused this */
+  /* Save r0-r7 & r8-r12 */
+  pop     {LR} /* we backed up the LR to hold the SPSR */
+  push    {r0-r7}
+  CMP     LR, #0x11
+  STMNEIA SP!, {r8-r12} /* Not FIQ save r8-12 */
+  /* Switch to FIQ_MODE if eq */
+  MOVEQ   R0, SP
+  MSREQ   cpsr_c,#(FIQ_MODE | I_BIT | F_BIT)
+  STMEQIA R0!, {r8-r12}
+  /* and switch back to abort mode */
+  MSREQ   cpsr_c,#(ABT_MODE | I_BIT | F_BIT)
+  MOVEQ   SP, R0
 
-  @LR already saved
-  STMFD SP!, {R0-R12}
+  /* Save SP & LR */
+  CMP     LR, #0x1 @FIQ
+  MSREQ   cpsr_c, #(FIQ_MODE | I_BIT | F_BIT)
+  CMP     LR, #0x2 @IRQ
+  MSREQ   cpsr_c, #(IRQ_MODE | I_BIT | F_BIT)
+  CMP     LR, #0x3 @SVC
+  MSREQ   cpsr_c, #(SVC_MODE | I_BIT | F_BIT)
+  CMP     LR, #0xB @UND
+  MSREQ   cpsr_c, #(UND_MODE | I_BIT | F_BIT)
+
+  MOV     R1, SP
+  MOV     R2, LR
+  MSR     cpsr_c, #(ABT_MODE | I_BIT | F_BIT)
+  STMIA   SP!, {R1,R2} /* Store SP & LR to data abort stack */
+
+  /* Save PC  of instr that aborted*/
+  SUB     R0, LR, #8
+  STMIA   SP!, {r0}
+  MRS     R0, SPSR
+  PUSH    {r0}
+
   BL prefetchAbortPrivileged
   LDMFD SP!, {R0-R12}
   LDMFD SP!, {PC}^

@@ -207,7 +207,7 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
       // the block of the entry that we collided with.
       u32int hypercallSWI = *((u32int*)(bcAddr[index].endAddress));
       // SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
-      hypercallSWI = (hypercallSWI & 0xFF000000) | i;
+      hypercallSWI = (hypercallSWI & 0xFF000000) | ((i + 1) << 8);
 #ifdef BLOCK_CACHE_DEBUG
       serial_putstring("blockCache: found another BB to end at same address.");
       serial_newline();

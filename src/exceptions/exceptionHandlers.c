@@ -31,6 +31,15 @@ void softwareInterrupt(u32int code)
   u32int nextPC = 0;
   u32int (*instrHandler)(GCONTXT * context);
 
+  if (code <= 0xFF)
+  {
+    serial_putstring("exceptionHandlers: SVC instruction, code ");
+    serial_putint(code);
+    serial_putstring(" is a guest system call.");
+    serial_newline();
+    DIE_NOW(gContext, "Unimplemented.");
+  }
+
   // get interpreter function pointer and call it
   instrHandler = gContext->hdlFunct;
   nextPC = instrHandler(gContext);
@@ -41,8 +50,7 @@ void softwareInterrupt(u32int code)
     serial_newline();
     serial_putstring("exceptionHandlers: Dumping gc");
     serial_newline();
-    dumpGuestContext(gContext);
-    DIE_NOW(0, "exceptionHandlers: In infinite loop");
+    DIE_NOW(gContext, "exceptionHandlers: In infinite loop");
   }
 
   int i = 0;
@@ -57,8 +65,7 @@ void softwareInterrupt(u32int code)
   // deliver interrupts
   if (gContext->guestDataAbtPending)
   {
-    dumpGuestContext(gContext);
-    DIE_NOW(0, "Exception handlers: guest abort in SWI handler! implement.");
+    DIE_NOW(gContext, "Exception handlers: guest abort in SWI handler! implement.");
   }
   else if (gContext->guestIrqPending)
   {
