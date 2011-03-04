@@ -1678,6 +1678,7 @@ void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow)
     u32int vAddr = 0;
     u32int maskedAddr = (u32int)shadow & 0xFFFFFC00;
     u32int ptIndex = 0;
+    bool found = TRUE;
     for (ptIndex = 0; ptIndex < PAGE_TABLE_ENTRIES; ptIndex++)
     {
       descriptor* ptEntry = &gc->PT_shadow[ptIndex];
@@ -1686,13 +1687,19 @@ void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow)
         pageTableDescriptor* ptDesc = (pageTableDescriptor*)ptEntry;
         if ( (((u32int)ptDesc->addr << 10) & 0xFFFFFC00) == maskedAddr)
         {
-          vAddr = ptIndex << 20;  
+          vAddr = ptIndex << 20;
+          found = TRUE;
           break;
-        } 
+        }
       }
     }
-    if (vAddr == 0)
+    if (!found)
     {
+      serial_putstring("copySmallEntry: hostPA = ");
+      serial_putint(hostPA);
+      serial_putstring(", maskedAddr = ");
+      serial_putint(maskedAddr);
+      serial_newline();
       DIE_NOW(gc, "copySmallEntry: couldn't find VA corresponding to edit.");
     }
 

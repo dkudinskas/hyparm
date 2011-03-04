@@ -314,12 +314,12 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
         } // case SECTION: ends
         case PAGE_TABLE:
         {
-          DIE_NOW(context, "should abort: guest 1st lvl pt entry: 2nd lvl PT!");
+          DIE_NOW(context, "shouldDataAbort: guest 1st lvl pt entry: 2nd lvl PT!");
           break;
         }
         case RESERVED:
         {
-          DIE_NOW(context, "should abort: guest 1st lvl pt entry: reserved!");
+          DIE_NOW(context, "shouldDataAbort: guest 1st lvl pt entry: reserved!");
           break;
         }
       }
