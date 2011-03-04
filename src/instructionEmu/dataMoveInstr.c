@@ -485,12 +485,16 @@ u32int stmInstruction(GCONTXT * context)
     // condition not met! allright, we're done here. next instruction...
     return context->R15 + 4;
   }
+
+  u32int savedCPSR = 0;
   if (forceUser != 0)
   {
-    DIE_NOW(0, "Invalid STM instruction - force user Sbit set");
+    // force user bit set: STM user mode registers
+    savedCPSR = context->CPSR;
+    context->CPSR = (context->CPSR & ~0x1f) | CPSR_MODE_USER;
   }
+
   int i = 0;
- 
   u32int address = 0;
   if ( (upDown == 0) && (prePost != 0) ) // STM decrement before
   {
@@ -562,6 +566,13 @@ u32int stmInstruction(GCONTXT * context)
     }
     storeGuestGPR(baseReg, baseAddress, context);
   }
+
+  // if we stored to user mode registers, lets restore the CPSR
+  if (forceUser != 0)
+  {
+    context->CPSR = savedCPSR;
+  }
+
   return context->R15+4;
 }
 
