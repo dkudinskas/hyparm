@@ -325,7 +325,7 @@ continue1:
     /* get SVC code into @parameter1 and call C function */
     LDR     R0, [LR, #-4]
     AND     R0, #0xFFFFFF
-    BL      do_software_interrupt
+    BL      softwareInterrupt
   
     /* handled this SWI. lets restore user state! */
     /* Use guest CPSR to work out which mode we are meant to be emulating */
@@ -410,7 +410,7 @@ data_abort_handler:
     save_pc_abort
     save_cc_flags
     
-    BL do_data_abort
+    BL dataAbort
   
     /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
     restore_r13_r14
@@ -419,8 +419,7 @@ data_abort_handler:
     
 .global data_abort_handler_privileged_mode
 data_abort_handler_privileged_mode:
-  /* Not from USR mode -> Our Hypervisor has caused this as we were running in a priviledged mode */
-  /* -> grab state, and abort nicely */
+  /* Not from USR mode -> Our Hypervisor has caused this */
   /* Save r0-r7 & r8-r12 */
   pop     {LR} /* we backed up the LR to hold the SPSR */
   push    {r0-r7}
@@ -455,7 +454,7 @@ data_abort_handler_privileged_mode:
   MRS     R0, SPSR
   PUSH    {r0}
 
-  BL do_data_abort_hypervisor
+  BL dataAbortPrivileged
 
   /* Hypervisor should have fixed things up and be ready to continue */
   /* Unwind the abort*/
@@ -512,7 +511,7 @@ undefined_handler:
   save_r0_to_r14 @pops LR
   save_pc_abort
 
-  BL do_undefined
+  BL undefined
 
   /* We came from usr mode (emulation or not of guest state) lets restore it and resume */
   restore_r13_r14
@@ -526,7 +525,7 @@ undefined_handler_privileged_mode:
   @LR already saved
   STMFD SP!, {R0-R12}
 
-  BL do_undefined_hypervisor
+  BL undefinedPrivileged
 
   LDMFD SP!, {R0-R12}
   LDMFD SP!, {PC}^
@@ -534,20 +533,21 @@ undefined_handler_privileged_mode:
 .global prefetch_abort_handler
 prefetch_abort_handler:
 
-  STMFD  SP!, {LR}
+  /* We can NOT assume that the abort is guest code */
+  push   {LR}
   /* If we aborted in FIQ then we can switch mode to get r8-12 later */
-
-  @Test SPSR -> are we from USR mode?
+  /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
   ANDS   LR, LR, #0x0f
-  BNE    prefetch_abort_handler_privileged_mode /* Abort occured in Hypervisor (privileged) code */
-
+  BNE    prefetchAbortHandlerPrivilegedMode
+  
   /* We were in USR mode, we must have been running guest code */
-  save_r0_to_r14 @pops LR
+  save_r0_to_r14 /* pops LR */
   /* Get the instr that aborted, after we fix up we probably want to re-try it */
   save_pc_abort
+  save_cc_flags
 
-  BL do_prefetch_abort
+  BL prefetchAbort
 
   /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
   restore_r13_r14
@@ -555,14 +555,12 @@ prefetch_abort_handler:
   restore_cpsr_pc_usr_mode
   /* End restore code */
 
-.global prefetch_abort_handler_privileged_mode
-prefetch_abort_handler_privileged_mode:
+.global prefetchAbortHandlerPrivilegedMode
+prefetchAbortHandlerPrivilegedMode:
 
   @LR already saved
   STMFD SP!, {R0-R12}
-
-  BL do_prefetch_abort_hypervisor
-
+  BL prefetchAbortPrivileged
   LDMFD SP!, {R0-R12}
   LDMFD SP!, {PC}^
 
@@ -582,7 +580,7 @@ monitor_mode_handler:
   /* Get the instr that aborted, after we fix up we probably want to re-try it */
   save_pc_abort
 
-  BL do_monitor_mode
+  BL monitorMode
 
   /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
   restore_r13_r14
@@ -596,7 +594,7 @@ monitor_mode_handler_privileged_mode:
   @LR already saved
   STMFD SP!, {R0-R12}
 
-  BL do_monitor_mode_hypervisor
+  BL monitorModePrivileged
 
   LDMFD SP!, {R0-R12}
   LDMFD SP!, {PC}^
@@ -619,7 +617,7 @@ irq_handler:
   /* save the PC of the guest, during which we got the interrupt */
   save_pc
   save_cc_flags
-  BL do_irq
+  BL irq
   restore_r13_r14
   restore_r0_to_r12
   restore_cpsr_pc_usr_mode_irq
@@ -635,7 +633,7 @@ irq_handler_privileged_mode:
   push    {lr}
   push    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
 
-  BL      do_irq_hypervisor
+  BL      irqPrivileged
 
   pop     {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
   ldm     sp!, {pc}^
@@ -647,7 +645,7 @@ fiq_handler:
   STMFD SP!, {LR}
   STMFD SP!, {R0-R12}
 
-  BL do_fiq
+  BL fiq
 
   LDMFD SP!, {R0-R12}
   LDMFD SP!, {PC}^

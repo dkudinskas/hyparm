@@ -44,10 +44,10 @@ memProtPtr checkProtectionArray(u32int address);
 u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TYPE protection);
 u32int removeProtection(u32int startAddr);
 
-// returns abort flag if access is denied
-bool shouldAbort(bool privAccess, bool isWrite, u32int address);
+// returns true if data abort to be delivered to guest
+bool shouldDataAbort(bool privAccess, bool isWrite, u32int address);
 
-// true if translation data abort should be forwarded to the guest
-bool forwardTranslationAbort(u32int dfar);
+// returns true if prefetch abort to be delivered to guest
+bool shouldPrefetchAbort(u32int address);
 
 #endif

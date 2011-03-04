@@ -32,12 +32,14 @@
 #define CPSR_MODE_UND    0x1b
 #define CPSR_MODE_SYS    0x1f
 
-void tickEvent(u32int irqNumber);
+void throwInterrupt(u32int irqNumber);
 
 void deliverInterrupt(void);
 
-void throwAbort(u32int address, u32int faultType, bool isWrite, u32int domain);
+void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain);
+void deliverDataAbort(void);
 
-void deliverAbort(void);
+void throwPrefetchAbort(u32int address, u32int faultType);
+void deliverPrefetchAbort(void);
 
 #endif

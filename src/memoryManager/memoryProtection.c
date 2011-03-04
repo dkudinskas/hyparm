@@ -202,16 +202,15 @@ void compile_time_check_memory_protection(void)
 }
 
 // returns abort flag if access is denied
-bool shouldAbort(bool privAccess, bool isWrite, u32int address)
+bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 {
   GCONTXT* context = getGuestContext();
 
-  // get page table entyr for address
-  sectionDescriptor* ptEntry =
-                 (sectionDescriptor*)getPageTableEntry(context->PT_os, address);
+  // get page table entry for address
+  descriptor* pt1Entry = get1stLevelPtDescriptorAddr(context->PT_os, address);
   // check guest domain: if manager, allow access.
   u32int dacr = getCregVal(3, 0, 0, 0, &context->coprocRegBank[0]);
-  u32int dom  = (u32int)ptEntry->domain;
+  u32int dom  = ((sectionDescriptor*)pt1Entry)->domain;
     
   u32int domBits = (dacr >> (dom*2)) & 0x3;
 
@@ -220,31 +219,32 @@ bool shouldAbort(bool privAccess, bool isWrite, u32int address)
     case 0:
     {
       // throw guest data abort with domain_fault!
-      DIE_NOW(context, "shouldAbort(): domain access control 0: no access!");
+      DIE_NOW(context, "shouldDataAbort(): domain access control 0: no access!");
       break;
     }
     case 1:
     {
       // client access: need to check page table entry access control bits
-      switch (ptEntry->type)
+      switch (pt1Entry->type)
       {
         case FAULT:
         {
 #ifdef MEM_PROT_DBG
-          serial_putstring("shouldAbort(): dacr 1, ptEntry type fault!");
+          serial_putstring("shouldDataAbort(): dacr 1, ptEntry type fault!");
           serial_newline();
 #endif
-          throwAbort(address, translation_section, isWrite, ptEntry->domain);
+          throwDataAbort(address, translation_section, isWrite, dom);
           return TRUE;
         }
         case SECTION:
         {
+          sectionDescriptor* ptEntry = (sectionDescriptor*)pt1Entry;
           u8int accPerm = ptEntry->ap10 | (ptEntry->ap2 << 2);
           switch (accPerm)
           {
             case PRIV_NO_USR_NO:      //priv no access, usr no access
             {
-              throwAbort(address, perm_section, isWrite, ptEntry->domain);
+              throwDataAbort(address, perm_section, isWrite, ptEntry->domain);
               return TRUE;
             }
             case PRIV_RW_USR_NO:      //priv read/write, usr no access
@@ -255,7 +255,7 @@ bool shouldAbort(bool privAccess, bool isWrite, u32int address)
               }
               else
               {
-                throwAbort(address, perm_section, isWrite, ptEntry->domain);
+                throwDataAbort(address, perm_section, isWrite, ptEntry->domain);
                 return TRUE;
               }
             }
@@ -263,7 +263,7 @@ bool shouldAbort(bool privAccess, bool isWrite, u32int address)
             {
               if ((!privAccess) && (isWrite))
               {
-                throwAbort(address, perm_section, isWrite, ptEntry->domain);
+                throwDataAbort(address, perm_section, isWrite, ptEntry->domain);
                 return TRUE;
               }
               else
@@ -277,18 +277,18 @@ bool shouldAbort(bool privAccess, bool isWrite, u32int address)
             }
             case AP_RESERVED:         // reserved!
             {
-              DIE_NOW(context, "shouldAbort(): RESERVED access bits in PT entry!");
+              DIE_NOW(context, "shouldDataAbort(): RESERVED access bits in PT entry!");
             }
             case PRIV_RO_USR_NO:      // priv read only, usr no access
             {
               if (!privAccess)
               {
-                throwAbort(address, perm_section, isWrite, ptEntry->domain);
+                throwDataAbort(address, perm_section, isWrite, ptEntry->domain);
                 return TRUE;
               }
               else if (isWrite)
               {
-                throwAbort(address, perm_section, isWrite, ptEntry->domain);
+                throwDataAbort(address, perm_section, isWrite, ptEntry->domain);
                 return TRUE;
               }
               else
@@ -301,7 +301,7 @@ bool shouldAbort(bool privAccess, bool isWrite, u32int address)
             {
               if (isWrite)
               {
-                throwAbort(address, perm_section, isWrite, ptEntry->domain);
+                throwDataAbort(address, perm_section, isWrite, ptEntry->domain);
                 return TRUE;
               }
               else
@@ -326,14 +326,14 @@ bool shouldAbort(bool privAccess, bool isWrite, u32int address)
       break;
     } // client access: ends
     case 2:
-      DIE_NOW(context, "shouldAbort(): domain access control 2: reserved!");
+      DIE_NOW(context, "shouldDataAbort(): domain access control 2: reserved!");
       break;
     case 3:
       // manager access: do NOT check page table entry AP bits.
       // however, pt entry must be valid.
-      if (ptEntry->type == FAULT)
+      if (pt1Entry->type == FAULT)
       {
-        throwAbort(address, translation_section, isWrite, ptEntry->domain);
+        throwDataAbort(address, translation_section, isWrite, dom);
         return TRUE;
       }
       else
@@ -346,10 +346,71 @@ bool shouldAbort(bool privAccess, bool isWrite, u32int address)
   return FALSE;
 }
 
-// true if translation data abort should be forwarded to the guest
-bool forwardTranslationAbort(u32int dfar)
+
+bool shouldPrefetchAbort(u32int address)
 {
-  serial_putstring("WARN: forwardTranslationAbort unimplemented.");
+  GCONTXT* context = getGuestContext();
+#ifdef MEM_PROT_DBG
+  serial_putstring("shouldPrefetchAbort(");
+  serial_putint(address);
+  serial_putstring(")");
   serial_newline();
-  return TRUE;
+#endif
+
+  // get page table entry for address
+  descriptor* ptEntry = get1stLevelPtDescriptorAddr(context->PT_os, address);
+
+  // client access: need to check page table entry access control bits
+  switch (ptEntry->type)
+  {
+    case FAULT:
+    {
+#ifdef MEM_PROT_DBG
+      serial_putstring("shouldPrefetchAbort(): Lvl1 ptEntry type FAULT!");
+      serial_newline();
+#endif
+      throwPrefetchAbort(address, translationFaultSection);
+      return TRUE;
+    }
+    case SECTION:
+    {
+      DIE_NOW(context, "shouldPrefetchAbort: guest PT1 entry Section. Investigate.");
+      break;
+    }
+    case PAGE_TABLE:
+    {
+#ifdef MEM_PROT_DBG
+      serial_putstring("shouldPrefetchAbort(): Lvl1 ptEntry type PageTable!");
+      serial_newline();
+#endif
+      // get 2nd level table entry address
+      descriptor* ptd2nd = get2ndLevelPtDescriptor((pageTableDescriptor*)ptEntry, address);
+      switch (ptd2nd->type)
+      {
+        case SMALL_PAGE:
+        case SMALL_PAGE_3:
+        {
+          DIE_NOW(context, "shouldPrefetchAbort(): Lvl2 ptEntry type SmallPage! Investigate.");
+        }
+        case LARGE_PAGE:
+        {
+          DIE_NOW(context, "shouldPrefetchAbort(): Lvl2 ptEntry type Large! Investigate.");
+        }
+        case FAULT:
+        {
+          throwPrefetchAbort(address, translationFaultPage);
+          return TRUE;
+        }
+      }
+      break;
+    }
+    case RESERVED:
+    {
+      DIE_NOW(context, "shouldPrefetchAbort: guest PT1 entry Reserved. Investigate.");
+      break;
+    }
+  }
+
+  // compiler happy
+  return FALSE;
 }

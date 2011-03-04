@@ -182,7 +182,7 @@ u32int strInstruction(GCONTXT * context)
   // P = 0 and W == 1 then STR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
-    bool abort = shouldAbort(FALSE, TRUE, address);
+    bool abort = shouldDataAbort(FALSE, TRUE, address);
     if (abort)
     {
       return context->R15;
@@ -302,7 +302,7 @@ u32int strbInstruction(GCONTXT * context)
   // P = 0 and W == 1 then STR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
-    bool abort = shouldAbort(FALSE, TRUE, address);
+    bool abort = shouldDataAbort(FALSE, TRUE, address);
     if (abort)
     {
       return context->R15;
@@ -1153,7 +1153,7 @@ u32int ldrbInstruction(GCONTXT * context)
   // P = 0 and W == 1 then LDRB as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
-    bool abort = shouldAbort(FALSE, FALSE, address);
+    bool abort = shouldDataAbort(FALSE, FALSE, address);
     if (abort)
     {
       return context->R15;
@@ -1282,7 +1282,7 @@ u32int ldrInstruction(GCONTXT * context)
   // P = 0 and W == 1 then LDR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
-    bool abort = shouldAbort(FALSE, FALSE, address);
+    bool abort = shouldDataAbort(FALSE, FALSE, address);
     if (abort)
     {
       return context->R15;

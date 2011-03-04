@@ -8,19 +8,19 @@
 
 // uncomment me to enable exception handler debug : #define EXC_HDLR_DBG
 
-void do_software_interrupt(u32int code);
+void softwareInterrupt(u32int code);
 
-void do_data_abort(void);
-void do_data_abort_hypervisor(void);
-void do_undefined(void);
-void do_undefined_hypervisor(void);
-void do_prefetch_abort(void);
-void do_prefetch_abort_hypervisor(void);
-void do_monitor_mode(void);
-void do_monitor_mode_hypervisor(void);
-void do_irq(void);
-void do_irq_hypervisor(void);
-void do_fiq(void);
+void dataAbort(void);
+void dataAbortPrivileged(void);
+void undefined(void);
+void undefinedPrivileged(void);
+void prefetchAbort(void);
+void prefetchAbortPrivileged(void);
+void monitorMode(void);
+void monitorModePrivileged(void);
+void irq(void);
+void irqPrivileged(void);
+void fiq(void);
 
 #endif
 
