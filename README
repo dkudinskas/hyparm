@@ -21,6 +21,18 @@ arm-none-eabi-objcopy -O binary -R .note -R .note.gnu.build-id -R .comment -S vm
 mkimage -A arm -O linux -T kernel -C none -a 0x80008000 -e 0x80008000 -n 'Linux-2.6.28.1' -d arch/arm/boot/Image arch/arm/boot/uImage 
 
 
+COMPILING THE HYPERVISOR:
+
+A cross-compiler toolchain is required for building the hypervisor. It must be set using the CROSS_COMPILE variable, either from the environment, or as part of the command line to make.
+
+The hypervisor supports compiling for multiple "targets". A target is an abstract concept that refers to:
+- the physical platform the hypervisor is built for;
+- a set of compile-time options.
+
+Currently, the following targets are supported:
+- beagle: build for the BeagleBoard (based on TI OMAP3530);
+- beagle-autodecoder: same as the above, but use an optimized (auto-generated) instruction decoder.
+
 
 GIT:
 
