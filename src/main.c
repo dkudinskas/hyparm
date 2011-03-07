@@ -16,7 +16,10 @@
 #include "beClockMan.h"
 #include "debug.h"
 
+
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
+
+//uncomment me to enable block copy cache debug (installation of backpointer): #define BLOCK_COPY_DEBUG
 
 #define HIDDEN_RAM_START   0x8f000000
 #define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
@@ -68,7 +71,7 @@ int main(int argc, char *argv[])
   }
   registerCrb(gContext, coprocRegBank);
   
-  /* initialise block cache */
+  /* initialise block cache (logbook) */
   BCENTRY * blockCache = (BCENTRY*)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   if (blockCache == 0)
   {
@@ -84,6 +87,79 @@ int main(int argc, char *argv[])
 #endif
   }
   registerBlockCache(gContext, blockCache);
+
+  //Install jump instruction
+  /* initialise block(copy) cache -> place for copied instructions*/
+  u32int * blockCopyCache = (u32int*)mallocBytes(BLOCK_COPY_CACHE_SIZE_IN_BYTES);  //BLOCK_COPY_CACHE_SIZE_IN_BYTES
+  if (blockCopyCache == 0)
+  {
+    DIE_NOW(0, "Failed to allocate block copy cache.");
+  }
+  else
+  {
+    memset((void*)blockCopyCache, 0x0, BLOCK_COPY_CACHE_SIZE_IN_BYTES);
+    u32int blockCopyCacheSize= BLOCK_COPY_CACHE_SIZE -1;
+    //Jump offset is in multiples of 4 (thus words) (see ARM ARM p.357)
+    //And PC is 2 words behind - 1 word (because 1st word is a backpointer)
+    u32int jumpOffset=blockCopyCacheSize+1;
+    u32int index = 0;
+    u32int result = 0;
+    int i;
+    while((jumpOffset & (1<<index)) == 0){//Find index of first bit that is set to 1
+#ifdef BLOCK_COPY_DEBUG
+    serial_putint((1<<index));
+    serial_putstring(",");
+    serial_newline();
+#endif
+      index ++;
+    }
+#ifdef BLOCK_COPY_DEBUG
+    serial_putstring("Index of first 1bit");
+    serial_putint((u32int)index);
+    serial_newline();
+#endif
+    //unconditional branch => first 8 bits = 11111010 = 250 = FA
+    result=250;
+#ifdef BLOCK_COPY_DEBUG
+    serial_putstring("Bits inverted:");
+    serial_newline();
+#endif
+    for(i=23;i>=0;i--){
+      result = result<<1;
+
+      if(i>index){
+        //add bits inverted
+        //result += (1-(jumpOffset & 1<<i)); -> ! wrong result -> jumpOffset & 1<<i can be 1,2,4,8,...
+        result += (1-(jumpOffset>>i & 1));
+#ifdef BLOCK_COPY_DEBUG
+    serial_putstring("i");
+    serial_putint_nozeros((1-(jumpOffset>>i & 1)));
+#endif
+      }else{
+        //add bits normal
+        result += (jumpOffset>>i & 1);
+#ifdef BLOCK_COPY_DEBUG
+    serial_putstring("n");
+    serial_putint_nozeros((jumpOffset>>i & 1));
+#endif
+      }
+
+    }
+#ifdef BLOCK_COPY_DEBUG
+    serial_newline();
+#endif
+    //Install unconditional jump to beginning of blockCopyCache at end of blockCopyCache
+    *(blockCopyCache + blockCopyCacheSize)=result;
+    //TODO CHECK IF THIS Branch is installed correctly!
+#ifdef STARTUP_DEBUG
+    serial_putstring("Block copy cache at 0x");
+    serial_putint((u32int)blockCopyCache);
+    serial_newline();
+#endif
+  }
+  registerBlockCopyCache(gContext, blockCopyCache, BLOCK_COPY_CACHE_SIZE);
+
+
 
   /* initialise virtual hardware devices */
   device * libraryPtr;
@@ -102,6 +178,8 @@ int main(int argc, char *argv[])
 
   /* Setup guest memory protection */
   registerMemoryProtection(gContext);
+
+
 
   ret = parseCommandline(argc, argv);
   if ( ret < 0 )
@@ -123,6 +201,7 @@ int main(int argc, char *argv[])
 #ifdef STARTUP_DEBUG
   dumpHdrInfo(&imageHeader);
 #endif
+  //Till here everything is ok
 
   /* initialise physical interrupt controller */
   intcBEInit();

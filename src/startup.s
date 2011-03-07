@@ -798,6 +798,14 @@ hardwareLibrary:
         
 guestContextOther:
         .space 8
+guestContextBlockCopyCache:
+        .space 4
+guestContextBlockCopyCacheLastUsedLine:
+        .space 4
+guestContextBlockCopyCacheEnd:
+        .space 4
+guestContextPCOfLastInstruction:
+        .space 4
 
 /* physical real mode stacks */
 userStack:

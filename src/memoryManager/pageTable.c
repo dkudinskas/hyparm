@@ -9,9 +9,8 @@
 #include "debug.h"
 
 //Uncomment to enable all page table debugging: #define PT_DEBUG
-//Uncomment to show entries being mapped #define PT_SHORT_DEBUG
+//Uncomment to show entries being mapped: #define PT_SHORT_DEBUG
 //Uncomment to show shadow page table code:#define PT_SHADOW_DEBUG
-#define PT_DUMP_DEBUG
 
 //Useful to have pageTableDumps with shadow debug
 #ifdef PT_SHADOW_DEBUG
@@ -44,6 +43,7 @@ void setGuestPhysicalPt(GCONTXT* gc)
 
 descriptor* createHypervisorPageTable()
 {
+  GCONTXT* gc = (GCONTXT*)getGuestContext();
   // zero metadata array
   int i = 0;
   for (i = 0; i < 256; i++)
@@ -72,6 +72,8 @@ descriptor* createHypervisorPageTable()
   //serial
   smallMapMemory(hypervisorPtd, UART3, (UART3 + UART3_SIZE -1),
                                GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
+
+
   // uart1
   smallMapMemory(hypervisorPtd, UART1, (UART1 + UART1_SIZE -1), 
                                GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
@@ -90,6 +92,7 @@ descriptor* createHypervisorPageTable()
   smallMapMemory(hypervisorPtd, GPTIMER2, (GPTIMER2+GPTIMER2_SIZE-1),
                           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
+
   /*
   Exception vectors
   For some reason these do not seem to work unless mapped in as sections?!
@@ -104,21 +107,32 @@ descriptor* createHypervisorPageTable()
   const u32int exceptionHandlerRedirectAddr = 0x4020ffd0;
   addSectionPtEntry(hypervisorPtd, exceptionHandlerRedirectAddr,exceptionHandlerRedirectAddr,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
+  u32int blockCopyCache = gc->blockCopyCache;
+  //blockCopyCache is set to Hypervisordomain in mapHypervisorMemory (See logfile:pageTablesOutput.log)
+
+  //TODO: Check if it is possible to change accessbits for a smaller part.  Since 1 section = 1 MB which is much larger than the blockCopyCache.
+  if(setAccessBits(hypervisorPtd, blockCopyCache, PRIV_RW_USR_RO)>7){
+    DIE_NOW(0,"Failed to setting AccessBits for blockCopyCache");
+  }
+
+
   return hypervisorPtd;
 }
 
 descriptor* createGuestOSPageTable()
 {
   descriptor* ptd = createNew1stLevelPageTable(HYPERVISOR_FA_DOMAIN);
+  GCONTXT* gc = (GCONTXT*)getGuestContext();
 
   mapHypervisorMemory(ptd);
 
   //Map Serial
   const u32int serial = SERIAL_BASE;
-  if(addSmallPtEntry(ptd, serial, serial,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0) != 0)
+  if(addSmallPtEntry(ptd, serial, serial,GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0) != 0)
   {
     DIE_NOW(0, "Added serial mapping failed. Entering infinite loop");
   }
+
 
   /*  Map Exception vectors */
 
@@ -275,7 +289,7 @@ void mapHypervisorMemory(descriptor* ptd)
   sectionMapMemory(ptd, startAddr, endAddr, HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 1, 0, 0b000);
 }
 
-/* We come here first, to check that stupid things don't occur whe mapping memory -> indicating potential problems */
+/* We come here first, to check that stupid things don't occur when mapping memory -> indicating potential problems */
 u32int addSectionPtEntry(descriptor* ptd, u32int virtual, u32int physical, u8int domain, u8int accessBits, u8int c, u8int b, u8int tex)
 {
 #ifdef PT_SECTION_DEBUG

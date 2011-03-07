@@ -154,6 +154,13 @@ u32int mallocBytes(u32int size)
   nrOfChunksAllocd++;
  
   freePtr = freePtr + size;
+
+#ifdef MALLOC_DEBUG
+  serial_putstring("mallocBytes = ");
+  serial_putint(chunkList->chunk.startAddress);
+  serial_newline();
+#endif
+
   return chunkList->chunk.startAddress;
 }
 

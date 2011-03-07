@@ -226,6 +226,20 @@ void dumpGuestContext(GCONTXT * gc)
     serial_putint(gc->blockHistory[i]);
     serial_newline();
   }
+
+  /* BlockCache with copied code */
+  serial_putstring("gc blockCopyCache: ");
+  serial_putint((u32int)gc->blockCopyCache);
+  serial_newline();
+  serial_putstring("gc blockCopyCacheEnd: ");
+  serial_putint((u32int)gc->blockCopyCacheEnd);
+  serial_newline();
+  serial_putstring("gc blockCopyCacheLastUsedLine: ");
+  serial_putint((u32int)gc->blockCopyCacheLastUsedLine);
+  serial_newline();
+  serial_putstring("gc PCOfLastInstruction: ");
+  serial_putint((u32int)gc->PCOfLastInstruction);
+  serial_newline();
 }
 
 void initGuestContext(GCONTXT * gContext)
@@ -299,6 +313,10 @@ void initGuestContext(GCONTXT * gContext)
   {
     gContext->blockHistory[i] = 0;
   }
+  gContext->blockCopyCache = 0;
+  gContext->blockCopyCacheEnd = 0;
+  gContext->blockCopyCacheLastUsedLine = 0;
+  gContext->PCOfLastInstruction=0;
 }
 
 void registerCrb(GCONTXT * gc, CREG * coprocRegBank)
@@ -311,6 +329,13 @@ void registerBlockCache(GCONTXT * gc, BCENTRY * blockCacheStart)
 {
   gc->blockCache = blockCacheStart;
   initialiseBlockCache(gc->blockCache);
+}
+
+void registerBlockCopyCache(GCONTXT *gc, u32int * blockCopyCache, u32int size)
+{
+  gc->blockCopyCache = (u32int)blockCopyCache;
+  gc->blockCopyCacheEnd = (u32int)(blockCopyCache + size - 1);  // !pointer arithmetic size is size in number of u32ints
+  gc->blockCopyCacheLastUsedLine = (u32int)(blockCopyCache-1);
 }
 
 void registerHardwareLibrary(GCONTXT * gc, device * libraryPtr)

@@ -5,7 +5,6 @@
 #include "cp15coproc.h"
 #include "mmu.h"
 #include "debug.h"
-
 void invalidDataMoveTrap(char * msg, GCONTXT * gc)
 {
   serial_putstring("ERROR: ");
@@ -22,17 +21,23 @@ void invalidDataMoveTrap(char * msg, GCONTXT * gc)
     // infinite loop
   }
 }
-
 /***********************************************************************************
 ***********************************************************************************
 ************************** STORE FUNCTIONS ****************************************
 ***********************************************************************************
 ***********************************************************************************/
 
+u32int strPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "str PCFunct unfinished\n");
+  return 0;
+}
+
 u32int strInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "strInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
-
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regOrImm = instr & 0x02000000; // 1 = reg, 0 = imm
   u32int preOrPost = instr & 0x01000000; // 1 = pre, 0 = post
@@ -40,7 +45,6 @@ u32int strInstruction(GCONTXT * context)
   u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
   u32int regDst = (instr & 0x000F0000) >> 16; // Base Destination address
   u32int regSrc = (instr & 0x0000F000) >> 12; // Source value from this register...
-
 #ifdef DATA_MOVE_TRACE
   serial_putstring("strInstr: ");
   serial_putstring("regOrImm=");
@@ -57,11 +61,9 @@ u32int strInstruction(GCONTXT * context)
   serial_putint_nozeros(regSrc);
   serial_newline();
 #endif
-
   u32int offsetAddress = 0;
   u32int baseAddress = loadGuestGPR(regDst, context);
   u32int valueToStore = loadGuestGPR(regSrc, context);
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -73,7 +75,6 @@ u32int strInstruction(GCONTXT * context)
 #endif
     return context->R15 + 4;
   }
-
   if (regOrImm == 0)
   {
 #ifdef DATA_MOVE_TRACE
@@ -82,7 +83,6 @@ u32int strInstruction(GCONTXT * context)
 #endif
     // immediate case
     u32int imm32 = instr & 0x00000FFF;
-
 #ifdef DATA_MOVE_TRACE
     serial_putstring("imm32=");
     serial_putint_nozeros(imm32);
@@ -93,7 +93,6 @@ u32int strInstruction(GCONTXT * context)
     serial_putstring(" offsetAddress=");
     serial_putint(offsetAddress);
 #endif
-
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
     {
@@ -120,7 +119,6 @@ u32int strInstruction(GCONTXT * context)
 #endif
     // register case
     u32int regDst2 = instr & 0x0000000F;
-
     u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
 #ifdef DATA_MOVE_TRACE
     serial_putstring("regDst2=");
@@ -133,22 +131,18 @@ u32int strInstruction(GCONTXT * context)
     serial_putint(valueToStore);
     serial_newline();
 #endif
-
     // regDest2 == PC then UNPREDICTABLE
     if (regDst2 == 15)
     {
         DIE_NOW(0, "STR reg Rm == PC UNPREDICTABLE case!");
     }
-
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5),
                                             ((instr & 0xF80)>>7), &shiftAmount);
     u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
-
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
     u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
-
     // if increment then base + offset else base - offset
     if (incOrDec != 0)
     {
@@ -161,7 +155,6 @@ u32int strInstruction(GCONTXT * context)
       offsetAddress = baseAddress - offset;
     }
   } // Register case ends
-
   u32int address = 0;
   // if preIndex then use offsetAddress else baseAddress
   if (preOrPost != 0)
@@ -172,13 +165,11 @@ u32int strInstruction(GCONTXT * context)
   {
     address = baseAddress;
   }
-
   if ((address & 0x3) != 0x0)
   {
     dumpGuestContext(context);
     DIE_NOW(0, "STR Rd [Rn, Rm/#imm] unaligned address!\n");
   }
-
   // P = 0 and W == 1 then STR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
@@ -188,12 +179,9 @@ u32int strInstruction(GCONTXT * context)
       return context->R15;
     }
   }
-
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
   valueToStore = (regSrc == 15) ? (valueToStore+8) : valueToStore;
-
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
-
   // wback = (P = 0) or (W = 1)
   bool wback = (preOrPost == 0) || (writeBack != 0);
   if (wback)
@@ -209,8 +197,16 @@ u32int strInstruction(GCONTXT * context)
   return (context->R15 + 4);
 }
 
+u32int strbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "strb PCFunct unfinished\n");
+  return 0;
+}
+
 u32int strbInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "strbInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -220,11 +216,9 @@ u32int strbInstruction(GCONTXT * context)
   u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
   u32int regDst = (instr & 0x000F0000) >> 16; // Base Destination address
   u32int regSrc = (instr & 0x0000F000) >> 12; // Source value from this register...
-
   u32int offsetAddress = 0;
   u32int baseAddress = 0;
   u32int valueToStore = 0;
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -242,7 +236,6 @@ u32int strbInstruction(GCONTXT * context)
     u32int imm32 = instr & 0x00000FFF;
     baseAddress = loadGuestGPR(regDst, context);
     valueToStore = loadGuestGPR(regSrc, context) & 0xFF;
-
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
     {
@@ -265,16 +258,13 @@ u32int strbInstruction(GCONTXT * context)
     {
         DIE_NOW(0, "STRB reg Rm == PC UNPREDICTABLE case!");
     }
-
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5),
                                             ((instr & 0xF80)>>7), &shiftAmount);
     u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
-
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
     u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
-
     // if increment then base + offset else base - offset
     if (incOrDec != 0)
     {
@@ -287,7 +277,6 @@ u32int strbInstruction(GCONTXT * context)
       offsetAddress = baseAddress - offset;
     }
   } // Register case ends
-
   u32int address = 0;
   // if preIndex then use offsetAddress else baseAddress
   if (preOrPost != 0)
@@ -298,7 +287,6 @@ u32int strbInstruction(GCONTXT * context)
   {
     address = baseAddress;
   }
-
   // P = 0 and W == 1 then STR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
@@ -309,10 +297,8 @@ u32int strbInstruction(GCONTXT * context)
     }
     // if usr can write, continue
   }
-
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valueToStore & 0xFF));
-
   // wback = (P = 0) or (W = 1)
   bool wback = (preOrPost == 0) || (writeBack != 0);
   if (wback)
@@ -328,17 +314,31 @@ u32int strbInstruction(GCONTXT * context)
   return (context->R15 + 4);
 }
 
+u32int strhtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "strht PCFunct unfinished\n");
+  return 0;
+}
 
 u32int strhtInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "strhtInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "STRHT unfinished\n");
   return 0;
 }
 
+u32int strhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "strh PCFunct unfinished\n");
+  return 0;
+}
 
 u32int strhInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "strhInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -348,7 +348,6 @@ u32int strhInstruction(GCONTXT * context)
   u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
   u32int regDst = (instr & 0x000F0000) >> 16; // Destination address
   u32int regSrc = (instr & 0x0000F000) >> 12; // Source value from this register...
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -368,7 +367,6 @@ u32int strhInstruction(GCONTXT * context)
   u32int offsetAddress = 0;
   u32int baseAddress = 0;
   u32int valueToStore = 0;
-
   if (regOrImm != 0)
   {
     // immediate case
@@ -378,7 +376,6 @@ u32int strhInstruction(GCONTXT * context)
     
     baseAddress = loadGuestGPR(regDst, context);
     valueToStore = loadGuestGPR(regSrc, context);
-
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
     {
@@ -401,15 +398,12 @@ u32int strhInstruction(GCONTXT * context)
     {
         DIE_NOW(0, "STRH reg Rm == PC UNPREDICTABLE case!");
     }
-
     // (shift_t, shift_n) = (SRType_LSL, 0);
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(0, 0, &shiftAmount);
     u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
-
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
     u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
-
     // if increment then base + offset else base - offset
     if (incOrDec != 0)
     {
@@ -422,7 +416,6 @@ u32int strhInstruction(GCONTXT * context)
       offsetAddress = baseAddress - offset;
     }
   } // reg case done
-
   u32int address = 0;
   // if preIndex then use offsetAddress else baseAddress
   if (preOrPost != 0)
@@ -440,7 +433,6 @@ u32int strhInstruction(GCONTXT * context)
     DIE_NOW(0, "STRH Rd [Rn, Rm/#imm] unaligned address!\n");
   }
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, address, valueToStore);
-
   // wback = (P = 0) or (W = 1)
   bool wback = (preOrPost == 0) || (writeBack != 0);
   if (wback)
@@ -456,10 +448,16 @@ u32int strhInstruction(GCONTXT * context)
   return (context->R15 + 4);
 }
 
-
+u32int stmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "stm PCFunct unfinished\n");
+  return 0;
+}
 
 u32int stmInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "stmInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("STM instruction: ");
@@ -468,17 +466,14 @@ u32int stmInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int prePost = instr & 0x01000000;
   u32int upDown = instr & 0x00800000;
   u32int forceUser = instr & 0x00400000;
   u32int writeback = instr & 0x00200000;
-
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regList = instr & 0x0000FFFF;
   u32int baseAddress = loadGuestGPR(baseReg, context);
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -546,7 +541,6 @@ u32int stmInstruction(GCONTXT * context)
     context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD,
                                             address, (loadGuestGPR(15, context)+8));
   }
-
   // if writeback then baseReg = baseReg - 4 * number of registers to store;
   if (writeback != 0)
   {
@@ -564,12 +558,19 @@ u32int stmInstruction(GCONTXT * context)
   }
   return context->R15+4;
 }
-
 /* store dual */
+
+u32int strdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "strd PCFunct unfinished\n");
+  return 0;
+}
+
 u32int strdInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "strdInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
-
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int prePost = instr & 0x01000000;
   u32int upDown = instr & 0x00800000;
@@ -578,7 +579,6 @@ u32int strdInstruction(GCONTXT * context)
   u32int regDst = (instr & 0x000F0000) >> 16;
   u32int regSrc = (instr & 0x0000F000) >> 12;
   u32int regSrc2 = regSrc+1;
-
 #ifdef DATA_MOVE_TRACE
   serial_putstring("STRD instruction: ");
   serial_putint(instr);
@@ -586,7 +586,6 @@ u32int strdInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -597,20 +596,16 @@ u32int strdInstruction(GCONTXT * context)
   {
     DIE_NOW(0, "STRD undefined case: regSrc must be even number!");
   }
-
   u32int offsetAddress = 0;
   u32int baseAddress = loadGuestGPR(regDst, context);
   u32int valueToStore = loadGuestGPR(regSrc, context);
   u32int valueToStore2 = loadGuestGPR(regSrc2, context);
-
   u32int wback = (prePost == 0) || (writeback != 0);
-
   // P = 0 and W == 1 then STR as if user mode
   if ((prePost == 0) && (writeback != 0))
   {
     DIE_NOW(0, "STRD unpredictable case (P=0 AND W=1)!");
   }
-
   if (wback && ((regDst == 15) || (regDst == regSrc) || (regDst == regSrc2)) )
   {
     DIE_NOW(0, "STRD unpredictable register selection!");
@@ -619,14 +614,12 @@ u32int strdInstruction(GCONTXT * context)
   {
     DIE_NOW(0, "STRD: unpredictable case, regSrc2 = PC!");
   }
-
   if (regOrImm != 0)
   {
     // immediate case
     u32int imm4h = (instr & 0x00000f00) >> 4;
     u32int imm4l = (instr & 0x0000000f);
     u32int imm32 = imm4h | imm4l;
-
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (upDown != 0)
     {
@@ -658,7 +651,6 @@ u32int strdInstruction(GCONTXT * context)
     {
       DIE_NOW(0, "STR reg Rm == PC UNPREDICTABLE case!");
     }
-
     // if increment then base + offset else base - offset
     if (upDown != 0)
     {
@@ -682,7 +674,6 @@ u32int strdInstruction(GCONTXT * context)
     serial_newline();
 #endif
   } // Register case ends
-
   u32int address = 0;
   // if preIndex then use offsetAddress else baseAddress
   if (prePost != 0)
@@ -707,10 +698,8 @@ u32int strdInstruction(GCONTXT * context)
   serial_putint(valueToStore2);
   serial_newline();
 #endif
-
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address+4, valueToStore2);
-
   if (wback)
   {
     // Rn = offsetAddr;
@@ -719,9 +708,16 @@ u32int strdInstruction(GCONTXT * context)
   return (context->R15 + 4);
 }
 
+u32int strexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "strex PCFunct unfinished\n");
+  return 0;
+}
 
 u32int strexInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "strexInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("STREX instruction: ");
@@ -730,12 +726,10 @@ u32int strexInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -751,7 +745,6 @@ u32int strexInstruction(GCONTXT * context)
   {
     DIE_NOW(0, "STREX unpredictable case (invalid register use)");
   }
-
   u32int address = loadGuestGPR(regN, context);
   u32int valToStore = loadGuestGPR(regT, context);
 #ifdef DATA_MOVE_TRACE
@@ -764,7 +757,6 @@ u32int strexInstruction(GCONTXT * context)
   serial_newline();
   }
 #endif
-
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore);
   // operation succeeded updating memory, flag regD (0 - updated, 1 - fail)
   storeGuestGPR(regD, 0, context);
@@ -772,8 +764,16 @@ u32int strexInstruction(GCONTXT * context)
   return context->R15 + 4;
 }
 
+u32int strexbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "strexb PCFunct unfinished\n");
+  return 0;
+}
+
 u32int strexbInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "strexbInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("STREXB instruction: ");
@@ -782,12 +782,10 @@ u32int strexbInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -803,19 +801,24 @@ u32int strexbInstruction(GCONTXT * context)
   {
     DIE_NOW(0, "STREX unpredictable case (invalid register use)");
   }
-
   u32int address = loadGuestGPR(regN, context);
-
   u32int valToStore = loadGuestGPR(regT, context);
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valToStore & 0xFF));
-
   storeGuestGPR(regD, 0, context);
   
   return context->R15 + 4;
 }
 
+u32int strexdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "strexd PCFunct unfinished\n");
+  return 0;
+}
+
 u32int strexdInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "strexdInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("STREXD instruction: ");
@@ -824,12 +827,10 @@ u32int strexdInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -845,9 +846,7 @@ u32int strexdInstruction(GCONTXT * context)
   {
     DIE_NOW(0, "STREXD unpredictable case (PC used)");
   }
-
   u32int address = loadGuestGPR(regN, context);
-
   // Create doubleword to store such that R[t] will be stored at addr and R[t2] at addr+4.
   u32int valToStore1 = loadGuestGPR(regT, context);
   u32int valToStore2 = loadGuestGPR(regT+1, context);
@@ -868,8 +867,16 @@ u32int strexdInstruction(GCONTXT * context)
   return context->R15 + 4;
 }
 
+u32int strexhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "strexh PCFunct unfinished\n");
+  return 0;
+}
+
 u32int strexhInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "strexhInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("STREXH instruction: ");
@@ -878,12 +885,10 @@ u32int strexhInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -899,32 +904,44 @@ u32int strexhInstruction(GCONTXT * context)
   {
     DIE_NOW(0, "STREX unpredictable case (invalid register use)");
   }
-
   u32int address = loadGuestGPR(regN, context);
-
   u32int valToStore = loadGuestGPR(regT, context);
-
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, address, (valToStore & 0xFFFF));
   storeGuestGPR(regD, 0, context);
   
   return context->R15 + 4;
 }
-
-
  /***********************************************************************************
 ***********************************************************************************
 ************************** LOAD FUNCTIONS *****************************************
 ***********************************************************************************
 ***********************************************************************************/
+
+u32int ldrhtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "ldrht PCFunct unfinished\n");
+  return 0;
+}
+
 u32int ldrhtInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "ldrhtInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "LDRHT unfinished\n");
   return 0;
 }
 
+u32int ldrhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "ldrh PCFunct unfinished\n");
+  return 0;
+}
+
 u32int ldrhInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "ldrhInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -934,7 +951,6 @@ u32int ldrhInstruction(GCONTXT * context)
   u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
   u32int regSrc = (instr & 0x000F0000) >> 16; // Source value from this register...
   u32int regDst = (instr & 0x0000F000) >> 12; // Destination address
-
   // P = 0 and W == 1 then LDRHT (as if user mode)
   if ((preOrPost == 0) && (writeBack != 0))
   {
@@ -945,18 +961,15 @@ u32int ldrhInstruction(GCONTXT * context)
     // cannot load halfword into PC!!
     DIE_NOW(0, "LDRH Rd=PC UNPREDICTABLE case.");
   }
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
     return context->R15 + 4;
   }
-
   u32int baseAddress = loadGuestGPR(regSrc, context);;
   u32int offsetAddress = 0;
   u32int address = 0;
-
   if (regOrImm != 0)
   {
     // immediate case
@@ -973,7 +986,6 @@ u32int ldrhInstruction(GCONTXT * context)
     {
       offsetAddress = baseAddress - imm32;
     }
-
     // if preIndex then use offsetAddress else baseAddress
     if (preOrPost != 0)
     {
@@ -997,15 +1009,12 @@ u32int ldrhInstruction(GCONTXT * context)
       DIE_NOW(0, "LDRH reg Rm == PC UNPREDICTABLE case!");
     }
     u32int offsetRegisterValue = loadGuestGPR(regSrc2, context);
-
     // (shift_t, shift_n) = (SRType_LSL, 0);
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(0, 0, &shiftAmount);
     u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
-
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
     u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
-
     // if increment then base + offset else base - offset
     if (incOrDec != 0)
     {
@@ -1017,7 +1026,6 @@ u32int ldrhInstruction(GCONTXT * context)
       // decrement
       offsetAddress = baseAddress - offset;
     }
-
     // if preIndex then use offsetAddress else baseAddress
     if (preOrPost != 0)
     {
@@ -1032,14 +1040,10 @@ u32int ldrhInstruction(GCONTXT * context)
       DIE_NOW(0, "LDRH: load address unaligned.");
     }
   } // reg case done
-
-
   u32int valueLoaded =
     context->hardwareLibrary->loadFunction(context->hardwareLibrary, HALFWORD, address);
-
   // put loaded val to reg
   storeGuestGPR(regDst, valueLoaded, context);
-
 #ifdef DATA_MOVE_TRACE
   serial_putstring("ldrhInstr: ");
   serial_putint(instr);
@@ -1064,13 +1068,19 @@ u32int ldrhInstruction(GCONTXT * context)
     // Rn = offsetAddr;
     storeGuestGPR(regSrc, offsetAddress, context);
   }
-
   return (context->R15 + 4);
 }
 
+u32int ldrbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "ldrb PCFunct unfinished\n");
+  return 0;
+}
 
 u32int ldrbInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "ldrbInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -1080,11 +1090,9 @@ u32int ldrbInstruction(GCONTXT * context)
   u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
   u32int regSrc = (instr & 0x000F0000) >> 16; // Base Load address
   u32int regDst = (instr & 0x0000F000) >> 12; // Destination - load to this
-
   u32int offset = 0;
   u32int offsetAddress = 0;
   u32int baseAddress = loadGuestGPR(regSrc, context);
-
   if (regDst == 15)
   {
     DIE_NOW(0, "LDRB: cannot load a single byte into PC!");
@@ -1096,7 +1104,6 @@ u32int ldrbInstruction(GCONTXT * context)
     // condition not met! allright, we're done here. next instruction...
     return context->R15 + 4;
   }
-
   if (regOrImm == 0)
   {
     if (regSrc == 15)
@@ -1105,7 +1112,6 @@ u32int ldrbInstruction(GCONTXT * context)
     }
     // immediate case
     offset = instr & 0x00000FFF;
-
   } // Immediate case ends
   else
   {
@@ -1116,16 +1122,13 @@ u32int ldrbInstruction(GCONTXT * context)
       DIE_NOW(0, "LDRB reg Rm == PC UNPREDICTABLE case!");
     }
     u32int offsetRegisterValue = loadGuestGPR(regSrc2, context);
-
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5),
                                             ((instr & 0xF80)>>7), &shiftAmount);
     u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
-
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
     offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
-
   } // Register case ends
   // if increment then base + offset else base - offset
   if (incOrDec != 0)
@@ -1138,7 +1141,6 @@ u32int ldrbInstruction(GCONTXT * context)
     // decrement
     offsetAddress = baseAddress - offset;
   }
-
   u32int address = 0;
   // if preIndex then use offsetAddress else baseAddress
   if (preOrPost != 0)
@@ -1149,7 +1151,6 @@ u32int ldrbInstruction(GCONTXT * context)
   {
     address = baseAddress;
   }
-
   // P = 0 and W == 1 then LDRB as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
@@ -1159,14 +1160,11 @@ u32int ldrbInstruction(GCONTXT * context)
       return context->R15;
     }
   }
-
   // DO the actual load from memory
   u32int valueLoaded =
       context->hardwareLibrary->loadFunction(context->hardwareLibrary, BYTE, address) & 0xFF;
-
   // put loaded val to reg
   storeGuestGPR(regDst, valueLoaded, context);
-
   // wback = (P = 0) or (W = 1)
   bool wback = (preOrPost == 0) || (writeBack != 0);
   if (wback)
@@ -1182,8 +1180,16 @@ u32int ldrbInstruction(GCONTXT * context)
   return context->R15+4;
 }
 
+u32int ldrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "ldr PCFunct unfinished\n");
+  return 0;
+}
+
 u32int ldrInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "ldrInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -1193,17 +1199,14 @@ u32int ldrInstruction(GCONTXT * context)
   u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
   u32int regSrc = (instr & 0x000F0000) >> 16; // Base Load address
   u32int regDst = (instr & 0x0000F000) >> 12; // Destination - load to this
-
   u32int offsetAddress = 0;
   u32int baseAddress = 0;
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
     return context->R15 + 4;
   }
-
   if (regOrImm == 0)
   {
     // immediate case
@@ -1213,7 +1216,6 @@ u32int ldrInstruction(GCONTXT * context)
     {
       baseAddress = baseAddress + 8;
     }
-
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
     {
@@ -1239,16 +1241,13 @@ u32int ldrInstruction(GCONTXT * context)
         DIE_NOW(0, "LDR reg Rm == PC UNPREDICTABLE case!");
     }
     u32int offsetRegisterValue = loadGuestGPR(regSrc2, context);
-
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5),
                                             ((instr & 0xF80)>>7), &shiftAmount);
     u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
-
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
     u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
-
     // if increment then base + offset else base - offset
     if (incOrDec != 0)
     {
@@ -1261,7 +1260,6 @@ u32int ldrInstruction(GCONTXT * context)
       offsetAddress = baseAddress - offset;
     }
   } // Register case ends
-
   u32int address = 0;
   // if preIndex then use offsetAddress else baseAddress
   if (preOrPost != 0)
@@ -1272,13 +1270,11 @@ u32int ldrInstruction(GCONTXT * context)
   {
     address = baseAddress;
   }
-
   if ((address & 0x3) != 0x0)
   {
     dumpGuestContext(context);
     DIE_NOW(0, "LDR Rd [Rn, Rm/#imm] unaligned address!\n");
   }
-
   // P = 0 and W == 1 then LDR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
@@ -1288,11 +1284,9 @@ u32int ldrInstruction(GCONTXT * context)
       return context->R15;
     }
   }
-
   // DO the actual load from memory
   u32int valueLoaded =
       context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
-
   // LDR loading to PC should load a word-aligned value
   if ((regDst == 15) && ((valueLoaded & 0x3) != 0))
   {
@@ -1306,7 +1300,6 @@ u32int ldrInstruction(GCONTXT * context)
   }
   // put loaded val to reg
   storeGuestGPR(regDst, valueLoaded, context);
-
   // wback = (P = 0) or (W = 1)
   bool wback = (preOrPost == 0) || (writeBack != 0);
   if (wback)
@@ -1329,22 +1322,45 @@ u32int ldrInstruction(GCONTXT * context)
   }
 }
 
+u32int popLdrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "popLdr PCFunct unfinished\n");
+  return 0;
+}
 
 u32int popLdrInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "popLdrInstruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(0, "POP unfinished\n");
+  return 0;
+}
+
+u32int popLdmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "popLdm PCFunct unfinished\n");
   return 0;
 }
 
 u32int popLdmInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "popLdmInstruction is executed but not yet checked for blockCopyCompatibility");
   // regList must include PC, otherwise wouldnt have trapped!
   // just treat as a regular load multiple.
   return ldmInstruction(context);
 }
 
+u32int ldmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "ldm PCFunct unfinished\n");
+  return 0;
+}
+
 u32int ldmInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "ldmInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDM instruction: ");
@@ -1361,19 +1377,16 @@ u32int ldmInstruction(GCONTXT * context)
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regList = instr & 0x0000FFFF;
   u32int baseAddress = loadGuestGPR(baseReg, context);
-
   if ( (baseReg == 15) || (countBitsSet(regList) == 0) )
   {
     DIE_NOW(0, "LDM UNPREDICTABLE: base=PC or no registers in list");
   }
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
     return context->R15 + 4;
   }
-
   u32int savedCPSR = 0;
   bool cpySpsr = FALSE;
   if (forceUser != 0)
@@ -1414,7 +1427,6 @@ u32int ldmInstruction(GCONTXT * context)
     // address = baseAddress - will be incremented as we go
     address = baseAddress;
   }
-
   bool isPCinRegList = FALSE;
   // for i = 0 to 15
   for (i = 0; i < 16; i++)
@@ -1442,7 +1454,6 @@ u32int ldmInstruction(GCONTXT * context)
       address = address + 4;
     }
   } // for ends
-
   // if writeback then baseReg = baseReg +/- 4 * number of registers to load;
   if (writeback != 0)
   {
@@ -1458,7 +1469,6 @@ u32int ldmInstruction(GCONTXT * context)
     }
     storeGuestGPR(baseReg, baseAddress, context);
   }
-
   if (forceUser != 0)
   {
     // do we need to copy spsr? or return from userland?
@@ -1500,7 +1510,6 @@ u32int ldmInstruction(GCONTXT * context)
       context->CPSR = savedCPSR;
     }
   }
-
   if (isPCinRegList)
   {
     return context->R15;
@@ -1510,23 +1519,27 @@ u32int ldmInstruction(GCONTXT * context)
     return context->R15+4;
   }
 }
-
-
 /* load dual */
+
+u32int ldrdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "ldrd PCFunct unfinished\n");
+  return 0;
+}
+
 u32int ldrdInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "ldrdInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
-
   u32int condcode  = (instr & 0xF0000000) >> 28;
   u32int prePost   = instr & 0x01000000;
   u32int upDown    = instr & 0x00800000;
   u32int regOrImm  = instr & 0x00400000; // 0 = reg, 1 = imm
   u32int writeback = instr & 0x00200000;
-
   u32int regSrc = (instr & 0x000F0000) >> 16;
   u32int regDst = (instr & 0x0000F000) >> 12;
   u32int regDst2 = regDst+1;
-
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDRD instruction: ");
   serial_putint(instr);
@@ -1534,30 +1547,24 @@ u32int ldrdInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
     return context->R15 + 4;
   }
-
   if ((regDst % 2) == 1)
   {
     DIE_NOW(0, "LDRD undefined case: regDst must be even number!");
   }
-
   u32int offsetAddress = 0;
   u32int baseAddress = loadGuestGPR(regSrc, context);
-
   u32int wback = (prePost == 0) || (writeback != 0);
-
   // P = 0 and W == 1 then STR as if user mode
   if ((prePost == 0) && (writeback != 0))
   {
     DIE_NOW(context, "LDRD unpredictable case (P=0 AND W=1)!");
   }
-
   if (wback && ((regDst == 15) || (regSrc == regDst) || (regSrc == regDst2)) )
   {
     DIE_NOW(context, "LDRD unpredictable register selection!");
@@ -1566,14 +1573,12 @@ u32int ldrdInstruction(GCONTXT * context)
   {
     DIE_NOW(context, "LDRD: unpredictable case, regDst2 = PC!");
   }
-
   if (regOrImm != 0)
   {
     // immediate case
     u32int imm4h = (instr & 0x00000f00) >> 4;
     u32int imm4l = (instr & 0x0000000f);
     u32int imm32 = imm4h | imm4l;
-
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (upDown != 0)
     {
@@ -1603,7 +1608,6 @@ u32int ldrdInstruction(GCONTXT * context)
     {
       DIE_NOW(0, "STR reg Rm == PC UNPREDICTABLE case!");
     }
-
     // if increment then base + offset else base - offset
     if (upDown != 0)
     {
@@ -1625,7 +1629,6 @@ u32int ldrdInstruction(GCONTXT * context)
     serial_newline();
 #endif
   } // Register case ends
-
   u32int address = 0;
   // if preIndex then use offsetAddress else baseAddress
   if (prePost != 0)
@@ -1641,7 +1644,6 @@ u32int ldrdInstruction(GCONTXT * context)
   serial_putint(address);
   serial_newline();
 #endif
-
   u32int valueLoaded = 
     context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
   u32int valueLoaded2 = 
@@ -1649,7 +1651,6 @@ u32int ldrdInstruction(GCONTXT * context)
   // put loaded values to their registers
   storeGuestGPR(regDst,  valueLoaded,  context);
   storeGuestGPR(regDst2, valueLoaded2, context);
-
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDRD: valueLoaded1 = ");
   serial_putint(valueLoaded);
@@ -1657,7 +1658,6 @@ u32int ldrdInstruction(GCONTXT * context)
   serial_putint(valueLoaded2);
   serial_newline();
 #endif
-
   if (wback)
   {
     // Rn = offsetAddr;
@@ -1666,8 +1666,16 @@ u32int ldrdInstruction(GCONTXT * context)
   return (context->R15 + 4);
 }
 
+u32int ldrexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "ldrex PCFunct unfinished\n");
+  return 0;
+}
+
 u32int ldrexInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "ldrexInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDREX instruction: ");
@@ -1676,11 +1684,9 @@ u32int ldrexInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -1692,7 +1698,6 @@ u32int ldrexInstruction(GCONTXT * context)
   {
     DIE_NOW(0, "LDREX unpredictable case (PC used).");
   }
-
   u32int baseVal = loadGuestGPR(baseReg, context);
   u32int value =
       context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal);
@@ -1710,9 +1715,16 @@ u32int ldrexInstruction(GCONTXT * context)
   return context->R15 + 4;
 }
 
+u32int ldrexbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "ldrexb PCFunct unfinished\n");
+  return 0;
+}
 
 u32int ldrexbInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "ldrexbInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDREXB instruction: ");
@@ -1721,11 +1733,9 @@ u32int ldrexbInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -1744,16 +1754,23 @@ u32int ldrexbInstruction(GCONTXT * context)
   
   return context->R15 + 4;
 }
-
-
 /*****************************************************************
 * Load Register Exclusive Doubleword *
 * derives an address from a base register value, loads a 64-bit *
 * doubleword from memory, writes it to two registers and *
 * marks the physical address as exclusive access *
 *****************************************************************/
+
+u32int ldrexdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "ldrexd PCFunct unfinished\n");
+  return 0;
+}
+
 u32int ldrexdInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "ldrexdInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDREXD instruction: ");
@@ -1762,7 +1779,6 @@ u32int ldrexdInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
@@ -1779,7 +1795,6 @@ u32int ldrexdInstruction(GCONTXT * context)
     DIE_NOW(0, "LDREXH unpredictable case (invalid registers).");
   }
   u32int baseVal = loadGuestGPR(baseReg, context);
-
   u32int value =
       context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal);
   u32int value2 =
@@ -1790,8 +1805,16 @@ u32int ldrexdInstruction(GCONTXT * context)
   return context->R15 + 4;
 }
 
+u32int ldrexhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+{
+  dumpGuestContext(context);
+  DIE_NOW(0, "ldrexh PCFunct unfinished\n");
+  return 0;
+}
+
 u32int ldrexhInstruction(GCONTXT * context)
 {
+  DIE_NOW(0, "ldrexhInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDREXH instruction: ");
@@ -1800,11 +1823,9 @@ u32int ldrexhInstruction(GCONTXT * context)
   serial_putint(context->R15);
   serial_newline();
 #endif
-
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
-
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {

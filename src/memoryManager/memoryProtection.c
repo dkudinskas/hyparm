@@ -27,7 +27,6 @@ MEMPROT* initialiseMemoryProtection(void)
   {
     DIE_NOW(0, "Unable to allocate memory for initialiseProtectionArray() in memoryProtection.c");
   }
-
   u32int arraySpace = FRAME_TABLE_CHUNK_SIZE;
   memset(addr, 0, arraySpace);
 

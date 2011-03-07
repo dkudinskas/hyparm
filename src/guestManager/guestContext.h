@@ -56,7 +56,7 @@ struct guestContext
   u32int endOfBlockInstr;
   u32int (*hdlFunct)(GCONTXT * context);
   CREG * coprocRegBank;
-  BCENTRY * blockCache;
+  BCENTRY * blockCache;  // This is the log book
   u32int blockHistory[BLOCK_HISOTRY_SIZE];
   /* Virtual Addressing */
   descriptor* PT_physical; //guest physical to real physical PT
@@ -80,6 +80,12 @@ struct guestContext
   /* interrupt handling */
   bool guestIrqPending;
   bool guestAbtPending;
+  u32int blockCopyCache; // This is the blokCache with copied instructions we use u32int because the content of the address cannot be typed
+  u32int blockCopyCacheLastUsedLine; // This points to the last used line of the block cache.  This is for knowing where to place
+                                       //the next entry. this will be on blockCopyCacheLastUsedLine+1;
+  u32int blockCopyCacheEnd; // This points to the end of the blockCache. This address is the last address off blockCopyCache!
+                              // This will contain an unconditional branch to begin ofblockCopyCache
+  u32int PCOfLastInstruction;//This will contain the value the program counter should have when the last instruction is executing
 };
 
 
@@ -91,6 +97,8 @@ void initGuestContext(GCONTXT * gContext);
 void registerCrb(GCONTXT * gc, CREG * coprocRegBank);
 
 void registerBlockCache(GCONTXT * gc, BCENTRY * blockCacheStart);
+
+void registerBlockCopyCache(GCONTXT *gc, u32int * blockCopyCache, u32int size);
 
 void registerHardwareLibrary(GCONTXT * gc, device * libraryPtr);
 

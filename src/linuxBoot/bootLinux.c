@@ -32,7 +32,7 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
 
 #ifdef STARTUP_DEBUG
   serial_putstring("machid = ");
-  serial_putint(machid);
+//  serial_putint(machid);
   serial_newline();
 
   serial_putstring("hdrEntryPoint = ");
@@ -48,6 +48,10 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
   need to create a Global Page table/map for the VM and add mappings for where the kernel is to be copied?
   */
   createVirtualMachineGPAtoRPA(getGuestContext());
+#ifdef STARTUP_DEBUG
+  serial_putstring("Creating of Virtual Machine Global Page table for VM done");
+  serial_newline();
+#endif
 
   if (load != hdrEntryPoint)
   {
@@ -69,12 +73,26 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
 #ifdef DUMP_SCANNER_COUNTER
   resetScannerCounter();
 #endif
+#ifdef STARTUP_DEBUG
+  serial_putstring("First block will be scanned");
+  serial_newline();
+#endif
   scanBlock(getGuestContext(), hdrEntryPoint);
-
+#ifdef STARTUP_DEBUG
+  serial_putstring("First block is scanned");
+  serial_newline();
+#endif
   cleanupBeforeLinux();
 
   /* does not return */
-  callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, hdrEntryPoint);
+#ifdef STARTUP_DEBUG
+  serial_putstring("Processor ready for Linux-> call kernel");
+  serial_newline();
+#endif
+  //execution shouldn't be started at hrdEntryPoint any more!
+  //The code from the blockCache should be executed  :  getGuestContext()->blockCopyCache
+  //But first entry in blockCopyCache is backpointer -> next entry (blockCopyCache is u32int => +4)
+  callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, (getGuestContext()->blockCopyCache+4));
 
 }
 

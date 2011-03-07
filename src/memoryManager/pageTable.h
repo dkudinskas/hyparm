@@ -2,7 +2,7 @@
 #define __PAGE_TABLE_H__
 
 #include "types.h"
-
+//Uncomment to enable debuging : #define PT_SMALL_DEBUG
 #define PAGE_TABLE_ENTRIES 4096
 #define SECOND_LEVEL_PAGE_TABLE_ENTRIES 256
 #define PAGE_TABLE_ENTRY_WIDTH 4

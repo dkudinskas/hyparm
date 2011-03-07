@@ -7,6 +7,8 @@
 #include "memFunctions.h"
 #include "stringFunctions.h"
 
+//#define STARTUP_DEBUG
+
 #define BOARD_MACHINE_ID        0x60A
 #define BOARD_REVISION           0x20
 #define NR_DRAM_BANKS               2

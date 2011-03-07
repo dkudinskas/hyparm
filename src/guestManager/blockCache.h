@@ -5,6 +5,10 @@
 #include "common.h"
 
 #define BLOCK_CACHE_SIZE    128
+#define BLOCK_COPY_CACHE_SIZE_IN_BYTES   (44 * BLOCK_CACHE_SIZE) // Here the assumption is taken that on average 10% of the instructions
+                                                                 // will be critical. -> on average there are 10 instructions per block
+                                                                 // cache.  + 1 backpointer -> 4B * 11 = 44 B
+#define BLOCK_COPY_CACHE_SIZE (BLOCK_COPY_CACHE_SIZE_IN_BYTES / 4) // size in words (32 bits)
 
 // uncomment me for block cache debug: #define BLOCK_CACHE_DEBUG
 
@@ -15,7 +19,10 @@ struct blockCacheEntry
   u32int startAddress;
   u32int endAddress;
   u32int hyperedInstruction;
-  bool valid;
+  u32int valid:1; //valid is a flag and needs only 1 bit
+  u32int blockCopyCacheSize:23; // blockCopyCacheSize will be rather limited
+                            // there are 8 bits left -> can be used for profiling
+  u32int blockCopyCacheAddress; // This is the address were the instructions with hypercall will reside
   u32int hdlFunct;
 };
 
@@ -26,7 +33,9 @@ void initialiseBlockCache(BCENTRY * bcache);
 bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr);
 
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
-                     u32int index, u32int hdlFunct, BCENTRY * bcAddr);
+                     u32int index, u32int hdlFunct, u32int blockCopyCacheSize, u32int blockCopyCacheAddress, BCENTRY * bcAddr);
+
+u32int * checkAndClearBlockCopyCacheAddress(u32int *Addr,BCENTRY *bcStartAddr,u32int* blockCopyCache,u32int* blockCopyCacheEnd);
 
 BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr);
 
@@ -34,8 +43,12 @@ u32int findEntryForAddress(BCENTRY * bcAddr, u32int addr);
 
 void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex);
 
+//Remove the copied instructions
+void removeBlockCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize);
+
 void resolveCacheConflict(u32int index, BCENTRY * bcAddr);
 
+//Remove all cache entries.  All logbook entries and all copied instructions will be removed.
 void explodeCache(BCENTRY * bcache);
 
 void validateCachePreChange(BCENTRY * bcache, u32int address);
@@ -49,5 +62,7 @@ void setExecBitMap(u32int addr);
 void clearExecBitMap(u32int addr);
 
 bool isBitmapSetForAddress(u32int addr);
+
+u32int* updateCurrBlockCopyCacheAddr(u32int* oldAddr, u32int nrOfAddedInstr,u32int* blockCopyCacheEnd);
 
 #endif

@@ -18,6 +18,8 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr);
 
 void protectScannedBlock(u32int startAddress, u32int endAddress);
 
+u32int allSrcRegNonPC(u32int instruction);
+
 #ifdef DUMP_SCANNER_COUNTER
 void resetScannerCounter(void);
 #endif

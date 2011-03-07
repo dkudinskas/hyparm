@@ -1,5 +1,8 @@
 #include "blockCache.h"
+#include "memFunctions.h"
 #include "serial.h"
+
+#define BLOCK_COPY_CACHE_DEBUG 1
 
 #ifdef DUMP_COLLISION_COUNTER
 static u32int collisionCounter = 0;
@@ -29,6 +32,8 @@ void initialiseBlockCache(BCENTRY * bcache)
     bcache[i].endAddress = 0;
     bcache[i].hyperedInstruction = 0;
     bcache[i].valid = FALSE;
+    bcache[i].blockCopyCacheSize = 0;
+    bcache[i].blockCopyCacheAddress = 0;
     bcache[i].hdlFunct = 0;
   }
   
@@ -66,7 +71,7 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr)
 }
 
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
-                     u32int index, u32int hdlFunct, BCENTRY * bcAddr)
+                     u32int index, u32int hdlFunct, u32int blockCopyCacheSize, u32int blockCopyCacheAddress, BCENTRY * bcAddr)
 {
 #ifdef BLOCK_CACHE_DEBUG
   serial_putstring("blockCache: ADD[");
@@ -79,34 +84,28 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAd
   serial_putint(hdlFunct);
   serial_putstring(" eobInstr ");
   serial_putint(hypInstruction);
+  serial_putstring(" blockCopyCacheSize ")
+  serial_putint(blockCopyCacheSize);
+  serial_putstring(" blockCopyCache@");
+  serial_putint(blockCopyCacheAddress);
   serial_newline();
 #endif
-  if ((bcAddr[index].valid == TRUE) && (bcAddr[index].endAddress != blkEndAddr) )
+  if (bcAddr[index].valid == TRUE)
   {
+
     // somebody has been sleeping in our cache location!
     resolveCacheConflict(index, bcAddr);
-    // now that we resolved the conflict, we can store the new entry data...
-    bcAddr[index].startAddress = blkStartAddr;
-    bcAddr[index].endAddress = blkEndAddr;
-    bcAddr[index].hyperedInstruction = hypInstruction;
-    bcAddr[index].hdlFunct = hdlFunct;
-    bcAddr[index].valid = TRUE;
+    // now that we resolved the conflict, we arrive at situation where bcAddr[index].valid==false
   }
-  else if ((bcAddr[index].valid == TRUE) && (bcAddr[index].endAddress == blkEndAddr) )
-  {
-    /* NOTE: if entry valid, but blkEndAddress is the same as new block to add      *
-     * then the block starts at another address but ends on the same instruction    *
-     * and by chance - has the same index. just modify existing entry, don't remove */
-    bcAddr[index].startAddress = blkStartAddr;
-  }
-  else
-  {
-    bcAddr[index].startAddress = blkStartAddr;
-    bcAddr[index].endAddress = blkEndAddr;
-    bcAddr[index].hyperedInstruction = hypInstruction;
-    bcAddr[index].hdlFunct = hdlFunct;
-    bcAddr[index].valid = TRUE;
-  }
+  //store the new entry data...
+  bcAddr[index].startAddress = blkStartAddr;
+  bcAddr[index].endAddress = blkEndAddr;
+  bcAddr[index].hyperedInstruction = hypInstruction;
+  bcAddr[index].hdlFunct = hdlFunct;
+  bcAddr[index].valid = TRUE;
+  bcAddr[index].blockCopyCacheSize = blockCopyCacheSize;
+  bcAddr[index].blockCopyCacheAddress = blockCopyCacheAddress;
+
   
   // set bitmap entry to executed
   setExecBitMap(blkEndAddr);
@@ -158,13 +157,16 @@ u32int findEntryForAddress(BCENTRY * bcAddr, u32int addr)
 /* remove a specific cache entry */
 void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex)
 {
-  // restore replaced end of block instruction
-  *((u32int*)(bcAddr[cacheIndex].endAddress)) = bcAddr[cacheIndex].hyperedInstruction;
+  //The copied code has to be cleaned up
+  removeBlockCacheEntry(bcAddr[cacheIndex].blockCopyCacheAddress,bcAddr[cacheIndex].blockCopyCacheSize);
   bcAddr[cacheIndex].valid = FALSE;
   bcAddr[cacheIndex].startAddress = 0;
   bcAddr[cacheIndex].endAddress = 0;
   bcAddr[cacheIndex].hdlFunct = 0;
+  bcAddr[cacheIndex].blockCopyCacheSize = 0;
+  bcAddr[cacheIndex].blockCopyCacheAddress = 0;
   bcAddr[cacheIndex].hyperedInstruction = 0;
+
   return;
 }
 
@@ -174,12 +176,12 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
     Replacement policy: SIMPLE REPLACE
     Collision: new block is trying to replace old block in cache
     Steps to Carry out:
-    1. scan the cache for any other blocks that end with the same instruction
-    as the old block in the cache
-    2.1. if found, get hypercall, and update SWIcode to point to found entry
-    2.2. if not found, restore hypered instruction back!
+    1. Remove entry in blockCache (The copied instructions)
+    2. Remove log book(the original blockCache) entry
+    Since a different startAddress means a different block of Code.
+    There will be exactly 1 block in the block cache corresponding with this block
    */
-  int i = 0;
+
 #ifdef BLOCK_CACHE_DEBUG
   serial_putstring("blockCache: COLLISION!!!");
   serial_newline();
@@ -196,40 +198,10 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
     }
   }
 #endif
-
-  for (i = 0; i < BLOCK_CACHE_SIZE; i++)
-  {
-    if ((bcAddr[i].valid == TRUE) &&
-        (bcAddr[i].endAddress == bcAddr[index].endAddress) &&
-        (i != index) )
-    {
-      // found a valid entry in the cache, that BB ends @ the same address as
-      // the block of the entry that we collided with.
-      u32int hypercallSWI = *((u32int*)(bcAddr[index].endAddress));
-      // SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
-      hypercallSWI = (hypercallSWI & 0xFF000000) | i;
-#ifdef BLOCK_CACHE_DEBUG
-      serial_putstring("blockCache: found another BB to end at same address.");
-      serial_newline();
-      serial_putstring("blockCache: replace hypercall with ");
-      serial_putint(hypercallSWI);
-      serial_newline();
-#endif
-      *((u32int*)(bcAddr[index].endAddress)) = hypercallSWI;
-      return;
-    }
-  }
-#ifdef BLOCK_CACHE_DEBUG
-  serial_putstring("blockCache: no other BB ends at same address.");
-  serial_newline();
-  // restore hypered instruction back!
-  serial_putstring("blockCache: restoring hypercall ");
-  serial_putint(*((u32int*)(bcAddr[index].endAddress)));
-  serial_putstring(" back to ");
-  serial_putint(bcAddr[index].hyperedInstruction);
-  serial_newline();
-#endif
-  *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
+  removeBlockCacheEntry(bcAddr[index].blockCopyCacheAddress,bcAddr[index].blockCopyCacheSize);
+}
+void removeBlockCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize){
+  memset((u32int *)blockCopyCacheAddress,0,blockCopyCacheSize);//blockCopyCacheSize is number of u32int entries
 }
 
 
@@ -307,6 +279,10 @@ void dumpBlockCacheEntry(u32int index, BCENTRY * bcache)
 
   serial_putstring("BlockCache: valid = ");
   serial_putint_nozeros(bcache[index].valid);
+  serial_putstring("BlockCopyCacheAddress = ");
+  serial_putint(bcache[index].blockCopyCacheAddress);
+  serial_putstring("BlockCopyCache size = ");
+  serial_putint(bcache[index].blockCopyCacheSize);
   serial_putstring(" EOBinstr = ");
   serial_putint(bcache[index].hyperedInstruction);
   serial_putstring(" hdlFunct = ");
@@ -336,5 +312,49 @@ bool isBitmapSetForAddress(u32int addr)
   u32int bitNumber = (addr & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
   u32int bitResult = execBitMap[index] & (1 << bitNumber); 
   return (bitResult != 0);
+}
+/* This function will check if the content at Addr == 0x0 if not make it free -> the address that must be used is returned*/
+u32int * checkAndClearBlockCopyCacheAddress(u32int *Addr,BCENTRY *bcStartAddr,u32int* blockCopyCache,u32int* blockCopyCacheEnd){
+  if(Addr >= blockCopyCacheEnd){//Last address of BlockCopyCacheAddr
+    //Continue at beginning of blockCopyCacheAddress
+    Addr=blockCopyCache;
+#ifdef BLOCK_COPY_CACHE_DEBUG
+  serial_putstring("blockCopyCache: End exceeded continue at start=0x");
+  serial_putint((u32int)Addr);
+  serial_newline();
+#endif
+  }
+  if(*Addr == 0x0){
+    //Do nothing -> address is usable
+    return Addr;
+  }else{
+#ifdef BLOCK_COPY_CACHE_DEBUG
+  serial_putstring("blockCopyCache: The contents of 0x");
+  serial_putint((u32int)Addr);
+  serial_putstring(" differs from 0x0 -> clean ");
+  serial_newline();
+#endif
+    //The address will be the first occurrence of a non 0x0 entry => the contents will be a backpointer to a log entry
+    BCENTRY * bcEntry = (BCENTRY*)(*Addr);
+    u32int index = bcEntry-bcStartAddr;
+#ifdef BLOCK_COPY_CACHE_DEBUG
+  serial_putstring("block with blockcache id=");
+  serial_putint(index);
+  serial_putstring(" gets cleaned");
+  serial_newline();
+#endif
+    //Remove cacheEntry In both blockCache & blockCopyCache
+    removeCacheEntry(bcStartAddr, index);
+  }
+  return Addr;//Return Address that should be used to place next instruction
+}
+
+u32int* updateCurrBlockCopyCacheAddr(u32int* oldAddr, u32int nrOfAddedInstr,u32int* blockCopyCacheEnd){
+  oldAddr=oldAddr+nrOfAddedInstr;
+  if(oldAddr >= blockCopyCacheEnd ){//oldAddr=currBlockCopyCacheAddress blockCopyCacheAddresses will be used in a  cyclic manner
+                                    //-> if end of blockCopyCache is passed blockCopyCacheCurrAddress must be updated
+    oldAddr=oldAddr - (BLOCK_COPY_CACHE_SIZE-1);
+  }
+  return oldAddr;
 }
 
