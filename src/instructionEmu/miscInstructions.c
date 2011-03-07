@@ -1138,13 +1138,8 @@ u32int msrInstruction(GCONTXT * context)
     {
       dumpGuestContext(context);
       DIE_NOW(0, "MSR toggle THUMB bit.");
-    } 
-    // is new CPSR - user mode?
-    if ((value & CPSR_MODE_FIELD) == CPSR_MODE_USER)
-    {
-      DIE_NOW(context, "MSR switching CPSR to user mode\n");
     }
-    // separate the field we're gonna update from new value 
+    // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x000000FF);
     // clear old fields!
     oldValue &= 0xFFFFFF00;

@@ -131,8 +131,6 @@ struct genericDevice
   struct genericDevice * attachedDevices[MAX_NR_ATTACHED];
   LOAD_FUNCTION loadFunction;
   STORE_FUNCTION storeFunction;
-//  u32int (*loadFunction)(device * dev, ACCESS_SIZE size, u32int address);
-//  void (*storeFunction)(device * dev, ACCESS_SIZE size, u32int address, u32int value);
 };
 
 device * initialiseHardwareLibrary(void);

@@ -11,7 +11,6 @@
 
 // uncomment me to enable scanner request counter: #define DUMP_SCANNER_COUNTER
 
-/* SWI */
 #define INSTR_SWI                 0xEF000000
 
 void scanBlock(GCONTXT * gc, u32int blkStartAddr);

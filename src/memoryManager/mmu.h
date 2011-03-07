@@ -4,6 +4,8 @@
 #include "assert.h" //COMPILE_TIME_ASSERT
 #include "pageTable.h"
 
+//uncomment to enable debug #define MMU_DEBUG
+
 struct abort_dfsr
 {
   u16int fs3_0:4; //0-3 FS[3:0]
@@ -27,7 +29,7 @@ struct abort_ifsr
 };
 typedef struct abort_ifsr IFSR;
 
-enum abort_fault_status
+enum DataAbortFaultStatus
 {
   alignment = 0b0001,
   debug,
@@ -44,6 +46,27 @@ enum abort_fault_status
   perm_section,
   sync_external_2nds,
   perm_page = 0b1111,
+};
+
+enum InstructionAbortFaultStatus
+{
+  debugEvent = 0b00010,
+  accessFlagFaultSection = 0b00011,
+  translationFaultSection = 0b00101,
+  accessFlagFaultPage = 0b00110,
+  translationFaultPage = 0b00111,
+  synchronousExternalAbort = 0b01000,
+  domainFaultSection = 0b01001,
+  domainFaultPage = 0b01011 ,
+  translationTableTalk1stLvlSynchExtAbt = 0b01100,
+  permissionFaultSection = 0b01101,
+  translationTableWalk2ndLvllSynchExtAbt = 0b01110,
+  permissionFaultPage = 0b01111,
+  impDepLockdown = 0b10100,
+  memoryAccessSynchParityError = 0b11001,
+  impDepCoprocessorAbort = 0b11010,
+  translationTableWalk1stLvlSynchParityError = 0b11100,
+  translationTableWalk2ndLvlSynchParityError = 0b11110,
 };
 
 //access is a two bit field 00 = no access, 01=client, 10=reserved, 11=manager

@@ -70,7 +70,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   serial_newline();
 #endif
 
-
 #ifdef CONFIG_DECODER_TABLE_SEARCH
   while ((decodedInstruction = decodeInstr(instruction))->replaceCode == 0)
 #else
@@ -87,24 +86,35 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 
   if ((instruction & INSTR_SWI) == INSTR_SWI)
   {
-    // we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
-    u32int cacheIndex = instruction & 0x00FFFFFF;
-    if ((cacheIndex < 0) || (cacheIndex >= BLOCK_CACHE_SIZE))
+    u32int svcCode = (instruction & 0x00FFFFFF);
+    if ((svcCode >= 0) && (svcCode <= 0xFF))
     {
-      DIE_NOW(0, "scanner: block cache index in SWI out of range.");
+      serial_putstring("scanBlock: SWI code = ");
+      serial_putint(svcCode);
+      serial_newline();
+      DIE_NOW(gc, "scanBlock: SVC instruction not placed by hypervisor!");
     }
+    else
+    {
+      // we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
+      u32int cacheIndex = (svcCode >> 8) - 1;
+      if (cacheIndex >= BLOCK_CACHE_SIZE)
+      {
+        DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
+      }
 #ifdef SCANNER_DEBUG
-    serial_putstring("scanner: EOB instruction is SWI @ ");
-    serial_putint((u32int)currAddress);
-    serial_putstring(" code ");
-    serial_putint(cacheIndex);
-    serial_newline();
-#endif
-    BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
-
-    // retrieve end of block instruction and handler function pointer
-    gc->endOfBlockInstr = bcEntry->hyperedInstruction;
-    gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
+      serial_putstring("scanner: EOB instruction is SWI @ ");
+      serial_putint((u32int)currAddress);
+      serial_putstring(" code ");
+      serial_putint(cacheIndex);
+      serial_newline();
+  #endif
+      BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
+  
+      // retrieve end of block instruction and handler function pointer
+      gc->endOfBlockInstr = bcEntry->hyperedInstruction;
+      gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
+    } 
   }
   else
   {
@@ -120,12 +130,11 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 # endif
 #endif
     // replace end of block instruction with hypercall of the appropriate code
-    *currAddress = (INSTR_SWI | bcIndex);
+    *currAddress = INSTR_SWI | ((bcIndex + 1) << 8);
     // if guest instruction stream is mapped with caching enabled, must maintain
     // i and d cache coherency
     // iCacheFlushByMVA((u32int)currAddress);
   }
-
   
 #ifdef SCANNER_DEBUG
   serial_putstring("scanner: EOB @ ");
@@ -133,7 +142,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   serial_putstring(" instr ");
   serial_putint(gc->endOfBlockInstr);
   serial_putstring(" SWIcode ");
-  serial_putint(bcIndex);
+  serial_putint((bcIndex + 1) << 8);
   serial_putstring(" hdlrFuncPtr ");
   serial_putint((u32int)gc->hdlFunct);
   serial_newline();

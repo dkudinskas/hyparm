@@ -5,7 +5,8 @@
 #include "serial.h"
 
 
-// uncomment me to enable debug : #define GUEST_EXCEPTIONS_DBG
+// uncomment me to enable debug : 
+#define GUEST_EXCEPTIONS_DBG
 
 #define CPSR_NEG_CCFLAG       0x80000000
 #define CPSR_ZER_CCFLAG       0x40000000
@@ -31,12 +32,14 @@
 #define CPSR_MODE_UND    0x1b
 #define CPSR_MODE_SYS    0x1f
 
-void tickEvent(u32int irqNumber);
+void throwInterrupt(u32int irqNumber);
 
 void deliverInterrupt(void);
 
-void throwAbort(u32int address, u32int faultType, bool isWrite, u32int domain);
+void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain);
+void deliverDataAbort(void);
 
-void deliverAbort(void);
+void throwPrefetchAbort(u32int address, u32int faultType);
+void deliverPrefetchAbort(void);
 
 #endif

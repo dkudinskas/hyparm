@@ -120,8 +120,8 @@ char * gpio6Name = "GPIO6";
 device q2bus;
 char * q2busName = "Q2Bus";
 // Q2: sdram
-device sdram;
-char * sdramName = "SDRAM";
+device sdramDevice;
+char * sdramDeviceName = "SDRAM";
 /********************************************************/
 // QUARTER 3
 device q3bus;
@@ -285,7 +285,8 @@ device * initialiseHardwareLibrary()
   initialiseDevice(&q2bus, q2busName, TRUE, QUARTER2, (u32int)(QUARTER2-1+QUARTER_SIZE),
                       &topLevelBus, &loadGeneric, &storeGeneric);
   // Q2: sdram
-  initialiseDevice(&sdram, sdramName, FALSE,
+  initSdram();
+  initialiseDevice(&sdramDevice, sdramDeviceName, FALSE,
               Q2_SDRC_SMS, (u32int)(Q2_SDRC_SMS+Q2_SDRC_SMS_SIZE-1),
               &q2bus, &loadSdram, &storeSdram);
   /********************************************************/

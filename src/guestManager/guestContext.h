@@ -79,7 +79,8 @@ struct guestContext
   device * hardwareLibrary;
   /* interrupt handling */
   bool guestIrqPending;
-  bool guestAbtPending;
+  bool guestDataAbtPending;
+  bool guestPrefetchAbtPending;
 };
 
 

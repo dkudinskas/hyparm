@@ -182,7 +182,7 @@ u32int strInstruction(GCONTXT * context)
   // P = 0 and W == 1 then STR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
-    bool abort = shouldAbort(FALSE, TRUE, address);
+    bool abort = shouldDataAbort(FALSE, TRUE, address);
     if (abort)
     {
       return context->R15;
@@ -302,7 +302,7 @@ u32int strbInstruction(GCONTXT * context)
   // P = 0 and W == 1 then STR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
-    bool abort = shouldAbort(FALSE, TRUE, address);
+    bool abort = shouldDataAbort(FALSE, TRUE, address);
     if (abort)
     {
       return context->R15;
@@ -485,12 +485,16 @@ u32int stmInstruction(GCONTXT * context)
     // condition not met! allright, we're done here. next instruction...
     return context->R15 + 4;
   }
+
+  u32int savedCPSR = 0;
   if (forceUser != 0)
   {
-    DIE_NOW(0, "Invalid STM instruction - force user Sbit set");
+    // force user bit set: STM user mode registers
+    savedCPSR = context->CPSR;
+    context->CPSR = (context->CPSR & ~0x1f) | CPSR_MODE_USER;
   }
+
   int i = 0;
- 
   u32int address = 0;
   if ( (upDown == 0) && (prePost != 0) ) // STM decrement before
   {
@@ -562,6 +566,13 @@ u32int stmInstruction(GCONTXT * context)
     }
     storeGuestGPR(baseReg, baseAddress, context);
   }
+
+  // if we stored to user mode registers, lets restore the CPSR
+  if (forceUser != 0)
+  {
+    context->CPSR = savedCPSR;
+  }
+
   return context->R15+4;
 }
 
@@ -1153,7 +1164,7 @@ u32int ldrbInstruction(GCONTXT * context)
   // P = 0 and W == 1 then LDRB as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
-    bool abort = shouldAbort(FALSE, FALSE, address);
+    bool abort = shouldDataAbort(FALSE, FALSE, address);
     if (abort)
     {
       return context->R15;
@@ -1282,7 +1293,7 @@ u32int ldrInstruction(GCONTXT * context)
   // P = 0 and W == 1 then LDR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
-    bool abort = shouldAbort(FALSE, FALSE, address);
+    bool abort = shouldDataAbort(FALSE, FALSE, address);
     if (abort)
     {
       return context->R15;

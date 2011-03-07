@@ -1,6 +1,7 @@
 #include "guestContext.h"
 #include "miscInstructions.h"
 #include "commonInstrFunctions.h"
+#include "sdram.h"
 
 void dumpGuestContext(GCONTXT * gc)
 {
@@ -160,6 +161,9 @@ void dumpGuestContext(GCONTXT * gc)
   serial_putstring("gc guest OS Page Table: 0x");
   serial_putint((u32int)gc->PT_os);
   serial_newline();
+  serial_putstring("gc guest OS Page Table (real): 0x");
+  serial_putint((u32int)gc->PT_os_real);
+  serial_newline();
   serial_putstring("gc guest OS shadow Page Table: 0x");
   serial_putint((u32int)gc->PT_shadow);
   serial_newline();
@@ -209,8 +213,12 @@ void dumpGuestContext(GCONTXT * gc)
   serial_putint(gc->guestIrqPending);
   serial_newline();
 
-  serial_putstring("Abort pending: ");
-  serial_putint(gc->guestAbtPending);
+  serial_putstring("Data abort pending: ");
+  serial_putint(gc->guestDataAbtPending);
+  serial_newline();
+
+  serial_putstring("Prefetch abort pending: ");
+  serial_putint(gc->guestPrefetchAbtPending);
   serial_newline();
 
   serial_putstring("Block cache at: ");
@@ -226,6 +234,7 @@ void dumpGuestContext(GCONTXT * gc)
     serial_putint(gc->blockHistory[i]);
     serial_newline();
   }
+  dumpSdramStats();
 }
 
 void initGuestContext(GCONTXT * gContext)
@@ -293,7 +302,9 @@ void initGuestContext(GCONTXT * gContext)
   gContext->guestFiqHandler = 0;
   gContext->hardwareLibrary = 0;
   gContext->guestIrqPending = FALSE;
-  gContext->guestAbtPending = FALSE;
+  gContext->guestDataAbtPending = FALSE;
+  gContext->guestPrefetchAbtPending = FALSE;
+
   int i = 0;
   for (i = 0; i < BLOCK_HISOTRY_SIZE; i++)
   {

@@ -77,6 +77,7 @@ bool isAddrInGuestPT(u32int vaddr);
 void dumpPageTable(descriptor* ptd);
 
 u32int findVAforPA(u32int physAddr);
+u32int findGuestVAforPA(u32int physAddr);
 
 
 enum enum_pageType
@@ -128,6 +129,7 @@ void splitSectionToSmallPages(descriptor* ptd, u32int vAddr);
 
 u8int mapGuestDomain(u8int guestDomain);
 u32int mapAccessPermissionBits(u32int guestAP, u32int domain);
+void mapAPBitsSection(u32int vAddr, sectionDescriptor* guestNewSD, descriptor* shadowSD);
 
 void dumpPageTable(descriptor* ptd);
 void dumpSection(sectionDescriptor* sd);
@@ -249,5 +251,14 @@ struct pTSmallDescriptor
   u32int addr:20; //31-12
 };
 /* End 2nd Level Descriptors */
+
+struct pageTableMetaDataElement
+{
+  u32int valid;
+  u32int pAddr;
+  u32int vAddr;
+};
+
+typedef struct pageTableMetaDataElement ptMetaData;
 
 #endif

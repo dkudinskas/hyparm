@@ -144,7 +144,8 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   if(CRn==2 && opc2==0)
   {
 #ifdef COPROC_DEBUG
-    serial_putstring("TTBR0 write");
+    serial_putstring("TTBR0 write ");
+    serial_putint(val);
     serial_newline();
 #endif
     initialiseGuestShadowPageTable(val);
@@ -181,6 +182,13 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   {
     if (oldVal != val)
     {
+#ifdef COPROC_DEBUG
+      serial_putstring("CP15: Domain Access Control Register write val ");
+      serial_putint(val);
+      serial_putstring(" old DACR ");
+      serial_putint(oldVal);
+      serial_newline();
+#endif
       changeGuestDomainAccessControl(oldVal, val);
     }
   }
