@@ -5,8 +5,8 @@
 #include "pageTable.h"
 #include "debug.h"
 
-#define SCANNER_DEBUG
-#define PC_DEBUG
+//#define SCANNER_DEBUG
+//#define PC_DEBUG
 #ifdef DUMP_SCANNER_COUNTER
 static u32int scannerReqCounter = 0;
 #endif
@@ -132,8 +132,16 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
 
 
         protectScannedBlock(blkStartAddr, (u32int)currAddress);
-        //update blockCopyCacheLastUsedLine
 
+        //update blockCopyCacheLastUsedLine (blockCopyCacheLastUsedLine is u32int -> add nrOfInstructions*4
+        gc->blockCopyCacheLastUsedLine=gc->blockCopyCacheLastUsedLine+((blockCopyCacheCurrAddress-blockCopyCacheStartAddress)<<2);
+
+        #ifdef SCANNER_DEBUG
+          serial_putstring("Block added with size of ");
+          serial_putint((blockCopyCacheCurrAddress-blockCopyCacheStartAddress));
+          serial_putstring(" words.");
+          serial_newline();
+        #endif
         /*----------------END Install HdlFunct----------------*/
         return;
       }else
@@ -174,13 +182,22 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
 
         // add the block we just scanned to block cache
         addToBlockCache(blkStartAddr, gc->endOfBlockInstr, (u32int)currAddress,
-                        bcIndex, (u32int)gc->hdlFunct, (blockCopyCacheCurrAddress-blockCopyCacheStartAddress)+1, (u32int)blockCopyCacheStartAddress, gc->blockCache);
+                        bcIndex, (u32int)gc->hdlFunct, (blockCopyCacheCurrAddress-blockCopyCacheStartAddress), (u32int)blockCopyCacheStartAddress, gc->blockCache);
+        //update blockCopyCacheLastUsedLine (blockCopyCacheLastUsedLine is u32int -> add nrOfInstructions*4
+        gc->blockCopyCacheLastUsedLine=gc->blockCopyCacheLastUsedLine+((blockCopyCacheCurrAddress-blockCopyCacheStartAddress)<<2);
 
 
         protectScannedBlock(blkStartAddr, (u32int)currAddress);
         //update blockCopyCacheLastUsedLine
 
+        #ifdef SCANNER_DEBUG
+          serial_putstring("Block added with size of ");
+          serial_putint((blockCopyCacheCurrAddress-blockCopyCacheStartAddress));
+          serial_putstring(" words.");
+          serial_newline();
+        #endif
         /*----------------END Install HdlFunct----------------*/
+        return;
       }
 
 

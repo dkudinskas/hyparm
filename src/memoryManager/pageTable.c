@@ -114,6 +114,7 @@ descriptor* createHypervisorPageTable()
   if(setAccessBits(hypervisorPtd, blockCopyCache, PRIV_RW_USR_RO)>7){
     DIE_NOW(0,"Failed to setting AccessBits for blockCopyCache");
   }
+  disableCacheBit(hypervisorPtd,blockCopyCache);//Disable caching for blockCopyCache
 
 
   return hypervisorPtd;
@@ -122,7 +123,6 @@ descriptor* createHypervisorPageTable()
 descriptor* createGuestOSPageTable()
 {
   descriptor* ptd = createNew1stLevelPageTable(HYPERVISOR_FA_DOMAIN);
-  GCONTXT* gc = (GCONTXT*)getGuestContext();
 
   mapHypervisorMemory(ptd);
 
@@ -1002,6 +1002,54 @@ void dumpSuperSection(void* sd)
 }
 #endif
 
+void disableCacheBit(descriptor* ptd, u32int virtual)
+{
+  if(0 == ptd)
+  {
+    ptd = hypervisorPtd;
+  }
+
+
+  descriptor* pte = get1stLevelPtDescriptorAddr(ptd, virtual);
+
+  switch(pte->type)
+  {
+    case SECTION:
+    {
+      sectionDescriptor* sd = (sectionDescriptor*)pte;
+      if(sd->sectionType != 0)
+      {
+        //error supersection
+        DIE_NOW(0, "setting accessBits for a SuperSection is not implemented. Entering infinite loop...");
+      }
+      else
+      {
+        sd->c = 0b0;
+        sd->b = 0b0;
+        sd->tex = 0b100;  //TRE=0 (SCTLR= 0x00C51875) =>
+        //tex[2]=1 will make it possible to chose caching behavior see p 1308 ARM ARM
+        sd->s = 0;
+        serial_putstring("Caching disabled");
+      }
+      break;
+    }
+    case PAGE_TABLE:
+      DIE_NOW(0, "setting cacheBit for a PAGE_TABLE is not implemented. Entering infinite loop...");
+    case FAULT:
+      DIE_NOW(0, "setting cacheBit for a FAULT is not implemented. Entering infinite loop...");
+    case RESERVED:
+      DIE_NOW(0, "setting cacheBit for a RESERVED is not implemented. Entering infinite loop...");
+      //fall through
+    default:
+      DIE_NOW(0, "setting cacheBit has done nothing. Entering infinite loop...");
+    break;
+  }
+
+  //toggle imp defined bit to signify memProtection active / inactive
+  pte->imp = pte->imp ^ 0x1;
+  clearTLB();
+  return;
+}
 
 /** Change the accessBits of a descriptor given valid accessBits & a descriptor
 

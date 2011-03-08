@@ -28,7 +28,7 @@ do
   #For every function we should also match the { at the next line -> sed scans only 1 line at a time
   #just delete all the { corresponding with a function (easy since they are first char of line
   #And insert it wherever you want
-  sed 's/^{//' <$bronbestand | sed 's/^u32int \([a-zA-Z0-9]*\)Instruction(GCONTXT \* context)/€$€u32int \1PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)€{€  dumpGuestContext(context);€  DIE_NOW(0, "\1 PCFunct unfinished\\n");€  return 0;€}€$€&€{€  DIE_NOW(0, "\1Instruction is executed but not yet checked for blockCopyCompatibility");/g' |tr -s '€' '\012' |tr -d '$' >$tempbestand
+  sed 's/^{//' <$bronbestand | sed 's/^u32int \([a-zA-Z0-9]*\)Instruction(GCONTXT \* context)/€$€u32int \1PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)€{€  DIE_NOW(0, "\1 PCFunct unfinished\\n");€  return 0;€}€$€&€{€  DIE_NOW(0, "\1Instruction is executed but not yet checked for blockCopyCompatibility");/g' |tr -s '€' '\012' |tr -d '$' >$tempbestand
   #For the files which have functions different from handle functions a { will be short
   #-> add it using the manually added tags
   sed 's_//blockCopyHelp_{_' <$tempbestand >$doelbestand

@@ -138,6 +138,7 @@ void dump2ndVirtAddr(u32int virtual, u32int i, u32int pageSize);
 void dumpLargePage(largeDescriptor* ld);
 void dumpSmallPage(smallDescriptor* sd);
 
+void disableCacheBit(descriptor* ptd, u32int virtual);
 
 /* 1st level page table descriptor formats */
 /*

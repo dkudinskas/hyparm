@@ -29,7 +29,6 @@ void invalidDataMoveTrap(char * msg, GCONTXT * gc)
 
 u32int strPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "str PCFunct unfinished\n");
   return 0;
 }
@@ -199,7 +198,6 @@ u32int strInstruction(GCONTXT * context)
 
 u32int strbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "strb PCFunct unfinished\n");
   return 0;
 }
@@ -316,7 +314,6 @@ u32int strbInstruction(GCONTXT * context)
 
 u32int strhtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "strht PCFunct unfinished\n");
   return 0;
 }
@@ -331,7 +328,6 @@ u32int strhtInstruction(GCONTXT * context)
 
 u32int strhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "strh PCFunct unfinished\n");
   return 0;
 }
@@ -450,7 +446,6 @@ u32int strhInstruction(GCONTXT * context)
 
 u32int stmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "stm PCFunct unfinished\n");
   return 0;
 }
@@ -562,7 +557,6 @@ u32int stmInstruction(GCONTXT * context)
 
 u32int strdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "strd PCFunct unfinished\n");
   return 0;
 }
@@ -710,7 +704,6 @@ u32int strdInstruction(GCONTXT * context)
 
 u32int strexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "strex PCFunct unfinished\n");
   return 0;
 }
@@ -766,7 +759,6 @@ u32int strexInstruction(GCONTXT * context)
 
 u32int strexbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "strexb PCFunct unfinished\n");
   return 0;
 }
@@ -811,7 +803,6 @@ u32int strexbInstruction(GCONTXT * context)
 
 u32int strexdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "strexd PCFunct unfinished\n");
   return 0;
 }
@@ -869,7 +860,6 @@ u32int strexdInstruction(GCONTXT * context)
 
 u32int strexhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "strexh PCFunct unfinished\n");
   return 0;
 }
@@ -919,7 +909,6 @@ u32int strexhInstruction(GCONTXT * context)
 
 u32int ldrhtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "ldrht PCFunct unfinished\n");
   return 0;
 }
@@ -934,7 +923,6 @@ u32int ldrhtInstruction(GCONTXT * context)
 
 u32int ldrhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "ldrh PCFunct unfinished\n");
   return 0;
 }
@@ -1073,7 +1061,6 @@ u32int ldrhInstruction(GCONTXT * context)
 
 u32int ldrbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "ldrb PCFunct unfinished\n");
   return 0;
 }
@@ -1182,7 +1169,6 @@ u32int ldrbInstruction(GCONTXT * context)
 
 u32int ldrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "ldr PCFunct unfinished\n");
   return 0;
 }
@@ -1324,7 +1310,6 @@ u32int ldrInstruction(GCONTXT * context)
 
 u32int popLdrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "popLdr PCFunct unfinished\n");
   return 0;
 }
@@ -1338,7 +1323,6 @@ u32int popLdrInstruction(GCONTXT * context)
 
 u32int popLdmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "popLdm PCFunct unfinished\n");
   return 0;
 }
@@ -1353,7 +1337,6 @@ u32int popLdmInstruction(GCONTXT * context)
 
 u32int ldmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "ldm PCFunct unfinished\n");
   return 0;
 }
@@ -1523,7 +1506,6 @@ u32int ldmInstruction(GCONTXT * context)
 
 u32int ldrdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "ldrd PCFunct unfinished\n");
   return 0;
 }
@@ -1668,7 +1650,6 @@ u32int ldrdInstruction(GCONTXT * context)
 
 u32int ldrexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "ldrex PCFunct unfinished\n");
   return 0;
 }
@@ -1717,7 +1698,6 @@ u32int ldrexInstruction(GCONTXT * context)
 
 u32int ldrexbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "ldrexb PCFunct unfinished\n");
   return 0;
 }
@@ -1763,7 +1743,6 @@ u32int ldrexbInstruction(GCONTXT * context)
 
 u32int ldrexdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "ldrexd PCFunct unfinished\n");
   return 0;
 }
@@ -1807,7 +1786,6 @@ u32int ldrexdInstruction(GCONTXT * context)
 
 u32int ldrexhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  dumpGuestContext(context);
   DIE_NOW(0, "ldrexh PCFunct unfinished\n");
   return 0;
 }
