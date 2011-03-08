@@ -94,8 +94,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
     //binary & checks types -> do a cast of function pointer to u32int
     if((decodedInstruction = decodeInstr(instruction))->replaceCode == 1)
     {  //Critical instruction
-      if(allSrcRegNonPC(instruction))
-      {
+
         /*----------------Install HdlFunct----------------*/
         //Non of the source registers is the ProgramCounter -> Just End Of Block
         //Finish block by installing SVC
@@ -144,63 +143,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
         #endif
         /*----------------END Install HdlFunct----------------*/
         return;
-      }else
-      {      //One of the source registers of the instruction is the ProgramCounter
-        /*----------------Execute PCFunct----------------*/
-        //Save end of block instruction and handler function pointer close to us...
-        gc->endOfBlockInstr = instruction;
-        gc->hdlFunct = decodedInstruction->hdlFunct;
-        gc->PCOfLastInstruction = (u32int)currAddress;
-
-        u32int nrOfAddedInstr = decodedInstruction->PCFunct(gc, currAddress,blockCopyCacheCurrAddress);
-        blockCopyCacheCurrAddress=updateCurrBlockCopyCacheAddr(blockCopyCacheCurrAddress, nrOfAddedInstr,(u32int*)gc->blockCopyCacheEnd);
-
-
-        /*----------------END Execute PCFunct----------------*/
-        /*----------------Modified Install HdlFunct----------------*/
-
-
-        // replace end of block instruction with hypercall of the appropriate code
-        //Check if there is room on blockCopyCacheCurrAddress and if not make it
-        blockCopyCacheCurrAddress = checkAndClearBlockCopyCacheAddress(blockCopyCacheCurrAddress,gc->blockCache,(u32int*)gc->blockCopyCache,(u32int*)gc->blockCopyCacheEnd);
-        *(blockCopyCacheCurrAddress++)=(INSTR_SWI | bcIndex);
-
-        // if guest instruction stream is mapped with caching enabled, must maintain
-        // i and d cache coherency
-        // iCacheFlushByMVA((u32int)currAddress);
-        #ifdef SCANNER_DEBUG
-          serial_putstring("scanner: EOB @ ");
-          serial_putint((u32int)currAddress);
-          serial_putstring(" instr ");
-          serial_putint(gc->endOfBlockInstr);
-          serial_putstring(" SWIcode ");
-          serial_putint(bcIndex);
-          serial_putstring(" hdlrFuncPtr ");
-          serial_putint((u32int)gc->hdlFunct);
-          serial_newline();
-        #endif
-
-        // add the block we just scanned to block cache
-        addToBlockCache(blkStartAddr, gc->endOfBlockInstr, (u32int)currAddress,
-                        bcIndex, (u32int)gc->hdlFunct, (blockCopyCacheCurrAddress-blockCopyCacheStartAddress), (u32int)blockCopyCacheStartAddress, gc->blockCache);
-        //update blockCopyCacheLastUsedLine (blockCopyCacheLastUsedLine is u32int -> add nrOfInstructions*4
-        gc->blockCopyCacheLastUsedLine=gc->blockCopyCacheLastUsedLine+((blockCopyCacheCurrAddress-blockCopyCacheStartAddress)<<2);
-
-
-        protectScannedBlock(blkStartAddr, (u32int)currAddress);
-        //update blockCopyCacheLastUsedLine
-
-        #ifdef SCANNER_DEBUG
-          serial_putstring("Block added with size of ");
-          serial_putint((blockCopyCacheCurrAddress-blockCopyCacheStartAddress));
-          serial_putstring(" words.");
-          serial_newline();
-        #endif
-        /*----------------END Install HdlFunct----------------*/
-        return;
-      }
-
-
     }else
     {//Non critical instruction
       if(allSrcRegNonPC(instruction))
