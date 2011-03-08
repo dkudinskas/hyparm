@@ -229,6 +229,8 @@ u32int sbcInstruction(GCONTXT * context)
 
 u32int addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
+  //Check if target Register is PC if so HandleFunct should take care of possible PC problems
+
   DIE_NOW(0, "add PCFunct unfinished\n");
   return 0;
 }

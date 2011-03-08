@@ -2185,13 +2185,13 @@ u32int mrsInstruction(GCONTXT * context)
 
 u32int bPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  DIE_NOW(0, "b PCFunct unfinished\n");
+  //Currently a bInstruction is always replaced by an SVC -> do nothing and check for PC in handleFunct
   return 0;
 }
 
 u32int bInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "bInstruction is executed but not yet checked for blockCopyCompatibility");
+  //No register arguments Just change nextPC
   u32int instr = context->endOfBlockInstr;
   u32int instrCC = 0xF0000000 & instr;
   u32int sign = 0x00800000 & instr;
@@ -2227,18 +2227,18 @@ u32int bInstruction(GCONTXT * context)
   if (conditionMet)
   {
     // condition met
-    u32int currPC = context->R15;
+    u32int currPC = context->PCOfLastInstruction;
     currPC += 8;
     nextPC = currPC + target;
     if (link)
     {
-      storeGuestGPR(14, context->R15+4, context);
+      storeGuestGPR(14, context->PCOfLastInstruction+4, context);
     }
   }
   else
   {
     // condition not met!
-    nextPC = context->R15 + 4;
+    nextPC = context->PCOfLastInstruction + 4;
   }
   return nextPC;
 }
