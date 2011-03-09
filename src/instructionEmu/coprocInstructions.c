@@ -42,8 +42,8 @@ u32int cdpInstruction(GCONTXT * context)
 
 u32int mrcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  //mrc instruction is always emulated -> No need to anything in mrcPCInstruction
-  return 0;
+  DIE_NOW(0, "mrcPCInstruction is called but should always be critical");
+  return -1;
 }
 
 u32int mrcInstruction(GCONTXT * context)
@@ -58,7 +58,7 @@ u32int mrcInstruction(GCONTXT * context)
   serial_putstring("MRC instr ");
   serial_putint(instr);
   serial_putstring(" @ ");
-  serial_putint(context->R15);
+  serial_putint(context->PCOfLastInstruction);
   serial_newline();
 #endif
   if (conditionMet)
