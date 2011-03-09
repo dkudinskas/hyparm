@@ -157,7 +157,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
         /*----------------Execute PCFunct----------------*/
         gc->endOfBlockInstr = instruction;//Not really the endOfBlockInstr but we can use it
         u32int nrOfAddedInstr = decodedInstruction->PCFunct(gc,currAddress,blockCopyCacheCurrAddress);
-        blockCopyCacheCurrAddress=blockCopyCacheCurrAddress+nrOfAddedInstr;
         blockCopyCacheCurrAddress=updateCurrBlockCopyCacheAddr(blockCopyCacheCurrAddress, nrOfAddedInstr,(u32int*)gc->blockCopyCacheEnd);
         /*----------------END Execute PCFunct----------------*/
       }

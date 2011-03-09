@@ -1,6 +1,7 @@
 #include "dataProcessInstr.h"
 #include "commonInstrFunctions.h"
 #include "debug.h"
+#include "blockCache.h" //necessary to check and clear blockCopyCache
 void invalidDataProcTrap(char * msg, GCONTXT * gc)
 {
   serial_putint(gc->endOfBlockInstr);
@@ -16,7 +17,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
   u32int cpsrCC = (context->CPSR >> 28) & 0xF;
   u32int nextPC = context->R15;
   u32int regDest = (instr & 0x0000F000) >> 12;
-  if (regDest != 0xF)
+  if (regDest != 0xF)//Destination register is not PC -> instruction should have been handled by PCFunct
   {
     invalidDataProcTrap(instrString, context);
   }
@@ -229,7 +230,121 @@ u32int sbcInstruction(GCONTXT * context)
 
 u32int addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  //Check if target Register is PC if so HandleFunct should take care of possible PC problems
+  //target register is not PC
+  u32int instruction=*instructionAddr;
+  u32int* instructionAddr2=instructionAddr+2;//pointer arithmetic and PC is 2 behind
+  u32int instr2=(instruction>>24) & 0x0F;
+  u32int instrbit4=(instruction>>4) & 0x1;
+  u32int instrbit7=(instruction>>7) & 0x1;
+  u32int destReg=(instruction>>12) & 0xF;
+
+  if(instr2 == 0x02){//Add instruction is ADD immediate
+    //THIS IS COMMENTED OUT SINCE IT IS ARMv6T2, ARMv7
+
+    //The real PC and the blockCopyCachePC are to far appart to solve it using a 12 bit immediate BUT
+    //We can only get here when Rn==PC && Rd!=PC
+    //=> We can first set Rd to value of PC and then perform Add{s}<c> <Rd>,<Rd>,<#const>
+    //MOV <Rd> bottombitsvalue of realPC
+    //MOVT <Rd> topbitsvalue of realPC
+    //ADD <Rd>,<Rd>,<#12bitimm>
+    //MOVW -> ARM ARM A8.6.96 p506
+    //|    |    |    |    |    |11         0|
+    //|COND|0011|0000|imm4| Rd |    imm12   |
+    //|1110|0011|0000|imm4| Rd |    imm12  0|
+    //   e    3    0    ?    ?   ?   ?   ?
+    u32int instr2Copy = 0xe3000000;
+    instr2Copy=instr2Copy | ((((u32int)instructionAddr2)>>12 & 0xF)<<16);//set imm4 correct
+    instr2Copy=instr2Copy | (destReg<<12);
+    instr2Copy=instr2Copy | ((u32int)instructionAddr2 & 0xFFF);//set imm12 correct
+
+
+    checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    //MOVW -> ARM ARM A8.6.96 p506
+    //|    |    |    |    |    |11         0|
+    //|COND|0011|0100|imm4| Rd |    imm12   |
+    //|1110|0011|0000|imm4| Rd |    imm12  0|
+    //   e    3    4    ?    ?   ?   ?   ?
+    instr2Copy = 0xe3400000;
+    instr2Copy=instr2Copy | ((((u32int)instructionAddr2)>>28 & 0xF)<<16);//set 4 top bits correct
+    instr2Copy=instr2Copy | (destReg<<12);
+    instr2Copy=instr2Copy | (((u32int)instructionAddr2 >> 16) & 0xFFF);//set imm12 correct
+
+    checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    //Add instruction will only be changed very little -> Rn is the only thing that has to be changed
+    instr2Copy=instruction & 0xFFF0FFFF; //set Rn to Rd
+    instr2Copy=instr2Copy | (destReg<<16);
+
+    checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    return 3;//3 instructions are added!
+    /*
+
+    //MOV -> ARM ARM A8.6.96 p506
+    //|    |    |    |    |    |11         0|
+    //|COND|0011|101S|0000| Rd |    imm12   | ->S indicates if flags should be updated -> no => S=0
+    u32int instr2Copy = 0xe3a00000;
+    instr2Copy=instr2Copy | (destReg<<12);
+    instr2Copy=instr2Copy | ((u32int)instructionAddr>>20 & 0xFFF);//set imm12 correct
+
+    checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    //Shift 12 bits to the left LSL
+    //|COND|0001|101S|0000| Rd |imm5 |000| Rn |
+    instr2Copy =0xe1a00000;
+    instr2Copy=instr2Copy | (destReg<<12);
+    instr2Copy=instr2Copy | (12<<7);
+    instr2Copy=instr2Copy | (destReg);//srcReg is destReg
+
+    checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    //ADD (immediate) the following 12 bits
+    //|COND|0010|100S| Rn | Rd |     imm12   |
+    instr2Copy =0xe2800000;
+    instr2Copy=instr2Copy | (destReg<<16);//Rn = destReg
+    instr2Copy=instr2Copy | (destReg<<12);//Rd = destReg
+    instr2Copy=instr2Copy | ((u32int)instructionAddr>>8 & 0xFFF);
+
+    checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    //Again shift see above: But only over 8 bits
+    instr2Copy =0xe1a00000;
+    instr2Copy=instr2Copy | (destReg<<12);
+    instr2Copy=instr2Copy | (8<<7);
+    instr2Copy=instr2Copy | (destReg);//srcReg is destReg
+
+    checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    //ADD (immediate) the last 8 bits
+    instr2Copy =0xe2800000;
+    instr2Copy=instr2Copy | (destReg<<16);//Rn = destReg
+    instr2Copy=instr2Copy | (destReg<<12);//Rd = destReg
+    instr2Copy=instr2Copy | ((u32int)instructionAddr & 0xFF);
+
+    checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    //Rd should now be the expected PC value
+    return 5;//1 MOV + 2 ADD + 2 LSL
+    /**/
+
+
+  }else{//Add instruction is ADD with registers
+    if(instrbit4 == 1 && instrbit7==0){//ADD register-shifted register
+      DIE_NOW(0, "ADD (register-shifted register) is not implemented yet");
+    }else{//Add register
+      DIE_NOW(0, "Add (register) is not implemented yet");
+    }
+  }
+
 
   DIE_NOW(0, "add PCFunct unfinished\n");
   return 0;
