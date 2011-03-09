@@ -187,12 +187,15 @@ u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
   u32int guestMode = context->CPSR & CPSR_MODE_FIELD;
   u32int value = 0;
 
-  if ( ((regSrc >= 0) && (regSrc < 8)) || (regSrc == 15) )
+  if ( ((regSrc >= 0) && (regSrc < 8)))
   {
     // dont care about modes here. just get the value.
     u32int * ldPtr = &(context->R0);
     ldPtr = (u32int*)( (u32int)ldPtr + 4 * regSrc);
     value = *ldPtr;
+  }
+  else if(regSrc == 15) {//The function loadGuestGPR is only called when emulation of a critical instruction is done (last instruction of cacheblock)
+    value = context->PCOfLastInstruction+8;//Do +8 because PC is 2 instruction behind
   }
   else
   {
