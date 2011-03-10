@@ -202,9 +202,9 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 {0,  &lslInstruction,       0x01a00000, 0x0fef0070, "LSL Rd, Rm, #shamt"},
 {0,  &lslInstruction,       0x01a00010, 0x0fef00f0, "LSL Rd, Rm, Rshamt"},
 // LSR: Rd = PC and shamt = #imm, then end block. Otherwise fine
-{1,  &lslInstruction,       0x01a0f020, 0x0feff070, "LSR Rd, Rm, #shamt"},
+{1,  &lsrInstruction,       0x01a0f020, 0x0feff070, "LSR Rd, Rm, #shamt"},
 {1,  &lsrInstruction,       0x01a0f030, 0x0feff0f0, "LSR Rd, Rm, Rshamt"},
-{0,  &lslInstruction,       0x01a00020, 0x0fef0070, "LSR Rd, Rm, #shamt"},
+{0,  &lsrInstruction,       0x01a00020, 0x0fef0070, "LSR Rd, Rm, #shamt"},
 {0,  &lsrInstruction,       0x01a00030, 0x0fef00f0, "LSR Rd, Rm, Rshamt"},
 // ASR: Rd = PC and shamt = #imm, then end block. Otherwise fine
 {1,  &asrInstruction,       0x01a0f040, 0x0feff070, "ASR Rd, Rm, #shamt"},
