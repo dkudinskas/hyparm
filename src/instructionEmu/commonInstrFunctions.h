@@ -60,6 +60,12 @@
 /* a function to serve as a dead-loop if we decode something invalid */
 void invalid_instruction(u32int instr, char * msg);
 
+/* a function that sets 4 bits to zero starting at startbit (left bit is most significant) */
+u32int zeroBits(u32int instruction, u32int startbit);
+
+/* This function will save the PC that corresponds to the one that should be read by an instruction at instructionAddress to reg */
+u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * currBlockCopyCacheAddr, u32int reg  );
+
 /* a function to evaluate if guest is in priviledge mode or user mode */
 bool guestInPrivMode(GCONTXT * context);
 

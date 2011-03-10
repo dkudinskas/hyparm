@@ -30,7 +30,7 @@ struct instruction32bit
   s16int replaceCode;  //-> This information should be saved in the last bit of hdlFunct
                        //But introduces problems since functionpointer |1 will not be seen as a const by GCC -> in prototypecode we can use an extra field
   u32int (*hdlFunct)(GCONTXT * context);
-  u32int (*PCFunct)(GCONTXT * context, u32int * instructionAddr, u32int * currBlockCopyCacheAddr);
+  u32int* (*PCFunct)(GCONTXT * context, u32int * instructionAddr, u32int * currBlockCopyCacheAddr);
   u32int value;            /* If arch == 0 then value is a sentinel.  */
   u32int mask;             /* Recognise insn if (op & mask) == value.  */
   const char * instructionString; /* How to disassemble this insn.  */

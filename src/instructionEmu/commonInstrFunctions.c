@@ -14,12 +14,58 @@ void invalid_instruction(u32int instr, char * msg)
   serial_newline();
 }
 
+u32int zeroBits(u32int instruction, u32int startbit){
+  switch(startbit){
+    case 0:
+      return (instruction & 0xFFFFFFF0);
+    case 12:
+      return (instruction & 0xFFFF0FFF);
+    case 16:
+      return (instruction & 0xFFF0FFFF);
+    default :
+      DIE_NOW(0, "zeroBits not implemented for this startbitvalue");
+  }
+}
+
+/* This will save the PC corresponding to instructionAddress in reg. instructionAddress is the original address of the instruction */
+u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * currBlockCopyCacheAddr, u32int reg  )
+{
+  //First we will calculate the PCValue (PC is 2 behind)
+  u32int instructionAddr2 = (u32int)(instructionAddress + 2);
+  //MOVW -> ARM ARM A8.6.96 p506
+  //|    |    |    |    |    |11         0|
+  //|COND|0011|0000|imm4| Rd |    imm12   |
+  //|1110|0011|0000|imm4| Rd |    imm12  0|
+  //   e    3    0    ?    ?   ?   ?   ?
+  u32int instr2Copy = 0xe3000000;
+  instr2Copy=instr2Copy | ((((u32int)instructionAddr2)>>12 & 0xF)<<16);//set imm4 correct
+  instr2Copy=instr2Copy | (reg<<12);
+  instr2Copy=instr2Copy | ((u32int)instructionAddr2 & 0xFFF);//set imm12 correct
+
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+
+  //MOVT -> ARM ARM A8.6.99 p512
+  //|    |    |    |    |    |11         0|
+  //|COND|0011|0100|imm4| Rd |    imm12   |
+  //|1110|0011|0000|imm4| Rd |    imm12  0|
+  //   e    3    4    ?    ?   ?   ?   ?
+  instr2Copy = 0xe3400000;
+  instr2Copy=instr2Copy | ((((u32int)instructionAddr2)>>28 & 0xF)<<16);//set 4 top bits correct
+  instr2Copy=instr2Copy | (reg<<12);
+  instr2Copy=instr2Copy | (((u32int)instructionAddr2 >> 16) & 0xFFF);//set imm12 correct
+
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+  //Return the current BlockCopyCacheAddr so that the PCfunct that called this function knows where to continue.
+  return currBlockCopyCacheAddr;
+}
+
 bool guestInPrivMode(GCONTXT * context)
 {
   u32int modeField = context->CPSR & CPSR_MODE_FIELD;
   return (modeField == CPSR_MODE_USER) ? FALSE : TRUE;
 }
-
 
 bool evalCC(u32int instrCC, u32int cpsrCC)
 {

@@ -34,7 +34,7 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr);
 
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
                      u32int index, u32int hdlFunct, u32int blockCopyCacheSize, u32int blockCopyCacheAddress, BCENTRY * bcAddr);
-
+/* checkAndClearBlockCopyCacheAddress will check an address you provide and return a valid address.  Always use the returned address!! */
 u32int * checkAndClearBlockCopyCacheAddress(u32int *Addr,BCENTRY *bcStartAddr,u32int* blockCopyCache,u32int* blockCopyCacheEnd);
 
 BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr);

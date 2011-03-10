@@ -44,7 +44,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
     gc->endOfBlockInstr = bcEntry->hyperedInstruction;
 
     //The programcounter of the code that is executing should be set to the code in the blockCache
-    u32int * addressInCopyBlockCache= (u32int*)bcEntry->blockCopyCacheAddress;
+    u32int * addressInCopyBlockCache= (u32int*)bcEntry->blockCopyCacheAddress+1;//First word is a backpointer
     gc->R15 = (u32int)addressInCopyBlockCache;
     //But also the PC of the last instruction of the block should be set
     gc->PCOfLastInstruction = (u32int)bcEntry->endAddress;
@@ -151,13 +151,19 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
         blockCopyCacheCurrAddress=checkAndClearBlockCopyCacheAddress(blockCopyCacheCurrAddress,gc->blockCache,(u32int*)gc->blockCopyCache,(u32int*)gc->blockCopyCacheEnd);
         //copy instruction to Block Copy Cache
         *(blockCopyCacheCurrAddress++)=instruction;//Copy instruction and update pointer
-      }else
+      }
+      else
       {  //One of the source registers of the instruction is the ProgramCounter
          //Perform PCFunct-> necessary information = currAddress,
         /*----------------Execute PCFunct----------------*/
         gc->endOfBlockInstr = instruction;//Not really the endOfBlockInstr but we can use it
-        u32int nrOfAddedInstr = decodedInstruction->PCFunct(gc,currAddress,blockCopyCacheCurrAddress);
-        blockCopyCacheCurrAddress=updateCurrBlockCopyCacheAddr(blockCopyCacheCurrAddress, nrOfAddedInstr,(u32int*)gc->blockCopyCacheEnd);
+
+
+        //DEPRECATED
+        //u32int nrOfAddedInstr = decodedInstruction->PCFunct(gc,currAddress,blockCopyCacheCurrAddress);
+        //blockCopyCacheCurrAddress=updateCurrBlockCopyCacheAddr(blockCopyCacheCurrAddress, nrOfAddedInstr,(u32int*)gc->blockCopyCacheEnd);
+        //BETTER
+        blockCopyCacheCurrAddress= decodedInstruction->PCFunct(gc,currAddress,blockCopyCacheCurrAddress);
         /*----------------END Execute PCFunct----------------*/
       }
     }
