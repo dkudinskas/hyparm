@@ -15,6 +15,12 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
   u32int instr = *((u32int*)context->R15);
   // save the end of block instruction, as we faulted /not/ on EOB
   u32int eobInstrBackup = context->endOfBlockInstr;
+  // save the PCOfLastInstruction. The emulationfunctions make use of this value to calculate the next PC so R15 should be stored here temporary
+  // but after the abort the PCOfLastInstruction should be back a valid value since the next emulation function will make use of this!
+  u32int PCOfLastInstructionBackup = context->PCOfLastInstruction;
+
+  //emulate methods will take PCOfLastInstruction from context, put it there
+  context->PCOfLastInstruction = context->R15;
   // emulate methods will take instr from context, put it there
   context->endOfBlockInstr = instr;
   if ( ((instr & STR_IMM_MASK) == STR_IMM_MASKED) ||
@@ -93,6 +99,8 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
     serial_newline(); 
     DIE_NOW(context, "Load/Store generic unimplemented\n");
   } 
-  // restore end of block instruction 
+  // restore end of block instruction & PCOFLastInstruction
   context->endOfBlockInstr = eobInstrBackup;
+  context->PCOfLastInstruction = PCOfLastInstructionBackup;
+
 }

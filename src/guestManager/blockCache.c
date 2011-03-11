@@ -58,7 +58,7 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr)
   }
   else
   {
-    // cache entry valid, but is this a collision?
+    // cache entry valid, but is this a collision? ->Hashes are used so it must be checked that the startAddress is indeed equal
     if (bcAddr[bcIndex].startAddress != blkStartAddr)
     {
       return FALSE;

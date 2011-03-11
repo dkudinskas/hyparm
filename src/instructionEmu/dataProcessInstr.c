@@ -133,7 +133,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
         DIE_NOW(0, "unimplemented arithLogicOp set flags case");
       }
     }
-    context->PCOfLastInstruction = nextPC;
+    context->R15 = nextPC;
     return nextPC;
   }
   else
@@ -290,7 +290,6 @@ u32int* addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int addInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "addInstruction is executed but not yet checked for blockCopyCompatibility");
   OPTYPE opType = ADD;
   return arithLogicOp(context, opType, "ADD instr ");
 }

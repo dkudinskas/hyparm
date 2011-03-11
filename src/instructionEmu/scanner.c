@@ -137,7 +137,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
 
         #ifdef SCANNER_DEBUG
           serial_putstring("Block added with size of ");
-          serial_putint((blockCopyCacheCurrAddress-blockCopyCacheStartAddress));
+          serial_putint(((u32int)blockCopyCacheCurrAddress-(u32int)blockCopyCacheStartAddress));
           serial_putstring(" words.");
           serial_newline();
         #endif

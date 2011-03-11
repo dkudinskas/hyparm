@@ -446,19 +446,32 @@ u32int strhInstruction(GCONTXT * context)
 
 u32int* stmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  DIE_NOW(0, "stm PCFunct unfinished\n");
-  return 0;
+  u32int instruction = *instructionAddr;
+  if((instruction & 0xF0000) == 0xF0000)
+  {
+    // According to ARM ARM: source register = PC ->  UNPREDICTABLE
+    DIE_NOW(0, "stm PC had PC as Rn -> UNPREDICTABLE?!\n");
+  }
+  else
+  {
+    //Stores multiple registers to consecutive memory locations
+    //PC is not used -> instruction is save to execute just copy it to blockCopyCache
+    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instruction;
+
+    return currBlockCopyCacheAddr;
+  }
 }
 
+/* This function can also get called when a data abort occurs and a store is emulated (emulateLoadStoreGeneric) */
 u32int stmInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "stmInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("STM instruction: ");
   serial_putint(instr);
   serial_putstring(" @ PC=");
-  serial_putint(context->R15);
+  serial_putint(context->PCOfLastInstruction);
   serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -473,7 +486,7 @@ u32int stmInstruction(GCONTXT * context)
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
+    return context->PCOfLastInstruction + 4;
   }
   if (forceUser != 0)
   {
@@ -532,9 +545,9 @@ u32int stmInstruction(GCONTXT * context)
   {
     // emulating store. Validate cache if needed
     validateCachePreChange(context->blockCache, address);
-    // *(address)= PC+8 - architectural feature due to pipeline..
+    // *(address)= PC+8 - architectural feature due to pipeline.. -> loadGuestGPR will take care of this
     context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD,
-                                            address, (loadGuestGPR(15, context)+8));
+                                            address, (loadGuestGPR(15, context)));
   }
   // if writeback then baseReg = baseReg - 4 * number of registers to store;
   if (writeback != 0)
@@ -551,7 +564,7 @@ u32int stmInstruction(GCONTXT * context)
     }
     storeGuestGPR(baseReg, baseAddress, context);
   }
-  return context->R15+4;
+  return context->PCOfLastInstruction+4;
 }
 /* store dual */
 
