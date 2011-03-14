@@ -5,8 +5,8 @@
 #include "pageTable.h"
 #include "debug.h"
 
-#define SCANNER_DEBUG
-//#define PC_DEBUG
+//Uncomment to enable debugging: #define SCANNER_DEBUG
+//Uncomment to enable debugging: #define PC_DEBUG
 #ifdef DUMP_SCANNER_COUNTER
 static u32int scannerReqCounter = 0;
 #endif

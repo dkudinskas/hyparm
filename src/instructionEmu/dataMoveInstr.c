@@ -202,7 +202,6 @@ u32int* strbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
 
 u32int strbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "strbInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -219,7 +218,7 @@ u32int strbInstruction(GCONTXT * context)
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
+    return context->PCOfLastInstruction + 4;
   }
   if (regSrc == 15)
   {
@@ -289,11 +288,10 @@ u32int strbInstruction(GCONTXT * context)
     bool abort = shouldAbort(FALSE, TRUE, address);
     if (abort)
     {
-      return context->R15;
+      return context->PCOfLastInstruction;
     }
     // if usr can write, continue
   }
-  // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valueToStore & 0xFF));
   // wback = (P = 0) or (W = 1)
   bool wback = (preOrPost == 0) || (writeBack != 0);
@@ -307,7 +305,7 @@ u32int strbInstruction(GCONTXT * context)
     // Rn = offsetAddr;
     storeGuestGPR(regDst, offsetAddress, context);
   }
-  return (context->R15 + 4);
+  return (context->PCOfLastInstruction + 4);
 }
 
 u32int* strhtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
@@ -1390,14 +1388,13 @@ u32int* ldmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 }
 
 u32int ldmInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "ldmInstruction is executed but not yet checked for blockCopyCompatibility");
+{//Check for blockCopy functionality
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDM instruction: ");
   serial_putint(instr);
   serial_putstring(" @ PC=");
-  serial_putint(context->R15);
+  serial_putint(context->PCOfLastInstruction);
   serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -1416,7 +1413,7 @@ u32int ldmInstruction(GCONTXT * context)
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
+    return context->PCOfLastInstruction + 4;
   }
   u32int savedCPSR = 0;
   bool cpySpsr = FALSE;
@@ -1543,11 +1540,12 @@ u32int ldmInstruction(GCONTXT * context)
   }
   if (isPCinRegList)
   {
-    return context->R15;
+    return context->R15; //PC is in RegList so it is important that we load R15 instead of PCOfLastInstruction.  Because we have fetched the
+                        //PC from memory and stored it in context->R15 (see above, the loop over the registers)
   }
   else
   {
-    return context->R15+4;
+    return (context->PCOfLastInstruction+4);
   }
 }
 /* load dual */

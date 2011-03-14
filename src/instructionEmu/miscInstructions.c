@@ -399,7 +399,6 @@ u32int* cpsidPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int 
 
 u32int cpsidInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "cpsidInstruction is executed but not yet checked for blockCopyCompatibility");
   return cpsInstruction(context);
 }
 
@@ -411,7 +410,6 @@ u32int* cpsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int cpsInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "cpsInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   u32int imod       = (instr & 0x000C0000) >> 18;
   u32int changeMode = (instr & 0x00020000) >> 17;
@@ -423,7 +421,7 @@ u32int cpsInstruction(GCONTXT * context)
   serial_putstring("CPS instr ");
   serial_putint(instr);
   serial_putstring(" @ ");
-  serial_putint(context->R15);
+  serial_putint(context->PCOfLastInstruction);
   serial_newline();
 #endif
   if ( ((imod == 0) && (changeMode == 0)) || (imod == 1) )
@@ -522,7 +520,7 @@ u32int cpsInstruction(GCONTXT * context)
     // guest is not in privileged mode! cps should behave as a nop, but lets see what went wrong.
     DIE_NOW(0, "CPS instruction: executed in guest user mode.");
   }
-  return context->R15+4;
+  return (context->PCOfLastInstruction+4);
 }
 
 u32int* pkhbtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
@@ -2129,7 +2127,6 @@ u32int* mrsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int mrsInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "mrsInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   int regSrc   =  instr & 0x00400000;
   int regDest  = (instr & 0x0000F000) >> 12;
@@ -2140,7 +2137,7 @@ u32int mrsInstruction(GCONTXT * context)
   serial_putstring("MRS instr ");
   serial_putint(instr);
   serial_putstring(" @ ");
-  serial_putint(context->R15);
+  serial_putint(context->PCOfLastInstruction);
   serial_newline();
 #endif
   if (regDest == 0xF)
@@ -2186,7 +2183,7 @@ u32int mrsInstruction(GCONTXT * context)
     } // spsr case ends
     storeGuestGPR(regDest, value, context);
   } // condition met ends
-  nextPC = context->R15 + 4;
+  nextPC = context->PCOfLastInstruction + 4;
   return nextPC;
 }
 

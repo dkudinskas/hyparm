@@ -558,6 +558,27 @@ u32int teqInstruction(GCONTXT * context)
 u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
   DIE_NOW(0, "cmp PCFunct unfinished\n");
+
+  //ARM ARM p.392 and further:
+  //CMP Rs <> PC otherwise unpredictable
+  //If immediate only check Rn (bits 16-19 => srcReg1) else also check Rm (bits 0-3 => srcReg2)
+  u32int instruction = *instructionAddr;
+  u32int srcReg1 = (instruction >> 16) & 0xF;
+  u32int srcReg2 = (instruction) & 0xF;
+  bool immediate = ((instruction >> 24) & 0xF) == 0x3;
+  //srcReg1 must always be checked
+  bool replaceReg1 = (srcReg1 == 0xF);
+  bool replaceReg2 = 0;//default false
+
+  if(!immediate) //It is not an immediate instruction and thus srcReg2 must also be checked
+  {
+    replaceReg2=(srcReg2 == 0xF);
+  }
+  if(replaceReg1 || replaceReg2)
+  {// there is a register that must be replaced -> move PC to target register
+
+  }
+
   return 0;
 }
 
