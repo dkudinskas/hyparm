@@ -122,6 +122,7 @@ descriptor* createHypervisorPageTable()
 
 descriptor* createGuestOSPageTable()
 {
+  GCONTXT* gc = (GCONTXT*)getGuestContext();
   descriptor* ptd = createNew1stLevelPageTable(HYPERVISOR_FA_DOMAIN);
 
   mapHypervisorMemory(ptd);
@@ -166,6 +167,15 @@ descriptor* createGuestOSPageTable()
   dumpPageTable(ptd);
   serial_putstring("End shadow PT dump.");
 #endif
+
+  u32int blockCopyCache = gc->blockCopyCache;
+  //TODO: Check if it is possible to change accessbits for a smaller part.  Since 1 section = 1 MB which is much larger than the blockCopyCache.
+  //Make sure that blockCopyCache is accessible for guestOS
+  if(setAccessBits(ptd, blockCopyCache, PRIV_RW_USR_RO)>7){
+    DIE_NOW(0,"Failed to setting AccessBits for blockCopyCache");
+  }
+  disableCacheBit(ptd,blockCopyCache);//Disable caching for blockCopyCache
+
 
   return ptd;
 }

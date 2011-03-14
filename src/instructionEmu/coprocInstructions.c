@@ -90,13 +90,13 @@ u32int mrcInstruction(GCONTXT * context)
 
 u32int* mcrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  DIE_NOW(0, "mcr PCFunct unfinished\n");
+  DIE_NOW(0, "mcr PCFunct shouldn't be launched since mcrPCInstruction is always emulated!\n");
   return 0;
 }
 
 u32int mcrInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "mcrInstruction is executed but not yet checked for blockCopyCompatibility");
+  //This function shouldn't pose a problem no inputRegisters are used
   u32int nextPC = 0;
   u32int instr = context->endOfBlockInstr;
   int instrCC = (instr >> 28) & 0xF;
@@ -106,7 +106,7 @@ u32int mcrInstruction(GCONTXT * context)
   serial_putstring("MCR instr ");
   serial_putint(instr);
   serial_putstring(" @ ");
-  serial_putint(context->R15);
+  serial_putint(context->PCOfLastInstruction);
   serial_newline();
 #endif
   if (conditionMet)
@@ -128,7 +128,7 @@ u32int mcrInstruction(GCONTXT * context)
       invalid_instruction(instr, "Unknown coprocessor number");
     }
   }
-  nextPC = context->R15 + 4;
+  nextPC = context->PCOfLastInstruction + 4;
   return nextPC;
 }
 

@@ -44,7 +44,7 @@ u32int findEntryForAddress(BCENTRY * bcAddr, u32int addr);
 void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex);
 
 //Remove the copied instructions
-void removeBlockCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize);
+void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize);
 
 void resolveCacheConflict(u32int index, BCENTRY * bcAddr);
 

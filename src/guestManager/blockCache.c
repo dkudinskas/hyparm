@@ -158,7 +158,7 @@ u32int findEntryForAddress(BCENTRY * bcAddr, u32int addr)
 void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex)
 {
   //The copied code has to be cleaned up
-  removeBlockCacheEntry(bcAddr[cacheIndex].blockCopyCacheAddress,bcAddr[cacheIndex].blockCopyCacheSize);
+  removeBlockCopyCacheEntry(bcAddr[cacheIndex].blockCopyCacheAddress,bcAddr[cacheIndex].blockCopyCacheSize);
   bcAddr[cacheIndex].valid = FALSE;
   bcAddr[cacheIndex].startAddress = 0;
   bcAddr[cacheIndex].endAddress = 0;
@@ -198,10 +198,10 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
     }
   }
 #endif
-  removeBlockCacheEntry(bcAddr[index].blockCopyCacheAddress,bcAddr[index].blockCopyCacheSize);
+  removeBlockCopyCacheEntry(bcAddr[index].blockCopyCacheAddress,bcAddr[index].blockCopyCacheSize);
 }
-void removeBlockCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize){
-  memset((u32int *)blockCopyCacheAddress,0,blockCopyCacheSize);//blockCopyCacheSize is number of u32int entries
+void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize){
+  memset((u32int *)blockCopyCacheAddress,0,blockCopyCacheSize<<2);//blockCopyCacheSize is number of u32int entries
 }
 
 
@@ -223,6 +223,8 @@ void explodeCache(BCENTRY * bcache)
   {
     execBitMap[i] = 0;
   }
+  //Now it is also possible to set last used line of blockCopyCache back to the word just before the blockCopyCache (this way the blockCopyCache
+  //will start again from the beginning -> Not absolutely necessary however.
 }
 
 // finds block cache entries that include a given address, clears them

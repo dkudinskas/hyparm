@@ -173,28 +173,26 @@ u32int* dsbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int dsbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "dsbInstruction is executed but not yet checked for blockCopyCompatibility");
 #ifdef ARM_INSTR_TRACE
   serial_putstring("Warning: DSB (ignored)!");
   serial_newline();
 #endif
-  return context->R15+4;
+  return context->PCOfLastInstruction+4;
 }
 
 u32int* isbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  DIE_NOW(0, "isb PCFunct unfinished\n");
+  DIE_NOW(0, "isb PCFunct shouldn't be used since isbInstructions are always emulated!!\n");
   return 0;
 }
 
 u32int isbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "isbInstruction is executed but not yet checked for blockCopyCompatibility");
 #ifdef ARM_INSTR_TRACE
   serial_putstring("Warning: ISB (ignored)!");
   serial_newline();
 #endif
-  return context->R15+4;
+  return context->PCOfLastInstruction+4;
 }
 
 u32int* bfcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
@@ -1617,8 +1615,17 @@ u32int blxInstruction(GCONTXT * context)
 
 u32int* clzPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  DIE_NOW(0, "clz PCFunct unfinished\n");
-  return 0;
+  u32int instruction = *instructionAddr;
+
+  if((instruction & 0xF) == 0xF || ((instruction>>12 & 0xF)==0xF))
+  {  //see ARM ARM clz p.384
+    DIE_NOW(0, "clz PCFunct: bits 0-3 = 0xF -> UNPREDICTABLE BEHAVIOR\n");
+  }
+  //Since no register can be PC the instruction is save to execute -> copy it to blockCopyCache
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instruction;
+
+  return currBlockCopyCacheAddr;
 }
 
 u32int clzInstruction(GCONTXT * context)

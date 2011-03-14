@@ -358,7 +358,40 @@ u32int bicInstruction(GCONTXT * context)
 /*********************************/
 
 u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
-{
+{ //Destination is surely not PC
+  u32int instruction = *instructionAddr;
+  u32int destReg=(instruction>>12) & 0xF;
+  u32int instr2Copy=0;
+  if( ( (instruction>>25) & 0b1 ) == 1)
+  {//bit 25 == 1 -> immediate
+    //PC cannot be read -> instruction is safe
+    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instruction;
+
+    return currBlockCopyCacheAddr;
+  }
+  else
+  {//bit 25 == 0 -> register
+    if((instruction & 0xF) != 0xF)
+    {
+      DIE_NOW(0, "mov PCFunct: movPCFunct can only be called if last 4 bits are 1111\n");
+    }else{
+      //step 1 Copy PC (=instructionAddr2) to desReg
+      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+      //Step 2 modify ldrInstruction
+      //Clear PC source Register
+      instr2Copy=zeroBits(instruction, 0);//set last 4 bits equal to zero
+      instr2Copy=instr2Copy | (destReg);  //set last 4 bits so correct register is used
+
+      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+      *(currBlockCopyCacheAddr++)=instr2Copy;
+
+      return currBlockCopyCacheAddr;
+
+    }
+
+  }
+
   DIE_NOW(0, "mov PCFunct unfinished\n");
   return 0;
 }

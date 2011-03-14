@@ -35,7 +35,6 @@ u32int* strPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int strInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "strInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regOrImm = instr & 0x02000000; // 1 = reg, 0 = imm
@@ -72,7 +71,7 @@ u32int strInstruction(GCONTXT * context)
     serial_putstring("condition not met");
     serial_newline();
 #endif
-    return context->R15 + 4;
+    return context->PCOfLastInstruction + 4;
   }
   if (regOrImm == 0)
   {
@@ -175,11 +174,10 @@ u32int strInstruction(GCONTXT * context)
     bool abort = shouldAbort(FALSE, TRUE, address);
     if (abort)
     {
-      return context->R15;
+      return context->PCOfLastInstruction;
     }
   }
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
-  valueToStore = (regSrc == 15) ? (valueToStore+8) : valueToStore;
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
   // wback = (P = 0) or (W = 1)
   bool wback = (preOrPost == 0) || (writeBack != 0);
@@ -193,7 +191,7 @@ u32int strInstruction(GCONTXT * context)
     // Rn = offsetAddr;
     storeGuestGPR(regDst, offsetAddress, context);
   }
-  return (context->R15 + 4);
+  return (context->PCOfLastInstruction + 4);
 }
 
 u32int* strbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
@@ -697,7 +695,7 @@ u32int strdInstruction(GCONTXT * context)
   serial_newline();
 #endif
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
-  valueToStore = (regSrc == 15) ? (valueToStore+8) : valueToStore;
+  // valueToStore = (regSrc == 15) ? (valueToStore+8) : valueToStore; ->Not necessary loadGuestGPR already added 8
 #ifdef DATA_MOVE_TRACE
   serial_putstring("store val1 = ");
   serial_putint(valueToStore);
@@ -1380,8 +1378,15 @@ u32int popLdmInstruction(GCONTXT * context)
 
 u32int* ldmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
 {
-  DIE_NOW(0, "ldm PCFunct unfinished\n");
-  return 0;
+  u32int instruction = *instructionAddr;
+  if((instruction>>16 & 0xF) ==0xF){
+    DIE_NOW(0, "ldm that is using PC is UNPREDICTABLE");//see ARM ARM P.424-428
+  }
+  //This means that instruction is always save
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instruction;
+
+  return currBlockCopyCacheAddr;
 }
 
 u32int ldmInstruction(GCONTXT * context)
