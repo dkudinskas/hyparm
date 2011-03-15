@@ -2446,16 +2446,19 @@ void pageTableEdit(u32int address, u32int newVal)
     }
     else
     {
+      // need to get second level page table address, not first level PTE
+      u32int secondLvlEntryAddr = (*(u32int*)shadowEntry) & 0xFFFFFC00;
+      secondLvlEntryAddr = secondLvlEntryAddr | ((virtualAddr >> 10) & 0x3FC);
       // second level page table edit
       if (oldGuestEntry->type == LARGE_PAGE)
       {
         // changing a page table to a section or fault, need to remove PT entry.
-        removeLargePageEntry((largeDescriptor*)shadowEntry);
+        removeLargePageEntry((largeDescriptor*)secondLvlEntryAddr);
       }
       else if (oldGuestEntry->type == SMALL_PAGE || newGuestEntry->type == SMALL_PAGE_3)
       {
         // changing a page table to a section or fault, need to remove PT entry.
-        removeSmallPageEntry((smallDescriptor*)shadowEntry);
+        removeSmallPageEntry((smallDescriptor*)secondLvlEntryAddr);
       }
     }
   }
@@ -3031,5 +3034,10 @@ void removeLargePageEntry(largeDescriptor* shadow)
 
 void removeSmallPageEntry(smallDescriptor* shadow)
 {
+  serial_putstring("removeSmallPageEntry: shadow @ ");
+  serial_putint((u32int)shadow);
+  serial_putstring(" = ");
+  serial_putint(*(u32int*)shadow);
+  serial_newline();
   DIE_NOW(0, "UNIMPLEMENTED: removeSmallPageEntry");
 }

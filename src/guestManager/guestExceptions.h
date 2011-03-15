@@ -32,8 +32,11 @@
 #define CPSR_MODE_UND    0x1b
 #define CPSR_MODE_SYS    0x1f
 
-void throwInterrupt(u32int irqNumber);
+// no need to throw a service call to guest context.
+// hypercall handler deals with it.
+void deliverServiceCall(void);
 
+void throwInterrupt(u32int irqNumber);
 void deliverInterrupt(void);
 
 void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain);

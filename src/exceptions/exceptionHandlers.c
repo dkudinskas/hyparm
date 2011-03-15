@@ -22,8 +22,9 @@ extern GCONTXT * getGuestContext(void);
 void softwareInterrupt(u32int code)
 {
 #ifdef EXC_HDLR_DBG
-  serial_putstring("exceptionHandlers: software interrupt ");
+  serial_putstring("softwareInterrupt(");
   serial_putint(code);
+  serial_putstring(")");
   serial_newline();
 #endif
   // parse the instruction to find the start address of next block
@@ -33,24 +34,23 @@ void softwareInterrupt(u32int code)
 
   if (code <= 0xFF)
   {
-    serial_putstring("exceptionHandlers: SVC instruction, code ");
+    deliverServiceCall();
+    nextPC = gContext->R15;
+    serial_putstring("softwareInterrupt: SVC<");
     serial_putint(code);
-    serial_putstring(" is a guest system call.");
+    serial_putstring("> is a guest system call.");
     serial_newline();
-    DIE_NOW(gContext, "Unimplemented.");
   }
-
-  // get interpreter function pointer and call it
-  instrHandler = gContext->hdlFunct;
-  nextPC = instrHandler(gContext);
+  else
+  {
+    // get interpreter function pointer and call it
+    instrHandler = gContext->hdlFunct;
+    nextPC = instrHandler(gContext);
+  }
 
   if (nextPC == 0)
   {
-    serial_putstring("exceptionHandlers: Invalid nextPC. Instr to implement?");
-    serial_newline();
-    serial_putstring("exceptionHandlers: Dumping gc");
-    serial_newline();
-    DIE_NOW(gContext, "exceptionHandlers: In infinite loop");
+    DIE_NOW(gContext, "softwareInterrupt: Invalid nextPC. Instr to implement?");
   }
 
   int i = 0;
@@ -63,11 +63,7 @@ void softwareInterrupt(u32int code)
   gContext->R15 = nextPC;
 
   // deliver interrupts
-  if (gContext->guestDataAbtPending)
-  {
-    DIE_NOW(gContext, "Exception handlers: guest abort in SWI handler! implement.");
-  }
-  else if (gContext->guestIrqPending)
+  if (gContext->guestIrqPending)
   {
     if ((gContext->CPSR & CPSR_IRQ_DIS) == 0)
     {
@@ -76,7 +72,7 @@ void softwareInterrupt(u32int code)
   }
 
 #ifdef EXC_HDLR_DBG
-  serial_putstring("exceptionHandlers: Next PC = 0x");
+  serial_putstring("softwareInterrupt: Next PC = 0x");
   serial_putint(nextPC);
   serial_newline();
 #endif
@@ -143,7 +139,7 @@ void dataAbort()
 void dataAbortPrivileged()
 {
   /* Here if we abort in a priviledged mode, i.e its the Hypervisors fault */
-  serial_putstring("exceptionHandlers: Hypervisor data abort in priviledged mode.");
+  serial_putstring("dataAbortPrivileged: Hypervisor data abort in priviledged mode.");
   serial_newline();
 
   printDataAbort();
@@ -189,18 +185,12 @@ void dataAbortPrivileged()
 
 void undefined(void)
 {
-  serial_putstring("exceptionHandlers: undefined handler, Implement me!");
-  serial_newline();
-
-  DIE_NOW(getGuestContext(), "Entering infinite loop.");
+  DIE_NOW(0, "undefined: undefined handler, Implement me!");
 }
 
 void undefinedPrivileged(void)
 {
-  serial_putstring("exceptionHandlers: Undefined handler (Privileged/Hypervisor), Implement me!");
-  serial_newline();
-
-  DIE_NOW(getGuestContext(), "Entering infinite loop.");
+  DIE_NOW(0, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!");
 }
 
 void prefetchAbort(void)
@@ -241,45 +231,29 @@ void prefetchAbort(void)
     case translationTableWalk1stLvlSynchParityError:
     case translationTableWalk2ndLvlSynchParityError:
     default:
-      serial_putstring("Unimplemented user prefetch abort.");
-      serial_newline();
       printPrefetchAbort();
-      DIE_NOW(0, "Entering infinite loop");
+      DIE_NOW(gc, "Unimplemented guest prefetch abort.");
   }
   enableInterrupts();
 }
 
 void prefetchAbortPrivileged(void)
 {
-  serial_putstring("Hypervisor Prefetch Abort");
-  serial_newline();
-
   printPrefetchAbort();
-
-  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
+  DIE_NOW(0, "prefetchAbortPrivileged: unimplemented");
   //Never returns
 }
 
 void monitorMode(void)
 {
-  serial_putstring("exceptionHandlers: monitor/secure mode handler, Implement me!");
-  serial_newline();
-
   /* Does the omap 3 implement monitor/secure mode? */
-
-  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
-  //Never returns
+  DIE_NOW(0, "monitorMode: monitor/secure mode handler, Implement me!");
 }
 
 void monitorModePrivileged(void)
 {
-  serial_putstring("exceptionHandlers: monitor/secure mode handler(privileged/Hypervisor), Implement me!");
-  serial_newline();
-
   /* Does the omap 3 implement monitor/secure mode? */
-
-  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
-  //Never returns
+  DIE_NOW(0, "monitorMode: monitor/secure mode handler, privlieged mode. Implement me!");
 }
 
 void irq()
@@ -306,7 +280,7 @@ void irq()
     default:
       serial_putstring("Received IRQ=");
       serial_putint(activeIrqNumber);
-      DIE_NOW(0, " Implement me!");
+      DIE_NOW(0, "irq: unimplemented IRQ number.");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -342,7 +316,7 @@ void irqPrivileged()
     default:
       serial_putstring("Received IRQ=");
       serial_putint(activeIrqNumber);
-      DIE_NOW(0, " Implement me!");
+      DIE_NOW(0, "irqPrivileged: unimplemented IRQ number.");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -358,5 +332,5 @@ void irqPrivileged()
 
 void fiq(void)
 {
-  DIE_NOW(getGuestContext(), "Received FIQ! Implement me.");
+  DIE_NOW(getGuestContext(), "fiq: FIQ handler unimplemented!");
 }

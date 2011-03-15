@@ -59,10 +59,10 @@ struct guestContext
   BCENTRY * blockCache;
   u32int blockHistory[BLOCK_HISOTRY_SIZE];
   /* Virtual Addressing */
-  descriptor* PT_physical; //guest physical to real physical PT
-  descriptor* PT_os; //guest OS to guest Physical PT
-  descriptor* PT_os_real; //physical addr of PT_os for H/W
-  descriptor* PT_shadow; //guest OS to real physical PT
+  descriptor* PT_physical; // guest physical to real physical PT
+  descriptor* PT_os;       // guest OS to guest Physical PT
+  descriptor* PT_os_real;  // physical addr of PT_os for H/W
+  descriptor* PT_shadow;   // guest OS to real physical PT
   bool virtAddrEnabled;
   /* Virtual Addressing end */
   MEMPROT* memProt;
@@ -77,7 +77,7 @@ struct guestContext
   u32int guestIrqHandler;
   u32int guestFiqHandler;
   device * hardwareLibrary;
-  /* interrupt handling */
+  /* exception flags */
   bool guestIrqPending;
   bool guestDataAbtPending;
   bool guestPrefetchAbtPending;

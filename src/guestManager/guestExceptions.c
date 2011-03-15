@@ -6,6 +6,35 @@
 
 extern GCONTXT * getGuestContext(void);
 
+void deliverServiceCall(void)
+{
+  GCONTXT * context = getGuestContext();
+  // 2. copy guest CPSR into SPSR_SVC
+  context->SPSR_SVC = context->CPSR;
+  // 3. put guest CPSR in SVC mode
+  context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_SVC;
+  // 5. set LR to PC+4
+  context->R14_SVC = context->R15 + 4;
+  // 6. set PC to guest svc handler address
+  if (context->virtAddrEnabled)
+  {
+    if (context->guestHighVectorSet)
+    {
+      context->R15 = 0xffff0008;
+    }
+    else
+    {
+      context->R15 = 0x00000008;
+    }
+  }
+  else
+  {
+    DIE_NOW(0, "deliverInterrupt: SVC to be delivered with guest vmem off.");
+  }
+  // only thing left is to mask subsequent interrupts
+  context->CPSR |= CPSR_IRQ_DIS;
+  context->CPSR |= CPSR_FIQ_DIS;
+}
 
 void throwInterrupt(u32int irqNumber)
 {
@@ -38,11 +67,9 @@ void deliverInterrupt(void)
   context->SPSR_IRQ = context->CPSR;
   // 3. put guest CPSR in IRQ mode
   context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_IRQ;
-  // 4. disable further guest interrupts
-  context->CPSR |= CPSR_IRQ_DIS;
-  // 5. set LR to PC+4
+  // 4. set LR to PC+4
   context->R14_IRQ = context->R15 + 4;
-  // 6. set PC to guest irq handler address
+  // 5. set PC to guest irq handler address
   if (context->virtAddrEnabled)
   {
     if (context->guestHighVectorSet)
@@ -58,7 +85,7 @@ void deliverInterrupt(void)
   {
     DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
   }
-  // only thing left is to mask subsequent interrupts
+  // 6. mask subsequent guest interrupts
   context->CPSR |= CPSR_IRQ_DIS;
   context->CPSR |= CPSR_FIQ_DIS;
 }
@@ -90,7 +117,7 @@ void deliverDataAbort()
   {
     DIE_NOW(0, "deliverInterrupt: Data abort to be delivered with guest vmem off.");
   }
-  // only thing left is to mask subsequent interrupts
+  // 6. mask subsequent guest interrupts
   context->CPSR |= CPSR_IRQ_DIS;
   context->CPSR |= CPSR_FIQ_DIS;
 }
