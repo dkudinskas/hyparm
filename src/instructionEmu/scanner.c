@@ -24,7 +24,16 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   }
 #endif
 
+#ifdef CONFIG_DECODER_TABLE_SEARCH
   struct instruction32bit * decodedInstruction = 0;
+#else
+# ifdef CONFIG_DECODER_AUTO
+  //instructionHandler decodedInstruction = 0;
+  instructionHandler decodedInstruction = 0;
+# else
+#  error Decoder must be set!
+# endif
+#endif
   u32int * currAddress = (u32int*)blkStartAddr;
   u32int instruction = *currAddress;
 
@@ -61,7 +70,15 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   serial_newline();
 #endif
 
+#ifdef CONFIG_DECODER_TABLE_SEARCH
   while ((decodedInstruction = decodeInstr(instruction))->replaceCode == 0)
+#else
+# ifdef CONFIG_DECODER_AUTO
+  while ((decodedInstruction = decodeInstr(instruction)) == 0)
+# else
+#  error Decoder must be set!
+# endif
+#endif
   {
     currAddress++;
     instruction = *currAddress;
@@ -103,7 +120,15 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   {
     // save end of block instruction and handler function pointer close to us...
     gc->endOfBlockInstr = instruction;
+#ifdef CONFIG_DECODER_TABLE_SEARCH
     gc->hdlFunct = decodedInstruction->hdlFunct;
+#else
+# ifdef CONFIG_DECODER_AUTO
+    gc->hdlFunct = decodedInstruction;
+# else
+#  error Decoder must be set!
+# endif
+#endif
     // replace end of block instruction with hypercall of the appropriate code
     *currAddress = INSTR_SWI | ((bcIndex + 1) << 8);
     // if guest instruction stream is mapped with caching enabled, must maintain

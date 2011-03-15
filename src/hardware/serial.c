@@ -28,8 +28,8 @@ void serial_putstring(char * c)
 
 void serial_newline()
 {
-  serial_putchar('\n');
   serial_putchar('\r');
+  serial_putchar('\n');
   return;
 }
 
