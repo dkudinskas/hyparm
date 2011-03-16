@@ -29,15 +29,16 @@ void DIE_NOW(GCONTXT* context, char* msg)
   banner("ERROR");
   serial_putstring(msg);
   serial_newline();
+  if (context == 0)
+  {
+    context = getGuestContext();
+  }
   if (context != 0)
   {
     dumpGuestContext(context);
-  }
-  else
-  {
-    dumpGuestContext(getGuestContext());
   }
   banner("HALT");
   
   infiniteIdleLoop();
 }
+

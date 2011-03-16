@@ -36,13 +36,14 @@ GCONTXT * gContext;
 
 int main(int argc, char *argv[])
 {
-  /* save power: cut the clocks to the display subsystem */
-  cmDisableDssClocks();
-  
   int ret = 0;
   kernAddr = 0;
   initrdAddr = 0;
+  gContext = 0;
 
+  /* save power: cut the clocks to the display subsystem */
+  cmDisableDssClocks();
+  
   mallocInit(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
   
   /* create the frametable from which we can alloc memory */

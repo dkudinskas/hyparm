@@ -12,13 +12,9 @@
   .equ  UND_MODE,       0x1B
   .equ  SYS_MODE,       0x1F
 
-  .align  5
-
 .global startup_hypervisor
 .func   startup_hypervisor
 startup_hypervisor:
-
-_start:
 
 /* Initialize stacks for all modes */
   /* set IRQ stack */
@@ -55,45 +51,50 @@ _start:
   /* register allocated guest context */
   LDR     R0,=guestContextSpace
   BL      registerGuestContext
+  .ifdef CONFIG_CPU_HAS_ARM_SEC_EXT
+    /* Set VBAR to exceptionVectorBase. On the OMAP35xx, this eliminates a few branches through the NAND and the SRAM */
+    LDR     r4, =exceptionVectorBase
+    MCR     p15, 0, r4, c12, c0, 0
+  .else
+    /* Fix RAM exception vectors on TI OMAP 35xx */
+    .ifdef CONFIG_CPU_TI_OMAP_35XX
+      LDR     R4, [pc, #0x20]
+      LDR     R3, [pc, #0x20]
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      ADD     pc, pc, #0x4
+      /* next 2 lines are data */
+      .word 0x4020FFC8
+      LDR     pc, [pc, #0x14]
+    .endif
 
-  /* Fix RAM exception vectors on TI OMAP 35xx */
-  .ifdef CONFIG_CPU_TI_OMAP_35XX
-    LDR   R4, [pc, #0x20]
-    LDR   R3, [pc, #0x20]
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    ADD   pc, pc, #0x4
-    /* next 2 lines are data */
-    .word 0x4020FFC8
-    LDR   pc, [pc, #0x14]
+    /* Batch installation of interupt handlers */
+    /* This section of code is order dependant */
+    .ifndef CONFIG_CPU_TI_OMAP_35XX
+      /* On the TI OMAP 35xx R4 is already correct */
+      LDR     R4,=undefined_addr @First interupt handler address
+      LDR     R4, [R4]
+    .endif
+    LDR     R3,=undefined_handler
+    STR     R3, [R4], #4       @auto increment to the next handler address
+    LDR     R3,=swi_handler
+    STR     R3, [R4], #4       @install swi handler
+    LDR     R3,=prefetch_abort_handler
+    STR     R3, [R4], #4
+    LDR     R3,=data_abort_handler
+    STR     R3, [R4], #4
+    LDR     R3,=monitor_mode_handler
+    STR     R3, [R4], #4
+    LDR     R3,=irq_handler
+    STR     R3, [R4], #4
+    LDR     R3,=fiq_handler
+    STR     R3, [R4], #4
   .endif
-
-  /* Batch installation of interupt handlers */
-  /* This section of code is order dependant */
-  .ifndef CONFIG_CPU_TI_OMAP_35XX
-    /* On the TI OMAP 35xx R4 is already correct */
-    LDR   R4,=undefined_addr @First interupt handler address
-    LDR   R4, [R4]
-  .endif
-  LDR     R3,=undefined_handler
-  STR     R3, [R4], #4       @auto increment to the next handler address
-  LDR     R3,=swi_handler
-  STR     R3, [R4], #4       @install swi handler
-  LDR     R3,=prefetch_abort_handler
-  STR     R3, [R4], #4
-  LDR     R3,=data_abort_handler
-  STR     R3, [R4], #4
-  LDR     R3,=monitor_mode_handler
-  STR     R3, [R4], #4
-  LDR     R3,=irq_handler
-  STR     R3, [R4], #4
-  LDR     R3,=fiq_handler
-  STR     R3, [R4], #4
 
   /* write guest stack pointers for now */
   LDR     R0, =guestContextR13_USR
@@ -260,6 +261,20 @@ _start:
         /* restore PC and load the SPSR into the CPSR */
         LDM     SP, {PC}^
         .endm
+
+
+.ifdef CONFIG_CPU_HAS_ARM_SEC_EXT
+  .align 5
+exceptionVectorBase:
+  MOV     pc, #0x00014000
+  B       undefined_handler
+  B       swi_handler
+  B       prefetch_abort_handler
+  B       data_abort_handler
+  B       monitor_mode_handler
+  B       irq_handler
+  B       fiq_handler
+.endif
 
 
 .global swi_handler
