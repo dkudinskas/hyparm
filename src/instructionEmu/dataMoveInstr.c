@@ -1368,7 +1368,6 @@ u32int* popLdmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int
 
 u32int popLdmInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "popLdmInstruction is executed but not yet checked for blockCopyCompatibility");
   // regList must include PC, otherwise wouldnt have trapped!
   // just treat as a regular load multiple.
   return ldmInstruction(context);
@@ -1388,7 +1387,7 @@ u32int* ldmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 }
 
 u32int ldmInstruction(GCONTXT * context)
-{//Check for blockCopy functionality
+{//Checked for blockCopy functionality
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDM instruction: ");

@@ -104,8 +104,10 @@ int main(int argc, char *argv[])
     memset((void*)blockCopyCache, 0x0, BLOCK_COPY_CACHE_SIZE_IN_BYTES);
     u32int blockCopyCacheSize= BLOCK_COPY_CACHE_SIZE -1;
     //Jump offset is in multiples of 4 (thus words) (see ARM ARM p.357)
-    //And PC is 2 words behind - 1 word (because 1st word is a backpointer)
-    u32int jumpOffset=blockCopyCacheSize+1;
+    //And PC is 2 words behind & When jump is taken it means that instruction before jump is not critical and that block is not finished.
+    //This will result in a continuation of the block at the beginning of blockCopyCache. (-> there is a backpointer but the initial block will
+    //be removed to make place for the rest of the block that was being scanned!).
+    u32int jumpOffset=blockCopyCacheSize+2;
     u32int index = 0;
     u32int result = 0;
     int i;
@@ -122,8 +124,8 @@ int main(int argc, char *argv[])
     serial_putint((u32int)index);
     serial_newline();
 #endif
-    //unconditional branch => first 8 bits = 11111010 = 250 = FA
-    result=250;
+    //unconditional branch => first 8 bits = 11101010 = 234 = EA
+    result=234;
 #ifdef BLOCK_COPY_DEBUG
     serial_putstring("Bits inverted:");
     serial_newline();

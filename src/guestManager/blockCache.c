@@ -1,6 +1,9 @@
 #include "blockCache.h"
 #include "memFunctions.h"
 #include "serial.h"
+#include "guestContext.h"
+
+extern GCONTXT * getGuestContext(void); //from main.c
 
 #define BLOCK_COPY_CACHE_DEBUG 1
 
@@ -210,7 +213,22 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
   removeBlockCopyCacheEntry(bcAddr[index].blockCopyCacheAddress,bcAddr[index].blockCopyCacheSize);
 }
 void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize){
-  memset((u32int *)blockCopyCacheAddress,0,blockCopyCacheSize<<2);//blockCopyCacheSize is number of u32int entries
+  //First we must check if we have to remove a coninuous block are that it is split up (if it was to close to the end
+  GCONTXT * context = getGuestContext();
+  u32int endOfBlock = (blockCopyCacheAddress+blockCopyCacheSize<<2);//End of the block that has to be removed
+  u32int lastUsableBlockCopyCacheAddress = context->blockCopyCacheEnd-4; //see comment next rule
+  //Warning last adress of blockCopyCache is a backpointer and might not be erased therefore
+  if( endOfBlock > lastUsableBlockCopyCacheAddress)
+  {
+    u32int difference = endOfBlock-lastUsableBlockCopyCacheAddress;
+    memset((u32int *)blockCopyCacheAddress,0,(blockCopyCacheSize<<2)-(difference));
+    memset((u32int *)context->blockCopyCache,0,difference); //The rest of the block is at the start of BlockCopyCache remove it there
+  }
+  else //safe to remove all at once
+  {
+    memset((u32int *)blockCopyCacheAddress,0,blockCopyCacheSize<<2);//blockCopyCacheSize is number of u32int entries
+  }
+
 }
 
 

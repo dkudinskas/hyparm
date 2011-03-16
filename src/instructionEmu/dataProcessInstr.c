@@ -148,6 +148,50 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
 
 u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
+  u32int instruction = *instructionAddr;
+  u32int destReg = (instruction>>12) & 0xF;
+  u32int instr2Copy = instruction;
+  //bit 25 set to 1 is immediate
+  bool immediate = ((instruction>>25) & 0b1)==0b1;
+
+  if(immediate)
+  {
+    if((instruction>>16 & 0xF) != 0xF)
+    {//Instruction is safe!
+      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+      *(currBlockCopyCacheAddr++)=instruction;
+
+      return currBlockCopyCacheAddr;
+    }
+
+    //Store PC in destReg
+    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+
+    //Let instruction use destReg as inputRegister
+    instr2Copy=zeroBits(instruction, 16);
+    instr2Copy=instr2Copy | (destReg<<16);
+
+    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    return currBlockCopyCacheAddr;
+
+  }
+  else //something with registers (register or register-shifted register
+  {
+    //register-shifted register => bit 4 == 1 and bit 7 == 0
+    bool shifted=((instruction>>4 & 0b1) == 0b1)&&((instruction>>7 & 0b1) == 0b0);
+    if(shifted)
+    {
+      //ARM ARM p.350
+      DIE_NOW(0,"andPCInstruction: register-shifted register cannot have PC as input!");
+    }
+    else
+    {
+      DIE_NOW(0,"andPCInstruction: register not implemented yet.");
+      //THIS must make use of reserved word!
+    }
+  }
   DIE_NOW(0, "and PCFunct unfinished\n");
   return 0;
 }
@@ -569,7 +613,7 @@ u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   //srcReg1 must always be checked
   bool replaceReg1 = (srcReg1 == 0xF);
   bool replaceReg2 = 0;//default false
-  u32int scratchRegister = findUnusedRegister(srcReg1,srcReg2,-1);//Only 2 registers -> use negative value for 3th register
+  u32int scratchRegister = 0;//This only needs to set if register must be replaced
   u32int instr2Copy = 0;
   if(!immediate) //It is not an immediate instruction and thus srcReg2 must also be checked
   {
@@ -578,6 +622,8 @@ u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   if(replaceReg1 || replaceReg2)
   { //there is a register that must be replaced -> backup scratchregister & move PC to scratchRegister
     //backup scratchregister = str
+    DIE_NOW(0,"cmpPCInstruction: This isn't validated yet");
+    scratchRegister = findUnusedRegister(srcReg1,srcReg2,-1);//Only 2 registers -> use negative value for 3th register
     currBlockCopyCacheAddr=backupRegister(scratchRegister, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
     //MovePC to scratchRegister
     currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr, scratchRegister);

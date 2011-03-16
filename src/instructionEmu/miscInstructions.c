@@ -1182,9 +1182,17 @@ u32int uxtb16Instruction(GCONTXT * context)
 }
 
 u32int* uxtbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "uxtb PCFunct unfinished\n");
-  return 0;
+{//Can be optimized -> this instruction is always safe!
+  u32int instruction = *instructionAddr;
+  if( (instruction & 0xF) == 0xF)
+  {
+    DIE_NOW(0,"uxtbPCInstruction: Rm is PC -> unpredictable");
+  }
+
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instruction;
+
+  return currBlockCopyCacheAddr;
 }
 
 u32int uxtbInstruction(GCONTXT * context)
