@@ -7,14 +7,14 @@
 
 //Uncomment to enable debugging: #define SCANNER_DEBUG
 //Uncomment to enable debugging: #define PC_DEBUG
-#ifdef DUMP_SCANNER_COUNTER
-static u32int scannerReqCounter = 0;
-#endif
 
-void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to make use of new block cache.
+
+void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 {
-#ifdef DUMP_SCANNER_COUNTER
+#ifdef SCANNER_COUNTER
   scannerReqCounter++;
+#endif
+#ifdef DUMP_SCANNER_COUNTER
   if ((scannerReqCounter % 4000) == 3999)
   {
     serial_putint_nozeros(scannerReqCounter);
@@ -31,6 +31,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
   u32int instruction = *currAddress;
   u32int * blockCopyCacheCurrAddress = ((u32int* )(gc->blockCopyCacheLastUsedLine))+1;
   u32int * blockCopyCacheStartAddress = ((u32int* )(gc->blockCopyCacheLastUsedLine))+1;
+  bool reservedWord = 0;//See struct blockCacheEntry in blockCache.h for explanation
 
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
@@ -43,9 +44,18 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
     gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
     gc->endOfBlockInstr = bcEntry->hyperedInstruction;
 
+    u32int * addressInBlockCopyCache = 0;
     //The programcounter of the code that is executing should be set to the code in the blockCache
-    u32int * addressInCopyBlockCache= (u32int*)bcEntry->blockCopyCacheAddress+1;//First word is a backpointer
-    gc->R15 = (u32int)addressInCopyBlockCache;
+    if(bcEntry->reservedWord)
+    {
+      addressInBlockCopyCache= (u32int*)bcEntry->blockCopyCacheAddress+2;//First word is a backpointer & 2nd word is reservedWord
+    }
+    else
+    {
+      addressInBlockCopyCache= (u32int*)bcEntry->blockCopyCacheAddress+1;//First word is a backpointer
+    }
+
+    gc->R15 = (u32int)addressInBlockCopyCache;
     //But also the PC of the last instruction of the block should be set
     gc->PCOfLastInstruction = (u32int)bcEntry->endAddress;
 
@@ -126,8 +136,17 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
         // asm volatile ("BKPT 0");
 
         // add the block we just scanned to block cache
-        addToBlockCache(blkStartAddr, gc->endOfBlockInstr, (u32int)currAddress,
-                        bcIndex, (u32int)gc->hdlFunct, (blockCopyCacheCurrAddress-blockCopyCacheStartAddress), (u32int)blockCopyCacheStartAddress, gc->blockCache);
+        if(reservedWord)
+        {
+          addToBlockCache(blkStartAddr&1, (u32int)currAddress,
+                                            bcIndex, (blockCopyCacheCurrAddress-blockCopyCacheStartAddress), (u32int)blockCopyCacheStartAddress,gc->endOfBlockInstr,(u32int)gc->hdlFunct,gc->blockCache);
+        }
+        else
+        {
+          addToBlockCache(blkStartAddr, (u32int)currAddress,
+                                                      bcIndex, (blockCopyCacheCurrAddress-blockCopyCacheStartAddress), (u32int)blockCopyCacheStartAddress,gc->endOfBlockInstr,(u32int)gc->hdlFunct,gc->blockCache);
+        }
+
 
 
         protectScannedBlock(blkStartAddr, (u32int)currAddress);
@@ -158,12 +177,12 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)//TODO: SCANBLOCK ADAPT it to m
         /*----------------Execute PCFunct----------------*/
         gc->endOfBlockInstr = instruction;//Not really the endOfBlockInstr but we can use it
 
-
-        //DEPRECATED
-        //u32int nrOfAddedInstr = decodedInstruction->PCFunct(gc,currAddress,blockCopyCacheCurrAddress);
-        //blockCopyCacheCurrAddress=updateCurrBlockCopyCacheAddr(blockCopyCacheCurrAddress, nrOfAddedInstr,(u32int*)gc->blockCopyCacheEnd);
-        //BETTER
-        blockCopyCacheCurrAddress= decodedInstruction->PCFunct(gc,currAddress,blockCopyCacheCurrAddress);
+        blockCopyCacheCurrAddress= decodedInstruction->PCFunct(gc,currAddress,blockCopyCacheCurrAddress,blockCopyCacheStartAddress);
+        if(((u32int)blockCopyCacheCurrAddress & 0b1) == 0b1)
+        {//Last bit of returnAddress is used to indicate that a reserved word is necessary -> we can assume 2 byte allignement (even in worst case scenario (thumb))
+          reservedWord=1;//ReservedWord is true
+          blockCopyCacheCurrAddress=(u32int*)((u32int)blockCopyCacheCurrAddress & 0xFFFFFFFE);//Set last bit back to zero
+        }
         /*----------------END Execute PCFunct----------------*/
       }
     }
@@ -268,4 +287,5 @@ u32int allSrcRegNonPC(u32int instruction)
     return 1;//true
   }
 }
+
 

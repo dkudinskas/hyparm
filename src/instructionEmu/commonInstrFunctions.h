@@ -75,6 +75,18 @@ bool evalCC(u32int instrCC, u32int cpsrCC);
 /* function to store a register value, evaluates modes. */
 void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context);
 
+/* function to find a register that is not one of the arguments */
+u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regSrc3);
+
+/* This function inserts an instruction in the instructionstream of the blockCopycache which will write the content of reg2Backup to the reserved word*/
+// The reserved word = a word in the blockCopyCache that won't contain instructions (if present it is situated right after the backpointer)
+u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);
+
+/* This function inserts an instruction in the instructionstream of the blockCopycache which will restore the content of reg2Restore from the reserved word*/
+// The reserved word = a word in the blockCopyCache that won't contain instructions (if present it is situated right after the backpointer)
+u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);
+
+
 /* function to obtain a register value, evaluates modes. */
 u32int loadGuestGPR(u32int regSource, GCONTXT * context);
 

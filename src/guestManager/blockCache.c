@@ -70,9 +70,10 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr)
   }
 }
 
-void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
-                     u32int index, u32int hdlFunct, u32int blockCopyCacheSize, u32int blockCopyCacheAddress, BCENTRY * bcAddr)
+void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr,
+                     u32int index, u32int blockCopyCacheSize, u32int blockCopyCacheAddress,u32int hypInstruction,u32int hdlFunct,BCENTRY * bcAddr)
 {
+
 #ifdef BLOCK_CACHE_DEBUG
   serial_putstring("blockCache: ADD[");
   serial_putint(index);
@@ -98,7 +99,15 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAd
     // now that we resolved the conflict, we arrive at situation where bcAddr[index].valid==false
   }
   //store the new entry data...
-  bcAddr[index].startAddress = blkStartAddr;
+  if(blkStartAddr & 0b1)//Last bit of blkStartAddr is used to indicate that a reserved word is present in blockCopyCache (see scanner.c)
+  {
+    bcAddr[index].reservedWord = 1;//Set reservedWord to true
+    bcAddr[index].startAddress = blkStartAddr & 0xFFFFFFFE;//Set last bit back to zero!!
+  }
+  else
+  {
+    bcAddr[index].startAddress = blkStartAddr;
+  }
   bcAddr[index].endAddress = blkEndAddr;
   bcAddr[index].hyperedInstruction = hypInstruction;
   bcAddr[index].hdlFunct = hdlFunct;

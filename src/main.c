@@ -15,6 +15,7 @@
 #include "beGPTimer.h"
 #include "beClockMan.h"
 #include "debug.h"
+#include "scanner.h"
 
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
@@ -30,6 +31,7 @@ void printUsage(void);
 int parseCommandline(int argc, char *argv[]);
 void registerGuestContext(u32int gcAddr);
 GCONTXT * getGuestContext(void);
+u32int scannerReqCounter;
 
 unsigned long kernAddr;
 unsigned long initrdAddr;
@@ -39,6 +41,8 @@ GCONTXT * gContext;
 
 int main(int argc, char *argv[])
 {
+
+  scannerReqCounter = 0;
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
   

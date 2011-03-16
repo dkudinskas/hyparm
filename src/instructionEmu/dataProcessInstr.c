@@ -146,7 +146,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
 /* AND Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
-u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "and PCFunct unfinished\n");
   return 0;
@@ -161,7 +161,7 @@ u32int andInstruction(GCONTXT * context)
 /* RSB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
-u32int* rsbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* rsbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "rsb PCFunct unfinished\n");
   return 0;
@@ -176,7 +176,7 @@ u32int rsbInstruction(GCONTXT * context)
 /* RSB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
-u32int* rscPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* rscPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "rsc PCFunct unfinished\n");
   return 0;
@@ -191,7 +191,7 @@ u32int rscInstruction(GCONTXT * context)
 /* SUB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
-u32int* subPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* subPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   //target register is not PC
   u32int instruction=*instructionAddr;
@@ -234,7 +234,7 @@ u32int subInstruction(GCONTXT * context)
 /* SBC Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
-u32int* sbcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* sbcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sbc PCFunct unfinished\n");
   return 0;
@@ -249,7 +249,7 @@ u32int sbcInstruction(GCONTXT * context)
 /* ADD Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
-u32int* addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   //target register is not PC
   u32int instruction=*instructionAddr;
@@ -297,7 +297,7 @@ u32int addInstruction(GCONTXT * context)
 /* ADD Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
-u32int* adcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* adcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "adc PCFunct unfinished\n");
   return 0;
@@ -312,7 +312,7 @@ u32int adcInstruction(GCONTXT * context)
 /* ORR Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
-u32int* orrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* orrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "orr PCFunct unfinished\n");
   return 0;
@@ -327,7 +327,7 @@ u32int orrInstruction(GCONTXT * context)
 /* ORR Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
-u32int* eorPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* eorPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "eor PCFunct unfinished\n");
   return 0;
@@ -342,7 +342,7 @@ u32int eorInstruction(GCONTXT * context)
 /* SBC Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
-u32int* bicPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* bicPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "bic PCFunct unfinished\n");
   return 0;
@@ -357,7 +357,7 @@ u32int bicInstruction(GCONTXT * context)
 /* MOV Rd, Rs                    */
 /*********************************/
 
-u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 { //Destination is surely not PC
   u32int instruction = *instructionAddr;
   u32int destReg=(instruction>>12) & 0xF;
@@ -406,7 +406,7 @@ u32int movInstruction(GCONTXT * context)
 /* MVN Rd, Rs                    */
 /*********************************/
 
-u32int* mvnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* mvnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mvn PCFunct unfinished\n");
   return 0;
@@ -421,7 +421,7 @@ u32int mvnInstruction(GCONTXT * context)
 /* LSL Rd, Rs                    */
 /*********************************/
 
-u32int* lslPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* lslPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "lsl PCFunct unfinished\n");
   return 0;
@@ -436,7 +436,7 @@ u32int lslInstruction(GCONTXT * context)
 /* LSR Rd, Rs                    */
 /*********************************/
 
-u32int* lsrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* lsrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   u32int instruction=*instructionAddr;
   u32int srcPCRegLoc = 0;//This is where the PC is in the instruction
@@ -446,6 +446,8 @@ u32int* lsrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   if((instruction>>4 & 0b1) == 1)
   {//Bit 4 is 1 if extra register (LSR(register))
+    DIE_NOW(0,"lsrPCInstruction LSR(register) with a srcReg==PC is UNPREDICTABLE?");
+    //ToDO: Normally this cannot be executed->remove when confirmed
     if(((instruction>>8 & 0xF) == 0xF) && ((instruction & 0xF) == 0xF))
     {
       DIE_NOW(0, "LSR with both srcRegisters equal to PC is not implemented yet");
@@ -479,7 +481,7 @@ u32int lsrInstruction(GCONTXT * context)
 /* ASR Rd, Rs                    */
 /*********************************/
 
-u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "asr PCFunct unfinished\n");
   return 0;
@@ -494,7 +496,7 @@ u32int asrInstruction(GCONTXT * context)
 /* RRX Rd, Rs                    */
 /*********************************/
 
-u32int* rrxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* rrxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "rrx PCFunct unfinished\n");
   return 0;
@@ -509,7 +511,7 @@ u32int rrxInstruction(GCONTXT * context)
 /* ROR Rd, Rs                    */
 /*********************************/
 
-u32int* rorPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* rorPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "ror PCFunct unfinished\n");
   return 0;
@@ -524,7 +526,7 @@ u32int rorInstruction(GCONTXT * context)
 /* TST Rs, Rs2/imm               */
 /*********************************/
 
-u32int* tstPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* tstPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "tst PCFunct unfinished\n");
   return 0;
@@ -539,7 +541,7 @@ u32int tstInstruction(GCONTXT * context)
 /* TEQ Rs, Rs2/imm               */
 /*********************************/
 
-u32int* teqPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* teqPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "teq PCFunct unfinished\n");
   return 0;
@@ -555,10 +557,8 @@ u32int teqInstruction(GCONTXT * context)
 /* CMP Rs, Rs2/imm               */
 /*********************************/
 
-u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "cmp PCFunct unfinished\n");
-
   //ARM ARM p.392 and further:
   //CMP Rs <> PC otherwise unpredictable
   //If immediate only check Rn (bits 16-19 => srcReg1) else also check Rm (bits 0-3 => srcReg2)
@@ -569,17 +569,41 @@ u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   //srcReg1 must always be checked
   bool replaceReg1 = (srcReg1 == 0xF);
   bool replaceReg2 = 0;//default false
-
+  u32int scratchRegister = findUnusedRegister(srcReg1,srcReg2,-1);//Only 2 registers -> use negative value for 3th register
+  u32int instr2Copy = 0;
   if(!immediate) //It is not an immediate instruction and thus srcReg2 must also be checked
   {
     replaceReg2=(srcReg2 == 0xF);
   }
   if(replaceReg1 || replaceReg2)
-  {// there is a register that must be replaced -> move PC to target register
+  { //there is a register that must be replaced -> backup scratchregister & move PC to scratchRegister
+    //backup scratchregister = str
+    currBlockCopyCacheAddr=backupRegister(scratchRegister, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+    //MovePC to scratchRegister
+    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr, scratchRegister);
+  }
+  //Modify instruction & copy
+  instr2Copy=instruction;
+  if(replaceReg1)
+  {// srcReg1 Must be replaced
+    instr2Copy=instr2Copy & 0xFFF0FFFF;
+    instr2Copy=instr2Copy | (scratchRegister<<16);
+  }
+  if(replaceReg2)
+  {// srcReg2 Must be replaced
+    instr2Copy=instr2Copy & 0xFFFFFFF0;
+    instr2Copy=instr2Copy | (scratchRegister);
+  }
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
 
+  //Restore scratchRegister if a register was replaced
+  if(replaceReg1 || replaceReg2)
+  {
+    currBlockCopyCacheAddr=restoreRegister(scratchRegister, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
   }
 
-  return 0;
+  return currBlockCopyCacheAddr;
 }
 
 u32int cmpInstruction(GCONTXT * context)
@@ -592,7 +616,7 @@ u32int cmpInstruction(GCONTXT * context)
 /* CMN Rs, Rs2/imm               */
 /*********************************/
 
-u32int* cmnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr)
+u32int* cmnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "cmn PCFunct unfinished\n");
   return 0;

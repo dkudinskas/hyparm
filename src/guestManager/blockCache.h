@@ -20,7 +20,9 @@ struct blockCacheEntry
   u32int endAddress;
   u32int hyperedInstruction;
   u32int valid:1; //valid is a flag and needs only 1 bit
-  u32int blockCopyCacheSize:23; // blockCopyCacheSize will be rather limited
+  u32int reservedWord:1; //reservedWord is a flag that indicates that after the backpointer there will be 1 word that is reserved for saving
+                         //a temporary value of a PC. This means code execution will start @ startAddress+8 (skip backpointer & reserved word)
+  u32int blockCopyCacheSize:22; // blockCopyCacheSize will be rather limited
                             // there are 8 bits left -> can be used for profiling
   u32int blockCopyCacheAddress; // This is the address were the instructions with hypercall will reside
   u32int hdlFunct;
@@ -32,8 +34,9 @@ void initialiseBlockCache(BCENTRY * bcache);
 
 bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr);
 
-void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
-                     u32int index, u32int hdlFunct, u32int blockCopyCacheSize, u32int blockCopyCacheAddress, BCENTRY * bcAddr);
+void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr,
+                     u32int index, u32int blockCopyCacheSize, u32int blockCopyCacheAddress,u32int hypInstruction,u32int hdlFunct,BCENTRY * bcAddr);
+
 /* checkAndClearBlockCopyCacheAddress will check an address you provide and return a valid address.  Always use the returned address!! */
 u32int * checkAndClearBlockCopyCacheAddress(u32int *Addr,BCENTRY *bcStartAddr,u32int* blockCopyCache,u32int* blockCopyCacheEnd);
 

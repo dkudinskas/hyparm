@@ -227,6 +227,54 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
   } // mode specific else ends
 }
 
+/* Function will return a register that is different from regSrc1,regSrc2 and regSrc3*/
+u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regSrc3)
+{
+  int i;
+  for(i=0;i<15;i++){
+    if( (i != regSrc1) && (i != regSrc2) && (i != regSrc3) )
+      return i;
+  }
+  DIE_NOW(0,"No unusedRegister, this cannot be happening!");
+  return -1;
+}
+
+u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  GCONTXT * context = getGuestContext();
+  //STR(immediate) -> ARM ARM A8.6.194 p696
+  //|    |    |    |    |    |11         0|
+  //|COND|010P|U0W0| Rn | Rt |    imm12   |
+  //|1110|0101|0000|1111|????|????????????|
+  //Rn=baseregister=PC,Rt=sourceRegister,P=1 (otherwise imm12 is ignored),U==1 add imm12 <-> U==0 subtract imm12,W=writeback=0
+  u32int instr2Copy = 0xe50F0000;
+  //set scratchRegister
+  instr2Copy=instr2Copy | reg2Backup<<12;
+  //set imm12 -> No way that the offset will be bigger than a 12 bit value, PC is 2 behind -> +8
+  instr2Copy=instr2Copy | ((u32int)currBlockCopyCacheAddr -(u32int)blockCopyCacheStartAddress + 8);
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+  return currBlockCopyCacheAddr;
+}
+
+u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  GCONTXT * context = getGuestContext();
+  //ldr(immediate) -> ARM ARM A8.6.58 p432
+  //|    |    |    |    |    |11         0|
+  //|COND|010P|U0W1| Rn | Rt |    imm12   |
+  //|1110|0101|0001|1111|????|????????????|
+  //Rn=baseregister=PC,Rt=sourceRegister,P=1 (otherwise imm12 is ignored),U==1 add imm12 <-> U==0 subtract imm12,W=writeback=0
+  u32int instr2Copy = 0xe51F0000;
+  //set scratchRegister
+  instr2Copy=instr2Copy | reg2Restore<<12;
+  //set imm12 -> No way that the offset will be bigger than a 12 bit value, PC is 2 behind -> +8
+  instr2Copy=instr2Copy | ((u32int)currBlockCopyCacheAddr -(u32int)blockCopyCacheStartAddress + 8);
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+  return currBlockCopyCacheAddr;
+}
+
 /* function to load a register value, evaluates modes. */
 u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
 {

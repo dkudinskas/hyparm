@@ -3,6 +3,13 @@
 #include "cpu.h"
 
 extern GCONTXT * getGuestContext(void); //from main.c
+//uncomment to dump scanner counter on DIE_NOW:
+#define DIE_NOW_SCANNER_COUNTER
+
+#ifdef DIE_NOW_SCANNER_COUNTER
+  extern u32int scannerReqCounter; //from scanner.c
+#endif
+
 
 void banner(char* msg)
 {
@@ -29,6 +36,12 @@ void DIE_NOW(GCONTXT* context, char* msg)
   banner("ERROR");
   serial_putstring(msg);
   serial_newline();
+#ifdef DIE_NOW_SCANNER_COUNTER
+  serial_putstring("Number of scanned blocks: ");
+  serial_putint(scannerReqCounter);
+  serial_newline();
+#endif
+
   if (context != 0)
   {
     dumpGuestContext(context);
