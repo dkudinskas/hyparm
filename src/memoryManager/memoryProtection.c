@@ -317,77 +317,94 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
           pageTableDescriptor* ptDesc = (pageTableDescriptor*)pt1Entry;
           smallDescriptor* ptEntry = 
              (smallDescriptor*)get2ndLevelPtDescriptor((pageTableDescriptor*)ptDesc, address);
-          u8int accPerm = ptEntry->ap10 | (ptEntry->ap2 << 2);
-          switch (accPerm)
+          switch (((descriptor*)ptEntry)->type)
           {
-            case PRIV_NO_USR_NO:      //priv no access, usr no access
+            case SMALL_PAGE:
+            case SMALL_PAGE_3:
             {
-              throwDataAbort(address, perm_page, isWrite, dom);
+              u8int accPerm = ptEntry->ap10 | (ptEntry->ap2 << 2);
+              switch (accPerm)
+              {
+                case PRIV_NO_USR_NO:      //priv no access, usr no access
+                {
+                  throwDataAbort(address, perm_page, isWrite, dom);
+                  return TRUE;
+                }
+                case PRIV_RW_USR_NO:      //priv read/write, usr no access
+                {
+                  if (privAccess)
+                  {
+                    return FALSE;
+                  }
+                  else
+                  {
+                    throwDataAbort(address, perm_page, isWrite, dom);
+                    return TRUE;
+                  }
+                }
+                case PRIV_RW_USR_RO:      // priv read/write, usr read only
+                {
+                  if ((!privAccess) && (isWrite))
+                  {
+                    throwDataAbort(address, perm_page, isWrite, dom);
+                    return TRUE;
+                  }
+                  else
+                  {
+                    return FALSE;
+                  }
+                }
+                case PRIV_RW_USR_RW:       // priv read/write, usr read/write
+                {
+                  return FALSE;
+                }
+                case AP_RESERVED:         // reserved!
+                {
+                  DIE_NOW(context, "shouldDataAbort(): RESERVED access bits in PT entry!");
+                }
+                case PRIV_RO_USR_NO:      // priv read only, usr no access
+                {
+                  if (!privAccess)
+                  {
+                    throwDataAbort(address, perm_page, isWrite, dom);
+                    return TRUE;
+                  }
+                  else if (isWrite)
+                  {
+                    throwDataAbort(address, perm_page, isWrite, dom);
+                    return TRUE;
+                  }
+                  else
+                  {
+                    return FALSE;
+                  }
+                }
+                case DEPRECATED:          // priv read only, usr read only
+                case PRIV_RO_USR_RO:      // priv read only, usr read only
+                {
+                  if (isWrite)
+                  {
+                    throwDataAbort(address, perm_page, isWrite, dom);
+                    return TRUE;
+                  }
+                  else
+                  {
+                    return FALSE;
+                  }
+                }
+              } // AP bits switch ends
+              break;
+            }
+            case LARGE_PAGE:
+            {
+              DIE_NOW(context, "shouldAbort: 2nd lvl ptEntry - large page. unimplemented.");
+            }
+            case FAULT:
+            {
+              throwDataAbort(address, translation_page, isWrite, dom);
               return TRUE;
             }
-            case PRIV_RW_USR_NO:      //priv read/write, usr no access
-            {
-              if (privAccess)
-              {
-                return FALSE;
-              }
-              else
-              {
-                throwDataAbort(address, perm_page, isWrite, dom);
-                return TRUE;
-              }
-            }
-            case PRIV_RW_USR_RO:      // priv read/write, usr read only
-            {
-              if ((!privAccess) && (isWrite))
-              {
-                throwDataAbort(address, perm_page, isWrite, dom);
-                return TRUE;
-              }
-              else
-              {
-                return FALSE;
-              }
-            }
-            case PRIV_RW_USR_RW:       // priv read/write, usr read/write
-            {
-              return FALSE;
-            }
-            case AP_RESERVED:         // reserved!
-            {
-              DIE_NOW(context, "shouldDataAbort(): RESERVED access bits in PT entry!");
-            }
-            case PRIV_RO_USR_NO:      // priv read only, usr no access
-            {
-              if (!privAccess)
-              {
-                throwDataAbort(address, perm_page, isWrite, dom);
-                return TRUE;
-              }
-              else if (isWrite)
-              {
-                throwDataAbort(address, perm_page, isWrite, dom);
-                return TRUE;
-              }
-              else
-              {
-                return FALSE;
-              }
-            }
-            case DEPRECATED:          // priv read only, usr read only
-            case PRIV_RO_USR_RO:      // priv read only, usr read only
-            {
-              if (isWrite)
-              {
-                throwDataAbort(address, perm_page, isWrite, dom);
-                return TRUE;
-              }
-              else
-              {
-                return FALSE;
-              }
-            }
-          } // AP bits switch ends
+          }
           break;
         }
         case RESERVED:
@@ -415,6 +432,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
       }
   } // domain switch ends
 
+  DIE_NOW(context, "shouldDataAbort: should never get to end of function.");
   // compiler happy
   return FALSE;
 }

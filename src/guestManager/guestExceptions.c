@@ -125,6 +125,13 @@ void deliverDataAbort()
 void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
 {
   GCONTXT* context = getGuestContext();
+  // set CP15 Data Fault Status Register
+  u32int dfsr = (faultType & 0xF) | ((faultType & 0x10) << 6);
+  dfsr |= domain << 4;
+  if (isWrite)
+  {
+    dfsr |= 0x800; // write-not-read bit
+  }
 #ifdef GUEST_EXCEPTIONS_DBG
   serial_putstring("throwDataAbort(");
   serial_putint(address);
@@ -136,16 +143,11 @@ void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domai
   serial_putint(isWrite);
   serial_putstring(" @pc=");
   serial_putint(context->R15);
+  serial_putstring(" dfsr=");
+  serial_putint(dfsr);
   serial_putstring(")");
   serial_newline();
 #endif
-  // set CP15 Data Fault Status Register
-  u32int dfsr = (faultType & 0xF) | ((faultType & 0x10) << 6);
-  dfsr |= domain << 4;
-  if (isWrite)
-  {
-    dfsr |= 0x800; // write-not-read bit
-  }
   setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
   // set CP15 Data Fault Address Register to 'address'
   setCregVal(6, 0, 0, 0, context->coprocRegBank, address);
@@ -188,6 +190,9 @@ void deliverPrefetchAbort(void)
 void throwPrefetchAbort(u32int address, u32int faultType)
 {
   GCONTXT* context = getGuestContext();
+  // set CP15 Data Fault Status Register
+  u32int ifsr = (faultType & 0xF) | ((faultType & 0x10) << 10);
+
 #ifdef GUEST_EXCEPTIONS_DBG
   serial_putstring("throwPrefetchAbort(");
   serial_putint(address);
@@ -195,12 +200,11 @@ void throwPrefetchAbort(u32int address, u32int faultType)
   serial_putint(faultType);
   serial_putstring(" @pc=");
   serial_putint(context->R15);
+  serial_putstring(" ifsr=");
+  serial_putint(ifsr);
   serial_putstring(")");
   serial_newline();
 #endif
-  // set CP15 Data Fault Status Register
-  u32int ifsr = (faultType & 0xF) | ((faultType & 0x10) << 10);
-
   setCregVal(5, 0, 0, 1, context->coprocRegBank, ifsr);
   // set CP15 Data Fault Address Register to 'address'
   setCregVal(6, 0, 0, 2, context->coprocRegBank, address);

@@ -34,12 +34,14 @@ void softwareInterrupt(u32int code)
 
   if (code <= 0xFF)
   {
-    deliverServiceCall();
-    nextPC = gContext->R15;
     serial_putstring("softwareInterrupt: SVC<");
     serial_putint(code);
-    serial_putstring("> is a guest system call.");
+    serial_putstring("> @ ");
+    serial_putint(gContext->R15);
+    serial_putstring(" is a guest system call.");
     serial_newline();
+    deliverServiceCall();
+    nextPC = gContext->R15;
   }
   else
   {
@@ -119,7 +121,6 @@ void dataAbort()
       GCONTXT* gc = getGuestContext();
       DFSR dfsr = getDFSR();
       bool isPrivAccess = (gc->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
-      
       if ( shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()) )
       {
         deliverDataAbort();

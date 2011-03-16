@@ -3034,10 +3034,84 @@ void removeLargePageEntry(largeDescriptor* shadow)
 
 void removeSmallPageEntry(smallDescriptor* shadow)
 {
-  serial_putstring("removeSmallPageEntry: shadow @ ");
+#ifdef PT_SHADOW_DEBUG
+  serial_putstring("removeSmallEntry: shadow @ ");
   serial_putint((u32int)shadow);
   serial_putstring(" = ");
   serial_putint(*(u32int*)shadow);
   serial_newline();
-  DIE_NOW(0, "UNIMPLEMENTED: removeSmallPageEntry");
+#endif
+  GCONTXT* context = getGuestContext();
+  u32int vAddr = 0;
+  
+  // get virtual address that this small page maps:
+  u32int maskedAddr = (u32int)shadow & 0xFFFFFC00;
+  u32int ptIndex = 0;
+  bool found = TRUE;
+  for (ptIndex = 0; ptIndex < PAGE_TABLE_ENTRIES; ptIndex++)
+  {
+    descriptor* ptEntry = &context->PT_shadow[ptIndex];
+    if (ptEntry->type == PAGE_TABLE)
+    {
+      pageTableDescriptor* ptDesc = (pageTableDescriptor*)ptEntry;
+      if ( (((u32int)ptDesc->addr << 10) & 0xFFFFFC00) == maskedAddr)
+      {
+        // found section
+        vAddr = ptIndex << 20;
+        // add page index
+        //removeSmallPageEntry: shadow @ 8d016020 = 87897822
+        u32int pageNumber = ((u32int)shadow & 0x000003FF) >> 2;
+        vAddr |= (pageNumber << 12);
+        found = TRUE;
+        break;
+      }
+    }
+  }
+  if (!found)
+  {
+    serial_putstring("removeSmallEntry: maskedAddr = ");
+    serial_putint(maskedAddr);
+    serial_newline();
+    DIE_NOW(context, "removeSmallEntry: couldn't find VA corresponding to edit.");
+  }
+
+#ifdef PT_SHADOW_DEBUG
+  serial_putstring("removeSmallEntry: small page is for VA 0x");
+  serial_putint(vAddr);
+  serial_newline();
+#endif
+    
+  // check if this address maps guest 1st level page table
+  if ((vAddr & 0xFFF00000) == ((u32int)context->PT_os & 0xFFF00000))
+  {
+    // 1st level page table lives in this page!
+    DIE_NOW(context, "removeSmallEntry: may contain guest 1st level page table!");
+  }
+  
+  // check if this address maps guest 2nd level page table
+  u32int metaArrayIndex = 0;
+  u32int guestPA = (*(u32int*)shadow) & 0xFFFFF000;
+  while (guestSecondLvlPageTables[metaArrayIndex].valid != 0)
+  {
+    u32int pAddrPt2 = guestSecondLvlPageTables[metaArrayIndex].pAddr;
+    if( (pAddrPt2 >= guestPA) 
+    && ((pAddrPt2 + SECOND_LEVEL_PAGE_TABLE_SIZE -1) <= (guestPA + SMALL_PAGE_SIZE-1)) )
+    {
+      // 2nd level page table lives in this page!
+      DIE_NOW(context, "removeSmallEntry: may contain guest 1st level page table!");
+    }
+    metaArrayIndex++;
+  }
+  
+  // check if address doesnt fall into hypervisor space
+  u32int startAddr = HYPERVISOR_START_ADDR;
+  u32int endAddr = startAddr + TOTAL_MACHINE_RAM/4;
+  if ((startAddr <= vAddr) && ((vAddr+SMALL_PAGE_SIZE) <= endAddr))
+  {
+    DIE_NOW(context, "removeSmallPage: Guest trying to unmap a VA that the hypervisor lives in");
+  }
+    
+  // Need to flush block cache at these addresses first
+  validateCacheMultiPreChange(context->blockCache, vAddr, (vAddr+SMALL_PAGE_SIZE-1));
+  *(u32int*)shadow = 0;
 }
