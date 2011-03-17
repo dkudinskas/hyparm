@@ -238,9 +238,12 @@ u32int mlsInstruction(GCONTXT * context)
 }
 
 u32int* movwPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "movw PCFunct unfinished\n");
-  return 0;
+{ //Can be optimized -> this instruction is always safe!
+
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=(*instructionAddr);
+
+  return currBlockCopyCacheAddr;
 }
 
 u32int movwInstruction(GCONTXT * context)
@@ -1650,12 +1653,11 @@ u32int* pldPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int pldInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "pldInstruction is executed but not yet checked for blockCopyCompatibility");
 #ifdef ARM_INSTR_TRACE
   serial_putstring("Warning: PLD!");
   serial_newline();
 #endif
-  return context->R15+4;
+  return context->PCOfLastInstruction+4;
 }
 
 u32int* smlabbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)

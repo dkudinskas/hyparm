@@ -388,6 +388,44 @@ u32int eorInstruction(GCONTXT * context)
 
 u32int* bicPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
+  u32int instruction = *instructionAddr;
+  bool immediate = ((instruction >> 25 & 0b1 ) == 0b1);
+  u32int destReg = (instruction >> 12 ) & 0xF;
+  u32int instr2Copy = instruction;
+  if(immediate)
+  {//bic (immediate)
+
+    if(((instruction>>16)& 0xF) == 0xF )
+    { //srcReg is PC ->
+      //step 1 Copy PC (=instructionAddr2) to desReg
+      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+
+      //Step 2 modify ldrInstruction
+      //Clear PC source Register
+      instr2Copy=zeroBits(instruction, 16);
+      instr2Copy=instr2Copy | (destReg<<16);
+    }
+
+    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    return currBlockCopyCacheAddr;
+
+  }
+  else
+  {
+    bool registerShifted = (((instruction>>4 & 0b1) == 0b1) && ((instruction>>7 & 0b1) == 0b0));
+    if(registerShifted)
+    {//bic (register-shifted register)
+       //ARM ARM p 366
+      DIE_NOW(0,"bicPCInstruction: one of the src registers is PC -> UNPREDICTABLE");
+    }
+    else
+    { //bic (register)
+      DIE_NOW(0,"bicPCInstruction (register): not implemented yet");
+    }
+  }
+
   DIE_NOW(0, "bic PCFunct unfinished\n");
   return 0;
 }
