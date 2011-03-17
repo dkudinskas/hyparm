@@ -389,6 +389,35 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // update CCSIDR with correct value
     crbPtr[crbIndex(0, 1, 0, 0)].value = newCCSIDR;
   }
+  else if (CRn==1 && opc1==0 && CRm==0 && opc2==0)
+  {
+    // SCTRL: System control register
+    // check for MMU enable
+    if( (0 == (oldVal & 0x1)) && (1 == (val & 0x1)) )
+    {
+#ifdef COPROC_DEBUG
+      serial_putstring("MMU enable.");
+      serial_newline();
+#endif
+      guestEnableVirtMem();
+    }
+#ifdef COPROC_DEBUG
+    else if((1 == (oldVal & 0x1)) && (0 == (val & 0x1)))
+    {
+      serial_putstring("MMU disable.");
+      serial_newline();
+    }
+#endif
+    //Interupt handler remap
+    if( (0 == (oldVal & 0x2000)) && (0 != (val & 0x2000)) )
+    {
+#ifdef COPROC_DEBUG
+      serial_putstring("CP15: high interrupt vector set.");
+      serial_newline();
+#endif
+      (getGuestContext())->guestHighVectorSet = TRUE; 
+    }
+  }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==0)
   {
 #ifdef COPROC_DEBUG
@@ -599,12 +628,18 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==3)
   {
     // TPIDRURO: software thread ID register, user mode read-only
-    if (val != 0)
-    {
-      serial_putstring("setCregVal: WARN: TPIDRURO value ");
-      serial_putint(val);
-      serial_newline();
-    }
+    // writes are caught by the hypervisor - they are privileged operations
+    // but reads are not! must propagate TPIDRURO value to real CP15.
+#ifdef COPROC_DEBUG
+    serial_putstring("setCregVal: WARN: TPIDRURO value ");
+    serial_putint(val);
+    serial_newline();
+#endif
+    asm("mcr p15, 0, %0, c13, c0, 3"
+    :
+    :"r"(val)
+    :"memory"
+       );
   }
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==4)
   {
@@ -614,34 +649,6 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
       serial_putstring("setCregVal: WARN: TPIDRPRW value ");
       serial_putint(val);
       serial_newline();
-    }
-  }
-  else if(CRn==1 && CRm==0 && opc2==0)
-  {
-    // Test Sys ctrl for mmu enable
-    if( (0 == (oldVal & 0x1)) && (1 == (val & 0x1)) )
-    {
-#ifdef COPROC_DEBUG
-      serial_putstring("MMU enable.");
-      serial_newline();
-#endif
-      guestEnableVirtMem();
-    }
-#ifdef COPROC_DEBUG
-    else if((1 == (oldVal & 0x1)) && (0 == (val & 0x1)))
-    {
-      serial_putstring("MMU disable.");
-      serial_newline();
-    }
-#endif
-    //Interupt handler remap
-    if( (0 == (oldVal & 0x2000)) && (0 != (val & 0x2000)) )
-    {
-#ifdef COPROC_DEBUG
-      serial_putstring("CP15: high interrupt vector set.");
-      serial_newline();
-#endif
-      (getGuestContext())->guestHighVectorSet = TRUE; 
     }
   }
 }
