@@ -504,9 +504,8 @@ u32int mvnInstruction(GCONTXT * context)
 /*********************************/
 
 u32int* lslPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "lsl PCFunct unfinished\n");
-  return 0;
+{  //This is the same as lsrPCInstruction only direction has changed -> only bit 5 differs
+  return lsrPCInstruction(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 
 u32int lslInstruction(GCONTXT * context)

@@ -29,8 +29,29 @@ void invalidDataMoveTrap(char * msg, GCONTXT * gc)
 
 u32int* strPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "str PCFunct unfinished\n");
-  return 0;
+  u32int instruction=*instructionAddr;
+  u32int srcPCRegLoc = 16;//This is where the PC is in the instruction (if immediate always at bit 16 if not can be at bit 0)
+  u32int destReg=(instruction>>12) & 0xF;
+  u32int instr2Copy=instruction;
+  if(((instruction>>25 & 0b1) == 0b1) & ((instruction & 0xF) == 0xF)){//bit 25 is 1 when there are 2 source registers
+    DIE_NOW(0, "str PCFunct: str (register) cannot have Rm as PC -> UNPREDICTABLE");
+  }
+  if((instruction>>srcPCRegLoc & 0xF) == 0xF)  //There only have to be taken measures if Rn is PC
+  {
+    //step 1 Copy PC (=instructionAddr2) to desReg
+    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+
+    //Step 2 modify strInstruction
+    //Clear PC source Register
+    instr2Copy=zeroBits(instruction, srcPCRegLoc);
+    instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
+  }
+
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+
+  return currBlockCopyCacheAddr;
+
 }
 
 u32int strInstruction(GCONTXT * context)

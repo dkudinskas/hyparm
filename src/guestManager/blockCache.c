@@ -236,7 +236,12 @@ void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCach
   //Warning last adress of blockCopyCache is a backpointer and might not be erased therefore
   if( endOfBlock > lastUsableBlockCopyCacheAddress)
   {
-    u32int difference = endOfBlock-lastUsableBlockCopyCacheAddress;
+    u32int difference = endOfBlock-lastUsableBlockCopyCacheAddress-4;
+    serial_putstring("REMOVEBLOCKCOPYCACHEENTRY: ENDOFBLOCK:");
+    serial_newline();
+    serial_putstring("difference = ");
+    serial_putint(difference);
+    serial_newline();
     memset((u32int *)blockCopyCacheAddress,0,(blockCopyCacheSize<<2)-(difference));
     memset((u32int *)context->blockCopyCache,0,difference); //The rest of the block is at the start of BlockCopyCache remove it there
   }
