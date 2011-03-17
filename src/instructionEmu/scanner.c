@@ -32,6 +32,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   u32int * blockCopyCacheCurrAddress = ((u32int* )(gc->blockCopyCacheLastUsedLine))+1;
   u32int * blockCopyCacheStartAddress = ((u32int* )(gc->blockCopyCacheLastUsedLine))+1;
   bool reservedWord = 0;//See struct blockCacheEntry in blockCache.h for explanation
+  u32int blockCopyCacheSize=0;
 
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
@@ -134,17 +135,32 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 
         // asm volatile ("BKPT 0");
         // asm volatile ("BKPT 0");
+        //We have to determine the size of the BlockCopyCache
+        if(blockCopyCacheCurrAddress<blockCopyCacheStartAddress)
+        {
+          blockCopyCacheSize+=gc->blockCopyCacheEnd - (u32int)blockCopyCacheStartAddress;
+          blockCopyCacheSize+=(u32int)blockCopyCacheCurrAddress - gc->blockCopyCache;
+          blockCopyCacheSize=blockCopyCacheSize>>2;//we have casted pointers to u32int thus divide by 4 to get size in words
+          #ifdef SCANNER_DEBUG
+            serial_putstring("Block exceeding end: blockCopyCacheSize=");
+            serial_putint(blockCopyCacheSize);
+          #endif
+        }
+        else
+        {
+          blockCopyCacheSize=blockCopyCacheCurrAddress-blockCopyCacheStartAddress;
+        }
 
         // add the block we just scanned to block cache
         if(reservedWord)
         {
           addToBlockCache(blkStartAddr&1, (u32int)currAddress,
-                                            bcIndex, (blockCopyCacheCurrAddress-blockCopyCacheStartAddress), (u32int)blockCopyCacheStartAddress,gc->endOfBlockInstr,(u32int)gc->hdlFunct,gc->blockCache);
+                                            bcIndex, blockCopyCacheSize, (u32int)blockCopyCacheStartAddress,gc->endOfBlockInstr,(u32int)gc->hdlFunct,gc->blockCache);
         }
         else
         {
           addToBlockCache(blkStartAddr, (u32int)currAddress,
-                                                      bcIndex, (blockCopyCacheCurrAddress-blockCopyCacheStartAddress), (u32int)blockCopyCacheStartAddress,gc->endOfBlockInstr,(u32int)gc->hdlFunct,gc->blockCache);
+                                                      bcIndex, blockCopyCacheSize, (u32int)blockCopyCacheStartAddress,gc->endOfBlockInstr,(u32int)gc->hdlFunct,gc->blockCache);
         }
 
 

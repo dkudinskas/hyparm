@@ -1214,7 +1214,6 @@ u32int* ldrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int ldrInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ldrInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -1230,17 +1229,14 @@ u32int ldrInstruction(GCONTXT * context)
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
+    return context->PCOfLastInstruction + 4;
   }
   if (regOrImm == 0)
   {
     // immediate case
     u32int imm32 = instr & 0x00000FFF;
     baseAddress = loadGuestGPR(regSrc, context);
-    if (regSrc == 15)
-    {
-      baseAddress = baseAddress + 8;
-    }
+
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
     {
@@ -1256,10 +1252,7 @@ u32int ldrInstruction(GCONTXT * context)
     // register case
     u32int regSrc2 = instr & 0x0000000F;
     baseAddress = loadGuestGPR(regSrc, context);
-    if (regSrc == 15)
-    {
-      baseAddress = baseAddress + 8;
-    }
+
     // regSrc2 == PC then UNPREDICTABLE
     if (regSrc2 == 15)
     {
@@ -1306,7 +1299,7 @@ u32int ldrInstruction(GCONTXT * context)
     bool abort = shouldAbort(FALSE, FALSE, address);
     if (abort)
     {
-      return context->R15;
+      return context->PCOfLastInstruction;
     }
   }
   // DO the actual load from memory
@@ -1339,11 +1332,11 @@ u32int ldrInstruction(GCONTXT * context)
   }
   if (regDst == 15)
   {
-    return context->R15;
+    return context->R15; //PC is destination of ldr so we have to use this new value
   }
   else
   {
-    return context->R15+4;
+    return context->PCOfLastInstruction+4; //just go to next instruction
   }
 }
 

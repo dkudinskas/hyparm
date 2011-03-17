@@ -170,7 +170,23 @@ u32int findEntryForAddress(BCENTRY * bcAddr, u32int addr)
 void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex)
 {
   //The copied code has to be cleaned up
-  removeBlockCopyCacheEntry(bcAddr[cacheIndex].blockCopyCacheAddress,bcAddr[cacheIndex].blockCopyCacheSize);
+#ifdef BLOCK_COPY_CACHE_DEBUG
+  serial_putstring("removeCache entered.  Address of cache(logbook) entry:");
+  serial_putint((u32int) (bcAddr+cacheIndex));
+  serial_putstring(" gets cleaned");
+  serial_newline();
+#endif
+  u32int blockCopyCacheAddressOfEntry = bcAddr[cacheIndex].blockCopyCacheAddress;
+  u32int blockCopyCacheSizeOfEntry = bcAddr[cacheIndex].blockCopyCacheSize;
+#ifdef BLOCK_COPY_CACHE_DEBUG
+  serial_putstring("removeBlockCopyCache entry: startAddress:");
+  serial_putint((u32int)blockCopyCacheAddressOfEntry);
+  serial_putstring(" size:");
+  serial_putint(blockCopyCacheSizeOfEntry);
+  serial_newline();
+#endif
+  removeBlockCopyCacheEntry(blockCopyCacheAddressOfEntry,blockCopyCacheSizeOfEntry);
+
   bcAddr[cacheIndex].valid = FALSE;
   bcAddr[cacheIndex].startAddress = 0;
   bcAddr[cacheIndex].endAddress = 0;
@@ -215,7 +231,7 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize){
   //First we must check if we have to remove a coninuous block are that it is split up (if it was to close to the end
   GCONTXT * context = getGuestContext();
-  u32int endOfBlock = (blockCopyCacheAddress+blockCopyCacheSize<<2);//End of the block that has to be removed
+  u32int endOfBlock = (blockCopyCacheAddress+(blockCopyCacheSize<<2));//End of the block that has to be removed
   u32int lastUsableBlockCopyCacheAddress = context->blockCopyCacheEnd-4; //see comment next rule
   //Warning last adress of blockCopyCache is a backpointer and might not be erased therefore
   if( endOfBlock > lastUsableBlockCopyCacheAddress)

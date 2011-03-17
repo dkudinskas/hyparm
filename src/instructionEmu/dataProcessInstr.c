@@ -527,8 +527,37 @@ u32int lsrInstruction(GCONTXT * context)
 
 u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "asr PCFunct unfinished\n");
-  return 0;
+  u32int instruction = *instructionAddr;
+  bool immediate = ( (instruction>>4 & 0x7) == 0x4 );
+  u32int destReg = (instruction>>12) & 0xF;
+  u32int instr2Copy = 0;
+  if(immediate)
+  {
+    if((instruction & 0xF)== 0xF)
+    { //inputRegister = PC
+      //step 1 Copy PC (=instructionAddr2) to desReg
+      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+
+      //Step 2 modify ldrInstruction
+      //Clear PC source Register
+      instr2Copy=zeroBits(instruction, 0);
+      instr2Copy=instr2Copy | (destReg);
+    }
+    else
+    {//Safe instruction-> just copy it
+      instr2Copy = instruction;
+    }
+  }
+  else
+  {
+    //ARM p 352
+    DIE_NOW(0,"asrPCInstruction: ASR(register) cannot take PC as input!->UNPREDICTABLE");
+  }
+
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+
+  return currBlockCopyCacheAddr;
 }
 
 u32int asrInstruction(GCONTXT * context)
