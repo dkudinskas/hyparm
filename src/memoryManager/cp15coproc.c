@@ -97,15 +97,6 @@ void initCRB(CREG * crb)
   crb[crbIndex(CRn, opc1, CRm, opc2)].value = physVal;
   crb[crbIndex(CRn, opc1, CRm, opc2)].valid = TRUE;
 
-//  CRn = 0; opc1 = 1; CRm = 0; opc2 = 1;
-//  asm ("mrc p15, 0x01, %0, c0, c0, 0x01"
-//  : "=r"(physVal)            /* output operands */
-//  :                          /* input operands */
-//  : "memory"                 /* clobbered registers */
-//      );
-//  crb[crbIndex(CRn, opc1, CRm, opc2)].value = physVal;
-//  crb[crbIndex(CRn, opc1, CRm, opc2)].valid = TRUE;
-
   /* CLIDR:
    * cache level ID register: beagle board 0x0A000023
    * lvl1 separate I&D caches, lvl2 unified cache */
@@ -152,9 +143,108 @@ void initCRB(CREG * crb)
   crb[i].value = 0x0000000f;
   crb[i].valid = TRUE;
 
+  /* DFSR:
+   * data fault status register: encodes information about the last dAbort
+   * initialize to 0 */
+  i = crbIndex(5, 0, 0, 0);
+  crb[i].value = 0x0;
+  crb[i].valid = TRUE;
+
+  /* IFSR:
+   * instruction fault status register: encodes information about the last
+   * prefetch abort. Initialize to 0 */
+  i = crbIndex(5, 0, 0, 1);
+  crb[i].value = 0x0;
+  crb[i].valid = TRUE;
+
+  /* DFAR:
+   * data fault address register: target address of last mem access that
+   * caused a data abort. initialize to 0 */
+  i = crbIndex(6, 0, 0, 0);
+  crb[i].value = 0x0;
+  crb[i].valid = TRUE;
+
+  /* IFAR:
+   * instruction fault address register: target PC of the last instruction fetch
+   * that caused a prefetch abort. Initialize to 0 */
+  i = crbIndex(6, 0, 0, 2);
+  crb[i].value = 0x0;
+  crb[i].valid = TRUE;
+
+  /* ICIALLU:
+   * invalidate all instruction caches to PoC, write-only */
+  i = crbIndex(7, 0, 5, 0);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* ICIMVAU:
+   * invalidate instruction caches by MVA to PoU, write-only */
+  i = crbIndex(7, 0, 5, 1);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* BPIALL:
+   * invalidate entire branch predictor array, write-only */
+  i = crbIndex(7, 0, 5, 6);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* DCCMVAC:
+   * clean data cache line by MVA to PoC, write-only */
+  i = crbIndex(7, 0, 10, 1);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* DCCSW:
+   * clean data cache line by set/way to PoC, write-only */
+  i = crbIndex(7, 0, 10, 2);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* DCCMVAU: 
+   * clean data cache line by MVA to PoU, write only */
+  i = crbIndex(7, 0, 11, 1);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* DCCIMVAC: clean and invalidate dCache by MVA to PoC, write-only */
+  i = crbIndex(7, 0, 14, 1);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
   /* DCCISW:
-   * clean and invalidate data cache line by set/way, W/O register */
+   * clean and invalidate data cache line by set/way, write-only */
   i = crbIndex(7, 0, 14, 2);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* ITLBIALL: invalide instruction TLB (all), write-only */
+  i = crbIndex(8, 0, 5, 0);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* ITLBIMVA: invalide instruction TLB by MVA, write-only */
+  i = crbIndex(8, 0, 5, 1);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* ITLBIASID: invalide instruction TLB by ASID match, write-only */
+  i = crbIndex(8, 0, 5, 2);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* DTLBIALL: invalide data TLB (all), write-only */
+  i = crbIndex(8, 0, 6, 0);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* DTLBIMVA: invalide data TLB by MVA, write-only */
+  i = crbIndex(8, 0, 6, 1);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* DTLBIMVA: invalide data TLB by ASID match, write-only */
+  i = crbIndex(8, 0, 6, 2);
   crb[i].value = 0;
   crb[i].valid = TRUE;
 
@@ -177,6 +267,41 @@ void initCRB(CREG * crb)
   i = crbIndex(10, 0, 2, 1);
   crb[i].value = 0x44E048E0;
   crb[i].valid = TRUE;
+  
+  /* FCSEIDR: 
+   * fast context switch extension process ID register
+   * initialize to 0 */
+  i = crbIndex(13, 0, 0, 0);
+  crb[i].value = 0x0;
+  crb[i].valid = TRUE;
+
+  /* CONTEXTID:
+   * context ID register 
+   * initialize to 0 */
+  i = crbIndex(13, 0, 0, 1);
+  crb[i].value = 0x0;
+  crb[i].valid = TRUE;
+
+  /* TPIDRURW:
+   * software thread ID register, user mode read-write 
+   * initialize to 0 */
+  i = crbIndex(13, 0, 0, 2);
+  crb[i].value = 0x0;
+  crb[i].valid = TRUE;
+
+  /* TPIDRURO:
+   * software thread ID register, user mode read-only
+   * initialize to 0 */
+  i = crbIndex(13, 0, 0, 3);
+  crb[i].value = 0x0;
+  crb[i].valid = TRUE;
+
+  /* TPIDRPRW: 
+   * software thread ID register, privileged read/write only
+   * initialize to 0 */
+  i = crbIndex(13, 0, 0, 4);
+  crb[i].value = 0x0;
+  crb[i].valid = TRUE;
 }
 
 void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr, u32int val)
@@ -197,7 +322,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     serial_putstring(") Value = ");
     serial_putint(val);
     serial_newline();
-//    DIE_NOW(0, "setCregVal: writing to uninitialized register. investigate.");
+    DIE_NOW(0, "setCregVal: writing to uninitialized register. investigate.");
   }
   u32int oldVal = crbPtr[index].value;
   crbPtr[index].value = val;
@@ -266,11 +391,11 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==0)
   {
-//#ifdef COPROC_DEBUG
+#ifdef COPROC_DEBUG
     serial_putstring("setCregVal: TTBR0 write ");
     serial_putint(val);
     serial_newline();
-//#endif
+#endif
     initialiseGuestShadowPageTable(val);
   }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==1)
@@ -303,10 +428,125 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     }
   }
 #ifdef COPROC_DEBUG
+  else if (CRn==5 && opc1==0 && CRm==0 && opc2==0)
+  {
+    // DFSR: data fault status register
+    serial_putstring("setCregVal: set DFSR to ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==5 && opc1==0 && CRm==0 && opc2==1)
+  {
+    // IFSR: instruction fault status register
+    serial_putstring("setCregVal: set IFSR to ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==6 && opc1==0 && CRm==0 && opc2==0)
+  {
+    // DFAR: data fault address register
+    serial_putstring("setCregVal: set DFAR to ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==6 && opc1==0 && CRm==0 && opc2==2)
+  {
+    // IFAR: instruction fault address register
+    serial_putstring("setCregVal: set IFAR to ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==7 && opc1==0 && CRm==5 && opc2==0)
+  {
+    // ICIALLU: invalidate all instruction caches to PoC
+    serial_putstring("setCregVal: invalidate all iCaches to PoC");
+    serial_newline();
+  }
+  else if (CRn==7 && opc1==0 && CRm==5 && opc2==1)
+  {
+    // ICIMVAU: invalidate instruction caches by MVA to PoU
+    serial_putstring("setCregVal: invalidate iCaches by MVA to PoC: ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==7 && opc1==0 && CRm==5 && opc2==6)
+  {
+    // BPIALL: invalidate entire branch predictor array
+    serial_putstring("setCregVal: invalidate entire branch predictor array");
+    serial_newline();
+  }
+  else if (CRn==7 && opc1==0 && CRm==11 && opc2==1)
+  {
+    // DCCMVAU: clean data cache line by MVA to PoU
+    serial_putstring("setCregVal: clean dCache line by MVA to PoU: ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==7 && opc1==0 && CRm==14 && opc2==1)
+  {
+    // DCCIMVAC: clean and invalidate dCache by MVA to PoC
+    serial_putstring("setCregVal: clean and invalidate dCache by MVA to PoC: ");
+    serial_putint(val);
+    serial_newline();
+  }
   else if (CRn==7 && opc1==0 && CRm==14 && opc2==2)
   {
     // DCCISW: clean and invalidate data cache line by set/way
     serial_putstring("setCregVal: clean and invalidate Dcache line, set/way: ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==7 && opc1==0 && CRm==10 && opc2==1)
+  {
+    // DCCMVAC: clean data cache line by MVA to PoC
+    serial_putstring("setCregVal: clean Dcache line by MVA to PoC: ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==7 && opc1==0 && CRm==10 && opc2==2)
+  {
+    // DCCSW: clean data cache line by set/way to PoC 
+    serial_putstring("setCregVal: clean Dcache line, set/way to PoC: ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==8 && opc1==0 && CRm==5 && opc2==0)
+  {
+    // ITLBIALL: invalide instruction TLB (all)
+    serial_putstring("setCregVal: invalidate instruction TLB (all)");
+    serial_newline();
+  }
+  else if (CRn==8 && opc1==0 && CRm==5 && opc2==1)
+  {
+    // ITLBIALL: invalide instruction TLB by MVA
+    serial_putstring("setCregVal: invalidate instruction TLB by MVA: ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==8 && opc1==0 && CRm==5 && opc2==2)
+  {
+    // ITLBIASID: invalide instruction TLB by ASID match 
+    serial_putstring("setCregVal: invalidate instruction TLB by ASID match: ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==8 && opc1==0 && CRm==6 && opc2==0)
+  {
+    // DTLBIALL: invalide data TLB (all)
+    serial_putstring("setCregVal: invalidate data TLB (all)");
+    serial_newline();
+  }
+  else if (CRn==8 && opc1==0 && CRm==6 && opc2==1)
+  {
+    // DTLBIMVA: invalidate dTLB entry by MVA
+    serial_putstring("setCregVal: invalidate data TLB by MVA: ");
+    serial_putint(val);
+    serial_newline();
+  }
+  else if (CRn==8 && opc1==0 && CRm==6 && opc2==2)
+  {
+    // DTLBIASID: invalidate dTLB entry by MVA
+    serial_putstring("setCregVal: invalidate data TLB by ASID match: ");
     serial_putint(val);
     serial_newline();
   }
@@ -331,6 +571,51 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     serial_newline();
   }
 #endif
+  else if (CRn==13 && opc1==0 && CRm==0 && opc2==0)
+  {
+    // FCSEIDR: fast context switch extension process ID register
+    DIE_NOW(0, "setCregVal: writing FCSEIDR - investigate!");
+  }
+  else if (CRn==13 && opc1==0 && CRm==0 && opc2==1)
+  {
+    // CONTEXTID: context ID register 
+    if (val != 0)
+    {
+      serial_putstring("setCregVal: WARN: CONTEXTID value ");
+      serial_putint(val);
+      serial_newline();
+    }
+  }
+  else if (CRn==13 && opc1==0 && CRm==0 && opc2==2)
+  {
+    // TPIDRURW: software thread ID register, user mode read-write 
+    if (val != 0)
+    {
+      serial_putstring("setCregVal: WARN: TPIDRURW value ");
+      serial_putint(val);
+      serial_newline();
+    }
+  }
+  else if (CRn==13 && opc1==0 && CRm==0 && opc2==3)
+  {
+    // TPIDRURO: software thread ID register, user mode read-only
+    if (val != 0)
+    {
+      serial_putstring("setCregVal: WARN: TPIDRURO value ");
+      serial_putint(val);
+      serial_newline();
+    }
+  }
+  else if (CRn==13 && opc1==0 && CRm==0 && opc2==4)
+  {
+    // TPIDRPRW: software thread ID register, user mode no access 
+    if (val != 0)
+    {
+      serial_putstring("setCregVal: WARN: TPIDRPRW value ");
+      serial_putint(val);
+      serial_newline();
+    }
+  }
   else if(CRn==1 && CRm==0 && opc2==0)
   {
     // Test Sys ctrl for mmu enable
