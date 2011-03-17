@@ -93,8 +93,8 @@ void dataAbort()
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
   switch(faultStatus)
   {
-    case perm_section:
-    case perm_page:
+    case dfsPermissionSection:
+    case dfsPermissionPage:
     {
       // Check if the addr we have faulted on is caused by 
       // a memory protection the hypervisor has enabled
@@ -115,8 +115,8 @@ void dataAbort()
       }
       break;
     }
-    case translation_section:
-    case translation_page:
+    case dfsTranslationSection:
+    case dfsTranslationPage:
     {
       GCONTXT* gc = getGuestContext();
       DFSR dfsr = getDFSR();
@@ -128,6 +128,27 @@ void dataAbort()
       }
       break;
     }
+    case dfsSyncExternalAbt:
+    {
+      printDataAbort();
+      DIE_NOW(0, "dataAbort: synchronous external abort hit!");
+    }
+    case dfsAlignmentFault:
+    case dfsDebugEvent:
+    case dfsAccessFlagSection:
+    case dfsIcacheMaintenance:
+    case dfsAccessFlagPage:
+    case dfsDomainSection:
+    case dfsDomainPage:
+    case dfsTranslationTableWalkLvl1SyncExtAbt:
+    case dfsTranslationTableWalkLvl2SyncExtAbt:
+    case dfsImpDepLockdown:
+    case dfsAsyncExternalAbt:
+    case dfsMemAccessAsyncParityErr:
+    case dfsMemAccessAsyncParityERr2:
+    case dfsImpDepCoprocessorAbort:
+    case dfsTranslationTableWalkLvl1SyncParityErr:
+    case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
       serial_putstring("Unimplemented user data abort.");
       serial_newline();
@@ -147,8 +168,8 @@ void dataAbortPrivileged()
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
   switch(faultStatus)
   {
-    case translation_section:
-    case translation_page:
+    case dfsTranslationSection:
+    case dfsTranslationPage:
     {
       //Mostly likely trying to access a page of physical memory, just map it.
       u32int memAddr = getDFAR();
@@ -168,9 +189,29 @@ void dataAbortPrivileged()
       }
       break;
     }
+    case dfsAlignmentFault:
+    case dfsDebugEvent:
+    case dfsAccessFlagSection:
+    case dfsIcacheMaintenance:
+    case dfsAccessFlagPage:
+    case dfsSyncExternalAbt:
+    case dfsDomainSection:
+    case dfsDomainPage:
+    case dfsTranslationTableWalkLvl1SyncExtAbt:
+    case dfsPermissionSection:
+    case dfsTranslationTableWalkLvl2SyncExtAbt:
+    case dfsPermissionPage:
+    case dfsImpDepLockdown:
+    case dfsAsyncExternalAbt:
+    case dfsMemAccessAsyncParityErr:
+    case dfsMemAccessAsyncParityERr2:
+    case dfsImpDepCoprocessorAbort:
+    case dfsTranslationTableWalkLvl1SyncParityErr:
+    case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
-      serial_putstring("UNIMPLEMENTED data abort type. (exceptionHandlers.c).");
+      serial_putstring("dataAbortPrivileged: UNIMPLEMENTED data abort type.");
       serial_newline();
+      printDataAbort();
       DIE_NOW(0, "Entering infinite loop");
       break;
   }
@@ -206,7 +247,7 @@ void prefetchAbort(void)
 
   switch(faultStatus)
   {
-    case translationFaultPage:
+    case ifsTranslationFaultPage:
     {
       if ( shouldPrefetchAbort(ifar) )
       {
@@ -215,22 +256,22 @@ void prefetchAbort(void)
       }
       break;
     }
-    case debugEvent:
-    case accessFlagFaultSection:
-    case translationFaultSection:
-    case accessFlagFaultPage:
-    case synchronousExternalAbort:
-    case domainFaultSection:
-    case domainFaultPage:
-    case translationTableTalk1stLvlSynchExtAbt:
-    case permissionFaultSection:
-    case translationTableWalk2ndLvllSynchExtAbt:
-    case permissionFaultPage:
-    case impDepLockdown:
-    case memoryAccessSynchParityError:
-    case impDepCoprocessorAbort:
-    case translationTableWalk1stLvlSynchParityError:
-    case translationTableWalk2ndLvlSynchParityError:
+    case ifsDebugEvent:
+    case ifsAccessFlagFaultSection:
+    case ifsTranslationFaultSection:
+    case ifsAccessFlagFaultPage:
+    case ifsSynchronousExternalAbort:
+    case ifsDomainFaultSection:
+    case ifsDomainFaultPage:
+    case ifsTranslationTableTalk1stLvlSynchExtAbt:
+    case ifsPermissionFaultSection:
+    case ifsTranslationTableWalk2ndLvllSynchExtAbt:
+    case ifsPermissionFaultPage:
+    case ifsImpDepLockdown:
+    case ifsMemoryAccessSynchParityError:
+    case ifsImpDepCoprocessorAbort:
+    case ifsTranslationTableWalk1stLvlSynchParityError:
+    case ifsTranslationTableWalk2ndLvlSynchParityError:
     default:
       printPrefetchAbort();
       DIE_NOW(gc, "Unimplemented guest prefetch abort.");

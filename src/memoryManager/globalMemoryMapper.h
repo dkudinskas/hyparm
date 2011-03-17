@@ -48,6 +48,9 @@
 // load multiple
 #define LDM_MASK        0x0e100000
 #define LDM_MASKED      0x08100000
+// load exclusive
+#define LDREX_MASK      0x0ff00fff
+#define LDREX_MASKED    0x01900f9f
 
 
 /* generic load store instruction emulation  *

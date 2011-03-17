@@ -84,6 +84,11 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
     // LDM, Rn, {reg list}
     ldmInstruction(context);
   }
+  else if ((instr & LDREX_MASK) == LDREX_MASKED)
+  {
+    // LDREX Rd, [Rn]
+    ldrexInstruction(context);
+  }
   else
   {
     serial_putstring("LoadStore @ ");

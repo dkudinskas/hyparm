@@ -233,7 +233,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
           serial_putstring("shouldDataAbort(): dacr 1, ptEntry type fault!");
           serial_newline();
 #endif
-          throwDataAbort(address, translation_section, isWrite, dom);
+          throwDataAbort(address, dfsTranslationSection, isWrite, dom);
           return TRUE;
         }
         case SECTION:
@@ -244,7 +244,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
           {
             case PRIV_NO_USR_NO:      //priv no access, usr no access
             {
-              throwDataAbort(address, perm_section, isWrite, dom);
+              throwDataAbort(address, dfsPermissionSection, isWrite, dom);
               return TRUE;
             }
             case PRIV_RW_USR_NO:      //priv read/write, usr no access
@@ -255,7 +255,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
               }
               else
               {
-                throwDataAbort(address, perm_section, isWrite, dom);
+                throwDataAbort(address, dfsPermissionSection, isWrite, dom);
                 return TRUE;
               }
             }
@@ -263,7 +263,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
             {
               if ((!privAccess) && (isWrite))
               {
-                throwDataAbort(address, perm_section, isWrite, dom);
+                throwDataAbort(address, dfsPermissionSection, isWrite, dom);
                 return TRUE;
               }
               else
@@ -283,12 +283,12 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
             {
               if (!privAccess)
               {
-                throwDataAbort(address, perm_section, isWrite, dom);
+                throwDataAbort(address, dfsPermissionSection, isWrite, dom);
                 return TRUE;
               }
               else if (isWrite)
               {
-                throwDataAbort(address, perm_section, isWrite, dom);
+                throwDataAbort(address, dfsPermissionSection, isWrite, dom);
                 return TRUE;
               }
               else
@@ -301,7 +301,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
             {
               if (isWrite)
               {
-                throwDataAbort(address, perm_section, isWrite, dom);
+                throwDataAbort(address, dfsPermissionSection, isWrite, dom);
                 return TRUE;
               }
               else
@@ -327,7 +327,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
               {
                 case PRIV_NO_USR_NO:      //priv no access, usr no access
                 {
-                  throwDataAbort(address, perm_page, isWrite, dom);
+                  throwDataAbort(address, dfsPermissionPage, isWrite, dom);
                   return TRUE;
                 }
                 case PRIV_RW_USR_NO:      //priv read/write, usr no access
@@ -338,7 +338,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
                   }
                   else
                   {
-                    throwDataAbort(address, perm_page, isWrite, dom);
+                    throwDataAbort(address, dfsPermissionPage, isWrite, dom);
                     return TRUE;
                   }
                 }
@@ -346,7 +346,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
                 {
                   if ((!privAccess) && (isWrite))
                   {
-                    throwDataAbort(address, perm_page, isWrite, dom);
+                    throwDataAbort(address, dfsPermissionPage, isWrite, dom);
                     return TRUE;
                   }
                   else
@@ -366,12 +366,12 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
                 {
                   if (!privAccess)
                   {
-                    throwDataAbort(address, perm_page, isWrite, dom);
+                    throwDataAbort(address, dfsPermissionPage, isWrite, dom);
                     return TRUE;
                   }
                   else if (isWrite)
                   {
-                    throwDataAbort(address, perm_page, isWrite, dom);
+                    throwDataAbort(address, dfsPermissionPage, isWrite, dom);
                     return TRUE;
                   }
                   else
@@ -384,7 +384,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
                 {
                   if (isWrite)
                   {
-                    throwDataAbort(address, perm_page, isWrite, dom);
+                    throwDataAbort(address, dfsPermissionPage, isWrite, dom);
                     return TRUE;
                   }
                   else
@@ -401,7 +401,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
             }
             case FAULT:
             {
-              throwDataAbort(address, translation_page, isWrite, dom);
+              throwDataAbort(address, dfsTranslationPage, isWrite, dom);
               return TRUE;
             }
           }
@@ -423,7 +423,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
       // however, pt entry must be valid.
       if (pt1Entry->type == FAULT)
       {
-        throwDataAbort(address, translation_section, isWrite, dom);
+        throwDataAbort(address, dfsTranslationSection, isWrite, dom);
         return TRUE;
       }
       else
@@ -460,7 +460,7 @@ bool shouldPrefetchAbort(u32int address)
       serial_putstring("shouldPrefetchAbort(): Lvl1 ptEntry type FAULT!");
       serial_newline();
 #endif
-      throwPrefetchAbort(address, translationFaultSection);
+      throwPrefetchAbort(address, ifsTranslationFaultSection);
       return TRUE;
     }
     case SECTION:
@@ -489,7 +489,7 @@ bool shouldPrefetchAbort(u32int address)
         }
         case FAULT:
         {
-          throwPrefetchAbort(address, translationFaultPage);
+          throwPrefetchAbort(address, ifsTranslationFaultPage);
           return TRUE;
         }
       }
