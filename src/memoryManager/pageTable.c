@@ -1776,11 +1776,21 @@ void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow)
     }
     /* End WARNING */
 
-    //Currently just map these, may need to correct this with something proper later
     shadow->c = 0;
     shadow->b = 0;
+    // since we map C and B as 0, and TEX remap is off, we must set
+    // TEX bits correctly
+    // TEX[2]= 1, then TEX[1:0] specify outer cache atributes, C:B specify inner.
+    // Encoding    Cache-attribute
+    //      0 0    Non-cacheable
+    //      0 1    Write-Back, Write-Allocate
+    //      1 0    Write-Through, no Write-Allocate
+    //      1 1    Write-Back, no Write-Allocate
+
+    // outer non-cacheable, normal memory type, page shareability S bit
+    shadow->tex = 0b100; 
+
     shadow->s = 0;
-    shadow->tex = 0;
     shadow->nG = guest->nG;
   }
   else

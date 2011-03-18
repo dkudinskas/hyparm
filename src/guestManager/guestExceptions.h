@@ -5,8 +5,7 @@
 #include "serial.h"
 
 
-// uncomment me to enable debug : 
-#define GUEST_EXCEPTIONS_DBG
+// uncomment me to enable debug : #define GUEST_EXCEPTIONS_DBG
 
 #define CPSR_NEG_CCFLAG       0x80000000
 #define CPSR_ZER_CCFLAG       0x40000000

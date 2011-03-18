@@ -99,6 +99,7 @@ void clearTLBbyMVA(u32int address);
 void dataBarrier(void);
 void setTTBCR(u32int value);
 void setDomain(u8int domain, access_type access);
+void setTexRemap(bool enable);
 
 u32int getDFAR(void);
 DFSR getDFSR(void);

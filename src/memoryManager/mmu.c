@@ -196,6 +196,56 @@ void setDomain(u8int domain, access_type access)
 
 }
 
+
+void setTexRemap(bool enable)
+{
+#ifdef MMU_DEBUG
+  serial_putstring("setTexRemap: ");
+  serial_putint(enable);
+  serial_newline();
+#endif
+
+  u32int value;
+  asm volatile("mrc p15, 0, %0, c1, c0, 0"
+  : "=r"(value)
+  :
+  : "memory"
+     );
+#ifdef MMU_DEBUG
+  serial_putstring("setTexRemap: currently SCTRL.TRE = ");
+  u32int treEnabled = ((value & 0x10000000) == 0x10000000) ? TRUE : FALSE; 
+  serial_putint(treEnabled);
+  serial_newline();
+#endif
+
+  if (enable)
+  {
+    value |= 0x10000000;
+  }
+  else
+  {
+    value &= 0xEFFFFFFF;
+  }
+
+  asm volatile("mcr p15, 0, %0, c1, c0, 0"
+  :
+  : "r"(value)
+  : "memory"
+     );
+
+#ifdef MMU_DEBUG
+  asm volatile("mrc p15, 0, %0, c1, c0, 0"
+  : "=r"(value)
+  :
+  : "memory"
+              );
+  serial_putstring("setTexRemap: SCTRL after update ");
+  serial_putint(value);
+  serial_newline();
+#endif
+}
+
+
 void mmuInsertPt0(descriptor* addr)
 {
 #ifdef MMU_DEBUG

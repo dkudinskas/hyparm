@@ -34,12 +34,14 @@ void softwareInterrupt(u32int code)
 
   if (code <= 0xFF)
   {
+#ifdef EXC_HDLR_DBG
     serial_putstring("softwareInterrupt: SVC<");
     serial_putint(code);
     serial_putstring("> @ ");
     serial_putint(gContext->R15);
     serial_putstring(" is a guest system call.");
     serial_newline();
+#endif
     deliverServiceCall();
     nextPC = gContext->R15;
   }

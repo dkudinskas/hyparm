@@ -8,8 +8,6 @@ extern GCONTXT * getGuestContext(void);
 void initCRB(CREG * crb)
 {
   u32int i = 0;
-  u32int physVal = 0;
-  u16int CRn = 0; u8int opc1 = 0; u16int CRm = 0; u8int opc2 = 0;
 
 #ifdef COPROC_DEBUG
   serial_putstring("Initializing coprocessor reg bank @ address ");
@@ -24,78 +22,46 @@ void initCRB(CREG * crb)
     crb[i].valid = FALSE;
   }
 
-  /* initialize default register values */
-  CRn = 0; opc1 = 0; CRm = 0; opc2 = 0;
-  asm ("mrc p15, 0, %0, c0, c0, 0"
-       : "=r"(physVal)            /* output operands */
-       :                          /* input operands */
-       : "memory"                 /* clobbered registers */
-       );
-  crb[crbIndex(CRn, opc1, CRm, opc2)].value = physVal;
-  crb[crbIndex(CRn, opc1, CRm, opc2)].valid = TRUE;
+  /* MIDR:
+   * main ID register: CPU idenification including implementor code
+   * read only. init to 411FC083
+   * 41xxxxxx - implementer ID
+   * xx1xxxxx - variant
+   * xxxFxxxx - architecture
+   * xxxxC08x - primary part number
+   * xxxxxxx3 - revision */
+  i = crbIndex(0, 0, 0, 0);
+  crb[i].value = 0x411FC083;
+  crb[i].valid = TRUE;
 
-  CRn = 0; opc1 = 0; CRm = 0; opc2 = 1;
-  asm ("mrc p15, 0, %0, c0, c0, 1"
-       : "=r"(physVal)            /* output operands */
-       :                          /* input operands */
-       : "memory"                 /* clobbered registers */
-       );
-  crb[crbIndex(CRn, opc1, CRm, opc2)].value = physVal;
-  crb[crbIndex(CRn, opc1, CRm, opc2)].valid = TRUE;
+  /* CTR:
+   * cache type register: information on the architecture of caches
+   * read only. init to 80048004 */
+  i = crbIndex(0, 0, 0, 1);
+  crb[i].value = 0x80048004;
+  crb[i].valid = TRUE;
 
-  CRn = 0; opc1 = 0; CRm = 1; opc2 = 4;
-  asm ("mrc p15, 0x00, %0, c0, c1, 0x04"
-       : "=r"(physVal)            /* output operands */
-       :                          /* input operands */
-       : "memory"                 /* clobbered registers */
-       );
-  crb[crbIndex(CRn, opc1, CRm, opc2)].value = physVal;
-  crb[crbIndex(CRn, opc1, CRm, opc2)].valid = TRUE;
+  /* MMFR0:
+   * memory model feature register 0
+   * read only, init to 31100003 */
+  i = crbIndex(0, 0, 1, 4);
+  crb[i].value = 0x31100003;
+  crb[i].valid = TRUE;
 
-  CRn = 0; opc1 = 0; CRm = 1; opc2 = 5;
-  asm ("mrc p15, 0x00, %0, c0, c1, 0x05"
-       : "=r"(physVal)            /* output operands */
-       :                          /* input operands */
-       : "memory"                 /* clobbered registers */
-       );
-  crb[crbIndex(CRn, opc1, CRm, opc2)].value = physVal;
-  crb[crbIndex(CRn, opc1, CRm, opc2)].valid = TRUE;
+  /* MMFR1:
+   * memory model feature register 1
+   * read only, init to 20000000 */
+  i = crbIndex(0, 0, 1, 5);
+  crb[i].value = 0x20000000;
+  crb[i].valid = TRUE;
 
-  CRn = 0; opc1 = 1; CRm = 0; opc2 = 0;
-  asm ("mrc p15, 0x01, %0, c0, c0, 0x00"
-       : "=r"(physVal)            /* output operands */
-       :                          /* input operands */
-       : "memory"                 /* clobbered registers */
-       );
-  crb[crbIndex(CRn, opc1, CRm, opc2)].value = physVal;
-  crb[crbIndex(CRn, opc1, CRm, opc2)].valid = TRUE;
-
-  CRn = 0; opc1 = 1; CRm = 0; opc2 = 1;
-  asm ("mrc p15, 0x01, %0, c0, c0, 0x01"
-       : "=r"(physVal)            /* output operands */
-       :                          /* input operands */
-       : "memory"                 /* clobbered registers */
-       );
-  crb[crbIndex(CRn, opc1, CRm, opc2)].value = physVal;
-  crb[crbIndex(CRn, opc1, CRm, opc2)].valid = TRUE;
-
-  CRn = 1; opc1 = 0; CRm = 0; opc2 = 0;
-  asm ("mrc p15, 0x00, %0, c1, c0, 0x00"
-       : "=r"(physVal)            /* output operands */
-       :                          /* input operands */
-       : "memory"                 /* clobbered registers */
-       );
-  crb[crbIndex(CRn, opc1, CRm, opc2)].value = physVal;
-  crb[crbIndex(CRn, opc1, CRm, opc2)].valid = TRUE;
-
-  CRn = 0; opc1 = 0; CRm = 1; opc2 = 5;
-  asm ("mrc p15, 0x00, %0, c0, c1, 0x05"
-  : "=r"(physVal)            /* output operands */
-  :                          /* input operands */
-  : "memory"                 /* clobbered registers */
-      );
-  crb[crbIndex(CRn, opc1, CRm, opc2)].value = physVal;
-  crb[crbIndex(CRn, opc1, CRm, opc2)].valid = TRUE;
+  /* CCSIDR:
+   * cache size id register: provide information about the architecture of caches
+   * CSSELR selects default level 0 data cache information: 0xE007E01A
+   * WT, WB, RA able, no WA. 256 sets, associativity 4, words per line 16 */
+  i = crbIndex(0, 1, 0, 0);
+  crb[i].value = 0xE007E01A;
+  crb[i].valid = TRUE;
 
   /* CLIDR:
    * cache level ID register: beagle board 0x0A000023
@@ -111,12 +77,10 @@ void initCRB(CREG * crb)
   crb[i].value = 0x00000000;
   crb[i].valid = TRUE;
 
-  /* CCSIDR:
-   * cache size id register: provide information about the architecture of caches
-   * CSSELR selects default level 0 data cache information: 0xE007E01A
-   * WT, WB, RA able, no WA. 256 sets, associativity 4, words per line 16 */
-  i = crbIndex(0, 1, 0, 0);
-  crb[i].value = 0xE007E01A;
+  /* SCTRL:
+   * system control register, init to C5187A */  
+  i = crbIndex(1, 0, 0, 0);
+  crb[i].value = 0xC5187A;
   crb[i].valid = TRUE;
 
   /* TTBR0:
@@ -391,6 +355,12 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==1 && opc1==0 && CRm==0 && opc2==0)
   {
+#ifdef COPROC_DEBUG
+    serial_putstring("setCregVal: sys ctrl reg: ");
+    serial_putint(val);
+    serial_newline();
+#endif
+
     // SCTRL: System control register
     // check for MMU enable
     if( (0 == (oldVal & 0x1)) && (1 == (val & 0x1)) )
@@ -585,12 +555,18 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     serial_putstring("setCregVal: invalidate unified TLB (all)");
     serial_newline();
   }
+#endif
   else if (CRn==10 && opc1==0 && CRm==2 && opc2==0)
   {
     // PRRR: primary region remap register
     serial_putstring("setCregVal: WARN: PRRR value ");
     serial_putint(val);
     serial_newline();
+    asm("mcr p15, 0, %0, c10, c2, 0"
+    :
+    :"r"(val)
+    :"memory"
+       );
   }
   else if (CRn==10 && opc1==0 && CRm==2 && opc2==1)
   {
@@ -598,8 +574,12 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     serial_putstring("setCregVal: WARN: NMRR value ");
     serial_putint(val);
     serial_newline();
+    asm("mcr p15, 0, %0, c10, c2, 1"
+    :
+    :"r"(val)
+    :"memory"
+       );
   }
-#endif
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==0)
   {
     // FCSEIDR: fast context switch extension process ID register
@@ -614,6 +594,11 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
       serial_putint(val);
       serial_newline();
     }
+    asm("mcr p15, 0, %0, c13, c0, 1"
+    :
+    :"r"(val)
+    :"memory"
+       );
   }
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==2)
   {
