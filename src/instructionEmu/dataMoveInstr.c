@@ -22,10 +22,10 @@ void invalidDataMoveTrap(char * msg, GCONTXT * gc)
   }
 }
 /***********************************************************************************
-***********************************************************************************
-************************** STORE FUNCTIONS ****************************************
-***********************************************************************************
-***********************************************************************************/
+ ***********************************************************************************
+ ************************** STORE FUNCTIONS ****************************************
+ ***********************************************************************************
+ ***********************************************************************************/
 
 u32int* strPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
@@ -1204,28 +1204,24 @@ u32int* ldrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 {
   u32int instruction=*instructionAddr;
   u32int srcPCRegLoc = 16;//This is where the PC is in the instruction (if immediate always at bit 16 if not can be at bit 0)
+  bool srcReg1IsPC = ((instruction>>srcPCRegLoc) & 0xF)==0xF;
   u32int destReg=(instruction>>12) & 0xF;
-  u32int instr2Copy=0;
-  if((instruction>>25 & 0b1) == 1){//bit 25 is 1 when there are 2 source registers
-    //Check if both source registers are PC -> we assume this won't occur
-    if(((instruction & 0xF) == 0xF)&&((instruction>>16 & 0xF)==0xF)){
-      DIE_NOW(0, "ldr PCFunct with 2 source registers that are equal to PC\n");
-    }else
-    {//Here we are sure only 1 src register is a PC, which one?
-      if((instruction & 0xF) == 0xF)
-      {//Only if it is the first 4 bits we have to change srcPCRegLoc
-        srcPCRegLoc = 0;
-      }
-    }
+  u32int instr2Copy=instruction;
+  if(((instruction>>25 & 0b1) == 1) && ((instruction & 0xF) == 0xF)){//bit 25 is 1 when there are 2 source registers
+    //see ARM ARM p 436 Rm cannot be PC
+    DIE_NOW(0, "ldr PCFunct (register) with Rm = PC -> UNPREDICTABLE\n");
   }
-  //Here starts the general procedure.  For this srcPCRegLoc must be set correctly
-  //step 1 Copy PC (=instructionAddr2) to desReg
-  currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
 
-  //Step 2 modify ldrInstruction
-  //Clear PC source Register
-  instr2Copy=zeroBits(instruction, srcPCRegLoc);
-  instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
+  if(srcReg1IsPC){
+    //Here starts the general procedure.  For this srcPCRegLoc must be set correctly
+    //step 1 Copy PC (=instructionAddr2) to desReg
+    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+
+    //Step 2 modify ldrInstruction
+    //Clear PC source Register
+    instr2Copy=zeroBits(instruction, srcPCRegLoc);
+    instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
+  }
 
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
   *(currBlockCopyCacheAddr++)=instr2Copy;
