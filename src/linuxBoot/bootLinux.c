@@ -22,25 +22,23 @@ static int builtInInitrd = 0;
 
 void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
 {
-  int hdrSize = sizeof(image_header_t);
-  ulong load = loadAddr + hdrSize;
-  ulong hdrEntryPoint = imageHeader->ih_ep;
-  ulong sizeInBytes = imageHeader->ih_size;
+  ulong currentAddress = loadAddr + sizeof(image_header_t);
+  u32int targetAddress = imageHeader->ih_load;
+  u32int entryPoint = imageHeader->ih_ep;
+  u32int sizeInBytes = imageHeader->ih_size;
   char * commandline = "\0";
 
   paramTag = (struct tag *)BOARD_PARAMS;
 
 #ifdef STARTUP_DEBUG
-  serial_putstring("machid = ");
-  serial_putint(machid);
+  serial_putstring("Current address = ");
+  serial_putint(currentAddress);
   serial_newline();
-
-  serial_putstring("hdrEntryPoint = ");
-  serial_putint(hdrEntryPoint);
+  serial_putstring("Load address    = ");
+  serial_putint(targetAddress);
   serial_newline();
-
-  serial_putstring("loadAddr = ");
-  serial_putint(load);
+  serial_putstring("Entry point     = ");
+  serial_putint(entryPoint);
   serial_newline();
 #endif
 
@@ -49,9 +47,9 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
   */
   createVirtualMachineGPAtoRPA(getGuestContext());
 
-  if (load != hdrEntryPoint)
+  if (currentAddress != targetAddress)
   {
-    memmove((void*)hdrEntryPoint, (const void*)load, sizeInBytes);
+    memmove((void*)targetAddress, (const void*)currentAddress, sizeInBytes);
   }
   populateDramBanks();
 
@@ -65,17 +63,15 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
   }
   setup_end_tag();
 
-
 #ifdef DUMP_SCANNER_COUNTER
   resetScannerCounter();
 #endif
-  scanBlock(getGuestContext(), hdrEntryPoint);
+  scanBlock(getGuestContext(), entryPoint);
 
   cleanupBeforeLinux();
 
   /* does not return */
-  callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, hdrEntryPoint);
-
+  callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, entryPoint);
 }
 
 void populateDramBanks()
