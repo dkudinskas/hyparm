@@ -1,5 +1,7 @@
-#include "blockCache.h"
-#include "serial.h"
+#include "guestManager/blockCache.h"
+
+#include "hardware/serial.h"
+
 
 #ifdef DUMP_COLLISION_COUNTER
 static u32int collisionCounter = 0;

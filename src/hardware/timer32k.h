@@ -1,9 +1,10 @@
-#ifndef __TIMER32K_H__
-#define __TIMER32K_H__
+#ifndef __HARDWARE__TIMER_32K_H__
+#define __HARDWARE__TIMER_32K_H__
 
-#include "types.h"
-#include "serial.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "hardware/hardwareLibrary.h"
+
 
 // uncomment me to enable debug : #define TIMER32K_DBG
 

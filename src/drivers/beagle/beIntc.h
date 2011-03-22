@@ -1,8 +1,8 @@
-#ifndef __BE_INTC_H__
-#define __BE_INTC_H__
+#ifndef __DRIVERS__BEAGLE__BE_INTC_H__
+#define __DRIVERS__BEAGLE__BE_INTC_H__
 
-#include "types.h"
-#include "serial.h"
+#include "common/types.h"
+
 
 #define INTCPS_NR_OF_BANKS          3
 #define INTCPS_INTERRUPTS_PER_BANK 32

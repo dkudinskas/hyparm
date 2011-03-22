@@ -1,8 +1,10 @@
-#ifndef __COMMON_DEBUG_H_
-#define __COMMON_DEBUG_H_
+#ifndef __COMMON__DEBUG_H__
+#define __COMMON__DEBUG_H__
 
-#include "types.h"
-#include "guestContext.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
 
 __attribute((noreturn)) void DIE_NOW(GCONTXT * context, char* msg);
 

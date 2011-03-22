@@ -1,9 +1,17 @@
-#include "bootLinux.h"
-#include "serial.h"
-#include "cpu.h"
-#include "scanner.h"
-#include "pageTable.h"
-#include "addressing.h"
+#include "common/memFunctions.h"
+#include "common/stringFunctions.h"
+
+#include "cpuArch/cpu.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/scanner.h"
+
+#include "linuxBoot/bootLinux.h"
+
+#include "memoryManager/addressing.h"
+#include "memoryManager/pageTable.h"
+
 
 extern GCONTXT * getGuestContext(void);
 extern void callKernel(int, int, u32int, u32int) __attribute__((noreturn));

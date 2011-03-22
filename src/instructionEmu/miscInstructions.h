@@ -1,9 +1,10 @@
-#ifndef __MISC_INSTRUCTIONS_H__
-#define __MISC_INSTRUCTIONS_H__
+#ifndef __INSTRUCTION_EMU__MISC_INSTRUCTIONS_H__
+#define __INSTRUCTION_EMU__MISC_INSTRUCTIONS_H__
 
-#include "types.h"
-#include "serial.h"
-#include "guestContext.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
 
 // uncomment me for ARM instruction trace: #define ARM_INSTR_TRACE
 

@@ -1,9 +1,9 @@
-#ifndef __GPTIMER_H__
-#define __GPTIMER_H__
+#ifndef __HARDWARE__GPTIMER_H__
+#define __HARDWARE__GPTIMER_H__
 
-#include "types.h"
-#include "serial.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "hardware/hardwareLibrary.h"
 
 
 // uncomment me to enable debug : #define GPTIMER_DBG

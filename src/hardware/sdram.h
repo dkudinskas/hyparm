@@ -1,9 +1,11 @@
-#ifndef __SDRAM_H__
-#define __SDRAM_H__
+#ifndef __HARDWARE__SDRAM_H__
+#define __HARDWARE__SDRAM_H__
 
-#include "types.h"
-#include "serial.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "hardware/hardwareLibrary.h"
+#include "hardware/serial.h"
+
 
 #define MEGABYTE_COUNT   4096
 

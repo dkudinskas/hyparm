@@ -1,9 +1,10 @@
-#ifndef __ASM_DIS_H__
-#define __ASM_DIS_H__
+#ifndef __INSTRUCTION_EMU__ASM_DIS_H__
+#define __INSTRUCTION_EMU__ASM_DIS_H__
 
-#include "serial.h"
-#include "types.h"
-#include "guestContext.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
 
 #define UNDEFINED_INSTRUCTION    0x0
 

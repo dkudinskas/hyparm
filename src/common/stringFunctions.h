@@ -1,7 +1,7 @@
-#ifndef __STRING_FUNCTIONS_H__
-#define __STRING_FUNCTIONS_H__
+#ifndef __COMMON__STRING_FUNCTIONS_H__
+#define __COMMON__STRING_FUNCTIONS_H__
 
-#include "types.h"
+#include "common/types.h"
 
 int stringncmp(char * str1, char * str2, int n);
 ulong stringToLong(char * str);

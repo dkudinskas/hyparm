@@ -1,9 +1,10 @@
-#ifndef __GLOBAL_MEMORY_MAPPER_H__
-#define __GLOBAL_MEMORY_MAPPER_H__
+#ifndef __MEMORY_MANAGER__GLOBAL_MEMORY_MAPPER_H__
+#define __MEMORY_MANAGER__GLOBAL_MEMORY_MAPPER_H__
 
-#include "types.h"
-#include "serial.h"
-#include "guestContext.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
 
 #define STRH_IMM_MASK   0x0e5000f0
 #define STRH_IMM_MASKED 0x004000b0

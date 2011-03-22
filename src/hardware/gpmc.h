@@ -1,9 +1,10 @@
-#ifndef __GPMC_H__
-#define __GPMC_H__
+#ifndef __HARDWARE__GPMC_H__
+#define __HARDWARE__GPMC_H__
 
-#include "types.h"
-#include "serial.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "hardware/hardwareLibrary.h"
+
 
 // uncomment me to enable debug : #define GPMC_DBG
 

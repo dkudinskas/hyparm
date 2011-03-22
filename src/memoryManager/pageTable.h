@@ -1,7 +1,8 @@
-#ifndef __PAGE_TABLE_H__
-#define __PAGE_TABLE_H__
+#ifndef __MEMORY_MANAGER__PAGE_TABLE_H__
+#define __MEMORY_MANAGER__PAGE_TABLE_H__
 
-#include "types.h"
+#include "common/types.h"
+
 
 #define PAGE_TABLE_ENTRIES 4096
 #define SECOND_LEVEL_PAGE_TABLE_ENTRIES 256

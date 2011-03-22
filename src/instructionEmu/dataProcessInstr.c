@@ -1,6 +1,10 @@
-#include "dataProcessInstr.h"
-#include "commonInstrFunctions.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/dataProcessInstr.h"
+
 
 void invalidDataProcTrap(char * msg, GCONTXT * gc)
 {

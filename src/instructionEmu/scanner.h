@@ -1,11 +1,10 @@
-#ifndef __SCANNER_H__
-#define __SCANNER_H__
+#ifndef __INSTRUCTION_EMU__SCANNER_H__
+#define __INSTRUCTION_EMU__SCANNER_H__
 
-#include "types.h"
-#include "serial.h"
-#include "asm-dis.h"
-#include "decoder.h"
-#include "guestContext.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
 
 // uncomment me to enable scanner debug: #define SCANNER_DEBUG
 

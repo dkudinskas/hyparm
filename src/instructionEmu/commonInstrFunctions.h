@@ -1,8 +1,10 @@
-#ifndef __COMMON_INSTR_FUNCTIONS_H_
-#define __COMMON_INSTR_FUNCTIONS_H_
+#ifndef __INSTRUCTION_EMU__COMMON_INSTR_FUNCTIONS_H_
+#define __INSTRUCTION_EMU__COMMON_INSTR_FUNCTIONS_H_
 
-#include "types.h"
-#include "guestContext.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
 
 /****************** all defines for CPSR (spsr's) ************/
 /* mode field / bits */

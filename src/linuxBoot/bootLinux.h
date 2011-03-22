@@ -1,11 +1,10 @@
-#ifndef __BOOTLINUX_H__
-#define __BOOTLINUX_H__
+#ifndef __LINUX_BOOT__BOOT_LINUX_H__
+#define __LINUX_BOOT__BOOT_LINUX_H__
 
-#include "types.h"
-#include "image.h"
-#include "common.h"
-#include "memFunctions.h"
-#include "stringFunctions.h"
+#include "common/types.h"
+
+#include "linuxBoot/image.h"
+
 
 #define BOARD_MACHINE_ID        0x60A
 #define BOARD_REVISION           0x20

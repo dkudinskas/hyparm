@@ -1,6 +1,9 @@
-#include "debug.h"
-#include "serial.h"
-#include "cpu.h"
+#include "cpuArch/cpu.h"
+
+#include "common/debug.h"
+
+#include "hardware/serial.h"
+
 
 extern GCONTXT * getGuestContext(void); //from main.c
 

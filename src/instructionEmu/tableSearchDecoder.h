@@ -1,7 +1,8 @@
-#ifndef __TABLE_SEARCH_DECODER_H__
-#define __TABLE_SEARCH_DECODER_H__
+#ifndef __INSTRUCTION_EMU__TABLE_SEARCH_DECODER_H__
+#define __INSTRUCTION_EMU__TABLE_SEARCH_DECODER_H__
 
-#include "serial.h"
+#include "common/types.h"
+
 
 // Uncomment me for decoder debug: #define DECODER_DEBUG  
 

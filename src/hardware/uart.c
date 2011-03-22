@@ -1,8 +1,13 @@
-#include "uart.h"
-#include "pageTable.h" // for getPhysicalAddress()
-#include "guestContext.h"
-#include "memFunctions.h"
-#include "debug.h"
+#include "common/debug.h"
+#include "common/memFunctions.h"
+
+#include "guestManager/guestContext.h"
+
+#include "hardware/serial.h"
+#include "hardware/uart.h"
+
+#include "memoryManager/pageTable.h" // for getPhysicalAddress()
+
 
 extern GCONTXT * getGuestContext(void);
 

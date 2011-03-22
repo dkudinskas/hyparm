@@ -1,9 +1,10 @@
-#ifndef __CLOCK_MAANGER_H__
-#define __CLOCK_MAANGER_H__
+#ifndef __HARDWARE__CLOCK_MAANGER_H__
+#define __HARDWARE__CLOCK_MAANGER_H__
 
-#include "types.h"
-#include "serial.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "hardware/hardwareLibrary.h"
+
 
 // uncomment me to enable debug : #define CLK_MAN_DBG
 

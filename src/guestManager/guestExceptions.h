@@ -1,8 +1,7 @@
-#ifndef __GUEST_INTERRUPTS_H__
-#define __GUEST_INTERRUPTS_H__
+#ifndef __GUEST_MANAGER__GUEST_EXCEPTIONS_H__
+#define __GUEST_MANAGER__GUEST_EXCEPTIONS_H__
 
-#include "types.h"
-#include "serial.h"
+#include "common/types.h"
 
 
 // uncomment me to enable debug : #define GUEST_EXCEPTIONS_DBG

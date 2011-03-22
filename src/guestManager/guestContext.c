@@ -1,7 +1,11 @@
-#include "guestContext.h"
-#include "miscInstructions.h"
-#include "commonInstrFunctions.h"
-#include "sdram.h"
+#include "guestManager/guestContext.h"
+
+#include "hardware/serial.h"
+#include "hardware/sdram.h"
+
+#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/miscInstructions.h"
+
 
 void dumpGuestContext(GCONTXT * gc)
 {

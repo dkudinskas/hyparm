@@ -1,10 +1,14 @@
-#include "sdram.h"
-#include "memoryConstants.h" // for BEAGLE_RAM_START/END
-#include "pageTable.h" // for getPhysicalAddress()
-#include "guestContext.h"
-#include "dataMoveInstr.h"
-#include "debug.h"
-#include "memFunctions.h"
+#include "common/debug.h"
+#include "common/memFunctions.h"
+
+#include "guestManager/guestContext.h"
+
+#include "hardware/sdram.h"
+#include "hardware/serial.h"
+
+#include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
+#include "memoryManager/pageTable.h" // for getPhysicalAddress()
+
 
 extern GCONTXT * getGuestContext(void);
 

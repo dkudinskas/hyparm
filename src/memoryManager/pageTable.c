@@ -1,12 +1,18 @@
-#include "pageTable.h"
-#include "memoryConstants.h"
-#include "serial.h"
-#include "frameAllocator.h"
-#include "memFunctions.h" //for memset
-#include "mmu.h" // for setDomain
-#include "guestContext.h"
-#include "beGPTimer.h" /// should not be included here
-#include "debug.h"
+#include "common/assert.h"
+#include "common/debug.h"
+#include "common/memFunctions.h" // for memset
+
+#include "drivers/beagle/beGPTimer.h" /// should not be included here
+
+#include "guestManager/guestContext.h"
+
+#include "hardware/serial.h"
+
+#include "memoryManager/frameAllocator.h"
+#include "memoryManager/memoryConstants.h"
+#include "memoryManager/mmu.h" // for setDomain
+#include "memoryManager/pageTable.h"
+
 
 //Uncomment to enable all page table debugging: #define PT_DEBUG
 //Uncomment to show entries being mapped #define PT_SHORT_DEBUG

@@ -1,18 +1,22 @@
-#include "hardwareLibrary.h"
-#include "sdram.h"
-#include "sramInternal.h"
-#include "timer32k.h"
-#include "prm.h"
-#include "clockManager.h"
-#include "sysControlModule.h"
-#include "guestContext.h"
-#include "gpmc.h"
-#include "gpio.h"
-#include "gptimer.h"
-#include "intc.h"
-#include "uart.h"
-#include "sdma.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "guestManager/guestContext.h"
+
+#include "hardware/clockManager.h"
+#include "hardware/gpio.h"
+#include "hardware/gpmc.h"
+#include "hardware/gptimer.h"
+#include "hardware/hardwareLibrary.h"
+#include "hardware/intc.h"
+#include "hardware/prm.h"
+#include "hardware/sdma.h"
+#include "hardware/sdram.h"
+#include "hardware/serial.h"
+#include "hardware/sramInternal.h"
+#include "hardware/sysControlModule.h"
+#include "hardware/timer32k.h"
+#include "hardware/uart.h"
+
 
 extern GCONTXT * getGuestContext(void);
 

@@ -1,9 +1,12 @@
-#include "sramInternal.h"
-#include "debug.h"
-#include "sdram.h"
-#include "memoryConstants.h" // for BEAGLE_RAM_START/END
-#include "pageTable.h" // for getPhysicalAddress()
-#include "dataMoveInstr.h"
+#include "common/debug.h"
+
+#include "hardware/sdram.h"
+#include "hardware/serial.h"
+#include "hardware/sramInternal.h"
+
+#include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
+#include "memoryManager/pageTable.h" // for getPhysicalAddress()
+
 
 extern GCONTXT * getGuestContext(void);
 

@@ -1,8 +1,8 @@
-#ifndef __HARDWARE_LIBRARY_H__
-#define __HARDWARE_LIBRARY_H__
+#ifndef __HARDWARE__HARDWARE_LIBRARY_H__
+#define __HARDWARE__HARDWARE_LIBRARY_H__
 
-#include "types.h"
-#include "serial.h"
+#include "common/types.h"
+
 
 // uncomment me to enable hardwareLibrary debug : #define HARDWARE_LIB_DBG
 

@@ -1,7 +1,11 @@
-#include "miscInstructions.h"
-#include "commonInstrFunctions.h"
-#include "intc.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "hardware/intc.h"
+#include "hardware/serial.h"
+
+#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/miscInstructions.h"
+
 
 u32int nopInstruction(GCONTXT * context)
 {

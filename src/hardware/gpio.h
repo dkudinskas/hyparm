@@ -1,9 +1,10 @@
-#ifndef __GPIO_H__
-#define __GPIO_H__
+#ifndef __HARDWARE__GPIO_H__
+#define __HARDWARE__GPIO_H__
 
-#include "types.h"
-#include "serial.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "hardware/hardwareLibrary.h"
+
 
 // uncomment me to enable debug : #define GPIO_DBG
 

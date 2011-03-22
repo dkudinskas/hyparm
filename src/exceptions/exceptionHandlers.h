@@ -1,8 +1,8 @@
-#ifndef __EXCEPTION_HANDLERS_H__
-#define __EXCEPTION_HANDLERS_H__
+#ifndef __EXCEPTIONS__EXCEPTION_HANDLERS_H__
+#define __EXCEPTIONS__EXCEPTION_HANDLERS_H__
 
-#include "types.h"
-#include "guestContext.h"
+#include "common/types.h"
+
 
 #define SWI_END_OF_BLOCK      0x1
 

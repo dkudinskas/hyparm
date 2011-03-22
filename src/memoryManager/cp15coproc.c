@@ -1,7 +1,12 @@
-#include "cp15coproc.h"
-#include "commonInstrFunctions.h"
-#include "debug.h"
-#include "addressing.h"
+#include "common/debug.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/commonInstrFunctions.h"
+
+#include "memoryManager/addressing.h"
+#include "memoryManager/cp15coproc.h"
+
 
 extern GCONTXT * getGuestContext(void);
 
