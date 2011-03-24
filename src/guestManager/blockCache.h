@@ -10,6 +10,8 @@
                                                                  // cache.  + 1 backpointer -> 4B * 11 = 44 B
 #define BLOCK_COPY_CACHE_SIZE (BLOCK_COPY_CACHE_SIZE_IN_BYTES / 4) // size in words (32 bits)
 
+//uncomment to enable debugging: #define BLOCK_COPY_CACHE_DEBUG 1
+
 // uncomment me for block cache debug: #define BLOCK_CACHE_DEBUG
 
 // uncomment me for collision debug: #define DUMP_COLLISION_COUNTER

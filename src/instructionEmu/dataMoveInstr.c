@@ -1386,7 +1386,7 @@ u32int popLdmInstruction(GCONTXT * context)
 u32int* ldmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   u32int instruction = *instructionAddr;
-  if((instruction>>16 & 0xF) ==0xF){
+  if((instruction>>16 & 0xF) == 0xF){
     DIE_NOW(0, "ldm that is using PC is UNPREDICTABLE");//see ARM ARM P.424-428
   }
   //This means that instruction is always save

@@ -7,10 +7,12 @@
 #include "decoder.h"
 #include "guestContext.h"
 
-// uncomment me to enable scanner debug: #define SCANNER_DEBUG
+// uncomment me to enable scanner debug:
+#define SCANNER_DEBUG
 
-// uncomment me to enable scanner request counter:
-#define DUMP_SCANNER_COUNTER
+// uncomment me to enable scanner debug for blockCopyCache: #define SCANNER_DEBUG_BLOCKCOPY
+
+// uncomment me to enable scanner request counter: #define DUMP_SCANNER_COUNTER
 
 // uncomment me to enable output of number of scanned blocks by DIE_NOW also define #define DIE_NOW_SCANNER_COUNTER in debug.h
 #define SCANNER_COUNTER
@@ -19,6 +21,9 @@
   #define SCANNER_COUNTER
 #endif
 
+#ifdef SCANNER_DEBUG_BLOCKCOPY
+  #define SCANNER_DEBUG
+#endif
 
 #ifdef SCANNER_COUNTER
   extern u32int scannerReqCounter;

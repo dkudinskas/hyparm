@@ -53,6 +53,7 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
   serial_newline();
 #endif
 
+
   if (load != hdrEntryPoint)
   {
     memmove((void*)hdrEntryPoint, (const void*)load, sizeInBytes);
@@ -89,9 +90,12 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
   serial_putstring("Processor ready for Linux-> call kernel");
   serial_newline();
 #endif
-  //execution shouldn't be started at hrdEntryPoint any more!
+
+  //execution shouldn't be started at hdrEntryPoint any more!
   //The code from the blockCache should be executed  :  getGuestContext()->blockCopyCache
   //But first entry in blockCopyCache is backpointer -> next entry (blockCopyCache is u32int => +4)
+
+
   callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, (getGuestContext()->blockCopyCache+4));
 
 }

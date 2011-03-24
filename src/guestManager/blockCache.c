@@ -5,7 +5,7 @@
 
 extern GCONTXT * getGuestContext(void); //from main.c
 
-#define BLOCK_COPY_CACHE_DEBUG 1
+
 
 #ifdef DUMP_COLLISION_COUNTER
 static u32int collisionCounter = 0;

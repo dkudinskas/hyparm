@@ -156,20 +156,17 @@ u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   if(immediate)
   {
-    if((instruction>>16 & 0xF) != 0xF)
-    {//Instruction is safe!
-      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-      *(currBlockCopyCacheAddr++)=instruction;
+    if((instruction>>16 & 0xF) == 0xF)
+    {//Instruction must be replaced safe!
 
-      return currBlockCopyCacheAddr;
+      //Store PC in destReg
+      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+
+      //Let instruction use destReg as inputRegister
+      instr2Copy=zeroBits(instruction, 16);
+      instr2Copy=instr2Copy | (destReg<<16);
+
     }
-
-    //Store PC in destReg
-    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
-
-    //Let instruction use destReg as inputRegister
-    instr2Copy=zeroBits(instruction, 16);
-    instr2Copy=instr2Copy | (destReg<<16);
 
     currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
     *(currBlockCopyCacheAddr++)=instr2Copy;
@@ -243,16 +240,17 @@ u32int* subPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   u32int instrbit4=(instruction>>4) & 0x1;
   u32int instrbit7=(instruction>>7) & 0x1;
   u32int destReg=(instruction>>12) & 0xF;
-  u32int instr2Copy=0;
+  u32int instr2Copy=instruction;
 
   if(instr2 == 0x02){//Sub instruction is SUB immediate
     //Save PC in destReg
-    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+    if((instruction>>16 & 0xF) == 0xF){
+      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
 
-    //Sub instruction will only be changed very little -> Rn is the only thing that has to be changed
-    instr2Copy=instruction & 0xFFF0FFFF; //set Rn to Rd
-    instr2Copy=instr2Copy | (destReg<<16);
-
+      //Sub instruction will only be changed very little -> Rn is the only thing that has to be changed
+      instr2Copy=instruction & 0xFFF0FFFF; //set Rn to Rd
+      instr2Copy=instr2Copy | (destReg<<16);
+    }
     currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
     *(currBlockCopyCacheAddr++)=instr2Copy;
 
@@ -301,18 +299,21 @@ u32int* addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   u32int instrbit4=(instruction>>4) & 0x1;
   u32int instrbit7=(instruction>>7) & 0x1;
   u32int destReg=(instruction>>12) & 0xF;
-  u32int instr2Copy=0;
+  u32int instr2Copy=instruction;
 
   if(instr2 == 0x02){//Add instruction is ADD immediate
     //The real PC and the blockCopyCachePC are to far appart to solve it using a 12 bit immediate BUT
     //We can only get here when Rn==PC && Rd!=PC
     //=> We can first set Rd to value of PC and then perform Add{s}<c> <Rd>,<Rd>,<#const>
     //save PC
-    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+    if((instruction>>16 & 0xF)==0xF){
+      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
 
-    //Add instruction will only be changed very little -> Rn is the only thing that has to be changed
-    instr2Copy=instruction & 0xFFF0FFFF; //set Rn to Rd
-    instr2Copy=instr2Copy | (destReg<<16);
+      //Add instruction will only be changed very little -> Rn is the only thing that has to be changed
+      instr2Copy=instruction & 0xFFF0FFFF; //set Rn to Rd
+      instr2Copy=instr2Copy | (destReg<<16);
+    }
+
 
     currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
     *(currBlockCopyCacheAddr++)=instr2Copy;
@@ -321,7 +322,7 @@ u32int* addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   }else{//Add instruction is ADD with registers
     if(instrbit4 == 1 && instrbit7==0){//ADD register-shifted register
-      DIE_NOW(0, "ADD (register-shifted register) is not implemented yet");
+      DIE_NOW(0, "ADD (register-shifted register) is not implemented yet (UNPREDICTABLE?)");
     }else{//Add register
       DIE_NOW(0, "Add (register) is not implemented yet");
     }
@@ -443,17 +444,10 @@ u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 { //Destination is surely not PC
   u32int instruction = *instructionAddr;
   u32int destReg=(instruction>>12) & 0xF;
-  u32int instr2Copy=0;
-  if( ( (instruction>>25) & 0b1 ) == 1)
-  {//bit 25 == 1 -> immediate
-    //PC cannot be read -> instruction is safe
-    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-    *(currBlockCopyCacheAddr++)=instruction;
+  u32int instr2Copy=instruction;
 
-    return currBlockCopyCacheAddr;
-  }
-  else
-  {//bit 25 == 0 -> register
+  if( ( (instruction>>25) & 0b1 ) != 1)
+  {//bit 25 != 1 -> there can be registers, PC can possibly be read
     if((instruction & 0xF) != 0xF)
     {
       DIE_NOW(0, "mov PCFunct: movPCFunct can only be called if last 4 bits are 1111\n");
@@ -464,18 +458,13 @@ u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
       //Clear PC source Register
       instr2Copy=zeroBits(instruction, 0);//set last 4 bits equal to zero
       instr2Copy=instr2Copy | (destReg);  //set last 4 bits so correct register is used
-
-      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-      *(currBlockCopyCacheAddr++)=instr2Copy;
-
-      return currBlockCopyCacheAddr;
-
     }
-
   }
 
-  DIE_NOW(0, "mov PCFunct unfinished\n");
-  return 0;
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+
+  return currBlockCopyCacheAddr;
 }
 
 u32int movInstruction(GCONTXT * context)
@@ -519,34 +508,27 @@ u32int lslInstruction(GCONTXT * context)
 
 u32int* lsrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
+
   u32int instruction=*instructionAddr;
   u32int srcPCRegLoc = 0;//This is where the PC is in the instruction
   u32int destReg=(instruction>>12) & 0xF;
-  u32int instr2Copy=0;
+  u32int instr2Copy=instruction;
   //bits 16-19 are zero so Rm or Rn is PC
 
   if((instruction>>4 & 0b1) == 1)
   {//Bit 4 is 1 if extra register (LSR(register))
     DIE_NOW(0,"lsrPCInstruction LSR(register) with a srcReg==PC is UNPREDICTABLE?");
-    //ToDO: Normally this cannot be executed->remove when confirmed
-    if(((instruction>>8 & 0xF) == 0xF) && ((instruction & 0xF) == 0xF))
-    {
-      DIE_NOW(0, "LSR with both srcRegisters equal to PC is not implemented yet");
-    }
-    if((instruction>>8 & 0xF) == 0xF)
-    {
-      srcPCRegLoc=8;
-    }
   }
   //Ready to do shift
   //save PC
-  currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+  if((instruction &  0xF) == 0xF){
+    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
 
-  //Step 2 modify ldrInstruction
-  //Clear PC source Register
-  instr2Copy=zeroBits(instruction, srcPCRegLoc);
-  instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
-
+    //Step 2 modify ldrInstruction
+    //Clear PC source Register
+    instr2Copy=zeroBits(instruction, srcPCRegLoc);
+    instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
+  }
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
   *(currBlockCopyCacheAddr++)=instr2Copy;
 
@@ -567,7 +549,7 @@ u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   u32int instruction = *instructionAddr;
   bool immediate = ( (instruction>>4 & 0x7) == 0x4 );
   u32int destReg = (instruction>>12) & 0xF;
-  u32int instr2Copy = 0;
+  u32int instr2Copy = instruction;
   if(immediate)
   {
     if((instruction & 0xF)== 0xF)
@@ -579,10 +561,6 @@ u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
       //Clear PC source Register
       instr2Copy=zeroBits(instruction, 0);
       instr2Copy=instr2Copy | (destReg);
-    }
-    else
-    {//Safe instruction-> just copy it
-      instr2Copy = instruction;
     }
   }
   else
@@ -638,8 +616,59 @@ u32int rorInstruction(GCONTXT * context)
 
 u32int* tstPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "tst PCFunct unfinished\n");
-  return 0;
+  u32int instruction = *instructionAddr;
+  bool immediate = ((instruction>>25) & 0b1) == 0b1;
+  u32int regSrc1 = (instruction >> 16) & 0xF;
+  u32int regSrc2 = (instruction) & 0xF;
+  bool rnIsPC = (regSrc1) ==0xF; //see ARM ARM p.768
+  bool rmIsPC = (regSrc2) ==0xF;
+  u32int instr2Copy=instruction;
+  u32int scratchReg = 0;
+
+
+  if(immediate)
+  {
+    rmIsPC = 0;//Immediate doesn't use second register -> always false
+  }
+  else
+  {
+    if((((instruction>>4) & 0b1) == 0b1) && (((instruction>>7) & 0b1) == 0b0)) //register-shifted register
+    {
+      DIE_NOW(0,"tstPCFunct: tst(register-shifted register) cannot have PC as source -> UNPREDICTABLE ");
+    }
+  }
+
+  if(rnIsPC || rmIsPC)
+  { //Instruction has to be changed to a PC safe instructionstream.
+    serial_putstring("instruction = ");
+    serial_putint(instruction);
+    serial_newline();
+    DIE_NOW(0,"tstPC: this part is not tested.");
+    scratchReg = findUnusedRegister(regSrc1, regSrc2, -1);
+    //Backup scratchReg
+    currBlockCopyCacheAddr = backupRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+    if(rnIsPC)
+    {
+      instr2Copy = zeroBits(instr2Copy, 16);
+      instr2Copy = instr2Copy | scratchReg<<16;
+    }
+    if(rmIsPC)
+    {
+      instr2Copy = zeroBits(instr2Copy, 0);
+      instr2Copy = instr2Copy | scratchReg;
+    }
+  }
+
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+
+  if(rnIsPC || rmIsPC)
+  {
+    //restore scratchReg
+    currBlockCopyCacheAddr = restoreRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+  }
+
+  return currBlockCopyCacheAddr;
 }
 
 u32int tstInstruction(GCONTXT * context)
@@ -680,7 +709,7 @@ u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   bool replaceReg1 = (srcReg1 == 0xF);
   bool replaceReg2 = 0;//default false
   u32int scratchRegister = 0;//This only needs to set if register must be replaced
-  u32int instr2Copy = 0;
+  u32int instr2Copy = instruction;
   if(!immediate) //It is not an immediate instruction and thus srcReg2 must also be checked
   {
     replaceReg2=(srcReg2 == 0xF);
@@ -695,7 +724,6 @@ u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
     currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr, scratchRegister);
   }
   //Modify instruction & copy
-  instr2Copy=instruction;
   if(replaceReg1)
   {// srcReg1 Must be replaced
     instr2Copy=instr2Copy & 0xFFF0FFFF;

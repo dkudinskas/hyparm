@@ -37,7 +37,21 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
 
+  /*
+  if(bcIndex==0x47)
+  {
+    asm volatile("BKPT #0");
+  }
+  */
+
   bool inBlockCache = checkBlockCache(blkStartAddr, bcIndex, gc->blockCache);
+  /*
+  if(scannerReqCounter % 1000 == 2){
+    serial_putstring("Counter = ");
+    serial_putint(scannerReqCounter);
+    doBreakpoint();
+  }
+  */
   if (inBlockCache)
   {
     //Check the logbook
@@ -54,6 +68,11 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     else
     {
       addressInBlockCopyCache= (u32int*)bcEntry->blockCopyCacheAddress+1;//First word is a backpointer
+    }
+
+    if((u32int)addressInBlockCopyCache >= gc->blockCopyCacheEnd ){//oldAddr=currBlockCopyCacheAddress blockCopyCacheAddresses will be used in a  cyclic manner
+                                              //-> if end of blockCopyCache is passed blockCopyCacheCurrAddress must be updated
+      addressInBlockCopyCache=addressInBlockCopyCache - (BLOCK_COPY_CACHE_SIZE-1);
     }
 
     gc->R15 = (u32int)addressInBlockCopyCache;
@@ -92,7 +111,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   //After the Backpointer the instructions will be installed.  Here the guestprocess should continue it's execution.
   gc->R15=(u32int)blockCopyCacheCurrAddress;
 
-#ifdef SCANNER_DEBUG
+#ifdef SCANNER_DEBUG_BLOCKCOPY
   serial_putstring("Backpointer installed at: ");
   serial_putint((u32int)(blockCopyCacheCurrAddress-1));
   serial_putstring("Contents= ");
@@ -141,7 +160,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
           blockCopyCacheSize+=gc->blockCopyCacheEnd - (u32int)blockCopyCacheStartAddress;
           blockCopyCacheSize+=(u32int)blockCopyCacheCurrAddress - gc->blockCopyCache;
           blockCopyCacheSize=blockCopyCacheSize>>2;//we have casted pointers to u32int thus divide by 4 to get size in words
-          #ifdef SCANNER_DEBUG
+          #ifdef SCANNER_DEBUG_BLOCKCOPY
             serial_putstring("Block exceeding end: blockCopyCacheSize=");
             serial_putint(blockCopyCacheSize);
           #endif
@@ -170,7 +189,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
         //update blockCopyCacheLastUsedLine (blockCopyCacheLastUsedLine is u32int -> add nrOfInstructions*4
         gc->blockCopyCacheLastUsedLine=gc->blockCopyCacheLastUsedLine+((blockCopyCacheCurrAddress-blockCopyCacheStartAddress)<<2);
 
-        #ifdef SCANNER_DEBUG
+        #ifdef SCANNER_DEBUG_BLOCKCOPY
           serial_putstring("Block added with size of ");
           serial_putint(((u32int)blockCopyCacheCurrAddress-(u32int)blockCopyCacheStartAddress));
           serial_putstring(" words.");

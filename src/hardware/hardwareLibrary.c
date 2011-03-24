@@ -413,7 +413,7 @@ void storeGeneric(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     serial_putstring(" value ");
     serial_putint(value);
     serial_newline();
-    DIE_NOW(gc, "No child of current device holds load address in range.");
+    DIE_NOW(gc, "No child of current device holds store address in range.");
   }
   else
   {

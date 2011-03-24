@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   scannerReqCounter = 0;
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
-  
+  //asm volatile("BKPT #0");
   int ret = 0;
   kernAddr = 0;
   initrdAddr = 0;
@@ -57,6 +57,16 @@ int main(int argc, char *argv[])
 
   /* sets up stack addresses and exception handlers */
   startup_hypervisor();
+
+/* Debugging of debug register
+  int il = 0;
+  asm volatile("mrc p14, 0, %0, c0, c1, 0": :"r"(il));
+  serial_putstring("DebugReg: ");
+  serial_putint(il);//It is better to set a breakpoint after mrc register and see what value is placed in the register otherwise 0 is given.
+  serial_newline();
+  doBreakpoint();
+*/
+
 
   /* initialise coprocessor register bank */
   CREG * coprocRegBank = (CREG*)mallocBytes(MAX_CRB_SIZE * sizeof(CREG));
