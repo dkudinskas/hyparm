@@ -15,6 +15,8 @@
 #include "linuxBoot/bootLinux.h"
 #include "linuxBoot/image.h"
 
+#include "rtosBoot/bootRtos.h"
+
 #include "guestManager/guestContext.h"
 #include "guestManager/blockCache.h"
 
@@ -24,6 +26,8 @@
 
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
+
+#define STARTUP_DEBUG
 
 #define HIDDEN_RAM_START   0x8f000000
 #define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
@@ -47,7 +51,7 @@ int main(int argc, char *argv[])
   kernAddr = 0;
   initrdAddr = 0;
   gContext = 0;
-
+  image_header_t imageHeader;
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
   
@@ -117,21 +121,27 @@ int main(int argc, char *argv[])
     printUsage();
     DIE_NOW(0, "Hypervisor startup aborted.");
   }
-
+  else if(ret==1){
 #ifdef STARTUP_DEBUG
-  serial_putstring("Kernel address: ");
-  serial_putlong(kernAddr);
-  serial_newline();
-  serial_putstring("Initrd address: ");
-  serial_putlong(initrdAddr);
-  serial_newline();
+	serial_putstring("Kernel address: ");
+	serial_putlong(kernAddr);
+	serial_newline();
+	serial_putstring("Initrd address: ");
+	serial_putlong(initrdAddr);
+	serial_newline();
 #endif
-
-  image_header_t imageHeader = getImageHeader(kernAddr);
+  imageHeader = getImageHeader(kernAddr);
 #ifdef STARTUP_DEBUG
   dumpHdrInfo(&imageHeader);
 #endif
-
+  }
+  else if(ret==2){
+#ifdef STARTUP_DEBUG
+	serial_pustring("RTOS address: ");
+	serial_putlong(kernAddr);
+	serial_newline();
+#endif
+  }
   /* initialise physical interrupt controller */
   intcBEInit();
 
@@ -150,7 +160,8 @@ int main(int argc, char *argv[])
   gptBEStart(2);*/
 
   // does not return
-  doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
+  if(ret==2)doRtosBoot(kernAddr);
+  else doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
 }
 
 void registerGuestContext(u32int gcAddr)
@@ -174,6 +185,10 @@ void printUsage(void)
   serial_newline();
   serial_putstring("initrd: address of external initrd in hex format (0xXXXXXXXX)");
   serial_newline();
+  serial_putstring("For RTOS: go <loaderAddr> -rtos <rtosAddr>");
+  serial_newline();
+  serial_putstring("rtos: address of rtos in hex format (0xXXXXXXXX)");
+  serial_newline();
   return;
 }
 
@@ -196,18 +211,24 @@ int parseCommandline(int argc, char *argv[])
   }
 #endif
 
-  if ( argc != 5 )
-  {
-    return -1;
-  }
-
   /***************** Check KERNEL address parameter ****************/
   cmpFlag = stringncmp("-kernel", argv[1], 7);
   if (cmpFlag < 0)
   {
     serial_putstring("Parameter -kernel not found.");
     serial_newline();
-    return -1;
+    /* Check for -rtos */
+    cmpFlag = stringncmp("-rtos",argv[1],5);
+    if ( cmpFlag < 0){
+    	serial_putstring("Parameter -rtos not found.");
+	serial_newline();
+	return -1; // nothing useful was found
+    }
+    else{
+    	kernAddr = stringToLong(argv[2]);
+	return 2; // state that -rtos was found
+    }
+
   }
   kernAddr = stringToLong(argv[2]);
   if (kernAddr < 0)

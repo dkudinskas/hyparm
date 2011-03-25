@@ -244,11 +244,11 @@ void dumpGuestContext(GCONTXT * gc)
 void initGuestContext(GCONTXT * gContext)
 {
   serial_putstring("Initializing guest context @ address ");
-  serial_putint( (u32int)(&gContext) );
+  //serial_putlong((u32int)&gContext);
+  serial_putint( (u32int)getGuestContext() );
   serial_putstring(" blockTrace @ ");
   serial_putint( (u32int)(&gContext->blockHistory[0]) );
   serial_newline();
-
   /* zero context!!! */
   gContext->R0 = 0;
   gContext->R1 = 0;

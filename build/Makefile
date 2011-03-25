@@ -31,6 +31,7 @@ include $(DEPTH)/src/exceptions/makefile.in
 include $(DEPTH)/src/hardware/makefile.in
 include $(DEPTH)/src/guestManager/makefile.in
 include $(DEPTH)/src/linuxBoot/makefile.in
+include $(DEPTH)/src/rtosBoot/makefile.in
 include $(DEPTH)/src/instructionEmu/makefile.in
 include $(DEPTH)/src/memoryManager/makefile.in
 include $(DEPTH)/src/drivers/beagle/makefile.in

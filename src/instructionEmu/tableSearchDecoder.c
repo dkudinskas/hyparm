@@ -10,6 +10,8 @@
 #include "instructionEmu/miscInstructions.h"
 
 
+#define DECODER_DEBUG
+
 extern GCONTXT * getGuestContext(void);
 
 /* Top level instruction categories */
