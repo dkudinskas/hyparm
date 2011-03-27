@@ -1,8 +1,8 @@
-#ifndef __BE_CLK_MAN_H__
-#define __BE_CLK_MAN_H__
+#ifndef __DRIVERS__BEAGLE__BE_CLK_MAN_H__
+#define __DRIVERS__BEAGLE__BE_CLK_MAN_H__
 
-#include "types.h"
-#include "serial.h"
+#include "common/types.h"
+
 
 // uncomment me to enable debug : #define BE_CLK_MAN_DBG
 

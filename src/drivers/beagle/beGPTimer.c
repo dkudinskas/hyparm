@@ -1,6 +1,10 @@
-#include "beGPTimer.h"
-#include "memFunctions.h"
-#include "debug.h"
+#include "common/debug.h"
+#include "common/memFunctions.h"
+
+#include "drivers/beagle/beGPTimer.h"
+
+#include "hardware/serial.h"
+
 
 static inline bool gptBEidValid(u32int id);
 static inline bool gptBEisExtended(u32int id);

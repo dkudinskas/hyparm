@@ -1,10 +1,14 @@
-#include "decoder.h"
-#include "miscInstructions.h"
-#include "coprocInstructions.h"
-#include "dataProcessInstr.h"
-#include "dataMoveInstr.h"
-#include "asm-dis.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/asm-dis.h"
+#include "instructionEmu/decoder.h"
+#include "instructionEmu/coprocInstructions.h"
+#include "instructionEmu/dataMoveInstr.h"
+#include "instructionEmu/dataProcessInstr.h"
+#include "instructionEmu/miscInstructions.h"
+
 
 extern GCONTXT * getGuestContext(void);
 

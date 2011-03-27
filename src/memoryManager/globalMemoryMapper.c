@@ -1,7 +1,13 @@
-#include "globalMemoryMapper.h"
-#include "guestContext.h"
-#include "dataMoveInstr.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "guestManager/guestContext.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/dataMoveInstr.h"
+
+#include "memoryManager/globalMemoryMapper.h"
+
 
 extern GCONTXT * getGuestContext(void); //from main.c
 

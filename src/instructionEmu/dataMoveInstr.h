@@ -1,10 +1,10 @@
-#ifndef __DATA_MOVE_INSTR__
-#define __DATA_MOVE_INSTR__
+#ifndef __INSTRUCTION_EMU__DATA_MOVE_INSTR__
+#define __INSTRUCTION_EMU__DATA_MOVE_INSTR__
 
-#include "types.h"
-#include "serial.h"
-#include "guestContext.h"
-#include "globalMemoryMapper.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
 
 // uncomment me for LOAD/STORE instruction trace: #define DATA_MOVE_TRACE
 

@@ -1,6 +1,9 @@
-#include "commonInstrFunctions.h"
-#include "debug.h"
-#include "serial.h"
+#include "common/debug.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/commonInstrFunctions.h"
+
 
 extern GCONTXT * getGuestContext(void); //from main.c
 

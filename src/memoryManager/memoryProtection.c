@@ -1,13 +1,17 @@
-#include "memoryProtection.h"
-#include "serial.h"
-#include "memoryConstants.h"
-#include "frameAllocator.h"
-#include "common.h" //for memset
-#include "guestContext.h"
-#include "assert.h"
-#include "debug.h"
-#include "guestExceptions.h"
-#include "mmu.h"
+#include "common/assert.h"
+#include "common/debug.h"
+#include "common/memFunctions.h"
+
+#include "guestManager/guestContext.h"
+#include "guestManager/guestExceptions.h"
+
+#include "hardware/serial.h"
+
+#include "memoryManager/frameAllocator.h"
+#include "memoryManager/memoryConstants.h"
+#include "memoryManager/memoryProtection.h"
+#include "memoryManager/mmu.h"
+
 
 extern GCONTXT * getGuestContext(void);
 

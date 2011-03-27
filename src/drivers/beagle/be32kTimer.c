@@ -1,5 +1,9 @@
-#include "be32kTimer.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "drivers/beagle/be32kTimer.h"
+
+#include "hardware/serial.h"
+
 
 static u32int baseVA = 0;
 

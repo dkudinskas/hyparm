@@ -1,8 +1,8 @@
-#ifndef __BLOCK_CACHE_H__
-#define __BLOCK_CACHE_H__
+#ifndef __GUEST_MANAGER__BLOCK_CACHE_H__
+#define __GUEST_MANAGER__BLOCK_CACHE_H__
 
-#include "types.h"
-#include "common.h"
+#include "common/types.h"
+
 
 #define BLOCK_CACHE_SIZE    128
 

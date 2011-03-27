@@ -1,5 +1,9 @@
-#include "mmu.h"
-#include "serial.h"
+#include "common/assert.h"
+
+#include "hardware/serial.h"
+
+#include "memoryManager/mmu.h"
+
 
 static const char* dataAbtFaultString[] =
 {

@@ -1,8 +1,8 @@
-#ifndef __FRAME_ALLOCATOR_H__
-#define __FRAME_ALLOCATOR_H__
+#ifndef __MEMORY_MANAGER__FRAME_ALLOCATOR_H__
+#define __MEMORY_MANAGER__FRAME_ALLOCATOR_H__
 
-#include "types.h"
-#include "memFunctions.h"
+#include "common/types.h"
+
 
 //uncomment for frameAllocator debug: #define FRAME_ALLOC_DBG
 

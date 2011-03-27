@@ -1,13 +1,15 @@
-#ifndef __GUEST_CONTEXT_H__
-#define __GUEST_CONTEXT_H__
+#ifndef __GUEST_MANAGER__GUEST_CONTEXT_H__
+#define __GUEST_MANAGER__GUEST_CONTEXT_H__
 
-#include "types.h"
-#include "serial.h"
-#include "cp15coproc.h"
-#include "blockCache.h"
-#include "pageTable.h" // for descriptor type
-#include "memoryProtection.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "guestManager/blockCache.h"
+
+#include "hardware/hardwareLibrary.h"
+
+#include "memoryManager/cp15coproc.h"
+#include "memoryManager/memoryProtection.h"
+
 
 #define BLOCK_HISOTRY_SIZE     5
 

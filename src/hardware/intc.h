@@ -1,9 +1,10 @@
-#ifndef __INTC_H__
-#define __INTC_H__
+#ifndef __HARDWARE__INTC_H__
+#define __HARDWARE__INTC_H__
 
-#include "types.h"
-#include "serial.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "hardware/hardwareLibrary.h"
+
 
 #define INTCPS_NR_OF_BANKS          3
 #define INTCPS_INTERRUPTS_PER_BANK 32

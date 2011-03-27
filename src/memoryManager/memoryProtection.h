@@ -1,7 +1,10 @@
-#ifndef __MEMORY_PROTECTION_H__
-#define __MEMORY_PROTECTION_H__
-#include "types.h"
-#include "pageTable.h" // for ACCESS_TYPE enum
+#ifndef __MEMORY_MANAGER__MEMORY_PROTECTION_H__
+#define __MEMORY_MANAGER__MEMORY_PROTECTION_H__
+
+#include "common/types.h"
+
+#include "memoryManager/pageTable.h" // for ACCESS_TYPE enum
+
 
 // uncomment me for memory protection debug: #define MEM_PROT_DBG
 

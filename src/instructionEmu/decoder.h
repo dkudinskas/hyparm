@@ -1,16 +1,18 @@
-#ifndef __DECODER_H__
-#define __DECODER_H__
+#ifndef __INSTRUCTION_EMU__DECODER_H__
+#define __INSTRUCTION_EMU__DECODER_H__
 
-#include "guestContext.h"
-#include "types.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
 
 typedef u32int (*instructionHandler)(GCONTXT * context);
 
 #ifdef CONFIG_DECODER_TABLE_SEARCH
-# include "tableSearchDecoder.h"
+# include "instructionEmu/tableSearchDecoder.h"
 #else
 # ifdef CONFIG_DECODER_AUTO
-#  include "autoDecoder.h"
+#  include "instructionEmu/autoDecoder.h"
 # else
 #  error Decoder must be set!
 # endif

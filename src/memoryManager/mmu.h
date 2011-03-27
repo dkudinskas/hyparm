@@ -1,8 +1,10 @@
-#ifndef __MEMORY_MANAGEMENT_UNIT_H__
-#define __MEMORY_MANAGEMENT_UNIT_H__
-#include "types.h"
-#include "assert.h" //COMPILE_TIME_ASSERT
-#include "pageTable.h"
+#ifndef __MEMORY_MANAGER__MMU_H__
+#define __MEMORY_MANAGER__MMU_H__
+
+#include "common/types.h"
+
+#include "memoryManager/pageTable.h"
+
 
 //uncomment to enable debug #define MMU_DEBUG
 

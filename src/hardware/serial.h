@@ -1,7 +1,8 @@
-#ifndef __SERIAL_H__
-#define __SERIAL_H__
+#ifndef __HARDWARE__SERIAL_H__
+#define __HARDWARE__SERIAL_H__
 
-#include "types.h"
+#include "common/types.h"
+
 
 #ifdef TARGET_BEAGLE
 #define SERIAL_BASE            0x49020000

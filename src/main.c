@@ -1,20 +1,27 @@
-#include "LED.h"
-#include "serial.h"
-#include "stringFunctions.h"
-#include "image.h"
-#include "bootLinux.h"
-#include "cp15coproc.h"
-#include "guestContext.h"
-#include "blockCache.h"
-#include "addressing.h" /* For virtual addressing initialisation */
-#include "frameAllocator.h"
-#include "hardwareLibrary.h"
-#include "memFunctions.h"
-#include "cpu.h"
-#include "beIntc.h"
-#include "beGPTimer.h"
-#include "beClockMan.h"
-#include "debug.h"
+#include "common/debug.h"
+#include "common/memFunctions.h"
+#include "common/stringFunctions.h"
+
+#include "cpuArch/cpu.h"
+
+#include "drivers/beagle/beIntc.h"
+#include "drivers/beagle/beGPTimer.h"
+#include "drivers/beagle/beClockMan.h"
+
+#include "hardware/hardwareLibrary.h"
+#include "hardware/LED.h"
+#include "hardware/serial.h"
+
+#include "linuxBoot/bootLinux.h"
+#include "linuxBoot/image.h"
+
+#include "guestManager/guestContext.h"
+#include "guestManager/blockCache.h"
+
+#include "memoryManager/addressing.h" /* For virtual addressing initialisation */
+#include "memoryManager/cp15coproc.h"
+#include "memoryManager/frameAllocator.h"
+
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 

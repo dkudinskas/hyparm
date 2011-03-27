@@ -1,21 +1,29 @@
-#include "exceptionHandlers.h"
-#include "serial.h"
-#include "scanner.h"
-#include "guestContext.h"
-#include "addressing.h"
-#include "gptimer.h"
-#include "mmu.h"
-#include "memoryConstants.h"
-#include "scheduler.h"
-#include "globalMemoryMapper.h"
-#include "blockCache.h"
-#include "beIntc.h"
-#include "beGPTimer.h"
-#include "cpu.h"
-#include "guestExceptions.h"
-#include "intc.h"
-#include "be32kTimer.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "cpuArch/cpu.h"
+
+#include "drivers/beagle/be32kTimer.h"
+#include "drivers/beagle/beGPTimer.h"
+#include "drivers/beagle/beIntc.h"
+
+#include "exceptions/exceptionHandlers.h"
+
+#include "guestManager/blockCache.h"
+#include "guestManager/scheduler.h"
+#include "guestManager/guestContext.h"
+#include "guestManager/guestExceptions.h"
+
+#include "hardware/gptimer.h"
+#include "hardware/intc.h"
+#include "hardware/serial.h"
+
+#include "instructionEmu/scanner.h"
+
+#include "memoryManager/addressing.h"
+#include "memoryManager/globalMemoryMapper.h"
+#include "memoryManager/mmu.h"
+#include "memoryManager/memoryConstants.h"
+
 
 extern GCONTXT * getGuestContext(void);
 

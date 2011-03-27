@@ -1,5 +1,5 @@
-#ifndef __TYPES_H__
-#define __TYPES_H__
+#ifndef __COMMON__TYPES_H__
+#define __COMMON__TYPES_H__
 
 #define TRUE     1
 #define FALSE    0

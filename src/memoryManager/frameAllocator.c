@@ -1,9 +1,12 @@
-#include "frameAllocator.h"
-#include "assert.h"
-#include "common.h"
-#include "serial.h"
-#include "memoryConstants.h"
-#include "debug.h"
+#include "common/assert.h"
+#include "common/debug.h"
+#include "common/memFunctions.h"
+
+#include "hardware/serial.h"
+
+#include "memoryManager/frameAllocator.h"
+#include "memoryManager/memoryConstants.h"
+
 
 #ifdef FRAME_TABLE_ALLOC_TEST
 #include "frameAllocatorTest.h"

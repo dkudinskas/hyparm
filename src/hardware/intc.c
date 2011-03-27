@@ -1,11 +1,16 @@
-#include "serial.h"
-#include "intc.h"
-#include "memFunctions.h"
-#include "memoryConstants.h" // for BEAGLE_RAM_START/END
-#include "pageTable.h" // for getPhysicalAddress()
-#include "guestContext.h"
-#include "beIntc.h"
-#include "debug.h"
+#include "common/debug.h"
+#include "common/memFunctions.h"
+
+#include "drivers/beagle/beIntc.h"
+
+#include "guestManager/guestContext.h"
+
+#include "hardware/serial.h"
+#include "hardware/intc.h"
+
+#include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
+#include "memoryManager/pageTable.h" // for getPhysicalAddress()
+
 
 extern GCONTXT * getGuestContext(void);
 

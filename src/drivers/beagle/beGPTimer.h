@@ -1,14 +1,10 @@
-#ifndef __BE_GPTIMER_H__
-#define __BE_GPTIMER_H__
+#ifndef __DRIVERS__BEAGLE__BE_GP_TIMER_H__
+#define __DRIVERS__BEAGLE__BE_GP_TIMER_H__
 
-#ifndef TARGET_BEAGLE
-#error Driver for TARGET_BEAGLE included for different target
-#endif
+#include "common/types.h"
+
 
 // uncomment me to enable debug: #define GPTIMER_BE_DBG
-
-#include "types.h"
-#include "serial.h"
 
 // #define BE_GPTIMER_COUNT       12
 #define BE_GPTIMER_COUNT        2 // just use GPTIMER1 and GPTIMER2 for now

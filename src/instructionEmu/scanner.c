@@ -1,13 +1,32 @@
-#include "scanner.h"
-#include "blockCache.h"
-#include "common.h"
-#include "mmu.h"
-#include "pageTable.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "guestManager/blockCache.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/decoder.h"
+#include "instructionEmu/scanner.h"
+
+#include "memoryManager/mmu.h"
+#include "memoryManager/pageTable.h"
+
 
 #ifdef DUMP_SCANNER_COUNTER
 static u32int scannerReqCounter = 0;
 #endif
+
+// http://www.concentric.net/~Ttwang/tech/inthash.htm
+// 32bit mix function
+static inline u32int getHash(u32int key)
+{
+  key = ~key + (key << 15); // key = (key << 15) - key - 1;
+  key = key ^ (key >> 12);
+  key = key + (key << 2);
+  key = key ^ (key >> 4);
+  key = key * 2057; // key = (key + (key << 3)) + (key << 11);
+  key = key ^ (key >> 16);
+  return key >> 2;
+}
 
 void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 {

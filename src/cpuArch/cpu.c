@@ -1,4 +1,5 @@
-#include "cpu.h"
+#include "cpuArch/cpu.h"
+
 
 static inline unsigned int get_cr(void);
 static inline void set_cr(unsigned int val);

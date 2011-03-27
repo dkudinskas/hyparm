@@ -1,9 +1,7 @@
-#ifndef __SCHEDULER_H__
-#define __SCHEDULER_H__
+#ifndef __GUEST_MANAGER__SCHEDULER_H__
+#define __GUEST_MANAGER__SCHEDULER_H__
 
-#include "types.h"
-#include "serial.h"
-#include "guestContext.h"
+#include "guestManager/guestContext.h"
 
 // uncomment me to enable debug : #define SCHEDULER_DBG
 

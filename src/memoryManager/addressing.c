@@ -1,15 +1,19 @@
-#include "addressing.h"
-#include "serial.h"
-#include "pageTable.h"
-#include "memoryConstants.h"
-#include "mmu.h"
-#include "memoryProtection.h"
-#include "blockCache.h"
-#include "memoryConstants.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "guestManager/blockCache.h"
+
+#include "hardware/serial.h"
+
+#include "memoryManager/addressing.h"
+#include "memoryManager/memoryConstants.h"
+#include "memoryManager/memoryProtection.h"
+#include "memoryManager/mmu.h"
+#include "memoryManager/pageTable.h"
+
 
 extern GCONTXT * getGuestContext(void); //from main.c
 extern void setGuestPhysicalPt(GCONTXT* gc);
+
 
 void initialiseVirtualAddressing()
 {

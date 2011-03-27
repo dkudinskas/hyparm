@@ -1,8 +1,12 @@
-#include "coprocInstructions.h"
-#include "commonInstrFunctions.h"
-#include "debug.h"
-#include "serial.h"
-#include "cp15coproc.h"
+#include "common/debug.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/coprocInstructions.h"
+
+#include "memoryManager/cp15coproc.h"
+
 
 u32int mcrrInstruction(GCONTXT * context)
 {

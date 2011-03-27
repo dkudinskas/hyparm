@@ -1,8 +1,10 @@
-#ifndef __COPROC_INSTRUCTIONS_H_
-#define __COPROC_INSTRUCTIONS_H_
+#ifndef __INSTRUCTION_EMU__COPROC_INSTRUCTIONS_H_
+#define __INSTRUCTION_EMU__COPROC_INSTRUCTIONS_H_
 
-#include "types.h"
-#include "guestContext.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
 
 // uncomment me for coprocessor instruction trace: #define COPROC_INSTR_TRACE
 

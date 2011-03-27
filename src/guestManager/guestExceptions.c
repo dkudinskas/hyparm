@@ -1,8 +1,12 @@
-#include "guestExceptions.h"
-#include "guestContext.h"
-#include "intc.h"
-#include "cpu.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "cpuArch/cpu.h"
+
+#include "guestManager/guestExceptions.h"
+#include "guestManager/guestContext.h"
+
+#include "hardware/intc.h"
+
 
 extern GCONTXT * getGuestContext(void);
 

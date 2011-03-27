@@ -1,6 +1,9 @@
-#include "scheduler.h"
-#include "cpu.h"
-#include "intc.h"
+#include "guestManager/scheduler.h"
+
+#include "hardware/serial.h"
+#include "hardware/intc.h"
+
+#include "cpuArch/cpu.h"
 
 void scheduleGuest()
 {
@@ -31,7 +34,12 @@ void guestIdle(GCONTXT * context)
 
   while (!isIrqPending())
   {
-    delay(1000000);
+    // delay
+    volatile u32int i = 0;
+    while (i < 1000000)
+    {
+      i++;
+    }
   }
   context->guestIdle = FALSE;
 

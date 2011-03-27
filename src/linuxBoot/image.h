@@ -1,8 +1,8 @@
-#ifndef __IMAGE_H__
-#define __IMAGE_H__
+#ifndef __LINUX_BOOT__IMAGE_H__
+#define __LINUX_BOOT__IMAGE_H__
 
-#include "types.h"
-#include "serial.h"
+#include "common/types.h"
+
 
 /*
  * Operating System Codes

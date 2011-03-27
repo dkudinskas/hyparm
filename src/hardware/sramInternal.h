@@ -1,10 +1,12 @@
-#ifndef __SRAM_INTERNAL_H__
-#define __SRAM_INTERNAL_H__
+#ifndef __HARDWARE__SRAM_INTERNAL_H__
+#define __HARDWARE__SRAM_INTERNAL_H__
 
-#include "types.h"
-#include "guestContext.h"
-#include "serial.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
+#include "hardware/hardwareLibrary.h"
+
 
 // uncomment me to enable sdram debug: #define SRAM_INTERNAL_DBG
 

@@ -1,5 +1,6 @@
-#ifndef __MEMORY_CONSTANTS_H__
-#define __MEMORY_CONSTANTS_H__
+#ifndef __MEMORY_MANAGER__MEMORY_CONSTANTS_H__
+#define __MEMORY_MANAGER__MEMORY_CONSTANTS_H__
+
 /* These constants should be sourced from somewhere more appropriate
    The hypervisor size should be calculated using symbols
 */

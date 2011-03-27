@@ -1,10 +1,16 @@
-#include "dataMoveInstr.h"
-#include "commonInstrFunctions.h"
-#include "defines.h"
-#include "blockCache.h"
-#include "cp15coproc.h"
-#include "mmu.h"
-#include "debug.h"
+#include "common/debug.h"
+#include "common/defines.h"
+
+#include "guestManager/blockCache.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/dataMoveInstr.h"
+
+#include "memoryManager/cp15coproc.h"
+#include "memoryManager/mmu.h"
+
 
 void invalidDataMoveTrap(char * msg, GCONTXT * gc)
 {
