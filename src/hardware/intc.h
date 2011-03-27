@@ -93,7 +93,9 @@ M_IRQ_70 Reserved       Reserved
 M_IRQ_71 Reserved       Reserved
 M_IRQ_72 UART1_IRQ      UART module 1
 M_IRQ_73 UART2_IRQ      UART module 2
-M_IRQ_74 UART3_IRQ      UART module 3
+*/
+#define UART3_IRQ   74
+/*
 M_IRQ_75 PBIAS_IRQ      Merged interrupt for PBIASlite1 and 2
 M_IRQ_76 OHCI_IRQ       OHCI controller HSUSB MP Host Interrupt
 M_IRQ_77 EHCI_IRQ       EHCI controller HSUSB MP Host Interrupt
@@ -349,6 +351,8 @@ void acknowledgeIrq(void);
 
 bool isIrqPending(void);
 
+bool isFiqPending(void);
+
 void intcDumpRegisters(void);
 
 u32int prioritySortIrqs(void);
@@ -389,102 +393,7 @@ struct InterruptController
   u32int intcPendingFiq0;
   u32int intcPendingFiq1;
   u32int intcPendingFiq2;
-  u32int intcIlr0;
-  u32int intcIlr1;
-  u32int intcIlr2;
-  u32int intcIlr3;
-  u32int intcIlr4;
-  u32int intcIlr5;
-  u32int intcIlr6;
-  u32int intcIlr7;
-  u32int intcIlr8;
-  u32int intcIlr9;
-  u32int intcIlr10;
-  u32int intcIlr11;
-  u32int intcIlr12;
-  u32int intcIlr13;
-  u32int intcIlr14;
-  u32int intcIlr15;
-  u32int intcIlr16;
-  u32int intcIlr17;
-  u32int intcIlr18;
-  u32int intcIlr19;
-  u32int intcIlr20;
-  u32int intcIlr21;
-  u32int intcIlr22;
-  u32int intcIlr23;
-  u32int intcIlr24;
-  u32int intcIlr25;
-  u32int intcIlr26;
-  u32int intcIlr27;
-  u32int intcIlr28;
-  u32int intcIlr29;
-  u32int intcIlr30;
-  u32int intcIlr31;
-  u32int intcIlr32;
-  u32int intcIlr33;
-  u32int intcIlr34;
-  u32int intcIlr35;
-  u32int intcIlr36;
-  u32int intcIlr37;
-  u32int intcIlr38;
-  u32int intcIlr39;
-  u32int intcIlr40;
-  u32int intcIlr41;
-  u32int intcIlr42;
-  u32int intcIlr43;
-  u32int intcIlr44;
-  u32int intcIlr45;
-  u32int intcIlr46;
-  u32int intcIlr47;
-  u32int intcIlr48;
-  u32int intcIlr49;
-  u32int intcIlr50;
-  u32int intcIlr51;
-  u32int intcIlr52;
-  u32int intcIlr53;
-  u32int intcIlr54;
-  u32int intcIlr55;
-  u32int intcIlr56;
-  u32int intcIlr57;
-  u32int intcIlr58;
-  u32int intcIlr59;
-  u32int intcIlr60;
-  u32int intcIlr61;
-  u32int intcIlr62;
-  u32int intcIlr63;
-  u32int intcIlr64;
-  u32int intcIlr65;
-  u32int intcIlr66;
-  u32int intcIlr67;
-  u32int intcIlr68;
-  u32int intcIlr69;
-  u32int intcIlr70;
-  u32int intcIlr71;
-  u32int intcIlr72;
-  u32int intcIlr73;
-  u32int intcIlr74;
-  u32int intcIlr75;
-  u32int intcIlr76;
-  u32int intcIlr77;
-  u32int intcIlr78;
-  u32int intcIlr79;
-  u32int intcIlr80;
-  u32int intcIlr81;
-  u32int intcIlr82;
-  u32int intcIlr83;
-  u32int intcIlr84;
-  u32int intcIlr85;
-  u32int intcIlr86;
-  u32int intcIlr87;
-  u32int intcIlr88;
-  u32int intcIlr89;
-  u32int intcIlr90;
-  u32int intcIlr91;
-  u32int intcIlr92;
-  u32int intcIlr93;
-  u32int intcIlr94;
-  u32int intcIlr95;
+  u32int intcIlr[96];
 };
 
 

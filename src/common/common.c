@@ -23,3 +23,13 @@ u32int getHash(u32int key)
   key = key ^ (key >> 16);
   return key >> 2;
 }
+
+void delay(u32int count)
+{
+  volatile u32int i = 0;
+  
+  while (i < count)
+  {
+    i++;
+  }
+}

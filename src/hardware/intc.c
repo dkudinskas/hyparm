@@ -308,20 +308,20 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       DIE_NOW(0, "Intc storing to read only register: active fiq");
       break;
     case REG_INTCPS_MIR_CLEAR0:
-#ifdef INTC_DBG
     {
       u32int i;
       for (i = 0; i < 32; i++)
       {
         if (value & (1 << i))
         {
+#ifdef INTC_DBG
           serial_putstring("INTC: clearing mask from interrupt number ");
           serial_putint_nozeros(i);
           serial_newline();
+#endif
         }
       }
     }
-#endif
       irqController->intcMir0 &= ~value;
       break;
     case REG_INTCPS_MIR_CLEAR1:
@@ -348,20 +348,20 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       irqController->intcMir1 &= ~value;
       break;
     case REG_INTCPS_MIR_CLEAR2:
-#ifdef INTC_DBG
     {
       u32int i;
       for (i = 0; i < 32; i++)
       {
         if (value & (1 << i))
         {
+#ifdef INTC_DBG
           serial_putstring("INTC: clearing mask from interrupt number ");
           serial_putint_nozeros(i+64);
           serial_newline();
+#endif
         }
       }
     }
-#endif
       irqController->intcMir2 &= ~value;
       break;
     case REG_INTCPS_MIR_SET0:
@@ -510,8 +510,8 @@ void intcReset()
   // reset all register values to defaults
   irqController->intcSysConfig   = 0x00000000;
   irqController->intcSysStatus   = 0x00000000;
-  irqController->intcSirIrq      = 0xFFFFFFE0;
-  irqController->intcSirFiq      = 0xFFFFFFE0;
+  irqController->intcSirIrq      = 0xFFFFFF80;
+  irqController->intcSirFiq      = 0xFFFFFF80;
   irqController->intcControl     = 0x00000000;
   irqController->intcProtection  = 0x00000000;
   irqController->intcIdle        = 0x00000000;
@@ -542,102 +542,11 @@ void intcReset()
   irqController->intcPendingFiq0 = 0x0;
   irqController->intcPendingFiq1 = 0x0;
   irqController->intcPendingFiq2 = 0x0;
-  irqController->intcIlr0 = 0x0;
-  irqController->intcIlr1 = 0x0;
-  irqController->intcIlr2 = 0x0;
-  irqController->intcIlr3 = 0x0;
-  irqController->intcIlr4 = 0x0;
-  irqController->intcIlr5 = 0x0;
-  irqController->intcIlr6 = 0x0;
-  irqController->intcIlr7 = 0x0;
-  irqController->intcIlr8 = 0x0;
-  irqController->intcIlr9 = 0x0;
-  irqController->intcIlr10 = 0x0;
-  irqController->intcIlr11 = 0x0;
-  irqController->intcIlr12 = 0x0;
-  irqController->intcIlr13 = 0x0;
-  irqController->intcIlr14 = 0x0;
-  irqController->intcIlr15 = 0x0;
-  irqController->intcIlr16 = 0x0;
-  irqController->intcIlr17 = 0x0;
-  irqController->intcIlr18 = 0x0;
-  irqController->intcIlr19 = 0x0;
-  irqController->intcIlr20 = 0x0;
-  irqController->intcIlr21 = 0x0;
-  irqController->intcIlr22 = 0x0;
-  irqController->intcIlr23 = 0x0;
-  irqController->intcIlr24 = 0x0;
-  irqController->intcIlr25 = 0x0;
-  irqController->intcIlr26 = 0x0;
-  irqController->intcIlr27 = 0x0;
-  irqController->intcIlr28 = 0x0;
-  irqController->intcIlr29 = 0x0;
-  irqController->intcIlr30 = 0x0;
-  irqController->intcIlr31 = 0x0;
-  irqController->intcIlr32 = 0x0;
-  irqController->intcIlr33 = 0x0;
-  irqController->intcIlr34 = 0x0;
-  irqController->intcIlr35 = 0x0;
-  irqController->intcIlr36 = 0x0;
-  irqController->intcIlr37 = 0x0;
-  irqController->intcIlr38 = 0x0;
-  irqController->intcIlr39 = 0x0;
-  irqController->intcIlr40 = 0x0;
-  irqController->intcIlr41 = 0x0;
-  irqController->intcIlr42 = 0x0;
-  irqController->intcIlr43 = 0x0;
-  irqController->intcIlr44 = 0x0;
-  irqController->intcIlr45 = 0x0;
-  irqController->intcIlr46 = 0x0;
-  irqController->intcIlr47 = 0x0;
-  irqController->intcIlr48 = 0x0;
-  irqController->intcIlr49 = 0x0;
-  irqController->intcIlr50 = 0x0;
-  irqController->intcIlr51 = 0x0;
-  irqController->intcIlr52 = 0x0;
-  irqController->intcIlr53 = 0x0;
-  irqController->intcIlr54 = 0x0;
-  irqController->intcIlr55 = 0x0;
-  irqController->intcIlr56 = 0x0;
-  irqController->intcIlr57 = 0x0;
-  irqController->intcIlr58 = 0x0;
-  irqController->intcIlr59 = 0x0;
-  irqController->intcIlr60 = 0x0;
-  irqController->intcIlr61 = 0x0;
-  irqController->intcIlr62 = 0x0;
-  irqController->intcIlr63 = 0x0;
-  irqController->intcIlr64 = 0x0;
-  irqController->intcIlr65 = 0x0;
-  irqController->intcIlr66 = 0x0;
-  irqController->intcIlr67 = 0x0;
-  irqController->intcIlr68 = 0x0;
-  irqController->intcIlr69 = 0x0;
-  irqController->intcIlr70 = 0x0;
-  irqController->intcIlr71 = 0x0;
-  irqController->intcIlr72 = 0x0;
-  irqController->intcIlr73 = 0x0;
-  irqController->intcIlr74 = 0x0;
-  irqController->intcIlr75 = 0x0;
-  irqController->intcIlr76 = 0x0;
-  irqController->intcIlr77 = 0x0;
-  irqController->intcIlr78 = 0x0;
-  irqController->intcIlr79 = 0x0;
-  irqController->intcIlr80 = 0x0;
-  irqController->intcIlr81 = 0x0;
-  irqController->intcIlr82 = 0x0;
-  irqController->intcIlr83 = 0x0;
-  irqController->intcIlr84 = 0x0;
-  irqController->intcIlr85 = 0x0;
-  irqController->intcIlr86 = 0x0;
-  irqController->intcIlr87 = 0x0;
-  irqController->intcIlr88 = 0x0;
-  irqController->intcIlr89 = 0x0;
-  irqController->intcIlr90 = 0x0;
-  irqController->intcIlr91 = 0x0;
-  irqController->intcIlr92 = 0x0;
-  irqController->intcIlr93 = 0x0;
-  irqController->intcIlr94 = 0x0;
-  irqController->intcIlr95 = 0x0;
+  u32int i = 0;
+  for (i = 0; i < 96; i++)
+  {
+    irqController->intcIlr[i] = 0;
+  }
   // reset done flag
   irqController->intcSysStatus = irqController->intcSysStatus | INTCPS_SYSSTATUS_SOFTRESET;
 }
@@ -784,21 +693,98 @@ void setInterrupt(u32int irqNum)
 }
 
 
-// TODO: function to look through all pending irqs and select highest priority one
+// Function to look through all pending irqs and select highest priority one
 // return: interrupt number
 u32int prioritySortIrqs()
 {
-  if ( (irqController->intcPendingIrq0 == 0) &&
-       (irqController->intcPendingIrq1 == 0) &&
-       (irqController->intcPendingIrq2 == 0) )
+  if (!isIrqPending())
   {
     // no interrupts pending.
     return 0;
   }
   else
   {
-    // for now just one interrupt delivered ot the guest! no priority sorting needed. 
-    return GPT1_IRQ;
+    u32int currentHighestPriority = 0;
+    u32int currentIrqNumber = 0;
+    if (irqController->intcPendingIrq0 != 0)
+    {
+      u32int mask = 0;
+      u32int i = 0;
+      for (i = 0; i < 32; i++)
+      {
+        mask = 1 << i;
+        if ((irqController->intcPendingIrq0 & mask) != 0)
+        {
+          u32int priority = irqController->intcIlr[i];
+#ifdef INTC_DBG
+          serial_putstring("INTC: irq nr ");
+          serial_putint(i);
+          serial_putstring(" is pending with priority ");
+          serial_putint(priority);
+          serial_newline();
+#endif
+          if (priority >= currentHighestPriority)
+          {
+            currentHighestPriority = priority;
+            currentIrqNumber = i;
+          }
+        }
+      }
+    }
+
+    if (irqController->intcPendingIrq1 != 0)
+    {
+      u32int mask = 0; 
+      u32int i = 0;
+      for (i = 0; i < 32; i++)
+      {
+        mask = 1 << i;
+        if ((irqController->intcPendingIrq1 & mask) != 0)
+        {
+          u32int priority = irqController->intcIlr[i+32];
+#ifdef INTC_DBG
+          serial_putstring("INTC: irq nr ");
+          serial_putint(i+32);
+          serial_putstring(" is pending with priority ");
+          serial_putint(priority);
+          serial_newline();
+#endif
+          if (priority >= currentHighestPriority)
+          {
+            currentHighestPriority = priority;
+            currentIrqNumber = i+32;
+          }
+        }
+      }
+    }
+
+    if (irqController->intcPendingIrq2 != 0)
+    {
+      u32int mask = 0; 
+      u32int i = 0;
+      for (i = 0; i < 32; i++)
+      {
+        mask = 1 << i;
+        if ((irqController->intcPendingIrq2 & mask) != 0)
+        {
+          u32int priority = irqController->intcIlr[i+64];
+#ifdef INTC_DBG
+          serial_putstring("INTC: irq nr ");
+          serial_putint(i+64);
+          serial_putstring(" is pending with priority ");
+          serial_putint(priority);
+          serial_newline();
+#endif
+          if (priority >= currentHighestPriority)
+          {
+            currentHighestPriority = priority;
+            currentIrqNumber = i+64;
+          }
+        }
+      }
+    }
+
+    return currentIrqNumber;
   }
 }
 
@@ -808,6 +794,13 @@ bool isIrqPending()
   return ( (irqController->intcPendingIrq0 != 0) ||
            (irqController->intcPendingIrq1 != 0) ||
            (irqController->intcPendingIrq2 != 0) );
+}
+
+bool isFiqPending()
+{
+  return ( (irqController->intcPendingFiq0 != 0) ||
+           (irqController->intcPendingFiq1 != 0) ||
+           (irqController->intcPendingFiq2 != 0) );
 }
 
 void intcDumpRegisters(void)

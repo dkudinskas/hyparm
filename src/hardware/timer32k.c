@@ -36,6 +36,12 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
     if (regAddr == REG_TIMER_32K_SYSCONFIG)
     {
       val = timer32SysconfReg;
+#ifdef TIMER32K_DBG
+      serial_putstring(dev->deviceName);
+      serial_putstring(" load sys cfg value ");
+      serial_putint(val);
+      serial_newline();
+#endif
     }
     else if (regAddr == REG_TIMER_32K_COUNTER)
     {

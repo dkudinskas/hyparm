@@ -3,6 +3,8 @@
 #include "guestContext.h"
 #include "memFunctions.h"
 #include "debug.h"
+#include "guestExceptions.h"
+#include "intc.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -52,14 +54,14 @@ void resetUart(u32int uartID)
   uart[uID]->thr         = 0x00000000;
   uart[uID]->dlh         = 0x00000000;
   uart[uID]->ier         = 0x00000000;
-  uart[uID]->iir         = 0x00000001;
+  uart[uID]->iir         = 0x00000001; // no interrupt is pending bit set
   uart[uID]->fcr         = 0x00000000;
   uart[uID]->efr         = 0x00000000;
   uart[uID]->lcr         = 0x00000000;
   setUartMode(uartID);
   uart[uID]->mcr         = 0x00000000;
   uart[uID]->xon1        = 0x00000000;
-  uart[uID]->lsr         = 0x00000060;
+  uart[uID]->lsr         = 0x00000060; // THR and shift register is empty
   uart[uID]->icr         = 0x00000000;
   uart[uID]->xon2        = 0x00000000;
   uart[uID]->msr         = 0x00000000;
@@ -68,7 +70,7 @@ void resetUart(u32int uartID)
   uart[uID]->spr         = 0x00000000;
   uart[uID]->tlr         = 0x00000000;
   uart[uID]->xoff2       = 0x00000000;
-  uart[uID]->mdr1        = 0x00000007;
+  uart[uID]->mdr1        = 0x00000007; // mode select: disable
   uart[uID]->mdr2        = 0x00000000;
   uart[uID]->uasr        = 0x00000000;
   uart[uID]->scr         = 0x00000000;
@@ -102,7 +104,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
 
   switch (regOffs)
   {
-    case UART_DLL_REG:
+    case UART_DLL_REG: // also RHR, THR
     {
       if (getUartMode(uID+1) == operational)
       {
@@ -110,10 +112,21 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
         // check LSR RX bit. if zero, return nil.
         if ((uart[uID]->lsr & UART_LSR_RX_FIFO_E) == 0)
         {
+#ifdef UART_DBG
+          serial_putstring(dev->deviceName);
+          serial_putstring(": load RHR, but RX FIFO is empty! return 0");
+          serial_newline();
+#endif
           value = 0;
         }
         else
         {
+#ifdef UART_DBG
+          serial_putstring(dev->deviceName);
+          serial_putstring(": load RHR value ");
+          serial_putint(uart[uID]->rhr);
+          serial_newline();
+#endif
           // there's stuff in the FIFO! get char from RHR
           value = uart[uID]->rhr;
           // adjust our fifo: all RX elements shift one position left
@@ -142,6 +155,12 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       else
       {
         // load DLL
+#ifdef UART_DBG
+        serial_putstring(dev->deviceName);
+        serial_putstring(": load DLL value ");
+        serial_putint(uart[uID]->dll);
+        serial_newline();
+#endif
         value = uart[uID]->dll;
       }
       break;
@@ -150,11 +169,23 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       if (getUartMode(uID+1) == operational)
       {
         // load IER
+#ifdef UART_DBG
+        serial_putstring(dev->deviceName);
+        serial_putstring(": load IRQ enable register ");
+        serial_putint(uart[uID]->ier);
+        serial_newline();
+#endif
         value = uart[uID]->ier;
       }
       else
       {
         // load DLH
+#ifdef UART_DBG
+        serial_putstring(dev->deviceName);
+        serial_putstring(": load DLH register ");
+        serial_putint(uart[uID]->ier);
+        serial_newline();
+#endif
         value = uart[uID]->dlh;
       }
       break;
@@ -162,15 +193,33 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       if (getUartMode(uID+1) == configB)
       {
         // load EFR
+#ifdef UART_DBG
+        serial_putstring(dev->deviceName);
+        serial_putstring(": load enhanced feature register ");
+        serial_putint(uart[uID]->efr);
+        serial_newline();
+#endif
         value = uart[uID]->efr;
       }
       else
       {
         // load IIR
+#ifdef UART_DBG
+        serial_putstring(dev->deviceName);
+        serial_putstring(": load IRQ identification register ");
+        serial_putint(uart[uID]->iir);
+        serial_newline();
+#endif
         value = uart[uID]->iir;
       }
       break;
     case UART_LCR_REG:
+#ifdef UART_DBG
+      serial_putstring(dev->deviceName);
+      serial_putstring(": load line control reg ");
+      serial_putint(uart[uID]->iir);
+      serial_newline();
+#endif
       value = uart[uID]->lcr;
       break;
     case UART_MCR_REG:
@@ -182,6 +231,12 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       else
       {
         // load MCR
+#ifdef UART_DBG
+        serial_putstring(dev->deviceName);
+        serial_putstring(": load modem control reg ");
+        serial_putint(uart[uID]->mcr);
+        serial_newline();
+#endif
         value = uart[uID]->mcr;
       }
       break;
@@ -194,18 +249,24 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       else
       {
         // load LSR
+#ifdef UART_DBG
+        serial_putstring(dev->deviceName);
+        serial_putstring(": load line status ");
+        serial_putint(uart[uID]->lsr);
+        serial_newline();
+#endif
         value = uart[uID]->lsr;
       }
       break;
     case UART_MSR_REG:
       if (getUartMode(uID+1) == configB)
       {
-        // store TCR/XOFF1
-        DIE_NOW(0, "UART store TCR/XOFF1 unimplemented");
+        // load TCR/XOFF1
+        DIE_NOW(0, "UART load TCR/XOFF1 unimplemented");
       }
       else
       {
-        // store MSR/TCR
+        // load MSR/TCR
         if ( ((uart[uID]->efr & UART_EFR_ENHANCED_EN) == 0) ||
              ((uart[uID]->mcr & UART_MCR_TCR_TLR) == 0) )
         {
@@ -218,8 +279,6 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
           DIE_NOW(0, "UART store TCR unimplemented");
         }
       }
-      break;
-      DIE_NOW(0, "UART load MSR/TCR/XOFF1 unimplemented");
       break;
     case UART_SPR_REG:
       if (getUartMode(uID+1) == configB)
@@ -242,8 +301,6 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
           DIE_NOW(0, "UART store TLR unimplemented");
         }
       }
-      break;
-      DIE_NOW(0, "UART load SPR/TLR/XOFF2 unimplemented");
       break;
     case UART_MDR1_REG:
       value = uart[uID]->mdr1;
@@ -329,6 +386,13 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         // store THR
         if (uart[uID]->loopback)
         {
+#ifdef UART_DBG
+          serial_putstring(dev->deviceName);
+          serial_putstring(": send '");
+          serial_putchar((char)value);
+          serial_putstring("' to THR in loopback mode - to RX FIFO.");
+          serial_newline(); 
+#endif
           // do we have space in RX FIFO?
           if (uart[uID]->rxFifoPtr >= RX_FIFO_SIZE)
           {
@@ -355,6 +419,13 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
           // don't need to adjust TX bits in LSR, as we will always
           // finish transmitting this character first, before going back to guest
           // therefore, the non-existant TX FIFO is trully always empty.
+#ifdef UART_DBG
+          serial_putstring(dev->deviceName);
+          serial_putstring(": send '");
+          serial_putchar((char)value);
+          serial_putstring("' to THR.");
+          serial_newline(); 
+#endif
           serial_putchar((u8int)value);
         }
       }
@@ -369,6 +440,12 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         }
         else
         {
+#ifdef UART_DBG
+          serial_putstring(dev->deviceName);
+          serial_putstring(": storing DLL reg, 8bit LSB divisor value ");
+          serial_putint(value);
+          serial_newline(); 
+#endif
           uart[uID]->dll = value;
         }
       }
@@ -378,17 +455,58 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       if (getUartMode(uID+1) == operational)
       {
         // store IER
+        if (((uart[uID]->ier & UART_IER_THR) == 0) &&
+            ((value & UART_IER_THR) == UART_IER_THR))
+        {
+          // THR irq was disabled, now is enabled.
+          // by manual, should check LSR reg TXFIFO and shift reg are empty
+          // but TX FIFO and THR are defo empty, set IRQ bits in IIR register
+          uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
+          uart[uID]->iir = uart[uID]->iir | (UART_IIR_IT_TYPE_THR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+#ifdef UART_DBG
+          serial_putstring(dev->deviceName);
+          serial_putstring(": enabling THR irq, set IIR to ");
+          serial_putint(uart[uID]->iir);
+          serial_newline();
+#endif
+          throwInterrupt(UART3_IRQ);
+        }
+        else if (((uart[uID]->ier & UART_IER_THR) == UART_IER_THR) &&
+                ((value & UART_IER_THR) == 0))
+        {
+          // THR irq was enabled, clear irq
+          uart[uID]->iir = uart[uID]->iir | UART_IIR_IT_PENDING;
+          uart[uID]->iir = uart[uID]->iir &~ UART_IIR_IT_TYPE;
+#ifdef UART_DBG
+          serial_putstring(dev->deviceName);
+          serial_putstring(": disabling THR irq, set IIR to ");
+          serial_putint(uart[uID]->iir);
+          serial_newline();
+#endif
+        }
+
         // bits [4:7] Can be written only when EFR_REG[4] = 1
+        u32int writenValue = value;
         if ((uart[uID]->efr && UART_EFR_ENHANCED_EN) == 0)
         {
           // enchaned features disabled. only write bottom four bits
-          uart[uID]->ier = (uart[uID]->ier & 0xFFFFFFF0) | (value & 0xF);
+          writenValue &= 0xF;
+          uart[uID]->ier &= 0xFFFFFFF0;
         }
         else
         {
           // enchaned features enabled. write all 8 bits
-          uart[uID]->ier = (uart[uID]->ier & 0xFFFFFF00) | (value & 0xFF);
+          writenValue &= 0xFF;
+          uart[uID]->ier &= 0xFFFFFF00;
         }
+        uart[uID]->ier = writenValue;
+#ifdef UART_DBG
+          serial_putstring(dev->deviceName);
+          serial_putstring(": storing IRQ enable register: ");
+          serial_putint(uart[uID]->ier);
+          serial_newline();
+#endif
+ 
         if ((value & UART_IER_SLEEP_MODE) != 0)
         {
 #ifdef UART_DBG
@@ -410,6 +528,12 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         }
         else
         {
+#ifdef UART_DBG
+          serial_putstring(dev->deviceName);
+          serial_putstring(": store DLH MSB divisor value: ");
+          serial_putint(value);
+          serial_newline(); 
+#endif
           uart[uID]->dlh = value;
         }
       }

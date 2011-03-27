@@ -81,6 +81,7 @@ struct guestContext
   bool guestIrqPending;
   bool guestDataAbtPending;
   bool guestPrefetchAbtPending;
+  bool guestIdle;
 };
 
 

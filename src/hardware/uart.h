@@ -27,7 +27,15 @@
 #define UART_IER_CTS            0x00000080 // CTS interrupt
 #define UART_IIR_REG          0x00000008 // interrupt identification register, R/O
 #define UART_IIR_FCR_MIRROR     0x000000C0 // Mirror FCR[0] on both bits 
-#define UART_IIR_IT_TYPE        0x0000003E // one of seven interrupt types 
+#define UART_IIR_IT_TYPE        0x0000003E // one of seven interrupt types
+#define UART_IIR_IT_TYPE_MODEM_IRQ       0x0
+#define UART_IIR_IT_TYPE_THR_IRQ         0x1
+#define UART_IIR_IT_TYPE_RHR_IRQ         0x2
+#define UART_IIR_IT_TYPE_RX_LS_ERR_IRQ   0x3
+#define UART_IIR_IT_TYPE_RX_TIMEOUT_IRQ  0x6
+#define UART_IIR_IT_TYPE_XOFF_IRQ        0x8
+#define UART_IIR_IT_TYPE_CTS_IRQ         0x10
+#define UART_IIR_IT_TYPE_SHAMT           0x1
 #define UART_IIR_IT_PENDING     0x00000001 // interrupt pending bit
 #define UART_FCR_REG          0x00000008 // FIFO control register, W/O
 #define UART_FCR_RX_FIFO_TRIG   0x0000000C // RX FIFO trigger level

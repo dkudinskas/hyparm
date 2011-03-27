@@ -313,10 +313,7 @@ void irq()
       break;
     case GPT2_IRQ:
     {
-      if(!isGuestIrqMasked(activeIrqNumber))
-      {
-        throwInterrupt(activeIrqNumber);
-      }
+      throwInterrupt(activeIrqNumber);
       gptBEClearOverflowInterrupt(2);
       acknowledgeIrqBE();
       break;
@@ -350,10 +347,7 @@ void irqPrivileged()
       acknowledgeIrqBE();
       break;
     case GPT2_IRQ:
-      if(!isGuestIrqMasked(activeIrqNumber))
-      {
-        throwInterrupt(activeIrqNumber);
-      }
+      throwInterrupt(activeIrqNumber);
       gptBEClearOverflowInterrupt(2);
       acknowledgeIrqBE();
       break;

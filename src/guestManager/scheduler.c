@@ -1,4 +1,6 @@
 #include "scheduler.h"
+#include "cpu.h"
+#include "intc.h"
 
 void scheduleGuest()
 {
@@ -18,4 +20,19 @@ void scheduleGuest()
   //   - restore guest state
   //   - return to guest...
   return;
+}
+
+void guestIdle(GCONTXT * context)
+{
+  context->guestIdle = TRUE;
+
+  // enable interrupts if they were disabled...
+  enableInterrupts();
+
+  while (!isIrqPending())
+  {
+    delay(1000000);
+  }
+  context->guestIdle = FALSE;
+
 }
