@@ -3,8 +3,8 @@
 
 #include "guestManager/guestContext.h"
 
-#include "hardware/gpmc.h"
-#include "hardware/serial.h"
+#include "vm/omap35xx/gpmc.h"
+#include "vm/omap35xx/serial.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()

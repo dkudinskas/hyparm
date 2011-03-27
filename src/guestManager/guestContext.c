@@ -1,7 +1,7 @@
 #include "guestManager/guestContext.h"
 
-#include "hardware/serial.h"
-#include "hardware/sdram.h"
+#include "vm/omap35xx/serial.h"
+#include "vm/omap35xx/sdram.h"
 
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/miscInstructions.h"

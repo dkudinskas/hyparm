@@ -2,7 +2,7 @@
 
 #include "guestManager/blockCache.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/scanner.h"

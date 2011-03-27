@@ -1,7 +1,7 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 
 u32int heapStart;

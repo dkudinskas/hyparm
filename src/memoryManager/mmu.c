@@ -1,6 +1,6 @@
 #include "common/assert.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 #include "memoryManager/mmu.h"
 

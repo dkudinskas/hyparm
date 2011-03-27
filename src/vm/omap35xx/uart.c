@@ -4,9 +4,9 @@
 #include "guestManager/guestContext.h"
 #include "guestManager/guestExceptions.h"
 
-#include "hardware/serial.h"
-#include "hardware/uart.h"
-#include "hardware/intc.h"
+#include "vm/omap35xx/serial.h"
+#include "vm/omap35xx/uart.h"
+#include "vm/omap35xx/intc.h"
 
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 

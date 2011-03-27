@@ -13,9 +13,9 @@
 #include "guestManager/guestContext.h"
 #include "guestManager/guestExceptions.h"
 
-#include "hardware/gptimer.h"
-#include "hardware/intc.h"
-#include "hardware/serial.h"
+#include "vm/omap35xx/gptimer.h"
+#include "vm/omap35xx/intc.h"
+#include "vm/omap35xx/serial.h"
 
 #include "instructionEmu/scanner.h"
 

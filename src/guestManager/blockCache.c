@@ -1,6 +1,6 @@
 #include "guestManager/blockCache.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 
 #ifdef DUMP_COLLISION_COUNTER

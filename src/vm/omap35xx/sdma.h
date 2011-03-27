@@ -3,7 +3,7 @@
 
 #include "common/types.h"
 
-#include "hardware/hardwareLibrary.h"
+#include "vm/omap35xx/hardwareLibrary.h"
 
 
 #define SDMA_REVISION_NUMBER      0x40

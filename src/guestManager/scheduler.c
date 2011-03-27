@@ -1,7 +1,7 @@
 #include "guestManager/scheduler.h"
 
-#include "hardware/serial.h"
-#include "hardware/intc.h"
+#include "vm/omap35xx/serial.h"
+#include "vm/omap35xx/intc.h"
 
 #include "cpuArch/cpu.h"
 

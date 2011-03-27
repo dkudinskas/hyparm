@@ -5,7 +5,7 @@
 #include "guestManager/guestExceptions.h"
 #include "guestManager/guestContext.h"
 
-#include "hardware/intc.h"
+#include "vm/omap35xx/intc.h"
 
 
 extern GCONTXT * getGuestContext(void);
