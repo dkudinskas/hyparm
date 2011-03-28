@@ -1,50 +1,68 @@
-#include "exceptionHandlers.h"
-#include "serial.h"
-#include "scanner.h"
-#include "guestContext.h"
-#include "addressing.h"
-#include "gptimer.h"
-#include "mmu.h"
-#include "memoryConstants.h"
-#include "scheduler.h"
-#include "globalMemoryMapper.h"
-#include "blockCache.h"
-#include "beIntc.h"
-#include "beGPTimer.h"
-#include "cpu.h"
-#include "guestExceptions.h"
-#include "intc.h"
-#include "be32kTimer.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "cpuArch/cpu.h"
+
+#include "drivers/beagle/be32kTimer.h"
+#include "drivers/beagle/beGPTimer.h"
+#include "drivers/beagle/beIntc.h"
+
+#include "exceptions/exceptionHandlers.h"
+
+#include "guestManager/blockCache.h"
+#include "guestManager/scheduler.h"
+#include "guestManager/guestContext.h"
+#include "guestManager/guestExceptions.h"
+
+#include "hardware/gptimer.h"
+#include "hardware/intc.h"
+#include "hardware/serial.h"
+
+#include "instructionEmu/scanner.h"
+
+#include "memoryManager/addressing.h"
+#include "memoryManager/globalMemoryMapper.h"
+#include "memoryManager/mmu.h"
+#include "memoryManager/memoryConstants.h"
+
 
 extern GCONTXT * getGuestContext(void);
 
-void do_software_interrupt(u32int code)
+void softwareInterrupt(u32int code)
 {
 #ifdef EXC_HDLR_DBG
-  serial_putstring("exceptionHandlers: software interrupt ");
+  serial_putstring("softwareInterrupt(");
   serial_putint(code);
+  serial_putstring(")");
   serial_newline();
 #endif
-  /* parse the instruction to find the start address of next block */
-  /* scan next block! */
+  // parse the instruction to find the start address of next block
   GCONTXT * gContext = getGuestContext();
   u32int nextPC = 0;
   u32int (*instrHandler)(GCONTXT * context);
 
-  /* get evaluate function addr */
-  instrHandler = gContext->hdlFunct;
-  /* evaluate replaced instruction and get next pc */
-  nextPC = instrHandler(gContext);
+  if (code <= 0xFF)
+  {
+#ifdef EXC_HDLR_DBG
+    serial_putstring("softwareInterrupt: SVC<");
+    serial_putint(code);
+    serial_putstring("> @ ");
+    serial_putint(gContext->R15);
+    serial_putstring(" is a guest system call.");
+    serial_newline();
+#endif
+    deliverServiceCall();
+    nextPC = gContext->R15;
+  }
+  else
+  {
+    // get interpreter function pointer and call it
+    instrHandler = gContext->hdlFunct;
+    nextPC = instrHandler(gContext);
+  }
 
   if (nextPC == 0)
   {
-    serial_putstring("exceptionHandlers: Invalid nextPC. Instr to implement?");
-    serial_newline();
-    serial_putstring("exceptionHandlers: Dumping gc");
-    serial_newline();
-    dumpGuestContext(gContext);
-    DIE_NOW(0, "exceptionHandlers: In infinite loop");
+    DIE_NOW(gContext, "softwareInterrupt: Invalid nextPC. Instr to implement?");
   }
 
   int i = 0;
@@ -57,59 +75,90 @@ void do_software_interrupt(u32int code)
   gContext->R15 = nextPC;
 
   // deliver interrupts
-  if (gContext->guestAbtPending)
+  if (gContext->guestIrqPending)
   {
-    dumpGuestContext(gContext);
-    DIE_NOW(0, "Exception handlers: guest abort in SWI handler! implement.");
-  }
-  else if (gContext->guestIrqPending)
-  {
-    deliverInterrupt();
+    if ((gContext->CPSR & CPSR_IRQ_DIS) == 0)
+    {
+      deliverInterrupt();
+    }
   }
 
 #ifdef EXC_HDLR_DBG
-  serial_putstring("exceptionHandlers: Next PC = 0x");
+  serial_putstring("softwareInterrupt: Next PC = 0x");
   serial_putint(nextPC);
   serial_newline();
 #endif
-  scanBlock(gContext, gContext->R15);
+
+  if ((gContext->CPSR & CPSR_MODE) != CPSR_MODE_USR)
+  {
+    // guest in privileged mode! scan...
+    scanBlock(gContext, gContext->R15);
+  }
 }
 
-void do_data_abort()
+void dataAbort()
 {
   // make sure interrupts are disabled while we deal with data abort.
   disableInterrupts();
-  switch(getDFSR().fs3_0)
+  u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
+  switch(faultStatus)
   {
-    case perm_section:
-    case perm_page:
+    case dfsPermissionSection:
+    case dfsPermissionPage:
     {
-      /* Check if the addr we have faulted on is caused by a memory protection the hypervisor has enabled */
+      // Check if the addr we have faulted on is caused by 
+      // a memory protection the hypervisor has enabled
       GCONTXT* gc = getGuestContext();
 
       // ATM dont expect anything else to permission fault except load/stores
       emulateLoadStoreGeneric(gc, getDFAR());
-      if (!gc->guestAbtPending)
+      if (!gc->guestDataAbtPending)
       {
-        // ONLY move to the next instruction, if the guest hasn't aborted... 
+        // ONLY move to the next instruction, if the guest hasn't aborted...
         gc->R15 = gc->R15 + 4;
       }
       else
       {
         // deliver the abort!
-        deliverAbort();
+        deliverDataAbort();
         scanBlock(gc, gc->R15);
       }
       break;
     }
-    case translation_section:
-      printDataAbort();
-      DIE_NOW(0, "Translation section data abort.");
+    case dfsTranslationSection:
+    case dfsTranslationPage:
+    {
+      GCONTXT* gc = getGuestContext();
+      DFSR dfsr = getDFSR();
+      bool isPrivAccess = (gc->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
+      if ( shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()) )
+      {
+        deliverDataAbort();
+        scanBlock(gc, gc->R15);
+      }
       break;
-    case translation_page:
+    }
+    case dfsSyncExternalAbt:
+    {
       printDataAbort();
-      DIE_NOW(0, "Translation page data abort.");
-      break;
+      DIE_NOW(0, "dataAbort: synchronous external abort hit!");
+    }
+    case dfsAlignmentFault:
+    case dfsDebugEvent:
+    case dfsAccessFlagSection:
+    case dfsIcacheMaintenance:
+    case dfsAccessFlagPage:
+    case dfsDomainSection:
+    case dfsDomainPage:
+    case dfsTranslationTableWalkLvl1SyncExtAbt:
+    case dfsTranslationTableWalkLvl2SyncExtAbt:
+    case dfsImpDepLockdown:
+    case dfsAsyncExternalAbt:
+    case dfsMemAccessAsyncParityErr:
+    case dfsMemAccessAsyncParityERr2:
+    case dfsImpDepCoprocessorAbort:
+    case dfsTranslationTableWalkLvl1SyncParityErr:
+    case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
       serial_putstring("Unimplemented user data abort.");
       serial_newline();
@@ -119,19 +168,19 @@ void do_data_abort()
   enableInterrupts();
 }
 
-void do_data_abort_hypervisor()
+void dataAbortPrivileged()
 {
   /* Here if we abort in a priviledged mode, i.e its the Hypervisors fault */
-  serial_putstring("exceptionHandlers: Hypervisor data abort in priviledged mode.");
+  serial_putstring("dataAbortPrivileged: Hypervisor data abort in priviledged mode.");
   serial_newline();
 
   printDataAbort();
-
-  switch(getDFSR().fs3_0)
+  u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
+  switch(faultStatus)
   {
-    case translation_section:
-    case translation_page:
-      ;
+    case dfsTranslationSection:
+    case dfsTranslationPage:
+    {
       //Mostly likely trying to access a page of physical memory, just map it.
       u32int memAddr = getDFAR();
       if( (memAddr >= BEAGLE_RAM_START) && (memAddr <= BEAGLE_RAM_END) )
@@ -149,9 +198,30 @@ void do_data_abort_hypervisor()
         */
       }
       break;
+    }
+    case dfsAlignmentFault:
+    case dfsDebugEvent:
+    case dfsAccessFlagSection:
+    case dfsIcacheMaintenance:
+    case dfsAccessFlagPage:
+    case dfsSyncExternalAbt:
+    case dfsDomainSection:
+    case dfsDomainPage:
+    case dfsTranslationTableWalkLvl1SyncExtAbt:
+    case dfsPermissionSection:
+    case dfsTranslationTableWalkLvl2SyncExtAbt:
+    case dfsPermissionPage:
+    case dfsImpDepLockdown:
+    case dfsAsyncExternalAbt:
+    case dfsMemAccessAsyncParityErr:
+    case dfsMemAccessAsyncParityERr2:
+    case dfsImpDepCoprocessorAbort:
+    case dfsTranslationTableWalkLvl1SyncParityErr:
+    case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
-      serial_putstring("UNIMPLEMENTED data abort type. (exceptionHandlers.c).");
+      serial_putstring("dataAbortPrivileged: UNIMPLEMENTED data abort type.");
       serial_newline();
+      printDataAbort();
       DIE_NOW(0, "Entering infinite loop");
       break;
   }
@@ -165,67 +235,80 @@ void do_data_abort_hypervisor()
   //Should be fixed and ready to re-execute the offending isntruction
 }
 
-void do_undefined(void)
+void undefined(void)
 {
-  serial_putstring("exceptionHandlers: undefined handler, Implement me!");
-  serial_newline();
-
-  DIE_NOW(getGuestContext(), "Entering infinite loop.");
+  DIE_NOW(0, "undefined: undefined handler, Implement me!");
 }
 
-void do_undefined_hypervisor(void)
+void undefinedPrivileged(void)
 {
-  serial_putstring("exceptionHandlers: Undefined handler (Privileged/Hypervisor), Implement me!");
-  serial_newline();
-
-  DIE_NOW(getGuestContext(), "Entering infinite loop.");
+  DIE_NOW(0, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!");
 }
 
-void do_prefetch_abort(void)
+void prefetchAbort(void)
 {
-  serial_putstring("exceptionHandlers: prefetch abort handler, Implement me!");
-  serial_newline();
+  // make sure interrupts are disabled while we deal with prefetch abort.
+  disableInterrupts();
 
+  IFSR ifsr = getIFSR();
+  u32int ifar = getIFAR();
+  u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
+  GCONTXT* gc = getGuestContext();
+
+  switch(faultStatus)
+  {
+    case ifsTranslationFaultPage:
+    {
+      if ( shouldPrefetchAbort(ifar) )
+      {
+        deliverPrefetchAbort();
+        scanBlock(gc, gc->R15);
+      }
+      break;
+    }
+    case ifsDebugEvent:
+    case ifsAccessFlagFaultSection:
+    case ifsTranslationFaultSection:
+    case ifsAccessFlagFaultPage:
+    case ifsSynchronousExternalAbort:
+    case ifsDomainFaultSection:
+    case ifsDomainFaultPage:
+    case ifsTranslationTableTalk1stLvlSynchExtAbt:
+    case ifsPermissionFaultSection:
+    case ifsTranslationTableWalk2ndLvllSynchExtAbt:
+    case ifsPermissionFaultPage:
+    case ifsImpDepLockdown:
+    case ifsMemoryAccessSynchParityError:
+    case ifsImpDepCoprocessorAbort:
+    case ifsTranslationTableWalk1stLvlSynchParityError:
+    case ifsTranslationTableWalk2ndLvlSynchParityError:
+    default:
+      printPrefetchAbort();
+      DIE_NOW(gc, "Unimplemented guest prefetch abort.");
+  }
+  enableInterrupts();
+}
+
+void prefetchAbortPrivileged(void)
+{
   printPrefetchAbort();
-
-  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
+  DIE_NOW(0, "prefetchAbortPrivileged: unimplemented");
   //Never returns
 }
 
-void do_prefetch_abort_hypervisor(void)
+void monitorMode(void)
 {
-  serial_putstring("Hypervisor Prefetch Abort");
-  serial_newline();
-
-  printPrefetchAbort();
-
-  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
-  //Never returns
-}
-
-void do_monitor_mode(void)
-{
-  serial_putstring("exceptionHandlers: monitor/secure mode handler, Implement me!");
-  serial_newline();
-
   /* Does the omap 3 implement monitor/secure mode? */
-
-  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
-  //Never returns
+  DIE_NOW(0, "monitorMode: monitor/secure mode handler, Implement me!");
 }
 
-void do_monitor_mode_hypervisor(void)
+void monitorModePrivileged(void)
 {
-  serial_putstring("exceptionHandlers: monitor/secure mode handler(privileged/Hypervisor), Implement me!");
-  serial_newline();
-
   /* Does the omap 3 implement monitor/secure mode? */
-
-  DIE_NOW(getGuestContext(), "Entering Infinite Loop.");
-  //Never returns
+  DIE_NOW(0, "monitorMode: monitor/secure mode handler, privlieged mode. Implement me!");
 }
 
-void do_irq()
+void irq()
 {
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
@@ -240,7 +323,7 @@ void do_irq()
     {
       if(!isGuestIrqMasked(activeIrqNumber))
       {
-        tickEvent(activeIrqNumber);
+        throwInterrupt(activeIrqNumber);
       }
       gptBEClearOverflowInterrupt(2);
       acknowledgeIrqBE();
@@ -249,7 +332,7 @@ void do_irq()
     default:
       serial_putstring("Received IRQ=");
       serial_putint(activeIrqNumber);
-      DIE_NOW(0, " Implement me!");
+      DIE_NOW(0, "irq: unimplemented IRQ number.");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -264,7 +347,7 @@ void do_irq()
 }
 
 
-void do_irq_hypervisor()
+void irqPrivileged()
 {
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
@@ -277,7 +360,7 @@ void do_irq_hypervisor()
     case GPT2_IRQ:
       if(!isGuestIrqMasked(activeIrqNumber))
       {
-        tickEvent(activeIrqNumber);
+        throwInterrupt(activeIrqNumber);
       }
       gptBEClearOverflowInterrupt(2);
       acknowledgeIrqBE();
@@ -285,7 +368,7 @@ void do_irq_hypervisor()
     default:
       serial_putstring("Received IRQ=");
       serial_putint(activeIrqNumber);
-      DIE_NOW(0, " Implement me!");
+      DIE_NOW(0, "irqPrivileged: unimplemented IRQ number.");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -295,12 +378,11 @@ void do_irq_hypervisor()
   asm volatile("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
-
   return;
 }
 
 
-void do_fiq(void)
+void fiq(void)
 {
-  DIE_NOW(getGuestContext(), "Received FIQ! Implement me.");
+  DIE_NOW(getGuestContext(), "fiq: FIQ handler unimplemented!");
 }

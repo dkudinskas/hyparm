@@ -1,8 +1,8 @@
-#ifndef __HARDWARE_LIBRARY_H__
-#define __HARDWARE_LIBRARY_H__
+#ifndef __HARDWARE__HARDWARE_LIBRARY_H__
+#define __HARDWARE__HARDWARE_LIBRARY_H__
 
-#include "types.h"
-#include "serial.h"
+#include "common/types.h"
+
 
 // uncomment me to enable hardwareLibrary debug : #define HARDWARE_LIB_DBG
 
@@ -131,8 +131,6 @@ struct genericDevice
   struct genericDevice * attachedDevices[MAX_NR_ATTACHED];
   LOAD_FUNCTION loadFunction;
   STORE_FUNCTION storeFunction;
-//  u32int (*loadFunction)(device * dev, ACCESS_SIZE size, u32int address);
-//  void (*storeFunction)(device * dev, ACCESS_SIZE size, u32int address, u32int value);
 };
 
 device * initialiseHardwareLibrary(void);

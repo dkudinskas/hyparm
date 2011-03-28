@@ -24,17 +24,6 @@ ASMFLAGS = $(TARGET_ASMFLAGS)
 CCFLAGS = -g -O3 -fno-common -ffixed-r8 -msoft-float -D__KERNEL__ -DTEXT_BASE=$(TARGET_BASE_ADDRESS) -fno-builtin -ffreestanding -nostdinc -pipe -DCONFIG_ARM -D__ARM__ -marm -mabi=aapcs-linux -mno-thumb-interwork -Wall -Wstrict-prototypes -Winline -fno-stack-protector -c -fno-toplevel-reorder $(TARGET_CCFLAGS)
 LDFLAGS = -g -Ttext $(TARGET_BASE_ADDRESS) -e main -o $(APP_NAME).elf -Map $(APP_NAME).map --cref
 
-INCLUDE_DIRS += -I$(DEPTH)/src/
-INCLUDE_DIRS += -I$(DEPTH)/src/common/
-INCLUDE_DIRS += -I$(DEPTH)/src/cpuArch/
-INCLUDE_DIRS += -I$(DEPTH)/src/exceptions/
-INCLUDE_DIRS += -I$(DEPTH)/src/guestManager/
-INCLUDE_DIRS += -I$(DEPTH)/src/hardware/
-INCLUDE_DIRS += -I$(DEPTH)/src/instructionEmu/
-INCLUDE_DIRS += -I$(DEPTH)/src/linuxBoot/
-INCLUDE_DIRS += -I$(DEPTH)/src/memoryManager/
-INCLUDE_DIRS += -I$(DEPTH)/src/drivers/beagle/
-
 include $(DEPTH)/src/makefile.in
 include $(DEPTH)/src/common/makefile.in
 include $(DEPTH)/src/cpuArch/makefile.in
@@ -66,7 +55,7 @@ $(APP_NAME).dump: $(APP_NAME).elf
 
 # Rule to build object files from .c sources - $@ contains the current target
 $(SRCS): init_once
-	@$(CC) $(CCFLAGS) $(INCLUDE_DIRS) -c $(DEPTH)/$@ -o $(DEPTH)/$(@:.c=.o)
+	@$(CC) $(CCFLAGS) -I$(DEPTH)/src -c $(DEPTH)/$@ -o $(DEPTH)/$(@:.c=.o)
 	@echo $(@:.c=.o)
 
 # Rule to build object files from .s sources - $@ contains the current target

@@ -1,4 +1,7 @@
-#include "scheduler.h"
+#include "guestManager/scheduler.h"
+
+#include "hardware/serial.h"
+
 
 void scheduleGuest()
 {

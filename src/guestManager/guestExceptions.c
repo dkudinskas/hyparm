@@ -1,13 +1,46 @@
-#include "guestExceptions.h"
-#include "guestContext.h"
-#include "intc.h"
-#include "cpu.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "cpuArch/cpu.h"
+
+#include "guestManager/guestExceptions.h"
+#include "guestManager/guestContext.h"
+
+#include "hardware/intc.h"
+
 
 extern GCONTXT * getGuestContext(void);
 
+void deliverServiceCall(void)
+{
+  GCONTXT * context = getGuestContext();
+  // 2. copy guest CPSR into SPSR_SVC
+  context->SPSR_SVC = context->CPSR;
+  // 3. put guest CPSR in SVC mode
+  context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_SVC;
+  // 5. set LR to PC+4
+  context->R14_SVC = context->R15 + 4;
+  // 6. set PC to guest svc handler address
+  if (context->virtAddrEnabled)
+  {
+    if (context->guestHighVectorSet)
+    {
+      context->R15 = 0xffff0008;
+    }
+    else
+    {
+      context->R15 = 0x00000008;
+    }
+  }
+  else
+  {
+    DIE_NOW(0, "deliverInterrupt: SVC to be delivered with guest vmem off.");
+  }
+  // only thing left is to mask subsequent interrupts
+  context->CPSR |= CPSR_IRQ_DIS;
+  context->CPSR |= CPSR_FIQ_DIS;
+}
 
-void tickEvent(u32int irqNumber)
+void throwInterrupt(u32int irqNumber)
 {
   GCONTXT * context = getGuestContext();
 
@@ -38,11 +71,9 @@ void deliverInterrupt(void)
   context->SPSR_IRQ = context->CPSR;
   // 3. put guest CPSR in IRQ mode
   context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_IRQ;
-  // 4. disable further guest interrupts
-  context->CPSR |= CPSR_IRQ_DIS;
-  // 5. set LR to PC+4
+  // 4. set LR to PC+4
   context->R14_IRQ = context->R15 + 4;
-  // 6. set PC to guest irq handler address
+  // 5. set PC to guest irq handler address
   if (context->virtAddrEnabled)
   {
     if (context->guestHighVectorSet)
@@ -58,14 +89,16 @@ void deliverInterrupt(void)
   {
     DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
   }
-  // now prepared the global guest environment. scanner will scan correct code.
+  // 6. mask subsequent guest interrupts
+  context->CPSR |= CPSR_IRQ_DIS;
+  context->CPSR |= CPSR_FIQ_DIS;
 }
 
-void deliverAbort()
+void deliverDataAbort()
 {
   GCONTXT * context = getGuestContext();
   // 1. reset abt pending flag
-  context->guestAbtPending = FALSE;
+  context->guestDataAbtPending = FALSE;
   // 2. copy CPSR into SPSR_ABT
   context->SPSR_ABT = context->CPSR;
   // 3. put guest CPSR in ABT mode
@@ -86,24 +119,15 @@ void deliverAbort()
   }
   else
   {
-    DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
+    DIE_NOW(0, "deliverInterrupt: Data abort to be delivered with guest vmem off.");
   }
-  // now prepared the global guest environment. scanner will scan correct code.
+  // 6. mask subsequent guest interrupts
+  context->CPSR |= CPSR_IRQ_DIS;
+  context->CPSR |= CPSR_FIQ_DIS;
 }
 
-void throwAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
+void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
 {
-#ifdef GUEST_EXCEPTIONS_DBG
-  serial_putstring("throwAbort(");
-  serial_putint(address);
-  serial_putstring(", faultType ");
-  serial_putint_nozeros(faultType);
-  serial_putstring(", isWrite ");
-  serial_putint(isWrite);
-  serial_putstring(", dom ");
-  serial_putint(isWrite);
-  serial_newline();
-#endif
   GCONTXT* context = getGuestContext();
   // set CP15 Data Fault Status Register
   u32int dfsr = (faultType & 0xF) | ((faultType & 0x10) << 6);
@@ -112,9 +136,82 @@ void throwAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
   {
     dfsr |= 0x800; // write-not-read bit
   }
+#ifdef GUEST_EXCEPTIONS_DBG
+  serial_putstring("throwDataAbort(");
+  serial_putint(address);
+  serial_putstring(", faultType ");
+  serial_putint_nozeros(faultType);
+  serial_putstring(", isWrite ");
+  serial_putint(isWrite);
+  serial_putstring(", dom ");
+  serial_putint(isWrite);
+  serial_putstring(" @pc=");
+  serial_putint(context->R15);
+  serial_putstring(" dfsr=");
+  serial_putint(dfsr);
+  serial_putstring(")");
+  serial_newline();
+#endif
   setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
   // set CP15 Data Fault Address Register to 'address'
   setCregVal(6, 0, 0, 0, context->coprocRegBank, address);
   // set guest abort pending flag, return
-  context->guestAbtPending = TRUE;
+  context->guestDataAbtPending = TRUE;
+}
+
+void deliverPrefetchAbort(void)
+{
+  GCONTXT * context = getGuestContext();
+  // 1. reset abt pending flag
+  context->guestPrefetchAbtPending = FALSE;
+  // 2. copy CPSR into SPSR_ABT
+  context->SPSR_ABT = context->CPSR;
+  // 3. put guest CPSR in ABT mode
+  context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_ABT;
+  // 4. set LR to PC+8
+  context->R14_ABT = context->R15 + 8;
+  // 5. set PC to guest irq handler address
+  if (context->virtAddrEnabled)
+  {
+    if (context->guestHighVectorSet)
+    {
+      context->R15 = 0xffff000c;
+    }
+    else
+    {
+      context->R15 = 0x0000000c;
+    }
+  }
+  else
+  {
+    DIE_NOW(0, "deliverInterrupt: Prefetch abort to be delivered with guest vmem off.");
+  }
+  // only thing left is to mask subsequent interrupts
+  context->CPSR |= CPSR_IRQ_DIS;
+  context->CPSR |= CPSR_FIQ_DIS;
+}
+
+void throwPrefetchAbort(u32int address, u32int faultType)
+{
+  GCONTXT* context = getGuestContext();
+  // set CP15 Data Fault Status Register
+  u32int ifsr = (faultType & 0xF) | ((faultType & 0x10) << 10);
+
+#ifdef GUEST_EXCEPTIONS_DBG
+  serial_putstring("throwPrefetchAbort(");
+  serial_putint(address);
+  serial_putstring(", faultType ");
+  serial_putint(faultType);
+  serial_putstring(" @pc=");
+  serial_putint(context->R15);
+  serial_putstring(" ifsr=");
+  serial_putint(ifsr);
+  serial_putstring(")");
+  serial_newline();
+#endif
+  setCregVal(5, 0, 0, 1, context->coprocRegBank, ifsr);
+  // set CP15 Data Fault Address Register to 'address'
+  setCregVal(6, 0, 0, 2, context->coprocRegBank, address);
+  // set guest abort pending flag, return
+  context->guestPrefetchAbtPending = TRUE;
 }

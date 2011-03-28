@@ -1,8 +1,8 @@
-#ifndef __PAGE_TABLE_H__
-#define __PAGE_TABLE_H__
+#ifndef __MEMORY_MANAGER__PAGE_TABLE_H__
+#define __MEMORY_MANAGER__PAGE_TABLE_H__
 
-#include "types.h"
-//Uncomment to enable debuging : #define PT_SMALL_DEBUG
+#include "common/types.h"
+
 #define PAGE_TABLE_ENTRIES 4096
 #define SECOND_LEVEL_PAGE_TABLE_ENTRIES 256
 #define PAGE_TABLE_ENTRY_WIDTH 4
@@ -77,6 +77,7 @@ bool isAddrInGuestPT(u32int vaddr);
 void dumpPageTable(descriptor* ptd);
 
 u32int findVAforPA(u32int physAddr);
+u32int findGuestVAforPA(u32int physAddr);
 
 
 enum enum_pageType
@@ -128,6 +129,7 @@ void splitSectionToSmallPages(descriptor* ptd, u32int vAddr);
 
 u8int mapGuestDomain(u8int guestDomain);
 u32int mapAccessPermissionBits(u32int guestAP, u32int domain);
+void mapAPBitsSection(u32int vAddr, sectionDescriptor* guestNewSD, descriptor* shadowSD);
 
 void dumpPageTable(descriptor* ptd);
 void dumpSection(sectionDescriptor* sd);
@@ -250,5 +252,14 @@ struct pTSmallDescriptor
   u32int addr:20; //31-12
 };
 /* End 2nd Level Descriptors */
+
+struct pageTableMetaDataElement
+{
+  u32int valid;
+  u32int pAddr;
+  u32int vAddr;
+};
+
+typedef struct pageTableMetaDataElement ptMetaData;
 
 #endif

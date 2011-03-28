@@ -1,7 +1,8 @@
-#ifndef __LED_H__
-#define __LED_H__
+#ifndef __HARDWARE__LED_H__
+#define __HARDWARE__LED_H__
 
-#include "types.h"
+#include "common/types.h"
+
 
 #define LED1  				0x00200000
 #define LED2  				0x00400000

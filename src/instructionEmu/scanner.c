@@ -1,13 +1,31 @@
-#include "scanner.h"
-#include "blockCache.h"
-#include "common.h"
-#include "mmu.h"
-#include "pageTable.h"
-#include "debug.h"
+#include "common/debug.h"
 
-//Uncomment to enable debugging: #define SCANNER_DEBUG
+#include "guestManager/blockCache.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/decoder.h"
+#include "instructionEmu/scanner.h"
+
+#include "memoryManager/mmu.h"
+#include "memoryManager/pageTable.h"
+
+
 //Uncomment to enable debugging: #define PC_DEBUG
 
+
+// http://www.concentric.net/~Ttwang/tech/inthash.htm
+// 32bit mix function
+static inline u32int getHash(u32int key)
+{
+  key = ~key + (key << 15); // key = (key << 15) - key - 1;
+  key = key ^ (key >> 12);
+  key = key + (key << 2);
+  key = key ^ (key >> 4);
+  key = key * 2057; // key = (key + (key << 3)) + (key << 11);
+  key = key ^ (key >> 16);
+  return key >> 2;
+}
 
 void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 {
@@ -26,39 +44,47 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   }
 #endif
 
+#ifdef CONFIG_DECODER_TABLE_SEARCH
   struct instruction32bit * decodedInstruction = 0;
-  u32int * currAddress = (u32int*)blkStartAddr;
-  u32int instruction = *currAddress;
+#else
+# ifdef CONFIG_BLOCK_COPY
+  struct instruction32bit * decodedInstruction = 0;
+# endif
+# ifdef CONFIG_DECODER_AUTO
+  //instructionHandler decodedInstruction = 0;
+  instructionHandler decodedInstruction = 0;
+# else
+#  error Decoder must be set!
+# endif
+#endif
+#ifdef CONFIG_BLOCK_COPY
   u32int * blockCopyCacheCurrAddress = ((u32int* )(gc->blockCopyCacheLastUsedLine))+1;
   u32int * blockCopyCacheStartAddress = ((u32int* )(gc->blockCopyCacheLastUsedLine))+1;
   bool reservedWord = 0;//See struct blockCacheEntry in blockCache.h for explanation
   u32int blockCopyCacheSize=0;
-
+#endif
+  u32int * currAddress = (u32int*)blkStartAddr;
+  u32int instruction = *currAddress;
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
-
-  /*
-  if(bcIndex==0x47)
-  {
-    asm volatile("BKPT #0");
-  }
-  */
-
   bool inBlockCache = checkBlockCache(blkStartAddr, bcIndex, gc->blockCache);
-  /*
-  if(scannerReqCounter % 1000 == 2){
-    serial_putstring("Counter = ");
-    serial_putint(scannerReqCounter);
-    doBreakpoint();
-  }
-  */
   if (inBlockCache)
   {
     //Check the logbook
     BCENTRY * bcEntry = getBlockCacheEntry(bcIndex, gc->blockCache);
     gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
     gc->endOfBlockInstr = bcEntry->hyperedInstruction;
-
+#ifdef SCANNER_DEBUG
+    serial_putstring("scanner: Block @ ");
+    serial_putint(blkStartAddr);
+    serial_putstring(" hash value ");
+    serial_putint(hashVal);
+    serial_putstring(" cache index ");
+    serial_putint(bcIndex);
+    serial_putstring(" HIT");
+    serial_newline();
+#endif
+#ifdef CONFIG_BLOCK_COPY
     u32int * addressInBlockCopyCache = 0;
     //The programcounter of the code that is executing should be set to the code in the blockCache
     if(bcEntry->reservedWord)
@@ -70,29 +96,19 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
       addressInBlockCopyCache= (u32int*)bcEntry->blockCopyCacheAddress+1;//First word is a backpointer
     }
 
-    if((u32int)addressInBlockCopyCache >= gc->blockCopyCacheEnd ){//oldAddr=currBlockCopyCacheAddress blockCopyCacheAddresses will be used in a  cyclic manner
-                                              //-> if end of blockCopyCache is passed blockCopyCacheCurrAddress must be updated
+    if((u32int)addressInBlockCopyCache >= gc->blockCopyCacheEnd ){
+	  //oldAddr=currBlockCopyCacheAddress blockCopyCacheAddresses will be used in a  cyclic manner
+      //-> if end of blockCopyCache is passed blockCopyCacheCurrAddress must be updated
       addressInBlockCopyCache=addressInBlockCopyCache - (BLOCK_COPY_CACHE_SIZE-1);
     }
 
     gc->R15 = (u32int)addressInBlockCopyCache;
     //But also the PC of the last instruction of the block should be set
     gc->PCOfLastInstruction = (u32int)bcEntry->endAddress;
-
-#ifdef SCANNER_DEBUG
-    serial_putstring("scanner: Block @ ");
-    serial_putint(blkStartAddr);
-    serial_putstring(" hash value ");
-    serial_putint(hashVal);
-    serial_putstring(" cache index ");
-    serial_putint(bcIndex);
-    serial_putstring(" HIT");
-    serial_newline();
 #endif
     return;
   }
 
-  //NOT in Block Cache
 #ifdef SCANNER_DEBUG
   serial_putstring("scanner: Block @ ");
   serial_putint(blkStartAddr);
@@ -104,6 +120,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   serial_newline();
 #endif
 
+#ifdef CONFIG_BLOCK_COPY
   //Check if there is room on blockCopyCacheCurrAddres and if not make it
   blockCopyCacheCurrAddress=checkAndClearBlockCopyCacheAddress(blockCopyCacheCurrAddress,gc->blockCache,(u32int*)gc->blockCopyCache,(u32int*)gc->blockCopyCacheEnd);
   //Install Backpointer in BlockCache:
@@ -111,20 +128,20 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   //After the Backpointer the instructions will be installed.  Here the guestprocess should continue it's execution.
   gc->R15=(u32int)blockCopyCacheCurrAddress;
 
-#ifdef SCANNER_DEBUG_BLOCKCOPY
+# ifdef SCANNER_DEBUG_BLOCKCOPY
   serial_putstring("Backpointer installed at: ");
   serial_putint((u32int)(blockCopyCacheCurrAddress-1));
   serial_putstring("Contents= ");
   serial_putint(*(blockCopyCacheCurrAddress-1));
   serial_newline();
-#endif
+# endif
 
   while (1)//Just keep on scanning untill function scanBlock returns.
   {
     //binary & checks types -> do a cast of function pointer to u32int
     if((decodedInstruction = decodeInstr(instruction))->replaceCode == 1)
-    {  //Critical instruction
-
+    {  
+		//Critical instruction
         /*----------------Install HdlFunct----------------*/
         //Non of the source registers is the ProgramCounter -> Just End Of Block
         //Finish block by installing SVC
@@ -135,12 +152,9 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
         // replace end of block instruction with hypercall of the appropriate code
         //Check if there is room on blockCopyCacheCurrAddress and if not make it
         blockCopyCacheCurrAddress = checkAndClearBlockCopyCacheAddress(blockCopyCacheCurrAddress,gc->blockCache,(u32int*)gc->blockCopyCache,(u32int*)gc->blockCopyCacheEnd);
-        *(blockCopyCacheCurrAddress++)=(INSTR_SWI | bcIndex);
+        *(blockCopyCacheCurrAddress++)= INSTR_SWI | ((bcIndex+1)<<8);
 
-        // if guest instruction stream is mapped with caching enabled, must maintain
-        // i and d cache coherency
-        // iCacheFlushByMVA((u32int)currAddress);
-        #ifdef SCANNER_DEBUG
+# ifdef SCANNER_DEBUG
           serial_putstring("scanner: EOB @ ");
           serial_putint((u32int)currAddress);
           serial_putstring(" instr ");
@@ -150,20 +164,18 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
           serial_putstring(" hdlrFuncPtr ");
           serial_putint((u32int)gc->hdlFunct);
           serial_newline();
-        #endif
+# endif
 
-        // asm volatile ("BKPT 0");
-        // asm volatile ("BKPT 0");
         //We have to determine the size of the BlockCopyCache
         if(blockCopyCacheCurrAddress<blockCopyCacheStartAddress)
         {
           blockCopyCacheSize+=gc->blockCopyCacheEnd - (u32int)blockCopyCacheStartAddress;
           blockCopyCacheSize+=(u32int)blockCopyCacheCurrAddress - gc->blockCopyCache;
           blockCopyCacheSize=blockCopyCacheSize>>2;//we have casted pointers to u32int thus divide by 4 to get size in words
-          #ifdef SCANNER_DEBUG_BLOCKCOPY
-            serial_putstring("Block exceeding end: blockCopyCacheSize=");
-            serial_putint(blockCopyCacheSize);
-          #endif
+# ifdef SCANNER_DEBUG_BLOCKCOPY
+          serial_putstring("Block exceeding end: blockCopyCacheSize=");
+          serial_putint(blockCopyCacheSize);
+# endif
         }
         else
         {
@@ -173,13 +185,13 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
         // add the block we just scanned to block cache
         if(reservedWord)
         {
-          addToBlockCache(blkStartAddr&1, (u32int)currAddress,
-                                            bcIndex, blockCopyCacheSize, (u32int)blockCopyCacheStartAddress,gc->endOfBlockInstr,(u32int)gc->hdlFunct,gc->blockCache);
+          addToBlockCache(blkStartAddr&1, (u32int)currAddress, bcIndex, blockCopyCacheSize,
+                                          (u32int)blockCopyCacheStartAddress,gc->endOfBlockInstr,(u32int)gc->hdlFunct,gc->blockCache);
         }
         else
         {
-          addToBlockCache(blkStartAddr, (u32int)currAddress,
-                                                      bcIndex, blockCopyCacheSize, (u32int)blockCopyCacheStartAddress,gc->endOfBlockInstr,(u32int)gc->hdlFunct,gc->blockCache);
+          addToBlockCache(blkStartAddr,   (u32int)currAddress, bcIndex, blockCopyCacheSize,
+                                          (u32int)blockCopyCacheStartAddress,gc->endOfBlockInstr,(u32int)gc->hdlFunct,gc->blockCache);
         }
 
 
@@ -189,32 +201,36 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
         //update blockCopyCacheLastUsedLine (blockCopyCacheLastUsedLine is u32int -> add nrOfInstructions*4
         gc->blockCopyCacheLastUsedLine=gc->blockCopyCacheLastUsedLine+((blockCopyCacheCurrAddress-blockCopyCacheStartAddress)<<2);
 
-        #ifdef SCANNER_DEBUG_BLOCKCOPY
-          serial_putstring("Block added with size of ");
-          serial_putint(((u32int)blockCopyCacheCurrAddress-(u32int)blockCopyCacheStartAddress));
-          serial_putstring(" words.");
-          serial_newline();
-        #endif
+# ifdef SCANNER_DEBUG_BLOCKCOPY
+        serial_putstring("Block added with size of ");
+        serial_putint(((u32int)blockCopyCacheCurrAddress-(u32int)blockCopyCacheStartAddress));
+        serial_putstring(" words.");
+        serial_newline();
+# endif
         /*----------------END Install HdlFunct----------------*/
         return;
     }else
-    {//Non critical instruction
+    {
+	  //Non critical instruction
       if(allSrcRegNonPC(instruction))
-      { //Non of the source registers is the ProgramCounter -> Safe instruction
+      { 
+		//Non of the source registers is the ProgramCounter -> Safe instruction
         //Check if there is room on blockCopyCacheCurrAddress and if not make it
         blockCopyCacheCurrAddress=checkAndClearBlockCopyCacheAddress(blockCopyCacheCurrAddress,gc->blockCache,(u32int*)gc->blockCopyCache,(u32int*)gc->blockCopyCacheEnd);
         //copy instruction to Block Copy Cache
         *(blockCopyCacheCurrAddress++)=instruction;//Copy instruction and update pointer
       }
       else
-      {  //One of the source registers of the instruction is the ProgramCounter
-         //Perform PCFunct-> necessary information = currAddress,
+      {  
+		//One of the source registers of the instruction is the ProgramCounter
+        //Perform PCFunct-> necessary information = currAddress,
         /*----------------Execute PCFunct----------------*/
         gc->endOfBlockInstr = instruction;//Not really the endOfBlockInstr but we can use it
 
         blockCopyCacheCurrAddress= decodedInstruction->PCFunct(gc,currAddress,blockCopyCacheCurrAddress,blockCopyCacheStartAddress);
         if(((u32int)blockCopyCacheCurrAddress & 0b1) == 0b1)
-        {//Last bit of returnAddress is used to indicate that a reserved word is necessary -> we can assume 2 byte allignement (even in worst case scenario (thumb))
+        {
+		  //Last bit of returnAddress is used to indicate that a reserved word is necessary -> we can assume 2 byte allignement (even in worst case scenario (thumb))
           reservedWord=1;//ReservedWord is true
           blockCopyCacheCurrAddress=(u32int*)((u32int)blockCopyCacheCurrAddress & 0xFFFFFFFE);//Set last bit back to zero
         }
@@ -226,6 +242,93 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     instruction = *currAddress;
   } // decoding while ends
 }//end of scanBlock
+# else  //not CONFIG_BLOCK_COPY
+# ifdef CONFIG_DECODER_TABLE_SEARCH
+  while ((decodedInstruction = decodeInstr(instruction))->replaceCode == 0)
+# else
+#  ifdef CONFIG_DECODER_AUTO
+  while ((decodedInstruction = decodeInstr(instruction)) == 0)
+#  else
+#   error Decoder must be set!
+#  endif
+# endif
+  {
+    currAddress++;
+    instruction = *currAddress;
+  } // while ends
+
+  if ((instruction & INSTR_SWI) == INSTR_SWI)
+  {
+    u32int svcCode = (instruction & 0x00FFFFFF);
+    if ((svcCode >= 0) && (svcCode <= 0xFF))
+    {
+      serial_putstring("scanBlock: SWI code = ");
+      serial_putint(svcCode);
+      serial_newline();
+      DIE_NOW(gc, "scanBlock: SVC instruction not placed by hypervisor!");
+    }
+    else
+    {
+      // we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
+      u32int cacheIndex = (svcCode >> 8) - 1;
+      if (cacheIndex >= BLOCK_CACHE_SIZE)
+      {
+        DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
+      }
+# ifdef SCANNER_DEBUG
+      serial_putstring("scanner: EOB instruction is SWI @ ");
+      serial_putint((u32int)currAddress);
+      serial_putstring(" code ");
+      serial_putint(cacheIndex);
+      serial_newline();
+# endif
+      BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
+  
+      // retrieve end of block instruction and handler function pointer
+      gc->endOfBlockInstr = bcEntry->hyperedInstruction;
+      gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
+    } 
+  }
+  else
+  {
+    // save end of block instruction and handler function pointer close to us...
+    gc->endOfBlockInstr = instruction;
+# ifdef CONFIG_DECODER_TABLE_SEARCH
+    gc->hdlFunct = decodedInstruction->hdlFunct;
+# else
+#  ifdef CONFIG_DECODER_AUTO
+    gc->hdlFunct = decodedInstruction;
+#  else
+#   error Decoder must be set!
+#  endif
+# endif
+    // replace end of block instruction with hypercall of the appropriate code
+    *currAddress = INSTR_SWI | ((bcIndex + 1) << 8);
+    // if guest instruction stream is mapped with caching enabled, must maintain
+    // i and d cache coherency
+    // iCacheFlushByMVA((u32int)currAddress);
+  }
+  
+# ifdef SCANNER_DEBUG
+  serial_putstring("scanner: EOB @ ");
+  serial_putint((u32int)currAddress);
+  serial_putstring(" instr ");
+  serial_putint(gc->endOfBlockInstr);
+  serial_putstring(" SWIcode ");
+  serial_putint((bcIndex + 1) << 8);
+  serial_putstring(" hdlrFuncPtr ");
+  serial_putint((u32int)gc->hdlFunct);
+  serial_newline();
+# endif
+
+  // add the block we just scanned to block cache
+  addToBlockCache(blkStartAddr, gc->endOfBlockInstr, (u32int)currAddress, 
+                  bcIndex, (u32int)gc->hdlFunct, gc->blockCache);
+
+  protectScannedBlock(blkStartAddr, (u32int)currAddress);
+  // and we're done.
+}
+#endif
 
 
 
@@ -297,30 +400,31 @@ void resetScannerCounter()
 }
 #endif
 
+#ifdef CONFIG_BLOCK_COPY
 /* allSrcRegNonPC will return true if all source registers of an instruction are zero  */
 u32int allSrcRegNonPC(u32int instruction)
 {
   //Source registers correspond with the bits [0..3],[8..11] or [16..19]
   if((instruction & 0xF0000)==0xF0000 || (instruction & 0xF00)==0xF00 || (instruction & 0xF)==0xF )
   {
-#ifdef PC_DEBUG
+# ifdef PC_DEBUG
     serial_putstring("Instruction 0x");
     serial_putint(instruction);
     serial_putstring(" has a PC register");
     serial_newline();
-#endif
+# endif
     return 0;//false
   }
   else
   {
-#ifdef PC_DEBUG
+# ifdef PC_DEBUG
     serial_putstring("Instruction 0x");
     serial_putint(instruction);
     serial_putstring(" doesn't have a PC register");
     serial_newline();
-#endif
+# endif
     return 1;//true
   }
 }
-
+#endif // CONFIG_BLOCK_COPY
 

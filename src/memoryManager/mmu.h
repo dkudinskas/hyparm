@@ -1,8 +1,12 @@
-#ifndef __MEMORY_MANAGEMENT_UNIT_H__
-#define __MEMORY_MANAGEMENT_UNIT_H__
-#include "types.h"
-#include "assert.h" //COMPILE_TIME_ASSERT
-#include "pageTable.h"
+#ifndef __MEMORY_MANAGER__MMU_H__
+#define __MEMORY_MANAGER__MMU_H__
+
+#include "common/types.h"
+
+#include "memoryManager/pageTable.h"
+
+
+//uncomment to enable debug #define MMU_DEBUG
 
 struct abort_dfsr
 {
@@ -27,23 +31,50 @@ struct abort_ifsr
 };
 typedef struct abort_ifsr IFSR;
 
-enum abort_fault_status
+enum DataAbortFaultStatus
 {
-  alignment = 0b0001,
-  debug,
-  accessflag_section,
-  icache_maint,
-  translation_section,
-  accessflag_page,
-  translation_page,
-  sync_external,
-  unknown_abort_fault_status_0,
-  domain_section,
-  domain_page,
-  trans_table_walk_1st,
-  perm_section,
-  sync_external_2nds,
-  perm_page = 0b1111,
+  dfsAlignmentFault = 0b00001,
+  dfsDebugEvent = 0b00010,
+  dfsAccessFlagSection = 0b00011,
+  dfsIcacheMaintenance = 0b00100,
+  dfsTranslationSection = 0b00101,
+  dfsAccessFlagPage = 0b00110,
+  dfsTranslationPage = 0b00111,
+  dfsSyncExternalAbt = 0b01000,
+  dfsDomainSection = 0b01001,
+  dfsDomainPage = 0b01011,
+  dfsTranslationTableWalkLvl1SyncExtAbt = 0b01100,
+  dfsPermissionSection = 0b01101,
+  dfsTranslationTableWalkLvl2SyncExtAbt = 0b01110,
+  dfsPermissionPage = 0b01111,
+  dfsImpDepLockdown = 0b10100,
+  dfsAsyncExternalAbt = 0b10110,
+  dfsMemAccessAsyncParityErr = 0b11000,
+  dfsMemAccessAsyncParityERr2 = 0b11001,
+  dfsImpDepCoprocessorAbort = 0b11010,
+  dfsTranslationTableWalkLvl1SyncParityErr = 0b11100,
+  dfsTranslationTableWalkLvl2SyncParityErr = 0b11110,
+};
+
+enum InstructionAbortFaultStatus
+{
+  ifsDebugEvent = 0b00010,
+  ifsAccessFlagFaultSection = 0b00011,
+  ifsTranslationFaultSection = 0b00101,
+  ifsAccessFlagFaultPage = 0b00110,
+  ifsTranslationFaultPage = 0b00111,
+  ifsSynchronousExternalAbort = 0b01000,
+  ifsDomainFaultSection = 0b01001,
+  ifsDomainFaultPage = 0b01011 ,
+  ifsTranslationTableTalk1stLvlSynchExtAbt = 0b01100,
+  ifsPermissionFaultSection = 0b01101,
+  ifsTranslationTableWalk2ndLvllSynchExtAbt = 0b01110,
+  ifsPermissionFaultPage = 0b01111,
+  ifsImpDepLockdown = 0b10100,
+  ifsMemoryAccessSynchParityError = 0b11001,
+  ifsImpDepCoprocessorAbort = 0b11010,
+  ifsTranslationTableWalk1stLvlSynchParityError = 0b11100,
+  ifsTranslationTableWalk2ndLvlSynchParityError = 0b11110,
 };
 
 //access is a two bit field 00 = no access, 01=client, 10=reserved, 11=manager
@@ -70,6 +101,7 @@ void clearTLBbyMVA(u32int address);
 void dataBarrier(void);
 void setTTBCR(u32int value);
 void setDomain(u8int domain, access_type access);
+void setTexRemap(bool enable);
 
 u32int getDFAR(void);
 DFSR getDFSR(void);

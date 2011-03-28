@@ -1,14 +1,11 @@
-#include "debug.h"
-#include "serial.h"
-#include "cpu.h"
+#include "cpuArch/cpu.h"
+
+#include "common/debug.h"
+
+#include "hardware/serial.h"
+
 
 extern GCONTXT * getGuestContext(void); //from main.c
-//uncomment to dump scanner counter on DIE_NOW:
-#define DIE_NOW_SCANNER_COUNTER
-
-#ifdef DIE_NOW_SCANNER_COUNTER
-  extern u32int scannerReqCounter; //from scanner.c
-#endif
 
 
 void banner(char* msg)
@@ -41,16 +38,16 @@ void DIE_NOW(GCONTXT* context, char* msg)
   serial_putint(scannerReqCounter);
   serial_newline();
 #endif
-
+  if (context == 0)
+  {
+    context = getGuestContext();
+  }
   if (context != 0)
   {
     dumpGuestContext(context);
-  }
-  else
-  {
-    dumpGuestContext(getGuestContext());
   }
   banner("HALT");
   
   infiniteIdleLoop();
 }
+

@@ -1,7 +1,10 @@
-#include "beClockMan.h"
-#include "memFunctions.h"
-#include "types.h"
-#include "debug.h"
+#include "common/debug.h"
+#include "common/memFunctions.h"
+
+#include "drivers/beagle/beClockMan.h"
+
+#include "hardware/serial.h"
+
 
 struct ClockManagerBE * clkManBE;
 

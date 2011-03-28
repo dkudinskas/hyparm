@@ -1,3 +1,50 @@
+LINUX KERNEL:
+
+The config file is checked into the repository. The kernel version used is a 2.6.28.1 release version, download link
+http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.28.1.tar.bz2
+
+U-Boot uses a specific kernel image format called uImage. Such image can be built from a kernel source tree using the uImage target. It is prepared from the kernel ELF binary (vmlinuz) using a series of scripts, of which some are well hidden (dot-files):
+
+1. The kernel ELF binary vmlinuz is compressed to arch/arm/boot/compressed/vmlinux
+
+2. A zImage is created using the arch/arm/boot/.zImage.cmd script:
+arm-none-eabi-objcopy -O binary -R .note -R .note.gnu.build-id -R .comment -S arch/arm/boot/compressed/vmlinux arch/arm/boot/zImage
+
+3. A uImage is created from the zImage using the arch/arm/boot/.uImage.cmd script, which in turn calls scripts/mkuboot.sh. The latter resolves the location of the mkimage binary, and calls it to create the actual uImage:
+mkimage -A arm -O linux -T kernel -C none -a 0x80008000 -e 0x80008000 -n 'Linux-2.6.28.1' -d arch/arm/boot/zImage arch/arm/boot/uImage
+
+You can manually build a uImage from an uncompressed kernel:
+
+1. Build an Image file:
+arm-none-eabi-objcopy -O binary -R .note -R .note.gnu.build-id -R .comment -S vmlinux arch/arm/boot/Image
+2. Invoke mkimage on the Image file instead:
+mkimage -A arm -O linux -T kernel -C none -a 0x80008000 -e 0x80008000 -n 'Linux-2.6.28.1' -d arch/arm/boot/Image arch/arm/boot/uImage 
+
+
+COMPILING THE HYPERVISOR:
+
+A cross-compiler toolchain is required for building the hypervisor. It must be set using the CROSS_COMPILE variable, either from the environment, or as part of the command line to make.
+
+The hypervisor supports compiling for multiple "targets", which can be set using the TARGET variable. A target is an abstract concept that refers to:
+- the physical platform the hypervisor is built for;
+- a set of compile-time options.
+
+Currently, the following targets are supported:
+- beagle: build for the BeagleBoard (based on TI OMAP3530);
+- beagle-autodecoder: same as the above, but use an optimized (auto-generated) instruction decoder.
+
+The following targets are incomplete and non-functional:
+- tegra250
+
+Typical example of how to set CROSS_COMPILE and TARGET:
+export CROSS_COMPILE=/opt/arm-none-eabi-4.4/bin/arm-none-eabi-
+make TARGET=beagle-autodecoder
+
+Each target has a corresponding target_name.config file in the build directory. Targets can be edited by manipulating their respective .config files; new targets may also be created by creating new .config files for them. No changes to the Makefile are required.
+
+
+GIT:
+
   Global setup:
  Download and install Git
   git config --global user.name "Your Name"
@@ -22,7 +69,7 @@ Existing Git Repo?
 Importing a Subversion Repo?
   Click here
       
-ssh-keygen -t rsa -C "tekkub@gmail.com"
+ssh-keygen -t rsa -C "email@provider.com"
 Generating public/private rsa key pair.
 Enter file in which to save the key (/home/tekkub/.ssh/id_rsa):
 Enter passphrase (empty for no passphrase):
@@ -30,16 +77,10 @@ Enter same passphrase again:
 Your identification has been saved in /home/tekkub/.ssh/id_rsa.
 Your public key has been saved in /home/tekkub/.ssh/id_rsa.pub.
 The key fingerprint is:
-01:0f:f4:3b:ca:85:d6:17:a1:7d:f0:68:9d:f0:a2:db tekkub@gmail.com
-
+01:0f:f4:3b:ca:85:d6:17:a1:7d:f0:68:9d:f0:a2:db email@provider.com
 
 
 git clone git@github.com:gendalfas/hyparm.git
 git pull git@github.com:gendalfas/hyparm.git master
 
-
-
-
-
-OPENOCD setup:
 

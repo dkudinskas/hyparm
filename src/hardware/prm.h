@@ -1,9 +1,10 @@
-#ifndef __PRM_H__
-#define __PRM_H__
+#ifndef __HARDWARE__PRM_H__
+#define __HARDWARE__PRM_H__
 
-#include "types.h"
-#include "serial.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "hardware/hardwareLibrary.h"
+
 
 // uncomment me to enable debug : #define PRM_DBG
 

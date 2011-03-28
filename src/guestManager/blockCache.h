@@ -1,8 +1,8 @@
-#ifndef __BLOCK_CACHE_H__
-#define __BLOCK_CACHE_H__
+#ifndef __GUEST_MANAGER__BLOCK_CACHE_H__
+#define __GUEST_MANAGER__BLOCK_CACHE_H__
 
-#include "types.h"
-#include "common.h"
+#include "common/types.h"
+
 
 #define BLOCK_CACHE_SIZE    128
 #define BLOCK_COPY_CACHE_SIZE_IN_BYTES   (44 * BLOCK_CACHE_SIZE) // Here the assumption is taken that on average 10% of the instructions
@@ -36,8 +36,13 @@ void initialiseBlockCache(BCENTRY * bcache);
 
 bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr);
 
-void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr,
-                     u32int index, u32int blockCopyCacheSize, u32int blockCopyCacheAddress,u32int hypInstruction,u32int hdlFunct,BCENTRY * bcAddr);
+#ifdef CONFIG_BLOCK_COPY
+void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr, u32int index, u32int blockCopyCacheSize,
+                     u32int blockCopyCacheAddress,u32int hypInstruction,u32int hdlFunct,BCENTRY * bcAddr);
+#else
+void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
+                     u32int index, u32int hdlFunct, BCENTRY * bcAddr);
+#endif
 
 /* checkAndClearBlockCopyCacheAddress will check an address you provide and return a valid address.  Always use the returned address!! */
 u32int * checkAndClearBlockCopyCacheAddress(u32int *Addr,BCENTRY *bcStartAddr,u32int* blockCopyCache,u32int* blockCopyCacheEnd);

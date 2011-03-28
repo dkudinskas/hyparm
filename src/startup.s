@@ -12,13 +12,9 @@
   .equ  UND_MODE,       0x1B
   .equ  SYS_MODE,       0x1F
 
-  .align  5
-
 .global startup_hypervisor
 .func   startup_hypervisor
 startup_hypervisor:
-
-_start:
 
 /* Initialize stacks for all modes */
   /* set IRQ stack */
@@ -55,45 +51,50 @@ _start:
   /* register allocated guest context */
   LDR     R0,=guestContextSpace
   BL      registerGuestContext
+  .ifdef CONFIG_CPU_HAS_ARM_SEC_EXT
+    /* Set VBAR to exceptionVectorBase. On the OMAP35xx, this eliminates a few branches through the NAND and the SRAM */
+    LDR     r4, =exceptionVectorBase
+    MCR     p15, 0, r4, c12, c0, 0
+  .else
+    /* Fix RAM exception vectors on TI OMAP 35xx */
+    .ifdef CONFIG_CPU_TI_OMAP_35XX
+      LDR     R4, [pc, #0x20]
+      LDR     R3, [pc, #0x20]
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      STR     R3, [R4], #4
+      ADD     pc, pc, #0x4
+      /* next 2 lines are data */
+      .word 0x4020FFC8
+      LDR     pc, [pc, #0x14]
+    .endif
 
-  /* Fix RAM exception vectors on TI OMAP 35xx */
-  .ifdef CONFIG_CPU_TI_OMAP_35XX
-    LDR   R4, [pc, #0x20]
-    LDR   R3, [pc, #0x20]
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    STR   R3, [R4], #4
-    ADD   pc, pc, #0x4
-    /* next 2 lines are data */
-    .word 0x4020FFC8
-    LDR   pc, [pc, #0x14]
+    /* Batch installation of interupt handlers */
+    /* This section of code is order dependant */
+    .ifndef CONFIG_CPU_TI_OMAP_35XX
+      /* On the TI OMAP 35xx R4 is already correct */
+      LDR     R4,=undefined_addr @First interupt handler address
+      LDR     R4, [R4]
+    .endif
+    LDR     R3,=undefined_handler
+    STR     R3, [R4], #4       @auto increment to the next handler address
+    LDR     R3,=swi_handler
+    STR     R3, [R4], #4       @install swi handler
+    LDR     R3,=prefetch_abort_handler
+    STR     R3, [R4], #4
+    LDR     R3,=data_abort_handler
+    STR     R3, [R4], #4
+    LDR     R3,=monitor_mode_handler
+    STR     R3, [R4], #4
+    LDR     R3,=irq_handler
+    STR     R3, [R4], #4
+    LDR     R3,=fiq_handler
+    STR     R3, [R4], #4
   .endif
-
-  /* Batch installation of interupt handlers */
-  /* This section of code is order dependant */
-  .ifndef CONFIG_CPU_TI_OMAP_35XX
-    /* On the TI OMAP 35xx R4 is already correct */
-    LDR   R4,=undefined_addr @First interupt handler address
-    LDR   R4, [R4]
-  .endif
-  LDR     R3,=undefined_handler
-  STR     R3, [R4], #4       @auto increment to the next handler address
-  LDR     R3,=swi_handler
-  STR     R3, [R4], #4       @install swi handler
-  LDR     R3,=prefetch_abort_handler
-  STR     R3, [R4], #4
-  LDR     R3,=data_abort_handler
-  STR     R3, [R4], #4
-  LDR     R3,=monitor_mode_handler
-  STR     R3, [R4], #4
-  LDR     R3,=irq_handler
-  STR     R3, [R4], #4
-  LDR     R3,=fiq_handler
-  STR     R3, [R4], #4
 
   /* write guest stack pointers for now */
   LDR     R0, =guestContextR13_USR
@@ -262,6 +263,20 @@ _start:
         .endm
 
 
+.ifdef CONFIG_CPU_HAS_ARM_SEC_EXT
+  .align 5
+exceptionVectorBase:
+  MOV     pc, #0x00014000
+  B       undefined_handler
+  B       swi_handler
+  B       prefetch_abort_handler
+  B       data_abort_handler
+  B       monitor_mode_handler
+  B       irq_handler
+  B       fiq_handler
+.endif
+
+
 .global swi_handler
 swi_handler:
     PUSH    {LR}
@@ -325,7 +340,7 @@ continue1:
     /* get SVC code into @parameter1 and call C function */
     LDR     R0, [LR, #-4]
     AND     R0, #0xFFFFFF
-    BL      do_software_interrupt
+    BL      softwareInterrupt
   
     /* handled this SWI. lets restore user state! */
     /* Use guest CPSR to work out which mode we are meant to be emulating */
@@ -410,7 +425,7 @@ data_abort_handler:
     save_pc_abort
     save_cc_flags
     
-    BL do_data_abort
+    BL dataAbort
   
     /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
     restore_r13_r14
@@ -419,8 +434,7 @@ data_abort_handler:
     
 .global data_abort_handler_privileged_mode
 data_abort_handler_privileged_mode:
-  /* Not from USR mode -> Our Hypervisor has caused this as we were running in a priviledged mode */
-  /* -> grab state, and abort nicely */
+  /* Not from USR mode -> Our Hypervisor has caused this */
   /* Save r0-r7 & r8-r12 */
   pop     {LR} /* we backed up the LR to hold the SPSR */
   push    {r0-r7}
@@ -455,7 +469,7 @@ data_abort_handler_privileged_mode:
   MRS     R0, SPSR
   PUSH    {r0}
 
-  BL do_data_abort_hypervisor
+  BL dataAbortPrivileged
 
   /* Hypervisor should have fixed things up and be ready to continue */
   /* Unwind the abort*/
@@ -512,7 +526,7 @@ undefined_handler:
   save_r0_to_r14 @pops LR
   save_pc_abort
 
-  BL do_undefined
+  BL undefined
 
   /* We came from usr mode (emulation or not of guest state) lets restore it and resume */
   restore_r13_r14
@@ -526,7 +540,7 @@ undefined_handler_privileged_mode:
   @LR already saved
   STMFD SP!, {R0-R12}
 
-  BL do_undefined_hypervisor
+  BL undefinedPrivileged
 
   LDMFD SP!, {R0-R12}
   LDMFD SP!, {PC}^
@@ -534,20 +548,21 @@ undefined_handler_privileged_mode:
 .global prefetch_abort_handler
 prefetch_abort_handler:
 
-  STMFD  SP!, {LR}
+  /* We can NOT assume that the abort is guest code */
+  push   {LR}
   /* If we aborted in FIQ then we can switch mode to get r8-12 later */
-
-  @Test SPSR -> are we from USR mode?
+  /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
   ANDS   LR, LR, #0x0f
-  BNE    prefetch_abort_handler_privileged_mode /* Abort occured in Hypervisor (privileged) code */
-
+  BNE    prefetchAbortHandlerPrivilegedMode
+  
   /* We were in USR mode, we must have been running guest code */
-  save_r0_to_r14 @pops LR
+  save_r0_to_r14 /* pops LR */
   /* Get the instr that aborted, after we fix up we probably want to re-try it */
   save_pc_abort
+  save_cc_flags
 
-  BL do_prefetch_abort
+  BL prefetchAbort
 
   /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
   restore_r13_r14
@@ -555,14 +570,44 @@ prefetch_abort_handler:
   restore_cpsr_pc_usr_mode
   /* End restore code */
 
-.global prefetch_abort_handler_privileged_mode
-prefetch_abort_handler_privileged_mode:
+.global prefetchAbortHandlerPrivilegedMode
+prefetchAbortHandlerPrivilegedMode:
+  /* Not from USR mode -> our Hypervisor has caused this */
+  /* Save r0-r7 & r8-r12 */
+  pop     {LR} /* we backed up the LR to hold the SPSR */
+  push    {r0-r7}
+  CMP     LR, #0x11
+  STMNEIA SP!, {r8-r12} /* Not FIQ save r8-12 */
+  /* Switch to FIQ_MODE if eq */
+  MOVEQ   R0, SP
+  MSREQ   cpsr_c,#(FIQ_MODE | I_BIT | F_BIT)
+  STMEQIA R0!, {r8-r12}
+  /* and switch back to abort mode */
+  MSREQ   cpsr_c,#(ABT_MODE | I_BIT | F_BIT)
+  MOVEQ   SP, R0
 
-  @LR already saved
-  STMFD SP!, {R0-R12}
+  /* Save SP & LR */
+  CMP     LR, #0x1 @FIQ
+  MSREQ   cpsr_c, #(FIQ_MODE | I_BIT | F_BIT)
+  CMP     LR, #0x2 @IRQ
+  MSREQ   cpsr_c, #(IRQ_MODE | I_BIT | F_BIT)
+  CMP     LR, #0x3 @SVC
+  MSREQ   cpsr_c, #(SVC_MODE | I_BIT | F_BIT)
+  CMP     LR, #0xB @UND
+  MSREQ   cpsr_c, #(UND_MODE | I_BIT | F_BIT)
 
-  BL do_prefetch_abort_hypervisor
+  MOV     R1, SP
+  MOV     R2, LR
+  MSR     cpsr_c, #(ABT_MODE | I_BIT | F_BIT)
+  STMIA   SP!, {R1,R2} /* Store SP & LR to data abort stack */
 
+  /* Save PC  of instr that aborted*/
+  SUB     R0, LR, #8
+  STMIA   SP!, {r0}
+  MRS     R0, SPSR
+  PUSH    {r0}
+
+  BL prefetchAbortPrivileged
   LDMFD SP!, {R0-R12}
   LDMFD SP!, {PC}^
 
@@ -582,7 +627,7 @@ monitor_mode_handler:
   /* Get the instr that aborted, after we fix up we probably want to re-try it */
   save_pc_abort
 
-  BL do_monitor_mode
+  BL monitorMode
 
   /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
   restore_r13_r14
@@ -596,7 +641,7 @@ monitor_mode_handler_privileged_mode:
   @LR already saved
   STMFD SP!, {R0-R12}
 
-  BL do_monitor_mode_hypervisor
+  BL monitorModePrivileged
 
   LDMFD SP!, {R0-R12}
   LDMFD SP!, {PC}^
@@ -619,7 +664,7 @@ irq_handler:
   /* save the PC of the guest, during which we got the interrupt */
   save_pc
   save_cc_flags
-  BL do_irq
+  BL irq
   restore_r13_r14
   restore_r0_to_r12
   restore_cpsr_pc_usr_mode_irq
@@ -635,7 +680,7 @@ irq_handler_privileged_mode:
   push    {lr}
   push    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
 
-  BL      do_irq_hypervisor
+  BL      irqPrivileged
 
   pop     {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
   ldm     sp!, {pc}^
@@ -647,7 +692,7 @@ fiq_handler:
   STMFD SP!, {LR}
   STMFD SP!, {R0-R12}
 
-  BL do_fiq
+  BL fiq
 
   LDMFD SP!, {R0-R12}
   LDMFD SP!, {PC}^
@@ -798,6 +843,8 @@ hardwareLibrary:
         
 guestContextOther:
         .space 8
+        
+#ifdef CONFIG_BLOCK_COPY
 guestContextBlockCopyCache:
         .space 4
 guestContextBlockCopyCacheLastUsedLine:
@@ -806,6 +853,7 @@ guestContextBlockCopyCacheEnd:
         .space 4
 guestContextPCOfLastInstruction:
         .space 4
+#endif
 
 /* physical real mode stacks */
 userStack:

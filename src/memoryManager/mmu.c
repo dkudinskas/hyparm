@@ -1,9 +1,11 @@
-#include "mmu.h"
-#include "serial.h"
+#include "common/assert.h"
 
-//uncomment to enable debug #define MMU_DEBUG
+#include "hardware/serial.h"
 
-static const char* fault_string[] =
+#include "memoryManager/mmu.h"
+
+
+static const char* dataAbtFaultString[] =
 {
   "INVALID ENTRY",
   "Alignment Fault",
@@ -21,6 +23,42 @@ static const char* fault_string[] =
   "Permission Fault - Section",
   "Synchronous External Abort - 2nd Level",
   "Permission Fault - Page",
+};
+
+static const char* prefetchAbtFaultString[] =
+{
+  "INVALID ENTRY",                            //  0 = 0b00000,
+  "INVALID ENTRY",                            //  1 = 0b00001,
+  "Debug Event",                              //  2 = 0b00010,
+  "Access Flag Fault: Section",               //  3 = 0b00011,
+  "INVALID ENTRY",                            //  4 = 0b00100,
+  "Translation Fault: Section",               //  5 = 0b00101,
+  "Access Flag Fault: Page",                  //  6 = 0b00110,
+  "Translation Fault: Page",                  //  7 = 0b00111,
+  "Synchronous External Abort",               //  8 = 0b01000,
+  "Domain Fault: Section",                    //  9 = 0b01001,
+  "INVALID ENTRY",                            //  a = 0b01010,
+  "Domain Fault: Page",                       //  b = 0b01011,
+  "Translation Table Talk 1st Level sync abt",//  c = 0b01100,
+  "Permission Fault: Section"                 //  d = 0b01101,
+  "Translation Table Walk 2nd Level sync abt",//  e = 0b01110,
+  "Permission Fault: Page",                   //  f = 0b01111,
+  "INVALID ENTRY",                            // 10 = 0b10000,
+  "INVALID ENTRY",                            // 11 = 0b10001,
+  "INVALID ENTRY",                            // 12 = 0b10010,
+  "INVALID ENTRY",                            // 13 = 0b10011,
+  "IMPLEMENTATION DEFINED Lockdown",          // 14 = 0b10100,
+  "INVALID ENTRY",                            // 15 = 0b10101,
+  "INVALID ENTRY",                            // 16 = 0b10110,
+  "INVALID ENTRY",                            // 17 = 0b10111,
+  "INVALID ENTRY",                            // 18 = 0b11000,
+  "Memory Access Synchronous Parity Error",   // 19 = 0b11001,
+  "IMPLEMENTATION DEFINED Coprocessor Abort", // 1a = 0b11010,
+  "INVALID ENTRY",                            // 1b = 0b11011,
+  "Translation Table Walk 1st Level parity",  // 1c = 0b11100,
+  "INVALID ENTRY",                            // 1d = 0b11101,
+  "Translation Table Walk 2nd Level parity",  // 1e = 0b11110,
+  "INVALID ENTRY",                            // 1f = 0b11111,
 };
 
 void clearTLB(void);
@@ -162,6 +200,56 @@ void setDomain(u8int domain, access_type access)
 
 }
 
+
+void setTexRemap(bool enable)
+{
+#ifdef MMU_DEBUG
+  serial_putstring("setTexRemap: ");
+  serial_putint(enable);
+  serial_newline();
+#endif
+
+  u32int value;
+  asm volatile("mrc p15, 0, %0, c1, c0, 0"
+  : "=r"(value)
+  :
+  : "memory"
+     );
+#ifdef MMU_DEBUG
+  serial_putstring("setTexRemap: currently SCTRL.TRE = ");
+  u32int treEnabled = ((value & 0x10000000) == 0x10000000) ? TRUE : FALSE; 
+  serial_putint(treEnabled);
+  serial_newline();
+#endif
+
+  if (enable)
+  {
+    value |= 0x10000000;
+  }
+  else
+  {
+    value &= 0xEFFFFFFF;
+  }
+
+  asm volatile("mcr p15, 0, %0, c1, c0, 0"
+  :
+  : "r"(value)
+  : "memory"
+     );
+
+#ifdef MMU_DEBUG
+  asm volatile("mrc p15, 0, %0, c1, c0, 0"
+  : "=r"(value)
+  :
+  : "memory"
+              );
+  serial_putstring("setTexRemap: SCTRL after update ");
+  serial_putint(value);
+  serial_newline();
+#endif
+}
+
+
 void mmuInsertPt0(descriptor* addr)
 {
 #ifdef MMU_DEBUG
@@ -291,7 +379,7 @@ void printDataAbort()
   serial_newline();
 
   serial_putstring("Fault type: ");
-  serial_putstring((char*)fault_string[dfsr.fs3_0]);
+  serial_putstring((char*)dataAbtFaultString[dfsr.fs3_0]);
   serial_putstring(" (0x");
   u32int faultStatus = dfsr.fs4 << 4 | dfsr.fs3_0;
   serial_putint_nozeros(faultStatus);
@@ -316,15 +404,14 @@ void printPrefetchAbort()
 {
   IFSR ifsr = getIFSR();
   u32int ifar = getIFAR();
-
+  u32int faultStatus = ifsr.fs3_0 | (ifsr.fs4 << 4);
   serial_putstring("Prefetch Abort Address: 0x");
   serial_putint(ifar);
   serial_newline();
 
   serial_putstring("Fault type: ");
-  serial_putstring((char*)fault_string[ifsr.fs3_0]);
+  serial_putstring((char*)prefetchAbtFaultString[faultStatus]);
   serial_putstring(" (0x");
-  u32int faultStatus = ifsr.fs4 << 4 | ifsr.fs3_0;
   serial_putint_nozeros(faultStatus);
   serial_putstring(")");
 

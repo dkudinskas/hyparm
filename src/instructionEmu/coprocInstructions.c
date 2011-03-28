@@ -1,50 +1,58 @@
-#include "coprocInstructions.h"
-#include "commonInstrFunctions.h"
-#include "debug.h"
-#include "serial.h"
-#include "cp15coproc.h"
+#include "common/debug.h"
 
+#include "hardware/serial.h"
+
+#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/coprocInstructions.h"
+
+#include "memoryManager/cp15coproc.h"
+
+#ifdef CONFIG_BLOCK_COPY
 u32int* mcrrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mcrr PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int mcrrInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "mcrrInstruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "MCRR instruction unimplemented");
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mrrcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mrrc PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int mrrcInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "mrrcInstruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "MRRC instruction unimplemented");
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* cdpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "cdp PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int cdpInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "cdpInstruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "CDP instruction unimplemented");
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mrcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mrcPCInstruction is called but should always be critical");
   return 0;
 }
+#endif
 
 u32int mrcInstruction(GCONTXT * context)
 {
@@ -84,15 +92,21 @@ u32int mrcInstruction(GCONTXT * context)
       invalid_instruction(instr, "Unknown coprocessor number");
     }
   }
+  #ifdef CONFIG_BLOCK_COPY
   nextPC = context->PCOfLastInstruction + 4;
+  #else
+  nextPC = context->R15+4;
+  #endif
   return nextPC;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mcrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mcr PCFunct shouldn't be launched since mcrPCInstruction is always emulated!\n");
   return 0;
 }
+#endif
 
 u32int mcrInstruction(GCONTXT * context)
 {
@@ -128,15 +142,21 @@ u32int mcrInstruction(GCONTXT * context)
       invalid_instruction(instr, "Unknown coprocessor number");
     }
   }
+  #ifdef CONFIG_BLOCK_COPY
   nextPC = context->PCOfLastInstruction + 4;
+  #else
+  nextPC = context->R15+4;
+  #endif
   return nextPC;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* stcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "stc PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int stcInstruction(GCONTXT * context)
 {
@@ -144,100 +164,108 @@ u32int stcInstruction(GCONTXT * context)
   DIE_NOW(context, "STC instruction unimplemented");
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* ldcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "ldc PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int ldcInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ldcInstruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "LDC instruction unimplemented");
 }
 /* V6 coprocessor instructions.  */
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mrrc2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mrrc2 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int mrrc2Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "mrrc2Instruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "MRRC2 instruction unimplemented");
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mcrr2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mcrr2 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int mcrr2Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "mcrr2Instruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "MCRR2 instruction unimplemented");
 }
 /* V5 coprocessor instructions.  */
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* ldc2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "ldc2 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int ldc2Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ldc2Instruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "LDC2 instruction unimplemented");
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* stc2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "stc2 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int stc2Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "stc2Instruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "STC2 instruction unimplemented");
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* cdp2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "cdp2 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int cdp2Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "cdp2Instruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "CDP2 instruction unimplemented");
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mcr2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mcr2 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int mcr2Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "mcr2Instruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "MCR2 instruction unimplemented");
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mrc2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mrc2 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int mrc2Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "mrc2Instruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "MRC2 instruction unimplemented");
 }

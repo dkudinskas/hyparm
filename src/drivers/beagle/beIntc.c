@@ -1,6 +1,10 @@
-#include "beIntc.h"
-#include "memFunctions.h"
-#include "debug.h"
+#include "common/debug.h"
+#include "common/memFunctions.h"
+
+#include "drivers/beagle/beIntc.h"
+
+#include "hardware/serial.h"
+
 
 static inline u32int intcRegReadBE(u32int regOffs);
 static inline void intcRegWriteBE(u32int regOffs, u32int value);

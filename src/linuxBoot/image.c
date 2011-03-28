@@ -1,5 +1,17 @@
-#include "image.h"
-#include "common.h"
+#include "hardware/serial.h"
+
+#include "linuxBoot/image.h"
+
+
+static inline u32int bs32(u32int number)
+{
+  u32int retVal = 0;
+  retVal |= ((number & 0xFF000000) >> 24);
+  retVal |= ((number & 0x00FF0000) >>  8);
+  retVal |= ((number & 0x0000FF00) <<  8);
+  retVal |= ((number & 0x000000FF) << 24);
+  return retVal;
+}
 
 image_header_t getImageHeader(ulong uImageAddr)
 {

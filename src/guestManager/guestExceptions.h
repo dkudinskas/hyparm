@@ -1,8 +1,7 @@
-#ifndef __GUEST_INTERRUPTS_H__
-#define __GUEST_INTERRUPTS_H__
+#ifndef __GUEST_MANAGER__GUEST_EXCEPTIONS_H__
+#define __GUEST_MANAGER__GUEST_EXCEPTIONS_H__
 
-#include "types.h"
-#include "serial.h"
+#include "common/types.h"
 
 
 // uncomment me to enable debug : #define GUEST_EXCEPTIONS_DBG
@@ -31,12 +30,17 @@
 #define CPSR_MODE_UND    0x1b
 #define CPSR_MODE_SYS    0x1f
 
-void tickEvent(u32int irqNumber);
+// no need to throw a service call to guest context.
+// hypercall handler deals with it.
+void deliverServiceCall(void);
 
+void throwInterrupt(u32int irqNumber);
 void deliverInterrupt(void);
 
-void throwAbort(u32int address, u32int faultType, bool isWrite, u32int domain);
+void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain);
+void deliverDataAbort(void);
 
-void deliverAbort(void);
+void throwPrefetchAbort(u32int address, u32int faultType);
+void deliverPrefetchAbort(void);
 
 #endif

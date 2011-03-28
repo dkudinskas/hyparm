@@ -1,11 +1,13 @@
-#ifndef __ADDRESSING_H__
-#define __ADDRESSING_H__
+#ifndef __MEMORY_MANAGER__ADDRESSING_H__
+#define __MEMORY_MANAGER__ADDRESSING_H__
 
-#include "types.h"
-#include "mmu.h"
-#include "guestContext.h"
+#include "common/types.h"
 
-//uncomment me to enable debugging: #define ADDRESSING_DEBUG
+#include "guestManager/guestContext.h"
+
+
+//uncomment me to enable debugging: 
+#define ADDRESSING_DEBUG
 
 /* Need to initialise the MMU and enable virtual addressing */
 void initialiseVirtualAddressing(void);

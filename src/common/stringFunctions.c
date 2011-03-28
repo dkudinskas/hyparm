@@ -1,5 +1,5 @@
-#include "stringFunctions.h"
-#include "serial.h"
+#include "common/stringFunctions.h"
+
 
 int stringncmp(char * str1, char * str2, int n)
 {

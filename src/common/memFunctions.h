@@ -1,7 +1,8 @@
-#ifndef __MEM_FUNCTIONS_H__
-#define __MEM_FUNCTIONS_H__
+#ifndef __COMMON__MEM_FUNCTIONS_H__
+#define __COMMON__MEM_FUNCTIONS_H__
 
-#include "types.h"
+#include "common/types.h"
+
 
 // uncomment me to enable debug: #define MALLOC_DEBUG
 // uncomment me to enable debug: #define MEMSET_DEBUG

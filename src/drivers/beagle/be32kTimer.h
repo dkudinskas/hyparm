@@ -1,9 +1,8 @@
-#ifndef __BE_TIMER32K_H__
-#define __BE_TIMER32K_H__
+#ifndef __DRIVERS__BEAGLE__BE_32K_TIMER_H__
+#define __DRIVERS__BEAGLE__BE_32K_TIMER_H__
 
-#include "types.h"
-#include "serial.h"
-#include "pageTable.h"
+#include "common/types.h"
+
 
 // uncomment me to enable debug : #define BE_TIMER32K_DBG
 

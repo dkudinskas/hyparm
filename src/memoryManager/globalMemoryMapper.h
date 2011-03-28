@@ -1,9 +1,10 @@
-#ifndef __GLOBAL_MEMORY_MAPPER_H__
-#define __GLOBAL_MEMORY_MAPPER_H__
+#ifndef __MEMORY_MANAGER__GLOBAL_MEMORY_MAPPER_H__
+#define __MEMORY_MANAGER__GLOBAL_MEMORY_MAPPER_H__
 
-#include "types.h"
-#include "serial.h"
-#include "guestContext.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
 
 #define STRH_IMM_MASK   0x0e5000f0
 #define STRH_IMM_MASKED 0x004000b0
@@ -48,6 +49,9 @@
 // load multiple
 #define LDM_MASK        0x0e100000
 #define LDM_MASKED      0x08100000
+// load exclusive
+#define LDREX_MASK      0x0ff00fff
+#define LDREX_MASKED    0x01900f9f
 
 
 /* generic load store instruction emulation  *

@@ -1,6 +1,9 @@
-#include "commonInstrFunctions.h"
-#include "debug.h"
-#include "serial.h"
+#include "common/debug.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/commonInstrFunctions.h"
+
 
 extern GCONTXT * getGuestContext(void); //from main.c
 
@@ -14,6 +17,7 @@ void invalid_instruction(u32int instr, char * msg)
   serial_newline();
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int zeroBits(u32int instruction, u32int startbit){
   switch(startbit){
     case 0:
@@ -26,7 +30,8 @@ u32int zeroBits(u32int instruction, u32int startbit){
       DIE_NOW(0, "zeroBits not implemented for this startbitvalue");
   }
 }
-
+#endif
+#ifdef CONFIG_BLOCK_COPY
 /* This will save the PC corresponding to instructionAddress in reg. instructionAddress is the original address of the instruction */
 u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * currBlockCopyCacheAddr, u32int reg  )
 {
@@ -60,6 +65,7 @@ u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * cur
   //Return the current BlockCopyCacheAddr so that the PCfunct that called this function knows where to continue.
   return currBlockCopyCacheAddr;
 }
+#endif
 
 bool guestInPrivMode(GCONTXT * context)
 {
@@ -227,6 +233,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
   } // mode specific else ends
 }
 
+#ifdef CONFIG_BLOCK_COPY
 /* Function will return a register that is different from regSrc1,regSrc2 and regSrc3*/
 u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regSrc3)
 {
@@ -238,7 +245,8 @@ u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regSrc3)
   DIE_NOW(0,"No unusedRegister, this cannot be happening!");
   return -1;
 }
-
+#endif
+#ifdef CONFIG_BLOCK_COPY
 u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   GCONTXT * context = getGuestContext();
@@ -256,7 +264,9 @@ u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32i
   *(currBlockCopyCacheAddr++)=instr2Copy;
   return currBlockCopyCacheAddr;
 }
+#endif
 
+#ifdef CONFIG_BLOCK_COPY
 u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   GCONTXT * context = getGuestContext();
@@ -274,6 +284,7 @@ u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u3
   *(currBlockCopyCacheAddr++)=instr2Copy;
   return currBlockCopyCacheAddr;
 }
+#endif
 
 /* function to load a register value, evaluates modes. */
 u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
@@ -289,7 +300,11 @@ u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
     value = *ldPtr;
   }
   else if(regSrc == 15) {//The function loadGuestGPR is only called when emulation of a critical instruction is done (last instruction of cacheblock)
-    value = context->PCOfLastInstruction+8;//Do +8 because PC is 2 instruction behind
+	#ifdef CONFIG_BLOCK_COPY
+	value = context->PCOfLastInstruction+8;//Do +8 because PC is 2 instruction behind
+	#else
+	value = context->R15+8;//Do +8 because PC is 2 instruction behind
+	#endif
   }
   else
   {

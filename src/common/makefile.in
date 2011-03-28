@@ -1,4 +1,3 @@
-SRCS += src/common/common.c
 SRCS += src/common/debug.c
 SRCS += src/common/memFunctions.c
 SRCS += src/common/stringFunctions.c

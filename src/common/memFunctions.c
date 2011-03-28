@@ -1,6 +1,8 @@
-#include "memFunctions.h"
-#include "serial.h"
-#include "debug.h"
+#include "common/debug.h"
+#include "common/memFunctions.h"
+
+#include "hardware/serial.h"
+
 
 u32int heapStart;
 u32int heapSize;

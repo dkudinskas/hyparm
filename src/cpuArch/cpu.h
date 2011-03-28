@@ -1,7 +1,8 @@
-#ifndef __CPU_H__
-#define __CPU_H__
+#ifndef __CPU_ARCH__CPU_H__
+#define __CPU_ARCH__CPU_H__
 
-#include "types.h"
+#include "common/types.h"
+
 
 #define BOARD_DEVICE_TYPE           3
 

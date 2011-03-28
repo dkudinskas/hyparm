@@ -1,13 +1,18 @@
-#include "miscInstructions.h"
-#include "commonInstrFunctions.h"
-#include "intc.h"
-#include "debug.h"
+#include "common/debug.h"
 
+#include "hardware/intc.h"
+#include "hardware/serial.h"
+
+#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/miscInstructions.h"
+
+#ifdef CONFIG_BLOCK_COPY
 u32int* nopPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "nop PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int nopInstruction(GCONTXT * context)
 {
@@ -22,11 +27,13 @@ u32int nopInstruction(GCONTXT * context)
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* bxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "bx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int bxInstruction(GCONTXT * context)
 {
@@ -38,7 +45,11 @@ u32int bxInstruction(GCONTXT * context)
   u32int cpsrCC = (context->CPSR >> 28) & 0xF;
   if (!evalCC(instrCC, cpsrCC))
   {
-      nextPC = context->R15 + 4;
+      #ifdef CONFIG_BLOCK_COPY
+	  nextPC = context->PCOfLastInstruction + 4;
+	  #else
+	  nextPC = context->R15+4;
+	  #endif
       return nextPC;
   }
   //check if switching to thumb mode
@@ -53,123 +64,137 @@ u32int bxInstruction(GCONTXT * context)
   return nextPC;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mulPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mul PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int mulInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "mulInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "MUL unfinished\n");
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mlaPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mla PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int mlaInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "mlaInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "MLA unfinished\n");
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* swpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "swp PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int swpInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "swpInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SWP unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sumlalPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sumlal PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sumlalInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sumlalInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SUMLAL unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sumullPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sumull PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sumullInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sumullInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SUMULL unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* pliPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "pli PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int pliInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "pliInstruction is executed but not yet checked for blockCopyCompatibility");
 #ifdef ARM_INSTR_TRACE
   serial_putstring("Warning: PLI!");
   serial_newline();
 #endif
+  #ifdef CONFIG_BLOCK_COPY
+  return context->PCOfLastInstruction + 4;
+  #else
   return context->R15+4;
+  #endif
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* dbgPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "dbg PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int dbgInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "dbgInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "DBG unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* dmbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "dmb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int dmbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "dmbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "DBM unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* dsbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "dsb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int dsbInstruction(GCONTXT * context)
 {
@@ -177,14 +202,20 @@ u32int dsbInstruction(GCONTXT * context)
   serial_putstring("Warning: DSB (ignored)!");
   serial_newline();
 #endif
-  return context->PCOfLastInstruction+4;
+  #ifdef CONFIG_BLOCK_COPY
+  return context->PCOfLastInstruction + 4;
+  #else
+  return context->R15+4;
+  #endif
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* isbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "isb PCFunct shouldn't be used since isbInstructions are always emulated!!\n");
   return 0;
 }
+#endif
 
 u32int isbInstruction(GCONTXT * context)
 {
@@ -192,51 +223,59 @@ u32int isbInstruction(GCONTXT * context)
   serial_putstring("Warning: ISB (ignored)!");
   serial_newline();
 #endif
-  return context->PCOfLastInstruction+4;
+  #ifdef CONFIG_BLOCK_COPY
+  return context->PCOfLastInstruction + 4;
+  #else
+  return context->R15+4;
+  #endif
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* bfcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "bfc PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int bfcInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "bfcInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "BFC unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* bfiPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "bfi PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int bfiInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "bfiInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "BFI unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mlsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mls PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int mlsInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "mlsInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "MLS unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* movwPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 { //Can be optimized -> this instruction is always safe!
 
@@ -245,148 +284,163 @@ u32int* movwPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
 
   return currBlockCopyCacheAddr;
 }
+#endif
 
 u32int movwInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "movwInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "MOVW unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* movtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "movt PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int movtInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "movtInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "MOVT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* rbitPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "rbit PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int rbitInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "rbitInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "RBIT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* usbfxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "usbfx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int usbfxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "usbfxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "USBFX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smc PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smcInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smcInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMC unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* clrexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "clrex PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int clrexInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "clrexInstruction is executed but not yet checked for blockCopyCompatibility");
 #ifdef ARM_INSTR_TRACE
   serial_putstring("Warning: CLREX!");
   serial_newline();
 #endif
+  #ifdef CONFIG_BLOCK_COPY
+  return context->PCOfLastInstruction + 4;
+  #else
   return context->R15+4;
+  #endif
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* yieldPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "yield PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int yieldInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "yieldInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "YIELD unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* wfePCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "wfe PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int wfeInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "wfeInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "WFE unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* wfiPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "wfi PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int wfiInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "wfiInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "WFI unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sevPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sev PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sevInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sevInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SEV unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* cpsiePCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "cpsie PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int cpsieInstruction(GCONTXT * context)
 {
@@ -394,22 +448,26 @@ u32int cpsieInstruction(GCONTXT * context)
   return cpsInstruction(context);
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* cpsidPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "cpsid PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int cpsidInstruction(GCONTXT * context)
 {
   return cpsInstruction(context);
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* cpsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "cps PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int cpsInstruction(GCONTXT * context)
 {
@@ -523,667 +581,719 @@ u32int cpsInstruction(GCONTXT * context)
     // guest is not in privileged mode! cps should behave as a nop, but lets see what went wrong.
     DIE_NOW(0, "CPS instruction: executed in guest user mode.");
   }
-  return (context->PCOfLastInstruction+4);
+  #ifdef CONFIG_BLOCK_COPY
+  return context->PCOfLastInstruction + 4;
+  #else
+  return context->R15+4;
+  #endif
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* pkhbtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "pkhbt PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int pkhbtInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "pkhbtInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "PKHBT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* pkhtbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "pkhtb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int pkhtbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "pkhtbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "PKHTB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* qadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "qadd16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int qadd16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "qadd16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "QADD16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* qadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "qadd8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int qadd8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "qadd8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "QADD8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* qaddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "qaddsubx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int qaddsubxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "qaddsubxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "QADDSUBX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* qsub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "qsub16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int qsub16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "qsub16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "QSUB16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* qsub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "qsub8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int qsub8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "qsub8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "QSUB8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* qsubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "qsubaddx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int qsubaddxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "qsubaddxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "QSUBADDX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sadd16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sadd16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sadd16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SADD16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sadd8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sadd8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sadd8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SADD8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* saddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "saddsubx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int saddsubxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "saddsubxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SADDADDX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* shadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "shadd16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int shadd16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "shadd16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SHADD16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* shadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "shadd8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int shadd8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "shadd8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SHADD8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* shaddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "shaddsubx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int shaddsubxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "shaddsubxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SHADDSUBX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* shsub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "shsub16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int shsub16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "shsub16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SHSUB16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* shsub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "shsub8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int shsub8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "shsub8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SHSUB8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* shsubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "shsubaddx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int shsubaddxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "shsubaddxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SHSUBADDX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* ssub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "ssub16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int ssub16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ssub16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SSUB16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* ssub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "ssub8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int ssub8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ssub8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SSUB8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* ssubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "ssubaddx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int ssubaddxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ssubaddxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SSUBADDX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uadd16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uadd16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uadd16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UADD16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uadd8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uadd8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uadd8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UADD8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uaddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uaddsubx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uaddsubxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uaddsubxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UADDSUBX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uhadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uhadd16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uhadd16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uhadd16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UHADD16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uhadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uhadd8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uhadd8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uhadd8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UHADD8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uhaddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uhaddsubx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uhaddsubxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uhaddsubxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UHADDSUBX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uhsub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uhsub16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uhsub16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uhsub16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UHSUB16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uhsub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uhsub8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uhsub8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uhsub8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UHSUB8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uhsubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uhsubaddx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uhsubaddxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uhsubaddxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UHSUBADDX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uqadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uqadd16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uqadd16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uqadd16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UQADD16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uqadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uqadd8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uqadd8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uqadd8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UQADD8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uqaddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uqaddsubx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uqaddsubxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uqaddsubxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UQADDSUBX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uqsub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uqsub16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uqsub16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uqsub16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UQSUB16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uqsub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uqsub8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uqsub8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uqsub8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UQSUB8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uqsubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uqsubaddx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uqsubaddxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uqsubaddxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UQSUBADDX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* usub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "usub16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int usub16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "usub16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "USUB16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* usub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "usub8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int usub8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "usub8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "USUB8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* usubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "usubaddx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int usubaddxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "usubaddxInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "USUBADDX unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* revPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "rev PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int revInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "revInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "REV unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* rev16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "rev16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int rev16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "rev16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "REV16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* revshPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "revsh PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int revshInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "revshInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "REVSH unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* rfePCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "rfe PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int rfeInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "rfeInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "RFE unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sxthPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sxth PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sxthInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sxthInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SXTH unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sxtb16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sxtb16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sxtb16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sxtb16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SXTB16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sxtbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sxtb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sxtbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sxtbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SXTB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uxthPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uxth PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uxthInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uxthInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UXTHunfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uxtb16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uxtb16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uxtb16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uxtb16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UXTB16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uxtbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {//Can be optimized -> this instruction is always safe!
   u32int instruction = *instructionAddr;
@@ -1197,398 +1307,427 @@ u32int* uxtbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
 
   return currBlockCopyCacheAddr;
 }
+#endif
 
 u32int uxtbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uxtbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UXTB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sxtahPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sxtah PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sxtahInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sxtahInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SXTAH unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sxtab16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sxtab16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sxtab16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sxtab16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SXTAB16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sxtabPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sxtab PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sxtabInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sxtabInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SXTAB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uxtahPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uxtah PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uxtahInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uxtahInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UXTAH unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uxtab16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uxtab16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uxtab16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uxtab16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UXTAB16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* uxtabPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "uxtab PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int uxtabInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "uxtabInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UXTAB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* selPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sel PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int selInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "selInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SEL unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* setendPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "setend PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int setendInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "setendInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SETEND unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smuadPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smuad PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smuadInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smuadInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMUAD unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smusdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smusd PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smusdInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smusdInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMUSD unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smladPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlad PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smladInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smladInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLAD unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlaldPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlald PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlaldInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlaldInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLALD unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlsdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlsd PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlsdInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlsdInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLSD unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlsldPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlsld PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlsldInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlsldInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLSLD unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smmulPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smmul PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smmulInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smmulInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMMUL unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smmlaPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smmla PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smmlaInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smmlaInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMMLA unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smmlsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smmls PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smmlsInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smmlsInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMMLS unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* srsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "srs PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int srsInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "srsInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SRS unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* ssatPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "ssat PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int ssatInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ssatInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SSAT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* ssat16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "ssat16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int ssat16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ssat16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "ssat16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* umaalPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "umaal PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int umaalInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "umaalInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "UMAAL unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* usad8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "usad8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int usad8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "usad8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "USAD8 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* usada8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "usada8 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int usada8Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "usada8Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "USADA unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* usatPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "usat PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int usatInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "usatInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "USAT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* usat16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "usat16 PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int usat16Instruction(GCONTXT * context)
 {
-  DIE_NOW(0, "usat16Instruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "USAT16 unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* bxjPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "bxj PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int bxjInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "bxjInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "BXJ unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* bkptPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "bkpt PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int bkptInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "bkptInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "BKPT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* blxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "blx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int blxInstruction(GCONTXT * context)
 {
@@ -1605,7 +1744,11 @@ u32int blxInstruction(GCONTXT * context)
   u32int cpsrCC  = (context->CPSR >> 28) & 0xF;
   if (!evalCC(instrCC, cpsrCC))
   {
-    nextPC = context->R15 + 4;
+    #ifdef CONFIG_BLOCK_COPY
+    nextPC = context->PCOfLastInstruction + 4;
+    #else
+    nextPC = context->R15+4;
+    #endif
     return nextPC;
   }
   u32int regDest = (instr & 0x0000000F); // holds dest addr and mode bit
@@ -1622,6 +1765,7 @@ u32int blxInstruction(GCONTXT * context)
   return nextPC;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* clzPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   u32int instruction = *instructionAddr;
@@ -1636,20 +1780,22 @@ u32int* clzPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   return currBlockCopyCacheAddr;
 }
+#endif
 
 u32int clzInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "clzInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "CLZ unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* pldPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "pld PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int pldInstruction(GCONTXT * context)
 {
@@ -1657,294 +1803,320 @@ u32int pldInstruction(GCONTXT * context)
   serial_putstring("Warning: PLD!");
   serial_newline();
 #endif
-  return context->PCOfLastInstruction+4;
+  #ifdef CONFIG_BLOCK_COPY
+  return context->PCOfLastInstruction + 4;
+  #else
+  return context->R15+4;
+  #endif
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlabbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlabb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlabbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlabbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLABB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlatbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlatb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlatbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlatbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLATB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlabtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlabt PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlabtInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlabtInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLABT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlattPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlatt PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlattInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlattInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLATT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlawbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlawb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlawbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlawbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLAWB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlawtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlawt PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlawtInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlawtInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLAWT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlalbbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlalbb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlalbbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlalbbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLALBB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlaltbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlaltb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlaltbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlaltbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLALTB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlalbtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlalbt PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlalbtInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlalbtInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLALBT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smlalttPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smlaltt PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smlalttInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smlalttInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMLALTT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smulbbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smulbb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smulbbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smulbbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMULBB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smultbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smultb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smultbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smultbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMULTB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smulbtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smulbt PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smulbtInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smulbtInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMULBT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smulttPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smultt PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smulttInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smulttInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMULTT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smulwbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smulwb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smulwbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smulwbInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMULWD unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* smulwtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "smulwt PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int smulwtInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "smulwtInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "SMULWT unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* qaddPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "qadd PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int qaddInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "qaddInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "QADD unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* qdaddPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "qdadd PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int qdaddInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "qdaddInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "QDADD unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* qsubPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "qsub PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int qsubInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "qsubInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "QSUB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* qdsubPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "qdsub PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int qdsubInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "qdsubInstruction is executed but not yet checked for blockCopyCompatibility");
   dumpGuestContext(context);
   DIE_NOW(0, "QDSUB unfinished\n");
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* msrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "msr PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int msrInstruction(GCONTXT * context)
 {
@@ -1960,7 +2132,11 @@ u32int msrInstruction(GCONTXT * context)
   u32int cpsrCC = (context->CPSR >> 28) & 0xF;
   if (!evalCC(instrCC, cpsrCC))
   {
+    #ifdef CONFIG_BLOCK_COPY
     nextPC = context->PCOfLastInstruction + 4;
+    #else
+    nextPC = context->R15+4;
+    #endif
     return nextPC;
   }
   
@@ -2026,13 +2202,8 @@ u32int msrInstruction(GCONTXT * context)
     {
       dumpGuestContext(context);
       DIE_NOW(0, "MSR toggle THUMB bit.");
-    } 
-    // is new CPSR - user mode?
-    if ((value & CPSR_MODE_FIELD) == CPSR_MODE_USER)
-    {
-      DIE_NOW(context, "MSR switching CPSR to user mode\n");
     }
-    // separate the field we're gonna update from new value 
+    // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x000000FF);
     // clear old fields!
     oldValue &= 0xFFFFFF00;
@@ -2125,15 +2296,21 @@ u32int msrInstruction(GCONTXT * context)
 #ifdef ARM_INSTR_TRACE
   serial_newline();
 #endif
+  #ifdef CONFIG_BLOCK_COPY
   nextPC = context->PCOfLastInstruction + 4;
+  #else
+  nextPC = context->R15+4;
+  #endif
   return nextPC;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mrsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mrs PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int mrsInstruction(GCONTXT * context)
 {
@@ -2193,15 +2370,21 @@ u32int mrsInstruction(GCONTXT * context)
     } // spsr case ends
     storeGuestGPR(regDest, value, context);
   } // condition met ends
-  nextPC = context->PCOfLastInstruction + 4;
-  return nextPC;
+  #ifdef CONFIG_BLOCK_COPY
+    nextPC = context->PCOfLastInstruction + 4;
+    #else
+    nextPC = context->R15+4;
+    #endif
+    return nextPC;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* bPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   //Currently a bInstruction is always replaced by an SVC -> do nothing and check for PC in handleFunct
   return 0;
 }
+#endif
 
 u32int bInstruction(GCONTXT * context)
 {
@@ -2241,27 +2424,41 @@ u32int bInstruction(GCONTXT * context)
   if (conditionMet)
   {
     // condition met
+    #ifdef CONFIG_BLOCK_COPY
     u32int currPC = context->PCOfLastInstruction;
+    #else
+    u32int currPC = context->R15;
+    #endif
     currPC += 8;
     nextPC = currPC + target;
     if (link)
     {
-      storeGuestGPR(14, context->PCOfLastInstruction+4, context);
+	  #ifdef CONFIG_BLOCK_COPY
+	  storeGuestGPR(14, context->PCOfLastInstruction+4, context);
+	  #else
+	  storeGuestGPR(14, context->R15+4, context);
+	  #endif
     }
   }
   else
   {
     // condition not met!
+    #ifdef CONFIG_BLOCK_COPY
     nextPC = context->PCOfLastInstruction + 4;
+    #else
+    nextPC = context->R15+4;
+    #endif
   }
   return nextPC;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* svcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "svc PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int svcInstruction(GCONTXT * context)
 {
@@ -2277,15 +2474,16 @@ u32int svcInstruction(GCONTXT * context)
   return 0;
 }
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* undefinedPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "undefined PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int undefinedInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "undefinedInstruction is executed but not yet checked for blockCopyCompatibility");
   invalid_instruction(context->endOfBlockInstr, "undefined instruction");
   return 0;
 }

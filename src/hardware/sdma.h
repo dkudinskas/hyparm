@@ -1,9 +1,10 @@
-#ifndef __SDMA_H__
-#define __SDMA_H__
+#ifndef __HARDWARE__SDMA_H__
+#define __HARDWARE__SDMA_H__
 
-#include "types.h"
-#include "serial.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "hardware/hardwareLibrary.h"
+
 
 #define SDMA_REVISION_NUMBER      0x40
 

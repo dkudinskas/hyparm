@@ -1,8 +1,8 @@
-#ifndef __CP15_COPROC_H__
-#define __CP15_COPROC_H__
+#ifndef __MEMORY_MANAGER__CP15_COPROC_H__
+#define __MEMORY_MANAGER__CP15_COPROC_H__
 
-#include "types.h"
-#include "serial.h"
+#include "common/types.h"
+
 
 // uncomment me for COPROCESSOR DEBUG: #define COPROC_DEBUG
 

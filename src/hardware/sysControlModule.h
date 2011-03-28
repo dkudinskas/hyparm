@@ -1,9 +1,10 @@
-#ifndef __SYSTEM_CONTROL_MODULE_H__
-#define __SYSTEM_CONTROL_MODULE_H__
+#ifndef __HARDWARE__SYS_CONTROL_MODULE_H__
+#define __HARDWARE__SYS_CONTROL_MODULE_H__
 
-#include "types.h"
-#include "serial.h"
-#include "hardwareLibrary.h"
+#include "common/types.h"
+
+#include "hardware/hardwareLibrary.h"
+
 
 // uncomment me to enable debug : #define SYS_CTRL_MOD_DBG
 

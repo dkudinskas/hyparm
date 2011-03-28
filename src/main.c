@@ -1,21 +1,28 @@
-#include "LED.h"
-#include "serial.h"
-#include "stringFunctions.h"
-#include "image.h"
-#include "bootLinux.h"
-#include "cp15coproc.h"
-#include "guestContext.h"
-#include "blockCache.h"
-#include "addressing.h" /* For virtual addressing initialisation */
-#include "frameAllocator.h"
-#include "hardwareLibrary.h"
-#include "memFunctions.h"
-#include "cpu.h"
-#include "beIntc.h"
-#include "beGPTimer.h"
-#include "beClockMan.h"
-#include "debug.h"
-#include "scanner.h"
+#include "common/debug.h"
+#include "common/memFunctions.h"
+#include "common/stringFunctions.h"
+
+#include "cpuArch/cpu.h"
+
+#include "drivers/beagle/beIntc.h"
+#include "drivers/beagle/beGPTimer.h"
+#include "drivers/beagle/beClockMan.h"
+
+#include "hardware/hardwareLibrary.h"
+#include "hardware/LED.h"
+#include "hardware/serial.h"
+
+#include "instructionEmu/scanner.h"
+
+#include "linuxBoot/bootLinux.h"
+#include "linuxBoot/image.h"
+
+#include "guestManager/guestContext.h"
+#include "guestManager/blockCache.h"
+
+#include "memoryManager/addressing.h" /* For virtual addressing initialisation */
+#include "memoryManager/cp15coproc.h"
+#include "memoryManager/frameAllocator.h"
 
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
@@ -41,15 +48,16 @@ GCONTXT * gContext;
 
 int main(int argc, char *argv[])
 {
-
-  scannerReqCounter = 0;
-  /* save power: cut the clocks to the display subsystem */
-  cmDisableDssClocks();
-  //asm volatile("BKPT #0");
   int ret = 0;
   kernAddr = 0;
   initrdAddr = 0;
-
+  gContext = 0;
+#ifdef SCANNER_COUNTER  
+  scannerReqCounter = 0;
+#endif  
+  /* save power: cut the clocks to the display subsystem */
+  cmDisableDssClocks();
+  
   mallocInit(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
   
   /* create the frametable from which we can alloc memory */
@@ -102,6 +110,7 @@ int main(int argc, char *argv[])
   }
   registerBlockCache(gContext, blockCache);
 
+#ifdef CONFIG_BLOCK_COPY
   //Install jump instruction
   /* initialise block(copy) cache -> place for copied instructions*/
   u32int * blockCopyCache = (u32int*)mallocBytes(BLOCK_COPY_CACHE_SIZE_IN_BYTES);  //BLOCK_COPY_CACHE_SIZE_IN_BYTES
@@ -174,7 +183,7 @@ int main(int argc, char *argv[])
 #endif
   }
   registerBlockCopyCache(gContext, blockCopyCache, BLOCK_COPY_CACHE_SIZE);
-
+#endif //CONFIG_BLOCK_COPY
 
 
   /* initialise virtual hardware devices */
@@ -217,7 +226,6 @@ int main(int argc, char *argv[])
 #ifdef STARTUP_DEBUG
   dumpHdrInfo(&imageHeader);
 #endif
-  //Till here everything is ok
 
   /* initialise physical interrupt controller */
   intcBEInit();
@@ -235,7 +243,6 @@ int main(int argc, char *argv[])
   unmaskInterruptBE(GPT2_IRQ);
   enableInterrupts();
   gptBEStart(2);*/
-
   // does not return
   doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
 }

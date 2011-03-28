@@ -1,9 +1,17 @@
-#include "bootLinux.h"
-#include "serial.h"
-#include "cpu.h"
-#include "scanner.h"
-#include "pageTable.h"
-#include "addressing.h"
+#include "common/memFunctions.h"
+#include "common/stringFunctions.h"
+
+#include "cpuArch/cpu.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/scanner.h"
+
+#include "linuxBoot/bootLinux.h"
+
+#include "memoryManager/addressing.h"
+#include "memoryManager/pageTable.h"
+
 
 extern GCONTXT * getGuestContext(void);
 extern void callKernel(int, int, u32int, u32int) __attribute__((noreturn));
@@ -22,25 +30,23 @@ static int builtInInitrd = 0;
 
 void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
 {
-  int hdrSize = sizeof(image_header_t);
-  ulong load = loadAddr + hdrSize;
-  ulong hdrEntryPoint = imageHeader->ih_ep;
-  ulong sizeInBytes = imageHeader->ih_size;
+  ulong currentAddress = loadAddr + sizeof(image_header_t);
+  u32int targetAddress = imageHeader->ih_load;
+  u32int entryPoint = imageHeader->ih_ep;
+  u32int sizeInBytes = imageHeader->ih_size;
   char * commandline = "\0";
 
   paramTag = (struct tag *)BOARD_PARAMS;
 
 #ifdef STARTUP_DEBUG
-  serial_putstring("machid = ");
-//  serial_putint(machid);
+  serial_putstring("Current address = ");
+  serial_putint(currentAddress);
   serial_newline();
-
-  serial_putstring("hdrEntryPoint = ");
-  serial_putint(hdrEntryPoint);
+  serial_putstring("Load address    = ");
+  serial_putint(targetAddress);
   serial_newline();
-
-  serial_putstring("loadAddr = ");
-  serial_putint(load);
+  serial_putstring("Entry point     = ");
+  serial_putint(entryPoint);
   serial_newline();
 #endif
 
@@ -54,9 +60,9 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
 #endif
 
 
-  if (load != hdrEntryPoint)
+  if (currentAddress != targetAddress)
   {
-    memmove((void*)hdrEntryPoint, (const void*)load, sizeInBytes);
+    memmove((void*)targetAddress, (const void*)currentAddress, sizeInBytes);
   }
   populateDramBanks();
 
@@ -70,34 +76,21 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
   }
   setup_end_tag();
 
-
 #ifdef DUMP_SCANNER_COUNTER
   resetScannerCounter();
 #endif
-#ifdef STARTUP_DEBUG
-  serial_putstring("First block will be scanned");
-  serial_newline();
-#endif
-  scanBlock(getGuestContext(), hdrEntryPoint);
-#ifdef STARTUP_DEBUG
-  serial_putstring("First block is scanned");
-  serial_newline();
-#endif
+  scanBlock(getGuestContext(), entryPoint);
+
   cleanupBeforeLinux();
-
-  /* does not return */
-#ifdef STARTUP_DEBUG
-  serial_putstring("Processor ready for Linux-> call kernel");
-  serial_newline();
-#endif
-
+#ifdef CONFIG_BLOCK_COPY
   //execution shouldn't be started at hdrEntryPoint any more!
   //The code from the blockCache should be executed  :  getGuestContext()->blockCopyCache
   //But first entry in blockCopyCache is backpointer -> next entry (blockCopyCache is u32int => +4)
-
-
   callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, (getGuestContext()->blockCopyCache+4));
-
+#else
+  /* does not return */
+  callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, entryPoint);
+#endif
 }
 
 void populateDramBanks()

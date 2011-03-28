@@ -1,8 +1,10 @@
-#ifndef __COMMON_INSTR_FUNCTIONS_H_
-#define __COMMON_INSTR_FUNCTIONS_H_
+#ifndef __INSTRUCTION_EMU__COMMON_INSTR_FUNCTIONS_H_
+#define __INSTRUCTION_EMU__COMMON_INSTR_FUNCTIONS_H_
 
-#include "types.h"
-#include "guestContext.h"
+#include "common/types.h"
+
+#include "guestManager/guestContext.h"
+
 
 /****************** all defines for CPSR (spsr's) ************/
 /* mode field / bits */
@@ -60,11 +62,16 @@
 /* a function to serve as a dead-loop if we decode something invalid */
 void invalid_instruction(u32int instr, char * msg);
 
+
 /* a function that sets 4 bits to zero starting at startbit (left bit is most significant) */
+#ifdef CONFIG_BLOCK_COPY
 u32int zeroBits(u32int instruction, u32int startbit);
+#endif
 
 /* This function will save the PC that corresponds to the one that should be read by an instruction at instructionAddress to reg */
+#ifdef CONFIG_BLOCK_COPY
 u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * currBlockCopyCacheAddr, u32int reg  );
+#endif
 
 /* a function to evaluate if guest is in priviledge mode or user mode */
 bool guestInPrivMode(GCONTXT * context);
@@ -76,16 +83,21 @@ bool evalCC(u32int instrCC, u32int cpsrCC);
 void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context);
 
 /* function to find a register that is not one of the arguments */
+#ifdef CONFIG_BLOCK_COPY
 u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regSrc3);
+#endif
 
 /* This function inserts an instruction in the instructionstream of the blockCopycache which will write the content of reg2Backup to the reserved word*/
 // The reserved word = a word in the blockCopyCache that won't contain instructions (if present it is situated right after the backpointer)
+#ifdef CONFIG_BLOCK_COPY
 u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);
+#endif
 
 /* This function inserts an instruction in the instructionstream of the blockCopycache which will restore the content of reg2Restore from the reserved word*/
 // The reserved word = a word in the blockCopyCache that won't contain instructions (if present it is situated right after the backpointer)
+#ifdef CONFIG_BLOCK_COPY
 u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);
-
+#endif
 
 /* function to obtain a register value, evaluates modes. */
 u32int loadGuestGPR(u32int regSource, GCONTXT * context);

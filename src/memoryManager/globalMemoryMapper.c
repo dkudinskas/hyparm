@@ -1,7 +1,13 @@
-#include "globalMemoryMapper.h"
-#include "guestContext.h"
-#include "dataMoveInstr.h"
-#include "debug.h"
+#include "common/debug.h"
+
+#include "guestManager/guestContext.h"
+
+#include "hardware/serial.h"
+
+#include "instructionEmu/dataMoveInstr.h"
+
+#include "memoryManager/globalMemoryMapper.h"
+
 
 extern GCONTXT * getGuestContext(void); //from main.c
 
@@ -15,12 +21,14 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
   u32int instr = *((u32int*)context->R15);
   // save the end of block instruction, as we faulted /not/ on EOB
   u32int eobInstrBackup = context->endOfBlockInstr;
+#ifdef CONFIG_BLOCK_COPY
   // save the PCOfLastInstruction. The emulationfunctions make use of this value to calculate the next PC so R15 should be stored here temporary
   // but after the abort the PCOfLastInstruction should be back a valid value since the next emulation function will make use of this!
   u32int PCOfLastInstructionBackup = context->PCOfLastInstruction;
 
   //emulate methods will take PCOfLastInstruction from context, put it there
   context->PCOfLastInstruction = context->R15;
+#endif
   // emulate methods will take instr from context, put it there
   context->endOfBlockInstr = instr;
   if ( ((instr & STR_IMM_MASK) == STR_IMM_MASKED) ||
@@ -90,6 +98,11 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
     // LDM, Rn, {reg list}
     ldmInstruction(context);
   }
+  else if ((instr & LDREX_MASK) == LDREX_MASKED)
+  {
+    // LDREX Rd, [Rn]
+    ldrexInstruction(context);
+  }
   else
   {
     serial_putstring("LoadStore @ ");
@@ -101,6 +114,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
   } 
   // restore end of block instruction & PCOFLastInstruction
   context->endOfBlockInstr = eobInstrBackup;
+#ifdef CONFIG_BLOCK_COPY
   context->PCOfLastInstruction = PCOfLastInstructionBackup;
-
+#endif
 }

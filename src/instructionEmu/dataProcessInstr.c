@@ -1,7 +1,10 @@
-#include "dataProcessInstr.h"
-#include "commonInstrFunctions.h"
-#include "debug.h"
-#include "blockCache.h" //necessary to check and clear blockCopyCache
+#include "common/debug.h"
+
+#include "hardware/serial.h"
+#include "guestManager/blockCache.h"
+#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/dataProcessInstr.h"
+
 void invalidDataProcTrap(char * msg, GCONTXT * gc)
 {
   serial_putint(gc->endOfBlockInstr);
@@ -16,7 +19,11 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
  //Than a store to the PC should store a valid value
   u32int instr = context->endOfBlockInstr;
   u32int cpsrCC = (context->CPSR >> 28) & 0xF;
+  #ifdef CONFIG_BLOCK_COPY
   u32int nextPC = context->PCOfLastInstruction;
+  #else
+  u32int nextPC = context->R15;
+  #endif
   u32int regDest = (instr & 0x0000F000) >> 12;
   if (regDest != 0xF)//Destination register is not PC -> instruction should have been handled by PCFunct
   {
@@ -138,14 +145,18 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
   }
   else
   {
+	#ifdef CONFIG_BLOCK_COPY
     nextPC = context->PCOfLastInstruction + 4;
+    #else
+    nextPC = context->R15 + 4;
+    #endif
     return nextPC;
   }
 }
 /*********************************/
 /* AND Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-
+#ifdef CONFIG_BLOCK_COPY
 u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   u32int instruction = *instructionAddr;
@@ -192,6 +203,7 @@ u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   DIE_NOW(0, "and PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int andInstruction(GCONTXT * context)
 {
@@ -202,11 +214,13 @@ u32int andInstruction(GCONTXT * context)
 /* RSB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* rsbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "rsb PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int rsbInstruction(GCONTXT * context)
 {
@@ -217,11 +231,13 @@ u32int rsbInstruction(GCONTXT * context)
 /* RSB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* rscPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "rsc PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int rscInstruction(GCONTXT * context)
 {
@@ -232,6 +248,7 @@ u32int rscInstruction(GCONTXT * context)
 /* SUB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* subPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   //target register is not PC
@@ -266,6 +283,7 @@ u32int* subPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   DIE_NOW(0, "bottom subPCInstruction reached without return\n");
   return 0;
 }
+#endif
 
 u32int subInstruction(GCONTXT * context)
 {
@@ -276,11 +294,13 @@ u32int subInstruction(GCONTXT * context)
 /* SBC Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* sbcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "sbc PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int sbcInstruction(GCONTXT * context)
 {
@@ -291,6 +311,7 @@ u32int sbcInstruction(GCONTXT * context)
 /* ADD Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   //target register is not PC
@@ -332,6 +353,7 @@ u32int* addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   DIE_NOW(0, "add PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int addInstruction(GCONTXT * context)
 {
@@ -342,11 +364,13 @@ u32int addInstruction(GCONTXT * context)
 /* ADD Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* adcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "adc PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int adcInstruction(GCONTXT * context)
 {
@@ -357,11 +381,13 @@ u32int adcInstruction(GCONTXT * context)
 /* ORR Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* orrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "orr PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int orrInstruction(GCONTXT * context)
 {
@@ -372,11 +398,13 @@ u32int orrInstruction(GCONTXT * context)
 /* ORR Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* eorPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "eor PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int eorInstruction(GCONTXT * context)
 {
@@ -387,6 +415,7 @@ u32int eorInstruction(GCONTXT * context)
 /* SBC Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* bicPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   u32int instruction = *instructionAddr;
@@ -430,6 +459,7 @@ u32int* bicPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   DIE_NOW(0, "bic PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int bicInstruction(GCONTXT * context)
 {
@@ -440,6 +470,7 @@ u32int bicInstruction(GCONTXT * context)
 /* MOV Rd, Rs                    */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 { //Destination is surely not PC
   u32int instruction = *instructionAddr;
@@ -466,6 +497,7 @@ u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   return currBlockCopyCacheAddr;
 }
+#endif
 
 u32int movInstruction(GCONTXT * context)
 {
@@ -477,11 +509,13 @@ u32int movInstruction(GCONTXT * context)
 /* MVN Rd, Rs                    */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* mvnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mvn PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int mvnInstruction(GCONTXT * context)
 {
@@ -492,10 +526,12 @@ u32int mvnInstruction(GCONTXT * context)
 /* LSL Rd, Rs                    */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* lslPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {  //This is the same as lsrPCInstruction only direction has changed -> only bit 5 differs
   return lsrPCInstruction(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
+#endif
 
 u32int lslInstruction(GCONTXT * context)
 {
@@ -506,6 +542,7 @@ u32int lslInstruction(GCONTXT * context)
 /* LSR Rd, Rs                    */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* lsrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
 
@@ -534,6 +571,7 @@ u32int* lsrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   return currBlockCopyCacheAddr;
 }
+#endif
 
 u32int lsrInstruction(GCONTXT * context)
 {
@@ -544,6 +582,7 @@ u32int lsrInstruction(GCONTXT * context)
 /* ASR Rd, Rs                    */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   u32int instruction = *instructionAddr;
@@ -574,6 +613,7 @@ u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   return currBlockCopyCacheAddr;
 }
+#endif
 
 u32int asrInstruction(GCONTXT * context)
 {
@@ -584,11 +624,13 @@ u32int asrInstruction(GCONTXT * context)
 /* RRX Rd, Rs                    */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* rrxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "rrx PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int rrxInstruction(GCONTXT * context)
 {
@@ -599,11 +641,13 @@ u32int rrxInstruction(GCONTXT * context)
 /* ROR Rd, Rs                    */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* rorPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "ror PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int rorInstruction(GCONTXT * context)
 {
@@ -614,6 +658,7 @@ u32int rorInstruction(GCONTXT * context)
 /* TST Rs, Rs2/imm               */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* tstPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   u32int instruction = *instructionAddr;
@@ -670,6 +715,7 @@ u32int* tstPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   return currBlockCopyCacheAddr;
 }
+#endif
 
 u32int tstInstruction(GCONTXT * context)
 {
@@ -680,11 +726,13 @@ u32int tstInstruction(GCONTXT * context)
 /* TEQ Rs, Rs2/imm               */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* teqPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "teq PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int teqInstruction(GCONTXT * context)
 {
@@ -696,6 +744,7 @@ u32int teqInstruction(GCONTXT * context)
 /* CMP Rs, Rs2/imm               */
 /*********************************/
 
+#ifdef CONFIG_BLOCK_COPY
 u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   //ARM ARM p.392 and further:
@@ -745,6 +794,7 @@ u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   return currBlockCopyCacheAddr;
 }
+#endif
 
 u32int cmpInstruction(GCONTXT * context)
 {
@@ -755,12 +805,13 @@ u32int cmpInstruction(GCONTXT * context)
 /*********************************/
 /* CMN Rs, Rs2/imm               */
 /*********************************/
-
+#ifdef CONFIG_BLOCK_COPY
 u32int* cmnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "cmn PCFunct unfinished\n");
   return 0;
 }
+#endif
 
 u32int cmnInstruction(GCONTXT * context)
 {
