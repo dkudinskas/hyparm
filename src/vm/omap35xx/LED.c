@@ -1,4 +1,4 @@
-#include "hardware/LED.h"
+#include "vm/omap35xx/LED.h"
 
 
 ulong * ledPtrSet = (unsigned long int*)(DATA_SET_REG);

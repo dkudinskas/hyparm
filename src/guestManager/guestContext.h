@@ -5,7 +5,7 @@
 
 #include "guestManager/blockCache.h"
 
-#include "hardware/hardwareLibrary.h"
+#include "vm/omap35xx/hardwareLibrary.h"
 
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/memoryProtection.h"
@@ -83,6 +83,7 @@ struct guestContext
   bool guestIrqPending;
   bool guestDataAbtPending;
   bool guestPrefetchAbtPending;
+  bool guestIdle;
 };
 
 

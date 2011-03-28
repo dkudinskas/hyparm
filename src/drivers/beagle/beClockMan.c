@@ -3,7 +3,7 @@
 
 #include "drivers/beagle/beClockMan.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 
 struct ClockManagerBE * clkManBE;

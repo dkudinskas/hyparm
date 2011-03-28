@@ -28,7 +28,7 @@ include $(DEPTH)/src/makefile.in
 include $(DEPTH)/src/common/makefile.in
 include $(DEPTH)/src/cpuArch/makefile.in
 include $(DEPTH)/src/exceptions/makefile.in
-include $(DEPTH)/src/hardware/makefile.in
+include $(DEPTH)/src/vm/omap35xx/makefile.in
 include $(DEPTH)/src/guestManager/makefile.in
 include $(DEPTH)/src/linuxBoot/makefile.in
 include $(DEPTH)/src/rtosBoot/makefile.in

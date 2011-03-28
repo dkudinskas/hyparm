@@ -3,7 +3,7 @@
 
 #include "drivers/beagle/beGPTimer.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 
 static inline bool gptBEidValid(u32int id);

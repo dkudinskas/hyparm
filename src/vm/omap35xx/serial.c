@@ -1,6 +1,6 @@
 #include "cpuArch/cpu.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 
 void __attribute__((noinline)) serial_putchar(char c)

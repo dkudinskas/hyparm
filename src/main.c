@@ -8,9 +8,9 @@
 #include "drivers/beagle/beGPTimer.h"
 #include "drivers/beagle/beClockMan.h"
 
-#include "hardware/hardwareLibrary.h"
-#include "hardware/LED.h"
-#include "hardware/serial.h"
+#include "vm/omap35xx/hardwareLibrary.h"
+#include "vm/omap35xx/LED.h"
+#include "vm/omap35xx/serial.h"
 
 #include "linuxBoot/bootLinux.h"
 #include "linuxBoot/image.h"

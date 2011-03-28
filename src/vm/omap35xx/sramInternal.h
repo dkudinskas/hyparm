@@ -5,7 +5,7 @@
 
 #include "guestManager/guestContext.h"
 
-#include "hardware/hardwareLibrary.h"
+#include "vm/omap35xx/hardwareLibrary.h"
 
 
 // uncomment me to enable sdram debug: #define SRAM_INTERNAL_DBG

@@ -1,6 +1,6 @@
 #include "common/debug.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/coprocInstructions.h"
