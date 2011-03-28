@@ -1744,7 +1744,6 @@ u32int* blxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int blxInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "blxInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   if ((instr & 0xfe000000) == 0xfa000000)
   {
@@ -1773,7 +1772,11 @@ u32int blxInstruction(GCONTXT * context)
     DIE_NOW(0, "BLX Rm switching to Thumb. Unimplemented.\n");
   }
   // link register
+#ifdef CONFIG_BLOCK_COPY
+  storeGuestGPR(14, context->PCOfLastInstruction+4, context);
+#else
   storeGuestGPR(14, context->R15+4, context);
+#endif
   nextPC = value & 0xFFFFFFFE;
   return nextPC;
 }

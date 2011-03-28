@@ -332,11 +332,13 @@ void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCach
   if( endOfBlock > lastUsableBlockCopyCacheAddress)
   {
     u32int difference = endOfBlock-lastUsableBlockCopyCacheAddress-4;
+# ifdef  BLOCK_COPY_CACHE_DEBUG
     serial_putstring("REMOVEBLOCKCOPYCACHEENTRY: ENDOFBLOCK:");
     serial_newline();
     serial_putstring("difference = ");
     serial_putint(difference);
     serial_newline();
+# endif
     memset((u32int *)blockCopyCacheAddress,0,(blockCopyCacheSize<<2)-(difference));
     memset((u32int *)context->blockCopyCache,0,difference); //The rest of the block is at the start of BlockCopyCache remove it there
   }

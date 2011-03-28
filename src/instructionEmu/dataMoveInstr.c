@@ -388,7 +388,6 @@ u32int* strhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
 
 u32int strhInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "strhInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -403,9 +402,9 @@ u32int strhInstruction(GCONTXT * context)
   {
     // condition not met! allright, we're done here. next instruction...
     #ifdef CONFIG_BLOCK_COPY
-    return context->PCOfLastInstruction + 4;
+      return context->PCOfLastInstruction + 4;
     #else
-    return context->R15 + 4;
+      return context->R15 + 4;
     #endif
   }
   // P = 0 and W == 1 then STR as if user mode
@@ -500,9 +499,9 @@ u32int strhInstruction(GCONTXT * context)
     storeGuestGPR(regDst, offsetAddress, context);
   }
   #ifdef CONFIG_BLOCK_COPY
-  return (context->PCOfLastInstruction + 4);
+    return (context->PCOfLastInstruction + 4);
   #else
-  return (context->R15 + 4);
+    return (context->R15 + 4);
   #endif
 }
 
@@ -822,13 +821,16 @@ u32int* strexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int 
 
 u32int strexInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "strexInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("STREX instruction: ");
   serial_putint(instr);
   serial_putstring(" @ PC=");
+# ifdef CONFIG_BLOCK_COPY
+  serial_putint(context->PCOfLastInstruction);
+# else
   serial_putint(context->R15);
+# endif
   serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -887,13 +889,16 @@ u32int* strexbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int
 
 u32int strexbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "strexbInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("STREXB instruction: ");
   serial_putint(instr);
   serial_putstring(" @ PC=");
+# ifdef CONFIG_BLOCK_COPY
   serial_putint(context->R15);
+# else
+  serial_putint(context->PCOfLastInstruction);
+# endif
   serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -905,10 +910,10 @@ u32int strexbInstruction(GCONTXT * context)
   {
     // condition not met! allright, we're done here. next instruction...
     #ifdef CONFIG_BLOCK_COPY
-	return context->PCOfLastInstruction+4;
-	#else
-	return context->R15 + 4;
-	#endif
+      return context->PCOfLastInstruction+4;
+    #else
+      return context->R15 + 4;
+    #endif
   }
   
   if ((regN == 15) || (regD == 15) || (regT == 15))
@@ -925,9 +930,9 @@ u32int strexbInstruction(GCONTXT * context)
   storeGuestGPR(regD, 0, context);
   
   #ifdef CONFIG_BLOCK_COPY
-  return context->PCOfLastInstruction+4;
+    return context->PCOfLastInstruction+4;
   #else
-  return context->R15 + 4;
+    return context->R15 + 4;
   #endif
 }
 
@@ -1253,10 +1258,10 @@ u32int ldrbInstruction(GCONTXT * context)
   {
     // condition not met! allright, we're done here. next instruction...
     #ifdef CONFIG_BLOCK_COPY
-	return context->PCOfLastInstruction+4;
-	#else
-	return context->R15 + 4;
-	#endif
+      return context->PCOfLastInstruction+4;
+    #else
+      return context->R15 + 4;
+    #endif
   }
   if (regOrImm == 0)
   {
@@ -1312,9 +1317,9 @@ u32int ldrbInstruction(GCONTXT * context)
     if (abort)
     {
       #ifdef CONFIG_BLOCK_COPY
-	  return context->PCOfLastInstruction+4;
-	  #else
-      return context->R15 + 4;
+        return context->PCOfLastInstruction+4;
+      #else
+        return context->R15 + 4;
       #endif
     }
   }
@@ -1336,9 +1341,9 @@ u32int ldrbInstruction(GCONTXT * context)
     storeGuestGPR(regSrc, offsetAddress, context);
   }
   #ifdef CONFIG_BLOCK_COPY
-  return context->PCOfLastInstruction+4;
+    return context->PCOfLastInstruction+4;
   #else
-  return context->R15 + 4;
+    return context->R15 + 4;
   #endif
 }
 
@@ -1899,13 +1904,16 @@ u32int* ldrexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int 
 
 u32int ldrexInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ldrexInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDREX instruction: ");
   serial_putint(instr);
   serial_putstring(" @ PC=");
+# ifdef
+  serial_putint(context->PCOfLastInstruction);
+# else
   serial_putint(context->R15);
+# endif
   serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -1916,10 +1924,10 @@ u32int ldrexInstruction(GCONTXT * context)
   {
     // condition not met! allright, we're done here. next instruction...
     #ifdef CONFIG_BLOCK_COPY
-	return context->PCOfLastInstruction+4;
-	#else
-	return context->R15 + 4;
-	#endif
+      return context->PCOfLastInstruction+4;
+    #else
+      return context->R15 + 4;
+    #endif
   }
   
   if ((baseReg == 15) || (regDest == 15))
@@ -1941,9 +1949,9 @@ u32int ldrexInstruction(GCONTXT * context)
   storeGuestGPR(regDest, value, context);
   
   #ifdef CONFIG_BLOCK_COPY
-  return context->PCOfLastInstruction+4;
+    return context->PCOfLastInstruction+4;
   #else
-  return context->R15 + 4;
+    return context->R15 + 4;
   #endif
 }
 
@@ -1957,13 +1965,16 @@ u32int* ldrexbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int
 
 u32int ldrexbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ldrexbInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   serial_putstring("LDREXB instruction: ");
   serial_putint(instr);
   serial_putstring(" @ PC=");
+# ifdef CONFIG_BLOCK_COPY
+  serial_putint(context->PCOfLastInstruction);
+#else
   serial_putint(context->R15);
+# endif
   serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -1974,10 +1985,10 @@ u32int ldrexbInstruction(GCONTXT * context)
   {
     // condition not met! allright, we're done here. next instruction...
     #ifdef CONFIG_BLOCK_COPY
-	return context->PCOfLastInstruction+4;
-	#else
-	return context->R15 + 4;
-	#endif
+      return context->PCOfLastInstruction+4;
+    #else
+      return context->R15 + 4;
+    #endif
   }
   
   if ((baseReg == 15) || (regDest == 15))
@@ -1990,9 +2001,9 @@ u32int ldrexbInstruction(GCONTXT * context)
   storeGuestGPR(regDest, value, context);
   
   #ifdef CONFIG_BLOCK_COPY
-  return context->PCOfLastInstruction+4;
+    return context->PCOfLastInstruction+4;
   #else
-  return context->R15 + 4;
+    return context->R15 + 4;
   #endif
 }
 /*****************************************************************

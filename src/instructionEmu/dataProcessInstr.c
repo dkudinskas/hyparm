@@ -218,8 +218,71 @@ u32int andInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* rsbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "rsb PCFunct unfinished\n");
-  return 0;
+  u32int instruction = *instructionAddr;
+  u32int destReg=(instruction>>12) & 0xF;
+  u32int instr2Copy = instruction;
+  bool immediate = (instruction >> 25 & 0b1) == 0b1;
+  bool replaceReg1 = FALSE;
+  bool replaceReg2 = FALSE;
+  if(immediate)
+  {
+    if((instruction>>16 & 0xF) == 0xF)
+    {
+      replaceReg1 = TRUE;
+    }
+  }
+  else
+  {
+    bool registerShifted = ((instruction>>4 & 0b1)==0b1) && ((instruction>>4 & 0b1)==0b0);
+    //Here we know it is register or register-shifted register
+    if(registerShifted)
+    {
+      DIE_NOW(0,"EORPC (register-shifted register) -> UNPREDICTABLE");
+    }
+    else
+    {
+      //eor (register)
+      if((instruction>>16 & 0xF) == 0xF)
+      {
+        replaceReg1 = TRUE;
+        if((instruction & 0xF) == destReg)
+        {
+          DIE_NOW(0,"EORPC:Register is replaced but one of srcReg == destReg");
+        }
+      }
+      if((instruction & 0xF) == 0xF)
+      {
+        replaceReg2 = TRUE;
+        if((instruction>>16 & 0xF) == destReg)
+        {
+          DIE_NOW(0,"EORPC:Register is replaced but one of srcReg == destReg");
+        }
+      }
+    }
+  }
+  if(replaceReg1 || replaceReg2){
+      //step 1 Copy PC (=instructionAddr2) to desReg
+      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+      if(replaceReg1)
+      {
+        //Step 2 modify eorInstruction
+        //Clear PC source Register
+        instr2Copy=zeroBits(instruction, 16);
+        instr2Copy=instr2Copy | (destReg<<16);
+      }
+      if(replaceReg1)
+      {
+        //Step 2 modify eorInstruction
+        //Clear PC source Register
+        instr2Copy=zeroBits(instruction, 0);
+        instr2Copy=instr2Copy | (destReg);
+      }
+  }
+
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+
+  return currBlockCopyCacheAddr;
 }
 #endif
 
@@ -402,8 +465,71 @@ u32int orrInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* eorPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "eor PCFunct unfinished\n");
-  return 0;
+  u32int instruction = *instructionAddr;
+  u32int destReg=(instruction>>12) & 0xF;
+  u32int instr2Copy = instruction;
+  bool immediate = (instruction >> 25 & 0b1) == 0b1;
+  bool replaceReg1 = FALSE;
+  bool replaceReg2 = FALSE;
+  if(immediate)
+  {
+    if((instruction>>16 & 0xF) == 0xF)
+    {
+      replaceReg1 = TRUE;
+    }
+  }
+  else
+  {
+    bool registerShifted = ((instruction>>4 & 0b1)==0b1) && ((instruction>>4 & 0b1)==0b0);
+    //Here we know it is register or register-shifted register
+    if(registerShifted)
+    {
+      DIE_NOW(0,"EORPC (register-shifted register) -> UNPREDICTABLE");
+    }
+    else
+    {
+      //eor (register)
+      if((instruction>>16 & 0xF) == 0xF)
+      {
+        replaceReg1 = TRUE;
+        if((instruction & 0xF) == destReg)
+        {
+          DIE_NOW(0,"EORPC:Register is replaced but one of srcReg == destReg");
+        }
+      }
+      if((instruction & 0xF) == 0xF)
+      {
+        replaceReg2 = TRUE;
+        if((instruction>>16 & 0xF) == destReg)
+        {
+          DIE_NOW(0,"EORPC:Register is replaced but one of srcReg == destReg");
+        }
+      }
+    }
+  }
+  if(replaceReg1 || replaceReg2){
+      //step 1 Copy PC (=instructionAddr2) to desReg
+      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+      if(replaceReg1)
+      {
+        //Step 2 modify eorInstruction
+        //Clear PC source Register
+        instr2Copy=zeroBits(instruction, 16);
+        instr2Copy=instr2Copy | (destReg<<16);
+      }
+      if(replaceReg1)
+      {
+        //Step 2 modify eorInstruction
+        //Clear PC source Register
+        instr2Copy=zeroBits(instruction, 0);
+        instr2Copy=instr2Copy | (destReg);
+      }
+  }
+
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+
+  return currBlockCopyCacheAddr;
 }
 #endif
 

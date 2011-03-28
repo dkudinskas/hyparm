@@ -7,6 +7,9 @@
 
 extern GCONTXT * getGuestContext(void); //from main.c
 
+#ifdef DIE_NOW_SCANNER_COUNTER
+  extern u32int scannerReqCounter; //from scanner.c
+#endif
 
 void banner(char* msg)
 {
