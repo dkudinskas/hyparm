@@ -24,8 +24,6 @@
 #include "memoryManager/mmu.h"
 #include "memoryManager/memoryConstants.h"
 
-#define EXC_HDLR_DBG
-
 extern GCONTXT * getGuestContext(void);
 
 void softwareInterrupt(u32int code)

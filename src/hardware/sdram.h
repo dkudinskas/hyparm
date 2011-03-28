@@ -14,7 +14,6 @@
 
 // uncomment me to enable sdram debug : #define SDRAM_DBG
 
-
 void initSdram(void);
 
 u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address);

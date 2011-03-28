@@ -6,6 +6,7 @@
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/miscInstructions.h"
 
+extern GCONTXT * getGuestContext( void );
 
 void dumpGuestContext(GCONTXT * gc)
 {

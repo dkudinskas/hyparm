@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
   }
   else if(ret==2){
 #ifdef STARTUP_DEBUG
-	serial_pustring("RTOS address: ");
+	serial_putstring("RTOS address: ");
 	serial_putlong(kernAddr);
 	serial_newline();
 #endif

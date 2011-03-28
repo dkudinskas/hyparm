@@ -390,7 +390,7 @@ void storeGeneric(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   if (gc->virtAddrEnabled)
   {
     phyAddr = getPhysicalAddress(gc->PT_shadow, address);
-  }
+  } 
   else
   {
     phyAddr = getPhysicalAddress(gc->PT_physical, address);

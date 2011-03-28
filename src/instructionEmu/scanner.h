@@ -7,7 +7,6 @@
 
 
 // uncomment me to enable scanner debug: #define SCANNER_DEBUG
-
 // uncomment me to enable scanner request counter: #define DUMP_SCANNER_COUNTER
 
 #define INSTR_SWI                 0xEF000000

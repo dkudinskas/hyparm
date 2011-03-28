@@ -287,7 +287,12 @@ swi_handler:
     /* store SP & LR to the correct places.*/
     LDR     R0, =guestContextCPSR
     LDR     R0, [R0]
-    ANDS    R0, R0, #0x1F
+    /* If ANDS is used here and R0=0x1F then the cc flags do not
+     * seem to get triggered. I will use separate AND and CMP 
+     * instrcutions for now
+     */
+    AND     R0, R0, #0x1F
+    CMP	    R0, #0x1F
     LDREQ   R1, =guestContextR13_USR /* system mode - same register set as usr */
     BEQ     continue1
     CMP     R0, #0x13
@@ -346,7 +351,12 @@ continue1:
     /* Use guest CPSR to work out which mode we are meant to be emulating */
     LDR     R0, =guestContextCPSR
     LDR     R0, [R0]
-    ANDS    R0, R0, #0x1F
+    /* If ANDS is used here and R0=0x1F then the cc flags do not
+     * seem to get triggered. I will use separate AND and CMP 
+     * instrcutions for now
+     */
+    AND     R0, R0, #0x1F
+    CMP	    R0, #0x1F
     LDREQ   R1, =guestContextR13_USR /* system mode - same register set as usr */
     BEQ     continue2
     CMP     R0, #0x13

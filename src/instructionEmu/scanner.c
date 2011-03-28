@@ -10,7 +10,6 @@
 #include "memoryManager/mmu.h"
 #include "memoryManager/pageTable.h"
 
-
 #ifdef DUMP_SCANNER_COUNTER
 static u32int scannerReqCounter = 0;
 #endif
@@ -149,6 +148,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 # endif
 #endif
     // replace end of block instruction with hypercall of the appropriate code
+    
     *currAddress = INSTR_SWI | ((bcIndex + 1) << 8);
     // if guest instruction stream is mapped with caching enabled, must maintain
     // i and d cache coherency
