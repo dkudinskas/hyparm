@@ -2,7 +2,7 @@
 
 #include "drivers/beagle/be32kTimer.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 
 static u32int baseVA = 0;

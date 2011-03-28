@@ -3,8 +3,8 @@
 
 #include "guestManager/guestContext.h"
 
-#include "hardware/sdma.h"
-#include "hardware/serial.h"
+#include "vm/omap35xx/sdma.h"
+#include "vm/omap35xx/serial.h"
 
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 

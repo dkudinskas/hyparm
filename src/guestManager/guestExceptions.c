@@ -5,7 +5,7 @@
 #include "guestManager/guestExceptions.h"
 #include "guestManager/guestContext.h"
 
-#include "hardware/intc.h"
+#include "vm/omap35xx/intc.h"
 
 
 extern GCONTXT * getGuestContext(void);
@@ -35,30 +35,40 @@ void deliverServiceCall(void)
   {
     DIE_NOW(0, "deliverInterrupt: SVC to be delivered with guest vmem off.");
   }
-  // only thing left is to mask subsequent interrupts
+  // update AFI bits for SVC:
   context->CPSR |= CPSR_IRQ_DIS;
-  context->CPSR |= CPSR_FIQ_DIS;
 }
 
 void throwInterrupt(u32int irqNumber)
 {
   GCONTXT * context = getGuestContext();
 
-  if (irqNumber == GPT2_IRQ)
+  switch (irqNumber)
   {
-    // adjust guest interrupt controller state
-    setInterrupt(GPT1_IRQ);
-    // are we forwarding the interrupt event?
-    if ((context->CPSR & CPSR_IRQ_DIS) == 0)
-    {
-      // guest has enabled interrupts globally.
-      // set guest irq pending flag!
-      context->guestIrqPending = TRUE;
-    }
-  }
-  else
-  {
-    DIE_NOW(0, "GuestInterrupts: tickEvent from unknown source timer.");
+    case GPT2_IRQ:
+      // gpt2 is dedicated to the guest. if irq is from gpt2
+      // set it pending in emulated interrupt controller
+      setInterrupt(GPT1_IRQ);
+      // are we forwarding the interrupt event?
+      if ((context->CPSR & CPSR_IRQ_DIS) == 0)
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    case UART3_IRQ:
+      setInterrupt(UART3_IRQ);
+      // are we forwarding the interrupt event?
+      if ((context->CPSR & CPSR_IRQ_DIS) == 0)
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    default:
+      DIE_NOW(0, "throwInterrupt: from unknown source.");
   }
 }
 
@@ -89,9 +99,9 @@ void deliverInterrupt(void)
   {
     DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
   }
-  // 6. mask subsequent guest interrupts
+  // update AFI bits for IRQ:
   context->CPSR |= CPSR_IRQ_DIS;
-  context->CPSR |= CPSR_FIQ_DIS;
+  context->CPSR |= CPSR_ASYNC_ABT_DIS;
 }
 
 void deliverDataAbort()
@@ -121,9 +131,9 @@ void deliverDataAbort()
   {
     DIE_NOW(0, "deliverInterrupt: Data abort to be delivered with guest vmem off.");
   }
-  // 6. mask subsequent guest interrupts
+  // update AFI bits for IRQ:
   context->CPSR |= CPSR_IRQ_DIS;
-  context->CPSR |= CPSR_FIQ_DIS;
+  context->CPSR |= CPSR_ASYNC_ABT_DIS;
 }
 
 void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
@@ -186,9 +196,9 @@ void deliverPrefetchAbort(void)
   {
     DIE_NOW(0, "deliverInterrupt: Prefetch abort to be delivered with guest vmem off.");
   }
-  // only thing left is to mask subsequent interrupts
+  // update AFI bits for IRQ:
   context->CPSR |= CPSR_IRQ_DIS;
-  context->CPSR |= CPSR_FIQ_DIS;
+  context->CPSR |= CPSR_ASYNC_ABT_DIS;
 }
 
 void throwPrefetchAbort(u32int address, u32int faultType)

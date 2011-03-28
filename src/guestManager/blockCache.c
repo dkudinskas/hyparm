@@ -1,9 +1,13 @@
 #include "guestManager/blockCache.h"
-#include "common/memFunctions.h"
-#include "guestManager/guestContext.h"
-#include "hardware/serial.h"
 
-extern GCONTXT * getGuestContext(void); //from main.c
+#include "vm/omap35xx/serial.h"
+
+#include "guestManager/guestContext.h"
+
+#ifdef CONFIG_BLOCK_COPY
+# include "common/memFunctions.h"
+#endif
+
 
 #ifdef DUMP_COLLISION_COUNTER
 static u32int collisionCounter = 0;
@@ -12,6 +16,8 @@ static u32int collisionCounter = 0;
 #define NUMBER_OF_BITMAPS       16
 #define MEMORY_PER_BITMAP       0x10000000
 #define MEMORY_PER_BITMAP_BIT  (MEMORY_PER_BITMAP / 32) // should be 8 megabytes
+
+extern GCONTXT * getGuestContext(void); //from main.c
 
 static u32int execBitMap[NUMBER_OF_BITMAPS];
 

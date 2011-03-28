@@ -13,9 +13,9 @@
 #include "guestManager/guestContext.h"
 #include "guestManager/guestExceptions.h"
 
-#include "hardware/gptimer.h"
-#include "hardware/intc.h"
-#include "hardware/serial.h"
+#include "vm/omap35xx/gptimer.h"
+#include "vm/omap35xx/intc.h"
+#include "vm/omap35xx/serial.h"
 
 #include "instructionEmu/scanner.h"
 
@@ -321,10 +321,7 @@ void irq()
       break;
     case GPT2_IRQ:
     {
-      if(!isGuestIrqMasked(activeIrqNumber))
-      {
-        throwInterrupt(activeIrqNumber);
-      }
+      throwInterrupt(activeIrqNumber);
       gptBEClearOverflowInterrupt(2);
       acknowledgeIrqBE();
       break;
@@ -358,10 +355,7 @@ void irqPrivileged()
       acknowledgeIrqBE();
       break;
     case GPT2_IRQ:
-      if(!isGuestIrqMasked(activeIrqNumber))
-      {
-        throwInterrupt(activeIrqNumber);
-      }
+      throwInterrupt(activeIrqNumber);
       gptBEClearOverflowInterrupt(2);
       acknowledgeIrqBE();
       break;

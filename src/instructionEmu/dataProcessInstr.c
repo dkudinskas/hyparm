@@ -1,9 +1,10 @@
 #include "common/debug.h"
 
-#include "hardware/serial.h"
-#include "guestManager/blockCache.h"
+#include "vm/omap35xx/serial.h"
+
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/dataProcessInstr.h"
+
 
 void invalidDataProcTrap(char * msg, GCONTXT * gc)
 {

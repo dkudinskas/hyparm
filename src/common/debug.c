@@ -2,7 +2,7 @@
 
 #include "common/debug.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 
 extern GCONTXT * getGuestContext(void); //from main.c

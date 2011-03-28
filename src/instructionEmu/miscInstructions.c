@@ -1,10 +1,13 @@
 #include "common/debug.h"
 
-#include "hardware/intc.h"
-#include "hardware/serial.h"
+#include "vm/omap35xx/intc.h"
+#include "vm/omap35xx/serial.h"
 
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/miscInstructions.h"
+
+#include "guestManager/scheduler.h"
+
 
 #ifdef CONFIG_BLOCK_COPY
 u32int* nopPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
@@ -384,8 +387,7 @@ u32int* yieldPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int 
 
 u32int yieldInstruction(GCONTXT * context)
 {
-  dumpGuestContext(context);
-  DIE_NOW(0, "YIELD unfinished\n");
+  DIE_NOW(context, "YIELD unfinished\n");
   return 0;
 }
 
@@ -399,8 +401,7 @@ u32int* wfePCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int wfeInstruction(GCONTXT * context)
 {
-  dumpGuestContext(context);
-  DIE_NOW(0, "WFE unfinished\n");
+  DIE_NOW(context, "WFE unfinished\n");
   return 0;
 }
 
@@ -414,9 +415,13 @@ u32int* wfiPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int wfiInstruction(GCONTXT * context)
 {
-  dumpGuestContext(context);
-  DIE_NOW(0, "WFI unfinished\n");
-  return 0;
+  // stop guest execution...
+  guestIdle(context);
+#ifdef CONFIG_BLOCK_COPY
+  return context->PCOfLastInstruction+4;
+#else
+  return context->R15+4;
+#endif
 }
 
 #ifdef CONFIG_BLOCK_COPY
@@ -429,8 +434,7 @@ u32int* sevPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int sevInstruction(GCONTXT * context)
 {
-  dumpGuestContext(context);
-  DIE_NOW(0, "SEV unfinished\n");
+  DIE_NOW(context, "SEV unfinished\n");
   return 0;
 }
 
@@ -516,7 +520,7 @@ u32int cpsInstruction(GCONTXT * context)
           serial_newline();
 #endif
           // chech interrupt controller if there is an interrupt pending
-          if(isIrqPending())
+          if (isIrqPending())
           {
             context->guestIrqPending = TRUE;
           }
@@ -527,7 +531,16 @@ u32int cpsInstruction(GCONTXT * context)
       {
         if ( (oldCpsr & CPSR_FIQ_BIT) != 0)
         {
-          DIE_NOW(0, "Guest enabling fiqs globally!");
+#ifdef ARM_INSTR_TRACE
+          serial_putstring("Guest enabling FIQs globally!");
+          serial_newline();
+#endif
+          // chech interrupt controller if there is an interrupt pending
+          if (isFiqPending())
+          {
+            // context->guestFiqPending = TRUE; : IMPLEMENT!!
+            DIE_NOW(context, "cps: FIQ pending!! unimplemented.");
+          }
         } 
         oldCpsr &= ~CPSR_FIQ_BIT;
       }
@@ -2213,16 +2226,10 @@ u32int msrInstruction(GCONTXT * context)
   if ( ((fieldMsk & 0x2) == 0x2) && (guestInPrivMode(context)) )
   {
     // extension field: async abt, endianness, IT[7:2]
-    // check for async abt toggle!
-    if ((oldValue & CPSR_AAB_BIT) != (value & CPSR_AAB_BIT))
-    {
-      dumpGuestContext(context);
-      DIE_NOW(0, "MSR toggle async abort disable bit.");
-    } 
     // check for endiannes toggle!
     if ((oldValue & CPSR_ENDIANNESS) != (value & CPSR_ENDIANNESS))
     {
-      DIE_NOW(0, "MSR toggle endianess bit.");
+      DIE_NOW(context, "MSR toggle endianess bit.");
     } 
     // separate the field we're gonna update from new value 
     u32int appliedValue = (value & 0x0000FF00);

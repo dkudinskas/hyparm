@@ -3,7 +3,7 @@
 
 #include "drivers/beagle/beIntc.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 
 static inline u32int intcRegReadBE(u32int regOffs);

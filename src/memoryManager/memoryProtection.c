@@ -5,7 +5,7 @@
 #include "guestManager/guestContext.h"
 #include "guestManager/guestExceptions.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 #include "memoryManager/frameAllocator.h"
 #include "memoryManager/memoryConstants.h"

@@ -2,8 +2,9 @@
 #define __INSTRUCTION_EMU__DATA_MOVE_INSTR__
 
 #include "common/types.h"
-#include "hardware/serial.h"
+
 #include "memoryManager/globalMemoryMapper.h"
+
 #include "guestManager/guestContext.h"
 
 

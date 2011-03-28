@@ -3,7 +3,7 @@
 
 #include "common/types.h"
 
-#include "hardware/hardwareLibrary.h"
+#include "vm/omap35xx/hardwareLibrary.h"
 
 
 // uncomment me to enable debug : #define TIMER32K_DBG

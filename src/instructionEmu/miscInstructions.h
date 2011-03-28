@@ -2,7 +2,9 @@
 #define __INSTRUCTION_EMU__MISC_INSTRUCTIONS_H__
 
 #include "common/types.h"
-#include "hardware/serial.h"
+
+#include "vm/omap35xx/serial.h"
+
 #include "guestManager/guestContext.h"
 
 

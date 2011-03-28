@@ -1,6 +1,6 @@
 #include "common/debug.h"
 
-#include "hardware/serial.h"
+#include "vm/omap35xx/serial.h"
 
 #include "instructionEmu/asm-dis.h"
 #include "instructionEmu/decoder.h"
@@ -8,6 +8,7 @@
 #include "instructionEmu/dataMoveInstr.h"
 #include "instructionEmu/dataProcessInstr.h"
 #include "instructionEmu/miscInstructions.h"
+
 
 extern GCONTXT * getGuestContext(void);
 

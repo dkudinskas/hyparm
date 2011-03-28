@@ -1,7 +1,7 @@
 #include "guestManager/guestContext.h"
 
-#include "hardware/serial.h"
-#include "hardware/sdram.h"
+#include "vm/omap35xx/serial.h"
+#include "vm/omap35xx/sdram.h"
 
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/miscInstructions.h"
@@ -225,6 +225,10 @@ void dumpGuestContext(GCONTXT * gc)
   serial_putint(gc->guestPrefetchAbtPending);
   serial_newline();
 
+  serial_putstring("Guest idle: ");
+  serial_putint(gc->guestIdle);
+  serial_newline();
+
   serial_putstring("Block cache at: ");
   serial_putint((u32int)gc->blockCache);
   serial_newline();
@@ -323,7 +327,7 @@ void initGuestContext(GCONTXT * gContext)
   gContext->guestIrqPending = FALSE;
   gContext->guestDataAbtPending = FALSE;
   gContext->guestPrefetchAbtPending = FALSE;
-
+  gContext->guestIdle = FALSE;
   int i = 0;
   for (i = 0; i < BLOCK_HISOTRY_SIZE; i++)
   {
@@ -345,6 +349,9 @@ void registerCrb(GCONTXT * gc, CREG * coprocRegBank)
 
 void registerBlockCache(GCONTXT * gc, BCENTRY * blockCacheStart)
 {
+  serial_putstring("registerBlockCache: ");
+  serial_putint((u32int)blockCacheStart);
+  serial_newline();
   gc->blockCache = blockCacheStart;
   initialiseBlockCache(gc->blockCache);
 }

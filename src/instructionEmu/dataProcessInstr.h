@@ -2,7 +2,7 @@
 #define __INSTRUCTION_EMU__DATA_PROCESS_INSTR__
 
 #include "common/types.h"
-#include "hardware/serial.h"
+
 #include "guestManager/guestContext.h"
 
 

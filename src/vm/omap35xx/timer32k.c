@@ -2,8 +2,8 @@
 
 #include "guestManager/guestContext.h"
 
-#include "hardware/serial.h"
-#include "hardware/timer32k.h"
+#include "vm/omap35xx/serial.h"
+#include "vm/omap35xx/timer32k.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
@@ -40,6 +40,12 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
     if (regAddr == REG_TIMER_32K_SYSCONFIG)
     {
       val = timer32SysconfReg;
+#ifdef TIMER32K_DBG
+      serial_putstring(dev->deviceName);
+      serial_putstring(" load sys cfg value ");
+      serial_putint(val);
+      serial_newline();
+#endif
     }
     else if (regAddr == REG_TIMER_32K_COUNTER)
     {
