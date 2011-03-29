@@ -187,3 +187,41 @@ void dumpMallocs()
   DIE_NOW(0, "done");
 }
 
+/* This version of memcpy assumes disjoint ptrs src, dst */
+void *memcpy(void *dst, const void *src, u32int count)
+{
+  int i;
+  char *dst_tmp = dst;
+  const char *src_tmp = src;
+
+  if (!((unsigned int)src & 0xC) && !((unsigned int)dst & 0xC))
+  {
+    //word aligned so we can safely do word copies
+    for (i=0; i < count; i+=4)
+    {
+      if (i + 3 > count - 1)
+        break; //don't copy too much
+
+      *(u32int *)dst_tmp = *(u32int *)src_tmp;
+      dst_tmp += 4;
+      src_tmp += 4;
+    }
+    if (i < count - 1)
+    {
+      for (; i < count; i++)
+      {
+        *dst_tmp = *src_tmp;
+        dst_tmp++;
+        src_tmp++;
+      }
+    }
+  }
+  else
+  {
+    //generic version
+    for (i=0; i < count; i++)
+      dst_tmp[i] = src_tmp[i];
+  }
+  return dst;
+}
+
