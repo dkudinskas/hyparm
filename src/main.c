@@ -7,6 +7,7 @@
 #include "drivers/beagle/beIntc.h"
 #include "drivers/beagle/beGPTimer.h"
 #include "drivers/beagle/beClockMan.h"
+#include "drivers/beagle/beUart.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/LED.h"
@@ -52,7 +53,15 @@ int main(int argc, char *argv[])
   cmDisableDssClocks();
   
   mallocInit(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
-  
+
+  /* initialise uart backend, important to be before any debug output. */
+  /* init function initialises UARTs in disabled mode. */
+  /* startup fuction starts operation and enables RX IRQ generation */
+  beUartInit(1);
+  beUartInit(2);
+  beUartInit(3);
+  beUartStartup(3);
+
   /* create the frametable from which we can alloc memory */
   initialiseFrameTable();
 
@@ -135,19 +144,14 @@ int main(int argc, char *argv[])
   /* initialise physical interrupt controller */
   intcBEInit();
 
+  /* now we can umkask first interrupt - UART */
+  unmaskInterruptBE(UART3_IRQ);
+
   /* initialise physical clock manager */
   clkManBEInit();
 
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
-/*
-  setClockSource(2, FALSE);
-  toggleTimerFclk(2, TRUE);
-  gptBEEnableOverflowInterrupt(2);
-  gptBESet10msTick(2);
-  unmaskInterruptBE(GPT2_IRQ);
-  enableInterrupts();
-  gptBEStart(2);*/
 
   // does not return
   doLinuxBoot(&imageHeader, kernAddr, initrdAddr);

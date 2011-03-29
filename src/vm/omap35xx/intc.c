@@ -698,6 +698,52 @@ void setInterrupt(u32int irqNum)
 }
 
 
+void clearInterrupt(u32int irqNum)
+{
+  // 1. clear raw interrupt signal before masking
+  u32int bitMask = 0;
+  u32int bankNumber = 0;
+
+  if ((irqNum < 0) || (irqNum >= INTCPS_NR_OF_INTERRUPTS))
+  {
+    DIE_NOW(0, "INTC: setInterrupt interrupt number out of range.");
+  }
+  bankNumber = irqNum / INTCPS_INTERRUPTS_PER_BANK;
+  bitMask = 1 << (irqNum % INTCPS_INTERRUPTS_PER_BANK);
+  bitMask = ~bitMask;
+  switch (bankNumber)
+  {
+    case 0:
+      irqController->intcItr0 &= bitMask;
+      break;
+    case 1:
+      irqController->intcMir1 &= bitMask;
+      break;
+    case 2:
+      irqController->intcMir2 &= bitMask;
+      break;
+    default:
+      DIE_NOW(0, "INTC: setInterrupt in invalid interrupt bank");
+  }
+
+  // 2. clear irq-after-masking reg just in case as well
+  switch (bankNumber)
+  {
+    case 0:
+      irqController->intcPendingIrq0 &= bitMask;
+      break;
+    case 1:
+      irqController->intcPendingIrq1 &= bitMask;
+      break;
+    case 2:
+      irqController->intcPendingIrq2 &= bitMask;
+      break;
+    default:
+      DIE_NOW(0, "INTC: setInterrupt in invalid interrupt bank");
+  }
+}
+
+
 // Function to look through all pending irqs and select highest priority one
 // return: interrupt number
 u32int prioritySortIrqs()

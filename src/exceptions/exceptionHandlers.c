@@ -5,6 +5,7 @@
 #include "drivers/beagle/be32kTimer.h"
 #include "drivers/beagle/beGPTimer.h"
 #include "drivers/beagle/beIntc.h"
+#include "drivers/beagle/beUart.h"
 
 #include "exceptions/exceptionHandlers.h"
 
@@ -15,6 +16,7 @@
 
 #include "vm/omap35xx/gptimer.h"
 #include "vm/omap35xx/intc.h"
+#include "vm/omap35xx/uart.h"
 #include "vm/omap35xx/serial.h"
 
 #include "instructionEmu/scanner.h"
@@ -315,10 +317,12 @@ void irq()
   switch(activeIrqNumber)
   {
     case GPT1_IRQ:
+    {
       scheduleGuest();
       gptBEClearOverflowInterrupt(1);
       acknowledgeIrqBE();
       break;
+    }
     case GPT2_IRQ:
     {
       throwInterrupt(activeIrqNumber);
@@ -326,10 +330,21 @@ void irq()
       acknowledgeIrqBE();
       break;
     }
+    case UART3_IRQ:
+    {
+      // read character from UART
+      u8int c = serial_in();
+      acknowledgeIrqBE();
+      // forward character to emulated UART
+      uartPutRxByte(c, 3);
+      break;
+    }
     default:
+    {
       serial_putstring("Received IRQ=");
       serial_putint(activeIrqNumber);
       DIE_NOW(0, "irq: unimplemented IRQ number.");
+    }
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -351,18 +366,33 @@ void irqPrivileged()
   switch(activeIrqNumber)
   {
     case GPT1_IRQ:
+    {
       gptBEClearOverflowInterrupt(1);
       acknowledgeIrqBE();
       break;
+    }
     case GPT2_IRQ:
+    {
       throwInterrupt(activeIrqNumber);
       gptBEClearOverflowInterrupt(2);
       acknowledgeIrqBE();
       break;
+    }
+    case UART3_IRQ:
+    {
+      // read character from UART
+      u8int c = serial_in();
+      acknowledgeIrqBE();
+      // forward character to emulated UART
+      uartPutRxByte(c, 3);
+      break;
+    }
     default:
+    {
       serial_putstring("Received IRQ=");
       serial_putint(activeIrqNumber);
       DIE_NOW(0, "irqPrivileged: unimplemented IRQ number.");
+    }
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure

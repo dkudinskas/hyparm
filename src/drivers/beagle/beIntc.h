@@ -88,7 +88,11 @@ M_IRQ_70 Reserved       Reserved
 M_IRQ_71 Reserved       Reserved
 M_IRQ_72 UART1_IRQ      UART module 1
 M_IRQ_73 UART2_IRQ      UART module 2
-M_IRQ_74 UART3_IRQ      UART module 3
+*/
+#define UART1_IRQ      72
+#define UART2_IRQ      73
+#define UART3_IRQ      74
+/*
 M_IRQ_75 PBIAS_IRQ      Merged interrupt for PBIASlite1 and 2
 M_IRQ_76 OHCI_IRQ       OHCI controller HSUSB MP Host Interrupt
 M_IRQ_77 EHCI_IRQ       EHCI controller HSUSB MP Host Interrupt

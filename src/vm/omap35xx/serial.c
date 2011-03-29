@@ -2,18 +2,16 @@
 
 #include "vm/omap35xx/serial.h"
 
+#include "drivers/beagle/beUart.h"
 
 void __attribute__((noinline)) serial_putchar(char c)
 {
-  unsigned char *const thr = (unsigned char*)(SERIAL_BASE + TRANSMIT_HOLDING_REG_OFFSET);
-  volatile unsigned char *const lsr = (unsigned char*)(SERIAL_BASE + LINE_STATUS_REG_OFFSET);
-
-  while (0 == (*lsr & LINE_STATUS_REG_TX_HOLD))
+  while ((beLoadUart(UART_LSR_REG, 3) & UART_LSR_TX_FIFO_E) == 0)
   {
-    //loop until line status register is ready
+    // do nothing
   }
-  *thr = c;
-  return;
+  beStoreUart(UART_THR_REG, (u32int)c, 3);
+  
 }
 
 void serial_putstring(char * c)
