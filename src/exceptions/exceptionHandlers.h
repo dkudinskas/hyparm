@@ -8,6 +8,8 @@
 
 // uncomment me to enable exception handler debug : #define EXC_HDLR_DBG
 
+#define EXC_HDLR_DBG
+
 void softwareInterrupt(u32int code);
 
 void dataAbort(void);

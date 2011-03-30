@@ -41,7 +41,10 @@ void createVirtualMachineGPAtoRPA(GCONTXT* gc)
   serial_newline();
 #endif
 
-  //The hypervisor ptd is the guest physical ptd for now
+  /*The hypervisor ptd is the guest physical ptd for now
+   * Well, what this means is the the hypervisor page table is the
+   * page table the the guest will use to access memory
+   */
   setGuestPhysicalPt(gc);
 
   /*Alex: implementation thoughts

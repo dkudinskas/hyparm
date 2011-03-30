@@ -255,7 +255,7 @@ struct instruction32bit dataProcMiscInstructions_op1[] = {
 // MOVW - indication of 'wide' - to select ARM encoding. Rd cant be PC, pass through.
 {0,  &movwInstruction,      0x03000000, 0x0ff00000, "MOVW Rd, Rn"},
 // UNIMPLEMENTED: MOVT
-{1,  &movtInstruction,      0x03400000, 0x0ff00000, "movt%c\t%12-15r, %V"},
+{0,  &movtInstruction,      0x03400000, 0x0ff00000, "movt%c\t%0-12r, %V"},
 // AND: Rd = PC end block, others are fine
 {1,  &andInstruction,       0x0200f000, 0x0fe0f000, "AND PC, Rn, #imm"},
 {0,  &andInstruction,       0x02000000, 0x0fe00000, "AND Rd, Rn, #imm"},

@@ -209,9 +209,16 @@ void compile_time_check_memory_protection(void)
 bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 {
   GCONTXT* context = getGuestContext();
+  descriptor* pt1Entry;
+  /* get page table entry for address
+   * If the Guest OS does not support virtual
+   * addressing, The table that maps the guest physical
+   * to host virtual must be used */
+  if(context->virtAddrEnabled==1)
+  	pt1Entry = get1stLevelPtDescriptorAddr(context->PT_os, address);
+  else
+        pt1Entry = get1stLevelPtDescriptorAddr(context->PT_physical, address);
 
-  // get page table entry for address
-  descriptor* pt1Entry = get1stLevelPtDescriptorAddr(context->PT_os, address);
   // check guest domain: if manager, allow access.
   u32int dacr = getCregVal(3, 0, 0, 0, &context->coprocRegBank[0]);
   u32int dom  = ((sectionDescriptor*)pt1Entry)->domain;

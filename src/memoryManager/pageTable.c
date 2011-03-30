@@ -277,9 +277,16 @@ void largeMapMemory(descriptor* ptd, u32int startAddr, u32int endAddr, u8int dom
 void mapHypervisorMemory(descriptor* ptd)
 {
   //TODO: endAddr needs to be better defined
-  u32int startAddr = HYPERVISOR_START_ADDR;
-  u32int endAddr = startAddr + TOTAL_MACHINE_RAM/4;
+  u32int startAddr = HYPERVISOR_START_ADDR; // HYPERVISOR_START_ADDR= 0x8c000000
+  u32int endAddr = startAddr + TOTAL_MACHINE_RAM/4; // 256MB 
 
+  /* Create sections for the 256MB of "virtual" ram
+   * HYPERVISOR_ACCESS_DOMAIN= 15 --> 15/16 Domains
+   * HYPERVISOR_ACCESS_BITS=>PRIV_RW_USR_NO = 0b001 --> (page 1353:Client) 
+   * c = 1 (cacheable)
+   * b = 0 (no bufferable)
+   * tex = 0b000 (Extensions)
+   */
   sectionMapMemory(ptd, startAddr, endAddr, HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 1, 0, 0b000);
 }
 

@@ -101,6 +101,7 @@ void dataAbort()
   // make sure interrupts are disabled while we deal with data abort.
   disableInterrupts();
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
+  /* Encodings: Page 1289 & 1355 */
   switch(faultStatus)
   {
     case dfsPermissionSection:
@@ -130,6 +131,9 @@ void dataAbort()
     {
       GCONTXT* gc = getGuestContext();
       DFSR dfsr = getDFSR();
+      /* I think this means that the guest was trying to write within its
+       * allowed memory area in user mode
+       */
       bool isPrivAccess = (gc->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
       if ( shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()) )
       {
