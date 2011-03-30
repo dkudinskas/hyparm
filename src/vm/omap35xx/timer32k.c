@@ -2,7 +2,6 @@
 
 #include "guestManager/guestContext.h"
 
-#include "vm/omap35xx/serial.h"
 #include "vm/omap35xx/timer32k.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
@@ -24,14 +23,14 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef TIMER32K_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from physical address: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", virtual address: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_newline();
+  DEBUG_STRING(dev->deviceName);
+  DEBUG_STRING(" load from physical address: 0x");
+  DEBUG_INT(phyAddr);
+  DEBUG_STRING(", virtual address: 0x");
+  DEBUG_INT(address);
+  DEBUG_STRING(" access size ");
+  DEBUG_INT((u32int)size);
+  DEBUG_NEWLINE();
 #endif
 
   if (size == WORD)
@@ -41,10 +40,10 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
     {
       val = timer32SysconfReg;
 #ifdef TIMER32K_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(" load sys cfg value ");
-      serial_putint(val);
-      serial_newline();
+      DEBUG_STRING(dev->deviceName);
+      DEBUG_STRING(" load sys cfg value ");
+      DEBUG_INT(val);
+      DEBUG_NEWLINE();
 #endif
     }
     else if (regAddr == REG_TIMER_32K_COUNTER)
@@ -54,29 +53,29 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
       val = *memPtr;
       val = val >> 12;
 #ifdef TIMER32K_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(" load counter value ");
-      serial_putint(val);
-      serial_newline();
+      DEBUG_STRING(dev->deviceName);
+      DEBUG_STRING(" load counter value ");
+      DEBUG_INT(val);
+      DEBUG_NEWLINE();
 #endif
     }
     else
     {
-      serial_putstring(dev->deviceName);
-      serial_putstring(" load from physical address: 0x");
-      serial_putint(phyAddr);
-      serial_putstring(", virtual address: 0x");
-      serial_putint(address);
+      DEBUG_STRING(dev->deviceName);
+      DEBUG_STRING(" load from physical address: 0x");
+      DEBUG_INT(phyAddr);
+      DEBUG_STRING(", virtual address: 0x");
+      DEBUG_INT(address);
       DIE_NOW(0, " invalid register!");
     }
   }
   else
   {
-    serial_putstring(dev->deviceName);
-    serial_putstring(" load from physical address: 0x");
-    serial_putint(phyAddr);
-    serial_putstring(", virtual address: 0x");
-    serial_putint(address);
+    DEBUG_STRING(dev->deviceName);
+    DEBUG_STRING(" load from physical address: 0x");
+    DEBUG_INT(phyAddr);
+    DEBUG_STRING(", virtual address: 0x");
+    DEBUG_INT(address);
     DIE_NOW(0, " invalid register access size (non32bit)");
   }
   return val;

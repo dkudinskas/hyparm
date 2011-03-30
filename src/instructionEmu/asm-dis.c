@@ -1,7 +1,5 @@
 #include "common/debug.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/asm-dis.h"
 #include "instructionEmu/coprocInstructions.h"
 #include "instructionEmu/dataMoveInstr.h"
@@ -417,9 +415,8 @@ struct opcode32 * decodeInstruction(u32int instr)
   if (retInstr->replaceCode == -1)
   {
     // could not match the instruction in coproc as well! lunch time...
-    serial_putstring("decodeInstruction: undefined instruction found: ");
-    serial_putint((u32int)instr);
-    DIE_NOW(0, "");
+    printf("decodeInstruction: undefined instruction found: %08x\n", (u32int)instr);
+    DIE_NOW(0, "DIE");
   }
 
   // to make compiler happy
@@ -438,8 +435,8 @@ void dumpInstrString(u32int instr)
       {
         break;
       }
-      serial_putstring((char*)arm_opcodes[index].instructionString);
-      serial_newline();
+      printf((char*)arm_opcodes[index].instructionString);
+      printf("\n");
       return;
     }
     else
@@ -454,8 +451,8 @@ void dumpInstrString(u32int instr)
   {
     if ( (instr & arm_coproc_opcodes[index].mask) == arm_coproc_opcodes[index].value)
     {
-      serial_putstring((char*)arm_coproc_opcodes[index].instructionString);
-      serial_newline();
+      printf((char*)arm_coproc_opcodes[index].instructionString);
+      printf("\n");
       return;
     }
     else
@@ -465,8 +462,7 @@ void dumpInstrString(u32int instr)
   }
 
   // could not match the instruction in coproc as well! lunch time...
-  serial_putstring("decoder: dumpInstr: undefined instruction found: ");
-  serial_putint((u32int)instr);
-  DIE_NOW(0, "");
+  printf("decoder: dumpInstr: undefined instruction found: %08x\n", (u32int)instr);
+  DIE_NOW(0, "DIE");
 }
 

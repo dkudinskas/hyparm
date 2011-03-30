@@ -1,20 +1,16 @@
 #include "common/debug.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/commonInstrFunctions.h"
 
 
 extern GCONTXT * getGuestContext(void); //from main.c
 
 /* a function to serve as a dead-loop if we decode something invalid */
-void invalid_instruction(u32int instr, char * msg)
+void invalidInstruction(u32int instr, char * msg)
 {
-  serial_putstring("Invalid instruction detected! 0x");
-  serial_putint(instr);
-  serial_newline();
-  serial_putstring(msg);
-  serial_newline();
+  printf("Invalid instruction detected! %08x\n", instr);
+  printf(msg);
+  printf("\n");
 }
 
 bool guestInPrivMode(GCONTXT * context)
@@ -177,7 +173,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
           strPtr = (regDest == 13) ? (&(context->R13_UND)) : (&(context->R14_UND));
           break;
         default:
-          invalid_instruction(context->endOfBlockInstr, "storeGuestGPR: invalid CPSR mode!");
+          invalidInstruction(context->endOfBlockInstr, "storeGuestGPR: invalid CPSR mode!");
       } // switch ends
       *strPtr = value;
     } // R13/R14 ends
@@ -237,7 +233,7 @@ u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
           ldPtr = (regSrc == 13) ? (&(context->R13_UND)) : (&(context->R14_UND));
           break;
         default:
-          invalid_instruction(context->endOfBlockInstr, "loadGuestGPR: invalid CPSR mode!");
+          invalidInstruction(context->endOfBlockInstr, "loadGuestGPR: invalid CPSR mode!");
       } // switch ends
       value = *ldPtr;
     } // R13/R14 ends

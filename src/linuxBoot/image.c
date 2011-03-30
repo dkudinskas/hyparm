@@ -1,4 +1,4 @@
-#include "vm/omap35xx/serial.h"
+#include "common/debug.h"
 
 #include "linuxBoot/image.h"
 
@@ -40,40 +40,15 @@ image_header_t getImageHeader(ulong uImageAddr)
 
 void dumpHdrInfo(image_header_t * imgHdr)
 {
-  serial_putstring("magic number: \n\r");
-  serial_putint(imgHdr->ih_magic);
-  serial_newline();
-
-  serial_putstring("size: \n\r");
-  serial_putint(imgHdr->ih_size);
-  serial_newline();
-
-  serial_putstring("data load addr: \n\r");
-  serial_putint(imgHdr->ih_load);
-  serial_newline();
-
-  serial_putstring("entry point: \n\r");
-  serial_putint(imgHdr->ih_ep);
-  serial_newline();
-
-  serial_putstring("OS: \n\r");
-  serial_putbyte(imgHdr->ih_os);
-  serial_newline();
-
-  serial_putstring("arch: \n\r");
-  serial_putbyte(imgHdr->ih_arch);
-  serial_newline();
-
-  serial_putstring("type: \n\r");
-  serial_putbyte(imgHdr->ih_type);
-  serial_newline();
-
-  serial_putstring("compression: \n\r");
-  serial_putbyte(imgHdr->ih_comp);
-  serial_newline();
-
-  serial_putstring("name: \n\r");
-  serial_putstring((char*)&(imgHdr->ih_name));
-  serial_newline();
-  return;
+  printf("magic number: %x\n", imgHdr->ih_magic);
+  printf("size: %x\n", imgHdr->ih_size);
+  printf("data load addr: %x\n", imgHdr->ih_load);
+  printf("entry point: %x\n", imgHdr->ih_ep);
+  printf("OS: %x\n", imgHdr->ih_os);
+  printf("arch: %x\n", imgHdr->ih_arch);
+  printf("type: %x\n", imgHdr->ih_type);
+  printf("compression: %x\n", imgHdr->ih_comp);
+  printf("name: ");
+  printf((char*)(imgHdr->ih_name));
+  printf("\n");
 }

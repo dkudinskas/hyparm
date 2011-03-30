@@ -2,8 +2,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "memoryManager/frameAllocator.h"
 #include "memoryManager/memoryConstants.h"
 
@@ -42,9 +40,9 @@ void initialiseFrameTable()
   u32int addr = (u32int)frameTable;
 
 #ifdef FRAME_ALLOC_DBG
-  serial_putstring("Address of frame table (addr): 0x");
-  serial_putint(addr);
-  serial_newline();
+  DEBUG_STRING("Address of frame table (addr): 0x");
+  DEBUG_INT(addr);
+  DEBUG_NEWLINE();
 #endif
   u32int endAddr= addr + FRAME_TABLE_ENTRIES/8;
 
@@ -103,14 +101,14 @@ u32int* allocFrame(u8int domain)
 #ifdef FRAME_ALLOC_DBG
   if ((u32int)addr)
   {
-    serial_putstring("Allocated Frame: 0x");
-    serial_putint((u32int)addr);
-    serial_newline();
+    DEBUG_STRING("Allocated Frame: 0x");
+    DEBUG_INT((u32int)addr);
+    DEBUG_NEWLINE();
   }
   else
   {
-    serial_putstring("No free frames found!");
-    serial_newline();
+    DEBUG_STRING("No free frames found!");
+    DEBUG_NEWLINE();
   }
 #endif
   return addr;
@@ -137,13 +135,13 @@ u32int* allocMultipleFrames(u32int numFrames, u8int domain)
 #ifdef FRAME_ALLOC_DBG
   if ((u32int)addr)
   {
-    serial_putstring("Allocated Frame: 0x");
-    serial_putint(*addr);
-    serial_newline();
+    DEBUG_STRING("Allocated Frame: 0x");
+    DEBUG_INT(*addr);
+    DEBUG_NEWLINE();
   }
   else
   {
-    serial_putstring("No free frames found!");
+    DEBUG_STRING("No free frames found!");
   }
 #endif
   return addr;
@@ -157,9 +155,9 @@ u32int* allocMultipleFrames(u32int numFrames, u8int domain)
 u32int* allocFrameAddr(u32int phyAddr)
 {
 #ifdef FRAME_ALLOC_DBG
-  serial_putstring("Allocating frame for addr: 0x");
-  serial_putint(phyAddr);
-  serial_newline();
+  DEBUG_STRING("Allocating frame for addr: 0x");
+  DEBUG_INT(phyAddr);
+  DEBUG_NEWLINE();
 #endif
   // get offset into the frame table
   u32int offset = addrToOffset(phyAddr);
@@ -173,8 +171,8 @@ u32int* allocFrameAddr(u32int phyAddr)
 #ifdef FRAME_ALLOC_DBG
   else
   {
-    serial_putstring("Frame already allocated.");
-    serial_newline();
+    DEBUG_STRING("Frame already allocated.");
+    DEBUG_NEWLINE();
   }
 #endif
   return returnVal;
@@ -211,12 +209,12 @@ u8int freeMultipleFrames(u32int firstFrameAddr, u32int lastFrameAddr)
   if(lastFrameAddr < firstFrameAddr)
   {
 #ifdef FRAME_ALLOC_DBG
-    serial_putstring("Failure to free multiple frames, lastFrameAddr :0x");
-    serial_putint(lastFrameAddr);
-    serial_newline();
-    serial_putstring("Is before first frame addr: 0x");
-    serial_putint(firstFrameAddr);
-    serial_newline();
+    DEBUG_STRING("Failure to free multiple frames, lastFrameAddr :0x");
+    DEBUG_INT(lastFrameAddr);
+    DEBUG_NEWLINE();
+    DEBUG_STRING("Is before first frame addr: 0x");
+    DEBUG_INT(firstFrameAddr);
+    DEBUG_NEWLINE();
 #endif
     return 2;
   }
@@ -233,9 +231,9 @@ u8int freeMultipleFrames(u32int firstFrameAddr, u32int lastFrameAddr)
     {
       //If a free failed, return failure
 #ifdef FRAME_ALLOC_DBG
-      serial_putstring("Failure to free multiple frames, stopped at :0x");
-      serial_putint((u32int)offsetToAddr(offset));
-      serial_newline();
+      DEBUG_STRING("Failure to free multiple frames, stopped at :0x");
+      DEBUG_INT((u32int)offsetToAddr(offset));
+      DEBUG_NEWLINE();
 #endif
       return 1;
     }
@@ -257,10 +255,10 @@ u8int isDomainValid(u8int domain)
   else
   {
 #ifdef FRAME_ALLOC_DBG
-    serial_putstring("Error domain: ");
-    serial_putint(domain);
-    serial_putstring(", is not valid.");
-    serial_newline();
+    DEBUG_STRING("Error domain: ");
+    DEBUG_INT(domain);
+    DEBUG_STRING(", is not valid.");
+    DEBUG_NEWLINE();
 #endif
     return 0;
   }
@@ -282,29 +280,29 @@ void newFrameAllocationTable()
 #endif
 
 #ifdef FRAME_ALLOC_DBG
-  serial_putstring("Initialise Hypervisor Frame Allocator");
-  serial_newline();
-  serial_putstring("Machine Memory: ");
-  serial_putint(TOTAL_MACHINE_RAM);
-  serial_newline();
-  serial_putstring("HYPERVISOR_START_ADDR: ");
-  serial_putint(HYPERVISOR_START_ADDR);
-  serial_newline();
-  serial_putstring("HYPERVISOR_SIZE: ");
-  serial_putint(HYPERVISOR_SIZE);
-  serial_newline();
-  serial_putstring("FRAME_TABLE_CHUNK_SIZE: ");
-  serial_putint(FRAME_TABLE_CHUNK_SIZE);
-  serial_newline();
-  serial_putstring("Number of Frame Table entries: ");
-  serial_putint(FRAME_TABLE_ENTRIES);
-  serial_newline();
-  serial_putstring("Frame table address: ");
-  serial_putint((u32int)frameTable);
-  serial_newline();
-  serial_putstring("Frame table size (Bytes):");
-  serial_putint(FRAME_TABLE_ENTRIES);
-  serial_newline();
+  DEBUG_STRING("Initialise Hypervisor Frame Allocator");
+  DEBUG_NEWLINE();
+  DEBUG_STRING("Machine Memory: ");
+  DEBUG_INT(TOTAL_MACHINE_RAM);
+  DEBUG_NEWLINE();
+  DEBUG_STRING("HYPERVISOR_START_ADDR: ");
+  DEBUG_INT(HYPERVISOR_START_ADDR);
+  DEBUG_NEWLINE();
+  DEBUG_STRING("HYPERVISOR_SIZE: ");
+  DEBUG_INT(HYPERVISOR_SIZE);
+  DEBUG_NEWLINE();
+  DEBUG_STRING("FRAME_TABLE_CHUNK_SIZE: ");
+  DEBUG_INT(FRAME_TABLE_CHUNK_SIZE);
+  DEBUG_NEWLINE();
+  DEBUG_STRING("Number of Frame Table entries: ");
+  DEBUG_INT(FRAME_TABLE_ENTRIES);
+  DEBUG_NEWLINE();
+  DEBUG_STRING("Frame table address: ");
+  DEBUG_INT((u32int)frameTable);
+  DEBUG_NEWLINE();
+  DEBUG_STRING("Frame table size (Bytes):");
+  DEBUG_INT(FRAME_TABLE_ENTRIES);
+  DEBUG_NEWLINE();
 #endif
 
   memset(frameTable, 0, (FRAME_TABLE_ENTRIES/8));
@@ -367,11 +365,11 @@ u8int isFrameUsed_offset(u32int offset)
   if(offset > FRAME_TABLE_ENTRIES)
   {
 #ifdef FRAME_ALLOC_DBG
-    serial_putstring("Error offset into frame table out of bounds.  Offset is:");
-    serial_putint(offset);
-    serial_putstring(", but max value is: ");
-    serial_putint(FRAME_TABLE_ENTRIES);
-    serial_newline();
+    DEBUG_STRING("Error offset into frame table out of bounds.  Offset is:");
+    DEBUG_INT(offset);
+    DEBUG_STRING(", but max value is: ");
+    DEBUG_INT(FRAME_TABLE_ENTRIES);
+    DEBUG_NEWLINE();
 #endif
 
     //say that the frame is inUse
@@ -402,11 +400,11 @@ u8int markFrameUsed_offset(u32int offset)
   if(offset > FRAME_TABLE_ENTRIES)
   {
 #ifdef FRAME_ALLOC_DBG
-    serial_putstring("Error offset into frame table out of bounds.  Offset is:");
-    serial_putint(offset);
-    serial_putstring(", but max value is: ");
-    serial_putint(FRAME_TABLE_ENTRIES);
-    serial_newline();
+    DEBUG_STRING("Error offset into frame table out of bounds.  Offset is:");
+    DEBUG_INT(offset);
+    DEBUG_STRING(", but max value is: ");
+    DEBUG_INT(FRAME_TABLE_ENTRIES);
+    DEBUG_NEWLINE();
 #endif
 
     return 1; //fail
@@ -437,11 +435,11 @@ u8int freeFrame_offset(u32int offset)
   if(offset > FRAME_TABLE_ENTRIES)
   {
 #ifdef FRAME_ALLOC_DBG
-    serial_putstring("Error offset into frame table out of bounds.  Offset is:");
-    serial_putint(offset);
-    serial_putstring(", but max value is: ");
-    serial_putint(FRAME_TABLE_ENTRIES);
-    serial_newline();
+    DEBUG_STRING("Error offset into frame table out of bounds.  Offset is:");
+    DEBUG_INT(offset);
+    DEBUG_STRING(", but max value is: ");
+    DEBUG_INT(FRAME_TABLE_ENTRIES);
+    DEBUG_NEWLINE();
 #endif
 
     return 1; //fail

@@ -4,7 +4,6 @@
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/sdma.h"
-#include "vm/omap35xx/serial.h"
 
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 
@@ -24,11 +23,11 @@ void initSdma()
   {
     memset((void*)sdma, 0x0, sizeof(struct Sdma));
 #ifdef SDMA_DBG
-    serial_putstring("Initializing Sdma at 0x");
-    serial_putint((u32int)sdma);
-    serial_putstring(" size ");
-    serial_putint(sizeof(struct Sdma));
-    serial_newline();
+    DEBUG_STRING("Initializing Sdma at 0x");
+    DEBUG_INT((u32int)sdma);
+    DEBUG_STRING(" size ");
+    DEBUG_INT(sizeof(struct Sdma));
+    DEBUG_NEWLINE();
 #endif
   }
 
@@ -109,9 +108,9 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int address)
     case SDMA_CAPS_4:
     case SDMA_GCR:
       dumpGuestContext(getGuestContext());
-      serial_putstring("loadSdma reg ");
-      serial_putint_nozeros(regOffs);
-      serial_newline();
+      DEBUG_STRING("loadSdma reg ");
+      DEBUG_INT_NOZEROS(regOffs);
+      DEBUG_NEWLINE();
       DIE_NOW(0, "SDMA: load from unimplemented register.");
       break;
   } // switch ends
@@ -119,14 +118,14 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int address)
   if (found)
   {
 #ifdef SDMA_DBG
-    serial_putstring(dev->deviceName);
-    serial_putstring(": load from address ");
-    serial_putint(address);
-    serial_putstring(" reg ");
-    serial_putint_nozeros(regOffs);
-    serial_putstring(" value ");
-    serial_putint(value);
-    serial_newline(); 
+    DEBUG_STRING(dev->deviceName);
+    DEBUG_STRING(": load from address ");
+    DEBUG_INT(address);
+    DEBUG_STRING(" reg ");
+    DEBUG_INT_NOZEROS(regOffs);
+    DEBUG_STRING(" value ");
+    DEBUG_INT(value);
+    DEBUG_NEWLINE(); 
 #endif
     return value;
   }
@@ -154,20 +153,20 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int address)
     case SDMA_CCFNi:
     case SDMA_COLORi:
       dumpGuestContext(getGuestContext());
-      serial_putstring("loadSdma indexed reg ");
-      serial_putint(indexedRegOffs+0x80);
-      serial_putstring(" reg ");
-      serial_putint(regOffs);
-      serial_newline();
+      DEBUG_STRING("loadSdma indexed reg ");
+      DEBUG_INT(indexedRegOffs+0x80);
+      DEBUG_STRING(" reg ");
+      DEBUG_INT(regOffs);
+      DEBUG_NEWLINE();
       DIE_NOW(0, "SDMA: load from unimplemented register.");
       break;
     default:
       dumpGuestContext(getGuestContext());
-      serial_putstring("loadSdma indexed reg ");
-      serial_putint(indexedRegOffs+0x80);
-      serial_putstring(" reg ");
-      serial_putint(regOffs);
-      serial_newline();
+      DEBUG_STRING("loadSdma indexed reg ");
+      DEBUG_INT(indexedRegOffs+0x80);
+      DEBUG_STRING(" reg ");
+      DEBUG_INT(regOffs);
+      DEBUG_NEWLINE();
       DIE_NOW(0, "SDMA: load from undefined register.");
   }
 }
@@ -183,14 +182,14 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   bool found = FALSE;
 
 #ifdef SDMA_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(": store to address ");
-  serial_putint(address);
-  serial_putstring(" reg ");
-  serial_putint_nozeros(regOffs);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline(); 
+  DEBUG_STRING(dev->deviceName);
+  DEBUG_STRING(": store to address ");
+  DEBUG_INT(address);
+  DEBUG_STRING(" reg ");
+  DEBUG_INT_NOZEROS(regOffs);
+  DEBUG_STRING(" value ");
+  DEBUG_INT(value);
+  DEBUG_NEWLINE(); 
 #endif
   switch (regOffs)
   {
@@ -220,11 +219,11 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case SDMA_CAPS_3:
     case SDMA_CAPS_4:
       dumpGuestContext(getGuestContext());
-      serial_putstring("storeSdma reg ");
-      serial_putint_nozeros(regOffs);
-      serial_putstring(" value ");
-      serial_putint(value);
-      serial_newline();
+      DEBUG_STRING("storeSdma reg ");
+      DEBUG_INT_NOZEROS(regOffs);
+      DEBUG_STRING(" value ");
+      DEBUG_INT(value);
+      DEBUG_NEWLINE();
       DIE_NOW(0, "SDMA: store to unimplemented register.");
       break;
   } // switch ends
@@ -242,10 +241,10 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case SDMA_CCRi:
       if ((value & SDMA_CCRi_ENABLE) == SDMA_CCRi_ENABLE)
       {
-        serial_putstring(dev->deviceName);
-        serial_putstring(": Warning - enabling channel ");
-        serial_putint(channelIndex);
-        serial_newline();
+        DEBUG_STRING(dev->deviceName);
+        DEBUG_STRING(": Warning - enabling channel ");
+        DEBUG_INT(channelIndex);
+        DEBUG_NEWLINE();
       }
       sdma->chIndexedRegs[channelIndex].ccr = value;
       break;
@@ -287,8 +286,8 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       break;
     case SDMA_CSACi:
 #ifdef SDMA_DBG
-      serial_putstring("SDMA: WARNING: store to R/O register SDMA_CSACi");
-      serial_newline();
+      DEBUG_STRING("SDMA: WARNING: store to R/O register SDMA_CSACi");
+      DEBUG_NEWLINE();
 #endif
       break; 
     case SDMA_CDACi:
@@ -296,14 +295,14 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       break;
     case SDMA_CCENi:
 #ifdef SDMA_DBG
-      serial_putstring("SDMA: WARNING: store to R/O register SDMA_CCENi");
-      serial_newline();
+      DEBUG_STRING("SDMA: WARNING: store to R/O register SDMA_CCENi");
+      DEBUG_NEWLINE();
 #endif
       break; 
     case SDMA_CCFNi:
 #ifdef SDMA_DBG
-      serial_putstring("SDMA: WARNING: store to R/O register SDMA_CCFNi");
-      serial_newline();
+      DEBUG_STRING("SDMA: WARNING: store to R/O register SDMA_CCFNi");
+      DEBUG_NEWLINE();
 #endif
       break; 
     case SDMA_COLORi:
@@ -311,13 +310,13 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       break;
     default:
       dumpGuestContext(getGuestContext());
-      serial_putstring("storeSdma indexed reg ");
-      serial_putint_nozeros(indexedRegOffs+0x80);
-      serial_putstring(" reg ");
-      serial_putint(regOffs);
-      serial_putstring(" value ");
-      serial_putint(value);
-      serial_newline();
+      DEBUG_STRING("storeSdma indexed reg ");
+      DEBUG_INT_NOZEROS(indexedRegOffs+0x80);
+      DEBUG_STRING(" reg ");
+      DEBUG_INT(regOffs);
+      DEBUG_STRING(" value ");
+      DEBUG_INT(value);
+      DEBUG_NEWLINE();
       DIE_NOW(0, "SDMA: store to undefined register.");
   }
 }

@@ -1,18 +1,12 @@
 #include "common/debug.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/dataProcessInstr.h"
 
 
 void invalidDataProcTrap(char * msg, GCONTXT * gc)
 {
-  serial_putint(gc->endOfBlockInstr);
-  serial_putstring(" @ ");
-  serial_putint(gc->R15);
-  serial_putstring(" should not have trapped!");
-  serial_newline();
+  printf("%08x @ %08x should not have trapped!\n", gc->endOfBlockInstr, gc->R15);
   DIE_NOW(gc, msg);
 }
 
@@ -29,11 +23,8 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
   }
 
 #ifdef DATA_PROC_TRACE
-  serial_putstring(instrString);
-  serial_putint(instr);
-  serial_putstring(" @ ");
-  serial_putint(context->R15);
-  serial_newline();
+  printf(instrString);
+  printf(" %08x @ %08x\n", instr, context->R15);
 #endif
   
   int instrCC = (instr >> 28) & 0xF;
@@ -144,8 +135,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
       }
       else
       {
-        dumpGuestContext(context);
-        DIE_NOW(0, "unimplemented arithLogicOp set flags case");
+        DIE_NOW(context, "unimplemented arithLogicOp set flags case");
       }
     }
 

@@ -1,7 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
 
-#include "vm/omap35xx/serial.h"
 
 
 u32int heapStart;
@@ -18,12 +17,12 @@ memchunkListElem * chunkListRoot;
 void mallocInit(u32int startAddr, u32int size)
 {
 #ifdef MALLOC_DEBUG
-  serial_putstring("mallocInit(");
-  serial_putint_nozeros(startAddr);
-  serial_putstring(", ");
-  serial_putint_nozeros(size);
-  serial_putstring(");");
-  serial_newline();
+  DEBUG_STRING("mallocInit(");
+  DEBUG_INT_NOZEROS(startAddr);
+  DEBUG_STRING(", ");
+  DEBUG_INT_NOZEROS(size);
+  DEBUG_STRING(");");
+  DEBUG_NEWLINE();
 #endif
 
   heapStart = startAddr;
@@ -128,10 +127,10 @@ void * memset(void * dest, u32int c, u32int count)
 u32int mallocBytes(u32int size)
 {
 #ifdef MALLOC_DEBUG
-  serial_putstring("mallocBytes(");
-  serial_putint_nozeros(size);
-  serial_putstring(");");
-  serial_newline();
+  DEBUG_STRING("mallocBytes(");
+  DEBUG_INT_NOZEROS(size);
+  DEBUG_STRING(");");
+  DEBUG_NEWLINE();
 #endif
 
   if ((size & 0x3) != 0)
@@ -163,25 +162,25 @@ void dumpMallocs()
 {
   u32int i = 0;
   memchunkListElem * listPtr = chunkListRoot;
-  serial_putstring("Dumping malloc internal structures:");
-  serial_putstring("***********************************");
-  serial_newline();
+  DEBUG_STRING("Dumping malloc internal structures:");
+  DEBUG_STRING("***********************************");
+  DEBUG_NEWLINE();
   for (i = 0; i < nrOfChunksAllocd; i++)
   {
-    serial_putstring("Chunk ");
-    serial_putint_nozeros(i);
-    serial_putstring(": prev = ");
-    serial_putint((u32int)listPtr->prevChunk);
-    serial_putstring("; next = ");
-    serial_putint((u32int)listPtr->nextChunk);
-    serial_newline();
-    serial_putstring("Start address: ");
-    serial_putint(listPtr->chunk.startAddress);
-    serial_putstring("; Size: ");
-    serial_putint(listPtr->chunk.size);
-    serial_newline();
-    serial_putstring("-----------------------------------");
-    serial_newline();
+    DEBUG_STRING("Chunk ");
+    DEBUG_INT_NOZEROS(i);
+    DEBUG_STRING(": prev = ");
+    DEBUG_INT((u32int)listPtr->prevChunk);
+    DEBUG_STRING("; next = ");
+    DEBUG_INT((u32int)listPtr->nextChunk);
+    DEBUG_NEWLINE();
+    DEBUG_STRING("Start address: ");
+    DEBUG_INT(listPtr->chunk.startAddress);
+    DEBUG_STRING("; Size: ");
+    DEBUG_INT(listPtr->chunk.size);
+    DEBUG_NEWLINE();
+    DEBUG_STRING("-----------------------------------");
+    DEBUG_NEWLINE();
     listPtr = listPtr->nextChunk;
   }
   DIE_NOW(0, "done");

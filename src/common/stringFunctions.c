@@ -15,7 +15,7 @@ int stringncmp(char * str1, char * str2, int n)
   return 0;
 }
 
-ulong stringToLong(char * str)
+u32int strtoi(char * str)
 {
   int  length = 8;
   int  bitsInLong = 32;
