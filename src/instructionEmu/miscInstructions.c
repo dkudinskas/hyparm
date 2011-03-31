@@ -329,8 +329,16 @@ u32int rbitInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* usbfxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "usbfx PCFunct unfinished\n");
-  return 0;
+  //This cannot be a dangerous function see ARM ARM p. 778
+  u32int instruction = *instructionAddr;
+  if((instruction & 0xF) == 0xF || ((instruction>>12)&0xF)==0xF){
+    DIE_NOW(0, "ubfx PCFunct: with Rd or Rn == PC -> UNPREDICTABLE");
+  }
+  //Just copy the instruction
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instruction;
+
+  return currBlockCopyCacheAddr;
 }
 #endif
 
@@ -1264,8 +1272,18 @@ u32int sxtb16Instruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* sxtbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sxtb PCFunct unfinished\n");
-  return 0;
+  u32int instruction = *instructionAddr;
+
+  if((instruction & 0xF)==0xF)
+  {
+    //ARM ARM p.752
+    DIE_NOW(0, "stxb PC: Rm = PC -> UNPREDICTABLE!");
+  }
+  //Always safe when not unpredictable
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instruction;
+
+  return currBlockCopyCacheAddr;
 }
 #endif
 
@@ -1279,8 +1297,18 @@ u32int sxtbInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* uxthPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uxth PCFunct unfinished\n");
-  return 0;
+  u32int instruction = *instructionAddr;
+
+  if((instruction & 0xF)==0xF)
+  {
+    //ARM ARM p.836
+    DIE_NOW(0, "uxth PC: Rm = PC -> UNPREDICTABLE!");
+  }
+  //Always safe when not unpredictable
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instruction;
+
+  return currBlockCopyCacheAddr;
 }
 #endif
 

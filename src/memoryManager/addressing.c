@@ -314,6 +314,25 @@ void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
             }
             else if (ptEntry->type == PAGE_TABLE)
             {
+              /*  Should be implemented correctly
+              u32int z=0;
+              pageTableDescriptor* domainPtEntry = (pageTableDescriptor*)&context->PT_os[y];
+              u32int baseAddr=domainPtEntry->addr;
+              u32int address2ndLvlDescr=0;
+              largeDescriptor* largePageDesc=0;
+              for(z=0;z<SECOND_LEVEL_PAGE_TABLE_ENTRIES;z++)
+              {
+                largePageDesc=(largeDescriptor*)((baseAddr<<8)+z)<<2;
+                if(largePageDesc->type== FAULT)
+                {
+                  //not used
+                  continue;
+                }else if(largePageDesc->type==LARGE_PAGE)
+                {
+                  //small or largePage Descriptor -> AP bits are at same place
+
+                }
+              }*/
               // ignore for now?
 #ifdef ADDRESSING_DEBUG
               serial_putstring("changeGuestDomainAccessControl: remap AP for page table entry ");

@@ -664,7 +664,6 @@ u32int* strdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
 
 u32int strdInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "strdInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int prePost = instr & 0x01000000;
@@ -678,7 +677,11 @@ u32int strdInstruction(GCONTXT * context)
   serial_putstring("STRD instruction: ");
   serial_putint(instr);
   serial_putstring(" @ PC=");
+# ifdef CONFIG_BLOCK_COPY
+  serial_putint(context->PCOfLastInstruction);
+# else
   serial_putint(context->R15);
+# endif
   serial_newline();
 #endif
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
@@ -686,9 +689,9 @@ u32int strdInstruction(GCONTXT * context)
   {
     // condition not met! allright, we're done here. next instruction...
     #ifdef CONFIG_BLOCK_COPY
-    return context->PCOfLastInstruction+4;
+      return context->PCOfLastInstruction+4;
     #else
-    return context->R15 + 4;
+      return context->R15 + 4;
     #endif
   }
   if ((regSrc % 2) == 1)
@@ -805,9 +808,9 @@ u32int strdInstruction(GCONTXT * context)
     storeGuestGPR(regDst, offsetAddress, context);
   }
   #ifdef CONFIG_BLOCK_COPY
-  return context->PCOfLastInstruction+4;
+    return context->PCOfLastInstruction+4;
   #else
-  return context->R15 + 4;
+    return context->R15 + 4;
   #endif
 }
 

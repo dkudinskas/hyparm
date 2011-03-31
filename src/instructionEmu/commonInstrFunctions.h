@@ -73,6 +73,16 @@ u32int zeroBits(u32int instruction, u32int startbit);
 u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * currBlockCopyCacheAddr, u32int reg  );
 #endif
 
+/* This function will process ImmRegRSR instructions see comment above implementation in c-file for further details*/
+#ifdef CONFIG_BLOCK_COPY
+u32int* standardImmRegRSR(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);
+#endif
+
+/* This function is similar to standardImmRegRSR but for instructions that do not have a destReg*/
+#ifdef CONFIG_BLOCK_COPY
+u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);
+#endif
+
 /* a function to evaluate if guest is in priviledge mode or user mode */
 bool guestInPrivMode(GCONTXT * context);
 

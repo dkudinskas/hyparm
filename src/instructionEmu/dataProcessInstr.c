@@ -160,55 +160,12 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
 #ifdef CONFIG_BLOCK_COPY
 u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  u32int instruction = *instructionAddr;
-  u32int destReg = (instruction>>12) & 0xF;
-  u32int instr2Copy = instruction;
-  //bit 25 set to 1 is immediate
-  bool immediate = ((instruction>>25) & 0b1)==0b1;
-
-  if(immediate)
-  {
-    if((instruction>>16 & 0xF) == 0xF)
-    {//Instruction must be replaced safe!
-
-      //Store PC in destReg
-      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
-
-      //Let instruction use destReg as inputRegister
-      instr2Copy=zeroBits(instruction, 16);
-      instr2Copy=instr2Copy | (destReg<<16);
-
-    }
-
-    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-    *(currBlockCopyCacheAddr++)=instr2Copy;
-
-    return currBlockCopyCacheAddr;
-
-  }
-  else //something with registers (register or register-shifted register
-  {
-    //register-shifted register => bit 4 == 1 and bit 7 == 0
-    bool shifted=((instruction>>4 & 0b1) == 0b1)&&((instruction>>7 & 0b1) == 0b0);
-    if(shifted)
-    {
-      //ARM ARM p.350
-      DIE_NOW(0,"andPCInstruction: register-shifted register cannot have PC as input!");
-    }
-    else
-    {
-      DIE_NOW(0,"andPCInstruction: register not implemented yet.");
-      //THIS must make use of reserved word!
-    }
-  }
-  DIE_NOW(0, "and PCFunct unfinished\n");
-  return 0;
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
 u32int andInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "andInstruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "Unimplemented AND trap");
 }
 /*********************************/
@@ -218,71 +175,7 @@ u32int andInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* rsbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  u32int instruction = *instructionAddr;
-  u32int destReg=(instruction>>12) & 0xF;
-  u32int instr2Copy = instruction;
-  bool immediate = (instruction >> 25 & 0b1) == 0b1;
-  bool replaceReg1 = FALSE;
-  bool replaceReg2 = FALSE;
-  if(immediate)
-  {
-    if((instruction>>16 & 0xF) == 0xF)
-    {
-      replaceReg1 = TRUE;
-    }
-  }
-  else
-  {
-    bool registerShifted = ((instruction>>4 & 0b1)==0b1) && ((instruction>>4 & 0b1)==0b0);
-    //Here we know it is register or register-shifted register
-    if(registerShifted)
-    {
-      DIE_NOW(0,"EORPC (register-shifted register) -> UNPREDICTABLE");
-    }
-    else
-    {
-      //eor (register)
-      if((instruction>>16 & 0xF) == 0xF)
-      {
-        replaceReg1 = TRUE;
-        if((instruction & 0xF) == destReg)
-        {
-          DIE_NOW(0,"EORPC:Register is replaced but one of srcReg == destReg");
-        }
-      }
-      if((instruction & 0xF) == 0xF)
-      {
-        replaceReg2 = TRUE;
-        if((instruction>>16 & 0xF) == destReg)
-        {
-          DIE_NOW(0,"EORPC:Register is replaced but one of srcReg == destReg");
-        }
-      }
-    }
-  }
-  if(replaceReg1 || replaceReg2){
-      //step 1 Copy PC (=instructionAddr2) to desReg
-      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
-      if(replaceReg1)
-      {
-        //Step 2 modify eorInstruction
-        //Clear PC source Register
-        instr2Copy=zeroBits(instruction, 16);
-        instr2Copy=instr2Copy | (destReg<<16);
-      }
-      if(replaceReg1)
-      {
-        //Step 2 modify eorInstruction
-        //Clear PC source Register
-        instr2Copy=zeroBits(instruction, 0);
-        instr2Copy=instr2Copy | (destReg);
-      }
-  }
-
-  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-  *(currBlockCopyCacheAddr++)=instr2Copy;
-
-  return currBlockCopyCacheAddr;
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -298,8 +191,7 @@ u32int rsbInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* rscPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "rsc PCFunct unfinished\n");
-  return 0;
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -315,37 +207,7 @@ u32int rscInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* subPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  //target register is not PC
-  u32int instruction=*instructionAddr;
-  u32int instr2=(instruction>>24) & 0x0F;
-  u32int instrbit4=(instruction>>4) & 0x1;
-  u32int instrbit7=(instruction>>7) & 0x1;
-  u32int destReg=(instruction>>12) & 0xF;
-  u32int instr2Copy=instruction;
-
-  if(instr2 == 0x02){//Sub instruction is SUB immediate
-    //Save PC in destReg
-    if((instruction>>16 & 0xF) == 0xF){
-      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
-
-      //Sub instruction will only be changed very little -> Rn is the only thing that has to be changed
-      instr2Copy=instruction & 0xFFF0FFFF; //set Rn to Rd
-      instr2Copy=instr2Copy | (destReg<<16);
-    }
-    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-    *(currBlockCopyCacheAddr++)=instr2Copy;
-
-    return currBlockCopyCacheAddr;//3 instructions are added!
-  }else{//Sub instruction is SUB with registers
-    if(instrbit4 == 1 && instrbit7==0){//SUB register-shifted register
-      DIE_NOW(0, "ADD (register-shifted register) is not implemented yet");
-    }else{//Sub register
-      DIE_NOW(0, "Add (register) is not implemented yet");
-    }
-  }
-
-  DIE_NOW(0, "bottom subPCInstruction reached without return\n");
-  return 0;
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -361,8 +223,7 @@ u32int subInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* sbcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sbc PCFunct unfinished\n");
-  return 0;
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -378,44 +239,7 @@ u32int sbcInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  //target register is not PC
-  u32int instruction=*instructionAddr;
-  u32int instr2=(instruction>>24) & 0x0F;
-  u32int instrbit4=(instruction>>4) & 0x1;
-  u32int instrbit7=(instruction>>7) & 0x1;
-  u32int destReg=(instruction>>12) & 0xF;
-  u32int instr2Copy=instruction;
-
-  if(instr2 == 0x02){//Add instruction is ADD immediate
-    //The real PC and the blockCopyCachePC are to far appart to solve it using a 12 bit immediate BUT
-    //We can only get here when Rn==PC && Rd!=PC
-    //=> We can first set Rd to value of PC and then perform Add{s}<c> <Rd>,<Rd>,<#const>
-    //save PC
-    if((instruction>>16 & 0xF)==0xF){
-      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
-
-      //Add instruction will only be changed very little -> Rn is the only thing that has to be changed
-      instr2Copy=instruction & 0xFFF0FFFF; //set Rn to Rd
-      instr2Copy=instr2Copy | (destReg<<16);
-    }
-
-
-    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-    *(currBlockCopyCacheAddr++)=instr2Copy;
-
-    return currBlockCopyCacheAddr;
-
-  }else{//Add instruction is ADD with registers
-    if(instrbit4 == 1 && instrbit7==0){//ADD register-shifted register
-      DIE_NOW(0, "ADD (register-shifted register) is not implemented yet (UNPREDICTABLE?)");
-    }else{//Add register
-      DIE_NOW(0, "Add (register) is not implemented yet");
-    }
-  }
-
-
-  DIE_NOW(0, "add PCFunct unfinished\n");
-  return 0;
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -431,8 +255,7 @@ u32int addInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* adcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "adc PCFunct unfinished\n");
-  return 0;
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -448,8 +271,7 @@ u32int adcInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* orrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "orr PCFunct unfinished\n");
-  return 0;
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -465,71 +287,7 @@ u32int orrInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* eorPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  u32int instruction = *instructionAddr;
-  u32int destReg=(instruction>>12) & 0xF;
-  u32int instr2Copy = instruction;
-  bool immediate = (instruction >> 25 & 0b1) == 0b1;
-  bool replaceReg1 = FALSE;
-  bool replaceReg2 = FALSE;
-  if(immediate)
-  {
-    if((instruction>>16 & 0xF) == 0xF)
-    {
-      replaceReg1 = TRUE;
-    }
-  }
-  else
-  {
-    bool registerShifted = ((instruction>>4 & 0b1)==0b1) && ((instruction>>4 & 0b1)==0b0);
-    //Here we know it is register or register-shifted register
-    if(registerShifted)
-    {
-      DIE_NOW(0,"EORPC (register-shifted register) -> UNPREDICTABLE");
-    }
-    else
-    {
-      //eor (register)
-      if((instruction>>16 & 0xF) == 0xF)
-      {
-        replaceReg1 = TRUE;
-        if((instruction & 0xF) == destReg)
-        {
-          DIE_NOW(0,"EORPC:Register is replaced but one of srcReg == destReg");
-        }
-      }
-      if((instruction & 0xF) == 0xF)
-      {
-        replaceReg2 = TRUE;
-        if((instruction>>16 & 0xF) == destReg)
-        {
-          DIE_NOW(0,"EORPC:Register is replaced but one of srcReg == destReg");
-        }
-      }
-    }
-  }
-  if(replaceReg1 || replaceReg2){
-      //step 1 Copy PC (=instructionAddr2) to desReg
-      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
-      if(replaceReg1)
-      {
-        //Step 2 modify eorInstruction
-        //Clear PC source Register
-        instr2Copy=zeroBits(instruction, 16);
-        instr2Copy=instr2Copy | (destReg<<16);
-      }
-      if(replaceReg1)
-      {
-        //Step 2 modify eorInstruction
-        //Clear PC source Register
-        instr2Copy=zeroBits(instruction, 0);
-        instr2Copy=instr2Copy | (destReg);
-      }
-  }
-
-  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-  *(currBlockCopyCacheAddr++)=instr2Copy;
-
-  return currBlockCopyCacheAddr;
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -545,46 +303,7 @@ u32int eorInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* bicPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  u32int instruction = *instructionAddr;
-  bool immediate = ((instruction >> 25 & 0b1 ) == 0b1);
-  u32int destReg = (instruction >> 12 ) & 0xF;
-  u32int instr2Copy = instruction;
-  if(immediate)
-  {//bic (immediate)
-
-    if(((instruction>>16)& 0xF) == 0xF )
-    { //srcReg is PC ->
-      //step 1 Copy PC (=instructionAddr2) to desReg
-      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
-
-      //Step 2 modify ldrInstruction
-      //Clear PC source Register
-      instr2Copy=zeroBits(instruction, 16);
-      instr2Copy=instr2Copy | (destReg<<16);
-    }
-
-    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-    *(currBlockCopyCacheAddr++)=instr2Copy;
-
-    return currBlockCopyCacheAddr;
-
-  }
-  else
-  {
-    bool registerShifted = (((instruction>>4 & 0b1) == 0b1) && ((instruction>>7 & 0b1) == 0b0));
-    if(registerShifted)
-    {//bic (register-shifted register)
-       //ARM ARM p 366
-      DIE_NOW(0,"bicPCInstruction: one of the src registers is PC -> UNPREDICTABLE");
-    }
-    else
-    { //bic (register)
-      DIE_NOW(0,"bicPCInstruction (register): not implemented yet");
-    }
-  }
-
-  DIE_NOW(0, "bic PCFunct unfinished\n");
-  return 0;
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -639,8 +358,48 @@ u32int movInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* mvnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mvn PCFunct unfinished\n");
-  return 0;
+  u32int instruction = *instructionAddr;
+  u32int destReg=(instruction>>12) & 0xF;
+  u32int instr2Copy = instruction;
+  bool immediate = (instruction >> 25 & 0b1) == 0b1;
+  bool replaceReg1 = FALSE;
+  if(immediate)
+  {
+    //Always safe do nothing replaceReg1 is already false
+  }
+  else
+  {
+    bool registerShifted = ((instruction>>4 & 0b1)==0b1) && ((instruction>>4 & 0b1)==0b0);
+    //Here we know it is register or register-shifted register
+    if(registerShifted)
+    {
+      DIE_NOW(0,"MVNPC (register-shifted register) -> UNPREDICTABLE");
+    }
+    else
+    {
+      //eor (register)
+      if((instruction & 0xF) == 0xF)
+      {
+        replaceReg1 = TRUE;
+      }
+    }
+  }
+  if(replaceReg1){
+      //step 1 Copy PC (=instructionAddr2) to desReg
+      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+      if(replaceReg1)
+      {
+        //Step 2 modify eorInstruction
+        //Clear PC source Register
+        instr2Copy=zeroBits(instruction, 0);
+        instr2Copy=instr2Copy | (destReg);
+      }
+  }
+
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+
+  return currBlockCopyCacheAddr;
 }
 #endif
 
@@ -788,59 +547,7 @@ u32int rorInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* tstPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  u32int instruction = *instructionAddr;
-  bool immediate = ((instruction>>25) & 0b1) == 0b1;
-  u32int regSrc1 = (instruction >> 16) & 0xF;
-  u32int regSrc2 = (instruction) & 0xF;
-  bool rnIsPC = (regSrc1) ==0xF; //see ARM ARM p.768
-  bool rmIsPC = (regSrc2) ==0xF;
-  u32int instr2Copy=instruction;
-  u32int scratchReg = 0;
-
-
-  if(immediate)
-  {
-    rmIsPC = 0;//Immediate doesn't use second register -> always false
-  }
-  else
-  {
-    if((((instruction>>4) & 0b1) == 0b1) && (((instruction>>7) & 0b1) == 0b0)) //register-shifted register
-    {
-      DIE_NOW(0,"tstPCFunct: tst(register-shifted register) cannot have PC as source -> UNPREDICTABLE ");
-    }
-  }
-
-  if(rnIsPC || rmIsPC)
-  { //Instruction has to be changed to a PC safe instructionstream.
-    serial_putstring("instruction = ");
-    serial_putint(instruction);
-    serial_newline();
-    DIE_NOW(0,"tstPC: this part is not tested.");
-    scratchReg = findUnusedRegister(regSrc1, regSrc2, -1);
-    //Backup scratchReg
-    currBlockCopyCacheAddr = backupRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-    if(rnIsPC)
-    {
-      instr2Copy = zeroBits(instr2Copy, 16);
-      instr2Copy = instr2Copy | scratchReg<<16;
-    }
-    if(rmIsPC)
-    {
-      instr2Copy = zeroBits(instr2Copy, 0);
-      instr2Copy = instr2Copy | scratchReg;
-    }
-  }
-
-  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-  *(currBlockCopyCacheAddr++)=instr2Copy;
-
-  if(rnIsPC || rmIsPC)
-  {
-    //restore scratchReg
-    currBlockCopyCacheAddr = restoreRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-  }
-
-  return currBlockCopyCacheAddr;
+  return standardImmRegRSRNoDest(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -856,8 +563,7 @@ u32int tstInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* teqPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "teq PCFunct unfinished\n");
-  return 0;
+  return standardImmRegRSRNoDest(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -874,52 +580,7 @@ u32int teqInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  //ARM ARM p.392 and further:
-  //CMP Rs <> PC otherwise unpredictable
-  //If immediate only check Rn (bits 16-19 => srcReg1) else also check Rm (bits 0-3 => srcReg2)
-  u32int instruction = *instructionAddr;
-  u32int srcReg1 = (instruction >> 16) & 0xF;
-  u32int srcReg2 = (instruction) & 0xF;
-  bool immediate = ((instruction >> 24) & 0xF) == 0x3;
-  //srcReg1 must always be checked
-  bool replaceReg1 = (srcReg1 == 0xF);
-  bool replaceReg2 = 0;//default false
-  u32int scratchRegister = 0;//This only needs to set if register must be replaced
-  u32int instr2Copy = instruction;
-  if(!immediate) //It is not an immediate instruction and thus srcReg2 must also be checked
-  {
-    replaceReg2=(srcReg2 == 0xF);
-  }
-  if(replaceReg1 || replaceReg2)
-  { //there is a register that must be replaced -> backup scratchregister & move PC to scratchRegister
-    //backup scratchregister = str
-    DIE_NOW(0,"cmpPCInstruction: This isn't validated yet");
-    scratchRegister = findUnusedRegister(srcReg1,srcReg2,-1);//Only 2 registers -> use negative value for 3th register
-    currBlockCopyCacheAddr=backupRegister(scratchRegister, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-    //MovePC to scratchRegister
-    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr, scratchRegister);
-  }
-  //Modify instruction & copy
-  if(replaceReg1)
-  {// srcReg1 Must be replaced
-    instr2Copy=instr2Copy & 0xFFF0FFFF;
-    instr2Copy=instr2Copy | (scratchRegister<<16);
-  }
-  if(replaceReg2)
-  {// srcReg2 Must be replaced
-    instr2Copy=instr2Copy & 0xFFFFFFF0;
-    instr2Copy=instr2Copy | (scratchRegister);
-  }
-  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-  *(currBlockCopyCacheAddr++)=instr2Copy;
-
-  //Restore scratchRegister if a register was replaced
-  if(replaceReg1 || replaceReg2)
-  {
-    currBlockCopyCacheAddr=restoreRegister(scratchRegister, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-  }
-
-  return currBlockCopyCacheAddr;
+  return standardImmRegRSRNoDest(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 
@@ -935,8 +596,7 @@ u32int cmpInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* cmnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "cmn PCFunct unfinished\n");
-  return 0;
+  return standardImmRegRSRNoDest(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
 #endif
 

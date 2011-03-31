@@ -66,6 +66,176 @@ u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * cur
   return currBlockCopyCacheAddr;
 }
 #endif
+#ifdef CONFIG_BLOCK_COPY
+/*
+ * standardImmRegRSR is a function that is used for instructions that have 3 flavors:
+ *     -(immediate)       <=> bit 25 == 1
+ *     -(register-shifted register) <=> bit25 == 0 and bit7 == 0 and bit4 == 1
+ *     -(register)        <=> bit 25 == 0 and not  register-shifted register (bit4 == 0)
+ *
+ * It will make the instruction PC safe if and only if
+ *     For the register-shifted register flavor Rn,Rm,Rd and Rs cannot be PC -> UNPREDICTABLE
+ *     The immediate flavor has only 1 source register (bits 16-19)
+ *     Register flavor has 2 source registers (bits 16-19) and (bits 0-3)
+ *     List of instructions: ADD, ADC, AND, BIC, EOR, MVN, ORR RSB, RSC, SBC, SUB, TEQ, TST
+ *     MVN is a special case because one of the source register is set to 0000 -> only a small
+ *     inconvenience when destReg = R0 but it can be taken care of.
+ */
+u32int* standardImmRegRSR(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  //target register is not PC
+  u32int instruction=*instructionAddr;
+  bool immediate = (instruction>>25 & 0b1) == 0b1;
+  bool registerShifted = (((instruction>>4) & 0b1)==0b1) && (((instruction>>7) & 0b1)==0b0);
+  u32int srcReg1 = instruction>>16 & 0xF;
+  u32int srcReg2 = instruction & 0xF;
+  u32int destReg = instruction>>12 & 0xF;
+  bool replaceReg1 = FALSE;
+  bool replaceReg2 = FALSE;
+  u32int instr2Copy=instruction;
+
+  if(immediate){
+    /* Immediate -> only check regSrc1 */
+    if(srcReg1 == 0xF)
+    {
+      replaceReg1 = TRUE;
+    }
+
+  }else{
+    /* Not the immediate flavor => RSR of ordinary register flavor */
+    if(registerShifted){
+      DIE_NOW(0, "standardImmRegRSR (register-shifted register) with PC is UNPREDICTABLE!");
+    }else{
+      /* ordinary register flavor-> check regSrc1 & regSrc2 */
+      if(srcReg1 == 0xF)
+      {
+        replaceReg1 = TRUE;
+      }
+      if(srcReg2 == 0xF)
+      {
+        replaceReg2 = TRUE;
+      }
+    }
+  }
+  if(replaceReg1 || replaceReg2)
+  {
+    /* Rd should not be used as input.  srcReg2 is part of the immediate value if it is a immediate flavor */
+    if(srcReg1 == destReg || ( (!immediate) && srcReg2 == destReg ) )
+    {
+      /* Some information before crashing that can be useful to determine if this is indeed the way to go.*/
+      serial_putstring("instruction = ");
+      serial_putint(instruction);
+      serial_newline();
+      serial_putstring("immediate = ");
+      serial_putint(immediate);
+      serial_newline();
+      serial_putstring("srcReg1 = ");
+      serial_putint(srcReg1);
+      serial_newline();
+      serial_putstring("srcReg2 = ");
+      serial_putint(srcReg2);
+      serial_newline();
+      serial_putstring("destReg = ");
+      serial_putint(destReg);
+      serial_newline();
+      DIE_NOW(0, "standardImmRegRSR special care should be taken it is not possible to use destReg");
+      /*
+       *  Not sure if this can occur.  If it occurs our usual trick won't work.
+       *  It can still be solved using a scratch register.
+       *  An example of the scratch register trick can be seen in tstPCInstruction
+       *  So just place backup-scratch-register-instruction, put-PC-in-scratchregister-instruction, place modified instruction
+       *  place restore-scratch-register-instruction
+       *  THIS SHOULD BE DONE Inside this if-statement and this if-clause should return
+       */
+
+      return 0; /* Inpossible to flow through because last instruction is restore sratch-register*/
+    }
+
+    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+
+    if(replaceReg1)
+    {
+      /* Add instruction will only be changed very little -> Rn is the only thing that has to be changed */
+      instr2Copy=instr2Copy & 0xFFF0FFFF; //set Rn to Rd
+      instr2Copy=instr2Copy | (destReg<<16);
+    }
+    if(replaceReg2)
+    {
+      instr2Copy=instr2Copy & 0xFFFFFFF0;//set Rm to Rd
+      instr2Copy=instr2Copy | (destReg);
+    }
+  }
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+
+  return currBlockCopyCacheAddr;
+}
+#endif
+#ifdef CONFIG_BLOCK_COPY
+/*
+ * Similar to standardImmRegRSR but there is no destination register which makes it
+ * impossible to use the same trick.  A scratch register is needed.
+ * List of instructions: CMN, CMP, TEQ, TST
+ */
+u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  u32int instruction = *instructionAddr;
+  bool immediate = ((instruction>>25) & 0b1) == 0b1;
+  bool registerShifted =(((instruction>>4) & 0b1) == 0b1) && (((instruction>>7) & 0b1) == 0b0);
+  u32int regSrc1 = (instruction >> 16) & 0xF;
+  u32int regSrc2 = (instruction) & 0xF;
+  bool rnIsPC = (regSrc1) ==0xF; /* see ARM ARM p.768 */
+  bool rmIsPC = (regSrc2) ==0xF;
+  u32int instr2Copy=instruction;
+  u32int scratchReg = 0;
+
+
+  if(immediate)
+  {
+    rmIsPC = 0;/* Immediate doesn't use second register -> always false */
+  }
+  else
+  {
+    if(registerShifted) /* register-shifted register */
+    {
+      DIE_NOW(0,"tstPCFunct: tst(register-shifted register) cannot have PC as source -> UNPREDICTABLE ");
+    }
+    /* if ordinary register flavor than rnIsPC & rmIsPC are already set correctly */
+  }
+
+  if(rnIsPC || rmIsPC)
+  { /*Instruction has to be changed to a PC safe instructionstream. */
+    serial_putstring("instruction = ");
+    serial_putint(instruction);
+    serial_newline();
+    DIE_NOW(0,"standardImmRegRSRNoDest: this part is not tested.");
+    scratchReg = findUnusedRegister(regSrc1, regSrc2, -1);
+    /* place 'Backup scratchReg' instruction */
+    currBlockCopyCacheAddr = backupRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+    if(rnIsPC)
+    {
+      instr2Copy = zeroBits(instr2Copy, 16);
+      instr2Copy = instr2Copy | scratchReg<<16;
+    }
+    if(rmIsPC)
+    {
+      instr2Copy = zeroBits(instr2Copy, 0);
+      instr2Copy = instr2Copy | scratchReg;
+    }
+  }
+
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instr2Copy;
+
+  if(rnIsPC || rmIsPC)
+  {
+    /* place 'restore scratchReg' instruction */
+    currBlockCopyCacheAddr = restoreRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+  }
+
+  return currBlockCopyCacheAddr;
+}
+#endif
 
 bool guestInPrivMode(GCONTXT * context)
 {
