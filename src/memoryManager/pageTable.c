@@ -75,7 +75,7 @@ descriptor* createHypervisorPageTable()
   //1:1 Map the entire of physical memory
 
   //small page map the first MB of mem so we can best protect the bootstrap code from self modification
-  sectionMapMemory(hypervisorPtd, MEMORY_START_ADDR, (HYPERVISOR_START_ADDR-1), GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
+  sectionMapMemory(hypervisorPtd, MEMORY_START_ADDR, (HYPERVISOR_START_ADDR-1), GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000);
 
   setDomain(GUEST_ACCESS_DOMAIN, client);
 
@@ -1054,7 +1054,7 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
 #endif
 
       //Currently just map these, may need to correct this with something proper later
-      shadow->c = 0;
+      shadow->c = 1;
       shadow->b = 0;
       shadow->s = 0;
       shadow->tex = 0;
@@ -1521,7 +1521,7 @@ void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow)
     }
     /* End WARNING */
 
-    shadow->c = 0;
+    shadow->c = 1;
     shadow->b = 0;
     // since we map C and B as 0, and TEX remap is off, we must set
     // TEX bits correctly

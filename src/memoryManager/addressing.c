@@ -62,7 +62,6 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
 #ifdef ADDRESSING_DEBUG
     printf("initialiseGuestShadowPageTable: TTBR0 Linux identity mapping bootstrap, ignoring.\n");
 #endif
-    DIE_NOW(context, "initialiseGuestShadowPageTable");
     return;
   }
 

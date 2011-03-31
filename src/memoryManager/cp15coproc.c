@@ -148,6 +148,12 @@ void initCRB(CREG * crb)
   crb[i].value = 0;
   crb[i].valid = TRUE;
 
+  /* CP15ISB:
+   * Instruction Synchronization Barrier operation */
+  i = crbIndex(7, 0, 5, 4);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
   /* BPIALL:
    * invalidate entire branch predictor array, write-only */
   i = crbIndex(7, 0, 5, 6);
@@ -163,6 +169,12 @@ void initCRB(CREG * crb)
   /* DCCSW:
    * clean data cache line by set/way to PoC, write-only */
   i = crbIndex(7, 0, 10, 2);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* CP15DSB:
+   * Data Synchronization Barrier operation */
+  i = crbIndex(7, 0, 10, 4);
   crb[i].value = 0;
   crb[i].valid = TRUE;
 
@@ -424,6 +436,11 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // ICIMVAU: invalidate instruction caches by MVA to PoU
     printf("setCregVal: invalidate iCaches by MVA to PoC: %x\n", val);
   }
+  else if (CRn==7 && opc1==0 && CRm==5 && opc2==4)
+  {
+    // CP15DSB: Instruction Synchronization Barrier operation
+    printf("setCregVal: Instruction Synchronization Barrier operation\n");
+  }
   else if (CRn==7 && opc1==0 && CRm==5 && opc2==6)
   {
     // BPIALL: invalidate entire branch predictor array
@@ -453,6 +470,11 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   {
     // DCCSW: clean data cache line by set/way to PoC 
     printf("setCregVal: clean Dcache line, set/way to PoC: %x\n", val);
+  }
+  else if (CRn==7 && opc1==0 && CRm==10 && opc2==4)
+  {
+    // CP15DSB: Data Synchronization Barrier operation
+    printf("setCregVal: Data Synchronization Barrier operation\n");
   }
   else if (CRn==8 && opc1==0 && CRm==5 && opc2==0)
   {
