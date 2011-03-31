@@ -95,11 +95,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
   }
   else
   {
-    DEBUG_STRING("LoadStore @ ");
-    DEBUG_INT(context->R15);
-    DEBUG_STRING(" instruction ");
-    DEBUG_INT(instr);
-    DEBUG_NEWLINE(); 
+    printf("LoadStore @ %08x instruction %08x\n", context->R15, instr);
     DIE_NOW(context, "Load/Store generic unimplemented\n");
   } 
   // restore end of block instruction 

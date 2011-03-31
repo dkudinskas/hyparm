@@ -131,6 +131,8 @@ void splitSectionToSmallPages(descriptor* ptd, u32int vAddr);
 u8int mapGuestDomain(u8int guestDomain);
 u32int mapAccessPermissionBits(u32int guestAP, u32int domain);
 void mapAPBitsSection(u32int vAddr, sectionDescriptor* guestNewSD, descriptor* shadowSD);
+void mapAPBitsPageTable(u32int vAddr, sectionDescriptor* guestNewSD, descriptor* shadowSD);
+
 
 void dumpPageTable(descriptor* ptd);
 void dumpSection(sectionDescriptor* sd);

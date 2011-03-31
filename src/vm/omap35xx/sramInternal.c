@@ -20,14 +20,9 @@ u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef SRAM_INTERNAL_DBG
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" load from physical address: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", virtual address: 0x");
-  DEBUG_INT(address);
-  DEBUG_STRING(" access size ");
-  DEBUG_INT((u32int)size);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(" load from physical address: %08x, virtual address: %08x aSize %x\n",
+          phyAddr, address, (u32int)size);
 #endif
 
   switch (size)
@@ -51,12 +46,11 @@ u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int address)
       break;
     }
     default:
-      DEBUG_STRING(dev->deviceName);
-      DEBUG_STRING(" load from physical address: 0x");
-      DEBUG_INT(phyAddr);
-      DEBUG_STRING(", virtual address: 0x");
-      DEBUG_INT(address);
-      DIE_NOW(0, " invalid access size.");
+    {
+      printf(dev->deviceName);
+      printf(" load from pAddr: %08x, vAddr: %08x\n", phyAddr, address);
+      DIE_NOW(gc, "Invalid access size.");
+    }
   }
   return val;
 }
@@ -69,16 +63,9 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int address, u32int va
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef SRAM_INTERNAL_DBG
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" store to physical address: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", virtual address: 0x");
-  DEBUG_INT(address);
-  DEBUG_STRING(" access size ");
-  DEBUG_INT((u32int)size);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(" store to pAddr: %08x, vAddr %08x, aSize %x, val %08x\n",
+          phyAddr, address, (u32int)size, value);
 #endif
 
   switch (size)
@@ -101,9 +88,9 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int address, u32int va
     {
       if ( (phyAddr >= 0x4020FFC8) && (phyAddr <= 0x4020FFFE) )
       {
-        DEBUG_STRING(dev->deviceName);
-        DEBUG_STRING(": register guest exception handler address, halfword access ");
-        DIE_NOW(0, "UNIMPLEMENTED");
+        printf(dev->deviceName);
+        printf(": register guest exception handler address, halfword access\n");
+        DIE_NOW(gc, "UNIMPLEMENTED");
       } 
       // store the value...
       u16int * memPtr = (u16int*)address;
@@ -114,9 +101,9 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int address, u32int va
     {
       if ( (phyAddr >= 0x4020FFC8) && (phyAddr <= 0x4020FFFF) )
       {
-        DEBUG_STRING(dev->deviceName);
-        DEBUG_STRING(": register guest exception handler address, byte access ");
-        DIE_NOW(0, "UNIMPLEMENTED");
+        printf(dev->deviceName);
+        printf(": register guest exception handler address, byte access\n");
+        DIE_NOW(gc, "UNIMPLEMENTED");
       } 
       // store the value...
       u8int * memPtr = (u8int*)address;
@@ -124,88 +111,70 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int address, u32int va
       break;
     }
     default:
-      DEBUG_STRING(dev->deviceName);
-      DEBUG_STRING(" store to physical address: 0x");
-      DEBUG_INT(phyAddr);
-      DEBUG_STRING(", virtual address: 0x");
-      DEBUG_INT(address);
-      DEBUG_STRING(" access size ");
-      DEBUG_INT((u32int)size);
-      DEBUG_STRING(" value ");
-      DEBUG_INT(value);
-      DEBUG_NEWLINE();
-      DIE_NOW(0, " invalid access size.");
+    {
+      printf(dev->deviceName);
+      printf(" store to pAddr %08x, vAddr %08x, aSize %x, val %08x\n",
+              phyAddr, address, (u32int)size, value);
+      DIE_NOW(gc, "Invalid access size.");
+    }
   }
 }
 
 void registerGuestHandler(GCONTXT* gc, u32int address, u32int value)
 {
 #ifdef SRAM_INTERNAL_DBG
-  DEBUG_STRING("INTERNAL SRAM: guest registering ");
+  printf("INTERNAL SRAM: guest registering ");
 #endif
   switch(address)
   {
     case UNDEFINED_EXCEPTION_ADDR:
 #ifdef SRAM_INTERNAL_DBG
-      DEBUG_STRING(" UNDEF handler at address ");
-      DEBUG_INT(value);
+      printf(" UNDEF handler at address %08x\n", value);
 #endif
       gc->guestUndefinedHandler = value;
       break;
     case SWI_EXCEPTION_ADDR:
 #ifdef SRAM_INTERNAL_DBG
-      DEBUG_STRING(" SWI handler at address ");
-      DEBUG_INT(value);
+      printf(" SWI handler at address %08x\n", value);
 #endif
       gc->guestSwiHandler = value;
       break;
     case PREFETCH_ABT_EXCEPTION_ADDR:
 #ifdef SRAM_INTERNAL_DBG
-      DEBUG_STRING(" P_ABT handler at address ");
-      DEBUG_INT(value);
+      printf(" P_ABT handler at address %08x\n", value);
 #endif
       gc->guestPrefAbortHandler = value;
       break;
     case DATA_ABT_EXCEPTION_ADDR:
 #ifdef SRAM_INTERNAL_DBG
-      DEBUG_STRING(" D_ABT handler at address ");
-      DEBUG_INT(value);
+      printf(" D_ABT handler at address %08x\n", value);
 #endif
       gc->guestDataAbortHandler = value;
       break;
     case UNUSED_EXCEPTION_ADDR:
 #ifdef SRAM_INTERNAL_DBG
-      DEBUG_STRING(" UNUSED handler at address ");
-      DEBUG_INT(value);
+      printf(" UNUSED handler at address %08x\n", value);
 #endif
       gc->guestUnusedHandler = value;
       break;
     case IRQ_EXCEPTION_ADDR:
 #ifdef SRAM_INTERNAL_DBG
-      DEBUG_STRING(" IRQ handler at address ");
-      DEBUG_INT(value);
+      printf(" IRQ handler at address %08x\n", value);
 #endif
       gc->guestIrqHandler = value;
       break;
     case FIQ_EXCEPTION_ADDR:
 #ifdef SRAM_INTERNAL_DBG
-      DEBUG_STRING(" FIQ handler at address ");
-      DEBUG_INT(value);
+      printf(" FIQ handler at address %08x\n", value);
 #endif
       gc->guestFiqHandler = value;
       break;
     default:
+    {
 #ifdef SRAM_INTERNAL_DBG
-      DEBUG_STRING(" a new handler instruction ");
-      DEBUG_INT(value);
-      DEBUG_STRING("  at ");
-      DEBUG_INT(address);
+      printf(" a new handler instruction %x at %08x\n", value, address);
 #endif
-      break;
-      // not an actual write to guest exception vector.. just let it go.
+    }
   } // switch ends
-#ifdef SRAM_INTERNAL_DBG
-  DEBUG_NEWLINE();
-#endif
 }
 

@@ -25,9 +25,7 @@ void initPrm(void)
   {
     memset((void*)prMan, 0x0, sizeof(struct PowerAndResetManager));
 #ifdef PRM_DBG
-    DEBUG_STRING("Initializing Power and reset manager at 0x");
-    DEBUG_INT((u32int)prMan);
-    DEBUG_NEWLINE();
+    printf("Initializing Power and reset manager at %08x\n", (u32int)prMan);
 #endif
   }
   
@@ -75,14 +73,9 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef PRM_DBG
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" load from physical address: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", vAddr: 0x");
-  DEBUG_INT(address);
-  DEBUG_STRING(" access size ");
-  DEBUG_INT((u32int)size);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(" load from physical address: %08x, vAddr %08x, aSize %x\n",
+         phyAddr, address, (u32int)size);
 #endif
 
   if (size != WORD)
@@ -129,18 +122,14 @@ u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
   if (reg == PRM_CLKSEL)
   {
 #ifdef PRM_DBG
-    DEBUG_STRING("loadClockControlPrm reg PRM_CLKSEL, val ");
-    DEBUG_INT(prMan->prmClkSelReg);
-    DEBUG_NEWLINE(); 
+    printf("loadClockControlPrm reg PRM_CLKSEL, val %08x\n", prMan->prmClkSelReg);
 #endif
     return prMan->prmClkSelReg;
   }
   else if (reg == PRM_CLKOUT_CTRL)
   {
 #ifdef PRM_DBG
-    DEBUG_STRING("loadClockControlPrm reg PRM_CLKOUT_CTRL, val ");
-    DEBUG_INT(prMan->prmClkoutCtrlReg);
-    DEBUG_NEWLINE(); 
+    printf("loadClockControlPrm reg PRM_CLKOUT_CTRL, val %08x\n", prMan->prmClkoutCtrlReg);
 #endif
     return prMan->prmClkoutCtrlReg;
   }
@@ -220,11 +209,7 @@ u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
       DIE_NOW(0, "loadGlobalRegPrm loading non existing register!");
   } // switch ends
 #ifdef PRM_DBG
-  DEBUG_STRING("loadGlobalRegPrm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadGlobalRegPrm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -252,11 +237,7 @@ u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
       DIE_NOW(0, "loadOcpSystemPrm loading non existing register!");
   } // switch ends
 #ifdef PRM_DBG
-  DEBUG_STRING("loadOcpSystemPrm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadOcpSystemPrm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -273,16 +254,9 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef PRM_DBG
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" store to pAddr: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", vAddr: 0x");
-  DEBUG_INT(address);
-  DEBUG_STRING(" aSize ");
-  DEBUG_INT((u32int)size);
-  DEBUG_STRING(" val ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(" store to pAddr: %08x, vAddr %08x, aSize %x, val %08x\n",
+         phyAddr, address, (u32int)size, value);
 #endif
 
   if (size != WORD)
@@ -314,14 +288,9 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case EMU_PRM:
     case NEON_PRM:
     case USBHOST_PRM:
-      DEBUG_STRING("Store to: ");
-      DEBUG_STRING(dev->deviceName);
-      DEBUG_STRING(" at address ");
-      DEBUG_INT(address);
-      DEBUG_STRING(" value ");
-      DEBUG_INT(value);
-      DEBUG_NEWLINE();
-      DEBUG_STRING(dev->deviceName);
+      printf("Store to: ");
+      printf(dev->deviceName);
+      printf(" at address %08x value %08x\n", address, value);
       DIE_NOW(0, " unimplemented.");
       break;
     default:
@@ -331,27 +300,17 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 
 void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
+  printf("Store to: ");
+  printf(dev->deviceName);
+  printf(" at address %08x value %08x\n", address, value);
   DIE_NOW(0, " storeClockControlPrm unimplemented.");
 }
 
 void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
+  printf("Store to: ");
+  printf(dev->deviceName);
+  printf(" at address %08x value %08x\n", address, value);
   DIE_NOW(0, " storeGlobalRegPrm unimplemented.");
 }
 
@@ -359,11 +318,8 @@ void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int valu
 {
   u32int reg = phyAddr - OCP_System_Reg_PRM;
 #ifdef PRM_DBG
-  DEBUG_STRING("storeOcpSystemPrm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE(); 
+  printf(dev->deviceName);
+  printf(": storeOcpSystemPrm: store reg %x value %08x\n", reg, value);
 #endif
   switch (reg)
   {

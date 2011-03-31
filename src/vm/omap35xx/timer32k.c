@@ -23,14 +23,9 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef TIMER32K_DBG
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" load from physical address: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", virtual address: 0x");
-  DEBUG_INT(address);
-  DEBUG_STRING(" access size ");
-  DEBUG_INT((u32int)size);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(" load from physical address: %08x, vAddr %08x, aSize %x\n",
+          phyAddr, address, (u32int)size);
 #endif
 
   if (size == WORD)
@@ -40,10 +35,8 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
     {
       val = timer32SysconfReg;
 #ifdef TIMER32K_DBG
-      DEBUG_STRING(dev->deviceName);
-      DEBUG_STRING(" load sys cfg value ");
-      DEBUG_INT(val);
-      DEBUG_NEWLINE();
+      printf(dev->deviceName);
+      printf(" load sys cfg value %x\n", val);
 #endif
     }
     else if (regAddr == REG_TIMER_32K_COUNTER)
@@ -53,30 +46,22 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
       val = *memPtr;
       val = val >> 12;
 #ifdef TIMER32K_DBG
-      DEBUG_STRING(dev->deviceName);
-      DEBUG_STRING(" load counter value ");
-      DEBUG_INT(val);
-      DEBUG_NEWLINE();
+      printf(dev->deviceName);
+      printf(" load counter value %x\n", val);
 #endif
     }
     else
     {
-      DEBUG_STRING(dev->deviceName);
-      DEBUG_STRING(" load from physical address: 0x");
-      DEBUG_INT(phyAddr);
-      DEBUG_STRING(", virtual address: 0x");
-      DEBUG_INT(address);
-      DIE_NOW(0, " invalid register!");
+      printf(dev->deviceName);
+      printf(" load from physical address: %08x, vAddr %08x\n", phyAddr, address);
+      DIE_NOW(gc, "Invalid register!");
     }
   }
   else
   {
-    DEBUG_STRING(dev->deviceName);
-    DEBUG_STRING(" load from physical address: 0x");
-    DEBUG_INT(phyAddr);
-    DEBUG_STRING(", virtual address: 0x");
-    DEBUG_INT(address);
-    DIE_NOW(0, " invalid register access size (non32bit)");
+    printf(dev->deviceName);
+    printf(" load from physical address: %08x, vAddr %08x\n", phyAddr, address);
+    DIE_NOW(gc, "Invalid register access size (non32bit)");
   }
   return val;
 }

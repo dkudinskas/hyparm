@@ -25,9 +25,7 @@ void initClockManager()
   {
     memset((void*)clockMan, 0x0, sizeof(struct ClockManager));
 #ifdef CLK_MAN_DBG
-    DEBUG_STRING("Initializing Clock manager at 0x");
-    DEBUG_INT((u32int)clockMan);
-    DEBUG_NEWLINE();
+    printf("Initializing Clock manager at %08x\n", (u32int)clockMan);
 #endif
   }
 
@@ -139,20 +137,14 @@ u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" load from pAddr: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", vAddr: 0x");
-  DEBUG_INT(address);
-  DEBUG_STRING(" access size ");
-  DEBUG_INT((u32int)size);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x, aSize %x\n", phyAddr, address, (u32int)size);
 #endif
 
   if (size != WORD)
   {
     // only word access allowed in these modules
-    DIE_NOW(0, "CM: invalid access size.");
+    DIE_NOW(gc, "CM: invalid access size.");
   }
 
   u32int val = 0;
@@ -203,7 +195,7 @@ u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int address)
       val = loadUsbHostCm(dev, address, phyAddr);
       break;
     default:
-      DIE_NOW(0, "CM: invalid base module.");
+      DIE_NOW(gc, "CM: invalid base module.");
   } // switch ends  
 
   return val;
@@ -244,15 +236,10 @@ u32int loadIva2Cm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStIva2Reg;
       break;
     default:
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "loadIva2Cm loading non existing register!");
+      DIE_NOW(getGuestContext(), "loadIva2Cm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("loadIva2Cm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadIva2Cm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -260,15 +247,9 @@ u32int loadIva2Cm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadOcpSystemCm(device * dev, u32int address, u32int phyAddr)
 {
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" load from pAddr: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", vAddr: 0x");
-  DEBUG_INT(address);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, " loadOcpSystemCm unimplemented.");
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x\n", phyAddr, address);
+  DIE_NOW(getGuestContext(), " loadOcpSystemCm unimplemented.");
   return 0;
 }
 
@@ -304,15 +285,10 @@ u32int loadMpuCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStMpuReg;
       break;
     default:
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "loadMpuCm loading non existing register!");
+      DIE_NOW(getGuestContext(), "loadMpuCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("loadMpuCm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadMpuCm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -366,15 +342,10 @@ u32int loadCoreCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStSTCore;
       break;
     default:
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "loadCoreCm loading non existing register!");
+      DIE_NOW(getGuestContext(), "loadCoreCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("loadCoreCm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadCoreCm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -408,15 +379,10 @@ u32int loadSgxCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStSt;
       break;
     default:
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "loadSgxCm loading non existing register!");
+      DIE_NOW(getGuestContext(), "loadSgxCm loading non existing register!\n");
   } // switch ends
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("loadSgxCm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadSgxCm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -445,23 +411,16 @@ u32int loadWkupCm(device * dev, u32int address, u32int phyAddr)
       break;
     case CM_CLKSTCTRL_WKUP:
 #ifdef CLK_MAN_DBG
-      DEBUG_STRING("CLKMAN: warn: wkupCm load from undocumented reg (offs 0x48)");
+      printf("CLKMAN: warn: wkupCm load from undocumented reg (offs 0x48)\n");
 #endif  
       val = 0;
       break;
     default:
-      DEBUG_STRING("loadWkupCm reg ");
-      DEBUG_INT_NOZEROS(reg);
-      DEBUG_NEWLINE();
-      dumpGuestContext(getGuestContext());      
-      DIE_NOW(0, "loadWkupCm loading non existing register!");
+      printf("loadWkupCm reg %x\n", reg);
+      DIE_NOW(getGuestContext(), "loadWkupCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("loadWkupCm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadWkupCm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -482,10 +441,7 @@ u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr)
     case CM_UNDOCUMENTED:
       val = 0;
 #ifdef CLK_MAN_DBG
-      DEBUG_STRING("loadWkupCm warning: loading from undocumented reg ");
-      DEBUG_INT_NOZEROS(reg);
-      DEBUG_STRING(" returning zero");
-      DEBUG_NEWLINE(); 
+      printf("loadClockControlCm warning: loading from undocumented reg %x returning zero\n", reg);
 #endif
       break; 
     case CM_IDLEST_CKGEN:
@@ -519,18 +475,11 @@ u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkoutCtrl; 
       break;
     default:
-      dumpGuestContext(getGuestContext());
-      DEBUG_STRING("loadClockControlCm reg ");
-      DEBUG_INT_NOZEROS(reg);
-      DEBUG_NEWLINE();
-      DIE_NOW(0, "loadClockControlCm loading non existing register!");
+      printf("loadClockControlCm reg %x\n", reg);
+      DIE_NOW(getGuestContext(), "loadClockControlCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("loadClockControlCm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadClockControlCm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -566,15 +515,10 @@ u32int loadDssCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStDss;
       break;
     default:
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "loadDssCm loading non existing register!");
+      DIE_NOW(getGuestContext(), "loadDssCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("loadDssCm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadDssCm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -611,15 +555,10 @@ u32int loadCamCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStCam;
       break;
     default:
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "loadCamCm loading non existing register!");
+      DIE_NOW(getGuestContext(), "loadCamCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("loadCamCm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadCamCm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -656,15 +595,10 @@ u32int loadPerCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStPer;
       break;
     default:
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "loadPerCm loading non existing register!");
+      DIE_NOW(getGuestContext(), "loadPerCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("loadPerCm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadPerCm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -692,61 +626,37 @@ u32int loadEmuCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkSel3Emu;
       break;
     default:
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "loadEmuCm loading non existing register!");
+      DIE_NOW(getGuestContext(), "loadEmuCm loading non existing register!");
   } // switch ends
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("loadEmuCm reg ");
-  DEBUG_INT_NOZEROS(reg);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE(); 
+  printf("loadEmuCm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
 
 u32int loadGlobalRegCm(device * dev, u32int address, u32int phyAddr)
 {
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" load from pAddr: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", vAddr: 0x");
-  DEBUG_INT(address);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_NEWLINE();
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, " loadGlobalRegCm unimplemented.");
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x\n", phyAddr, address);
+  DIE_NOW(getGuestContext(), " loadGlobalRegCm unimplemented.");
   return 0;
 }
 
 
 u32int loadNeonCm(device * dev, u32int address, u32int phyAddr)
 {
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" load from pAddr: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", vAddr: 0x");
-  DEBUG_INT(address);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, " loadNeonCm unimplemented.");
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x\n", phyAddr, address);
+  DIE_NOW(getGuestContext(), " loadNeonCm unimplemented.");
   return 0;
 }
 
 
 u32int loadUsbHostCm(device * dev, u32int address, u32int phyAddr)
 {
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" load from pAddr: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", vAddr: 0x");
-  DEBUG_INT(address);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, " loadUsbHostCm unimplemented.");
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x\n", phyAddr, address);
+  DIE_NOW(getGuestContext(), " loadUsbHostCm unimplemented.");
   return 0;
 }
 
@@ -762,16 +672,9 @@ void storeClockManager(device * dev, ACCESS_SIZE size, u32int address, u32int va
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" store to pAddr: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", vAddr: 0x");
-  DEBUG_INT(address);
-  DEBUG_STRING(" aSize ");
-  DEBUG_INT((u32int)size);
-  DEBUG_STRING(" val ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(" store to pAddr: %08x, vAddr %08x, aSize %x, val %08x\n",
+          phyAddr, address, (u32int)size, value);
 #endif
 
   
@@ -821,23 +724,15 @@ void storeClockManager(device * dev, ACCESS_SIZE size, u32int address, u32int va
       storeUsbHostCm(dev, address, phyAddr, value);
       break;
     default:
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "CM: store to invalid base module.");
+      DIE_NOW(getGuestContext(), "CM: store to invalid base module.");
   } // switch ends
 } // storeClockManager
 
 
 void storeIva2Cm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
   DIE_NOW(0, " storeIva2Cm unimplemented.");
   return;
 }
@@ -845,14 +740,8 @@ void storeIva2Cm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeOcpSystemCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
   DIE_NOW(0, " storeOcpSystemCm unimplemented.");
   return;
 }
@@ -860,14 +749,8 @@ void storeOcpSystemCm(device * dev, u32int address, u32int phyAddr, u32int value
 
 void storeMpuCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
   DIE_NOW(0, " storeMpuCm unimplemented.");
   return;
 }
@@ -876,14 +759,8 @@ void storeMpuCm(device * dev, u32int address, u32int phyAddr, u32int value)
 void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
 #endif
   u32int reg = phyAddr - CORE_CM;
   switch (reg)
@@ -923,14 +800,8 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeSgxCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
   DIE_NOW(0, " storeSgxCm unimplemented.");
   return;
 }
@@ -939,13 +810,8 @@ void storeSgxCm(device * dev, u32int address, u32int phyAddr, u32int value)
 void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
 #endif
   u32int reg = phyAddr - WKUP_CM;
   switch (reg)
@@ -959,38 +825,32 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
         if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_WDT2) == CM_FCLKEN_WKUP_WDT2) &&
              ((value & CM_FCLKEN_WKUP_WDT2) == 0) )
         {
-          DEBUG_STRING("CM: warn: cmWkup disabling watchdog timer 2 functional clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup disabling watchdog timer 2 functional clock.\n");
         }
         else if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_WDT2) == 0) &&
              ((value & CM_FCLKEN_WKUP_WDT2) == CM_FCLKEN_WKUP_WDT2) )
         {
-          DEBUG_STRING("CM: warn: cmWkup enabling watchdog timer 2 functional clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup enabling watchdog timer 2 functional clock.\n");
         }
         if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_GPIO1) == CM_FCLKEN_WKUP_GPIO1) &&
              ((value & CM_FCLKEN_WKUP_GPIO1) == 0) )
         {
-          DEBUG_STRING("CM: warn: cmWkup disabling gpio1 functional clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup disabling gpio1 functional clock.\n");
         }
         else if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_GPIO1) == 0) &&
              ((value & CM_FCLKEN_WKUP_GPIO1) == CM_FCLKEN_WKUP_GPIO1) )
         {
-          DEBUG_STRING("CM: warn: cmWkup enabling gpio1 functional clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup enabling gpio1 functional clock.\n");
         }
         if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_ENGPT1) == CM_FCLKEN_WKUP_ENGPT1) &&
              ((value & CM_FCLKEN_WKUP_ENGPT1) == 0) )
         {
-          DEBUG_STRING("CM: warn: cmWkup disabling gptimer1 functional clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup disabling gptimer1 functional clock.\n");
         }
         else if ( ((clockMan->cmFclkEnWkup & CM_FCLKEN_WKUP_ENGPT1) == 0) &&
              ((value & CM_FCLKEN_WKUP_ENGPT1) == CM_FCLKEN_WKUP_ENGPT1) )
         {
-          DEBUG_STRING("CM: warn: cmWkup enabling gptimer1 functional clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup enabling gptimer1 functional clock.\n");
         }
         clockMan->cmFclkEnWkup = value;
       }
@@ -1004,38 +864,32 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
         if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_WDT2) == CM_ICLKEN_WKUP_WDT2) &&
              ((value & CM_ICLKEN_WKUP_WDT2) == 0) )
         {
-          DEBUG_STRING("CM: warn: cmWkup disabling watchdog timer 2 interface clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup disabling watchdog timer 2 interface clock.\n");
         }
         else if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_WDT2) == 0) &&
              ((value & CM_ICLKEN_WKUP_WDT2) == CM_ICLKEN_WKUP_WDT2) )
         {
-          DEBUG_STRING("CM: warn: cmWkup enabling watchdog timer 2 interface clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup enabling watchdog timer 2 interface clock.\n");
         }
         if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_GPIO1) == CM_ICLKEN_WKUP_GPIO1) &&
              ((value & CM_ICLKEN_WKUP_GPIO1) == 0) )
         {
-          DEBUG_STRING("CM: warn: cmWkup disabling gpio1 interface clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup disabling gpio1 interface clock.\n");
         }
         else if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_GPIO1) == 0) &&
              ((value & CM_ICLKEN_WKUP_GPIO1) == CM_ICLKEN_WKUP_GPIO1) )
         {
-          DEBUG_STRING("CM: warn: cmWkup enabling gpio1 interface clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup enabling gpio1 interface clock.\n");
         }
         if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_ENGPT1) == CM_ICLKEN_WKUP_ENGPT1) &&
              ((value & CM_ICLKEN_WKUP_ENGPT1) == 0) )
         {
-          DEBUG_STRING("CM: warn: cmWkup disabling gptimer1 interface clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup disabling gptimer1 interface clock.\n");
         }
         else if ( ((clockMan->cmIclkEnWkup & CM_ICLKEN_WKUP_ENGPT1) == 0) &&
              ((value & CM_ICLKEN_WKUP_ENGPT1) == CM_ICLKEN_WKUP_ENGPT1) )
         {
-          DEBUG_STRING("CM: warn: cmWkup enabling gptimer1 interface clock.");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup enabling gptimer1 interface clock.\n");
         }
         clockMan->cmFclkEnWkup = value;
       }
@@ -1061,30 +915,25 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
       {
         if ( (clockMan->cmClkSelWkup & CM_CLKSEL_WKUP_RM) != (value & CM_CLKSEL_WKUP_RM) )
         {
-          DEBUG_STRING("CM: warn: cmWkup reset module clock set to ");
-          DEBUG_INT_NOZEROS((value & CM_CLKSEL_WKUP_RM) >> 1);
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup reset module clock set to %x\n", (value & CM_CLKSEL_WKUP_RM) >> 1);
         }
         if ( ((clockMan->cmClkSelWkup & CM_CLKSEL_WKUP_GPT1) == 0) &&
              ((value & CM_CLKSEL_WKUP_GPT1) == CM_CLKSEL_WKUP_GPT1) )
         {
-          DEBUG_STRING("CM: warn: cmWkup set gptimer1 clock to system clock");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup set gptimer1 clock to system clock\n");
         }
         else if ( ((clockMan->cmIclkEnWkup & CM_CLKSEL_WKUP_GPT1) == CM_CLKSEL_WKUP_GPT1) &&
              ((value & CM_CLKSEL_WKUP_GPT1) == 0) )
         {
-          DEBUG_STRING("CM: warn: cmWkup set gptimer1 clock to 32kHz clock");
-          DEBUG_NEWLINE();
+          printf("CM: warn: cmWkup set gptimer1 clock to 32kHz clock\n");
         }
       }
       clockMan->cmClkSelWkup = value;
       break;
     case CM_CLKSTCTRL_WKUP:
 #ifdef CLK_MAN_DBG
-      DEBUG_STRING(dev->deviceName);
-      DEBUG_STRING(" WARN: store to undocumented register CM_CLKSTCTRL_WKUP");
-      DEBUG_NEWLINE();
+      printf(dev->deviceName);
+      printf(" WARN: store to undocumented register CM_CLKSTCTRL_WKUP\n");
 #endif
       break;
     default:
@@ -1097,30 +946,19 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
 void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at VA ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" at PA ");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
 #endif
 
   u32int reg = phyAddr - Clock_Control_Reg_CM;
   switch (reg)
   {
     case CM_CLKEN_PLL:
-      DEBUG_STRING("Store to CM_CLKEN_PLL val ");
-      DEBUG_INT(value);
-      DEBUG_NEWLINE();
+      printf("Store to CM_CLKEN_PLL val %08x\n", value);
       clockMan->cmClkEnPll = value;
       break;
     case CM_AUTOIDLE_PLL:
-      DEBUG_STRING("Store to CM_AUTOIDLE_PLL val ");
-      DEBUG_INT(value);
-      DEBUG_NEWLINE();
+      printf("Store to CM_AUTOIDLE_PLL val %08x\n", value);
       clockMan->cmAutoIdlePll = value;
       break;
     case CM_CLKEN2_PLL:
@@ -1133,43 +971,21 @@ void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int va
     case CM_CLKSEL4_PLL:
     case CM_CLKSEL5_PLL:
     case CM_CLKOUT_CTRL:
-      DEBUG_STRING("Store to: ");
-      DEBUG_STRING(dev->deviceName);
-      DEBUG_STRING(" at VA ");
-      DEBUG_INT(address);
-      DEBUG_STRING(" at PA ");
-      DEBUG_INT(phyAddr);
-      DEBUG_STRING(" value ");
-      DEBUG_INT(value);
-      DEBUG_NEWLINE();
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "storeClockControlCm store to unimplemented register register!");
+      printf(dev->deviceName);
+      printf(": store to VA %08x, PA %08x, value %08x\n", address, phyAddr, value);
+      DIE_NOW(getGuestContext(), "storeClockControlCm store to unimplemented register register!");
       break;
     default:
-      DEBUG_STRING("Store to: ");
-      DEBUG_STRING(dev->deviceName);
-      DEBUG_STRING(" at VA ");
-      DEBUG_INT(address);
-      DEBUG_STRING(" at PA ");
-      DEBUG_INT(phyAddr);
-      DEBUG_STRING(" value ");
-      DEBUG_INT(value);
-      DEBUG_NEWLINE();
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "storeClockControlCm storing non existing register!");
+      printf(dev->deviceName);
+      printf(": store to VA %08x, PA %08x, value %08x\n", address, phyAddr, value);
+      DIE_NOW(getGuestContext(), "storeClockControlCm storing non existing register!");
   } // switch ends
 }
 
 void storeDssCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
   DIE_NOW(0, " storeDssCm unimplemented.");
   return;
 }
@@ -1177,14 +993,8 @@ void storeDssCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeCamCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
   DIE_NOW(0, " storeCamCm unimplemented.");
   return;
 }
@@ -1193,13 +1003,8 @@ void storeCamCm(device * dev, u32int address, u32int phyAddr, u32int value)
 void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
 #ifdef CLK_MAN_DBG
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
 #endif
   u32int reg = phyAddr - PER_CM;
   switch (reg)
@@ -1243,8 +1048,7 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_CLKSTCTRL_PER:
       if (value & 0x2)
       {
-        DEBUG_STRING("CMper: WARNING software forced wakeup, deliver interrupt?");
-        DEBUG_NEWLINE();
+        printf("CMper: WARNING software forced wakeup, deliver interrupt?\n");
       }
       clockMan->cmClkStCtrlPer = value;
       break;
@@ -1262,29 +1066,16 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeEmuCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
   DIE_NOW(0, " storeEmuCm unimplemented.");
   return;
 }
 
 void storeGlobalRegCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
-  dumpGuestContext(getGuestContext());
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
   DIE_NOW(0, " storeGlobalRegCm unimplemented.");
   return;
 }
@@ -1292,15 +1083,8 @@ void storeGlobalRegCm(device * dev, u32int address, u32int phyAddr, u32int value
 
 void storeNeonCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
-  dumpGuestContext(getGuestContext());
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
   DIE_NOW(0, " storeNeonCm unimplemented.");
   return;
 }
@@ -1308,15 +1092,8 @@ void storeNeonCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeUsbHostCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG_STRING("Store to: ");
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" at address ");
-  DEBUG_INT(address);
-  DEBUG_STRING(" value ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
-  DEBUG_STRING(dev->deviceName);
-  dumpGuestContext(getGuestContext());
+  printf(dev->deviceName);
+  printf(": store to address %08x val %08x\n", address, value);
   DIE_NOW(0, " storeUsbHostCm unimplemented.");
   return;
 }

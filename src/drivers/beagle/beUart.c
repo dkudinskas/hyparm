@@ -8,6 +8,32 @@ static inline u32int beGetUartBaseAddr(u32int id);
 
 struct UartBackEnd * beUart[3];
 
+void serialPuts(char * c)
+{
+  int index = 0;
+
+  while (printableChar(c[index]))
+  {
+    serialPutc(c[index]);
+    index++;
+  }
+}
+
+void serialPutc(char c)
+{
+  while ((beLoadUart(UART_LSR_REG, 3) & UART_LSR_TX_FIFO_E) == 0)
+  {
+    // do nothing
+  }
+  beStoreUart(UART_THR_REG, (u32int)c, 3);
+}
+
+char serialGetc()
+{
+  return (char)beLoadUart(UART_RHR_REG, 3);
+}
+
+
 /*
  * initialize the device and put it in a harmless state
  */

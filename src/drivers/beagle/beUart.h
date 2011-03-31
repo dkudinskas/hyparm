@@ -17,9 +17,6 @@
 
 #define UART_SIZE                        0x00002000
 
-#define serial_in()     (beLoadUart(UART_RHR_REG, 3))
-#define serial_out(x)   (beStoreUart(UART_THR_REG, x, 3))
-
 
 /************************
  * REGISTER DEFINITIONS *
@@ -159,6 +156,11 @@
 #define UART_WER_REG          0x0000005C // Wake-up enable register, R/W
 
 
+void serialPuts(char * c);
+
+void serialPutc(char c);
+
+char serialGetc(void);
 
 void beUartInit(u32int uartid);
 

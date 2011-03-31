@@ -40,9 +40,7 @@ void initialiseFrameTable()
   u32int addr = (u32int)frameTable;
 
 #ifdef FRAME_ALLOC_DBG
-  DEBUG_STRING("Address of frame table (addr): 0x");
-  DEBUG_INT(addr);
-  DEBUG_NEWLINE();
+  printf("Address of frame table (addr): %08x\n", addr);
 #endif
   u32int endAddr= addr + FRAME_TABLE_ENTRIES/8;
 
@@ -101,14 +99,11 @@ u32int* allocFrame(u8int domain)
 #ifdef FRAME_ALLOC_DBG
   if ((u32int)addr)
   {
-    DEBUG_STRING("Allocated Frame: 0x");
-    DEBUG_INT((u32int)addr);
-    DEBUG_NEWLINE();
+    printf("Allocated Frame: %08x\n", (u32int)addr);
   }
   else
   {
-    DEBUG_STRING("No free frames found!");
-    DEBUG_NEWLINE();
+    printf("No free frames found!\n");
   }
 #endif
   return addr;
@@ -135,13 +130,11 @@ u32int* allocMultipleFrames(u32int numFrames, u8int domain)
 #ifdef FRAME_ALLOC_DBG
   if ((u32int)addr)
   {
-    DEBUG_STRING("Allocated Frame: 0x");
-    DEBUG_INT(*addr);
-    DEBUG_NEWLINE();
+    printf("Allocated Frame: %08x\n", (u32int)addr);
   }
   else
   {
-    DEBUG_STRING("No free frames found!");
+    printf("No free frames found!");
   }
 #endif
   return addr;
@@ -155,9 +148,7 @@ u32int* allocMultipleFrames(u32int numFrames, u8int domain)
 u32int* allocFrameAddr(u32int phyAddr)
 {
 #ifdef FRAME_ALLOC_DBG
-  DEBUG_STRING("Allocating frame for addr: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_NEWLINE();
+  printf("Allocating frame for addr: %08x\n", phyAddr);
 #endif
   // get offset into the frame table
   u32int offset = addrToOffset(phyAddr);
@@ -171,8 +162,7 @@ u32int* allocFrameAddr(u32int phyAddr)
 #ifdef FRAME_ALLOC_DBG
   else
   {
-    DEBUG_STRING("Frame already allocated.");
-    DEBUG_NEWLINE();
+    printf("Frame already allocated.\n");
   }
 #endif
   return returnVal;
@@ -209,12 +199,8 @@ u8int freeMultipleFrames(u32int firstFrameAddr, u32int lastFrameAddr)
   if(lastFrameAddr < firstFrameAddr)
   {
 #ifdef FRAME_ALLOC_DBG
-    DEBUG_STRING("Failure to free multiple frames, lastFrameAddr :0x");
-    DEBUG_INT(lastFrameAddr);
-    DEBUG_NEWLINE();
-    DEBUG_STRING("Is before first frame addr: 0x");
-    DEBUG_INT(firstFrameAddr);
-    DEBUG_NEWLINE();
+    printf("Failure to free multiple frames, lastFrameAddr : %08x\n", lastFrameAddr);
+    printf("Is before first frame addr: %08x\n", firstFrameAddr);
 #endif
     return 2;
   }
@@ -231,9 +217,7 @@ u8int freeMultipleFrames(u32int firstFrameAddr, u32int lastFrameAddr)
     {
       //If a free failed, return failure
 #ifdef FRAME_ALLOC_DBG
-      DEBUG_STRING("Failure to free multiple frames, stopped at :0x");
-      DEBUG_INT((u32int)offsetToAddr(offset));
-      DEBUG_NEWLINE();
+      printf("Failure to free multiple frames, stopped at :%08x\n", (u32int)offsetToAddr(offset));
 #endif
       return 1;
     }
@@ -255,10 +239,7 @@ u8int isDomainValid(u8int domain)
   else
   {
 #ifdef FRAME_ALLOC_DBG
-    DEBUG_STRING("Error domain: ");
-    DEBUG_INT(domain);
-    DEBUG_STRING(", is not valid.");
-    DEBUG_NEWLINE();
+    printf("Error domain: %x, is not valid\n", domain);
 #endif
     return 0;
   }
@@ -280,35 +261,20 @@ void newFrameAllocationTable()
 #endif
 
 #ifdef FRAME_ALLOC_DBG
-  DEBUG_STRING("Initialise Hypervisor Frame Allocator");
-  DEBUG_NEWLINE();
-  DEBUG_STRING("Machine Memory: ");
-  DEBUG_INT(TOTAL_MACHINE_RAM);
-  DEBUG_NEWLINE();
-  DEBUG_STRING("HYPERVISOR_START_ADDR: ");
-  DEBUG_INT(HYPERVISOR_START_ADDR);
-  DEBUG_NEWLINE();
-  DEBUG_STRING("HYPERVISOR_SIZE: ");
-  DEBUG_INT(HYPERVISOR_SIZE);
-  DEBUG_NEWLINE();
-  DEBUG_STRING("FRAME_TABLE_CHUNK_SIZE: ");
-  DEBUG_INT(FRAME_TABLE_CHUNK_SIZE);
-  DEBUG_NEWLINE();
-  DEBUG_STRING("Number of Frame Table entries: ");
-  DEBUG_INT(FRAME_TABLE_ENTRIES);
-  DEBUG_NEWLINE();
-  DEBUG_STRING("Frame table address: ");
-  DEBUG_INT((u32int)frameTable);
-  DEBUG_NEWLINE();
-  DEBUG_STRING("Frame table size (Bytes):");
-  DEBUG_INT(FRAME_TABLE_ENTRIES);
-  DEBUG_NEWLINE();
+  printf("Initialise Hypervisor Frame Allocator\n");
+  printf("Machine Memory: %x\n", TOTAL_MACHINE_RAM);
+  printf("HYPERVISOR_START_ADDR: %x\n", HYPERVISOR_START_ADDR);
+  printf("HYPERVISOR_SIZE: %x\n", HYPERVISOR_SIZE);
+  printf("FRAME_TABLE_CHUNK_SIZE: %x\n", FRAME_TABLE_CHUNK_SIZE);
+  printf("Number of Frame Table entries: %x\n", FRAME_TABLE_ENTRIES);
+  printf("Frame table address: %x\n", (u32int)frameTable);
+  printf("Frame table size (Bytes): %x\n", FRAME_TABLE_ENTRIES);
 #endif
 
   memset(frameTable, 0, (FRAME_TABLE_ENTRIES/8));
 
 #ifdef FRAME_ALLOC_DBG
-  if(0 == frameTable)
+  if(frameTable == 0)
   {
     DIE_NOW(0, "memset zeroed bss section. Frame Allocator:newFrameAllocationTable()");
   }
@@ -365,13 +331,9 @@ u8int isFrameUsed_offset(u32int offset)
   if(offset > FRAME_TABLE_ENTRIES)
   {
 #ifdef FRAME_ALLOC_DBG
-    DEBUG_STRING("Error offset into frame table out of bounds.  Offset is:");
-    DEBUG_INT(offset);
-    DEBUG_STRING(", but max value is: ");
-    DEBUG_INT(FRAME_TABLE_ENTRIES);
-    DEBUG_NEWLINE();
+    printf("Error: offs into frame table out of bounds. Offs is: %x, but max value is: %x\n",
+           offset, FRAME_TABLE_ENTRIES);
 #endif
-
     //say that the frame is inUse
     return 1;
   }
@@ -400,11 +362,8 @@ u8int markFrameUsed_offset(u32int offset)
   if(offset > FRAME_TABLE_ENTRIES)
   {
 #ifdef FRAME_ALLOC_DBG
-    DEBUG_STRING("Error offset into frame table out of bounds.  Offset is:");
-    DEBUG_INT(offset);
-    DEBUG_STRING(", but max value is: ");
-    DEBUG_INT(FRAME_TABLE_ENTRIES);
-    DEBUG_NEWLINE();
+    printf("Error: offs into frame table out of bounds. Offs is: %x, but max value is: %x\n",
+           offset, FRAME_TABLE_ENTRIES);
 #endif
 
     return 1; //fail
@@ -435,11 +394,8 @@ u8int freeFrame_offset(u32int offset)
   if(offset > FRAME_TABLE_ENTRIES)
   {
 #ifdef FRAME_ALLOC_DBG
-    DEBUG_STRING("Error offset into frame table out of bounds.  Offset is:");
-    DEBUG_INT(offset);
-    DEBUG_STRING(", but max value is: ");
-    DEBUG_INT(FRAME_TABLE_ENTRIES);
-    DEBUG_NEWLINE();
+    printf("Error: offs into frame table out of bounds. Offs is: %x, but max value is: %x\n",
+           offset, FRAME_TABLE_ENTRIES);
 #endif
 
     return 1; //fail

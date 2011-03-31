@@ -17,12 +17,7 @@ memchunkListElem * chunkListRoot;
 void mallocInit(u32int startAddr, u32int size)
 {
 #ifdef MALLOC_DEBUG
-  DEBUG_STRING("mallocInit(");
-  DEBUG_INT_NOZEROS(startAddr);
-  DEBUG_STRING(", ");
-  DEBUG_INT_NOZEROS(size);
-  DEBUG_STRING(");");
-  DEBUG_NEWLINE();
+  printf("mallocInit(%08x, %x);\n", startAddr, size);
 #endif
 
   heapStart = startAddr;
@@ -162,28 +157,15 @@ void dumpMallocs()
 {
   u32int i = 0;
   memchunkListElem * listPtr = chunkListRoot;
-  DEBUG_STRING("Dumping malloc internal structures:");
-  DEBUG_STRING("***********************************");
-  DEBUG_NEWLINE();
+  printf("Dumping malloc internal structures:\n");
+  printf("***********************************\n");
   for (i = 0; i < nrOfChunksAllocd; i++)
   {
-    DEBUG_STRING("Chunk ");
-    DEBUG_INT_NOZEROS(i);
-    DEBUG_STRING(": prev = ");
-    DEBUG_INT((u32int)listPtr->prevChunk);
-    DEBUG_STRING("; next = ");
-    DEBUG_INT((u32int)listPtr->nextChunk);
-    DEBUG_NEWLINE();
-    DEBUG_STRING("Start address: ");
-    DEBUG_INT(listPtr->chunk.startAddress);
-    DEBUG_STRING("; Size: ");
-    DEBUG_INT(listPtr->chunk.size);
-    DEBUG_NEWLINE();
-    DEBUG_STRING("-----------------------------------");
-    DEBUG_NEWLINE();
+    printf("Chunk %x: prev = %x; next = %x\n", i, (u32int)listPtr->prevChunk, (u32int)listPtr->nextChunk);
+    printf("Start address: %08x; size %x\n", listPtr->chunk.startAddress, listPtr->chunk.size);
+    printf("-----------------------------------\n");
     listPtr = listPtr->nextChunk;
   }
-  DIE_NOW(0, "done");
 }
 
 /* This version of memcpy assumes disjoint ptrs src, dst */
