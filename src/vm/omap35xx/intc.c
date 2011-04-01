@@ -384,8 +384,17 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case REG_INTCPS_CONTROL:
       irqController->intcControl = value & INTCPS_CONTROL_RESERVED;
       break;
-    case REG_INTCPS_PROTECTION:
     case REG_INTCPS_IDLE:
+      irqController->intcIdle = value & ( INTCPS_IDLE_RESERVED|INTCPS_IDLE_FUNCIDLE );
+      break;
+    case REG_INTCPS_MIR1:
+      /* value can be any 32-bit number */
+      irqController->intcIdle = value;
+      break;
+    case REG_INTCPS_ILR37: // this is FreeRTOS specific <- GPTIMER 2 delivers interrupt
+      irqController->intcIlr[36] = value & INTCPS_ILR_RESERVED;
+      break;
+    case REG_INTCPS_PROTECTION:
     case REG_INTCPS_IRQ_PRIORITY:
     case REG_INTCPS_FIQ_PRIORITY:
     case REG_INTCPS_THRESHOLD:
@@ -393,7 +402,6 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case REG_INTCPS_ITR1:
     case REG_INTCPS_ITR2:
     case REG_INTCPS_MIR0:
-    case REG_INTCPS_MIR1:
     case REG_INTCPS_MIR2:
     case REG_INTCPS_ISR_SET0:
     case REG_INTCPS_ISR_SET1:
@@ -444,7 +452,6 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case REG_INTCPS_ILR34:
     case REG_INTCPS_ILR35:
     case REG_INTCPS_ILR36:
-    case REG_INTCPS_ILR37:
     case REG_INTCPS_ILR38:
     case REG_INTCPS_ILR39:
     case REG_INTCPS_ILR40:

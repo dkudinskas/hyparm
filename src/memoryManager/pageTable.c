@@ -87,6 +87,13 @@ descriptor* createHypervisorPageTable()
   // uart1
   smallMapMemory(hypervisorPtd, UART1, (UART1 + UART1_SIZE -1), 
                                GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
+
+  // gpio5
+  smallMapMemory(hypervisorPtd, GPIO5, (GPIO5 + GPIO5_SIZE -1), GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
+
+  // gpio6
+  smallMapMemory(hypervisorPtd, GPIO6, (GPIO6 + GPIO6_SIZE -1), GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
+
   // clock manager
   smallMapMemory(hypervisorPtd, CLOCK_MANAGER, (CLOCK_MANAGER+CLOCK_MANAGER_SIZE-1),
                                GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);

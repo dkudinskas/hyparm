@@ -289,8 +289,19 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       }
       gpio[gpioNum]->gpioCtrl = value & ~GPIO_CTRL_RESERVED;
       break;
-    case GPIO_WAKEUPENABLE:
     case GPIO_OE:
+      /* value can be any 32-bit number */
+      gpio[gpioNum]->gpioOE = value;
+      break;
+    case GPIO_CLEARDATAOUT:
+      /* value can be any 32-bit number */
+      gpio[gpioNum]->gpioClearDataOut=value;
+      break;
+    case GPIO_SETDATAOUT:
+      /* value can be any 32-bit number */
+      gpio[gpioNum]->gpioSetDataOut=value;
+      break;
+    case GPIO_WAKEUPENABLE:
     case GPIO_DATAIN:
     case GPIO_DATAOUT:
     case GPIO_LEVELDETECT0:
@@ -305,8 +316,6 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPIO_SETIRQENABLE2:
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
-    case GPIO_CLEARDATAOUT:
-    case GPIO_SETDATAOUT:
       serial_putstring("GPIO: store to unimplemented register ");
       serial_putint_nozeros(regOffset);
       DIE_NOW(0, ", panic.");

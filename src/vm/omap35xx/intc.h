@@ -229,6 +229,8 @@ M_IRQ_95 Reserved       Reserved
 #define REG_INTCPS_PENDING_FIQ2  0x000000DC // RO contains the FIQ status after masking
 #define INTCPS_PENDING_FIQ2_PENDINGFIQ  0xFFFFFFFF // [31:0] fiq status after masking
 
+#define INTCPS_ILR_RESERVED  0xFC // Reserved bits 31-8 & bit 1
+
 #define REG_INTCPS_ILR0           0x00000100 // RW contains the priority for the interrupts and the FIQ/IRQ steering
 #define REG_INTCPS_ILR1           0x00000104 // 
 #define REG_INTCPS_ILR2           0x00000108 // 
