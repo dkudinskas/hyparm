@@ -5,7 +5,6 @@
 
 #include "guestManager/guestContext.h"
 
-#include "vm/omap35xx/serial.h"
 #include "vm/omap35xx/intc.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
@@ -27,9 +26,7 @@ void initIntc(void)
   {
     memset((void*)irqController, 0x0, sizeof(struct InterruptController));
 #ifdef INTC_DBG
-    serial_putstring("Initializing Interrupt controller at 0x");
-    serial_putint((u32int)irqController);
-    serial_newline();
+    printf("Initializing Interrupt controller at %08x\n", (u32int)irqController);
 #endif
   }
   intcReset();
@@ -97,25 +94,19 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
     case REG_INTCPS_PENDING_IRQ0:
       val = irqController->intcPendingIrq0;
 #ifdef INTC_DBG
-      serial_putstring("INTC: load pending irq0 value ");
-      serial_putint(val);
-      serial_newline();
+      printf("INTC: load pending irq0 value %08x\n", val);
 #endif
       break;
     case REG_INTCPS_PENDING_IRQ1:
       val = irqController->intcPendingIrq1;
 #ifdef INTC_DBG
-      serial_putstring("INTC: load pending irq1 value ");
-      serial_putint(val);
-      serial_newline();
+      printf("INTC: load pending irq1 value %08x\n", val);
 #endif
       break;
     case REG_INTCPS_PENDING_IRQ2:
       val = irqController->intcPendingIrq2;
 #ifdef INTC_DBG
-      serial_putstring("INTC: load pending irq2 value ");
-      serial_putint(val);
-      serial_newline();
+      printf("INTC: load pending irq2 value %08x\n", val);
 #endif
       break;
     case REG_INTCPS_SIR_IRQ:
@@ -231,27 +222,19 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
     case REG_INTCPS_ILR93:
     case REG_INTCPS_ILR94:
     case REG_INTCPS_ILR95:
-      serial_putstring("Intc: Unimplemted regsiter load.");
-      serial_putstring("register number ");
-      serial_putint(regOffset);
-      serial_newline();
-      DIE_NOW(0, "PANIC");
+    {
+      printf("Intc: Unimplemted regsiter load reg nr %x\n", regOffset);
+      DIE_NOW(gc, "PANIC");
       break;
+    }
     default:
-      DIE_NOW(0, "Intc: load on invalid register.");
+      DIE_NOW(gc, "Intc: load on invalid register.");
   }
   
 #ifdef INTC_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_putstring(" val = ");
-  serial_putint(val);
-  serial_newline();
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x, aSize %x, val %08x\n",
+         phyAddr, address, (u32int)size, val);
 #endif
   return val;
 }
@@ -266,16 +249,9 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef INTC_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" store to pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_putstring(" val ");
-  serial_putint(value);
-  serial_newline();
+  printf(dev->deviceName);
+  printf(" store to pAddr: %08x, vAddr %08x, aSize %x, val %08x\n",
+         phyAddr, address, (u32int)size, value);
 #endif
 
   if (size != WORD)
@@ -288,14 +264,16 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   switch (regOffset)
   {
     case REG_INTCPS_REVISION:
+    {
       DIE_NOW(0, "Intc storing to read only register: version");
       break;
+    }
     case REG_INTCPS_SYSCONFIG:
+    {
       if (value & INTCPS_SYSCONFIG_SOFTRESET)
       {
 #ifdef INTC_DBG
-        serial_putstring("INTC: soft reset.");
-        serial_newline();
+        printf("INTC: soft reset.\n");
 #endif
         intcReset();
         value = value & ~INTCPS_SYSCONFIG_SOFTRESET;
@@ -303,15 +281,22 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       // never set reset bit, all else except bit 0 is reserved
       irqController->intcSysConfig = value & INTCPS_SYSCONFIG_AUTOIDLE;
       break;
+    }
     case REG_INTCPS_SYSSTATUS:
+    {
       DIE_NOW(0, "Intc storing to read only register: system status");
       break;
+    }
     case REG_INTCPS_SIR_IRQ:
+    {
       DIE_NOW(0, "Intc storing to read only register: active irq");
       break;
+    }
     case REG_INTCPS_SIR_FIQ:
+    {
       DIE_NOW(0, "Intc storing to read only register: active fiq");
       break;
+    }
     case REG_INTCPS_MIR_CLEAR0:
     {
       u32int i;
@@ -320,15 +305,13 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         if (value & (1 << i))
         {
 #ifdef INTC_DBG
-          serial_putstring("INTC: clearing mask from interrupt number ");
-          serial_putint_nozeros(i);
-          serial_newline();
+          printf("INTC: clearing mask from interrupt number %x\n", i);
 #endif
         }
       }
-    }
       irqController->intcMir0 &= ~value;
       break;
+    }
     case REG_INTCPS_MIR_CLEAR1:
     {
       u32int i;
@@ -343,15 +326,13 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
             unmaskInterruptBE(GPT2_IRQ);
           }
 #ifdef INTC_DBG
-          serial_putstring("INTC: clearing mask from interrupt number ");
-          serial_putint_nozeros(i+32);
-          serial_newline();
+          printf("INTC: clearing mask from interrupt number %x\n", i+32);
 #endif
         }
       }
-    }
       irqController->intcMir1 &= ~value;
       break;
+    }
     case REG_INTCPS_MIR_CLEAR2:
     {
       u32int i;
@@ -360,30 +341,37 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         if (value & (1 << i))
         {
 #ifdef INTC_DBG
-          serial_putstring("INTC: clearing mask from interrupt number ");
-          serial_putint_nozeros(i+64);
-          serial_newline();
+          printf("INTC: clearing mask from interrupt number %x\n", i+64);
 #endif
         }
       }
-    }
       irqController->intcMir2 &= ~value;
       break;
+    }
     case REG_INTCPS_MIR_SET0:
+    {
       irqController->intcMir0 |= value;
       irqController->intcPendingIrq0 = irqController->intcItr0 & ~irqController->intcMir0;
       break;
+    }
     case REG_INTCPS_MIR_SET1:
+    {
       irqController->intcMir1 |= value;
       irqController->intcPendingIrq1 = irqController->intcItr1 & ~irqController->intcMir1;
       break;
+    }
     case REG_INTCPS_MIR_SET2:
+    {
       irqController->intcMir2 |= value;
       irqController->intcPendingIrq2 = irqController->intcItr2 & ~irqController->intcMir2;
       break;
+    }
     case REG_INTCPS_CONTROL:
+    {
       irqController->intcControl = value & INTCPS_CONTROL_RESERVED;
       break;
+    }
+    case REG_INTCPS_PROTECTION:
     case REG_INTCPS_IDLE:
       irqController->intcIdle = value & ( INTCPS_IDLE_RESERVED|INTCPS_IDLE_FUNCIDLE );
       break;
@@ -506,14 +494,13 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case REG_INTCPS_ILR93:
     case REG_INTCPS_ILR94:
     case REG_INTCPS_ILR95:
-      serial_putstring("Intc: Unimplemted regsiter store.");
-      serial_putstring("register number ");
-      serial_putint(regOffset);
-      serial_newline();
-      DIE_NOW(0, "PANIC");
+    {
+      printf("Intc: Unimplemted regsiter store reg nr %x\n", regOffset);
+      DIE_NOW(gc, "PANIC");
       break;
+    }
     default:
-      DIE_NOW(0, "Intc: store on invalid register.");
+      DIE_NOW(gc, "Intc: store on invalid register.");
   }
 }
 
@@ -705,6 +692,52 @@ void setInterrupt(u32int irqNum)
 }
 
 
+void clearInterrupt(u32int irqNum)
+{
+  // 1. clear raw interrupt signal before masking
+  u32int bitMask = 0;
+  u32int bankNumber = 0;
+
+  if ((irqNum < 0) || (irqNum >= INTCPS_NR_OF_INTERRUPTS))
+  {
+    DIE_NOW(0, "INTC: setInterrupt interrupt number out of range.");
+  }
+  bankNumber = irqNum / INTCPS_INTERRUPTS_PER_BANK;
+  bitMask = 1 << (irqNum % INTCPS_INTERRUPTS_PER_BANK);
+  bitMask = ~bitMask;
+  switch (bankNumber)
+  {
+    case 0:
+      irqController->intcItr0 &= bitMask;
+      break;
+    case 1:
+      irqController->intcMir1 &= bitMask;
+      break;
+    case 2:
+      irqController->intcMir2 &= bitMask;
+      break;
+    default:
+      DIE_NOW(0, "INTC: setInterrupt in invalid interrupt bank");
+  }
+
+  // 2. clear irq-after-masking reg just in case as well
+  switch (bankNumber)
+  {
+    case 0:
+      irqController->intcPendingIrq0 &= bitMask;
+      break;
+    case 1:
+      irqController->intcPendingIrq1 &= bitMask;
+      break;
+    case 2:
+      irqController->intcPendingIrq2 &= bitMask;
+      break;
+    default:
+      DIE_NOW(0, "INTC: setInterrupt in invalid interrupt bank");
+  }
+}
+
+
 // Function to look through all pending irqs and select highest priority one
 // return: interrupt number
 u32int prioritySortIrqs()
@@ -729,11 +762,7 @@ u32int prioritySortIrqs()
         {
           u32int priority = irqController->intcIlr[i];
 #ifdef INTC_DBG
-          serial_putstring("INTC: irq nr ");
-          serial_putint(i);
-          serial_putstring(" is pending with priority ");
-          serial_putint(priority);
-          serial_newline();
+          printf("INTC: irq nr %x is pending with priority %x\n", i, priority);
 #endif
           if (priority >= currentHighestPriority)
           {
@@ -755,11 +784,7 @@ u32int prioritySortIrqs()
         {
           u32int priority = irqController->intcIlr[i+32];
 #ifdef INTC_DBG
-          serial_putstring("INTC: irq nr ");
-          serial_putint(i+32);
-          serial_putstring(" is pending with priority ");
-          serial_putint(priority);
-          serial_newline();
+          printf("INTC: irq nr %x is pending with priority %x\n", i+32, priority);
 #endif
           if (priority >= currentHighestPriority)
           {
@@ -781,11 +806,7 @@ u32int prioritySortIrqs()
         {
           u32int priority = irqController->intcIlr[i+64];
 #ifdef INTC_DBG
-          serial_putstring("INTC: irq nr ");
-          serial_putint(i+64);
-          serial_putstring(" is pending with priority ");
-          serial_putint(priority);
-          serial_newline();
+          printf("INTC: irq nr %x is pending with priority %x\n", i+64, priority);
 #endif
           if (priority >= currentHighestPriority)
           {
@@ -817,75 +838,27 @@ bool isFiqPending()
 
 void intcDumpRegisters(void)
 {
-  serial_putstring("INTC: Revision ");
-  serial_putint(INTC_REVISION);
-  serial_newline();
+  printf("INTC: Revision %08x\n");
+  printf("INTC: sysconfig reg %08x\n", irqController->intcSysConfig);
+  printf("INTC: sysStatus reg %08x\n", irqController->intcSysStatus);
+  printf("INTC: current active irq reg %08x\n", irqController->intcSirIrq);
+  printf("INTC: current active fiq reg %08x\n", irqController->intcSirFiq);
+  printf("INTC: control reg %08x\n", irqController->intcControl);
+  printf("INTC: protection reg %08x\n", irqController->intcProtection);
+  printf("INTC: idle reg %08x\n", irqController->intcIdle);
+  printf("INTC: current active irq priority %08x\n", irqController->intcIrqPriority);
+  printf("INTC: current active fiq priority %08x\n", irqController->intcFiqPriority);
+  printf("INTC: priority threshold %08x\n", irqController->intcThreshold);
 
-  serial_putstring("INTC: sysconfig reg ");
-  serial_putint(irqController->intcSysConfig);
-  serial_newline();
+  printf("INTC: interrupt status before masking:\n");
+  printf("%x%x%x\n", irqController->intcItr0, irqController->intcItr1, irqController->intcItr2);
 
-  serial_putstring("INTC: sysStatus reg ");
-  serial_putint(irqController->intcSysStatus);
-  serial_newline();
+  printf("INTC: interrupt mask:\n");
+  printf("%x%x%x\n", irqController->intcMir0, irqController->intcMir1, irqController->intcMir2);
 
-  serial_putstring("INTC: current active irq reg ");
-  serial_putint(irqController->intcSirIrq);
-  serial_newline();
+  printf("INTC: pending IRQ:\n");
+  printf("%x%x%x\n", irqController->intcPendingIrq0, irqController->intcPendingIrq1, irqController->intcPendingIrq2);
 
-  serial_putstring("INTC: current active fiq reg ");
-  serial_putint(irqController->intcSirFiq);
-  serial_newline();
-
-  serial_putstring("INTC: control reg ");
-  serial_putint(irqController->intcControl);
-  serial_newline();
-
-  serial_putstring("INTC: protection reg ");
-  serial_putint(irqController->intcProtection);
-  serial_newline();
-
-  serial_putstring("INTC: idle reg ");
-  serial_putint(irqController->intcIdle);
-  serial_newline();
-
-  serial_putstring("INTC: current active irq priority ");
-  serial_putint(irqController->intcIrqPriority);
-  serial_newline();
-
-  serial_putstring("INTC: current active fiq priority ");
-  serial_putint(irqController->intcFiqPriority);
-  serial_newline();
-
-  serial_putstring("INTC: priority threshold ");
-  serial_putint(irqController->intcThreshold);
-  serial_newline();
-
-  serial_putstring("INTC: interrupt status before masking:");
-  serial_newline();
-  serial_putint(irqController->intcItr0);
-  serial_putint(irqController->intcItr1);
-  serial_putint(irqController->intcItr2);
-  serial_newline();
-
-  serial_putstring("INTC: interrupt mask:");
-  serial_newline();
-  serial_putint(irqController->intcMir0);
-  serial_putint(irqController->intcMir1);
-  serial_putint(irqController->intcMir2);
-  serial_newline();
-
-  serial_putstring("INTC: pending IRQ:");
-  serial_newline();
-  serial_putint(irqController->intcPendingIrq0);
-  serial_putint(irqController->intcPendingIrq1);
-  serial_putint(irqController->intcPendingIrq2);
-  serial_newline();
-
-  serial_putstring("INTC: pending FIQ:");
-  serial_newline();
-  serial_putint(irqController->intcPendingFiq0);
-  serial_putint(irqController->intcPendingFiq1);
-  serial_putint(irqController->intcPendingFiq2);
-  serial_newline();
+  printf("INTC: pending FIQ:\n");
+  printf("%x%x%x\n", irqController->intcPendingFiq0, irqController->intcPendingFiq1, irqController->intcPendingFiq2);
 }

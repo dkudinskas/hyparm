@@ -92,9 +92,9 @@ M_IRQ_68 Reserved       Reserved
 M_IRQ_69 Reserved       Reserved
 M_IRQ_70 Reserved       Reserved
 M_IRQ_71 Reserved       Reserved
-M_IRQ_72 UART1_IRQ      UART module 1
-M_IRQ_73 UART2_IRQ      UART module 2
 */
+#define UART1_IRQ   72
+#define UART2_IRQ   73
 #define UART3_IRQ   74
 /*
 M_IRQ_75 PBIAS_IRQ      Merged interrupt for PBIASlite1 and 2
@@ -350,6 +350,8 @@ u32int getIrqNumber(void);
 
 void setInterrupt(u32int irqNum);
 
+void clearInterrupt(u32int irqNum);
+
 void acknowledgeIrq(void);
 
 bool isIrqPending(void);
@@ -398,7 +400,6 @@ struct InterruptController
   u32int intcPendingFiq2;
   u32int intcIlr[96];
 };
-
 
 
 #endif

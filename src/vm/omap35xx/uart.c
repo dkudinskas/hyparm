@@ -4,7 +4,6 @@
 #include "guestManager/guestContext.h"
 #include "guestManager/guestExceptions.h"
 
-#include "vm/omap35xx/serial.h"
 #include "vm/omap35xx/uart.h"
 #include "vm/omap35xx/intc.h"
 
@@ -30,14 +29,9 @@ void initUart(u32int uartID)
   {
     memset((void*)uart[uID], 0x0, sizeof(struct Uart));
 #ifdef UART_DBG
-    serial_putstring("Initializing Uart");
-    serial_putint_nozeros(uartID);
-    serial_putstring(" at 0x");
-    serial_putint((u32int)uart[uID]);
-    serial_newline();
+    printf("Initializing Uart%x at %08x\n", uartID, (u32int)uart[uID]);
 #endif
   }
-
   resetUart(uartID);
 }
 
@@ -113,57 +107,14 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       if (getUartMode(uID+1) == operational)
       {
         // load RHR
-        // check LSR RX bit. if zero, return nil.
-        if ((uart[uID]->lsr & UART_LSR_RX_FIFO_E) == 0)
-        {
-#ifdef UART_DBG
-          serial_putstring(dev->deviceName);
-          serial_putstring(": load RHR, but RX FIFO is empty! return 0");
-          serial_newline();
-#endif
-          value = 0;
-        }
-        else
-        {
-#ifdef UART_DBG
-          serial_putstring(dev->deviceName);
-          serial_putstring(": load RHR value ");
-          serial_putint(uart[uID]->rhr);
-          serial_newline();
-#endif
-          // there's stuff in the FIFO! get char from RHR
-          value = uart[uID]->rhr;
-          // adjust our fifo: all RX elements shift one position left
-          int i = 0;
-          for (i = 0; i < RX_FIFO_SIZE-1; i++)
-          {
-            uart[uID]->rxFifo[i] = uart[uID]->rxFifo[i+1]; 
-          }
-          // adjust FIFO ptr
-          uart[uID]->rxFifoPtr--;
-          // if we had previously overrun, clear LSR overrun bit
-          uart[uID]->lsr &= ~UART_LSR_RX_OE;
-          // set new RHR: if FIFO now empty, RHR zero and lsr bit cleared.
-          // otherwise, FIFO char 0 is new RHR
-          if (uart[uID]->rxFifoPtr == 0)
-          {
-            uart[uID]->rhr = 0; 
-            uart[uID]->lsr &= ~UART_LSR_RX_FIFO_E;
-          }
-          else
-          {
-            uart[uID]->rhr = uart[uID]->rxFifo[0];
-          }
-        }
+        value = uartRxByte(uID+1);
       }
       else
       {
         // load DLL
 #ifdef UART_DBG
-        serial_putstring(dev->deviceName);
-        serial_putstring(": load DLL value ");
-        serial_putint(uart[uID]->dll);
-        serial_newline();
+        printf(dev->deviceName);
+        printf(": load DLL value %08x\n", uart[uID]->dll);
 #endif
         value = uart[uID]->dll;
       }
@@ -174,10 +125,8 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       {
         // load IER
 #ifdef UART_DBG
-        serial_putstring(dev->deviceName);
-        serial_putstring(": load IRQ enable register ");
-        serial_putint(uart[uID]->ier);
-        serial_newline();
+        printf(dev->deviceName);
+        printf(": load IRQ enable register %08x\n", uart[uID]->ier);
 #endif
         value = uart[uID]->ier;
       }
@@ -185,10 +134,8 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       {
         // load DLH
 #ifdef UART_DBG
-        serial_putstring(dev->deviceName);
-        serial_putstring(": load DLH register ");
-        serial_putint(uart[uID]->ier);
-        serial_newline();
+        printf(dev->deviceName);
+        printf(": load DLH register %08x\n", uart[uID]->ier);
 #endif
         value = uart[uID]->dlh;
       }
@@ -198,10 +145,8 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       {
         // load EFR
 #ifdef UART_DBG
-        serial_putstring(dev->deviceName);
-        serial_putstring(": load enhanced feature register ");
-        serial_putint(uart[uID]->efr);
-        serial_newline();
+        printf(dev->deviceName);
+        printf(": load enhanced feature register %08x\n", uart[uID]->efr);
 #endif
         value = uart[uID]->efr;
       }
@@ -209,20 +154,16 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       {
         // load IIR
 #ifdef UART_DBG
-        serial_putstring(dev->deviceName);
-        serial_putstring(": load IRQ identification register ");
-        serial_putint(uart[uID]->iir);
-        serial_newline();
+        printf(dev->deviceName);
+        printf(": load IRQ identification register %08x\n", uart[uID]->iir);
 #endif
         value = uart[uID]->iir;
       }
       break;
     case UART_LCR_REG:
 #ifdef UART_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load line control reg ");
-      serial_putint(uart[uID]->iir);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load line control reg %08x\n", uart[uID]->iir);
 #endif
       value = uart[uID]->lcr;
       break;
@@ -236,10 +177,8 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       {
         // load MCR
 #ifdef UART_DBG
-        serial_putstring(dev->deviceName);
-        serial_putstring(": load modem control reg ");
-        serial_putint(uart[uID]->mcr);
-        serial_newline();
+        printf(dev->deviceName);
+        printf(": load modem control reg %08x\n", uart[uID]->mcr);
 #endif
         value = uart[uID]->mcr;
       }
@@ -254,10 +193,8 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
       {
         // load LSR
 #ifdef UART_DBG
-        serial_putstring(dev->deviceName);
-        serial_putstring(": load line status ");
-        serial_putint(uart[uID]->lsr);
-        serial_newline();
+        printf(dev->deviceName);
+        printf(": load line status %08x\n", uart[uID]->lsr);
 #endif
         value = uart[uID]->lsr;
       }
@@ -321,32 +258,16 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int address)
     case UART_SYSC_REG:
     case UART_SYSS_REG:
     case UART_WER_REG:
-      dumpGuestContext(getGuestContext());
-      serial_putstring("loadUart");
-      serial_putint_nozeros(uID+1);
-      serial_putstring(" reg ");
-      serial_putint_nozeros(regOffs);
-      serial_newline();
-      DIE_NOW(0, "UART: load from unimplemented register.");
+      printf("loadUart%x reg %x\n", uID+1, regOffs);
+      DIE_NOW(gc, "UART: load from unimplemented register.");
     default:
-      dumpGuestContext(getGuestContext());
-      serial_putstring("loadUart");
-      serial_putint_nozeros(uID+1);
-      serial_putstring(" reg ");
-      serial_putint_nozeros(regOffs);
-      serial_newline();
-      DIE_NOW(0, "UART: load from undefined register.");
+      printf("loadUart%x reg %x\n", uID+1, regOffs);
+      DIE_NOW(gc, "UART: load from undefined register.");
   } // switch ends
   
 #ifdef UART_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(": load from address ");
-  serial_putint(address);
-  serial_putstring(" reg ");
-  serial_putint_nozeros(regOffs);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline(); 
+  printf(dev->deviceName);
+  printf(": load from address %08x reg %x value %08x\n", address, regOffs, value);
 #endif
 
  return value;
@@ -372,14 +293,8 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int regOffs = phyAddr - getUartBaseAddr(uID+1);
 
 #ifdef UART_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(": store to address ");
-  serial_putint(address);
-  serial_putstring(" reg ");
-  serial_putint_nozeros(regOffs);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline(); 
+  printf(dev->deviceName);
+  printf(": store to address %08x reg %x value %08x\n", address, regOffs, value);
 #endif
   switch (regOffs)
   {
@@ -388,50 +303,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       if (getUartMode(uID+1) == operational)
       {
         // store THR
-        if (uart[uID]->loopback)
-        {
-#ifdef UART_DBG
-          serial_putstring(dev->deviceName);
-          serial_putstring(": send '");
-          serial_putchar((char)value);
-          serial_putstring("' to THR in loopback mode - to RX FIFO.");
-          serial_newline(); 
-#endif
-          // do we have space in RX FIFO?
-          if (uart[uID]->rxFifoPtr >= RX_FIFO_SIZE)
-          {
-            // can't receive anymore. drop value, set overrun LSR status bit
-            uart[uID]->lsr |= UART_LSR_RX_OE;
-          }
-          else
-          {
-            // character goes straight back into RX
-            if (uart[uID]->rxFifoPtr == 0)
-            {
-              // first char in FIFO, is also RHR
-              uart[uID]->rhr = (u8int)(value & 0xFF);
-            }
-            uart[uID]->rxFifo[uart[uID]->rxFifoPtr] = (u8int)(value & 0xFF);
-            // set LSR rx status bit to indicate RX data
-            uart[uID]->lsr |= UART_LSR_RX_FIFO_E;
-            // increment FIFO pointer
-            uart[uID]->rxFifoPtr++;
-          }
-        }
-        else
-        {
-          // don't need to adjust TX bits in LSR, as we will always
-          // finish transmitting this character first, before going back to guest
-          // therefore, the non-existant TX FIFO is trully always empty.
-#ifdef UART_DBG
-          serial_putstring(dev->deviceName);
-          serial_putstring(": send '");
-          serial_putchar((char)value);
-          serial_putstring("' to THR.");
-          serial_newline(); 
-#endif
-          serial_putchar((u8int)value);
-        }
+        uartTxByte((u8int)value, uID+1);
       }
       else
       {
@@ -439,16 +311,13 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         // can only be written before sleep mode is enabled
         if ((uart[uID]->ier & UART_IER_SLEEP_MODE) != 0)
         {
-          dumpGuestContext(gc);
-          DIE_NOW(0, "UART writing DLL with sleep mode enabled!");
+          DIE_NOW(gc, "UART writing DLL with sleep mode enabled!");
         }
         else
         {
 #ifdef UART_DBG
-          serial_putstring(dev->deviceName);
-          serial_putstring(": storing DLL reg, 8bit LSB divisor value ");
-          serial_putint(value);
-          serial_newline(); 
+          printf(dev->deviceName);
+          printf(": storing DLL reg, 8bit LSB divisor value %08x\n", value);
 #endif
           uart[uID]->dll = value;
         }
@@ -459,67 +328,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       if (getUartMode(uID+1) == operational)
       {
         // store IER
-        if (((uart[uID]->ier & UART_IER_THR) == 0) &&
-            ((value & UART_IER_THR) == UART_IER_THR))
-        {
-          // THR irq was disabled, now is enabled.
-          // by manual, should check LSR reg TXFIFO and shift reg are empty
-          // but TX FIFO and THR are defo empty, set IRQ bits in IIR register
-          uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
-          uart[uID]->iir = uart[uID]->iir | (UART_IIR_IT_TYPE_THR_IRQ << UART_IIR_IT_TYPE_SHAMT);
-#ifdef UART_DBG
-          serial_putstring(dev->deviceName);
-          serial_putstring(": enabling THR irq, set IIR to ");
-          serial_putint(uart[uID]->iir);
-          serial_newline();
-#endif
-          throwInterrupt(UART3_IRQ);
-        }
-        else if (((uart[uID]->ier & UART_IER_THR) == UART_IER_THR) &&
-                ((value & UART_IER_THR) == 0))
-        {
-          // THR irq was enabled, clear irq
-          uart[uID]->iir = uart[uID]->iir | UART_IIR_IT_PENDING;
-          uart[uID]->iir = uart[uID]->iir &~ UART_IIR_IT_TYPE;
-#ifdef UART_DBG
-          serial_putstring(dev->deviceName);
-          serial_putstring(": disabling THR irq, set IIR to ");
-          serial_putint(uart[uID]->iir);
-          serial_newline();
-#endif
-        }
-
-        // bits [4:7] Can be written only when EFR_REG[4] = 1
-        u32int writenValue = value;
-        if ((uart[uID]->efr && UART_EFR_ENHANCED_EN) == 0)
-        {
-          // enchaned features disabled. only write bottom four bits
-          writenValue &= 0xF;
-          uart[uID]->ier &= 0xFFFFFFF0;
-        }
-        else
-        {
-          // enchaned features enabled. write all 8 bits
-          writenValue &= 0xFF;
-          uart[uID]->ier &= 0xFFFFFF00;
-        }
-        uart[uID]->ier = writenValue;
-#ifdef UART_DBG
-          serial_putstring(dev->deviceName);
-          serial_putstring(": storing IRQ enable register: ");
-          serial_putint(uart[uID]->ier);
-          serial_newline();
-#endif
- 
-        if ((value & UART_IER_SLEEP_MODE) != 0)
-        {
-#ifdef UART_DBG
-          serial_putstring("UART");
-          serial_putint_nozeros(uID+1);
-          serial_putstring(": sent to sleep mode!");
-          serial_newline();
-#endif
-        }
+        setIrqFlags(value, uID+1);
       }
       else
       {
@@ -527,16 +336,13 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         // can only be written before sleep mode is enabled
         if ((uart[uID]->ier & UART_IER_SLEEP_MODE) != 0)
         {
-          dumpGuestContext(gc);
-          DIE_NOW(0, "UART writing DLH with sleep mode enabled!");
+          DIE_NOW(gc, "UART writing DLH with sleep mode enabled!");
         }
         else
         {
 #ifdef UART_DBG
-          serial_putstring(dev->deviceName);
-          serial_putstring(": store DLH MSB divisor value: ");
-          serial_putint(value);
-          serial_newline(); 
+          printf(dev->deviceName);
+          printf(": store DLH MSB divisor value: %08x\n", value);
 #endif
           uart[uID]->dlh = value;
         }
@@ -556,8 +362,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         {
           // turning OFF RX/TX fifos.
 #ifdef UART_DBG
-          serial_putstring("UART: warning: rx/tx fifos on!");
-          serial_newline();
+          printf("UART: warning: rx/tx fifos on!\n");
 #endif
         }
         else if ( ((uart[uID]->fcr & UART_FCR_FIFO_EN) == UART_FCR_FIFO_EN) &&
@@ -565,8 +370,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         {
           // turning ON RX/TX fifos.
 #ifdef UART_DBG
-          serial_putstring("UART: warning: rx/tx fifos off!");
-          serial_newline();
+          printf("UART: warning: rx/tx fifos off!\n");
 #endif
         }
         if ((value & UART_FCR_RX_FIFO_CLR) != 0)
@@ -601,7 +405,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       if (getUartMode(uID+1) == configB)
       {
         // store XON1_ADDR1
-        DIE_NOW(0, "UART store XON1_ADDR1 unimplemented");
+        DIE_NOW(gc, "UART store XON1_ADDR1 unimplemented");
       }
       else
       {
@@ -615,10 +419,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
           uart[uID]->loopback = TRUE;
           // adjust MSR register
 #ifdef UART_DBG
-          serial_putstring("UART");
-          serial_putint_nozeros(uID+1);
-          serial_putstring(" loopback mode hack, magic number to MSR");
-          serial_newline();          
+          printf("UART%x loopback mode hack, magic number to MSR\n", uID+1);
 #endif
           uart[uID]->msr = 0x96;
         }
@@ -627,10 +428,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         {
           // switching off loopback mode!
 #ifdef UART_DBG
-          serial_putstring("UART");
-          serial_putint_nozeros(uID+1);
-          serial_putstring(" loopback mode off.");
-          serial_newline();          
+          printf("UART%x  loopback mode off.\n", uID+1);
 #endif
           uart[uID]->loopback = FALSE;
         }
@@ -652,7 +450,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       if (getUartMode(uID+1) == configB)
       {
         // store XON2_ADDR2
-        DIE_NOW(0, "UART store XON2_ADDR2 unimplemented");
+        DIE_NOW(gc, "UART store XON2_ADDR2 unimplemented");
       }
       else
       {
@@ -663,13 +461,13 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       }
       break;
     case UART_MSR_REG:
-      DIE_NOW(0, "UART store MSR/TCR/XOFF1 unimplemented");
+      DIE_NOW(gc, "UART store MSR/TCR/XOFF1 unimplemented");
       break;
     case UART_SPR_REG:
       if (getUartMode(uID+1) == configB)
       {
         // store TLR/XOFF2
-        DIE_NOW(0, "UART store TLR/XOFF2 unimplemented");
+        DIE_NOW(gc, "UART store TLR/XOFF2 unimplemented");
       }
       else
       {
@@ -683,48 +481,42 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         else
         {
           // sub-operational/sub-configA TCR_TLR mode, store TLR reg
-          DIE_NOW(0, "UART store TLR unimplemented");
+          DIE_NOW(gc, "UART store TLR unimplemented");
         }
       }
       break;
     case UART_MDR1_REG:
     {
-      serial_putstring(dev->deviceName);
+#ifdef UART_DBG
+      printf(dev->deviceName);
       switch (value & UART_MDR_MODE_SEL)
       {
         case UART_MODE_UARTx16:
-          serial_putstring(": warning - putting in UARTx16 mode!");
-          serial_newline();
+          printf(": warning - putting in UARTx16 mode!\n");
           break;
         case UART_MODE_SIR:
-          serial_putstring(": warning - putting in SIR mode!");
-          serial_newline();
+          printf(": warning - putting in SIR mode!\n");
           break;
         case UART_MODE_UARTx16ABAUD:
-          serial_putstring(": warning - putting in UARTx16 autobaud mode!");
-          serial_newline();
+          printf(": warning - putting in UARTx16 autobaud mode!\n");
           break;
         case UART_MODE_UARTx13:
-          serial_putstring(": warning - putting in UARTx13 mode!");
-          serial_newline();
+          printf(": warning - putting in UARTx13 mode!\n");
           break;
         case UART_MODE_MIR:
-          serial_putstring(": warning - putting in MIR mode!");
-          serial_newline();
+          printf(": warning - putting in MIR mode!\n");
           break;
         case UART_MODE_FIR:
-          serial_putstring(": warning - putting in FIR mode!");
-          serial_newline();
+          printf(": warning - putting in FIR mode!\n");
           break;
         case UART_MODE_CIR:
-          serial_putstring(": warning - putting in CIR mode!");
-          serial_newline();
+          printf(": warning - putting in CIR mode!\n");
           break;
         case UART_MODE_DISABLED:
-          serial_putstring(": warning - putting in disabled state!");
-          serial_newline();
+          printf(": warning - putting in disabled state!\n");
           break;
       }
+#endif
       uart[uID]->mdr1 = value;
       break;
     }
@@ -734,28 +526,27 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case UART_SYSC_REG:
       if ((value & UART_SYSC_REG_RESET) == UART_SYSC_REG_RESET)
       {
-        serial_putstring(dev->deviceName);
-        serial_putstring(": soft reset.");
-        serial_newline();
+        printf(dev->deviceName);
+        printf(": soft reset.\n");
         resetUart(uID+1);
       }
       uart[uID]->sysc = value;
       break;
     case UART_SYSS_REG:
-      serial_putstring(dev->deviceName);
-      DIE_NOW(0, " storing to R/O register (SYSS_REG)");
+      printf(dev->deviceName);
+      DIE_NOW(gc, " storing to R/O register (SYSS_REG)");
       break;
     case UART_UASR_REG:
-      serial_putstring(dev->deviceName);
-      DIE_NOW(0, " storing to R/O register (autobaud status)");
+      printf(dev->deviceName);
+      DIE_NOW(gc, " storing to R/O register (autobaud status)");
       break;
     case UART_SSR_REG:
-      serial_putstring(dev->deviceName);
-      DIE_NOW(0, " storing to R/O register (SSR)");
+      printf(dev->deviceName);
+      DIE_NOW(gc, " storing to R/O register (SSR)");
       break;
     case UART_MVR_REG:
-      serial_putstring(dev->deviceName);
-      DIE_NOW(0, " storing to R/O register (MVR)");
+      printf(dev->deviceName);
+      DIE_NOW(gc, " storing to R/O register (MVR)");
       break;
     case UART_MDR2_REG:
     case UART_SFLSR_REG:
@@ -763,25 +554,11 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case UART_SFREGL_REG:
     case UART_SFREGH_REG:
     case UART_WER_REG:
-      dumpGuestContext(getGuestContext());
-      serial_putstring("storeUart");
-      serial_putint_nozeros(uID+1);
-      serial_putstring(" reg ");
-      serial_putint_nozeros(regOffs);
-      serial_putstring(" value ");
-      serial_putint(value);
-      serial_newline();
-      DIE_NOW(0, "UART: store to unimplemented register.");
+      printf("storeUart%x reg %x value %08x\n", uID+1, regOffs, value);
+      DIE_NOW(gc, "UART: store to unimplemented register.");
     default:
-      dumpGuestContext(getGuestContext());
-      serial_putstring("storeUart");
-      serial_putint_nozeros(uID+1);
-      serial_putstring(" reg ");
-      serial_putint_nozeros(regOffs);
-      serial_putstring(" value ");
-      serial_putint(value);
-      serial_newline();
-      DIE_NOW(0, "UART: store to undefined register.");
+      printf("storeUart%x reg %x value %08x\n", uID+1, regOffs, value);
+      DIE_NOW(gc, "UART: store to undefined register.");
   } // switch ends
 
 }
@@ -825,11 +602,6 @@ static inline u32int getUartBaseAddr(u32int id)
   
 void setUartMode(u32int uartID)
 {
-#ifdef UART_DBG
-  serial_putstring("UART");
-  serial_putint_nozeros(uartID);
-  serial_putstring(": set mode to ");
-#endif
   u32int uID = uartID-1;
   if ((uart[uID]->lcr & UART_LCR_DIV_EN) == UART_LCR_DIV_EN)
   {
@@ -837,14 +609,14 @@ void setUartMode(u32int uartID)
     {
       uart[uID]->mode = configA;
 #ifdef UART_DBG
-      serial_putstring("configA");
+      printf("UART%x: set mode to configA\n", uartID);
 #endif
     }
     else
     {
       uart[uID]->mode = configB;
 #ifdef UART_DBG
-      serial_putstring("configB");
+      printf("UART%x: set mode to configB\n", uartID);
 #endif
     }
   }
@@ -852,15 +624,420 @@ void setUartMode(u32int uartID)
   {
     uart[uID]->mode = operational;
 #ifdef UART_DBG
-      serial_putstring("operational");
+    printf("UART%x: set mode to operational\n", uartID);
 #endif
   }
-#ifdef UART_DBG
-  serial_newline(); 
-#endif
 }
 
 uartMode getUartMode(u32int uartID)
 {
   return uart[uartID-1]->mode;
+}
+
+
+/*
+ * function called when guest writes to THR register.
+ * immediatelly transmits character to native serial
+ * unless emulation configured to be in loopback mode
+ */
+void uartTxByte(u8int byte, u32int uartID)
+{
+  u32int uID = uartID - 1;
+#ifdef UART_DBG
+    printf("uartTxByte: send '%c' out via serial\n", (char)byte);
+#endif
+
+  if (uart[uID]->loopback)
+  {
+#ifdef UART_DBG
+    printf("uartTxByte: in loopback mode - byte goes to RX FIFO.\n");
+#endif
+    // do we have space in RX FIFO?
+    if (uart[uID]->rxFifoPtr >= RX_FIFO_SIZE)
+    {
+      // can't receive anymore. drop value, set overrun LSR status bit
+      uart[uID]->lsr |= UART_LSR_RX_OE;
+    }
+    else
+    {
+      // character goes straight back into RX
+      if (uart[uID]->rxFifoPtr == 0)
+      {
+        // first char in FIFO, is also RHR
+        uart[uID]->rhr = (u8int)(byte & 0xFF);
+      }
+      uart[uID]->rxFifo[uart[uID]->rxFifoPtr] = (u8int)(byte & 0xFF);
+      // set LSR rx status bit to indicate RX data
+      uart[uID]->lsr |= UART_LSR_RX_FIFO_E;
+      // increment FIFO pointer
+      uart[uID]->rxFifoPtr++;
+    }
+  }
+  else
+  {
+    // don't need to adjust TX bits in LSR, as we will always
+    // finish transmitting this character first, before going back to guest
+    // therefore, the non-existant TX FIFO is trully always empty.
+    printf("%c", (u8int)byte);
+  }
+}
+
+
+/*
+ * function called when guest reads from RHR register.
+ * gets a byte out of RHR/RX FIFO, adjust IRQ bits and LSR
+ */
+u8int uartRxByte(u32int uartID)
+{
+  u32int uID = uartID - 1;
+  u8int value = 0;
+
+  // check LSR RX bit. if zero, return nil.
+  if ((uart[uID]->lsr & UART_LSR_RX_FIFO_E) == 0)
+  {
+#ifdef UART_DBG
+    printf("UART%x: load RHR, but RX FIFO is empty! return 0\n", uartID);
+#endif
+    value = 0;
+  }
+  else
+  {
+#ifdef UART_DBG
+    printf("UART%x: load RHR value %08x\n", uartID, uart[uID]->rhr);
+#endif
+    // there's stuff in the FIFO! get char from RHR
+    value = uart[uID]->rhr;
+    // adjust our fifo: all RX elements shift one position left
+    int i = 0;
+    for (i = 0; i < RX_FIFO_SIZE-1; i++)
+    {
+      uart[uID]->rxFifo[i] = uart[uID]->rxFifo[i+1]; 
+    }
+    // adjust FIFO ptr
+    uart[uID]->rxFifoPtr--;
+    // if we had previously overrun, clear LSR overrun bit
+    uart[uID]->lsr &= ~UART_LSR_RX_OE;
+    // set new RHR: if FIFO now empty, RHR zero and lsr bit cleared.
+    // otherwise, FIFO char 0 is new RHR
+    if (uart[uID]->rxFifoPtr == 0)
+    {
+      uart[uID]->rhr = 0; 
+      uart[uID]->lsr &= ~UART_LSR_RX_FIFO_E;
+      if ( (uart[uID]->ier & UART_IER_RHR) == UART_IER_RHR )
+      {
+        // RX IRQ was enabled. probably need to clear it.
+        uart[uID]->iir = uart[uID]->iir | UART_IIR_IT_PENDING;
+        uart[uID]->iir &= ~UART_IIR_IT_TYPE;
+        if ( (uart[uID]->ier & UART_IER_THR) == UART_IER_THR )
+        {
+          // TX fifo is always empty, set new IRQ type
+          uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
+          uart[uID]->iir &= ~UART_IIR_IT_TYPE;
+          uart[uID]->iir = uart[uID]->iir | (UART_IIR_IT_TYPE_THR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+          switch (uID)
+          {
+            case 0:
+              throwInterrupt(UART1_IRQ);
+              break;
+            case 1:
+              throwInterrupt(UART2_IRQ);
+              break;
+            case 2:
+              throwInterrupt(UART3_IRQ);
+              break;
+            default:
+              DIE_NOW(0, "store to uart: invalid uID.");
+          } // switch ends
+        } // THR irq
+      } // RHR irq
+    }
+    else
+    {
+      uart[uID]->rhr = uart[uID]->rxFifo[0];
+    }
+  } // RX FIFO turned on
+  return value;
+}
+
+
+
+/*
+ * function called from outside, when native serial receives data.
+ * data is stored in RHR and RX fifo.
+ * if they are full, data is dropped and exception indicated.
+ */
+void uartPutRxByte(u8int byte, u32int uartID)
+{
+  u32int uID = uartID - 1;
+
+#ifdef UART_DBG
+  printf("UART%x: uartPutRxByte: %c\n", uartID, (char)byte);
+#endif
+
+  if ((uart[uID]->fcr & UART_FCR_FIFO_EN) == 0)
+  {
+    // FIFO's are disabled!
+    // just receive to RHR
+    uart[uID]->rhr = (u8int)(byte & 0xFF);
+    // set LSR rx status bit to indicate RX data
+    uart[uID]->lsr |= UART_LSR_RX_FIFO_E;
+
+    // set RX IRQ
+    if ((uart[uID]->ier & UART_IER_RHR) == UART_IER_RHR)
+    {
+#ifdef UART_DBG
+      printf("uartPutRxByte: RX IRQ unmasked. Raise with INTC!\n");
+#endif
+      uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
+      uart[uID]->iir &= ~UART_IIR_IT_TYPE;
+      uart[uID]->iir |= (UART_IIR_IT_TYPE_RHR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+      switch (uID)
+      {
+        case 0:
+          throwInterrupt(UART1_IRQ);
+          break;
+        case 1:
+          throwInterrupt(UART2_IRQ);
+          break;
+        case 2:
+          throwInterrupt(UART3_IRQ);
+          break;
+        default:
+          DIE_NOW(0, "store to uart: invalid uID.");
+      } // siwtch ends
+    } // line status error IRQ enabled in UART
+  }
+  else
+  {
+    // do we have space in RX FIFO?
+    if (uart[uID]->rxFifoPtr >= RX_FIFO_SIZE)
+    {
+      // can't receive anymore. drop value, set overrun LSR status bit
+      uart[uID]->lsr |= UART_LSR_RX_OE;
+#ifdef UART_DBG
+      printf("uartPutRxByte: no space in RX fifo!\n");
+#endif
+      
+      // set RX line status error
+      if ((uart[uID]->ier & UART_IER_LINE_ST) == UART_IER_LINE_ST)
+      {
+        uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
+        uart[uID]->iir &= ~UART_IIR_IT_TYPE;
+        uart[uID]->iir |= (UART_IIR_IT_TYPE_RX_LS_ERR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+#ifdef UART_DBG
+        printf("uartPutRxByte: RX line error IRQ unmasked. Raise with INTC!\n");
+#endif
+        switch (uID)
+        {
+          case 0:
+            throwInterrupt(UART1_IRQ);
+            break;
+          case 1:
+            throwInterrupt(UART2_IRQ);
+            break;
+          case 2:
+            throwInterrupt(UART3_IRQ);
+            break;
+          default:
+            DIE_NOW(0, "store to uart: invalid uID.");
+        } // siwtch ends
+      } // line status error IRQ enabled in UART
+    }
+    else
+    {
+      // character goes into RX path
+      if (uart[uID]->rxFifoPtr == 0)
+      {
+        // first char in FIFO, is also RHR
+        uart[uID]->rhr = (u8int)(byte & 0xFF);
+      }
+      uart[uID]->rxFifo[uart[uID]->rxFifoPtr] = (u8int)(byte & 0xFF);
+      // set LSR rx status bit to indicate RX data
+      uart[uID]->lsr |= UART_LSR_RX_FIFO_E;
+      // increment FIFO pointer
+      uart[uID]->rxFifoPtr++;
+      
+      // set RX IRQ
+      if ((uart[uID]->ier & UART_IER_RHR) == UART_IER_RHR)
+      {
+#ifdef UART_DBG
+        printf("uartPutRxByte: RX IRQ unmasked. Raise with INTC!\n");
+#endif
+        uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
+        uart[uID]->iir &= ~UART_IIR_IT_TYPE;
+        uart[uID]->iir |= (UART_IIR_IT_TYPE_RHR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+        switch (uID)
+        {
+          case 0:
+            throwInterrupt(UART1_IRQ);
+            break;
+          case 1:
+            throwInterrupt(UART2_IRQ);
+            break;
+          case 2:
+            throwInterrupt(UART3_IRQ);
+            break;
+          default:
+            DIE_NOW(0, "store to uart: invalid uID.");
+        } // siwtch ends
+      } // line status error IRQ enabled in UART
+    } // RX character
+  } // FIFO's enabled
+
+}
+
+void setIrqFlags(u32int flags, u32int uartID)
+{
+  u32int uID = uartID-1;
+  
+  if (((uart[uID]->ier & UART_IER_THR) == 0) &&
+      ((flags & UART_IER_THR) == UART_IER_THR))
+  {
+    // enabling TX IRQ!
+    // TX fifo is always empty. raise IRQ
+    uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
+    uart[uID]->iir &= ~UART_IIR_IT_TYPE;
+    uart[uID]->iir = uart[uID]->iir | (UART_IIR_IT_TYPE_THR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+#ifdef UART_DBG
+    printf("setIrqFlags: enabling THR irq, set IIR to %x\n", uart[uID]->iir);
+#endif
+    switch (uID)
+    {
+      case 0:
+        throwInterrupt(UART1_IRQ);
+        break;
+      case 1:
+        throwInterrupt(UART2_IRQ);
+        break;
+      case 2:
+        throwInterrupt(UART3_IRQ);
+        break;
+      default:
+        DIE_NOW(0, "store to uart: invalid uID.");
+    }
+  }
+
+
+  if (((uart[uID]->ier & UART_IER_THR) == UART_IER_THR) &&
+          ((flags & UART_IER_THR) == 0))
+  {
+    // THR irq was enabled, clear irq
+    uart[uID]->iir = uart[uID]->iir | UART_IIR_IT_PENDING;
+    uart[uID]->iir = uart[uID]->iir &~ UART_IIR_IT_TYPE;
+#ifdef UART_DBG
+    printf("setIrqFlags: disabling THR irq, set IIR to %x\n", uart[uID]->iir);
+#endif
+  }
+
+
+  if (((uart[uID]->ier & UART_IER_RHR) == 0) &&
+      ((flags & UART_IER_RHR) == UART_IER_RHR))
+  {
+    // Enabling RX interrupt!
+    // if LSR has RX_FIFO_E bit set, set RX irq flag in IIR
+    if ( (uart[uID]->lsr & UART_LSR_RX_FIFO_E) == UART_LSR_RX_FIFO_E)
+    {
+      uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
+      uart[uID]->iir &= ~UART_IIR_IT_TYPE;
+      uart[uID]->iir = uart[uID]->iir | (UART_IIR_IT_TYPE_RHR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+      switch (uID)
+      {
+        case 0:
+          throwInterrupt(UART1_IRQ);
+          break;
+        case 1:
+          throwInterrupt(UART2_IRQ);
+          break;
+        case 2:
+          throwInterrupt(UART3_IRQ);
+          break;
+        default:
+          DIE_NOW(0, "store to uart: invalid uID.");
+      }
+    }
+#ifdef UART_DBG
+    printf("setIrqFlags: enabling RX irq, set IIR to %x\n", uart[uID]->iir);
+#endif
+  }
+
+
+  if (((uart[uID]->ier & UART_IER_RHR) == UART_IER_RHR) &&
+     ((flags & UART_IER_RHR) == 0))
+  {
+    // disabling RX IRQ! clear the flag
+    uart[uID]->iir = uart[uID]->iir | UART_IIR_IT_PENDING;
+    uart[uID]->iir = uart[uID]->iir &~ UART_IIR_IT_TYPE;
+    
+    if ( (flags & UART_IER_THR) == UART_IER_THR )
+    {
+      // TX fifo is always empty, set new IRQ type
+      uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
+      uart[uID]->iir &= ~UART_IIR_IT_TYPE;
+      uart[uID]->iir = uart[uID]->iir | (UART_IIR_IT_TYPE_THR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+      switch (uID)
+      {
+        case 0:
+          throwInterrupt(UART1_IRQ);
+          break;
+        case 1:
+          throwInterrupt(UART2_IRQ);
+          break;
+        case 2:
+          throwInterrupt(UART3_IRQ);
+          break;
+        default:
+          DIE_NOW(0, "store to uart: invalid uID.");
+      }
+    }
+#ifdef UART_DBG
+    printf("setIrqFlags: disabling RHR irq, set IIR to %x\n", uart[uID]->iir);
+#endif
+  }
+
+
+  // bits [4:7] Can be written only when EFR_REG[4] = 1
+  u32int writenValue = flags;
+  if ((uart[uID]->efr && UART_EFR_ENHANCED_EN) == 0)
+  {
+    // enchaned features disabled. only write bottom four bits
+    writenValue &= 0xF;
+    uart[uID]->ier &= 0xFFFFFFF0;
+  }
+  else
+  {
+    // enchaned features enabled. write all 8 bits
+    writenValue &= 0xFF;
+    uart[uID]->ier &= 0xFFFFFF00;
+  }
+  uart[uID]->ier = writenValue;
+#ifdef UART_DBG
+    printf("setIrqFlags: storing IRQ enable register: %x\n", uart[uID]->ier);
+#endif
+ 
+  if ((flags & UART_IER_SLEEP_MODE) != 0)
+  {
+#ifdef UART_DBG
+    printf("setIrqFlags: UART%x: : sent to sleep mode!", uID+1);
+#endif
+  }
+  
+  // if now all irq are clear/disabled, make sure INTC line is clear
+  if ((uart[uID]->iir & UART_IIR_IT_PENDING) == UART_IIR_IT_PENDING)
+  {
+    // no IRQ pending!
+    switch (uID)
+    {
+      case 0:
+        clearInterrupt(UART1_IRQ);
+        break;
+      case 1:
+        clearInterrupt(UART2_IRQ);
+        break;
+      case 2:
+        clearInterrupt(UART3_IRQ);
+        break;
+      default:
+        DIE_NOW(0, "store to uart: invalid uID.");
+    }
+  }
 }

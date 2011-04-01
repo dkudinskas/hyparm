@@ -4,7 +4,6 @@
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
-#include "vm/omap35xx/serial.h"
 
 
 #define MEGABYTE_COUNT   4096

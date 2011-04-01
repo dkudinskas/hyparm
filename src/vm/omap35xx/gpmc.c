@@ -4,7 +4,6 @@
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/gpmc.h"
-#include "vm/omap35xx/serial.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
@@ -25,9 +24,7 @@ void initGpmc()
   {
     memset((void*)gpmc, 0x0, sizeof(struct Gpmc));
 #ifdef GPMC_DBG
-    serial_putstring("Initializing GPMC at 0x");
-    serial_putint((u32int)gpmc);
-    serial_newline();
+    printf("Initializing GPMC at %08x\n", (u32int)gpmc);
 #endif
   }
   
@@ -92,9 +89,7 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
       break;
     case GPMC_SYSCONFIG:
       // TODO
-      serial_putstring("WARN reading GPMC_SYSCONFIG ");
-      serial_putint(gpmc->gpmcSysConfig);
-      serial_newline();
+      printf("WARN reading GPMC_SYSCONFIG %08x\n", gpmc->gpmcSysConfig);
       val = gpmc->gpmcSysConfig;
       break;
     case GPMC_NAND_COMMAND_0:
@@ -164,29 +159,15 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
       val = gpmc->gpmcConfig7_7;
       break;
     default:
-      dumpGuestContext(gc);
-      serial_putstring(dev->deviceName);
-      serial_putstring(" load from pAddr: 0x");
-      serial_putint(phyAddr);
-      serial_putstring(", vAddr: 0x");
-      serial_putint(address);
-      serial_putstring(" access size ");
-      serial_putint((u32int)size);
-      serial_newline();
-      DIE_NOW(0, "Gpmc: load on invalid register.");
+      printf(dev->deviceName);
+      printf(" load from pAddr: %08x, vAddr: %08x, accSize %x\n", phyAddr, address, (u32int)size);
+      DIE_NOW(gc, "Gpmc: load on invalid register.");
   }
   
 #ifdef GPMC_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_putstring(" val = ");
-  serial_putint(val);
-  serial_newline();
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr: %08x, accSize %x, val %08x\n",
+        phyAddr, address, (u32int)size);
 #endif
 
   return val;
@@ -202,16 +183,9 @@ void storeGpmc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef GPMC_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" store to pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_putstring(" aSize ");
-  serial_putint((u32int)size);
-  serial_putstring(" val ");
-  serial_putint(value);
-  serial_newline();
+  printf(dev->deviceName);
+  printf(" store to pAddr: %08x, vAddr %08x, aSize %x, val %08x\n",
+         phyAddr, address, (u32int)size, value);
 #endif
 
   u32int regOffset = phyAddr - Q1_L3_GPMC;
@@ -219,20 +193,18 @@ void storeGpmc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   {
     case GPMC_SYSCONFIG:
       // TODO
-      serial_putstring("WARN writing to GPMC_SYSCONFIG ");
-      serial_putint(value);
-      serial_newline();
+      printf("WARN writing to GPMC_SYSCONFIG %08x\n", value);
       if (value & GPMC_SYSCONFIG_SOFTRESET)
       {
-        serial_putstring("WARN should do soft reset of GPMC ");
+        printf("WARN should do soft reset of GPMC\n");
       }
       gpmc->gpmcSysConfig = value & GPMC_SYSCONFIG_MASK;
       break;
     case GPMC_SYSSTATUS:
-      DIE_NOW(0, "Gpmc: store to read-only register.");
+      DIE_NOW(gc, "Gpmc: store to read-only register.");
       break;
     default:
-      DIE_NOW(0, "Gpmc: store to invalid register.");
+      DIE_NOW(gc, "Gpmc: store to invalid register.");
   }
 }
 

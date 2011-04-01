@@ -15,7 +15,7 @@ int stringncmp(char * str1, char * str2, int n)
   return 0;
 }
 
-ulong stringToLong(char * str)
+u32int strtoi(char * str)
 {
   int  length = 8;
   int  bitsInLong = 32;
@@ -68,4 +68,15 @@ char * stringcpy(char * dest, char *src)
     // do nothing
   }
   return tmp;
+}
+
+/**
+ * strcmp - compare strings
+ */
+int stringcmp (const char * s1, const char * s2)
+{
+  for(; *s1 == *s2; ++s1, ++s2)
+    if(*s1 == 0)
+      return 0;
+  return *(unsigned char *)s1 < *(unsigned char *)s2 ? -1 : 1;
 }

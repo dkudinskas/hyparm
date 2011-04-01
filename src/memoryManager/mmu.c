@@ -1,6 +1,5 @@
 #include "common/assert.h"
-
-#include "vm/omap35xx/serial.h"
+#include "common/debug.h"
 
 #include "memoryManager/mmu.h"
 
@@ -73,9 +72,8 @@ void mmu_compile_time_check(void)
 
 void mmuInit()
 {
-#ifdef MMU_DEBUG
-  serial_putstring("MMU init");
-  serial_newline();
+#ifdef MMU_DBG
+  printf("MMU init\n");
 #endif
 
   dataBarrier();
@@ -86,9 +84,8 @@ void mmuInit()
 
 void dataBarrier()
 {
-#ifdef MMU_DEBUG
-  serial_putstring("Data Barrier");
-  serial_newline();
+#ifdef MMU_DBG
+  printf("Data Barrier\n");
 #endif
     /*it doesn't matter which register it written/nor the value inside it
      * Page: 153
@@ -102,9 +99,8 @@ void dataBarrier()
 
 void clearTLB()
 {
-#ifdef MMU_DEBUG
-  serial_putstring("Clearing TLB");
-  serial_newline();
+#ifdef MMU_DBG
+  printf("Clearing TLB\n");
 #endif
   /* It doesn't matter which register it written/nor the value inside it
    * Page 1373
@@ -120,10 +116,8 @@ void clearTLB()
 void clearTLBbyMVA(u32int address)
 {
   address &= 0xFFFFF000;
-#ifdef MMU_DEBUG
-  serial_putstring("Clearing TLB of virt addr: 0x");
-  serial_putint(address);
-  serial_newline();
+#ifdef MMU_DBG
+  printf("Clearing TLB of virt addr: %08x\n", address);
 #endif
   // mcr coproc opc1 Rt CRn CRm opc2
   asm ("mcr p15, 0, %0, c8, c7, 1"
@@ -135,9 +129,8 @@ void clearTLBbyMVA(u32int address)
 
 void clearCache()
 {
-#ifdef MMU_DEBUG
-  serial_putstring("Clearing caches");
-  serial_newline();
+#ifdef MMU_DBG
+  printf("Clearing caches\n");
 #endif
   // Page: 1361
   asm ("mcr p15, 0, r0, c7, c5, 0"
@@ -165,12 +158,8 @@ void setTTBCR(u32int value)
 void setDomain(u8int domain, access_type access)
 {
   //access is a two bit field 00 = no access, 01=client, 10=reserved, 11=manager
-#ifdef MMU_DEBUG
-  serial_putstring("Setting domain: ");
-  serial_putint_nozeros(domain);
-  serial_putstring(", with access bits 0x");
-  serial_putint_nozeros((u8int)access);
-  serial_newline();
+#ifdef MMU_DBG
+  printf("Setting domain: %x, with access bits %x\n", domain, (u8int)access);
 #endif
 
   u32int value;
@@ -179,10 +168,8 @@ void setDomain(u8int domain, access_type access)
   :
   : "memory"
      );
-#ifdef MMU_DEBUG
-  serial_putstring("Domain Register before update: 0x");
-  serial_putint(value);
-  serial_newline();
+#ifdef MMU_DBG
+  printf("Domain Register before update: %x\n", value);
 #endif
   //clear the current domain
   u32int mask = ~(0b11 << (domain*2));
@@ -195,26 +182,21 @@ void setDomain(u8int domain, access_type access)
   : "memory"
      );
 
-#ifdef MMU_DEBUG
+#ifdef MMU_DBG
   asm volatile("mrc p15, 0, %0, c3, c0, 0"
   : "=r"(value)
   :
   : "memory"
               );
-  serial_putstring("Domain Register after update: 0x");
-  serial_putint(value);
-  serial_newline();
+  printf("Domain Register after update: %x\n", value);
 #endif
-
 }
 
 
 void setTexRemap(bool enable)
 {
-#ifdef MMU_DEBUG
-  serial_putstring("setTexRemap: ");
-  serial_putint(enable);
-  serial_newline();
+#ifdef MMU_DBG
+  printf("setTexRemap: %x\n", enable);
 #endif
 
   u32int value;
@@ -223,11 +205,9 @@ void setTexRemap(bool enable)
   :
   : "memory"
      );
-#ifdef MMU_DEBUG
-  serial_putstring("setTexRemap: currently SCTRL.TRE = ");
+#ifdef MMU_DBG
   u32int treEnabled = ((value & 0x10000000) == 0x10000000) ? TRUE : FALSE; 
-  serial_putint(treEnabled);
-  serial_newline();
+  printf("setTexRemap: currently SCTRL.TRE = %x\n", treEnabled);
 #endif
 
   if (enable)
@@ -245,24 +225,21 @@ void setTexRemap(bool enable)
   : "memory"
      );
 
-#ifdef MMU_DEBUG
+#ifdef MMU_DBG
   asm volatile("mrc p15, 0, %0, c1, c0, 0"
   : "=r"(value)
   :
   : "memory"
               );
-  serial_putstring("setTexRemap: SCTRL after update ");
-  serial_putint(value);
-  serial_newline();
+  printf("setTexRemap: SCTRL after update %x\n", value);
 #endif
 }
 
 
 void mmuInsertPt0(descriptor* addr)
 {
-#ifdef MMU_DEBUG
-  serial_putstring("Add entry into TTBR0: 0x");
-  serial_putint((u32int)addr);
+#ifdef MMU_DBG
+  printf("Add entry into TTBR0: %08x\n", (u32int)addr);
 #endif
   /* TODO: need to improve this to insert the correct bit masks
    * TTBR0(1348): base address of translation table 0
@@ -275,9 +252,8 @@ void mmuInsertPt0(descriptor* addr)
 
 void mmuInsertPt1(descriptor* addr)
 {
-#ifdef MMU_DEBUG
-  serial_putstring("Add entry into TTBR1: 0x");
-  serial_putint((u32int)addr);
+#ifdef MMU_DBG
+  printf("Add entry into TTBR1: %08x\n", (u32int)addr);
 #endif
   //TODO: need to improve this to insert the correct bit masks
   asm("mcr p15, 0, %0,c2,c0,1"
@@ -294,9 +270,8 @@ descriptor* mmuGetPt0()
       :"=r"(regVal)
       :
       );
-#ifdef MMU_DEBUG
-  serial_putstring("Get TTBR0: 0x");
-  serial_putint((u32int)regVal);
+#ifdef MMU_DBG
+  printf("Get TTBR0: %08x\n", (u32int)regVal);
 #endif
   return (descriptor*)regVal;
 }
@@ -383,31 +358,14 @@ void printDataAbort()
 {
   DFSR dfsr = getDFSR();
   u32int dfar = getDFAR();
-
-  serial_putstring("Data Abort Address: 0x");
-  serial_putint(dfar);
-  serial_newline();
-
-  serial_putstring("Fault type: ");
-  serial_putstring((char*)dataAbtFaultString[dfsr.fs3_0]);
-  serial_putstring(" (0x");
   u32int faultStatus = dfsr.fs4 << 4 | dfsr.fs3_0;
-  serial_putint_nozeros(faultStatus);
-  serial_putstring(")");
-  serial_newline();
 
-  serial_putstring("domain: 0x");
-  serial_putint_nozeros(dfsr.domain);
-
+  printf("Data Abort Address: %08x\n", dfar);
+  printf("Fault type: ");
+  printf((char*)dataAbtFaultString[dfsr.fs3_0]);
+  printf(" (%x), domain %x, Write not Read: %x, External: %x",
+         faultStatus, dfsr.domain, dfsr.WnR, dfsr.ExT);
   /* Perhaps read out the domain and spit out the permission bits set for that domain at this point? */
-
-  serial_putstring(", Write not Read: 0x");
-  serial_putint_nozeros(dfsr.WnR);
-
-  serial_putstring(", External: 0x");
-  serial_putint_nozeros(dfsr.ExT);
-  serial_newline();
-
 }
 
 void printPrefetchAbort()
@@ -415,17 +373,9 @@ void printPrefetchAbort()
   IFSR ifsr = getIFSR();
   u32int ifar = getIFAR();
   u32int faultStatus = ifsr.fs3_0 | (ifsr.fs4 << 4);
-  serial_putstring("Prefetch Abort Address: 0x");
-  serial_putint(ifar);
-  serial_newline();
 
-  serial_putstring("Fault type: ");
-  serial_putstring((char*)prefetchAbtFaultString[faultStatus]);
-  serial_putstring(" (0x");
-  serial_putint_nozeros(faultStatus);
-  serial_putstring(")");
-
-  serial_putstring("External: 0x");
-  serial_putint_nozeros(ifsr.ExT);
-  serial_newline();
+  printf("Prefetch Abort Address: %08x\n", ifar);
+  printf("Fault type: ");
+  printf((char*)prefetchAbtFaultString[faultStatus]);
+  printf(" (%x),  External: %x\n", faultStatus, ifsr.ExT);
 }

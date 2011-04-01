@@ -2,8 +2,6 @@
 
 #include "drivers/beagle/be32kTimer.h"
 
-#include "vm/omap35xx/serial.h"
-
 
 static u32int baseVA = 0;
 
@@ -35,9 +33,7 @@ u32int getCounterVal(void)
   {
     u32int val = beLoadTimer32k(addr);
 #ifdef BE_TIMER32K_DBG
-    serial_putstring("BE_32KTIMER: load counter val ");
-    serial_putint_nozeros(val);
-    serial_newline();
+    printf("BE_32KTIMER: load counter val %x\n");
 #endif
     return val;
   }

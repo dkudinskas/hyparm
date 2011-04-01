@@ -4,7 +4,6 @@
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/gpio.h"
-#include "vm/omap35xx/serial.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
@@ -25,11 +24,7 @@ void initGpio(u32int gpioNumber)
   {
     memset((void*)gpio[gpioNumber-1], 0x0, sizeof(struct Gpio));
 #ifdef GPIO_DBG
-    serial_putstring("Initializing GPIO");
-    serial_putint_nozeros(gpioNumber);
-    serial_putstring(" at 0x");
-    serial_putint((u32int)gpio[gpioNumber-1]);
-    serial_newline();
+    printf("Initializing GPIO%x at %08x\n", gpioNumber, (u32int)gpio[gpioNumber-1]);
 #endif
   }
   
@@ -156,24 +151,16 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
     case GPIO_SETWKUENA:
     case GPIO_CLEARDATAOUT:
     case GPIO_SETDATAOUT:
-      serial_putstring("GPIO: load from unimplemented register ");
-      serial_putint_nozeros(regOffset);
-      DIE_NOW(0, ", panic.");
+      printf("GPIO: load from unimplemented register %x\n", regOffset);
+      DIE_NOW(0, "panic.");
       break;
     default:
       DIE_NOW(0, "Gpio: load on invalid register.");
   }
 #ifdef GPIO_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_putstring(" val = ");
-  serial_putint(val);
-  serial_newline();
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr: %08x access size %x val = %08x\n",
+         phyAddr, address, (u32int)size, val);
 #endif
   return val;
 }
@@ -188,16 +175,9 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef GPIO_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" store to pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_putstring(" aSize ");
-  serial_putint((u32int)size);
-  serial_putstring(" val ");
-  serial_putint(value);
-  serial_newline();
+  printf(dev->deviceName);
+  printf(" store to pAddr: %08x, vAddr: %08x, access size: %x, val %08x\n",
+        phyAddr, address, (u32int)size, value);
 #endif
 
   u32int regOffset = 0;
@@ -241,8 +221,7 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       if ((value & GPIO_SYSCONFIG_SOFTRESET) == GPIO_SYSCONFIG_SOFTRESET)
       {
 #ifdef GPIO_DBG
-        serial_putstring("GPIO: soft reset.");
-        serial_newline();
+        printf("GPIO: soft reset.\n");
 #endif
         resetGpio(gpioNum);
       }
@@ -316,12 +295,11 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPIO_SETIRQENABLE2:
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
-      serial_putstring("GPIO: store to unimplemented register ");
-      serial_putint_nozeros(regOffset);
-      DIE_NOW(0, ", panic.");
+      printf("GPIO: store to unimplemented register %x\n", regOffset);
+      DIE_NOW(gc, "panic.");
       break;
     default:
-      DIE_NOW(0, "Gpio: store to invalid register.");
+      DIE_NOW(gc, "Gpio: store to invalid register.");
   }
 }
 

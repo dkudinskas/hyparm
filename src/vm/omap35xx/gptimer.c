@@ -8,7 +8,6 @@
 
 #include "vm/omap35xx/clockManager.h"
 #include "vm/omap35xx/gptimer.h"
-#include "vm/omap35xx/serial.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
@@ -30,9 +29,7 @@ void initGPTimer()
   {
     memset((void*)gptimer, 0x0, sizeof(struct GeneralPurposeTimer));
 #ifdef GPTIMER_DBG
-    serial_putstring("Initializing General Purpose timer at 0x");
-    serial_putint((u32int)gptimer);
-    serial_newline();
+    printf("Initializing General Purpose timer at %08x\n", (u32int)gptimer);
 #endif
   }
 
@@ -86,172 +83,134 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
     case GPT_REG_TIOCP_CFG:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load from config register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load config register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TISTAT:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load from status register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load status register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TISR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load from irq status register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load irq status register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TIER:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load from irq enable register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load irq enable register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TWER:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load from wakeup enable register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load wakeup enable register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TCLR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load from conrol register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load conrol register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TCRR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load internal clock register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load internal clock register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TLDR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load counter reload value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load counter reload value %08x\n", val);
 #endif
       break;
     case GPT_REG_TTGR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load trigger register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load trigger register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TWPS:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load from write-posted pending status register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load write-posted pending status register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TMAR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load match register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load match register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TCAR1:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load first captured counter value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load first captured counter value %08x\n", val);
 #endif
       break;
     case GPT_REG_TSICR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load interface control register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load interface control register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TCAR2:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load second captured counter value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load second captured counter value %08x\n", val);
 #endif
       break;
     case GPT_REG_TPIR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load positive increment value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load positive increment value %08x\n", val);
 #endif
       break;
     case GPT_REG_TNIR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load negative increment value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load negative increment value %08x\n", val);
 #endif
       break;
     case GPT_REG_TCVR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load counter pir/nir selection register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load counter pir/nir selection register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TOCR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load overflow masking register value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load overflow masking register value %08x\n", val);
 #endif
       break;
     case GPT_REG_TOWR:
       val = loadFromGPTimer(2, regOffs);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": load number of masked overflows, value 0x");
-      serial_putint(val);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": load number of masked overflows value %08x\n", val);
 #endif
       break;
     default:
@@ -280,55 +239,43 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPT_REG_TIOCP_CFG:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to config register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to config register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TISTAT:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to status register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to status register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TISR:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to irq status register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to irq status register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TIER:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to irq enable register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to irq enable register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TWER:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to wakeup enable register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to wakeup enable register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TCLR:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to conrol register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to conrol register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TCRR:
@@ -337,10 +284,8 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       u32int adjustedValue = value << 12;
       storeToGPTimer(2, regOffs, adjustedValue);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to internal clock register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to internal clock register value %08x\n", value);
 #endif
       break;
     }
@@ -350,110 +295,86 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       u32int adjustedValue = value << 12;
       storeToGPTimer(2, regOffs, adjustedValue);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to counter reload value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to counter reload value %08x\n", value);
 #endif
       break;
     }
     case GPT_REG_TTGR:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to trigger register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to trigger register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TWPS:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to write-posted pending status register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to write-posted pending status register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TMAR:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to match register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to match register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TCAR1:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to first captured counter value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to first captured counter value %08x\n", value);
 #endif
       break;
     case GPT_REG_TSICR:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to interface control register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to interface control register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TCAR2:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to second captured counter value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to second captured counter value %08x\n", value);
 #endif
       break;
     case GPT_REG_TPIR:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to positive increment value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to positive increment value %08x\n", value);
 #endif
       break;
     case GPT_REG_TNIR:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to negative increment value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to negative increment value %08x\n", value);
 #endif
       break;
     case GPT_REG_TCVR:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to counter pir/nir selection register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to counter pir/nir selection register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TOCR:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to overflow masking register value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to overflow masking register value %08x\n", value);
 #endif
       break;
     case GPT_REG_TOWR:
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
-      serial_putstring(dev->deviceName);
-      serial_putstring(": store to number of masked overflows, value 0x");
-      serial_putint(value);
-      serial_newline();
+      printf(dev->deviceName);
+      printf(": store to number of masked overflows value %08x\n", value);
 #endif
       break;
     default:

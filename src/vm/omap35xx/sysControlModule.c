@@ -3,7 +3,6 @@
 
 #include "guestManager/guestContext.h"
 
-#include "vm/omap35xx/serial.h"
 #include "vm/omap35xx/sysControlModule.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
@@ -25,9 +24,7 @@ void initSysControlModule()
   {
     memset((void*)sysCtrlModule, 0x0, sizeof(struct SystemControlModule));
 #ifdef SYS_CTRL_MOD_DBG
-    serial_putstring("Initializing System control module at 0x");
-    serial_putint((u32int)sysCtrlModule);
-    serial_newline();
+    printf("Initializing System control module at %08x\n", (u32int)sysCtrlModule);
 #endif
   }
   
@@ -166,20 +163,14 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef SYS_CTRL_MOD_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_newline();
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x, aSize %x\n", phyAddr, address, (u32int)size);
 #endif
 
   if (size != WORD)
   {
     // only word access allowed in these modules
-    DIE_NOW(0, "SysControlModule: invalid access size.");
+    DIE_NOW(gc, "SysControlModule: invalid access size.");
   }
 
   u32int val = 0;
@@ -210,7 +201,7 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int address)
   }
   else
   {
-    DIE_NOW(0, "SysControlModule: invalid base module.");
+    DIE_NOW(gc, "SysControlModule: invalid base module.");
   }   
 
   return val;
@@ -218,13 +209,8 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int address)
 
 u32int loadInterfaceScm(device * dev, u32int address, u32int phyAddr)
 {
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x\n", phyAddr, address);
   DIE_NOW(0, " loadInterfaceScm unimplemented.");
   return 0;
 }
@@ -232,13 +218,8 @@ u32int loadInterfaceScm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadPadconfsScm(device * dev, u32int address, u32int phyAddr)
 {
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x\n", phyAddr, address);
   DIE_NOW(0, " loadPadconfsScm unimplemented.");
   return 0;
 }
@@ -257,17 +238,11 @@ u32int loadGeneralScm(device * dev, u32int address, u32int phyAddr)
       val = sysCtrlModule->ctrlDevConf1;
       break;
     default:
-      serial_putstring("loadGeneralScm: unimplemented reg addr 0x");
-      serial_putint(phyAddr);
-      serial_newline();
+      printf("loadGeneralScm: unimplemented reg addr %08x\n", phyAddr);
       DIE_NOW(0, "loadGeneralScm loading non existing/unimplemented register!");
   } // switch ends
 #ifdef SYS_CTRL_MOD_DBG
-  serial_putstring("loadGeneralScm reg ");
-  serial_putint_nozeros(reg);
-  serial_putstring(" value ");
-  serial_putint(val);
-  serial_newline(); 
+  printf("loadGeneralScm reg %x value %08x\n", reg, val);
 #endif
   return val;
 }
@@ -275,13 +250,8 @@ u32int loadGeneralScm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadMemWkupScm(device * dev, u32int address, u32int phyAddr)
 {
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x\n", phyAddr, address);
   DIE_NOW(0, " loadMemWkupScm unimplemented.");
   return 0;
 }
@@ -289,13 +259,8 @@ u32int loadMemWkupScm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadPadconfsWkupScm(device * dev, u32int address, u32int phyAddr)
 {
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x\n", phyAddr, address);
   DIE_NOW(0, " loadPadconfsWkupScm unimplemented.");
   return 0;
 }
@@ -303,13 +268,8 @@ u32int loadPadconfsWkupScm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadGeneralWkupScm(device * dev, u32int address, u32int phyAddr)
 {
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr %08x\n", phyAddr, address);
   DIE_NOW(0, " loadGeneralWkupScm unimplemented.");
   return 0;
 }
@@ -325,16 +285,9 @@ void storeSysCtrlModule(device * dev, ACCESS_SIZE size, u32int address, u32int v
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef CLK_MAN_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" store to pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_putstring(" aSize ");
-  serial_putint((u32int)size);
-  serial_putstring(" val ");
-  serial_putint(value);
-  serial_newline();
+  printf(dev->deviceName);
+  printf(" store to pAddr: %08x, vAddr %08x, aSize %x, value %08x\n", 
+         phyAddr, address, (u32int)size, value);
 #endif
 
   if ((phyAddr >= SYS_CTRL_MOD_INTERFACE) && (phyAddr < (SYS_CTRL_MOD_INTERFACE + 36)))
@@ -363,15 +316,10 @@ void storeSysCtrlModule(device * dev, ACCESS_SIZE size, u32int address, u32int v
   }
   else
   {
-    serial_putstring("Store to: ");
-    serial_putstring(dev->deviceName);
-    serial_putstring(" at address ");
-    serial_putint(address);
-    serial_putstring(" value ");
-    serial_putint(value);
-    serial_newline();
-    serial_putstring(dev->deviceName);
-    DIE_NOW(0, " invalid base module.");
+    printf(dev->deviceName);
+    printf(" store to pAddr: %08x, vAddr %08x, aSize %x, value %08x\n", 
+           phyAddr, address, (u32int)size, value);
+    DIE_NOW(gc, "Invalid base module.");
   }   
 
 }
@@ -379,83 +327,47 @@ void storeSysCtrlModule(device * dev, ACCESS_SIZE size, u32int address, u32int v
 
 void storeInterfaceScm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  serial_putstring("Store to: ");
-  serial_putstring(dev->deviceName);
-  serial_putstring(" at address ");
-  serial_putint(address);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": Store to address %08x, value %08x\n", address, value);
   DIE_NOW(0, " storeInterfaceScm unimplemented.");
 }
 
 
 void storePadconfsScm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  serial_putstring("Store to: ");
-  serial_putstring(dev->deviceName);
-  serial_putstring(" at address ");
-  serial_putint(address);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": Store to address %08x, value %08x\n", address, value);
   DIE_NOW(0, " storePadconfsScm unimplemented.");
 }
 
 
 void storeGeneralScm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  serial_putstring("Store to: ");
-  serial_putstring(dev->deviceName);
-  serial_putstring(" at address ");
-  serial_putint(address);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": Store to address %08x, value %08x\n", address, value);
   DIE_NOW(0, " storeGeneralScm unimplemented.");
 }
 
 
 void storeMemWkupScm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  serial_putstring("Store to: ");
-  serial_putstring(dev->deviceName);
-  serial_putstring(" at address ");
-  serial_putint(address);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": Store to address %08x, value %08x\n", address, value);
   DIE_NOW(0, " storeMemWkupScm unimplemented.");
 }
 
 
 void storePadconfsWkupScm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  serial_putstring("Store to: ");
-  serial_putstring(dev->deviceName);
-  serial_putstring(" at address ");
-  serial_putint(address);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": Store to address %08x, value %08x\n", address, value);
   DIE_NOW(0, " storePadconfsWkupScm unimplemented.");
 }
 
 
 void storeGeneralWkupScm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  serial_putstring("Store to: ");
-  serial_putstring(dev->deviceName);
-  serial_putstring(" at address ");
-  serial_putint(address);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  printf(dev->deviceName);
+  printf(": Store to address %08x, value %08x\n", address, value);
   DIE_NOW(0, " storeGeneralWkupScm unimplemented.");
 }

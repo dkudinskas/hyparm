@@ -5,8 +5,6 @@
 #include "guestManager/guestContext.h"
 #include "guestManager/guestExceptions.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "memoryManager/frameAllocator.h"
 #include "memoryManager/memoryConstants.h"
 #include "memoryManager/memoryProtection.h"
@@ -21,8 +19,9 @@ u32int removeEntry(u32int startAddr, u32int endAddr);
 
 MEMPROT* initialiseMemoryProtection(void)
 {
-  serial_putstring("Initialising memory protection array.");
-  serial_newline();
+#ifdef MEM_PROT_DBG
+  printf("Initialising memory protection array.\n");
+#endif
 
   //grab a 4KB chunk of mem
   u32int* addr = allocFrame(HYPERVISOR_FA_DOMAIN);
@@ -38,19 +37,9 @@ MEMPROT* initialiseMemoryProtection(void)
   MEMPROT* memProt = (MEMPROT*)addr;
   memProt->maxEntries = arraySpace / sizeof(MPE);
 
-#ifdef MEM_PROT_DEBUG
-  serial_putstring("Space for memProt array: 0x");
-  serial_putint_nozeros(arraySpace);
-  serial_newline();
-  serial_putstring(", size of single MEMPROT: ");
-  serial_putint_nozeros(sizeof(MEMPROT));
-  serial_newline();
-  serial_putstring(", size of single memoryProtectionEntry: ");
-  serial_putint_nozeros(sizeof(MPE));
-  serial_newline();
-  serial_putstring(", maxEntries: ");
-  serial_putint_nozeros(memProt->maxEntries);
-  serial_newline();
+#ifdef MEM_PROT_DBG
+  printf("Space for memProt array: %x, size of single MEMPROT: %x\n", arraySpace, sizeof(MEMPROT));
+  printf("Size of single memoryProtectionEntry: %x, , maxEntries: %x", sizeof(MPE), memProt->maxEntries);
 #endif
 
   return memProt;
@@ -62,30 +51,22 @@ returns 0 on success
 */
 u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TYPE protection)
 {
-#ifdef MEM_PROT_DEBUG
-  serial_putstring("PARTIAL IMPLEMENTATION. addProtection (memoryProtection.c)");
-  serial_newline();
+#ifdef MEM_PROT_DBG
+  printf("PARTIAL IMPLEMENTATION. addProtection (memoryProtection.c)\n");
 #endif
 
   GCONTXT* gc = getGuestContext();
 
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
 
-#ifdef MEM_PROT_DEBUG
-  serial_putstring("addProtection: Start Addr: 0x");
-  serial_putint(startAddr);
-  serial_putstring(", End Addr: 0x");
-  serial_putint(endAddr);
-  serial_newline();
+#ifdef MEM_PROT_DBG
+  printf("addProtection: Start Addr: %08x, End Addr: %08x\n", startAddr, endAddr);
 #endif
 
   if(startAddr > endAddr)
   {
-    serial_putstring("Start addr: 0x");
-    serial_putint(startAddr);
-    serial_putstring(", is greater than the end addr: 0x");
-    serial_putint(endAddr);
-    DIE_NOW(0, "Entering infinite loop.");
+    printf("Start addr: %08x, is greater than the end addr: %08x\n", startAddr, endAddr);
+    DIE_NOW(gc, "Entering infinite loop.");
   }
 
   //Simple way to find out if we cross PT entries
@@ -93,10 +74,8 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
   u32int pageEndAddr = getPageEndAddr(ptd, startAddr);
   u32int result;
 
-#ifdef MEM_PROT_DEBUG
-  serial_putstring("addProtection: pageEndAddr = ");
-  serial_putint(pageEndAddr);
-  serial_newline();
+#ifdef MEM_PROT_DBG
+  printf("addProtection: pageEndAddr = %08x\n", pageEndAddr);
 #endif
 
   if(pageEndAddr == 0)
@@ -106,9 +85,8 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
 
   if(endAddr <= pageEndAddr)
   {
-#ifdef MEM_PROT_DEBUG
-    serial_putstring("addProtection: Single entry, partially implemented");
-    serial_newline();
+#ifdef MEM_PROT_DBG
+    printf("addProtection: Single entry, partially implemented\n");
 #endif
     //If the end of the address range we want to protect is inside that of a single pageTableEntry
     //Add a single entry
@@ -117,9 +95,8 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
   else
   {
     //We cross multiple page table entries for this protection range
-#ifdef MEM_PROT_DEBUG
-    serial_putstring("addProtection: Multi entry, partially implemented");
-    serial_newline();
+#ifdef MEM_PROT_DBG
+    printf("addProtection: Multi entry, partially implemented\n");
 #endif
 
     u32int pageStartAddr = startAddr;
@@ -127,10 +104,8 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
     //We are dealing with multiple pages, loop to mark all pages USR_ read only
     while(endAddr > pageEndAddr)
     {
-#ifdef MEM_PROT_DEBUG
-      serial_putstring("addProtection: CurrentStartAddr: 0x"); serial_putint(pageStartAddr);
-      serial_putstring(", currentEndAddr: 0x"); serial_putint(pageEndAddr);
-      serial_newline();
+#ifdef MEM_PROT_DBG
+      printf("addProtection: CurrentStartAddr: %x, currentEndAddr: %x\n", pageStartAddr, pageEndAddr);
 #endif
 
       result = setAccessBits(ptd, pageStartAddr, protection);
@@ -166,11 +141,7 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
 u32int removeProtection(u32int startAddr)
 {
   /* Simple prototype implementation for now. Until proper memoryProtection is written */
-
-  serial_putstring("UNIMPLEMENTED: removeProtection. Setting memoryAddress: 0x");
-  serial_putint(startAddr);
-  serial_putstring(" R/W for now. Continuing");
-  serial_newline();
+  printf("UNIMPLEMENTED: removeProtection. Setting memoryAddress: %08x R/W for now.\n", startAddr);
 
   GCONTXT* gc = getGuestContext();
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
@@ -241,8 +212,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
         case FAULT:
         {
 #ifdef MEM_PROT_DBG
-          serial_putstring("shouldDataAbort(): dacr 1, ptEntry type fault!");
-          serial_newline();
+          printf("shouldDataAbort(): dacr 1, ptEntry type fault!\n");
 #endif
           throwDataAbort(address, dfsTranslationSection, isWrite, dom);
           return TRUE;
@@ -453,10 +423,7 @@ bool shouldPrefetchAbort(u32int address)
 {
   GCONTXT* context = getGuestContext();
 #ifdef MEM_PROT_DBG
-  serial_putstring("shouldPrefetchAbort(");
-  serial_putint(address);
-  serial_putstring(")");
-  serial_newline();
+  printf("shouldPrefetchAbort(%08x)\n", address);
 #endif
 
   // get page table entry for address
@@ -468,8 +435,7 @@ bool shouldPrefetchAbort(u32int address)
     case FAULT:
     {
 #ifdef MEM_PROT_DBG
-      serial_putstring("shouldPrefetchAbort(): Lvl1 ptEntry type FAULT!");
-      serial_newline();
+      printf("shouldPrefetchAbort(): Lvl1 ptEntry type FAULT!\n");
 #endif
       throwPrefetchAbort(address, ifsTranslationFaultSection);
       return TRUE;
@@ -482,8 +448,7 @@ bool shouldPrefetchAbort(u32int address)
     case PAGE_TABLE:
     {
 #ifdef MEM_PROT_DBG
-      serial_putstring("shouldPrefetchAbort(): Lvl1 ptEntry type PageTable!");
-      serial_newline();
+      printf("shouldPrefetchAbort(): Lvl1 ptEntry type PageTable!\n");
 #endif
       // get 2nd level table entry address
       descriptor* ptd2nd = get2ndLevelPtDescriptor((pageTableDescriptor*)ptEntry, address);

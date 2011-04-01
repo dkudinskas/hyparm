@@ -2,8 +2,6 @@
 
 #include "guestManager/guestContext.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/dataMoveInstr.h"
 
 #include "memoryManager/globalMemoryMapper.h"
@@ -97,11 +95,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
   }
   else
   {
-    serial_putstring("LoadStore @ ");
-    serial_putint(context->R15);
-    serial_putstring(" instruction ");
-    serial_putint(instr);
-    serial_newline(); 
+    printf("LoadStore @ %08x instruction %08x\n", context->R15, instr);
     DIE_NOW(context, "Load/Store generic unimplemented\n");
   } 
   // restore end of block instruction 

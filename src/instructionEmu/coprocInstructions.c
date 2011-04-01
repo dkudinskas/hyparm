@@ -1,7 +1,5 @@
 #include "common/debug.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/coprocInstructions.h"
 
@@ -34,11 +32,7 @@ u32int mrcInstruction(GCONTXT * context)
   bool conditionMet = evalCC(instrCC, cpsrCC);
 
 #ifdef COPROC_INSTR_TRACE
-  serial_putstring("MRC instr ");
-  serial_putint(instr);
-  serial_putstring(" @ ");
-  serial_putint(context->R15);
-  serial_newline();
+  printf("MRC instr %08x @ %08x\n", instr, context->R15);
 #endif
 
   if (conditionMet)
@@ -61,7 +55,7 @@ u32int mrcInstruction(GCONTXT * context)
     }
     else
     {
-      invalid_instruction(instr, "Unknown coprocessor number");
+      invalidInstruction(instr, "Unknown coprocessor number");
     }
   }
 
@@ -81,11 +75,7 @@ u32int mcrInstruction(GCONTXT * context)
   bool conditionMet = evalCC(instrCC, cpsrCC);
 
 #ifdef COPROC_INSTR_TRACE
-  serial_putstring("MCR instr ");
-  serial_putint(instr);
-  serial_putstring(" @ ");
-  serial_putint(context->R15);
-  serial_newline();
+  printf("MCR instr %08x @ %08x\n", instr, context->R15);
 #endif
 
   if (conditionMet)
@@ -104,7 +94,7 @@ u32int mcrInstruction(GCONTXT * context)
     }
     else
     {
-      invalid_instruction(instr, "Unknown coprocessor number");
+      invalidInstruction(instr, "Unknown coprocessor number");
     }
   }
 

@@ -6,7 +6,7 @@
 #include "memoryManager/pageTable.h"
 
 
-//uncomment to enable debug #define MMU_DEBUG
+//uncomment to enable debug #define MMU_DBG
 
 struct abort_dfsr
 {

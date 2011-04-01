@@ -1,16 +1,26 @@
-#ifndef __HARDWARE__UART_H__
-#define __HARDWARE__UART_H__
+#ifndef __DRIVERS__BEAGLE__BE_UART_H__
+#define __DRIVERS__BEAGLE__BE_UART_H__
 
 #include "common/types.h"
 
-#include "vm/omap35xx/hardwareLibrary.h"
 
+// uncomment me to enable debug : #define BE_UART_DBG
 
-// uncomment me to enable debug : #define UART_DBG
 
 // all register accesses are in words, 
 // all registers are 16 bits wide
 // all registers have top byte reserved (only bottom 8 bits are used)
+
+#define UART1                            0x4806a000
+#define UART2                            0x4806c000
+#define UART3                            0x49020000
+
+#define UART_SIZE                        0x00002000
+
+
+/************************
+ * REGISTER DEFINITIONS *
+ ************************/
 // register offsets and bit definitions
 #define UART_DLL_REG          0x00000000 // divisor latches low, RW
 #define UART_RHR_REG          0x00000000 // receive holding register R/O
@@ -58,6 +68,10 @@
 #define UART_LCR_PARITY_EN      0x00000008 // parity bit enable
 #define UART_LCR_NB_STOP        0x00000004 // number of stop bits
 #define UART_LCR_CHAR_LEN       0x00000003 // word length to be xmitted
+#define UART_LCR_CHAR_LEN_5            0x0
+#define UART_LCR_CHAR_LEN_6            0x1
+#define UART_LCR_CHAR_LEN_7            0x2
+#define UART_LCR_CHAR_LEN_8            0x3
 #define UART_MCR_REG          0x00000010 // modem control, R/W
 #define UART_MCR_TCR_TLR        0x00000040 // enable access to TCR/TLR registers
 #define UART_MCR_XON_EN         0x00000020 // enable XON any function
@@ -142,74 +156,31 @@
 #define UART_WER_REG          0x0000005C // Wake-up enable register, R/W
 
 
-#define RX_FIFO_SIZE    64
+void serialPuts(char * c);
 
-/* possible modes of operation: operational, configA and configB. */
-/* all modes have possible submodes to differentiate register access */
-enum UART_REG_ACCESS_MODE
+void serialPutc(char c);
+
+char serialGetc(void);
+
+void beUartInit(u32int uartid);
+
+void beUartReset(u32int uartid);
+
+void beUartStartup(u32int uartid);
+
+u32int beLoadUart(u32int regOffs, u32int uartid);
+
+void beStoreUart(u32int regOffs, u32int value, u32int uartid);
+
+void beUartDumpRegs(u32int uartid);
+
+struct UartBackEnd
 {
-  configA,
-  configB,
-  operational
-};
-
-typedef enum UART_REG_ACCESS_MODE uartMode;
-
-void initUart(u32int uartID);
-
-void resetUart(u32int uartID);
-
-u32int loadUart(device * dev, ACCESS_SIZE size, u32int address);
-
-void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value);
-
-void setUartMode(u32int uartID);
-
-uartMode getUartMode(u32int uartID);
-
-void uartTxByte(u8int byte, u32int uartID);
-
-u8int uartRxByte(u32int uartID);
-
-void uartPutRxByte(u8int byte, u32int uardID);
-
-void setIrqFlags(u32int flags, u32int uartID);
-
-struct Uart
-{
-  uartMode mode;
+  u32int baseAddress;
+  u32int size;
+  u32int rxFifoSize;
+  u32int txFifoSize;
   bool loopback;
-  u8int rxFifo[RX_FIFO_SIZE];
-  u32int rxFifoPtr;
-  u32int dll;
-  u32int rhr;
-  u32int thr;
-  u32int dlh;
-  u32int ier;
-  u32int iir;
-  u32int fcr;
-  u32int efr;
-  u32int lcr;
-  u32int mcr;
-  u32int xon1;
-  u32int lsr;
-  u32int icr;
-  u32int xon2;
-  u32int msr;
-  u32int tcr;
-  u32int xoff1;
-  u32int spr;
-  u32int tlr;
-  u32int xoff2;
-  u32int mdr1;
-  u32int mdr2;
-  u32int uasr;
-  u32int scr;
-  u32int ssr;
-  u32int mvr;
-  u32int sysc;
-  u32int syss;
-  u32int wer;
 };
 
 #endif

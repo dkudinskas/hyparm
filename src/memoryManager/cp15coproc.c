@@ -1,7 +1,5 @@
 #include "common/debug.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/commonInstrFunctions.h"
 
 #include "memoryManager/addressing.h"
@@ -15,9 +13,7 @@ void initCRB(CREG * crb)
   u32int i = 0;
 
 #ifdef COPROC_DEBUG
-  serial_putstring("Initializing coprocessor reg bank @ address ");
-  serial_putint((u32int)crb);
-  serial_newline();
+  printf("Initializing coprocessor reg bank @ address %08x\n", (u32int)crb);
 #endif
 
   // nullify all registers
@@ -152,6 +148,12 @@ void initCRB(CREG * crb)
   crb[i].value = 0;
   crb[i].valid = TRUE;
 
+  /* CP15ISB:
+   * Instruction Synchronization Barrier operation */
+  i = crbIndex(7, 0, 5, 4);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
   /* BPIALL:
    * invalidate entire branch predictor array, write-only */
   i = crbIndex(7, 0, 5, 6);
@@ -167,6 +169,12 @@ void initCRB(CREG * crb)
   /* DCCSW:
    * clean data cache line by set/way to PoC, write-only */
   i = crbIndex(7, 0, 10, 2);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
+  /* CP15DSB:
+   * Data Synchronization Barrier operation */
+  i = crbIndex(7, 0, 10, 4);
   crb[i].value = 0;
   crb[i].valid = TRUE;
 
@@ -280,17 +288,8 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   if (!crbPtr[index].valid)
   {
     // guest writing to a register that is not valid yet! investigate
-    serial_putstring("setCregVal (CRn=");
-    serial_putint(CRn);
-    serial_putstring(" opc1=");
-    serial_putint(opc1);
-    serial_putstring(" CRm=");
-    serial_putint(CRm);
-    serial_putstring(" opc2=");
-    serial_putint(opc2);
-    serial_putstring(") Value = ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
+           CRn, opc1, CRm, opc2, val);
     DIE_NOW(0, "setCregVal: writing to uninitialized register. investigate.");
   }
   u32int oldVal = crbPtr[index].value;
@@ -299,17 +298,8 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   crbPtr[index].valid = TRUE;
 
 #ifdef COPROC_DEBUG
-  serial_putstring("setCregVal (CRn=");
-  serial_putint(CRn);
-  serial_putstring(" opc1=");
-  serial_putint(opc1);
-  serial_putstring(" CRm=");
-  serial_putint(CRm);
-  serial_putstring(" opc2=");
-  serial_putint(opc2);
-  serial_putstring(") Value = ");
-  serial_putint(val);
-  serial_newline();
+  printf("setCregVal (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
+         CRn, opc1, CRm, opc2, val);
 #endif
 
   /* probably a better place to put these checks */
@@ -349,9 +339,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
       default:
       {
         // no such cache exists on the beagleboard!
-        serial_putstring("setCregVal: CSSELR = ");
-        serial_putint(val);
-        serial_newline();
+        printf("setCregVal: CSSELR = %x\n", val);
         DIE_NOW(0, "setCregVal: CSSELR selects an unimplemented cache."); 
       }
     } // switch (value) ends
@@ -361,34 +349,28 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==1 && opc1==0 && CRm==0 && opc2==0)
   {
 #ifdef COPROC_DEBUG
-    serial_putstring("setCregVal: sys ctrl reg: ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: sys ctrl reg: %x\n", val);
 #endif
-
     // SCTRL: System control register
     // check for MMU enable
     if( (0 == (oldVal & 0x1)) && (1 == (val & 0x1)) )
     {
 #ifdef COPROC_DEBUG
-      serial_putstring("MMU enable.");
-      serial_newline();
+      printf("MMU enable.\n");
 #endif
       guestEnableVirtMem();
     }
 #ifdef COPROC_DEBUG
     else if((1 == (oldVal & 0x1)) && (0 == (val & 0x1)))
     {
-      serial_putstring("MMU disable.");
-      serial_newline();
+      printf("MMU disable.\n");
     }
 #endif
     //Interupt handler remap
     if( (0 == (oldVal & 0x2000)) && (0 != (val & 0x2000)) )
     {
 #ifdef COPROC_DEBUG
-      serial_putstring("CP15: high interrupt vector set.");
-      serial_newline();
+      printf("CP15: high interrupt vector set.\n");
 #endif
       (getGuestContext())->guestHighVectorSet = TRUE; 
     }
@@ -396,17 +378,13 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==0)
   {
 #ifdef COPROC_DEBUG
-    serial_putstring("setCregVal: TTBR0 write ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: TTBR0 write %x\n", val);
 #endif
     initialiseGuestShadowPageTable(val);
   }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==1)
   {
-    serial_putstring("setCregVal: WARN: TTBR1 write ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: WARN: TTBR1 write %x\n", val);
   }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==2)
   {
@@ -422,11 +400,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     if (oldVal != val)
     {
 #ifdef COPROC_DEBUG
-      serial_putstring("CP15: Domain Access Control Register write val ");
-      serial_putint(val);
-      serial_putstring(" old DACR ");
-      serial_putint(oldVal);
-      serial_newline();
+      printf("CP15: DACR change val %x old DACR %x\n", val, oldVal);
 #endif
       changeGuestDomainAccessControl(oldVal, val);
     }
@@ -435,138 +409,113 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==5 && opc1==0 && CRm==0 && opc2==0)
   {
     // DFSR: data fault status register
-    serial_putstring("setCregVal: set DFSR to ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: set DFSR to %x\n", val);
   }
   else if (CRn==5 && opc1==0 && CRm==0 && opc2==1)
   {
     // IFSR: instruction fault status register
-    serial_putstring("setCregVal: set IFSR to ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: set IFSR to %x", val);
   }
   else if (CRn==6 && opc1==0 && CRm==0 && opc2==0)
   {
     // DFAR: data fault address register
-    serial_putstring("setCregVal: set DFAR to ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: set DFAR to %x\n", val);
   }
   else if (CRn==6 && opc1==0 && CRm==0 && opc2==2)
   {
     // IFAR: instruction fault address register
-    serial_putstring("setCregVal: set IFAR to ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: set IFAR to %x\n", val);
   }
   else if (CRn==7 && opc1==0 && CRm==5 && opc2==0)
   {
     // ICIALLU: invalidate all instruction caches to PoC
-    serial_putstring("setCregVal: invalidate all iCaches to PoC");
-    serial_newline();
+    printf("setCregVal: invalidate all iCaches to PoC\n");
   }
   else if (CRn==7 && opc1==0 && CRm==5 && opc2==1)
   {
     // ICIMVAU: invalidate instruction caches by MVA to PoU
-    serial_putstring("setCregVal: invalidate iCaches by MVA to PoC: ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: invalidate iCaches by MVA to PoC: %x\n", val);
+  }
+  else if (CRn==7 && opc1==0 && CRm==5 && opc2==4)
+  {
+    // CP15DSB: Instruction Synchronization Barrier operation
+    printf("setCregVal: Instruction Synchronization Barrier operation\n");
   }
   else if (CRn==7 && opc1==0 && CRm==5 && opc2==6)
   {
     // BPIALL: invalidate entire branch predictor array
-    serial_putstring("setCregVal: invalidate entire branch predictor array");
-    serial_newline();
+    printf("setCregVal: invalidate entire branch predictor array\n");
   }
   else if (CRn==7 && opc1==0 && CRm==11 && opc2==1)
   {
     // DCCMVAU: clean data cache line by MVA to PoU
-    serial_putstring("setCregVal: clean dCache line by MVA to PoU: ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: clean dCache line by MVA to PoU: %x\n", val);
   }
   else if (CRn==7 && opc1==0 && CRm==14 && opc2==1)
   {
     // DCCIMVAC: clean and invalidate dCache by MVA to PoC
-    serial_putstring("setCregVal: clean and invalidate dCache by MVA to PoC: ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: clean and invalidate dCache by MVA to PoC: %x\n", val);
   }
   else if (CRn==7 && opc1==0 && CRm==14 && opc2==2)
   {
     // DCCISW: clean and invalidate data cache line by set/way
-    serial_putstring("setCregVal: clean and invalidate Dcache line, set/way: ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: clean and invalidate Dcache line, set/way: %x\n", val);
   }
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==1)
   {
     // DCCMVAC: clean data cache line by MVA to PoC
-    serial_putstring("setCregVal: clean Dcache line by MVA to PoC: ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: clean Dcache line by MVA to PoC: %x\n", val);
   }
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==2)
   {
     // DCCSW: clean data cache line by set/way to PoC 
-    serial_putstring("setCregVal: clean Dcache line, set/way to PoC: ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: clean Dcache line, set/way to PoC: %x\n", val);
+  }
+  else if (CRn==7 && opc1==0 && CRm==10 && opc2==4)
+  {
+    // CP15DSB: Data Synchronization Barrier operation
+    printf("setCregVal: Data Synchronization Barrier operation\n");
   }
   else if (CRn==8 && opc1==0 && CRm==5 && opc2==0)
   {
     // ITLBIALL: invalide instruction TLB (all)
-    serial_putstring("setCregVal: invalidate instruction TLB (all)");
-    serial_newline();
+    printf("setCregVal: invalidate instruction TLB (all)\n");
   }
   else if (CRn==8 && opc1==0 && CRm==5 && opc2==1)
   {
     // ITLBIALL: invalide instruction TLB by MVA
-    serial_putstring("setCregVal: invalidate instruction TLB by MVA: ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: invalidate instruction TLB by MVA: %x\n", val);
   }
   else if (CRn==8 && opc1==0 && CRm==5 && opc2==2)
   {
     // ITLBIASID: invalide instruction TLB by ASID match 
-    serial_putstring("setCregVal: invalidate instruction TLB by ASID match: ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: invalidate instruction TLB by ASID match: %x\n", val);
   }
   else if (CRn==8 && opc1==0 && CRm==6 && opc2==0)
   {
     // DTLBIALL: invalide data TLB (all)
-    serial_putstring("setCregVal: invalidate data TLB (all)");
-    serial_newline();
+    printf("setCregVal: invalidate data TLB (all)\n");
   }
   else if (CRn==8 && opc1==0 && CRm==6 && opc2==1)
   {
     // DTLBIMVA: invalidate dTLB entry by MVA
-    serial_putstring("setCregVal: invalidate data TLB by MVA: ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: invalidate data TLB by MVA: %x\n", val);
   }
   else if (CRn==8 && opc1==0 && CRm==6 && opc2==2)
   {
     // DTLBIASID: invalidate dTLB entry by MVA
-    serial_putstring("setCregVal: invalidate data TLB by ASID match: ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: invalidate data TLB by ASID match: %x\n", val);
   }
   else if (CRn==8 && opc1==0 && CRm==7 && opc2==0)
   {
     // TLBIALL: invalide unified TLB, write-only
-    serial_putstring("setCregVal: invalidate unified TLB (all)");
-    serial_newline();
+    printf("setCregVal: invalidate unified TLB (all)\n");
   }
 #endif
   else if (CRn==10 && opc1==0 && CRm==2 && opc2==0)
   {
     // PRRR: primary region remap register
-    serial_putstring("setCregVal: WARN: PRRR value ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: WARN: PRRR value %x\n", val);
     asm("mcr p15, 0, %0, c10, c2, 0"
     :
     :"r"(val)
@@ -576,9 +525,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==10 && opc1==0 && CRm==2 && opc2==1)
   {
     // NMRR: normal memory remap register
-    serial_putstring("setCregVal: WARN: NMRR value ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: WARN: NMRR value %x\n", val);
     asm("mcr p15, 0, %0, c10, c2, 1"
     :
     :"r"(val)
@@ -595,9 +542,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // CONTEXTID: context ID register 
     if (val != 0)
     {
-      serial_putstring("setCregVal: WARN: CONTEXTID value ");
-      serial_putint(val);
-      serial_newline();
+      printf("setCregVal: WARN: CONTEXTID value %x\n", val);
     }
     asm("mcr p15, 0, %0, c13, c0, 1"
     :
@@ -610,9 +555,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // TPIDRURW: software thread ID register, user mode read-write 
     if (val != 0)
     {
-      serial_putstring("setCregVal: WARN: TPIDRURW value ");
-      serial_putint(val);
-      serial_newline();
+      printf("setCregVal: WARN: TPIDRURW value %x\n", val);
     }
   }
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==3)
@@ -621,9 +564,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // writes are caught by the hypervisor - they are privileged operations
     // but reads are not! must propagate TPIDRURO value to real CP15.
 #ifdef COPROC_DEBUG
-    serial_putstring("setCregVal: WARN: TPIDRURO value ");
-    serial_putint(val);
-    serial_newline();
+    printf("setCregVal: WARN: TPIDRURO value %x\n", val);
 #endif
     asm("mcr p15, 0, %0, c13, c0, 3"
     :
@@ -636,9 +577,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // TPIDRPRW: software thread ID register, user mode no access 
     if (val != 0)
     {
-      serial_putstring("setCregVal: WARN: TPIDRPRW value ");
-      serial_putint(val);
-      serial_newline();
+      printf("setCregVal: WARN: TPIDRPRW value %x\n", val);
     }
   }
 }
@@ -651,17 +590,8 @@ u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPt
   reg = crbPtr[index];
 
 #ifdef COPROC_DEBUG
-  serial_putstring("getCreg (CRn=");
-  serial_putint(CRn);
-  serial_putstring(" opc1=");
-  serial_putint(opc1);
-  serial_putstring(" CRm=");
-  serial_putint(CRm);
-  serial_putstring(" opc2=");
-  serial_putint(opc2);
-  serial_putstring(") Value = ");
-  serial_putint(reg.value);
-  serial_newline();
+  printf("getCreg (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
+         CRn, opc1, CRm, opc2, reg.value);
 #endif
 
   if (reg.valid)
@@ -670,17 +600,8 @@ u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPt
   }
   else
   {
-    serial_putstring("getCreg (CRn=");
-    serial_putint(CRn);
-    serial_putstring(" opc1=");
-    serial_putint(opc1);
-    serial_putstring(" CRm=");
-    serial_putint(CRm);
-    serial_putstring(" opc2=");
-    serial_putint(opc2);
-    serial_putstring(") Value = ");
-    serial_putint(reg.value);
-    serial_newline();
+    printf("getCreg (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
+           CRn, opc1, CRm, opc2, reg.value);
     DIE_NOW(0, "Undefined CP15 register!");
     return 0;
   }

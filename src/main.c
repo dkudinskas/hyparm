@@ -7,10 +7,10 @@
 #include "drivers/beagle/beIntc.h"
 #include "drivers/beagle/beGPTimer.h"
 #include "drivers/beagle/beClockMan.h"
+#include "drivers/beagle/beUart.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/LED.h"
-#include "vm/omap35xx/serial.h"
 
 #include "linuxBoot/bootLinux.h"
 #include "linuxBoot/image.h"
@@ -39,8 +39,8 @@ int parseCommandline(int argc, char *argv[]);
 void registerGuestContext(u32int gcAddr);
 GCONTXT * getGuestContext(void);
 
-unsigned long kernAddr;
-unsigned long initrdAddr;
+u32int kernAddr;
+u32int initrdAddr;
 
 // guest context
 GCONTXT * gContext;
@@ -56,7 +56,15 @@ int main(int argc, char *argv[])
   cmDisableDssClocks();
   
   mallocInit(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
-  
+
+  /* initialise uart backend, important to be before any debug output. */
+  /* init function initialises UARTs in disabled mode. */
+  /* startup fuction starts operation and enables RX IRQ generation */
+  beUartInit(1);
+  beUartInit(2);
+  beUartInit(3);
+  beUartStartup(3);
+
   /* create the frametable from which we can alloc memory */
   initialiseFrameTable();
 
@@ -73,9 +81,7 @@ int main(int argc, char *argv[])
   {
     memset((void*)coprocRegBank, 0x0, MAX_CRB_SIZE * sizeof(CREG));
 #ifdef STARTUP_DEBUG
-    serial_putstring("Coprocessor register bank at 0x");
-    serial_putint((u32int)coprocRegBank);
-    serial_newline();
+    printf("Coprocessor register bank at %x\n", (u32int)coprocRegBank);
 #endif
   }
   registerCrb(gContext, coprocRegBank);
@@ -90,9 +96,7 @@ int main(int argc, char *argv[])
   {
     memset((void*)blockCache, 0x0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
 #ifdef STARTUP_DEBUG
-    serial_putstring("Basic block cache at 0x");
-    serial_putint((u32int)blockCache);
-    serial_newline();
+    printf("Basic block cache at %x\n", (u32int)blockCache);
 #endif
   }
   registerBlockCache(gContext, blockCache);
@@ -123,12 +127,16 @@ int main(int argc, char *argv[])
   }
   else if(ret==1){
 #ifdef STARTUP_DEBUG
+<<<<<<< HEAD
 	serial_putstring("Kernel address: ");
 	serial_putlong(kernAddr);
 	serial_newline();
 	serial_putstring("Initrd address: ");
 	serial_putlong(initrdAddr);
 	serial_newline();
+=======
+  printf("Kernel address: %x, Initrd address: %x\n", kernAddr, initrdAddr);
+>>>>>>> a24883a72b9c3ad47fa49a11cb6baea3399e34ca
 #endif
   imageHeader = getImageHeader(kernAddr);
 #ifdef STARTUP_DEBUG
@@ -145,19 +153,14 @@ int main(int argc, char *argv[])
   /* initialise physical interrupt controller */
   intcBEInit();
 
+  /* now we can umkask first interrupt - UART */
+  unmaskInterruptBE(UART3_IRQ);
+
   /* initialise physical clock manager */
   clkManBEInit();
 
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
-/*
-  setClockSource(2, FALSE);
-  toggleTimerFclk(2, TRUE);
-  gptBEEnableOverflowInterrupt(2);
-  gptBESet10msTick(2);
-  unmaskInterruptBE(GPT2_IRQ);
-  enableInterrupts();
-  gptBEStart(2);*/
 
   // does not return
   if(ret==2)doRtosBoot(kernAddr);
@@ -177,6 +180,7 @@ GCONTXT * getGuestContext()
 
 void printUsage(void)
 {
+<<<<<<< HEAD
   serial_putstring("Loader usage:");
   serial_newline();
   serial_putstring ("go <loaderAddr> -kernel <kernAddress> -initrd <initrdAddr>");
@@ -189,6 +193,12 @@ void printUsage(void)
   serial_newline();
   serial_putstring("rtos: address of rtos in hex format (0xXXXXXXXX)");
   serial_newline();
+=======
+  printf("Loader usage:\n");
+  printf("go <loaderAddr> -kernel <kernAddress> -initrd <initrdAddr>\n");
+  printf("kernel: address of kernel in hex format (0xXXXXXXXX)\n");
+  printf("initrd: address of external initrd in hex format (0xXXXXXXXX)\n");
+>>>>>>> a24883a72b9c3ad47fa49a11cb6baea3399e34ca
   return;
 }
 
@@ -198,16 +208,10 @@ int parseCommandline(int argc, char *argv[])
   /***************** Check given arguments ************************/
 #ifdef STARTUP_DEBUG
   int i = 0;
-  serial_putstring("Number of args: ");
-  serial_putchar(argc + 0x30);
-  serial_newline();
+  printf("Number of args: %c\n", argc+0x30);
   for (i = 0; i < argc; i++)
   {
-    serial_putstring("Arg ");
-    serial_putchar(i + 0x30);
-    serial_putstring(": ");
-    serial_putstring(argv[i]);
-    serial_newline();
+    printf("Arg %c: %x\n", i+0x30, argv[i]);
   }
 #endif
 
@@ -215,6 +219,7 @@ int parseCommandline(int argc, char *argv[])
   cmpFlag = stringncmp("-kernel", argv[1], 7);
   if (cmpFlag < 0)
   {
+<<<<<<< HEAD
     serial_putstring("Parameter -kernel not found.");
     serial_newline();
     /* Check for -rtos */
@@ -229,12 +234,15 @@ int parseCommandline(int argc, char *argv[])
 	return 2; // state that -rtos was found
     }
 
+=======
+    printf("Parameter -kernel not found.");
+    return -1;
+>>>>>>> a24883a72b9c3ad47fa49a11cb6baea3399e34ca
   }
-  kernAddr = stringToLong(argv[2]);
+  kernAddr = strtoi(argv[2]);
   if (kernAddr < 0)
   {
-    serial_putstring("Invalid kernel address.");
-    serial_newline();
+    printf("Invalid kernel address.");
     return -1;
   }
 
@@ -242,15 +250,13 @@ int parseCommandline(int argc, char *argv[])
   cmpFlag = stringncmp("-initrd", argv[3], 7);
   if (cmpFlag < 0)
   {
-    serial_putstring("Parameter -initrd not found.");
-    serial_newline();
+    printf("Parameter -initrd not found.");
     return -1;
   }
-  initrdAddr = stringToLong(argv[4]);
+  initrdAddr = strtoi(argv[4]);
   if (initrdAddr < 0)
   {
-    serial_putstring("Invalid initrd address.");
-    serial_newline();
+    printf("Invalid initrd address.");
     return -1;
   }
   return 1;

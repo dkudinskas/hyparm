@@ -1,7 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
 
-#include "vm/omap35xx/serial.h"
 
 
 u32int heapStart;
@@ -18,12 +17,7 @@ memchunkListElem * chunkListRoot;
 void mallocInit(u32int startAddr, u32int size)
 {
 #ifdef MALLOC_DEBUG
-  serial_putstring("mallocInit(");
-  serial_putint_nozeros(startAddr);
-  serial_putstring(", ");
-  serial_putint_nozeros(size);
-  serial_putstring(");");
-  serial_newline();
+  printf("mallocInit(%08x, %x);\n", startAddr, size);
 #endif
 
   heapStart = startAddr;
@@ -128,10 +122,10 @@ void * memset(void * dest, u32int c, u32int count)
 u32int mallocBytes(u32int size)
 {
 #ifdef MALLOC_DEBUG
-  serial_putstring("mallocBytes(");
-  serial_putint_nozeros(size);
-  serial_putstring(");");
-  serial_newline();
+  DEBUG_STRING("mallocBytes(");
+  DEBUG_INT_NOZEROS(size);
+  DEBUG_STRING(");");
+  DEBUG_NEWLINE();
 #endif
 
   if ((size & 0x3) != 0)
@@ -163,27 +157,52 @@ void dumpMallocs()
 {
   u32int i = 0;
   memchunkListElem * listPtr = chunkListRoot;
-  serial_putstring("Dumping malloc internal structures:");
-  serial_putstring("***********************************");
-  serial_newline();
+  printf("Dumping malloc internal structures:\n");
+  printf("***********************************\n");
   for (i = 0; i < nrOfChunksAllocd; i++)
   {
-    serial_putstring("Chunk ");
-    serial_putint_nozeros(i);
-    serial_putstring(": prev = ");
-    serial_putint((u32int)listPtr->prevChunk);
-    serial_putstring("; next = ");
-    serial_putint((u32int)listPtr->nextChunk);
-    serial_newline();
-    serial_putstring("Start address: ");
-    serial_putint(listPtr->chunk.startAddress);
-    serial_putstring("; Size: ");
-    serial_putint(listPtr->chunk.size);
-    serial_newline();
-    serial_putstring("-----------------------------------");
-    serial_newline();
+    printf("Chunk %x: prev = %x; next = %x\n", i, (u32int)listPtr->prevChunk, (u32int)listPtr->nextChunk);
+    printf("Start address: %08x; size %x\n", listPtr->chunk.startAddress, listPtr->chunk.size);
+    printf("-----------------------------------\n");
     listPtr = listPtr->nextChunk;
   }
-  DIE_NOW(0, "done");
+}
+
+/* This version of memcpy assumes disjoint ptrs src, dst */
+void *memcpy(void *dst, const void *src, u32int count)
+{
+  int i;
+  char *dst_tmp = dst;
+  const char *src_tmp = src;
+
+  if (!((unsigned int)src & 0xC) && !((unsigned int)dst & 0xC))
+  {
+    //word aligned so we can safely do word copies
+    for (i=0; i < count; i+=4)
+    {
+      if (i + 3 > count - 1)
+        break; //don't copy too much
+
+      *(u32int *)dst_tmp = *(u32int *)src_tmp;
+      dst_tmp += 4;
+      src_tmp += 4;
+    }
+    if (i < count - 1)
+    {
+      for (; i < count; i++)
+      {
+        *dst_tmp = *src_tmp;
+        dst_tmp++;
+        src_tmp++;
+      }
+    }
+  }
+  else
+  {
+    //generic version
+    for (i=0; i < count; i++)
+      dst_tmp[i] = src_tmp[i];
+  }
+  return dst;
 }
 

@@ -4,7 +4,6 @@
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/sdram.h"
-#include "vm/omap35xx/serial.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
@@ -25,14 +24,11 @@ void initSdram(void)
   {
     memset((void*)sdram, 0x0, sizeof(struct SdramController));
 #ifdef SDRAM_DBG
-    serial_putstring("Sdram instance at 0x");
-    serial_putint((u32int)sdram);
-    serial_newline();
+    printf("Sdram instance at %08x\n", (u32int)sdram);
 #endif
   }
 
   sdram->enabled = 1;
-
 
 #ifdef SDRAM_STORE_COUNTER
   u32int * storeTrace = (u32int*)mallocBytes(MEGABYTE_COUNT * sizeof(u32int));
@@ -43,9 +39,7 @@ void initSdram(void)
   else
   {
     memset((void*)storeTrace, 0x0, MEGABYTE_COUNT*sizeof(u32int));
-    serial_putstring("Store trace at 0x");
-    serial_putint((u32int)storeTrace);
-    serial_newline();
+    printf("Store trace at %08x\n", (u32int)storeTrace);
   }
   sdram->storeCounters = storeTrace;
   
@@ -60,18 +54,14 @@ void initSdram(void)
 void dumpSdramStats()
 {
 #ifdef SDRAM_STORE_COUNTER
-  serial_putstring("Store trace: ");
-  serial_newline();
+  printf("Store trace:\n");
 
   u32int i = 0;
   for (i = 0; i < MEGABYTE_COUNT; i++)
   {
     if (sdram->storeCounters[i] != 0)
     {
-      serial_putint(i << 20);
-      serial_putstring(": ");
-      serial_putint(sdram->storeCounters[i]);
-      serial_newline();
+      printf("%x: %x\n", i << 20, sdram->storeCounters[i]);
     }
   }
 #endif
@@ -88,14 +78,9 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef SDRAM_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from physical address: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", virtual address: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_newline();
+  printf(dev->deviceName);
+  printf(" load from physical address: %08x, vAddr %08x, access size %x\n",
+          phyAddr, address, (u32int)size);
 #endif
 
   switch (size)
@@ -119,12 +104,11 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address)
       break;
     }
     default:
-      serial_putstring(dev->deviceName);
-      serial_putstring(" load from physical address: 0x");
-      serial_putint(phyAddr);
-      serial_putstring(", virtual address: 0x");
-      serial_putint(address);
-      DIE_NOW(0, " invalid access size.");
+    {
+      printf(dev->deviceName);
+      printf(" load from physical address: %08x, vAddr %08x\n", phyAddr, address);
+      DIE_NOW(gc, "Invalid access size.");
+    }
   }
   return val;
 }
@@ -137,16 +121,9 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef SDRAM_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" store to physical address: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", virtual address: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline();
+  printf(dev->deviceName);
+  printf(" store to physical address: %08x, vAddr %08x, aSize %x, val %08x\n",
+         phyAddr, address, (u32int)size, value);
 #endif
 
 #ifdef SDRAM_STORE_COUNTER
@@ -183,16 +160,11 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       break;
     }
     default:
-      serial_putstring(dev->deviceName);
-      serial_putstring(" store to physical address: 0x");
-      serial_putint(phyAddr);
-      serial_putstring(", virtual address: 0x");
-      serial_putint(address);
-      serial_putstring(" access size ");
-      serial_putint((u32int)size);
-      serial_putstring(" value ");
-      serial_putint(value);
-      serial_newline();
-      DIE_NOW(0, " invalid access size.");
+    {
+      printf(dev->deviceName);
+      printf(" store to physical address: %08x, vAddr %08x, aSize %x, val %08x\n",
+             phyAddr, address, (u32int)size, value);
+      DIE_NOW(gc, "Invalid access size.");
+    }
   }
 }
