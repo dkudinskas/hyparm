@@ -3,6 +3,9 @@ This is the world to build the kernel with an uncompressed initramfs built into 
 Key settings are:
 CONFIG_BLK_DEV_INITRD=y
 CONFIG_INITRAMFS_SOURCE="initramfs.cpio"
+make not that
+CONFIG_CMDLINE="console=ttyS2,115200n8 root=/dev/ram0 rdinit=/bin/sh"
+... is a lot shorter now - since it is no longer a 'disk' (as in initrd) we do not need to specity the file system type or other parameters. We also give information about the init function: in this case. /bin/sh directly.
 
 These lines will build initramfs.cpio in the working directory into the kernel.
 
