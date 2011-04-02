@@ -1,0 +1,5 @@
+#!/bin/sh
+cd initramfs
+find . | cpio -H newc -o > ../initramfs.cpio
+cd ..
+gzip initramfs.cpio -c > initramfs.igz

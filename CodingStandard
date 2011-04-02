@@ -1,0 +1,27 @@
+These are the coding standard rules. Many places in current code might breach them. If you find such a place and have time, tidy it up.
+
+
+1. Functions, variables, types in typedefs start with non-capital letters, and are written in non-capital (with exceptions in rule 2). #define'd macros are all in capitals.
+
+2. No underscores in variable or function names. Use capital letters to separate words instead (not function_name but functionName). Use underscores only to separate words in #define'd macros. (i.e. #define MY_MACRO_NAME).
+
+3. Use common typedef'd types (u32int instead of unsigned int).
+
+4. No function bodys in header files.
+
+5. Use curly bracketes everywhere, don't skip them where optional in control statements. Curly brackets are always in their own line.
+(i.e.
+  if (condition)
+  {
+    // one or more LoC
+  }
+).
+
+6. Use longer variable names if needed, but make them logical. Try not to name variables as acronyms, or undecodable text combinations. (u32int uloina is absolutely horrible, u32int upLimitOfUnsIntArray is long, but it's still better).
+
+7. Try to break lines into two where needed, avoid excessively long lines of code.
+
+8. Avoid 'magic numbers'. Try to #define them if they are needed. If they are not needed, they should not be there.
+
+9. Add more rules if they are sensible, and will help keep the codebase clean....
+
