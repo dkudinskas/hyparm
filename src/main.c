@@ -127,16 +127,7 @@ int main(int argc, char *argv[])
   }
   else if(ret==1){
 #ifdef STARTUP_DEBUG
-<<<<<<< HEAD
-	serial_putstring("Kernel address: ");
-	serial_putlong(kernAddr);
-	serial_newline();
-	serial_putstring("Initrd address: ");
-	serial_putlong(initrdAddr);
-	serial_newline();
-=======
   printf("Kernel address: %x, Initrd address: %x\n", kernAddr, initrdAddr);
->>>>>>> a24883a72b9c3ad47fa49a11cb6baea3399e34ca
 #endif
   imageHeader = getImageHeader(kernAddr);
 #ifdef STARTUP_DEBUG
@@ -145,9 +136,7 @@ int main(int argc, char *argv[])
   }
   else if(ret==2){
 #ifdef STARTUP_DEBUG
-	serial_putstring("RTOS address: ");
-	serial_putlong(kernAddr);
-	serial_newline();
+	printf("RTOS address: %x\n",kernAddr);
 #endif
   }
   /* initialise physical interrupt controller */
@@ -180,25 +169,11 @@ GCONTXT * getGuestContext()
 
 void printUsage(void)
 {
-<<<<<<< HEAD
-  serial_putstring("Loader usage:");
-  serial_newline();
-  serial_putstring ("go <loaderAddr> -kernel <kernAddress> -initrd <initrdAddr>");
-  serial_newline();
-  serial_putstring("kernel: address of kernel in hex format (0xXXXXXXXX)");
-  serial_newline();
-  serial_putstring("initrd: address of external initrd in hex format (0xXXXXXXXX)");
-  serial_newline();
-  serial_putstring("For RTOS: go <loaderAddr> -rtos <rtosAddr>");
-  serial_newline();
-  serial_putstring("rtos: address of rtos in hex format (0xXXXXXXXX)");
-  serial_newline();
-=======
   printf("Loader usage:\n");
   printf("go <loaderAddr> -kernel <kernAddress> -initrd <initrdAddr>\n");
   printf("kernel: address of kernel in hex format (0xXXXXXXXX)\n");
   printf("initrd: address of external initrd in hex format (0xXXXXXXXX)\n");
->>>>>>> a24883a72b9c3ad47fa49a11cb6baea3399e34ca
+  printf("rtos: address of rtos in hex format (0xXXXXXXXX)\n");
   return;
 }
 
@@ -219,25 +194,18 @@ int parseCommandline(int argc, char *argv[])
   cmpFlag = stringncmp("-kernel", argv[1], 7);
   if (cmpFlag < 0)
   {
-<<<<<<< HEAD
-    serial_putstring("Parameter -kernel not found.");
-    serial_newline();
+    printf("Parameter -kernel not found.\n");
     /* Check for -rtos */
     cmpFlag = stringncmp("-rtos",argv[1],5);
     if ( cmpFlag < 0){
-    	serial_putstring("Parameter -rtos not found.");
-	serial_newline();
+    	printf("Parameter -rtos not found.\n");
 	return -1; // nothing useful was found
     }
     else{
-    	kernAddr = stringToLong(argv[2]);
+    	kernAddr = strtoi(argv[2]);
 	return 2; // state that -rtos was found
     }
 
-=======
-    printf("Parameter -kernel not found.");
-    return -1;
->>>>>>> a24883a72b9c3ad47fa49a11cb6baea3399e34ca
   }
   kernAddr = strtoi(argv[2]);
   if (kernAddr < 0)

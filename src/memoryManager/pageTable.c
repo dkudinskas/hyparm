@@ -80,21 +80,8 @@ descriptor* createHypervisorPageTable()
   setDomain(GUEST_ACCESS_DOMAIN, client);
 
   //serial
-  smallMapMemory(hypervisorPtd, UART3, (UART3 + UART3_SIZE -1),
-                               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
-  // uart1
-  smallMapMemory(hypervisorPtd, UART1, (UART1 + UART1_SIZE -1), 
-                               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
+  smallMapMemory(hypervisorPtd, UART3, (UART3 + UART3_SIZE -1), HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000);
 
-  // gpio5
-  smallMapMemory(hypervisorPtd, GPIO5, (GPIO5 + GPIO5_SIZE -1), GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
-
-  // gpio6
-  smallMapMemory(hypervisorPtd, GPIO6, (GPIO6 + GPIO6_SIZE -1), GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0);
-
-  // clock manager
-  smallMapMemory(hypervisorPtd, CLOCK_MANAGER, (CLOCK_MANAGER+CLOCK_MANAGER_SIZE-1),
-                               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
   // interrupt controller
   smallMapMemory(hypervisorPtd, INTERRUPT_CONTROLLER, (INTERRUPT_CONTROLLER+INTERRUPT_CONTROLLER_SIZE-1),
                           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);

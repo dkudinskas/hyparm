@@ -3,8 +3,6 @@
 
 #include "cpuArch/cpu.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/scanner.h"
 
 #include "rtosBoot/bootRtos.h"
@@ -33,17 +31,6 @@ void doRtosBoot(ulong loadAddr)
   char * commandline = "\0";
 
   paramTag = (struct tag *)BOARD_PARAMS;
-
-#ifdef STARTUP_DEBUG
-  serial_putstring("Load address    = ");
-  serial_putint(targetAddr);
-  serial_newline();
-  serial_putstring("Guest = ");
-  serial_putint( (u32int)(getGuestContext()));
-  serial_newline();
-
-
-#endif
 
   /* TODO: add virtual addressing startup for the new VM here
   need to create a Global Page table/map for the VM and add mappings for where the kernel is to be copied?

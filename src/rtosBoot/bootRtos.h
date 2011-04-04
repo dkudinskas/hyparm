@@ -3,6 +3,7 @@
 
 #include "common/types.h"
 #include "linuxBoot/bootLinux.h"
+#include "common/debug.h"
 
 void doRtosBoot(ulong loadAddr)  __attribute__((noreturn));
 

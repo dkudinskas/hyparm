@@ -371,7 +371,6 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       irqController->intcControl = value & INTCPS_CONTROL_RESERVED;
       break;
     }
-    case REG_INTCPS_PROTECTION:
     case REG_INTCPS_IDLE:
       irqController->intcIdle = value & ( INTCPS_IDLE_RESERVED|INTCPS_IDLE_FUNCIDLE );
       break;
