@@ -6,6 +6,8 @@
 
 // Uncomment me for decoder debug: #define DECODER_DEBUG  
 
+#define DECODER_DEBUG
+
 #define UNDEFINED_INSTRUCTION            0x0
 
 #define UNDEFINED_CATEGORY               0x0
@@ -29,7 +31,7 @@ struct instruction32bit
   s16int replaceCode;
   instructionHandler hdlFunct;
   u32int value;            /* If arch == 0 then value is a sentinel.  */
-  u32int mask;             /* Recognise insn if (op & mask) == value.  */
+  u32int mask;             /* Recognise inst if (op & mask) == value.  */
   const char * instructionString; /* How to disassemble this insn.  */
 };
 

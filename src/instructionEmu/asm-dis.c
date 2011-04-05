@@ -36,7 +36,7 @@ struct opcode32 arm_opcodes[] = {
 // NOP is just a nop...
 {0,  &nopInstruction,       0xe1a00000, 0xffffffff, "nop\t\t\t; (mov r0, r0)"},
 // branch and exchange - this changes execution mode!!! panic there.
-{1,  &bxInstruction,        0x012FFF10, 0x0ffffff0, "bx%c\t%0-3r"},
+{1,  &bxInstruction,        0x012FFF10, 0x0ffffff0, "BRANCH & EXCHANGE"},
 // MUL: Rd = Rm * Rn; Rd != PC. pass through
 {0,  &mulInstruction,       0x00000090, 0x0fe000f0, "MUL Rd, Rm, Rn"},
 // MLA: Rd = Rm * Rn + Ra; Rd != PC. pass through
@@ -59,8 +59,7 @@ struct opcode32 arm_opcodes[] = {
 {1,  &ldrhtInstruction,     0x00300090, 0x0f300090, "ldr%6's%5?hbt%c\t%12-15r, %s"},
 // MOVW - indication of 'wide' - to select ARM encoding. Rd cant be PC, pass through.
 {0,  &movwInstruction,      0x03000000, 0x0ff00000, "MOVW Rd, Rn"},
-// UNIMPLEMENTED
-{1,  &movtInstruction,      0x03400000, 0x0ff00000, "movt%c\t%12-15r, %V"},
+{0,  &movtInstruction,      0x03400000, 0x0ff00000, "MOVT Rd, Rn"},
 {1,  &rbitInstruction,      0x06ff0f30, 0x0fff0ff0, "rbit%c\t%12-15r, %0-3r"},
 {1,  &usbfxInstruction,     0x07a00050, 0x0fa00070, "%22?usbfx%c\t%12-15r, %0-3r, #%7-11d, #%16-20W"},
 
@@ -81,7 +80,7 @@ struct opcode32 arm_opcodes[] = {
 {1,  &wfeInstruction,       0x0320f002, 0x0fffffff, "wfe%c"},
 {1,  &wfiInstruction,       0x0320f003, 0x0fffffff, "wfi%c"},
 {1,  &sevInstruction,       0x0320f004, 0x0fffffff, "sev%c"},
-{1,  &nopInstruction,       0x0320f000, 0x0fffff00, "nop%c\t{%0-7d}"},
+{1,  &nopInstruction,       0x0320f000, 0x0fffff00, "nop"},
 
 /* ARM V6 instructions.  */
 {1,  &cpsieInstruction,     0xf1080000, 0xfffffe3f, "cpsie\t%8'a%7'i%6'f"},
@@ -349,7 +348,7 @@ struct opcode32 arm_opcodes[] = {
 // UNDEFINED INSTRUCTION SPACE
 {-1,  &undefinedInstruction, 0x06000010, 0x0e000010, UNDEFINED_INSTRUCTION},
 // UNIMPLEMENTED
-{1,  &popLdrInstruction,       0x049d0004, 0x0fff0fff, "pop%c\t{%12-15r}\t\t; (ldr%c %12-15r, %a)"},
+{1,  &popLdrInstruction,       0x049d0004, 0x0fff0fff, "POP"},
 // LDR traps if dest = PC, otherwise pass through
 {1,  &ldrInstruction,       0x0410f000, 0x0c10f000, "LDR PC, Rn/#imm12"},
 {0,  &ldrInstruction,       0x04100000, 0x0c100000, "LDR Rd, Rn/#imm12"},

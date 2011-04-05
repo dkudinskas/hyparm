@@ -8,7 +8,7 @@
 #include "instructionEmu/miscInstructions.h"
 
 
-#define DECODER_DEBUG
+//#define DECODER_DEBUG
 
 extern GCONTXT * getGuestContext(void);
 
@@ -246,8 +246,7 @@ struct instruction32bit dataProcMiscInstructions_op1[] = {
 {1,  &wfiInstruction,       0x0320f003, 0x0fffffff, "wfi%c"},
 // UNIMPLEMENTED: send event hint
 {1,  &sevInstruction,       0x0320f004, 0x0fffffff, "sev%c"},
-// UNIMPLEMENTED: nop hint
-{1,  &nopInstruction,       0x0320f000, 0x0fffff00, "nop%c\t{%0-7d}"},
+{0,  &nopInstruction,       0x0320f000, 0x0fffff00, "NOP"},
 // UNIMPLEMENTED: debug hint
 {1,  &dbgInstruction,       0x0320f0f0, 0x0ffffff0, "dbg%c\t#%0-3d"},
 // MOVW - indication of 'wide' - to select ARM encoding. Rd cant be PC, pass through.

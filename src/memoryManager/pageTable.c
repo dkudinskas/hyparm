@@ -82,6 +82,12 @@ descriptor* createHypervisorPageTable()
   //serial
   smallMapMemory(hypervisorPtd, UART3, (UART3 + UART3_SIZE -1), HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000);
 
+  //gpio5
+  smallMapMemory(hypervisorPtd, GPIO5, (GPIO5 + GPIO5_SIZE -1), HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
+  //gpio6
+  smallMapMemory(hypervisorPtd, GPIO6, (GPIO6 + GPIO6_SIZE -1), HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
   // interrupt controller
   smallMapMemory(hypervisorPtd, INTERRUPT_CONTROLLER, (INTERRUPT_CONTROLLER+INTERRUPT_CONTROLLER_SIZE-1),
                           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);

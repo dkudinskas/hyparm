@@ -3,6 +3,7 @@
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/dataProcessInstr.h"
 
+#define DATA_PROC_TRACE
 
 void invalidDataProcTrap(char * msg, GCONTXT * gc)
 {
@@ -32,14 +33,14 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
   if (conditionMet)
   {
     // set-flags case is tricky! depends on guest mode.
-    u32int setFlags = (instr & 0x00100000);
+    u32int setFlags = (instr & 0x00100000); // S bit on intruction binary respresentation
     // source operand1
     u32int regSrc = (instr & 0x000F0000) >> 16;
     // source operand2 - register or immediate?    
-    u32int regOrImm = instr & 0x02000000;
+    u32int regOrImm = instr & 0x02000000; // 1 = imm, 0 = reg
     if (regOrImm != 0)
     {
-      // source operand2 immediate: pc = regSrc + ror(immediate)
+      // source operand2 immediate: pc = regSrc +/- ror(immediate)
       u32int imm12 = instr & 0x00000FFF;
       switch (opType)
       {
@@ -50,6 +51,13 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
             nextPC += 8;
           }
           break;
+	case SUB:
+	  nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
+	  if (regSrc == 0xF)
+	  {
+	    nextPC += 8;
+	  }
+	  break;
         default:
           DIE_NOW(context, "invalid arithLogicOp opType");
       }
@@ -76,6 +84,14 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
               nextPC += 8;
             }
             break;
+	  case SUB:
+	    nextPC = loadGuestGPR(regSrc, context) - 
+	       shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+	    if (regSrc == 0xF)
+	    {
+	      nextPC += 8;
+	    }
+	    break;
           case MOV:
             // cant be shifted - mov shifted reg is a pseudo instr
             if (shamt != 0)
@@ -149,8 +165,6 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
   }
 }
 
-
-
 /*********************************/
 /* AND Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
@@ -183,7 +197,9 @@ u32int rscInstruction(GCONTXT * context)
 /*********************************/
 u32int subInstruction(GCONTXT * context)
 {
-  DIE_NOW(context, "Unimplemented SUB trap");
+  OPTYPE opType = SUB;
+  return arithLogicOp(context, opType, "SUB instr ");
+
 }
 
 
