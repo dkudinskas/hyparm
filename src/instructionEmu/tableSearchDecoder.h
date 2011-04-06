@@ -6,6 +6,8 @@
 
 // Uncomment me for decoder debug: #define DECODER_DEBUG  
 
+#define DECODER_DEBUG
+
 #define UNDEFINED_INSTRUCTION            0x0
 
 #define UNDEFINED_CATEGORY               0x0

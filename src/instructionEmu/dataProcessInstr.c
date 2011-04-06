@@ -3,8 +3,6 @@
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/dataProcessInstr.h"
 
-#define DATA_PROC_TRACE
-
 void invalidDataProcTrap(char * msg, GCONTXT * gc)
 {
   printf("%08x @ %08x should not have trapped!\n", gc->endOfBlockInstr, gc->R15);

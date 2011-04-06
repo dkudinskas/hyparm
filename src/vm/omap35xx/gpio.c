@@ -296,7 +296,7 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 	  	/* FreeRTOS initialization */
 	  	if(gpioNum==5 || gpioNum==6)
 	  	{
-	  		beStoreGPIO(regOffset,value,gpioNum);\
+	  		beStoreGPIO(regOffset,value,gpioNum);
 	  	}
       	break;
 	}
