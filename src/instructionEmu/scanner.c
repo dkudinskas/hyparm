@@ -31,6 +31,10 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 {
 #ifdef SCANNER_COUNTER
   scannerReqCounter++;
+  if(scannerReqCounter==0xb7b49)
+  {
+   asm volatile("BKPT #0");
+  }
 #endif
 #ifdef DUMP_SCANNER_COUNTER
   if ((scannerReqCounter % 4000) == 3999)
@@ -75,12 +79,14 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
     gc->endOfBlockInstr = bcEntry->hyperedInstruction;
 #ifdef SCANNER_DEBUG
-    serial_putstring("scanner: Block @ ");
+    serial_putstring("scanner: Block ");
+    serial_putint(scannerReqCounter);
+    serial_putstring(" @ ");
     serial_putint(blkStartAddr);
     serial_putstring(" hash value ");
     serial_putint(hashVal);
-    serial_putstring(" cache index ");
-    serial_putint(bcIndex);
+//    serial_putstring(" cache index ");
+//    serial_putint(bcIndex);
     serial_putstring(" HIT");
     serial_newline();
 #endif
@@ -110,12 +116,14 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   }
 
 #ifdef SCANNER_DEBUG
-  serial_putstring("scanner: Block @ ");
+  serial_putstring("scanner: Block ");
+  serial_putint(scannerReqCounter);
+  serial_putstring(" @ ");
   serial_putint(blkStartAddr);
   serial_putstring(" hash value ");
   serial_putint(hashVal);
-  serial_putstring(" cache index ");
-  serial_putint(bcIndex);
+//  serial_putstring(" cache index ");
+//  serial_putint(bcIndex);
   serial_putstring(" MISS!!!");
   serial_newline();
 #endif
@@ -154,7 +162,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
         blockCopyCacheCurrAddress = checkAndClearBlockCopyCacheAddress(blockCopyCacheCurrAddress,gc->blockCache,(u32int*)gc->blockCopyCache,(u32int*)gc->blockCopyCacheEnd);
         *(blockCopyCacheCurrAddress++)= INSTR_SWI | ((bcIndex+1)<<8);
 
-# ifdef SCANNER_DEBUG
+# ifdef SCANNER_DEBUG2
           serial_putstring("scanner: EOB @ ");
           serial_putint((u32int)currAddress);
           serial_putstring(" instr ");
@@ -275,7 +283,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
       {
         DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
       }
-# ifdef SCANNER_DEBUG
+# ifdef SCANNER_DEBUG2
       serial_putstring("scanner: EOB instruction is SWI @ ");
       serial_putint((u32int)currAddress);
       serial_putstring(" code ");
@@ -309,7 +317,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     // iCacheFlushByMVA((u32int)currAddress);
   }
   
-# ifdef SCANNER_DEBUG
+# ifdef SCANNER_DEBUG2
   serial_putstring("scanner: EOB @ ");
   serial_putint((u32int)currAddress);
   serial_putstring(" instr ");

@@ -31,6 +31,7 @@ u32int zeroBits(u32int instruction, u32int startbit){
   }
 }
 #endif
+
 #ifdef CONFIG_BLOCK_COPY
 /* This will save the PC corresponding to instructionAddress in reg. instructionAddress is the original address of the instruction */
 u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * currBlockCopyCacheAddr, u32int reg  )
@@ -93,82 +94,92 @@ u32int* standardImmRegRSR(GCONTXT * context, u32int *  instructionAddr, u32int *
   bool replaceReg1 = FALSE;
   bool replaceReg2 = FALSE;
   u32int instr2Copy=instruction;
-
-  if(immediate){
-    /* Immediate -> only check regSrc1 */
-    if(srcReg1 == 0xF)
-    {
-      replaceReg1 = TRUE;
-    }
-
-  }else{
-    /* Not the immediate flavor => RSR of ordinary register flavor */
-    if(registerShifted){
-      DIE_NOW(0, "standardImmRegRSR (register-shifted register) with PC is UNPREDICTABLE!");
-    }else{
-      /* ordinary register flavor-> check regSrc1 & regSrc2 */
-      if(srcReg1 == 0xF)
-      {
-        replaceReg1 = TRUE;
-      }
-      if(srcReg2 == 0xF)
-      {
-        replaceReg2 = TRUE;
-      }
-    }
-  }
-  if(replaceReg1 || replaceReg2)
+  bool conditionAlways = (instruction>>28 & 0xF) == 0xE;
+  if(conditionAlways)
   {
-    /* Rd should not be used as input.  srcReg2 is part of the immediate value if it is a immediate flavor */
-    if(srcReg1 == destReg || ( (!immediate) && srcReg2 == destReg ) )
-    {
-      /* Some information before crashing that can be useful to determine if this is indeed the way to go.*/
-      serial_putstring("instruction = ");
-      serial_putint(instruction);
-      serial_newline();
-      serial_putstring("immediate = ");
-      serial_putint(immediate);
-      serial_newline();
-      serial_putstring("srcReg1 = ");
-      serial_putint(srcReg1);
-      serial_newline();
-      serial_putstring("srcReg2 = ");
-      serial_putint(srcReg2);
-      serial_newline();
-      serial_putstring("destReg = ");
-      serial_putint(destReg);
-      serial_newline();
-      DIE_NOW(0, "standardImmRegRSR special care should be taken it is not possible to use destReg");
-      /*
-       *  Not sure if this can occur.  If it occurs our usual trick won't work.
-       *  It can still be solved using a scratch register.
-       *  An example of the scratch register trick can be seen in tstPCInstruction
-       *  So just place backup-scratch-register-instruction, put-PC-in-scratchregister-instruction, place modified instruction
-       *  place restore-scratch-register-instruction
-       *  THIS SHOULD BE DONE Inside this if-statement and this if-clause should return
-       */
+    if(immediate){
+        /* Immediate -> only check regSrc1 */
+        if(srcReg1 == 0xF)
+        {
+          replaceReg1 = TRUE;
+        }
 
-      return 0; /* Inpossible to flow through because last instruction is restore sratch-register*/
-    }
+      }else{
+        /* Not the immediate flavor => RSR of ordinary register flavor */
+        if(registerShifted){
+          DIE_NOW(0, "standardImmRegRSR (register-shifted register) with PC is UNPREDICTABLE!");
+        }else{
+          /* ordinary register flavor-> check regSrc1 & regSrc2 */
+          if(srcReg1 == 0xF)
+          {
+            replaceReg1 = TRUE;
+          }
+          if(srcReg2 == 0xF)
+          {
+            replaceReg2 = TRUE;
+          }
+        }
+      }
+      if(replaceReg1 || replaceReg2)
+      {
+        /* Rd should not be used as input.  srcReg2 is part of the immediate value if it is a immediate flavor */
+        if(srcReg1 == destReg || ( (!immediate) && srcReg2 == destReg ) )
+        {
+          /* Some information before crashing that can be useful to determine if this is indeed the way to go.*/
+          serial_putstring("instruction = ");
+          serial_putint(instruction);
+          serial_newline();
+          serial_putstring("immediate = ");
+          serial_putint(immediate);
+          serial_newline();
+          serial_putstring("srcReg1 = ");
+          serial_putint(srcReg1);
+          serial_newline();
+          serial_putstring("srcReg2 = ");
+          serial_putint(srcReg2);
+          serial_newline();
+          serial_putstring("destReg = ");
+          serial_putint(destReg);
+          serial_newline();
+          DIE_NOW(0, "standardImmRegRSR special care should be taken it is not possible to use destReg");
+          /*
+           *  Not sure if this can occur.  If it occurs our usual trick won't work.
+           *  It can still be solved using a scratch register.
+           *  An example of the scratch register trick can be seen in tstPCInstruction
+           *  So just place backup-scratch-register-instruction, put-PC-in-scratchregister-instruction, place modified instruction
+           *  place restore-scratch-register-instruction
+           *  THIS SHOULD BE DONE Inside this if-statement and this if-clause should return
+           */
 
-    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+          return 0; /* Inpossible to flow through because last instruction is restore sratch-register*/
+        }
 
-    if(replaceReg1)
-    {
-      /* Add instruction will only be changed very little -> Rn is the only thing that has to be changed */
-      instr2Copy=instr2Copy & 0xFFF0FFFF; //set Rn to Rd
-      instr2Copy=instr2Copy | (destReg<<16);
-    }
-    if(replaceReg2)
-    {
-      instr2Copy=instr2Copy & 0xFFFFFFF0;//set Rm to Rd
-      instr2Copy=instr2Copy | (destReg);
-    }
+        currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+
+        if(replaceReg1)
+        {
+          /* Add instruction will only be changed very little -> Rn is the only thing that has to be changed */
+          instr2Copy=instr2Copy & 0xFFF0FFFF; //set Rn to Rd
+          instr2Copy=instr2Copy | (destReg<<16);
+        }
+        if(replaceReg2)
+        {
+          instr2Copy=instr2Copy & 0xFFFFFFF0;//set Rm to Rd
+          instr2Copy=instr2Copy | (destReg);
+        }
+      }
+      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+      *(currBlockCopyCacheAddr++)=instr2Copy;
+
+      return currBlockCopyCacheAddr;
+  }else{
+    /*If instruction is not always executed it is unsafe to use the destination register to safe
+     * the program counter
+     */
+    DIE_NOW(0,"standardImmRegRSR: support for conditional instructions not yet implemented");
+
   }
-  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-  *(currBlockCopyCacheAddr++)=instr2Copy;
 
-  return currBlockCopyCacheAddr;
 }
 #endif
 #ifdef CONFIG_BLOCK_COPY
@@ -416,6 +427,7 @@ u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regSrc3)
   return -1;
 }
 #endif
+
 #ifdef CONFIG_BLOCK_COPY
 u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {

@@ -322,26 +322,37 @@ u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   u32int instruction = *instructionAddr;
   u32int destReg=(instruction>>12) & 0xF;
   u32int instr2Copy=instruction;
+  bool conditionAlways = (instruction>>28 & 0xF) == 0xE;
 
-  if( ( (instruction>>25) & 0b1 ) != 1)
-  {//bit 25 != 1 -> there can be registers, PC can possibly be read
-    if((instruction & 0xF) != 0xF)
-    {
-      DIE_NOW(0, "mov PCFunct: movPCFunct can only be called if last 4 bits are 1111\n");
-    }else{
-      //step 1 Copy PC (=instructionAddr2) to desReg
-      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
-      //Step 2 modify ldrInstruction
-      //Clear PC source Register
-      instr2Copy=zeroBits(instruction, 0);//set last 4 bits equal to zero
-      instr2Copy=instr2Copy | (destReg);  //set last 4 bits so correct register is used
-    }
+  if(conditionAlways)
+  {
+    if( ( (instruction>>25) & 0b1 ) != 1)
+      {//bit 25 != 1 -> there can be registers, PC can possibly be read
+        if((instruction & 0xF) != 0xF)
+        {
+          DIE_NOW(0, "mov PCFunct: movPCFunct can only be called if last 4 bits are 1111\n");
+        }else{
+          //step 1 Copy PC (=instructionAddr2) to desReg
+          currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+          //Step 2 modify ldrInstruction
+          //Clear PC source Register
+          instr2Copy=zeroBits(instruction, 0);//set last 4 bits equal to zero
+          instr2Copy=instr2Copy | (destReg);  //set last 4 bits so correct register is used
+        }
+      }
+
+      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+      *(currBlockCopyCacheAddr++)=instr2Copy;
+
+      return currBlockCopyCacheAddr;
+  }
+  else
+  {
+    //condition != always
+    DIE_NOW(0,"Unconditional MOV instruction not implemented yet");
   }
 
-  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-  *(currBlockCopyCacheAddr++)=instr2Copy;
 
-  return currBlockCopyCacheAddr;
 }
 #endif
 
@@ -363,37 +374,47 @@ u32int* mvnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   u32int instr2Copy = instruction;
   bool immediate = (instruction >> 25 & 0b1) == 0b1;
   bool replaceReg1 = FALSE;
+  bool conditionAlways = (instruction>>28 & 0xF) == 0xE;
+
   if(immediate)
   {
     //Always safe do nothing replaceReg1 is already false
   }
   else
   {
-    bool registerShifted = ((instruction>>4 & 0b1)==0b1) && ((instruction>>4 & 0b1)==0b0);
-    //Here we know it is register or register-shifted register
-    if(registerShifted)
+    if(conditionAlways)
     {
-      DIE_NOW(0,"MVNPC (register-shifted register) -> UNPREDICTABLE");
+      bool registerShifted = ((instruction>>4 & 0b1)==0b1) && ((instruction>>4 & 0b1)==0b0);
+      //Here we know it is register or register-shifted register
+      if(registerShifted)
+      {
+        DIE_NOW(0,"MVNPC (register-shifted register) -> UNPREDICTABLE");
+      }
+      else
+      {
+        //eor (register)
+        if((instruction & 0xF) == 0xF)
+        {
+          replaceReg1 = TRUE;
+        }
+      }
+      if(replaceReg1){
+        //step 1 Copy PC (=instructionAddr2) to desReg
+        currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+        if(replaceReg1)
+        {
+          //Step 2 modify eorInstruction
+          //Clear PC source Register
+          instr2Copy=zeroBits(instruction, 0);
+          instr2Copy=instr2Copy | (destReg);
+        }
+      }
     }
     else
     {
-      //eor (register)
-      if((instruction & 0xF) == 0xF)
-      {
-        replaceReg1 = TRUE;
-      }
+      /* mvn with condition code != ALWAYS*/
+      DIE_NOW(0,"conditional mvn PCFunct not yet implemented");
     }
-  }
-  if(replaceReg1){
-      //step 1 Copy PC (=instructionAddr2) to desReg
-      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
-      if(replaceReg1)
-      {
-        //Step 2 modify eorInstruction
-        //Clear PC source Register
-        instr2Copy=zeroBits(instruction, 0);
-        instr2Copy=instr2Copy | (destReg);
-      }
   }
 
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
@@ -436,26 +457,36 @@ u32int* lsrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   u32int srcPCRegLoc = 0;//This is where the PC is in the instruction
   u32int destReg=(instruction>>12) & 0xF;
   u32int instr2Copy=instruction;
+  bool conditionAlways = (instruction>>28 & 0xF) == 0xE;
   //bits 16-19 are zero so Rm or Rn is PC
 
-  if((instruction>>4 & 0b1) == 1)
-  {//Bit 4 is 1 if extra register (LSR(register))
-    DIE_NOW(0,"lsrPCInstruction LSR(register) with a srcReg==PC is UNPREDICTABLE?");
-  }
-  //Ready to do shift
-  //save PC
-  if((instruction &  0xF) == 0xF){
-    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+  if(conditionAlways)
+  {
+    if((instruction>>4 & 0b1) == 1)
+    {//Bit 4 is 1 if extra register (LSR(register))
+      DIE_NOW(0,"lsrPCInstruction LSR(register) with a srcReg==PC is UNPREDICTABLE?");
+    }
+    //Ready to do shift
+    //save PC
+    if((instruction &  0xF) == 0xF){
+      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
 
-    //Step 2 modify ldrInstruction
-    //Clear PC source Register
-    instr2Copy=zeroBits(instruction, srcPCRegLoc);
-    instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
-  }
-  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-  *(currBlockCopyCacheAddr++)=instr2Copy;
+      //Step 2 modify ldrInstruction
+      //Clear PC source Register
+      instr2Copy=zeroBits(instruction, srcPCRegLoc);
+      instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
+    }
+    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
 
-  return currBlockCopyCacheAddr;
+    return currBlockCopyCacheAddr;
+  }
+  else
+  {
+    /*lsrPC Funct conditional*/
+    DIE_NOW(0,"lsrPCFunct conditional is not yet implemented");
+
+  }
 }
 #endif
 
@@ -475,29 +506,38 @@ u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   bool immediate = ( (instruction>>4 & 0x7) == 0x4 );
   u32int destReg = (instruction>>12) & 0xF;
   u32int instr2Copy = instruction;
-  if(immediate)
-  {
-    if((instruction & 0xF)== 0xF)
-    { //inputRegister = PC
-      //step 1 Copy PC (=instructionAddr2) to desReg
-      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+  bool conditionAlways = (instruction>>28 & 0xF) == 0xE;
 
-      //Step 2 modify ldrInstruction
-      //Clear PC source Register
-      instr2Copy=zeroBits(instruction, 0);
-      instr2Copy=instr2Copy | (destReg);
+  if(conditionAlways)
+  {
+    if(immediate)
+    {
+      if((instruction & 0xF)== 0xF)
+      { //inputRegister = PC
+        //step 1 Copy PC (=instructionAddr2) to desReg
+        currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+
+        //Step 2 modify ldrInstruction
+        //Clear PC source Register
+        instr2Copy=zeroBits(instruction, 0);
+        instr2Copy=instr2Copy | (destReg);
+      }
     }
+    else
+    {
+      //ARM p 352
+      DIE_NOW(0,"asrPCInstruction: ASR(register) cannot take PC as input!->UNPREDICTABLE");
+    }
+
+    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    return currBlockCopyCacheAddr;
   }
   else
   {
-    //ARM p 352
-    DIE_NOW(0,"asrPCInstruction: ASR(register) cannot take PC as input!->UNPREDICTABLE");
+    DIE_NOW(0,"asrPCInstruction conditional");
   }
-
-  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-  *(currBlockCopyCacheAddr++)=instr2Copy;
-
-  return currBlockCopyCacheAddr;
 }
 #endif
 

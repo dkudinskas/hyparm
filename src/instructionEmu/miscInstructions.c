@@ -49,10 +49,10 @@ u32int bxInstruction(GCONTXT * context)
   if (!evalCC(instrCC, cpsrCC))
   {
       #ifdef CONFIG_BLOCK_COPY
-	  nextPC = context->PCOfLastInstruction + 4;
-	  #else
-	  nextPC = context->R15+4;
-	  #endif
+        nextPC = context->PCOfLastInstruction + 4;
+        #else
+        nextPC = context->R15+4;
+        #endif
       return nextPC;
   }
   //check if switching to thumb mode
@@ -236,8 +236,20 @@ u32int isbInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
 u32int* bfcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "bfc PCFunct unfinished\n");
-  return 0;
+
+  /* Normally always safe*/
+  u32int instruction = *instructionAddr;
+  u32int destReg = (instruction>>12) & 0xF;
+  if(destReg == 0xF)
+  {
+    DIE_NOW(0,"bfc PC: with Rd == PC -> UNPREDICTABLE");
+  }
+
+  //Other fields are safe
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instruction;
+
+  return currBlockCopyCacheAddr;
 }
 #endif
 
@@ -456,7 +468,6 @@ u32int* cpsiePCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int 
 
 u32int cpsieInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "cpsieInstruction is executed but not yet checked for blockCopyCompatibility");
   return cpsInstruction(context);
 }
 
@@ -494,7 +505,11 @@ u32int cpsInstruction(GCONTXT * context)
   serial_putstring("CPS instr ");
   serial_putint(instr);
   serial_putstring(" @ ");
+# ifdef CONFIG_BLOCK_COPY
   serial_putint(context->PCOfLastInstruction);
+# else
+  serial_putint(context->R15);
+# endif
   serial_newline();
 #endif
   if ( ((imod == 0) && (changeMode == 0)) || (imod == 1) )
@@ -603,9 +618,9 @@ u32int cpsInstruction(GCONTXT * context)
     DIE_NOW(0, "CPS instruction: executed in guest user mode.");
   }
   #ifdef CONFIG_BLOCK_COPY
-  return context->PCOfLastInstruction + 4;
+    return context->PCOfLastInstruction + 4;
   #else
-  return context->R15+4;
+    return context->R15+4;
   #endif
 }
 

@@ -40,25 +40,35 @@ u32int* strPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   u32int srcPCRegLoc = 16;//This is where the PC is in the instruction (if immediate always at bit 16 if not can be at bit 0)
   u32int destReg=(instruction>>12) & 0xF;
   u32int instr2Copy=instruction;
+  bool conditionAlways = (instruction>>28 & 0xF) == 0xE;
+
   if(((instruction>>25 & 0b1) == 0b1) & ((instruction & 0xF) == 0xF)){//bit 25 is 1 when there are 2 source registers
     DIE_NOW(0, "str PCFunct: str (register) cannot have Rm as PC -> UNPREDICTABLE");
   }
-  if((instruction>>srcPCRegLoc & 0xF) == 0xF)  //There only have to be taken measures if Rn is PC
+
+  if(conditionAlways)
   {
-    //step 1 Copy PC (=instructionAddr2) to desReg
-    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+    if((instruction>>srcPCRegLoc & 0xF) == 0xF)  //There only have to be taken measures if Rn is PC
+      {
+        //step 1 Copy PC (=instructionAddr2) to desReg
+        currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
 
-    //Step 2 modify strInstruction
-    //Clear PC source Register
-    instr2Copy=zeroBits(instruction, srcPCRegLoc);
-    instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
+        //Step 2 modify strInstruction
+        //Clear PC source Register
+        instr2Copy=zeroBits(instruction, srcPCRegLoc);
+        instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
+      }
+
+      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+      *(currBlockCopyCacheAddr++)=instr2Copy;
+
+      return currBlockCopyCacheAddr;
   }
-
-  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-  *(currBlockCopyCacheAddr++)=instr2Copy;
-
-  return currBlockCopyCacheAddr;
-
+  else
+  {
+    /* condition might be false */
+    DIE_NOW(0, "conditional strPCFunct not yet implemented");
+  }
 }
 #endif
 
@@ -1361,26 +1371,35 @@ u32int* ldrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   bool srcReg1IsPC = ((instruction>>srcPCRegLoc) & 0xF)==0xF;
   u32int destReg=(instruction>>12) & 0xF;
   u32int instr2Copy=instruction;
+  bool conditionAlways = (instruction>>28 & 0xF) == 0xE;
   if(((instruction>>25 & 0b1) == 1) && ((instruction & 0xF) == 0xF)){//bit 25 is 1 when there are 2 source registers
     //see ARM ARM p 436 Rm cannot be PC
     DIE_NOW(0, "ldr PCFunct (register) with Rm = PC -> UNPREDICTABLE\n");
   }
+  if(conditionAlways)
+  {
+    if(srcReg1IsPC){
+        //Here starts the general procedure.  For this srcPCRegLoc must be set correctly
+        //step 1 Copy PC (=instructionAddr2) to desReg
+        currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
 
-  if(srcReg1IsPC){
-    //Here starts the general procedure.  For this srcPCRegLoc must be set correctly
-    //step 1 Copy PC (=instructionAddr2) to desReg
-    currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+        //Step 2 modify ldrInstruction
+        //Clear PC source Register
+        instr2Copy=zeroBits(instruction, srcPCRegLoc);
+        instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
+      }
 
-    //Step 2 modify ldrInstruction
-    //Clear PC source Register
-    instr2Copy=zeroBits(instruction, srcPCRegLoc);
-    instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
+      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+      *(currBlockCopyCacheAddr++)=instr2Copy;
+
+      return currBlockCopyCacheAddr;
+  }
+  else
+  {
+    /* conditional instruction thus sometimes not executed */
+    DIE_NOW(0,"conditional ldr PCFunct not implemented yet");
   }
 
-  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-  *(currBlockCopyCacheAddr++)=instr2Copy;
-
-  return currBlockCopyCacheAddr;
 }
 #endif
 
