@@ -2,6 +2,7 @@
 #include "common/memFunctions.h"
 
 #include "guestManager/guestContext.h"
+#include "drivers/beagle/beGPIO.h"
 
 #include "vm/omap35xx/gpio.h"
 
@@ -137,6 +138,15 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
     case GPIO_OE:
     case GPIO_DATAIN:
     case GPIO_DATAOUT:
+	{
+		/* FreeRTOS GPIO status */
+	    val = gpio[gpioNum]->gpioDataOut;
+		if(gpioNum==5 || gpioNum==6)
+		{
+			val=beGetGPIO(regOffset,gpioNum);
+		}
+		break;
+	}
     case GPIO_LEVELDETECT0:
     case GPIO_LEVELDETECT1:
     case GPIO_RISINGDETECT:
@@ -269,17 +279,38 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       gpio[gpioNum]->gpioCtrl = value & ~GPIO_CTRL_RESERVED;
       break;
     case GPIO_OE:
-      /* value can be any 32-bit number */
-      gpio[gpioNum]->gpioOE = value;
+      {
+	  	/* value can be any 32-bit number */
+      	gpio[gpioNum]->gpioOE = value;
+	  	/* FreeRTOS initialization */
+	  	if(gpioNum==5 || gpioNum==6)
+	  	{
+	  		beStoreGPIO(regOffset,value,gpioNum);\
+	  	}
       break;
+	}
     case GPIO_CLEARDATAOUT:
-      /* value can be any 32-bit number */
-      gpio[gpioNum]->gpioClearDataOut=value;
-      break;
+      {
+	  	/* value can be any 32-bit number */
+      	gpio[gpioNum]->gpioClearDataOut=value;
+	  	/* FreeRTOS initialization */
+	  	if(gpioNum==5 || gpioNum==6)
+	  	{
+	  		beStoreGPIO(regOffset,value,gpioNum);\
+	  	}
+      	break;
+	}
     case GPIO_SETDATAOUT:
-      /* value can be any 32-bit number */
-      gpio[gpioNum]->gpioSetDataOut=value;
-      break;
+      {
+	  	/* value can be any 32-bit number */
+      	gpio[gpioNum]->gpioSetDataOut=value;
+	  	/* FreeRTOS initialization */
+	  	if(gpioNum==5 || gpioNum==6)
+	  	{
+	  		beStoreGPIO(regOffset,value,gpioNum);\
+	  	}
+      	break;
+	}
     case GPIO_WAKEUPENABLE:
     case GPIO_DATAIN:
     case GPIO_DATAOUT:

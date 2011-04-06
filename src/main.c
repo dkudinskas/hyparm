@@ -8,6 +8,7 @@
 #include "drivers/beagle/beGPTimer.h"
 #include "drivers/beagle/beClockMan.h"
 #include "drivers/beagle/beUart.h"
+#include "drivers/beagle/beGPIO.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/LED.h"

@@ -157,6 +157,7 @@ startup_hypervisor:
     get_emulated_mode /* uses R0 as scratch, puts guestContext addr into R1 */
     /* use system mode to extract guest stack pointer and link register */
     MRS     R2, CPSR /* Store current mode so we can switch back to it */
+    /* Change processor mode: CPS <mode> */
     CPS     SYS_MODE
     STMIA   R1, {R13, R14}
     /* switch back to previous mode */
