@@ -5,7 +5,6 @@
 
 #include "guestManager/guestContext.h"
 
-
 // uncomment me to enable scanner debug: #define SCANNER_DEBUG
 
 #define INSTR_SWI                 0xEF000000

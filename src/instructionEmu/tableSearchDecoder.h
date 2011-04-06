@@ -6,8 +6,6 @@
 
 // Uncomment me for decoder debug: #define DECODER_DEBUG  
 
-#define DECODER_DEBUG
-
 #define UNDEFINED_INSTRUCTION            0x0
 
 #define UNDEFINED_CATEGORY               0x0
@@ -17,6 +15,8 @@
 #define BRANCH_BLOCK_TRANSFER_CATEGORY   0x4
 #define SVC_COPROCESSOR_CATEGORY         0x5
 #define UNCONDITIONALS_CATEGORY          0x6
+
+//#define DECODER_DEBUG
 
 struct TopLevelCategory
 {

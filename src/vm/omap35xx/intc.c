@@ -375,9 +375,25 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       irqController->intcIdle = value & ( INTCPS_IDLE_RESERVED|INTCPS_IDLE_FUNCIDLE );
       break;
     case REG_INTCPS_MIR1:
-      /* value can be any 32-bit number */
-      irqController->intcIdle = value;
+      {	
+      	/* value can be any 32-bit number */
+      	irqController->intcMir1 = value & irqController->intcItr1;
+      	/* If guest wants to enable GPT1, then GPT2 IRQ
+	 * which is dedicated to guest must be unmasked
+	 */
+	if(!(value & 0x20 )) // bit 37(GPT1_IRQ)=0 -> IRQ Enable
+      	{
+      		unmaskInterruptBE(GPT2_IRQ);
+      	}
+	/* If GPT1 bit is masked, then GPT2_IRQ needs to be
+	 * masked
+	 */
+	else //bit 37(GPT1_IRQ)=1 -> IRQ Disable 
+	{
+		maskInterruptBE(GPT2_IRQ);
+	}
       break;
+      }
     case REG_INTCPS_ILR37: // this is FreeRTOS specific <- GPTIMER 2 delivers interrupt
       irqController->intcIlr[36] = value & INTCPS_ILR_RESERVED;
       break;

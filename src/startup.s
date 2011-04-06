@@ -128,7 +128,11 @@ startup_hypervisor:
     /* WARNING: changing registers will break dependant code */
     LDR     R0, =guestContextCPSR
     LDR     R0, [R0]
-    ANDS    R0, R0, #0x1F
+    /* I had to replace ANDS with AND + CMP again because it seems that
+     * ANDS does not set the CPSR flags.
+     */
+    AND     R0, R0, #0x1F
+    CMP	    R0, #0x1F
     LDREQ   R1, =guestContextR13_USR /* system mode - same register set as usr */
     CMP     R0, #0x10
     LDREQ   R1, =guestContextR13_USR
@@ -658,7 +662,13 @@ monitor_mode_handler_privileged_mode:
 
 .global irq_handler
 irq_handler:
-  /* disable further interrupts */
+  /* disable further interrupts
+   * Quick reference manual
+   * Page 3/6
+   * Disable Specific interrupts, <change mode>
+   * <iflags> = a->abort, i->interrupts, f->fast interrupts
+   */
+
   CPSID  i
 
   /* need to check if we came from guest mode, or were inside the hypervisor */
