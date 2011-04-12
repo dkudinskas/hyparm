@@ -78,11 +78,10 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr)
     }
   }
 }
-#ifdef CONFIG_BLOCK_COPY  //function is to different
+#ifdef CONFIG_BLOCK_COPY  //function is too different
 void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr,
                      u32int index, u32int blockCopyCacheSize, u32int blockCopyCacheAddress,u32int hypInstruction,u32int hdlFunct,BCENTRY * bcAddr)
 {
-
 #ifdef BLOCK_CACHE_DEBUG
   serial_putstring("blockCache: ADD[");
   serial_putint(index);
@@ -97,33 +96,33 @@ void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr,
   serial_putstring(" blockCopyCacheSize ")
   serial_putint(blockCopyCacheSize);
   serial_putstring(" blockCopyCache@");
-  serial_putint(blockCopyCacheAddress);
+  serial_putint((blockCopyCacheAddress & 0xFFFFFFFE));
   serial_newline();
 #endif
   if (bcAddr[index].valid == TRUE)
   {
-
     // somebody has been sleeping in our cache location!
     resolveCacheConflict(index, bcAddr);
     // now that we resolved the conflict, we arrive at situation where bcAddr[index].valid==false
   }
   //store the new entry data...
-  if(blkStartAddr & 0b1)//Last bit of blkStartAddr is used to indicate that a reserved word is present in blockCopyCache (see scanner.c)
+  if( (blockCopyCacheAddress & 0b1) == 0b1)//Last bit of blkStartAddr is used to indicate that a reserved word is present in blockCopyCache (see scanner.c)
   {
     bcAddr[index].reservedWord = 1;//Set reservedWord to true
-    bcAddr[index].startAddress = blkStartAddr & 0xFFFFFFFE;//Set last bit back to zero!!
+    bcAddr[index].blockCopyCacheAddress = blockCopyCacheAddress & 0xFFFFFFFE;//Set last bit back to zero!!
+    bcAddr[index].blockCopyCacheSize = blockCopyCacheSize+1;/* We need space for reserved word */
   }
   else
   {
-    bcAddr[index].startAddress = blkStartAddr;
+    bcAddr[index].reservedWord = 0;//Set reservedWord to true
+    bcAddr[index].blockCopyCacheAddress = blockCopyCacheAddress;
+    bcAddr[index].blockCopyCacheSize = blockCopyCacheSize; /* Size doesn't change*/
   }
+  bcAddr[index].startAddress = blkStartAddr;
   bcAddr[index].endAddress = blkEndAddr;
   bcAddr[index].hyperedInstruction = hypInstruction;
   bcAddr[index].hdlFunct = hdlFunct;
   bcAddr[index].valid = TRUE;
-  bcAddr[index].blockCopyCacheSize = blockCopyCacheSize;
-  bcAddr[index].blockCopyCacheAddress = blockCopyCacheAddress;
-
   
   // set bitmap entry to executed
   setExecBitMap(blkEndAddr);

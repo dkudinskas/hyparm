@@ -97,14 +97,19 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context);
 u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regSrc3);
 #endif
 
-/* This function inserts an instruction in the instructionstream of the blockCopycache which will write the content of reg2Backup to the reserved word*/
-// The reserved word = a word in the blockCopyCache that won't contain instructions (if present it is situated right after the backpointer)
+/* This function inserts an instruction in the instructionstream of the blockCopycache which will write the content of reg2Backup to the reserved word*
+ * The reserved word = a word in the blockCopyCache that won't contain instructions (if present it is situated right after the backpointer)
+ * If there isn't a free word to store the backup than blockCopyCacheStartAddress will end with a zero otherwise with a one
+ * If no free word is available backupRegister should leave a blank word
+ */
 #ifdef CONFIG_BLOCK_COPY
 u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);
 #endif
 
-/* This function inserts an instruction in the instructionstream of the blockCopycache which will restore the content of reg2Restore from the reserved word*/
-// The reserved word = a word in the blockCopyCache that won't contain instructions (if present it is situated right after the backpointer)
+/* This function inserts an instruction in the instructionstream of the blockCopycache which will restore the content of reg2Restore from the reserved word*
+ * The reserved word = a word in the blockCopyCache that won't contain instructions (if present it is situated right after the backpointer)
+ * The last bit of blockCopyCacheStartAddress can safely be ignored
+ */
 #ifdef CONFIG_BLOCK_COPY
 u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);
 #endif

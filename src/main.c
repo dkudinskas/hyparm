@@ -175,7 +175,6 @@ int main(int argc, char *argv[])
 #endif
     //Install unconditional jump to beginning of blockCopyCache at end of blockCopyCache
     *(blockCopyCache + blockCopyCacheSize)=result;
-    //TODO CHECK IF THIS Branch is installed correctly!
 #ifdef STARTUP_DEBUG
     serial_putstring("Block copy cache at 0x");
     serial_putint((u32int)blockCopyCache);

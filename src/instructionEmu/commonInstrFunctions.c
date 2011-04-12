@@ -223,6 +223,8 @@ u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int *  instructionAddr, u3
     scratchReg = findUnusedRegister(regSrc1, regSrc2, -1);
     /* place 'Backup scratchReg' instruction */
     currBlockCopyCacheAddr = backupRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+    currBlockCopyCacheAddr= savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  scratchReg);
+
     if(rnIsPC)
     {
       instr2Copy = zeroBits(instr2Copy, 16);
@@ -242,6 +244,8 @@ u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int *  instructionAddr, u3
   {
     /* place 'restore scratchReg' instruction */
     currBlockCopyCacheAddr = restoreRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+    /* Make sure scanner sees that we need a word to store the register*/
+    currBlockCopyCacheAddr = (u32int*)(((u32int)currBlockCopyCacheAddr)|0b1);
   }
 
   return currBlockCopyCacheAddr;
@@ -432,6 +436,7 @@ u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regSrc3)
 u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   GCONTXT * context = getGuestContext();
+  u32int targetAddr = (((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE) +4;
   //STR(immediate) -> ARM ARM A8.6.194 p696
   //|    |    |    |    |    |11         0|
   //|COND|010P|U0W0| Rn | Rt |    imm12   |
@@ -440,8 +445,23 @@ u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32i
   u32int instr2Copy = 0xe50F0000;
   //set scratchRegister
   instr2Copy=instr2Copy | reg2Backup<<12;
+  /*Now Check if there is already a free word in blockCopyCache if no then instructions should be placed after a free word (this way
+   * less instructions need to be copied afterwards.
+   */
+  if( (((u32int)blockCopyCacheStartAddress) & 0b1) == 0b0)
+  {
+    /* No free word make one */
+    /* First check if the current word is free (and free it up if not)*/
+    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    /*Then go to next word*/
+    currBlockCopyCacheAddr++;
+    /* As there needs to be taken maximum 1 backup per instruction no further actions need to be taken.  Scanner will change blockCopyCacheStartAddress if necessary
+     * Be sure to ignore last bit when using blockCopyCacheStartAddress.*/
+  }
+
+
   //set imm12 -> No way that the offset will be bigger than a 12 bit value, PC is 2 behind -> +8
-  instr2Copy=instr2Copy | ((u32int)currBlockCopyCacheAddr -(u32int)blockCopyCacheStartAddress + 8);
+  instr2Copy=instr2Copy | ((u32int)currBlockCopyCacheAddr + 8 - targetAddr );
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
   *(currBlockCopyCacheAddr++)=instr2Copy;
   return currBlockCopyCacheAddr;
@@ -452,6 +472,8 @@ u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32i
 u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   GCONTXT * context = getGuestContext();
+  u32int targetAddr = (((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE) +4;
+
   //ldr(immediate) -> ARM ARM A8.6.58 p432
   //|    |    |    |    |    |11         0|
   //|COND|010P|U0W1| Rn | Rt |    imm12   |
@@ -460,8 +482,9 @@ u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u3
   u32int instr2Copy = 0xe51F0000;
   //set scratchRegister
   instr2Copy=instr2Copy | reg2Restore<<12;
-  //set imm12 -> No way that the offset will be bigger than a 12 bit value, PC is 2 behind -> +8
-  instr2Copy=instr2Copy | ((u32int)currBlockCopyCacheAddr -(u32int)blockCopyCacheStartAddress + 8);
+  /*set imm12 -> No way that the offset will be bigger than a 12 bit value, PC is 2 behind -> +8
+   * Be sure to ignore last bit when using blockCopyCacheStartAddress.*/
+  instr2Copy=instr2Copy | ((u32int)currBlockCopyCacheAddr + 8 - targetAddr);
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
   *(currBlockCopyCacheAddr++)=instr2Copy;
   return currBlockCopyCacheAddr;
