@@ -90,8 +90,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   	    gc->endOfBlockInstr = bcEntry->hyperedInstruction;
     	gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
      }
-	 else
-		printf("WAS HERE: %x\n",instruction);
 	}
   else
   {
@@ -107,7 +105,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 # endif
 #endif
     // replace end of block instruction with hypercall of the appropriate code
-   printf("index %x\n",bcIndex); 
     *currAddress = INSTR_SWI | ((bcIndex + 1) << 8);
     // if guest instruction stream is mapped with caching enabled, must maintain
     // i and d cache coherency

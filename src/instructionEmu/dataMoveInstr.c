@@ -1112,7 +1112,6 @@ u32int ldrInstruction(GCONTXT * context)
     // immediate case
     u32int imm32 = instr & 0x00000FFF;
     baseAddress = loadGuestGPR(regSrc, context);
-	printf("Base: %x\n",baseAddress);
     if (regSrc == 15)
     {
       baseAddress = baseAddress + 8;

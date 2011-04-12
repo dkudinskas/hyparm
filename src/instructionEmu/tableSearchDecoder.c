@@ -526,7 +526,7 @@ struct instruction32bit svcCoprocInstructions[] = {
 struct instruction32bit * decodeInstr(u32int instr)
 {
   u32int catCode = decodeTopLevelCategory(instr);
-  printf("%x\n",instr);
+  //printf("%x\n",instr);
   switch(catCode)
   {
     case DATA_PROC_AND_MISC_CATEGORY:
