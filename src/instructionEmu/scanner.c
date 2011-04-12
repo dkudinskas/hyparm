@@ -1,6 +1,7 @@
 #include "common/debug.h"
 
 #include "guestManager/blockCache.h"
+#include "guestManager/guestExceptions.h"
 
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/scanner.h"
@@ -27,7 +28,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   struct instruction32bit * decodedInstruction = 0;
 #else
 # ifdef CONFIG_DECODER_AUTO
-  //instructionHandler decodedInstruction = 0;
   instructionHandler decodedInstruction = 0;
 # else
 #  error Decoder must be set!
@@ -73,30 +73,26 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 
   if ((instruction & INSTR_SWI) == INSTR_SWI)
   {
-    u32int svcCode = (instruction & 0x00FFFFFF);
-    if ((svcCode >= 0) && (svcCode <= 0xFF))
-    {
-      printf("scanBlock: SWI code = %x\n", svcCode);
-      DIE_NOW(gc, "scanBlock: SVC instruction not placed by hypervisor!");
-    }
-    else
-    {
-      // we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
-      u32int cacheIndex = (svcCode >> 8) - 1;
-      if (cacheIndex >= BLOCK_CACHE_SIZE)
-      {
-        DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
-      }
-#ifdef SCANNER_DEBUG
-      printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)currAddress, cacheIndex);
-#endif
-      BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
-  
-      // retrieve end of block instruction and handler function pointer
-      gc->endOfBlockInstr = bcEntry->hyperedInstruction;
-      gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
-    } 
-  }
+      u32int svcCode = (instruction & 0x00FFFFFF);
+	  if(!((svcCode >= 0) && (svcCode <= 0xFF)))
+	  {
+		// we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
+      	u32int cacheIndex = (svcCode >> 8) - 1;
+      	if (cacheIndex >= BLOCK_CACHE_SIZE)
+      	{
+        	DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
+      	}
+//#ifdef SCANNER_DEBUG
+      	printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)currAddress, cacheIndex);
+//#endif
+      	BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
+        // retrieve end of block instruction and handler function pointer
+  	    gc->endOfBlockInstr = bcEntry->hyperedInstruction;
+    	gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
+     }
+	 else
+		printf("WAS HERE: %x\n",instruction);
+	}
   else
   {
     // save end of block instruction and handler function pointer close to us...
@@ -111,7 +107,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 # endif
 #endif
     // replace end of block instruction with hypercall of the appropriate code
-    
+   printf("index %x\n",bcIndex); 
     *currAddress = INSTR_SWI | ((bcIndex + 1) << 8);
     // if guest instruction stream is mapped with caching enabled, must maintain
     // i and d cache coherency

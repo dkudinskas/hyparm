@@ -115,6 +115,9 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
     case REG_INTCPS_CONTROL:
       val = irqController->intcControl & INTCPS_CONTROL_RESERVED;
       break;
+	case REG_INTCPS_MIR1:
+	  val = irqController->intcMir1;
+	  break;
     case REG_INTCPS_SIR_FIQ:
     case REG_INTCPS_PROTECTION:
     case REG_INTCPS_IDLE:
@@ -346,6 +349,7 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         }
       }
       irqController->intcMir2 &= ~value;
+	  unmaskInterrupt(GPT1_IRQ);
       break;
     }
     case REG_INTCPS_MIR_SET0:
@@ -407,8 +411,10 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 		break;
 	  }
     case REG_INTCPS_ILR37: // this is FreeRTOS specific <- GPTIMER 2 delivers interrupt
-      irqController->intcIlr[36] = value & INTCPS_ILR_RESERVED;
-      break;
+      {
+	  	irqController->intcIlr[37] = value & INTCPS_ILR_RESERVED;
+      	break;
+	  }
     case REG_INTCPS_PROTECTION:
     case REG_INTCPS_IRQ_PRIORITY:
     case REG_INTCPS_FIQ_PRIORITY:
@@ -644,6 +650,7 @@ bool isGuestIrqMasked(u32int interruptNumber)
   }
   bankNumber = interruptNumber / INTCPS_INTERRUPTS_PER_BANK;
   bitMask = 1 << (interruptNumber % INTCPS_INTERRUPTS_PER_BANK);
+  /* Determine the status of the IRQ on virtual interrupt controller */
   switch (bankNumber)
   {
     case 0:

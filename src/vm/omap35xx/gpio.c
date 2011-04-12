@@ -9,7 +9,6 @@
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 
-
 extern GCONTXT * getGuestContext(void);
 
 struct Gpio * gpio[6];
@@ -141,7 +140,7 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
 	{
 		/* FreeRTOS GPIO status */
 	    val = gpio[gpioNum]->gpioDataOut;
-		if(gpioNum==5 || gpioNum==6)
+		if(gpioNum==4 || gpioNum==5)
 		{
 			val=beGetGPIO(regOffset,gpioNum);
 		}
@@ -283,9 +282,9 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 	  	/* value can be any 32-bit number */
       	gpio[gpioNum]->gpioOE = value;
 	  	/* FreeRTOS initialization */
-	  	if(gpioNum==5 || gpioNum==6)
+	  	if(gpioNum==4 || gpioNum==5)
 	  	{
-	  		beStoreGPIO(regOffset,value,gpioNum);\
+	  		beStoreGPIO(regOffset,value,gpioNum);
 	  	}
       break;
 	}
@@ -293,8 +292,9 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       {
 	  	/* value can be any 32-bit number */
       	gpio[gpioNum]->gpioClearDataOut=value;
+		gpio[gpioNum]->gpioDataOut=~(value);
 	  	/* FreeRTOS initialization */
-	  	if(gpioNum==5 || gpioNum==6)
+	  	if(gpioNum==4 || gpioNum==5)
 	  	{
 	  		beStoreGPIO(regOffset,value,gpioNum);
 	  	}
@@ -304,10 +304,11 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       {
 	  	/* value can be any 32-bit number */
       	gpio[gpioNum]->gpioSetDataOut=value;
+		gpio[gpioNum]->gpioDataOut=value;
 	  	/* FreeRTOS initialization */
-	  	if(gpioNum==5 || gpioNum==6)
+	  	if(gpioNum==4 || gpioNum==5)
 	  	{
-	  		beStoreGPIO(regOffset,value,gpioNum);\
+	  		beStoreGPIO(regOffset,value,gpioNum);
 	  	}
       	break;
 	}

@@ -43,7 +43,7 @@ struct opcode32 arm_opcodes[] = {
 {0,  &mlaInstruction,       0x00200090, 0x0fe000f0, "MLA Rd, Rm, Rn, Ra"},
 // UNIMPLEMENTED
 {1,  &swpInstruction,       0x01000090, 0x0fb00ff0, "swp%22'b%c\t%12-15r, %0-3r, [%16-19r]"},
-{0,  &sumullInstruction,    0x00800090, 0x0fa000f0, "%22?sumull%20's%c\t%12-15r, %16-19r, %0-3r, %8-11r"},
+{0,  &sumullInstruction,    0x00800090, 0x0fa000f0, "SMULL"},
 {0,  &sumlalInstruction,    0x00a00090, 0x0fa000f0, "%22?sumlal%20's%c\t%12-15r, %16-19r, %0-3r, %8-11r"},
 /* V7 instructions.  */
 {1,  &pliInstruction,       0xf450f000, 0xfd70f000, "pli\t%P"},
@@ -145,10 +145,10 @@ struct opcode32 arm_opcodes[] = {
 {1,  &sxtbInstruction,      0x06af0470, 0x0fff0ff0, "sxtb%c\t%12-15r, %0-3r, ror #8"},
 {1,  &sxtbInstruction,      0x06af0870, 0x0fff0ff0, "sxtb%c\t%12-15r, %0-3r, ror #16"},
 {1,  &sxtbInstruction,      0x06af0c70, 0x0fff0ff0, "sxtb%c\t%12-15r, %0-3r, ror #24"},
-{1,  &uxthInstruction,      0x06ff0070, 0x0fff0ff0, "uxth%c\t%12-15r, %0-3r"},
-{1,  &uxthInstruction,      0x06ff0470, 0x0fff0ff0, "uxth%c\t%12-15r, %0-3r, ror #8"},
-{1,  &uxthInstruction,      0x06ff0870, 0x0fff0ff0, "uxth%c\t%12-15r, %0-3r, ror #16"},
-{1,  &uxthInstruction,      0x06ff0c70, 0x0fff0ff0, "uxth%c\t%12-15r, %0-3r, ror #24"},
+{1,  &uxthInstruction,      0x06ff0070, 0x0fff0ff0, "UXTH"},
+{1,  &uxthInstruction,      0x06ff0470, 0x0fff0ff0, "UXTH"},
+{1,  &uxthInstruction,      0x06ff0870, 0x0fff0ff0, "UXTH"},
+{1,  &uxthInstruction,      0x06ff0c70, 0x0fff0ff0, "UXTH"},
 {1,  &uxtb16Instruction,    0x06cf0070, 0x0fff0ff0, "uxtb16%c\t%12-15r, %0-3r"},
 {1,  &uxtb16Instruction,    0x06cf0470, 0x0fff0ff0, "uxtb16%c\t%12-15r, %0-3r, ror #8"},
 {1,  &uxtb16Instruction,    0x06cf0870, 0x0fff0ff0, "uxtb16%c\t%12-15r, %0-3r, ror #16"},

@@ -6,7 +6,7 @@
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/intc.h"
-
+#include "drivers/beagle/beGPTimer.h"
 
 extern GCONTXT * getGuestContext(void);
 
@@ -33,7 +33,8 @@ void deliverServiceCall(void)
   }
   else
   {
-    DIE_NOW(0, "deliverInterrupt: SVC to be delivered with guest vmem off.");
+      context->R15 = context->guestSwiHandler;
+	//DIE_NOW(0, "deliverInterrupt: SVC to be delivered with guest vmem off.");
   }
   // update AFI bits for SVC:
   context->CPSR |= CPSR_IRQ_DIS;
@@ -42,7 +43,7 @@ void deliverServiceCall(void)
 void throwInterrupt(u32int irqNumber)
 {
   GCONTXT * context = getGuestContext();
-
+  //printf("Guest IRQ: %x\n",irqNumber);
   switch (irqNumber)
   {
     case GPT2_IRQ:
@@ -50,12 +51,17 @@ void throwInterrupt(u32int irqNumber)
       // set it pending in emulated interrupt controller
       setInterrupt(GPT1_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending() && ((context->CPSR & CPSR_IRQ_DIS) == 0) )
+      if ( ( isIrqPending() ) && ((context->CPSR & CPSR_IRQ_DIS) == 0) )
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
-        context->guestIrqPending = TRUE;
+#ifdef	GUEST_EXCEPTIONS_DBG
+		printf("Enable guest Interrupts\n");
+#endif
+      	context->guestIrqPending = TRUE;
       }
+	  //else
+	  	//printf("Guest is not ready to handle IRQ: %x\n",context->R15);
       break;
     case UART1_IRQ:
       setInterrupt(UART1_IRQ);
@@ -75,6 +81,7 @@ void throwInterrupt(u32int irqNumber)
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
         context->guestIrqPending = TRUE;
+		maskInterrupt(GPT1_IRQ);
       }
       break;
     case UART3_IRQ:
@@ -94,6 +101,7 @@ void throwInterrupt(u32int irqNumber)
 
 void deliverInterrupt(void)
 {
+  static u32int gInt=0x0;
   GCONTXT * context = getGuestContext();
   // 1. reset irq pending flag.
   context->guestIrqPending = FALSE;
@@ -117,11 +125,15 @@ void deliverInterrupt(void)
   }
   else
   {
-    DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
+      context->R15 = context->guestIrqHandler;
   }
   // update AFI bits for IRQ:
   context->CPSR |= CPSR_IRQ_DIS;
   context->CPSR |= CPSR_ASYNC_ABT_DIS;
+#ifdef GUEST_EXCEPTIONS_DBG
+	printf("gInt: %08x\n", gInt);
+#endif
+	gInt++;
 }
 
 void deliverDataAbort()
@@ -149,7 +161,7 @@ void deliverDataAbort()
   }
   else
   {
-    DIE_NOW(0, "deliverInterrupt: Data abort to be delivered with guest vmem off.");
+  	context->R15 = context->guestDataAbortHandler;
   }
   // update AFI bits for IRQ:
   context->CPSR |= CPSR_IRQ_DIS;

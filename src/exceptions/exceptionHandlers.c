@@ -29,7 +29,8 @@ extern GCONTXT * getGuestContext(void);
 
 void softwareInterrupt(u32int code)
 {
-
+  
+  disableInterrupts();
 #ifdef EXC_HDLR_DBG
   printf("softwareInterrupt(%x)\n", code);
 #endif
@@ -38,12 +39,15 @@ void softwareInterrupt(u32int code)
   u32int nextPC = 0;
   u32int (*instrHandler)(GCONTXT * context);
 
-  if (code <= 0xFF)
+  /* Make sure that any SVC that is not part of the scanner
+   * will be delivered to the guest
+   */
+  if (code >=0 && code <= 0xFF)
   {
 #ifdef EXC_HDLR_DBG
     printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, gContext->R15);
 #endif
-    deliverServiceCall();
+	deliverServiceCall();
     nextPC = gContext->R15;
   }
   else
@@ -68,6 +72,9 @@ void softwareInterrupt(u32int code)
   gContext->R15 = nextPC;
 
   // deliver interrupts
+  /* Maybe a timer interrupt is pending on real INTC but
+   * hasn't been acked yet
+   */
   if (gContext->guestIrqPending)
   {
     if ((gContext->CPSR & CPSR_IRQ_DIS) == 0)
@@ -79,16 +86,17 @@ void softwareInterrupt(u32int code)
 #ifdef EXC_HDLR_DBG
   printf("softwareInterrupt: Next PC = 0x%x\n", nextPC);
 #endif
-
+  
   if ((gContext->CPSR & CPSR_MODE) != CPSR_MODE_USR)
   {
-    // guest in privileged mode! scan...
+	// guest in privileged mode! scan...
     scanBlock(gContext, gContext->R15);
   }
 }
 
 void dataAbort()
 {
+  /* Stop the timer so we can resume from where we stopped */
   // make sure interrupts are disabled while we deal with data abort.
   disableInterrupts();
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
@@ -112,7 +120,7 @@ void dataAbort()
       else
       {
         // deliver the abort!
-        deliverDataAbort();
+		deliverDataAbort();
         scanBlock(gc, gc->R15);
       }
       break;
@@ -128,7 +136,7 @@ void dataAbort()
       bool isPrivAccess = (gc->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
       if ( shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()) )
       {
-        deliverDataAbort();
+		deliverDataAbort();
         scanBlock(gc, gc->R15);
       }
       break;
@@ -227,6 +235,7 @@ void undefinedPrivileged(void)
 
 void prefetchAbort(void)
 {
+  /* Stop the time so we can resume from where we stopped */
   // make sure interrupts are disabled while we deal with prefetch abort.
   disableInterrupts();
 
@@ -241,11 +250,49 @@ void prefetchAbort(void)
     {
       if ( shouldPrefetchAbort(ifar) )
       {
-        deliverPrefetchAbort();
+		deliverPrefetchAbort();
         scanBlock(gc, gc->R15);
       }
       break;
     }
+    case ifsDebugEvent:
+    case ifsAccessFlagFaultSection:
+    case ifsTranslationFaultSection:
+    case ifsAccessFlagFaultPage:
+    case ifsSynchronousExternalAbort:
+    case ifsDomainFaultSection:
+    case ifsDomainFaultPage:
+    case ifsTranslationTableTalk1stLvlSynchExtAbt:
+    case ifsPermissionFaultSection:
+    case ifsTranslationTableWalk2ndLvllSynchExtAbt:
+	{
+		if ( shouldPrefetchAbort(ifar) )
+		{
+			deliverPrefetchAbort();
+			scanBlock(gc, gc->R15);
+		}
+		break;
+	}
+    case ifsPermissionFaultPage:
+    case ifsImpDepLockdown:
+    case ifsMemoryAccessSynchParityError:
+    case ifsImpDepCoprocessorAbort:
+    case ifsTranslationTableWalk1stLvlSynchParityError:
+    case ifsTranslationTableWalk2ndLvlSynchParityError:
+    default:
+      printPrefetchAbort();
+      DIE_NOW(gc, "Unimplemented guest prefetch abort.");
+  }
+  enableInterrupts();
+}
+
+void prefetchAbortPrivileged(void)
+{
+  disableInterrupts();
+  IFSR ifsr = getIFSR();
+  u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
+  switch(faultStatus){
+	case ifsTranslationFaultPage:
     case ifsDebugEvent:
     case ifsAccessFlagFaultSection:
     case ifsTranslationFaultSection:
@@ -264,16 +311,8 @@ void prefetchAbort(void)
     case ifsTranslationTableWalk2ndLvlSynchParityError:
     default:
       printPrefetchAbort();
-      DIE_NOW(gc, "Unimplemented guest prefetch abort.");
-  }
-  enableInterrupts();
-}
-
-void prefetchAbortPrivileged(void)
-{
-  printPrefetchAbort();
-  DIE_NOW(0, "prefetchAbortPrivileged: unimplemented");
-  //Never returns
+      DIE_NOW(0, "Unimplemented privileged prefetch abort.");
+   }
 }
 
 void monitorMode(void)
@@ -302,9 +341,15 @@ void irq()
       break;
     }
     case GPT2_IRQ:
-    {
-      throwInterrupt(activeIrqNumber);
+    { 
+	  throwInterrupt(activeIrqNumber);
       gptBEClearOverflowInterrupt(2);
+	  /* Guest will handle the timer from now on.
+	   * Just clear the interrupt to make sure that
+	   * host wont loop on irq handler
+	   */
+	  storeToGPTimer(2,GPT_REG_TCRR,0x0);
+	  gptBEClearMatchInterrupt(2);
       acknowledgeIrqBE();
       break;
     }
@@ -331,7 +376,7 @@ void irq()
   asm volatile("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
-
+  
   return;
 }
 
@@ -345,15 +390,22 @@ void irqPrivileged()
     case GPT1_IRQ:
     {
       gptBEClearOverflowInterrupt(1);
+	  gptBEClearMatchInterrupt(1);
       acknowledgeIrqBE();
       break;
     }
     case GPT2_IRQ:
     {
       throwInterrupt(activeIrqNumber);
-      gptBEClearOverflowInterrupt(2);
+	  gptBEClearOverflowInterrupt(2);
+     /* Guest will handle the timer from now on.
+	  * Just clear the interrupt to make sure that
+	  * host wont loop on irq handler
+	  */
+	  storeToGPTimer(2,GPT_REG_TCRR,0x0);
+	  gptBEClearMatchInterrupt(2);
       acknowledgeIrqBE();
-      break;
+	break;
     }
     case UART3_IRQ:
     {

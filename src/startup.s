@@ -214,6 +214,7 @@ startup_hypervisor:
 
         /* Uses R0,R1,R2 as scratch registers */
         .macro restore_r13_r14
+		CPSID	i
         /* Use guest CPSR to work out which mode we are meant to be emulating */
         get_emulated_mode
         /* switch to system mode to restore SP & LR */
@@ -224,6 +225,7 @@ startup_hypervisor:
         LDR     LR, [R1, #4]
         /* switch back to previous mode */
         MSR     CPSR, R2
+		CPSIE	i
         .endm
 
         /* Restores the cpsr to USR mode (& cc flags) then restore pc */
@@ -284,7 +286,8 @@ exceptionVectorBase:
 
 .global swi_handler
 swi_handler:
-    PUSH    {LR}
+	CPSID	i
+	PUSH    {LR}
     LDR     lr,=guestContextSpace
     STMIA   lr, {R0-R7}
     POP     {LR}
@@ -351,7 +354,7 @@ continue1:
     LDR     R0, [LR, #-4]
     AND     R0, #0xFFFFFF
     BL      softwareInterrupt
-  
+    
     /* handled this SWI. lets restore user state! */
     /* Use guest CPSR to work out which mode we are meant to be emulating */
     LDR     R0, =guestContextCPSR
@@ -390,7 +393,7 @@ continue2:
     LDR     LR, [R1, #4]
     /* switch back to previous mode */
     MSR     CPSR, R2
-
+	
     /* general purpose registers common to all modes, using LR as scratch */
     LDR     LR,=guestContextR0
     LDMIA   LR, {R0-R7}
@@ -426,7 +429,7 @@ continue2:
 
 .global data_abort_handler
 data_abort_handler:
-    /* We can NOT assume that the data abort is guest code */
+	/* We can NOT assume that the data abort is guest code */
     push   {LR}
     /* If we aborted in FIQ then we can switch mode to get r8-12 later */
     /* Test SPSR -> are we from USR mode? */
@@ -568,7 +571,8 @@ prefetch_abort_handler:
   /* If we aborted in FIQ then we can switch mode to get r8-12 later */
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
-  ANDS   LR, LR, #0x0f
+  AND    LR, LR, #0x0f
+  CMP	 LR, #0x0f
   BNE    prefetchAbortHandlerPrivilegedMode
   
   /* We were in USR mode, we must have been running guest code */
@@ -676,7 +680,8 @@ irq_handler:
   push   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
-  ANDS   LR, LR, #0x0f
+  AND    LR, LR, #0x0f
+  CMP	 LR, #0x0f
   /* Abort occured in Hypervisor (privileged) code? */
   BNE    irq_handler_privileged_mode
 

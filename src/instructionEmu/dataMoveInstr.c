@@ -153,7 +153,6 @@ u32int strInstruction(GCONTXT * context)
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
   valueToStore = (regSrc == 15) ? (valueToStore+8) : valueToStore;
-
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
 
   // wback = (P = 0) or (W = 1)
@@ -1090,7 +1089,7 @@ u32int ldrbInstruction(GCONTXT * context)
 u32int ldrInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
-  
+   
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regOrImm = instr & 0x02000000; // 1 = reg, 0 = imm
   u32int preOrPost = instr & 0x01000000; // 1 = pre, 0 = post
@@ -1098,7 +1097,6 @@ u32int ldrInstruction(GCONTXT * context)
   u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
   u32int regSrc = (instr & 0x000F0000) >> 16; // Base Load address
   u32int regDst = (instr & 0x0000F000) >> 12; // Destination - load to this
-
   u32int offsetAddress = 0;
   u32int baseAddress = 0;
 
@@ -1114,6 +1112,7 @@ u32int ldrInstruction(GCONTXT * context)
     // immediate case
     u32int imm32 = instr & 0x00000FFF;
     baseAddress = loadGuestGPR(regSrc, context);
+	printf("Base: %x\n",baseAddress);
     if (regSrc == 15)
     {
       baseAddress = baseAddress + 8;

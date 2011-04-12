@@ -35,6 +35,13 @@ void gptBEInit(u32int id)
   gptBEReset(id);
 }
 
+
+void gptBEResetCount(u32int id)
+{
+	/* Reset the timer? -- I dont like that -- */
+	gptBEregWrite(id, GPT_REG_TTGR, 0x1);
+}
+
 void gptBEReset(u32int id)
 {
 #ifdef GPTIMER_BE_DBG
@@ -112,6 +119,11 @@ static inline void gptBEregWrite(u32int id, u32int reg, u32int val)
 void gptBEClearOverflowInterrupt(u32int id)
 {
   gptBEregWrite(id, GPT_REG_TISR, GPT_TISR_OVERFLOW);
+}
+
+void gptBEClearMatchInterrupt(u32int id)
+{
+  gptBEregWrite(id, GPT_REG_TISR, GPT_TISR_MATCH);
 }
 
 void gptBEDisableOverflowInterrupt(u32int id)

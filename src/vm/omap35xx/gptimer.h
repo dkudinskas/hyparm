@@ -8,6 +8,8 @@
 
 // uncomment me to enable debug : #define GPTIMER_DBG
 
+//#define GPTIMER_DBG
+
 // base addresses
 #define GPTIMER1        0x48318000
 #define GPTIMER2        0x49032000

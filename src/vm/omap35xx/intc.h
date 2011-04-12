@@ -12,8 +12,9 @@
 
 // uncomment me to enable debug : #define INTC_DBG
 
-#define INTC_REVISION                                  0x00000040
+//#define INTC_DBG
 
+#define INTC_REVISION                                  0x00000040
 
 // interrupt number mappings
 /*

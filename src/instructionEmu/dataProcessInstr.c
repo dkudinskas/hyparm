@@ -49,13 +49,13 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
             nextPC += 8;
           }
           break;
-	case SUB:
-	  nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
-	  if (regSrc == 0xF)
-	  {
-	    nextPC += 8;
-	  }
-	  break;
+		case SUB:
+	  	  nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
+	  	  if (regSrc == 0xF)
+	  	  {
+	    	nextPC += 8;
+	  	  }
+	      break;
         default:
           DIE_NOW(context, "invalid arithLogicOp opType");
       }
@@ -74,32 +74,32 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
         shiftType = decodeShiftImmediate(shiftType, imm5, &shamt);
         switch (opType)
         {
-          case ADD:
-            nextPC = loadGuestGPR(regSrc, context) +
-               shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
-            if (regSrc == 0xF)
-            {
-              nextPC += 8;
-            }
-            break;
-	  case SUB:
-	    nextPC = loadGuestGPR(regSrc, context) - 
-	       shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
-	    if (regSrc == 0xF)
-	    {
-	      nextPC += 8;
-	    }
-	    break;
-          case MOV:
+			case ADD:
+            	nextPC = loadGuestGPR(regSrc, context) +
+               	shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+            	if (regSrc == 0xF)
+            	{
+              	nextPC += 8;
+            	}
+            	break;
+	  		case SUB:
+	    		nextPC = loadGuestGPR(regSrc, context) - 
+	       		shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+	    		if (regSrc == 0xF)
+	    		{
+	      			nextPC += 8;
+	    		}
+	    		break;
+          	case MOV:
             // cant be shifted - mov shifted reg is a pseudo instr
-            if (shamt != 0)
-            {
-              DIE_NOW(context, "MOV PC, Rn cant be shifted - that is a pseudo instr");
-            }
-            nextPC = loadGuestGPR(regSrc2, context);
-            break;
-          default:
-            DIE_NOW(context, "invalid arithLogicOp opType");
+            	if (shamt != 0)
+            	{
+              		DIE_NOW(context, "MOV PC, Rn cant be shifted - that is a pseudo instr");
+            	}
+            	nextPC = loadGuestGPR(regSrc2, context);
+            	break;
+          	default:
+            	DIE_NOW(context, "invalid arithLogicOp opType");
         }
       }
       else

@@ -2,7 +2,7 @@
 #include "common/memFunctions.h"
 
 #include "drivers/beagle/beIntc.h"
-
+#include "drivers/beagle/beGPTimer.h"
 
 static inline u32int intcRegReadBE(u32int regOffs);
 static inline void intcRegWriteBE(u32int regOffs, u32int value);

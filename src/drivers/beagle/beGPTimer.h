@@ -150,11 +150,16 @@ void storeToGPTimer(u32int id, u32int reg, u32int value);
 
 void gptBEClearOverflowInterrupt(u32int id);
 
+/* FreeRTOS: Requires timer match interrupt handling */
+void gptBEClearMatchInterrupt(u32int id);
+
 void gptBEDisableOverflowInterrupt(u32int id);
 
 void gptBEEnable(u32int id);
 
 void gptBEEnableOverflowInterrupt(u32int id);
+
+void gptBEEnableMatchInterrupt(u32int id);
 
 void gptBESet10msTick(u32int id);
 
@@ -169,6 +174,8 @@ void gptBEWaitForReset(u32int id);
 void gptBEDumpRegisters(u32int id); 
 
 u32int getInternalCounterVal(u32int clkId);
+
+void gptBEResetCount(u32int id);
 
 struct GeneralPurposeTimerBE 
 {

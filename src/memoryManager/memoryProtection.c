@@ -186,9 +186,13 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
    * addressing, The table that maps the guest physical
    * to host virtual must be used */
   if(context->virtAddrEnabled==1)
+  {
   	pt1Entry = get1stLevelPtDescriptorAddr(context->PT_os, address);
+  }
   else
-        pt1Entry = get1stLevelPtDescriptorAddr(context->PT_physical, address);
+  {
+	pt1Entry = get1stLevelPtDescriptorAddr(context->PT_physical, address);
+  }
 
   // check guest domain: if manager, allow access.
   u32int dacr = getCregVal(3, 0, 0, 0, &context->coprocRegBank[0]);
@@ -425,9 +429,16 @@ bool shouldPrefetchAbort(u32int address)
 #ifdef MEM_PROT_DBG
   printf("shouldPrefetchAbort(%08x)\n", address);
 #endif
-
+  descriptor* ptEntry;
   // get page table entry for address
-  descriptor* ptEntry = get1stLevelPtDescriptorAddr(context->PT_os, address);
+  if(context->virtAddrEnabled==1)
+  {
+  	ptEntry = get1stLevelPtDescriptorAddr(context->PT_os, address);
+  }
+  else
+  {
+  	ptEntry = get1stLevelPtDescriptorAddr(context->PT_physical, address);
+  }
 
   // client access: need to check page table entry access control bits
   switch (ptEntry->type)

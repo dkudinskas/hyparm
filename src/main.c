@@ -143,12 +143,12 @@ int main(int argc, char *argv[])
   /* initialise physical interrupt controller */
   intcBEInit();
 
-  /* now we can umkask first interrupt - UART */
+  /* now we can unmask first interrupt - UART */
   unmaskInterruptBE(UART3_IRQ);
-
+  
   /* initialise physical clock manager */
   clkManBEInit();
-
+  
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
 
