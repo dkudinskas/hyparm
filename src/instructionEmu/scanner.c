@@ -11,6 +11,7 @@
 
 // http://www.concentric.net/~Ttwang/tech/inthash.htm
 // 32bit mix function
+
 static inline u32int getHash(u32int key)
 {
   key = ~key + (key << 15); // key = (key << 15) - key - 1;
@@ -24,6 +25,7 @@ static inline u32int getHash(u32int key)
 
 void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 {
+  u32int isHypSVC=FALSE;
 #ifdef CONFIG_DECODER_TABLE_SEARCH
   struct instruction32bit * decodedInstruction = 0;
 #else
@@ -76,22 +78,25 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
       u32int svcCode = (instruction & 0x00FFFFFF);
 	  if(!((svcCode >= 0) && (svcCode <= 0xFF)))
 	  {
+		isHypSVC=TRUE;
 		// we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
       	u32int cacheIndex = (svcCode >> 8) - 1;
       	if (cacheIndex >= BLOCK_CACHE_SIZE)
       	{
         	DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
       	}
-//#ifdef SCANNER_DEBUG
+#ifdef SCANNER_DEBUG
       	printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)currAddress, cacheIndex);
-//#endif
+#endif
       	BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
         // retrieve end of block instruction and handler function pointer
   	    gc->endOfBlockInstr = bcEntry->hyperedInstruction;
     	gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
      }
+	 else
+	 	isHypSVC=FALSE;
 	}
-  else
+  if((((instruction & INSTR_SWI) == INSTR_SWI) && isHypSVC==FALSE) ||  (instruction & INSTR_SWI) != INSTR_SWI)
   {
     // save end of block instruction and handler function pointer close to us...
     gc->endOfBlockInstr = instruction;
@@ -116,7 +121,11 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
         currAddress, gc->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)gc->hdlFunct);
 #endif
 
-  // add the block we just scanned to block cache
+  /* add the block we just scanned to block cache
+   * Ehm... Do not do that for guest SVC code. It messes up everything so 
+   * skipt it until I figure out what it going on
+   */
+
   addToBlockCache(blkStartAddr, gc->endOfBlockInstr, (u32int)currAddress, 
                   bcIndex, (u32int)gc->hdlFunct, gc->blockCache);
   /* To ensure that subsequent fetches from eobAddress get a hypercall

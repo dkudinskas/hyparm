@@ -19,6 +19,7 @@ struct TopLevelCategory categories[] = {
 {DATA_PROC_AND_MISC_CATEGORY,     0x0C000000, 0x00000000},
 {LOAD_STORE_WORD_BYTE_CATEGORY,   0x0E000000, 0x04000000},
 {LOAD_STORE_WORD_BYTE_CATEGORY,   0x0E000010, 0x06000000},
+{LOAD_STORE_WORD_BYTE_CATEGORY,	  0xEFFFFFFF, 0xEF000000},
 {MEDIA_CATEGORY,                  0x0E000010, 0x06000010},
 {BRANCH_BLOCK_TRANSFER_CATEGORY,  0x0C000000, 0x08000000},
 {SVC_COPROCESSOR_CATEGORY,        0x0C000000, 0x0c000000},
@@ -312,7 +313,7 @@ struct instruction32bit loadStoreWordByteInstructions[] = {
 // LDR traps if dest = PC, otherwise pass through
 {1,  &ldrInstruction,       0x0410f000, 0x0c10f000, "LDR PC, Rn/#imm12"},
 {0,  &ldrInstruction,       0x04100000, 0x0c100000, "LDR Rd, Rn/#imm12"},
-
+{0,  &ldrInstruction, 		0xEF000000, 0xEFFFFFFF, "FreeRTOS SWI"},
 {-1, &undefinedInstruction, 0x00000000, 0x00000000, UNDEFINED_INSTRUCTION}
 };
 
