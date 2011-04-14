@@ -6,6 +6,7 @@
 #include "instructionEmu/miscInstructions.h"
 
 #include "guestManager/scheduler.h"
+#include "guestManager/guestExceptions.h"
 
 u32int nopInstruction(GCONTXT * context)
 {
@@ -1217,11 +1218,24 @@ u32int bInstruction(GCONTXT * context)
 
 u32int svcInstruction(GCONTXT * context)
 {
+  u32int nextPC = 0;
 #ifdef ARM_INSTR_TRACE
   u32int instr = context->endOfBlockInstr;
   printf("SVC instr %08x @ %08x\n", instr, context->R15);
 #endif
-  return 0;
+	// save cpsr
+	context->SPSR_SVC =context->CPSR;
+	// set guest to svc
+	context->CPSR = (context->CPSR & 0xffffffe0) | CPSR_MODE_SVC;
+	// now disable the interrupts
+	context->CPSR |= CPSR_IRQ_DIS; 
+	// preserve program counter
+  	storeGuestGPR(14, context->R15+4, context);
+
+	// set pc to swi handler
+  	nextPC = context->guestSwiHandler;
+
+	return nextPC;
 }
 
 u32int undefinedInstruction(GCONTXT * context)

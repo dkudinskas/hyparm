@@ -101,7 +101,6 @@ void throwInterrupt(u32int irqNumber)
 
 void deliverInterrupt(void)
 {
-  static u32int gInt=0x0;
   GCONTXT * context = getGuestContext();
   // 1. reset irq pending flag.
   context->guestIrqPending = FALSE;
@@ -130,10 +129,6 @@ void deliverInterrupt(void)
   // update AFI bits for IRQ:
   context->CPSR |= CPSR_IRQ_DIS;
   context->CPSR |= CPSR_ASYNC_ABT_DIS;
-#ifdef GUEST_EXCEPTIONS_DBG
-	printf("gInt: %08x\n", gInt);
-	gInt++;
-#endif
 }
 
 void deliverDataAbort()

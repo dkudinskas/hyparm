@@ -512,7 +512,7 @@ struct instruction32bit branchBlockTransferInstructions[] = {
 
 struct instruction32bit svcCoprocInstructions[] = {
 // well obviously.
-{0,  &svcInstruction,       0x0f000000, 0x0f000000, "SWI code"},
+{1,  &svcInstruction,       0x0f000000, 0x0f000000, "SWI code"},
 // Generic coprocessor instructions.
 {3,  &mrcInstruction,   0x0e100010, 0x0f100010, "MRC"},
 {3,  &mcrInstruction,   0x0e000010, 0x0f100010, "MCR"},
