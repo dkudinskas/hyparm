@@ -132,8 +132,8 @@ void deliverInterrupt(void)
   context->CPSR |= CPSR_ASYNC_ABT_DIS;
 #ifdef GUEST_EXCEPTIONS_DBG
 	printf("gInt: %08x\n", gInt);
-#endif
 	gInt++;
+#endif
 }
 
 void deliverDataAbort()

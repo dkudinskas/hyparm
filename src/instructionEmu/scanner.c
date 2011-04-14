@@ -25,7 +25,7 @@ static inline u32int getHash(u32int key)
 
 void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 {
-  u32int isHypSVC=FALSE;
+  u32int ishypersvc=FALSE;
 #ifdef CONFIG_DECODER_TABLE_SEARCH
   struct instruction32bit * decodedInstruction = 0;
 #else
@@ -78,7 +78,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
       u32int svcCode = (instruction & 0x00FFFFFF);
 	  if(!((svcCode >= 0) && (svcCode <= 0xFF)))
 	  {
-		isHypSVC=TRUE;
+		ishypersvc=TRUE;
 		// we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
       	u32int cacheIndex = (svcCode >> 8) - 1;
       	if (cacheIndex >= BLOCK_CACHE_SIZE)
@@ -94,9 +94,14 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     	gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
      }
 	 else
-	 	isHypSVC=FALSE;
+	 {
+	 	ishypersvc=FALSE;
+	 }
 	}
-  if((((instruction & INSTR_SWI) == INSTR_SWI) && isHypSVC==FALSE) ||  (instruction & INSTR_SWI) != INSTR_SWI)
+	/* If the instruction is not a SWI placed by the hypervisor OR 
+	 * it is a non-SWI instruction, then proceed as normal
+	 */
+  if((((instruction & INSTR_SWI) == INSTR_SWI) && ishypersvc==FALSE) ||  (instruction & INSTR_SWI) != INSTR_SWI)
   {
     // save end of block instruction and handler function pointer close to us...
     gc->endOfBlockInstr = instruction;
