@@ -367,7 +367,7 @@ struct opcode32 arm_opcodes[] = {
 // B/BL: always hypercall! obviously.
 {1,  &bInstruction,         0x0a000000, 0x0e000000, "BRANCH"},
 // damn. if we hit this then i have to do some serious thinking :)
-{0,  &svcInstruction,       0x0f000000, 0x0f000000, "SWI"},
+{1,  &svcInstruction,       0x0f000000, 0x0f000000, "SWI"},
 
 {-1, &undefinedInstruction, 0x00000000, 0x00000000, "UNDEFINED_INSTRUCTION"}
 };
