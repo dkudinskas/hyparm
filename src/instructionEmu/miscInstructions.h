@@ -8,6 +8,12 @@
 
 // uncomment me for ARM instruction trace: #define ARM_INSTR_TRACE
 
+#define SXTH_R0		0
+#define SXTH_R8		8
+#define SXTH_R16	16
+#define SXTH_R24	24
+
+
 /* ARM instructions.  */
 u32int nopInstruction(GCONTXT * context);
 u32int bxInstruction(GCONTXT * context);

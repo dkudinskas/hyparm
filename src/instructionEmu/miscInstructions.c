@@ -571,8 +571,44 @@ u32int rfeInstruction(GCONTXT * context)
 
 u32int sxthInstruction(GCONTXT * context)
 {
-  DIE_NOW(context, "SXTH unfinished\n");
-  return 0;
+  u32int instr = context->endOfBlockInstr;
+  u32int instrCC = (instr >> 28) & 0xF;
+  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
+  u32int regSrc = (instr & 0xF);
+  u32int regDest = (instr & 0x0000F000) >> 12;
+  u32int rotate = (instr & 0x00000C00) >> 10;
+  u32int value = 0;
+  bool conditionMet;
+  if(regDest==15 || regSrc==15)
+  {
+  	DIE_NOW(0,"Rd/Rm is R15. Unpredictable behaviour\n");
+  }
+  conditionMet = evalCC(instrCC, cpsrCC);
+  if (conditionMet)
+  {
+  	/* load the least 16bits from the source register */
+	value=(loadGuestGPR(regSrc,context) & 0x0000FFFF);
+    /* ARM7-A : page 729 */
+	switch(rotate){
+		case 0:
+			value = rorVal(value,SXTH_R0);
+			break;
+		case 1:
+			value = rorVal(value,SXTH_R8);
+			break;
+		case 2:
+			value = rorVal(value,SXTH_R16);
+			break;
+		case 3:
+			value = rorVal(value,SXTH_R24);
+			break;
+	}
+	/* Extend it to 32bit */
+	value = value<<16;
+	/* Store it */
+	storeGuestGPR(regDest,value,context);
+  }
+  return context->R15+4;
 }
 
 u32int sxtb16Instruction(GCONTXT * context)
