@@ -320,7 +320,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 	   * This needs some fixing but should work for now. FreeRTOS set the TMAR value to
 	   * 0x6590. This is way too low for hypervisor to prepare guest CPSR.
 	   */
-      u32int adjustedvalue = value<<4;
+      u32int adjustedvalue = value;
 	  storeToGPTimer(2, regOffs, adjustedvalue);
 #ifdef GPTIMER_DBG
       printf(dev->deviceName);
