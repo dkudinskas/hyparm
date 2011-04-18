@@ -162,6 +162,15 @@ u32int vsprintf(char *buf, const char *fmt, va_list args)
           } // for ends - whole number is now done
           break;
         }
+        case 's':
+        {
+          char *arg_string = va_arg(args, char *);
+          while ((*str = *arg_string++))
+          {
+            ++str;
+          }
+          break;
+        }
         case 'c':
         {
           char character = va_arg(args, char);
