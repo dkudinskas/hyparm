@@ -547,8 +547,11 @@ u32int cpsInstruction(GCONTXT * context)
           {
             context->guestIrqPending = TRUE;
           }
-        } 
+        }
+#ifndef CONFIG_BLOCK_COPY_NO_IRQ
+        /*If No IRQ's are wanted we shouldn't switch bits*/
         oldCpsr &= ~CPSR_IRQ_BIT;
+#endif
       }
       if (affectF)
       {
@@ -2215,7 +2218,10 @@ u32int msrInstruction(GCONTXT * context)
     u32int immediate = instr & 0x00000FFF;
     value = armExpandImm12(immediate);
   }
-    
+#ifdef CONFIG_BLOCK_COPY_NO_IRQ
+  /* Set maskbit for interrupts */
+  value = value | 0x80;
+#endif
   u32int oldValue = 0;
   if (cpsrOrSpsr == 0)
   {
@@ -2421,7 +2427,27 @@ u32int mrsInstruction(GCONTXT * context)
           invalid_instruction(instr, "MRS cannot request spsr in user/system mode");
       } // switch ends
     } // spsr case ends
+#ifdef CONFIG_BLOCK_COPY_NO_IRQ
+    /* Make sure that interrupts are not enabled*/
+    value = value | 0x80; //bit 7 must be 1 so interupt bit is masked
+#endif
+#ifdef CONFIG_BLOCK_COPY_NO_IRQ
+    /* When Interrupts are disabled the mask bit will be one but we don't want linux to now this */
+    /* This will crash with undefined handler
+     * storeGuestGPR(regDest, (value & ~0x00000080), context); */
+    /* Use a hack to resolve this issue -> normally default behaviour but if certain instruction than modified behaviour */
+    if(instr == 0xe10f2000)
+    {
+      storeGuestGPR(regDest, (value & ~0x00000080), context);
+    }
+    else
+    {
+      storeGuestGPR(regDest, value, context);
+    }
+
+#else
     storeGuestGPR(regDest, value, context);
+#endif
   } // condition met ends
   #ifdef CONFIG_BLOCK_COPY
     nextPC = context->PCOfLastInstruction + 4;
@@ -2486,11 +2512,11 @@ u32int bInstruction(GCONTXT * context)
     nextPC = currPC + target;
     if (link)
     {
-	  #ifdef CONFIG_BLOCK_COPY
-	  storeGuestGPR(14, context->PCOfLastInstruction+4, context);
-	  #else
-	  storeGuestGPR(14, context->R15+4, context);
-	  #endif
+      #ifdef CONFIG_BLOCK_COPY
+      storeGuestGPR(14, context->PCOfLastInstruction+4, context);
+      #else
+      storeGuestGPR(14, context->R15+4, context);
+      #endif
     }
   }
   else

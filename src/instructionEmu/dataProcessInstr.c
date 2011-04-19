@@ -349,7 +349,44 @@ u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   else
   {
     //condition != always
-    DIE_NOW(0,"Unconditional MOV instruction not implemented yet");
+
+    if( ( (instruction>>25) & 0b1 ) == 0b0)
+    {//bit 25 != 1 -> there can be registers, PC can possibly be read
+      if((instruction & 0xF) != 0xF)
+      {
+        DIE_NOW(0, "mov PCFunct: movPCFunct can only be called if last 4 bits are 1111\n");
+      }else{
+        //Make instruction safe and return
+        /* conditional instruction thus sometimes not executed */
+        /*Instruction has to be changed to a PC safe instructionstream withouth using destReg. */
+        u32int srcReg = instruction & 0xF;
+        u32int srcPCRegLoc = 0;
+        u32int scratchReg = findUnusedRegister(srcReg, destReg, -1);
+        /* place 'Backup scratchReg' instruction */
+        currBlockCopyCacheAddr = backupRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+        currBlockCopyCacheAddr= savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  scratchReg);
+
+
+        instr2Copy = zeroBits(instr2Copy, srcPCRegLoc);
+        instr2Copy = instr2Copy | scratchReg<<srcPCRegLoc;
+
+        currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+        *(currBlockCopyCacheAddr++)=instr2Copy;
+
+        /* place 'restore scratchReg' instruction */
+        currBlockCopyCacheAddr = restoreRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+        /* Make sure scanner sees that we need a word to store the register*/
+        currBlockCopyCacheAddr = (u32int*)(((u32int)currBlockCopyCacheAddr)|0b1);
+
+        return currBlockCopyCacheAddr;
+      }
+    }
+    //if function hasn't returned at this point -> instruction is safe
+    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instruction;
+
+    return currBlockCopyCacheAddr;
+
   }
 
 

@@ -1406,7 +1406,7 @@ u32int* ldrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   {
     /* conditional instruction thus sometimes not executed */
     /*Instruction has to be changed to a PC safe instructionstream withouth using destReg. */
-    scratchReg = findUnusedRegister(srcReg1, -1, -1);
+    scratchReg = findUnusedRegister(srcReg1, destReg, -1);
     /* place 'Backup scratchReg' instruction */
     currBlockCopyCacheAddr = backupRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
     currBlockCopyCacheAddr= savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  scratchReg);

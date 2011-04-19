@@ -175,8 +175,9 @@ u32int* standardImmRegRSR(GCONTXT * context, u32int *  instructionAddr, u32int *
   }else{
     /*If instruction is not always executed it is unsafe to use the destination register to safe
      * the program counter
+     * We can use standardImmRegRSRNoDest for this.
      */
-    DIE_NOW(0,"standardImmRegRSR: support for conditional instructions not yet implemented");
+    return standardImmRegRSRNoDest(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 
   }
 
@@ -220,6 +221,7 @@ u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int *  instructionAddr, u3
     serial_putint(instruction);
     serial_newline();
     DIE_NOW(0,"standardImmRegRSRNoDest: this part is not tested.");
+    /* No destination register so only source registers have to be checked*/
     scratchReg = findUnusedRegister(regSrc1, regSrc2, -1);
     /* place 'Backup scratchReg' instruction */
     currBlockCopyCacheAddr = backupRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
@@ -420,11 +422,11 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
 
 #ifdef CONFIG_BLOCK_COPY
 /* Function will return a register that is different from regSrc1,regSrc2 and regSrc3*/
-u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regSrc3)
+u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regDest)
 {
   int i;
   for(i=0;i<15;i++){
-    if( (i != regSrc1) && (i != regSrc2) && (i != regSrc3) )
+    if( (i != regSrc1) && (i != regSrc2) && (i != regDest) )
       return i;
   }
   DIE_NOW(0,"No unusedRegister, this cannot be happening!");
@@ -437,6 +439,7 @@ u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32i
 {
   GCONTXT * context = getGuestContext();
   u32int targetAddr = (((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE) +4;
+  u32int offset = 0;
   //STR(immediate) -> ARM ARM A8.6.194 p696
   //|    |    |    |    |    |11         0|
   //|COND|010P|U0W0| Rn | Rt |    imm12   |
@@ -461,7 +464,15 @@ u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32i
 
 
   //set imm12 -> No way that the offset will be bigger than a 12 bit value, PC is 2 behind -> +8
-  instr2Copy=instr2Copy | ((u32int)currBlockCopyCacheAddr + 8 - targetAddr );
+  offset = (u32int)currBlockCopyCacheAddr + 8 - targetAddr;
+  if(offset>0xFFF)
+  {
+    /* It is possible that the offset will be something like 0xFFFF????.  This is when the block is split.  The offset will be rewritten
+     * when block is merged but if this offset is added we also overwrite the first bits of the instruction leading to the creation of
+     * another instruction.  We can just reset the offset to 0 */
+    offset=0;
+  }
+  instr2Copy=instr2Copy | ( offset );
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
   *(currBlockCopyCacheAddr++)=instr2Copy;
   return currBlockCopyCacheAddr;
@@ -473,6 +484,7 @@ u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u3
 {
   GCONTXT * context = getGuestContext();
   u32int targetAddr = (((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE) +4;
+  u32int offset=0;
 
   //ldr(immediate) -> ARM ARM A8.6.58 p432
   //|    |    |    |    |    |11         0|
@@ -484,7 +496,18 @@ u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u3
   instr2Copy=instr2Copy | reg2Restore<<12;
   /*set imm12 -> No way that the offset will be bigger than a 12 bit value, PC is 2 behind -> +8
    * Be sure to ignore last bit when using blockCopyCacheStartAddress.*/
-  instr2Copy=instr2Copy | ((u32int)currBlockCopyCacheAddr + 8 - targetAddr);
+  offset = (u32int)currBlockCopyCacheAddr + 8 - targetAddr;
+  if(offset>0xFFF)
+  {
+    /* It is possible that the offset will be something like 0xFFFF????.  This is when the block is split.  The offset will be rewritten
+     * when block is merged but if this offset is added we also overwrite the first bits of the instruction leading to the creation of
+     * another instruction.  We can just reset the offset to 0 */
+    serial_putstring("offset = ");
+    serial_putint(offset);
+    serial_newline();
+    offset=0; /*  */
+  }
+  instr2Copy=instr2Copy | (offset);
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
   *(currBlockCopyCacheAddr++)=instr2Copy;
   return currBlockCopyCacheAddr;

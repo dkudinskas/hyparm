@@ -89,12 +89,15 @@ void l2_cache_disable(void);
 
 
 #if (defined(CONFIG_CPU_ARCH_ARMV6) || defined(CONFIG_CPU_ARCH_ARMV7))
-
+# ifdef CONFIG_BLOCK_COPY_NO_IRQ
+  /* Make sure that interrupts cannot be enabled  */
+#  define enableInterrupts() {}
+# else
 #define enableInterrupts() \
   { \
     __asm__ __volatile__ ("CPSIE i"); \
   }
-
+# endif
 #define disableInterrupts() \
   { \
     __asm__ __volatile__ ("CPSID i"); \

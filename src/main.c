@@ -243,6 +243,9 @@ int main(int argc, char *argv[])
   enableInterrupts();
   gptBEStart(2);*/
   // does not return
+#ifdef CONFIG_BLOCK_COPY_NO_IRQ
+  disableInterrupts();
+#endif
   doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
 }
 
@@ -272,6 +275,12 @@ void printUsage(void)
 
 int parseCommandline(int argc, char *argv[])
 {
+  /* TEMPORARY HACK BECAUSE OF BOOTSCRIPT */
+  kernAddr   = 0x80300000;
+  initrdAddr = 0x81600000;
+  return 1;
+  /* END OF TEMPORARY HACK*/
+
   int cmpFlag = 0;
   /***************** Check given arguments ************************/
 #ifdef STARTUP_DEBUG

@@ -234,6 +234,9 @@ startup_hypervisor:
         AND     LR, LR, #0xf0000000
         /* set user mode, disable async abts and fiqs, but enable irqs */
         ORR     LR, LR, #(USR_MODE | A_BIT | F_BIT)
+ #ifdef CONFIG_BLOCK_COPY_NO_IRQ
+ 		ORR     LR, LR, #(USR_MODE | A_BIT | I_BIT | F_BIT)
+ #endif
         MSR     SPSR, LR
         LDM     SP, {PC}^ /* restore PC and load the SPSR into the CPSR */
         .endm

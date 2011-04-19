@@ -6,6 +6,7 @@
 
 #ifdef CONFIG_BLOCK_COPY
 # include "common/memFunctions.h"
+#include "common/debug.h"
 #endif
 
 
@@ -110,7 +111,7 @@ void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr,
   {
     bcAddr[index].reservedWord = 1;//Set reservedWord to true
     bcAddr[index].blockCopyCacheAddress = blockCopyCacheAddress & 0xFFFFFFFE;//Set last bit back to zero!!
-    bcAddr[index].blockCopyCacheSize = blockCopyCacheSize+1;/* We need space for reserved word */
+    bcAddr[index].blockCopyCacheSize = blockCopyCacheSize;/* Space is also made for blockCopyCache so we don't need to change it */
   }
   else
   {
@@ -186,6 +187,147 @@ BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr)
   return &bcAddr[index];
 }
 
+#ifdef CONFIG_BLOCK_COPY
+/*
+ * This code will check if a block that is split (splitting occurs due to 1 part being at the end of the blockCopyCache and another at the
+ * begin of the block.)  When a block is split up the code will also check if the second part wants to make use of a reserved word.  If that is
+ * the case the block will result in erroneous behavior and should be merged. This code will perform the merge and will return a pointer indicating
+ * the end of the merged block (the word just after the block, this is similar to blockCopyCurrCacheAddress). After the merge the merged block
+ * will be completely at the start of the blockCopyCache.
+ */
+u32int* checkAndMergeBlock(u32int* startOfBlock2, u32int* endOfBlock2, BCENTRY * blockCache,u32int* startOfBlock1,u32int* endOfBlock1)
+{
+  u32int* wordStepper = endOfBlock2-1;
+  u32int instruction=0;
+  bool patchCode=0;
+# ifdef BLOCK_COPY_CACHE_DEBUG
+  serial_putstring("checkAndMergeBlock with endOfBlock2 = ");
+  serial_putint((u32int)endOfBlock2);
+  serial_putstring(" & startOfBlock1 = ");
+  serial_putint((u32int)startOfBlock1);
+  serial_newline();
+# endif
+  while(wordStepper > (startOfBlock2 - 1)  )
+  {
+    /*
+     * If there is a ldr instruction that reads from PC + offset than that will be a load that we installed that wants to read
+     * the reserved word.  This is not possible since the reserved word will be somewhere near the end of the blockCopyCache
+     * Therefore we need to patch the code.  If no such ldr instruction is present than there won't be a problem.
+     * We are sure that we need to patch the code because the code is already translated and cannot read from PC if it was an original instruction
+     * Instruction will be a load literal 0xe51f????
+     */
+    instruction = *wordStepper;
+    if( (instruction & 0xe51f0000 )== 0xe51f0000 )
+    {
+      /* We have found a problem*/
+      patchCode=1;
+      break;
+    }
+    wordStepper--;
+  }
+  if(patchCode==1)
+  {
+    u32int nrInstructions2Move = 0;  /* These are the instructions that are currently at end of blockCopyCache */
+    u32int nrInstructions2Shift = 0; /* These are the instructions that are alread at start of blockCopyCache */
+    u32int* pointerDest=endOfBlock2;
+    u32int* blockCopyLast;
+    u32int offset=0;
+    u32int* pointerSrc=0;
+    u32int k=0;
+   /*
+    * 1)First we have to make sure that there is enough place freed up to place the new block
+    * 2)Then we can copy all instructions (from last instruction to first instruction (not the other way around because than we overwrite instructions
+    * 3)Clear the instructions that were placed at the end of the blockCopyCache!!
+    * 4)Make sure that block is safed correctly in blockCopyCache
+    */
+    /*
+     * Step 1 make room for new block.  The instructions that are at the end of the blockCopyCache will be placed at the start so we need
+     * room for the number of instructions that are at the end
+     */
+    nrInstructions2Move = ((u32int)endOfBlock1 - ( (u32int)startOfBlock1 & 0xFFFFFFFE) ) >> 2;
+    nrInstructions2Shift = ((u32int)endOfBlock2 - (u32int)startOfBlock2) >> 2;
+# ifdef BLOCK_COPY_CACHE_DEBUG
+    serial_putstring("nrInstructions2Move = ");
+    serial_putint(nrInstructions2Move);
+    serial_newline();
+    serial_putstring("nrInstructions2Shift = ");
+    serial_putint(nrInstructions2Shift);
+    serial_newline();
+# endif
+    k=nrInstructions2Move;
+    /**
+     * Make place for the instructions that have to be moved
+     */
+    while(k>0)
+    {
+      /* We can use startOfBlock2 instead of gc->blockCopyCache & endOfBlock1 instead of gc->blockCopyCacheEnd*/
+      pointerDest=checkAndClearBlockCopyCacheAddress(pointerDest,blockCache,startOfBlock2,endOfBlock1);
+      pointerDest++;
+      k--;
+    }
+    blockCopyLast=pointerDest;
+# ifdef BLOCK_COPY_CACHE_DEBUG
+    serial_putstring("Blockcache cleared till the end = ");
+    serial_putint((u32int)blockCopyLast);
+    serial_newline();
+# endif
+
+    /*
+     * Copy The instructions first the one that are at the start of the blockCopyCache (there the str and ldr instructions need to be rewritten)
+     * Than the one at the end of the blockCopyCache (including the reserved Word & backpointer) -> no rewrites needed
+     */
+    k=nrInstructions2Shift;
+    pointerSrc = endOfBlock2; /* We have to start with last instruction otherwise we might overwrite instruction!*/
+    while(k>0)
+    {
+      instruction = *(--pointerSrc);
+      if(((instruction & 0xe51f0000 )== 0xe51f0000) || ((instruction & 0xe50f0000 )== 0xe50f0000))
+      {
+        /* Offset of instruction needs to be changed + 2 because PC is 2 behind
+         * gc->blockCopyCache is address of SVC
+         * startOfBlock2 +1 is address of reserved Word */
+        offset=((pointerDest-1) - (startOfBlock2 + 1) + 2) << 2;
+        if(offset> 0xFFFF)
+        {
+          DIE_NOW(0, "Offset is to big -> instruction will get corrupted");
+        }
+        instruction = instruction & 0xFFFF0000;
+        instruction = instruction + offset;
+      }
+      *(--pointerDest)=instruction;
+      k--;
+    }
+# ifdef BLOCK_COPY_CACHE_DEBUG
+    serial_putstring("Instructions block2 shifted");
+# endif
+    /* Copy other block of instructions*/
+    k=nrInstructions2Move;
+    pointerSrc=endOfBlock1;
+    while(k>0)
+    {
+      *(--pointerDest) = *(--pointerSrc); /* Offsets are still correct, as reserved Word takes the same translation*/
+      /* And Clear the memory*/
+      *(pointerSrc)=0x0;
+      k--;
+    }
+# ifdef BLOCK_COPY_CACHE_DEBUG
+    serial_putstring("Instructions block1 Copied");
+# endif
+    /*
+     * Make sure that block is safed correctly in blockCopyCache
+     */
+    return blockCopyLast;
+
+    /* patching needs to be done: set blockCopyCacheSize -> must be done in scanBlock (caller of this function) */
+
+  }
+  else
+  {
+    return endOfBlock2;
+    /* No patching needs to be done just set blockCopyCacheSize -> must be done in scanBlock (caller of this function) */
+  }
+}
+#endif
 
 /* input: any address, might be start, end of block or somewhere in the middle... */
 /* output: first cache entry index for the block where this address falls into */

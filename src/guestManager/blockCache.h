@@ -3,7 +3,6 @@
 
 #include "common/types.h"
 
-
 #define BLOCK_CACHE_SIZE    128
 #define BLOCK_COPY_CACHE_SIZE_IN_BYTES   (44 * BLOCK_CACHE_SIZE) // Here the assumption is taken that on average 10% of the instructions
                                                                  // will be critical. -> on average there are 10 instructions per block
@@ -42,6 +41,10 @@ void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr, u32int index, u32in
 #else
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
                      u32int index, u32int hdlFunct, BCENTRY * bcAddr);
+#endif
+
+#ifdef CONFIG_BLOCK_COPY
+u32int* checkAndMergeBlock(u32int* startOfBlock2, u32int* endOfBlock2, BCENTRY * blockCache,u32int* startOfBlock1,u32int* endOfBlock1);
 #endif
 
 /* checkAndClearBlockCopyCacheAddress will check an address you provide and return a valid address.  Always use the returned address!! */

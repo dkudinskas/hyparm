@@ -94,7 +94,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context);
 
 /* function to find a register that is not one of the arguments */
 #ifdef CONFIG_BLOCK_COPY
-u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regSrc3);
+u32int findUnusedRegister(u32int regSrc1, u32int regDest, u32int regSrc2);
 #endif
 
 /* This function inserts an instruction in the instructionstream of the blockCopycache which will write the content of reg2Backup to the reserved word*

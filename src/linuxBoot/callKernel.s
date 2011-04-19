@@ -9,6 +9,10 @@ callKernel:
   ORR    R0, #0x10
   /* disable async and FIQ's */
   ORR    R0, #0x100
+#ifdef CONFIG_BLOCK_COPY_NO_IRQ
+  /*Make sure interupts are disabled*/
+  ORR    R0, #0x80
+#endif
   ORR    R0, #0x40
   MSR    SPSR, R0
   POP    {R0}
