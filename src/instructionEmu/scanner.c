@@ -32,7 +32,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #ifdef SCANNER_COUNTER
   scannerReqCounter++;
 
-  if(scannerReqCounter == 0xe173e)
+  if(scannerReqCounter == 0x1ad7d5)
             {
               //DIE_NOW(0,"Time is up!");
               //asm volatile("BKPT #0");
@@ -95,10 +95,10 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #endif
 #ifdef CONFIG_BLOCK_COPY
     u32int * addressInBlockCopyCache = 0;
-    //The programcounter of the code that is executing should be set to the code in the blockCache
+    // The programcounter of the code that is executing should be set to the code in the blockCache
     if(bcEntry->reservedWord == 0)
     {
-      addressInBlockCopyCache= ((u32int*)(bcEntry->blockCopyCacheAddress)) + 1;//First word is a backpointer
+      addressInBlockCopyCache= ((u32int*)(bcEntry->blockCopyCacheAddress)) + 1;// First word is a backpointer
     }
     else
     {
@@ -106,8 +106,8 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     }
 
     if((u32int)addressInBlockCopyCache >= gc->blockCopyCacheEnd ){
-	  //oldAddr=currBlockCopyCacheAddress blockCopyCacheAddresses will be used in a  cyclic manner
-      //-> if end of blockCopyCache is passed blockCopyCacheCurrAddress must be updated
+      /* blockCopyCacheAddresses will be used in a  cyclic manner
+      -> if end of blockCopyCache is passed blockCopyCacheCurrAddress must be updated */
       addressInBlockCopyCache=addressInBlockCopyCache - (BLOCK_COPY_CACHE_SIZE-1);
     }
 
@@ -132,11 +132,11 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #endif
 
 #ifdef CONFIG_BLOCK_COPY
-  //Check if there is room on blockCopyCacheCurrAddres and if not make it
+  /* Check if there is room on blockCopyCacheCurrAddres and if not make it */
   blockCopyCacheCurrAddress=checkAndClearBlockCopyCacheAddress(blockCopyCacheCurrAddress,gc->blockCache,(u32int*)gc->blockCopyCache,(u32int*)gc->blockCopyCacheEnd);
-  //Install Backpointer in BlockCache:
+  /* Install Backpointer in BlockCache: */
   *(blockCopyCacheCurrAddress++)=(u32int)(gc->blockCache + bcIndex);//pointer arithmetic gc->blcokCache+bcIndex  and save pointer as u32int
-  //After the Backpointer the instructions will be installed.  Here the guestprocess should continue it's execution.
+  /* After the Backpointer the instructions will be installed.  Here the guestprocess should continue it's execution. */
   gc->R15=(u32int)checkAndClearBlockCopyCacheAddress(blockCopyCacheCurrAddress,gc->blockCache,(u32int*)gc->blockCopyCache,(u32int*)gc->blockCopyCacheEnd);
 
 # ifdef SCANNER_DEBUG_BLOCKCOPY
@@ -153,87 +153,110 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     if((decodedInstruction = decodeInstr(instruction))->replaceCode == 1)
     {  
 		//Critical instruction
-        /*----------------Install HdlFunct----------------*/
-        /*Non of the source registers is the ProgramCounter -> Just End Of Block
-         *Finish block by installing SVC
-         *Save end of block instruction and handler function pointer close to us... */
-        gc->endOfBlockInstr = instruction;
-        gc->hdlFunct = decodedInstruction->hdlFunct;
-        gc->PCOfLastInstruction = (u32int)currAddress;
-        /* replace end of block instruction with hypercall of the appropriate code
-         *Check if there is room on blockCopyCacheCurrAddress and if not make it */
-        blockCopyCacheCurrAddress = checkAndClearBlockCopyCacheAddress(blockCopyCacheCurrAddress,gc->blockCache,(u32int*)gc->blockCopyCache,(u32int*)gc->blockCopyCacheEnd);
-        *(blockCopyCacheCurrAddress++)= INSTR_SWI | ((bcIndex+1)<<8);
+      /*----------------Install HdlFunct----------------*/
+      /*Non of the source registers is the ProgramCounter -> Just End Of Block
+       *Finish block by installing SVC
+       *Save end of block instruction and handler function pointer close to us... */
+      gc->endOfBlockInstr = instruction;
+      gc->hdlFunct = decodedInstruction->hdlFunct;
+      gc->PCOfLastInstruction = (u32int)currAddress;
+      /* replace end of block instruction with hypercall of the appropriate code
+       *Check if there is room on blockCopyCacheCurrAddress and if not make it */
+      blockCopyCacheCurrAddress = checkAndClearBlockCopyCacheAddress(blockCopyCacheCurrAddress,gc->blockCache,(u32int*)gc->blockCopyCache,(u32int*)gc->blockCopyCacheEnd);
+      *(blockCopyCacheCurrAddress++)= INSTR_SWI | ((bcIndex+1)<<8);
 
 # ifdef SCANNER_DEBUG2
-          serial_putstring("scanner: EOB @ ");
-          serial_putint((u32int)currAddress);
-          serial_putstring(" instr ");
-          serial_putint(gc->endOfBlockInstr);
-          serial_putstring(" SWIcode ");
-          serial_putint(bcIndex);
-          serial_putstring(" hdlrFuncPtr ");
-          serial_putint((u32int)gc->hdlFunct);
-          serial_newline();
+      serial_putstring("scanner: EOB @ ");
+      serial_putint((u32int)currAddress);
+      serial_putstring(" instr ");
+      serial_putint(gc->endOfBlockInstr);
+      serial_putstring(" SWIcode ");
+      serial_putint(bcIndex);
+      serial_putstring(" hdlrFuncPtr ");
+      serial_putint((u32int)gc->hdlFunct);
+      serial_newline();
 # endif
 
-        /*
-         * We have to determine the size of the BlockCopyCache & If necessary patch the code
-         * Patching of code is necessary when block is split up and a reserved word is used!
-         */
-        if(blockCopyCacheCurrAddress<blockCopyCacheStartAddress)
+      /*
+       * We have to determine the size of the BlockCopyCache & If necessary patch the code
+       * Patching of code is necessary when block is split up and a reserved word is used!
+       */
+      if(blockCopyCacheCurrAddress<blockCopyCacheStartAddress)
+      {
+
+        if(reservedWord==1)
         {
-          if(reservedWord==1)
-          {
 # ifdef SCANNER_DEBUG2
-            serial_putstring("Reserved WORD");
+          serial_putstring("Reserved WORD");
 # endif
-            u32int* blockCopyLast = checkAndMergeBlock((u32int*)gc->blockCopyCache,blockCopyCacheCurrAddress, gc->blockCache,blockCopyCacheStartAddress, (u32int*)gc->blockCopyCacheEnd);
+          u32int* blockCopyLast = checkAndMergeBlock((u32int*)gc->blockCopyCache,blockCopyCacheCurrAddress, gc->blockCache,blockCopyCacheStartAddress, (u32int*)gc->blockCopyCacheEnd);
 
-            /*
-             * Make sure that block is safed correctly in blockCopyCache
-             */
-            //UPDATE blockCopyCacheStartAddress
-            if(blockCopyLast!=blockCopyCacheCurrAddress)
-            {
-              blockCopyCacheStartAddress=(u32int*)gc->blockCopyCache;
-              //Set blockCopyCacheSize
-              blockCopyCacheSize=blockCopyLast-blockCopyCacheStartAddress;
-              /* Indicate that a free word is available at start of blockCopyCache */
-              blockCopyCacheStartAddress=(u32int*) ( ((u32int)blockCopyCacheStartAddress) |0b1);
-              /* Block is merged and moved to start of blockCopyCache.  We have to execute instructions from there!
-               * But first word is backpointer and 2nd word is reserved word*/
-              gc->R15=gc->blockCopyCache+8;
-# ifdef SCANNER_DEBUG2
-              serial_putstring("Block Merged.  New size = ");
-              serial_putint(blockCopyCacheSize);
-# endif
-            }
-            else
-            {
-              /* No patching needs to be done just set blockCopyCacheSize */
-              blockCopyCacheSize=gc->blockCopyCacheEnd - ( ((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE );
-              blockCopyCacheSize+=(u32int)blockCopyCacheCurrAddress - gc->blockCopyCache;
-              blockCopyCacheSize=blockCopyCacheSize>>2;//we have casted pointers to u32int thus divide by 4 to get size in words
-            }
-          }//end of reserved word case
-          else
+          /*
+           * Make sure that block is safed correctly in blockCopyCache
+           */
+          //UPDATE blockCopyCacheStartAddress
+          if(blockCopyLast!=blockCopyCacheCurrAddress)
           {
-              blockCopyCacheSize=gc->blockCopyCacheEnd - ( ((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE );
-              blockCopyCacheSize+=(u32int)blockCopyCacheCurrAddress - gc->blockCopyCache;
-              blockCopyCacheSize=blockCopyCacheSize>>2;//we have casted pointers to u32int thus divide by 4 to get size in words
-# ifdef SCANNER_DEBUG_BLOCKCOPY
-              serial_putstring("Block exceeding end: blockCopyCacheSize=");
-              serial_putint(blockCopyCacheSize);
+            blockCopyCacheCurrAddress=blockCopyLast;
+            blockCopyCacheStartAddress=(u32int*)gc->blockCopyCache;
+            //Set blockCopyCacheSize
+            blockCopyCacheSize=blockCopyLast-blockCopyCacheStartAddress;
+            /* Indicate that a free word is available at start of blockCopyCache */
+            blockCopyCacheStartAddress=(u32int*) ( ((u32int)blockCopyCacheStartAddress) |0b1);
+            /* Block is merged and moved to start of blockCopyCache.  We have to execute instructions from there!
+             * But first word is backpointer and 2nd word is reserved word*/
+            gc->R15=gc->blockCopyCache+8;
+# ifdef SCANNER_DEBUG2
+            serial_putstring("Block Merged.  New size = ");
+            serial_putint(blockCopyCacheSize);
 # endif
           }
-        }
+          else
+          {
+            /* No patching needs to be done just set blockCopyCacheSize */
+            blockCopyCacheSize=gc->blockCopyCacheEnd - ( ((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE );
+            blockCopyCacheSize+=(u32int)blockCopyCacheCurrAddress - gc->blockCopyCache;
+            blockCopyCacheSize=blockCopyCacheSize>>2;//we have casted pointers to u32int thus divide by 4 to get size in words
+          }
+        }//end of reserved word case
         else
         {
-          blockCopyCacheSize=blockCopyCacheCurrAddress- ( (u32int*)(((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE) );
+            blockCopyCacheSize=gc->blockCopyCacheEnd - ( ((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE );
+            blockCopyCacheSize+=(u32int)blockCopyCacheCurrAddress - gc->blockCopyCache;
+            blockCopyCacheSize=blockCopyCacheSize>>2;//we have casted pointers to u32int thus divide by 4 to get size in words
+# ifdef SCANNER_DEBUG_BLOCKCOPY
+            serial_putstring("Block exceeding end: blockCopyCacheSize=");
+            serial_putint(blockCopyCacheSize);
+# endif
         }
-
-      // add the block we just scanned to block cache
+      }
+      else
+      {
+        blockCopyCacheSize=blockCopyCacheCurrAddress- ( (u32int*)(((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE) );
+      }
+      /* This check is probably not necessary in production code but this can catch errors early on */
+      if(blockCopyCacheSize > 0xFFFF)
+      {
+        serial_putstring("blockCache: ADD[");
+        serial_putint(bcIndex);
+        serial_putstring("] start@");
+        serial_putint(blkStartAddr);
+        serial_putstring(" end@");
+        serial_putint((u32int)currAddress);
+        serial_putstring(" hdlPtr ");
+        serial_putint((u32int)gc->hdlFunct);
+        serial_putstring(" eobInstr ");
+        serial_putint(gc->endOfBlockInstr);
+        serial_putstring(" blockCopyCacheSize ");
+        serial_putint(blockCopyCacheSize);
+        serial_putstring(" blockCopyCache@");
+        serial_putint(((u32int)blockCopyCacheStartAddress));
+        serial_newline();
+        serial_putstring("Block nr:");
+        serial_putint(scannerReqCounter);
+        asm volatile("BKPT #0");
+      }
+      /* add the block we just scanned to block cache */
       addToBlockCache(blkStartAddr, (u32int)currAddress, bcIndex, blockCopyCacheSize,
                                         (u32int)blockCopyCacheStartAddress,gc->endOfBlockInstr,(u32int)gc->hdlFunct,gc->blockCache);
 
@@ -242,7 +265,11 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
       protectScannedBlock(blkStartAddr, (u32int)currAddress);
 
       //update blockCopyCacheLastUsedLine (blockCopyCacheLastUsedLine is u32int -> add nrOfInstructions*4
-      gc->blockCopyCacheLastUsedLine=gc->blockCopyCacheLastUsedLine+((blockCopyCacheCurrAddress-blockCopyCacheStartAddress)<<2);
+      /* It doesn't matter if it points to the word before the blockCopyCache. (Guestcontext was even initialized this way) */
+      gc->blockCopyCacheLastUsedLine=(u32int)(blockCopyCacheCurrAddress-1);
+
+
+
 
 # ifdef SCANNER_DEBUG_BLOCKCOPY
       serial_putstring("Block added with size of ");
@@ -265,16 +292,16 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
       }
       else
       {  
-		//One of the source registers of the instruction is the ProgramCounter
+        /* One of the source registers of the instruction is the ProgramCounter */
         /* Perform PCFunct-> necessary information = currAddress, */
-        /*----------------Execute PCFunct----------------*/
-        gc->endOfBlockInstr = instruction;//Not really the endOfBlockInstr but we can use it
+        /* ----------------Execute PCFunct---------------- */
+        gc->endOfBlockInstr = instruction;  /* Not really the endOfBlockInstr but we can use it */
 
         blockCopyCacheCurrAddress= decodedInstruction->PCFunct(gc,currAddress,blockCopyCacheCurrAddress,blockCopyCacheStartAddress);
         if(((u32int)blockCopyCacheCurrAddress & 0b1) == 0b1)
         {
           /* Last bit of returnAddress is used to indicate that a reserved word is necessary
-           * -> we can assume 2 byte allignement (even in worst case scenario (thumb))*/
+           * -> we can assume 2 byte alignment (even in worst case scenario (thumb))*/
           if(reservedWord==1)
           {
             /* Place has already been made -> just restore blockCopyCacheCurrAddress */
@@ -293,6 +320,14 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
             u32int destEmptyWord = (u32int)(blockCopyCacheStartAddress + 1);
             u32int tempWordPointer;
             blockCopyCacheCurrAddress=(u32int*)((u32int)blockCopyCacheCurrAddress & 0xFFFFFFFE);/*Set last bit back to zero*/
+            /* destEmptyWord can be set incorrectly if blockCopyCacheStartAddress is blockCopyCacheEnd -4
+             * Because then destEmptyWord will be blockCopyCacheEnd but blockCopyCacheEnd contains a static branch
+             * to start of blockCopyCache*/
+            if(destEmptyWord == gc->blockCopyCacheEnd)
+            {
+              destEmptyWord = gc->blockCopyCache; //Reserved word will be at start of blockCopyCache
+            }
+
             /*Set place for the reserved word correct now it is right before the instructions for the last instruction*/
             /*set pointer to the empty word.*/
             emptyWordPointer=(u32int)(blockCopyCacheCurrAddress-6);
@@ -304,9 +339,21 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
             }
             /* emptyWordPointer now points to the empty word*/
 
+# ifdef SCANNER_DEBUG_BLOCKCOPY
+            serial_putstring("Processing block :");
+            serial_putint(scannerReqCounter);
+            serial_newline();
+            serial_putstring("emptyWordPointer :");
+            serial_putint((u32int)emptyWordPointer);
+            serial_newline();
+            serial_putstring("destEmptyWord :");
+            serial_putint((u32int)destEmptyWord);
+            serial_newline();
+# endif
 
             while(emptyWordPointer!=destEmptyWord)
             {
+
               /* As long as the empty word isn't at its place keep on moving instructions */
               tempWordPointer = emptyWordPointer - 4; /* previous word */
               if(tempWordPointer == (gc->blockCopyCache - 4))

@@ -502,9 +502,9 @@ u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u3
     /* It is possible that the offset will be something like 0xFFFF????.  This is when the block is split.  The offset will be rewritten
      * when block is merged but if this offset is added we also overwrite the first bits of the instruction leading to the creation of
      * another instruction.  We can just reset the offset to 0 */
-    serial_putstring("offset = ");
+    /*serial_putstring("offset = ");
     serial_putint(offset);
-    serial_newline();
+    serial_newline();*/
     offset=0; /*  */
   }
   instr2Copy=instr2Copy | (offset);

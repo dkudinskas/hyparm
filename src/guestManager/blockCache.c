@@ -83,7 +83,7 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr)
 void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr,
                      u32int index, u32int blockCopyCacheSize, u32int blockCopyCacheAddress,u32int hypInstruction,u32int hdlFunct,BCENTRY * bcAddr)
 {
-#ifdef BLOCK_CACHE_DEBUG
+#ifdef BLOCK_COPY_CACHE_DEBUG
   serial_putstring("blockCache: ADD[");
   serial_putint(index);
   serial_putstring("] start@");
@@ -94,7 +94,7 @@ void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr,
   serial_putint(hdlFunct);
   serial_putstring(" eobInstr ");
   serial_putint(hypInstruction);
-  serial_putstring(" blockCopyCacheSize ")
+  serial_putstring(" blockCopyCacheSize ");
   serial_putint(blockCopyCacheSize);
   serial_putstring(" blockCopyCache@");
   serial_putint((blockCopyCacheAddress & 0xFFFFFFFE));
@@ -465,7 +465,7 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 
 #ifdef CONFIG_BLOCK_COPY
 void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize){
-  //First we must check if we have to remove a coninuous block are that it is split up (if it was to close to the end
+  //First we must check if we have to remove a coninuous block that it is split up (i.e.: if it was to close to the end)
   GCONTXT * context = getGuestContext();
   u32int endOfBlock = (blockCopyCacheAddress+(blockCopyCacheSize<<2));//End of the block that has to be removed
   u32int lastUsableBlockCopyCacheAddress = context->blockCopyCacheEnd-4; //see comment next rule
@@ -485,6 +485,7 @@ void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCach
   }
   else //safe to remove all at once
   {
+    /*serial_putstring("REMOVEBLOCKCOPYCACHEENTRY"); */
     memset((u32int *)blockCopyCacheAddress,0,blockCopyCacheSize<<2);//blockCopyCacheSize is number of u32int entries
   }
 
