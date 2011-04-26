@@ -3,6 +3,7 @@
 
 #include "drivers/beagle/beUart.h"
 
+
 static inline u32int beGetUartNumber(u32int phyAddr);
 static inline u32int beGetUartBaseAddr(u32int id);
 
@@ -106,8 +107,10 @@ void beUartReset(u32int uartid)
 /*
  * prepare the device for operation: set up baud rates, interrupts, etc.
  */
-void beUartStartup(u32int uartid)
+void beUartStartup(u32int uartid, u32int baudRate)
 {
+  u32int divisor;
+
   // set nRTS output to active (low), Force DTR output to active (low)
   beStoreUart(UART_MCR_REG, UART_MCR_RTS | UART_MCR_DTR, uartid);
   
@@ -130,17 +133,29 @@ void beUartStartup(u32int uartid)
   // clear TX and RX logic
   beStoreUart(UART_FCR_REG, UART_FCR_TX_FIFO_CLR | UART_FCR_RX_FIFO_CLR, uartid);
 
-
-  // ok, we need to set the BAUD rate divisors
-  // OMAP35XX Technical Reference Manual, page 2658UART/IrDA/CIR
-  // Baud Rate   Baud Multiple  DLH,DLL (Hex)   Actual Baud Rate    Err
-  // 115.2 Kbps            16x     0x00, 0x1A         115.38 Kbps   +0.16
-  // enable config mode 
+  // enable config mode
   beStoreUart(UART_LCR_REG, UART_LCR_DIV_EN | UART_LCR_CHAR_LEN_8, uartid);
 
-  // divisor - 0x0 0x1a
-  beStoreUart(UART_DLH_REG,  0x0, uartid);
-  beStoreUart(UART_DLL_REG, 0x1a, uartid);
+  /*
+   * The divisor for x16 mode can be calculated as follows:
+   *
+   * Operating frequency = 48000000
+   * Divisor value = Operating frequency/(16x baud rate)
+   *
+   * See OMAP35x TRM rev. O, p. 2666 (UART/IrDA/CIR).
+   */
+  switch (baudRate)
+  {
+    case 500000:
+      divisor = 6;
+      break;
+    default:
+      /* baud rate 115200 */
+      divisor = 26;
+      break;
+  }
+  beStoreUart(UART_DLH_REG, (divisor >> 8) & 0xff, uartid);
+  beStoreUart(UART_DLL_REG, divisor & 0xff, uartid);
 
   // get back to operational mode
   beStoreUart(UART_LCR_REG, UART_LCR_CHAR_LEN_8, uartid);
@@ -153,15 +168,15 @@ void beUartStartup(u32int uartid)
 }
 
 
-u32int beLoadUart(u32int regOffs, u32int uartid)
+u8int beLoadUart(u32int regOffs, u32int uartid)
 {
-  volatile u32int * regPtr = (u32int*)(beGetUartBaseAddr(uartid) | regOffs);
+  volatile u8int * regPtr = (u8int*)(beGetUartBaseAddr(uartid) | regOffs);
   return *regPtr;
 }
 
-void beStoreUart(u32int regOffs, u32int value, u32int uartid)
+void beStoreUart(u32int regOffs, u8int value, u32int uartid)
 {
-  volatile u32int * regPtr = (u32int*)(beGetUartBaseAddr(uartid) | regOffs);
+  volatile u8int * regPtr = (u8int*)(beGetUartBaseAddr(uartid) | regOffs);
   *regPtr = value;
 }
 
