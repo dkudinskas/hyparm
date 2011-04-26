@@ -37,7 +37,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #endif
   u32int * currAddress = (u32int*)blkStartAddr;
   u32int instruction = *currAddress;
-
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
 
@@ -68,11 +67,10 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #  error Decoder must be set!
 # endif
 #endif
-  {
-    currAddress++;
-    instruction = *currAddress;
-  } // while ends
-
+  	{
+    	currAddress++;
+		instruction = *currAddress;
+	} // while ends
   if ((instruction & INSTR_SWI) == INSTR_SWI)
   {
       u32int svcCode = (instruction & 0x00FFFFFF);

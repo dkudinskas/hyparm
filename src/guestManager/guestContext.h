@@ -86,6 +86,7 @@ struct guestContext
   bool guestDataAbtPending;
   bool guestPrefetchAbtPending;
   bool guestIdle;
+  bool halfword; // 1 -> High halfword, 0 -> Low halfword
 };
 
 

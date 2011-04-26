@@ -8,6 +8,7 @@
 #include "guestManager/scheduler.h"
 #include "guestManager/guestExceptions.h"
 
+#define T_BIT 	0x20
 u32int nopInstruction(GCONTXT * context)
 {
   printf("ERROR: NOP instr %08x @ %08x should not have trapped!\n",
@@ -806,25 +807,38 @@ u32int bkptInstruction(GCONTXT * context)
 u32int blxInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
-  if ((instr & 0xfe000000) == 0xfa000000)
-  {
-      DIE_NOW(context, "BLX #imm24 switching to Thumb. Unimplemented.\n");
-  }
-
   u32int nextPC = 0;
-  
+  u32int sign = 0x00800000 & instr;
   u32int instrCC = (instr >> 28) & 0xF;
   u32int cpsrCC  = (context->CPSR >> 28) & 0xF;
+  u32int regDest = (instr & 0x0000000F); // holds dest addr and mode bit
+  u32int value = loadGuestGPR(regDest, context);
+  u32int thumbMode = value & 0x1;
+  u32int target = instr & 0x00FFFFFF;
+
+  if ((instr & 0xfe000000) == 0xfa000000)
+  {
+  	if (sign != 0)
+  	{
+    	// target negative!
+    		target |= 0xFF000000;
+  	}
+  	target = target << 2;
+	
+	// blx <imm24>
+  	context->CPSR |= T_BIT;
+	storeGuestGPR(14, context->R15+4,context);
+
+	nextPC = context->R15 + 8 + target;
+	return nextPC;
+  }
+
   if (!evalCC(instrCC, cpsrCC))
   {
     nextPC = context->R15 + 4;
     return nextPC;
   }
 
-  u32int regDest = (instr & 0x0000000F); // holds dest addr and mode bit
-  u32int value = loadGuestGPR(regDest, context);
-
-  u32int thumbMode = value & 0x1;
   if (thumbMode)
   {
       DIE_NOW(context, "BLX Rm switching to Thumb. Unimplemented.\n");

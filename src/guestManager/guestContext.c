@@ -177,6 +177,7 @@ void initGuestContext(GCONTXT * gContext)
   gContext->guestDataAbtPending = FALSE;
   gContext->guestPrefetchAbtPending = FALSE;
   gContext->guestIdle = FALSE;
+  gContext->halfword = FALSE;
   int i = 0;
   for (i = 0; i < BLOCK_HISOTRY_SIZE; i++)
   {

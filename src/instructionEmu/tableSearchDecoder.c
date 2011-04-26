@@ -26,6 +26,45 @@ struct TopLevelCategory categories[] = {
 {UNDEFINED_CATEGORY,              0x00000000, 0x00000000}
 };
 
+//Thumb 16-bit
+struct TopLevelCategory t16categories[] = {
+{T16_UNCONDITIONALS_CATEGORY,		0xE000, 0xE000},
+{T16_CONDITIONAL_BRANCH_AND_SVC_CALL,	0xD000, 0xD000},
+{T16_LOAD_MULTIPLE_REGISTERS,		0xC800, 0xC800},
+{T16_STORE_MULTIPLE_REGISTERS,		0xC000, 0xC000},
+{T16_MISC,				0xB000, 0xB000},
+{T16_SP_ADDR,				0xA800, 0xA800},
+{T16_PC_ADDR,				0xA000, 0xA000},
+{T16_LOAD_STORE,			0x8000, 0x8000},
+{T16_LOAD_STORE,			0x6000, 0x6000},
+{T16_LOAD_STORE,			0x5000, 0x5000},
+{T16_LDR,				0x4800, 0x4800},
+{T16_SPECIAL_AND_BRANCH_EXCHANGE,	0x4400, 0x4400},
+{T16_DATA_PROC,				0x4000, 0x4400},
+{T16_SHIFT,				0x0000, 0x0000}
+};
+
+
+//Thumb 32-bit. Instructions are treated as 2 x halfwords
+struct TopLevelCategory t32categories[] = {
+{T32_LOAD_STORE_MULTIPLE,		0xE8000000,0xE8000000},
+{T32_LOAD_STORE_DOUBLE_EXCLUSIVE,	0xE8400000,0xE8400000},
+{T32_DATA_PROC,				0xEA000000,0xEA000000},
+{T32_COPROC,				0xEC000000,0xEC000000},
+{T32_DATA_PROC,				0xF0000000,0xF0000000},
+{T32_DATA_PROC,				0xF2000000,0xF2000000},
+{T32_BRANCH_AND_MISC,			0xF0008000,0xF0008000},
+{T32_STORE_SINGLE,			0xF8000000,0xF8000000},
+{T32_SIMD_STRUCT_LOAD_STORE,		0xF9000000,0xF9000000},
+{T32_LOAD_BYTE,				0xF8100000,0xF8010000},
+{T32_LOAD_HALFWORD,			0xF8300000,0xF8600000},
+{T32_LOAD_WORD,				0xF8500000,0xF8500000},
+{T32_UNDEFINED,				0xF8700000,0xF8700000},
+{T32_DATA_PROC,				0xFA000000,0xFA000000},
+{T32_MULTIPLY,				0xFB000000,0xFB000000},
+{T32_LONG_MULTIPLY,			0xFB800000,0xFB800000},
+{T32_COPROC,				0xFC000000,0xFC000000},
+};
 
 
 struct instruction32bit unconditionalInstructions[] = {
@@ -524,52 +563,192 @@ struct instruction32bit svcCoprocInstructions[] = {
 
 struct instruction32bit * decodeInstr(u32int instr)
 {
+  
+  GCONTXT* gc = getGuestContext();
   u32int catCode = decodeTopLevelCategory(instr);
-  //printf("%x\n",instr);
-  switch(catCode)
+  
+  // Check the status of T bit again
+  if(gc->CPSR & T_BIT)
   {
-    case DATA_PROC_AND_MISC_CATEGORY:
-      return decodeDataProcMisc(instr);
-      break;
-    case LOAD_STORE_WORD_BYTE_CATEGORY:
-      return decodeLoadStoreWordByte(instr);
-      break;
-    case MEDIA_CATEGORY:
-      return decodeMedia(instr);
-      break;
-    case BRANCH_BLOCK_TRANSFER_CATEGORY:
-      return decodeBranchBlockTransfer(instr);
-      break;
-    case SVC_COPROCESSOR_CATEGORY:
-      return decodeSvcCoproc(instr);
-      break;
-    case UNCONDITIONALS_CATEGORY:
-      return decodeUnconditional(instr);
-      break;
-    case UNDEFINED_CATEGORY:
-    default:
-      DIE_NOW(getGuestContext(), "decoder: UNDEFINED category");
+	switch(instr & THUMB32)
+	{
+		case THUMB32_1 || THUMB32_2 || THUMB32_3:
+		{
+			switch(catCode){
+				case T32_LOAD_STORE_MULTIPLE:
+					return t32decodeLoadStoreMultiple(instr);
+					break;
+				case T32_LOAD_STORE_DOUBLE_EXCLUSIVE:
+					return t32decodeLoadStoreDoubleExclusive(instr);
+					break;
+				case T32_DATA_PROC:
+					return t32decodeDataProc(instr);
+					break;
+				case T32_COPROC:
+					return t32decodeCoproc(instr);
+					break;
+				case T32_BRANCH_AND_MISC:
+					return t32decodeBranchMisc(instr);
+					break;
+				case T32_STORE_SINGLE:
+					return t32decodeStoreSingle(instr);
+					break;
+				case T32_SIMD_STRUCT_LOAD_STORE:
+					return t32decodeSimdStructLoadStore(instr);
+					break;
+				case T32_LOAD_BYTE:
+					return t32decodeLoadByte(instr);
+					break;
+				case T32_LOAD_HALFWORD:
+					return t32decodeLoadHalfWord(instr);
+					break;
+				case T32_LOAD_WORD:
+					return t32decodeLoadWord(instr);
+					break;
+				case T32_MULTIPLY:
+					return t32decodeMultiply(instr);
+					break;
+				case T32_LONG_MULTIPLY:
+					return t32decodeLongMultiply(instr);
+					break;
+				case T32_UNDEFINED:
+				default:
+					DIE_NOW(0,"Thumb-2 undefined 32-bit instruction");
+			}
+		}
+		// 16-bit instruction
+		default:
+		{
+			switch(catCode)
+			{
+				case T16_UNCONDITIONALS_CATEGORY:
+					return t16decodeUnconditionals(instr);
+					break;
+				case T16_CONDITIONAL_BRANCH_AND_SVC_CALL:
+					return t16decodeConditionalBranchSVC(instr);
+					break;
+				case T16_LOAD_MULTIPLE_REGISTERS:
+					return t16decodeLoadMultipleRegisters(instr);
+					break;
+				case T16_STORE_MULTIPLE_REGISTERS:
+					return t16decodeStoreMultipleRegisters(instr);
+					break;
+				case T16_MISC:
+					return t16decodeMisc(instr);
+					break;
+				case T16_SP_ADDR:
+					return t16decodeSPAddr(instr);
+					break;
+				case T16_PC_ADDR:
+					return	t16decodePCAddr(instr);
+					break;
+				case T16_LOAD_STORE:
+					return t16decodeLoadStore(instr);
+					break;
+				case T16_LDR:
+					return	t16decodeLDR(instr);
+					break;
+				case T16_SPECIAL_AND_BRANCH_EXCHANGE:
+					return t16decodeSpecialBranchExchange(instr);
+					break;
+				case T16_DATA_PROC:
+					return t16decodeDataProc(instr);
+					break;
+				case T16_SHIFT:
+					return t16decodeShift(instr);
+					break;
+				default:
+					DIE_NOW(0,"Thumb-2 undefined 16-bit instruction");
+			}
+		}
+	}
   }
+  else
+  {
+  	switch(catCode)
+	  {
+    	case DATA_PROC_AND_MISC_CATEGORY:
+   	    	return decodeDataProcMisc(instr);
+   	    	break;
+    	case LOAD_STORE_WORD_BYTE_CATEGORY:
+      		return decodeLoadStoreWordByte(instr);
+      		break;
+    	case MEDIA_CATEGORY:
+      		return decodeMedia(instr);
+      		break;
+	    case BRANCH_BLOCK_TRANSFER_CATEGORY:
+    	    return decodeBranchBlockTransfer(instr);
+		    break;
+	    case SVC_COPROCESSOR_CATEGORY:
+    		return decodeSvcCoproc(instr);
+  		    break;
+	    case UNCONDITIONALS_CATEGORY:
+    		return decodeUnconditional(instr);
+		    break;
+	    case UNDEFINED_CATEGORY:
+    	default:
+		    DIE_NOW(getGuestContext(), "decoder: UNDEFINED category");
+  	}
+}
 
   return 0;
 }
 
 u32int decodeTopLevelCategory(u32int instr)
 {
+  
+  GCONTXT* gc = getGuestContext();
   int index = 0;
   /* LOOP through all ARM instruction encoding categories */
   while (TRUE)
   {
-    if ( (instr & categories[index].mask) == categories[index].value)
-    {
-      return categories[index].categoryCode;
-    }
-    else
-    {
-      index = index + 1;
-    }
-  }
-  return UNDEFINED_CATEGORY;
+  	
+	if(gc->CPSR & T_BIT)
+  	{
+  		// we are in Thumb mode
+		switch(instr & THUMB32){
+			case THUMB32_1 || THUMB32_2 || THUMB32_3:
+			{
+				if ( (instr & t32categories[index].mask) == t32categories[index].value)
+				{
+					return t32categories[index].categoryCode;
+				}
+				else
+				{
+					index++;
+				}
+				break;
+			}
+			default:
+			{
+				// instr is 32 bit but we need to fetch only the lower half word
+				instr=0x0000FFFF & instr;
+				if ( (instr & t16categories[index].mask) == t16categories[index].value)
+				{
+					return t16categories[index].categoryCode;
+				}
+				else
+				{
+					index++;
+				}
+				break;
+			}
+		}
+  	}
+	// We should be in ARM mode 
+	else
+	{
+	    if ( (instr & categories[index].mask) == categories[index].value)
+    	{
+	      return categories[index].categoryCode;
+    	}
+	    else
+    	{
+	      index = index + 1;
+    	}
+	}
+   }
+	return UNDEFINED_CATEGORY;
 }
 
 struct instruction32bit * decodeDataProcMisc(u32int instr)
@@ -755,4 +934,132 @@ void dumpInstruction(char * msg, u32int instr)
   printf(": Instruction: %08x ", instr);
   dumpInstrString(instr);
   printf("\n");
+}
+
+// Thumb-2 32-bit functions
+struct instruction32bit * t32decodeLoadStoreMultiple(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t32decodeLoadStoreDoubleExclusive(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t32decodeDataProc(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t32decodeCoproc(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t32decodeBranchMisc(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t32decodeStoreSingle(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t32decodeSimdStructLoadStore(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t32decodeLoadByte(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t32decodeLoadHalfWord(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t32decodeLoadWord(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t32decodeMultiply(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t32decodeLongMultiply(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+
+// Thumb-2 16-bit functions
+struct instruction32bit * t16decodeUnconditionals(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t16decodeConditionalBranchSVC(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t16decodeLoadMultipleRegisters(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t16decodeStoreMultipleRegisters(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t16decodeMisc(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t16decodeSPAddr(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t16decodePCAddr(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t16decodeLoadStore(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t16decodeLDR(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t16decodeDataProc(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction32bit * t16decodeShift(u16int instr)
+{
+	DIE_NOW(0,"Unimplemented");
+}
+
+struct instruction16bit * t32tot16(u32int instr)
+{
+	DIE_NOW(0,"Unimplemented");
 }

@@ -866,7 +866,8 @@ guestFiqHandler:
         .space 4
 hardwareLibrary:
         .space 4
-        
+thumb:
+	.space 4
 guestContextOther:
         .space 8
 
