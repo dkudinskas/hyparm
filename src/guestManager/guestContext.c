@@ -156,6 +156,7 @@ void initGuestContext(GCONTXT * gContext)
   gContext->R15 = 0;
   gContext->CPSR = (CPSR_FIQ_BIT | CPSR_IRQ_BIT | CPSR_MODE_SVC);
   gContext->endOfBlockInstr = 0;
+  gContext->endOfBlockHalfInstr = 0;
   gContext->hdlFunct = 0;
   gContext->coprocRegBank = 0;
   gContext->blockCache = 0;
@@ -177,7 +178,6 @@ void initGuestContext(GCONTXT * gContext)
   gContext->guestDataAbtPending = FALSE;
   gContext->guestPrefetchAbtPending = FALSE;
   gContext->guestIdle = FALSE;
-  gContext->halfword = FALSE;
   int i = 0;
   for (i = 0; i < BLOCK_HISOTRY_SIZE; i++)
   {

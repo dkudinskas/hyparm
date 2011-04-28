@@ -15,6 +15,7 @@ struct blockCacheEntry
   u32int startAddress;
   u32int endAddress;
   u32int hyperedInstruction;
+  u16int halfhyperedInstruction;
   bool valid;
   u32int hdlFunct;
 };
@@ -25,7 +26,7 @@ void initialiseBlockCache(BCENTRY * bcache);
 
 bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr);
 
-void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
+void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int HalfhypInstruction, u32int blkEndAddr,
                      u32int index, u32int hdlFunct, BCENTRY * bcAddr);
 
 BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr);

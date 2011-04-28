@@ -10,10 +10,10 @@ typedef u32int (*instructionHandler)(GCONTXT * context);
 
 #define T_BIT			0x20
 
-#define THUMB32			0xF8000000
-#define	THUMB32_1		0x1D
-#define THUMB32_2		0x1E
-#define THUMB32_3		0x1F
+#define THUMB32			0xF800
+#define	THUMB32_1		0xE800
+#define THUMB32_2		0xF000
+#define THUMB32_3		0xF800
 
 #ifdef CONFIG_DECODER_TABLE_SEARCH
 # include "instructionEmu/tableSearchDecoder.h"

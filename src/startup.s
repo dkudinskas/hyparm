@@ -337,7 +337,12 @@ continue1:
      
     /* store guest PC */
     MOV     R0, LR
-    SUB     R0, R0, #4
+    LDR		R3, =guestContextCPSR
+	LDR		R3, [R3]
+	AND 	R4, #0x20
+	CMP		R4, #0x20
+	SUBNE   R0, R0, #4 @ARM
+	SUBEQ	R0, R0, #2 @Thumb
     LDR     R1, =guestContextR15
     STR     R0, [R1]
 
@@ -351,8 +356,14 @@ continue1:
     STR     R1, [R0]
   
     /* get SVC code into @parameter1 and call C function */
-    LDR     R0, [LR, #-4]
-    AND     R0, #0xFFFFFF
+    LDR		R0, =guestContextCPSR
+	LDR		R0, [R0]
+	AND		R1, R0, #0x20 @Check thumb bit
+	CMP		R1, #0x20
+	LDRNE   R0, [LR, #-4] @Thumb bit = 0
+    ANDNE   R0, #0xFFFFFF
+	LDREQ	R0, [LR, #-2] @Thumb bit = 1
+	ANDEQ	R0, #0x00FF
     BL      softwareInterrupt
     
     /* handled this SWI. lets restore user state! */
@@ -413,8 +424,8 @@ continue2:
     /* Preserve condition flags */
     LDR     LR, [LR]
     AND     R0, LR, #0xf0000000
-    /* Preserve exception flags */
-    AND     LR, LR, #0x1C0
+    /* Preserve exception flags & Thumb state*/
+    AND     LR, LR, #0x1F0
     ORR     R0, LR, R0
     /* set user mode */
     ORR     R0, R0, #(USR_MODE)
@@ -866,8 +877,6 @@ guestFiqHandler:
         .space 4
 hardwareLibrary:
         .space 4
-thumb:
-	.space 4
 guestContextOther:
         .space 8
 

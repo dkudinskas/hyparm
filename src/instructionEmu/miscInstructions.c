@@ -1215,24 +1215,63 @@ u32int mrsInstruction(GCONTXT * context)
 
 u32int bInstruction(GCONTXT * context)
 {
+  u16int halfinstr = context->endOfBlockHalfInstr;
   u32int instr = context->endOfBlockInstr;
-  u32int instrCC = 0xF0000000 & instr;
-  u32int sign = 0x00800000 & instr;
-  u32int link = 0x0F000000 & instr;
-  int target  = 0x00FFFFFF & instr;
+  u32int instrCC = 0;
+  u32int sign = 0;
+  u32int link;
+  int target = 0;
   u32int nextPC = 0;
-
+  
 #ifdef ARM_INSTR_TRACE
   printf("Branch instr %08x @ %08x\n", instr, context->R15);
 #endif
-
-  if (link == 0x0B000000)
+  // Are we on Thumb?
+  if (context->CPSR & T_BIT)
   {
-    link = 1;
+    /* Reconstruct instruction */
+	if(!halfinstr) // !0 -> half instruction from previous word
+	{
+		instr=(halfinstr<<16)|(instr & 0x0000FFFF);
+	}
+	// B has 2 different encodings in Thumb-2. Find out which one is
+	// WHAT A MESS! -> ARM-A manual : page 344
+	sign = ( (instr & 0x04000000 ) >> 26 );
+	u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
+	u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
+	target = (sign<<24)|(i1<<23)|(i2<<22)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
+
+	if((instr & 0x00008000) == 0)
+	{
+	
+		instrCC = (0x03C00000 & instr) >> 22;
+	}
+	link = 0x00005000 & instr;
+	if (link == 0x00005000 || link == 0x00004000)
+	{
+		link = 1 ;
+	}
+	else
+	{
+		link = 0;
+	}
   }
+  // ARM Mode
   else
   {
-    link = 0;
+  	instr = context->endOfBlockInstr;
+  	instrCC = (0xF0000000 & instr) >> 28;
+  	sign = 0x00800000 & instr;
+  	link = 0x0F000000 & instr;
+  	target  = 0x00FFFFFF & instr;
+  	if (link == 0x0B000000)
+	{
+    	link = 1;
+  	}
+  	else
+  	{
+    	link = 0;
+    }
   }
 
   // sign extend 24 bit imm to 32 bit offset
@@ -1241,27 +1280,65 @@ u32int bInstruction(GCONTXT * context)
     // target negative!
     target |= 0xFF000000;
   }
-  target = target << 2;
-
-  /* eval condition flags */
-  instrCC = instrCC >> 28;
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-  bool conditionMet = evalCC(instrCC, cpsrCC);
-  if (conditionMet)
+  if(context->CPSR & T_BIT)
   {
-    // condition met
-    u32int currPC = context->R15;
-    currPC += 8;
-    nextPC = currPC + target;
-    if (link)
-    {
-      storeGuestGPR(14, context->R15+4, context);
-    }
+  	target = target << 1;
   }
   else
   {
-    // condition not met!
-    nextPC = context->R15 + 4;
+  	target = target << 2;
+  }
+
+   /* eval condition flags only for Thumb-2 first encoding or ARM encoding*/
+  if( (context->CPSR & T_BIT && ( (instr & 0x00008000) == 0 ) ) || !(context->CPSR & T_BIT) )
+  {
+  	u32int cpsrCC = (context->CPSR >> 28) & 0xF;
+  	bool conditionMet = evalCC(instrCC, cpsrCC);
+  	if (conditionMet)
+  	{
+   	 // condition met
+   	 u32int currPC = context->R15;
+   	 if(context->CPSR & T_BIT)
+	 {
+	 	currPC += 4;
+	 }
+	 else
+	 {
+	 	currPC += 8;
+	 }
+   	 nextPC = currPC + target;
+   	 if (link)
+  	 {
+		if(context->CPSR & T_BIT )
+		{
+			storeGuestGPR(14, context->R15+2, context);
+		}
+		else
+		{
+			storeGuestGPR(14, context->R15+4, context);
+		}
+  	 }
+	}
+    else
+    {
+    	// condition not met!
+	    if(context->CPSR & T_BIT)
+		{
+			nextPC = context->R15 + 2;
+		}
+		else
+		{
+			nextPC = context->R15 + 4;
+		}
+    }
+  }
+  // Thumb-2 second encoding were no CC flags exist. Store to R14 anyway
+  else
+  {
+   	 storeGuestGPR(14, context->R15+2, context);
+     u32int currPC = context->R15;
+   	 currPC += 4;
+   	 nextPC = currPC + target;
   }
   return nextPC;
 }

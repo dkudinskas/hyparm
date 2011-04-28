@@ -37,16 +37,33 @@ void softwareInterrupt(u32int code)
   // parse the instruction to find the start address of next block
   GCONTXT * gContext = getGuestContext();
   u32int nextPC = 0;
+  bool gSVC = FALSE;
   u32int (*instrHandler)(GCONTXT * context);
 
   /* Make sure that any SVC that is not part of the scanner
    * will be delivered to the guest
    */
-  if (code >=0 && code <= 0xFF)
+  if(gContext->CPSR & T_BIT) // Thumb
   {
+  	if (code == 0) // svc in Thumb is between 0x01 and 0xFF
+	{
+		gSVC = TRUE;
+	}
+  }
+  else
+  {
+	 if (code >=0 && code <= 0xFF)
+	 {
 #ifdef EXC_HDLR_DBG
-    printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, gContext->R15);
+    	printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, gContext->R15);
 #endif
+		gSVC = TRUE;
+	}
+  }
+
+  // Do we need to forward it to the guest?
+  if(gSVC)
+  {
 	deliverServiceCall();
     nextPC = gContext->R15;
   }

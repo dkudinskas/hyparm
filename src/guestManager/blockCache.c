@@ -63,7 +63,7 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr)
   }
 }
 
-void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
+void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int halfhypInstruction, u32int blkEndAddr,
                      u32int index, u32int hdlFunct, BCENTRY * bcAddr)
 {
 #ifdef BLOCK_CACHE_DBG
@@ -76,7 +76,8 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAd
     resolveCacheConflict(index, bcAddr);
     // now that we resolved the conflict, we can store the new entry data...
     bcAddr[index].startAddress = blkStartAddr;
-    bcAddr[index].endAddress = blkEndAddr;
+    bcAddr[index].endAddress = blkEndAddr; 
+	bcAddr[index].halfhyperedInstruction = halfhypInstruction;
     bcAddr[index].hyperedInstruction = hypInstruction;
     bcAddr[index].hdlFunct = hdlFunct;
     bcAddr[index].valid = TRUE;
@@ -93,6 +94,7 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAd
     bcAddr[index].startAddress = blkStartAddr;
     bcAddr[index].endAddress = blkEndAddr;
     bcAddr[index].hyperedInstruction = hypInstruction;
+	bcAddr[index].halfhyperedInstruction = halfhypInstruction;
     bcAddr[index].hdlFunct = hdlFunct;
     bcAddr[index].valid = TRUE;
   }

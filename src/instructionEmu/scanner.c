@@ -37,6 +37,8 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #endif
   u32int * currAddress = (u32int*)blkStartAddr;
   u32int instruction = *currAddress;
+  u16int * currhwAddress = 0;
+  u16int halfinstruction = 0;
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
 
@@ -57,7 +59,31 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     printf("scanner: Block @ %08x hash value %x cache index %x MISS\n", 
            blkStartAddr, hashVal, bcIndex);
 #endif
-
+		
+  // Adjust values for Thumb-2
+  if(gc->CPSR & T_BIT)
+  {
+    currhwAddress = (u16int*)currAddress;
+	halfinstruction = *currhwAddress;
+	switch(halfinstruction & THUMB32)
+	{
+		case THUMB32_1:
+		case THUMB32_2:
+		case THUMB32_3:
+		{
+			currhwAddress++;
+			instruction = halfinstruction<<16|*currhwAddress;
+			break;
+		}
+		default:
+		{
+			instruction = halfinstruction;
+			break;
+		}
+	}
+	printf("InAddr: %08x\n",(u32int)currAddress);
+	printf("Instr : %08x\n",(u32int)instruction);
+   }
 #ifdef CONFIG_DECODER_TABLE_SEARCH
   while ((decodedInstruction = decodeInstr(instruction))->replaceCode == 0)
 #else
@@ -67,58 +93,165 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #  error Decoder must be set!
 # endif
 #endif
-  	{
-    	currAddress++;
-		instruction = *currAddress;
+	{	
+		// Thumb-2 is moving by 2 bytes at a time
+		if(gc->CPSR & T_BIT)
+		{
+			currhwAddress = (u16int*)currAddress; // point to half word instead of word
+			currhwAddress++;
+			halfinstruction = *currhwAddress;
+			switch(halfinstruction & THUMB32)
+			{
+				case THUMB32_1:
+				case THUMB32_2:
+				case THUMB32_3:
+				{
+					printf("1\n");
+					// fetch the remaining halfword
+					currhwAddress++;
+					instruction = halfinstruction<<16|*currhwAddress;
+					// adjust word pointer
+					currAddress = (u32int*)currhwAddress;
+					break;
+				}
+				// if the halfword is a 16bit instruction
+				default:
+				{
+					printf("2\n");
+					//keep only the last 16 bits
+					currAddress = (u32int*)currhwAddress;
+					instruction = halfinstruction;
+					break;
+				}
+			}
+			printf("InAddr: %08x\n",(u32int)currAddress);
+			printf("Instr : %08x\n",(u32int)instruction);
+		}
+		// ARM Mode
+		else
+		{
+			currAddress++;
+			instruction = *currAddress;
+		}
 	} // while ends
-  if ((instruction & INSTR_SWI) == INSTR_SWI)
+  //ARM Mode
+  if(!(gc->CPSR & T_BIT))
   {
-      u32int svcCode = (instruction & 0x00FFFFFF);
-	  if(!((svcCode >= 0) && (svcCode <= 0xFF)))
-	  {
-		ishypersvc=TRUE;
-		// we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
-      	u32int cacheIndex = (svcCode >> 8) - 1;
-      	if (cacheIndex >= BLOCK_CACHE_SIZE)
-      	{
-        	DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
-      	}
+	  if ((instruction & INSTR_SWI) == INSTR_SWI)
+  	  {
+      	u32int svcCode = (instruction & 0x00FFFFFF);
+	  	if(!((svcCode >= 0) && (svcCode <= 0xFF)))
+	  	{
+			ishypersvc=TRUE;
+			// we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
+    	  	u32int cacheIndex = (svcCode >> 8) - 1;
+      		if (cacheIndex >= BLOCK_CACHE_SIZE)
+      		{
+        		DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
+	      	}	
 #ifdef SCANNER_DEBUG
-      	printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)currAddress, cacheIndex);
+    	  	printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)currAddress, cacheIndex);
 #endif
-      	BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
-        // retrieve end of block instruction and handler function pointer
-  	    gc->endOfBlockInstr = bcEntry->hyperedInstruction;
-    	gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
-     }
-	 else
-	 {
-	 	ishypersvc=FALSE;
+      		BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
+	        // retrieve end of block instruction and handler function pointer
+  		    gc->endOfBlockInstr = bcEntry->hyperedInstruction;
+    		gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
+	     }	
+		 else
+		 {
+		 	ishypersvc=FALSE;
+		 }
 	 }
-	}
-	/* If the instruction is not a SWI placed by the hypervisor OR 
-	 * it is a non-SWI instruction, then proceed as normal
-	 */
-  if((((instruction & INSTR_SWI) == INSTR_SWI) && ishypersvc==FALSE) ||  (instruction & INSTR_SWI) != INSTR_SWI)
-  {
-    // save end of block instruction and handler function pointer close to us...
-    gc->endOfBlockInstr = instruction;
+		/* If the instruction is not a SWI placed by the hypervisor OR 
+		 * it is a non-SWI instruction, then proceed as normal
+		 */
+	  if((((instruction & INSTR_SWI) == INSTR_SWI) && ishypersvc==FALSE) ||  (instruction & INSTR_SWI) != INSTR_SWI)
+	  {	
+    	// save end of block instruction and handler function pointer close to us...
+	    gc->endOfBlockInstr = instruction;
 #ifdef CONFIG_DECODER_TABLE_SEARCH
-    gc->hdlFunct = decodedInstruction->hdlFunct;
+	    gc->hdlFunct = decodedInstruction->hdlFunct;
 #else
 # ifdef CONFIG_DECODER_AUTO
-    gc->hdlFunct = decodedInstruction;
+    	gc->hdlFunct = decodedInstruction;
 # else
 #  error Decoder must be set!
 # endif
 #endif
-    // replace end of block instruction with hypercall of the appropriate code
-    *currAddress = INSTR_SWI | ((bcIndex + 1) << 8);
-    // if guest instruction stream is mapped with caching enabled, must maintain
-    // i and d cache coherency
-    // iCacheFlushByMVA((u32int)currAddress);
-  }
-  
+    	// Thumb compatibility
+		gc->endOfBlockHalfInstr = 0;
+		// replace end of block instruction with hypercall of the appropriate code
+	    *currAddress = INSTR_SWI | ((bcIndex + 1) << 8);
+    	// if guest instruction stream is mapped with caching enabled, must maintain
+	    // i and d cache coherency
+    	// iCacheFlushByMVA((u32int)currAddress);
+  	  }
+	}
+	// If we reach this point, it means we are on Thumb Mode
+	else
+	{
+		if ((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX)
+ 		{
+      		u32int svcCode = (instruction & 0x000000FF); // NOP|SVC -> Keep the last 8 bits
+	  		if(!((svcCode > 0) && (svcCode <= 0xFF)))
+	  		{
+				ishypersvc=TRUE;
+				// we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
+    		  	u32int cacheIndex = (svcCode >> 8) - 1;
+      		if (cacheIndex >= BLOCK_CACHE_SIZE)
+      		{
+        		DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
+	      	}	
+#ifdef SCANNER_DEBUG
+    	  	printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)currAddress, cacheIndex);
+#endif
+      		BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
+	        // retrieve end of block instruction and handler function pointer
+  		    gc->endOfBlockInstr = bcEntry->hyperedInstruction;
+    		gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
+	     }	
+		 else
+		 {
+		 	ishypersvc=FALSE;
+		 }
+	 	}
+		/* If the instruction is not a SWI placed by the hypervisor OR 
+		 * it is a non-SWI instruction, then proceed as normal
+		 */
+	  	if((((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX) && ishypersvc==FALSE) ||  (instruction & INSTR_SWI_THUMB_MIX) != INSTR_SWI_THUMB_MIX)
+	  {	
+    	
+		/* Replace policy:
+		 * currAddress points to the word that holds the second half-word of the thumb instruction.
+		 * However, the first half-word is located 2 bytes before. The first halfword will be a nop
+		 * and the second one the actual svc. The word pointed by currAddress has to be preserved as is.
+		 * Only the lower halfword will be replaced with svc. The other halfword has to be preserved!
+		 * Block cache has been extended to hold the halfword (thumb-32 high halfword) pointer by 
+		 * currAddress - 2bytes
+		 */
+		currhwAddress = (u16int*)currAddress;
+		currhwAddress--; // go back 2 bytes ( fetch the high half-word of the Thumb-32 instruction )
+		// preserve before we replace them
+		gc->endOfBlockInstr = *currAddress;
+		gc->endOfBlockHalfInstr = *currhwAddress;
+
+		*currhwAddress = INSTR_NOP_THUMB;
+		currhwAddress += 2; // go 4 bytes ahead
+		halfinstruction=*currhwAddress; // this holds the high halfword of the word holding the 2nd Thumb-32 halfword
+		*currAddress = (halfinstruction<<16)|(INSTR_SWI_THUMB | (( bcIndex +1 )<<7));
+
+#ifdef CONFIG_DECODER_TABLE_SEARCH
+	    gc->hdlFunct = decodedInstruction->hdlFunct;
+#else
+# ifdef CONFIG_DECODER_AUTO
+    	gc->hdlFunct = decodedInstruction;
+# else
+#  error Decoder must be set!
+# endif
+#endif
+  	  }
+	}
+
 #ifdef SCANNER_DEBUG
   printf("scanner: EOB @ %08x insr %08x SVC code %x hdlrFuncPtr %x\n",
         currAddress, gc->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)gc->hdlFunct);
@@ -129,7 +262,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
    * skipt it until I figure out what it going on
    */
 
-  addToBlockCache(blkStartAddr, gc->endOfBlockInstr, (u32int)currAddress, 
+  addToBlockCache(blkStartAddr, gc->endOfBlockInstr, gc->endOfBlockHalfInstr, (u32int)currAddress, 
                   bcIndex, (u32int)gc->hdlFunct, gc->blockCache);
   /* To ensure that subsequent fetches from eobAddress get a hypercall
    * rather than the old cached copy... 

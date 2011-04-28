@@ -58,6 +58,7 @@ struct guestContext
   u32int R14_UND;
   u32int SPSR_UND;
   u32int endOfBlockInstr;
+  u16int endOfBlockHalfInstr;
   u32int (*hdlFunct)(GCONTXT * context);
   CREG * coprocRegBank;
   BCENTRY * blockCache;
@@ -86,7 +87,6 @@ struct guestContext
   bool guestDataAbtPending;
   bool guestPrefetchAbtPending;
   bool guestIdle;
-  bool halfword; // 1 -> High halfword, 0 -> Low halfword
 };
 
 

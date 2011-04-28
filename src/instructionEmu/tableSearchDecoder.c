@@ -28,20 +28,20 @@ struct TopLevelCategory categories[] = {
 
 //Thumb 16-bit
 struct TopLevelCategory t16categories[] = {
-{T16_UNCONDITIONALS_CATEGORY,		0xE000, 0xE000},
+{T16_UNCONDITIONALS_CATEGORY,			0xE000, 0xE000},
 {T16_CONDITIONAL_BRANCH_AND_SVC_CALL,	0xD000, 0xD000},
-{T16_LOAD_MULTIPLE_REGISTERS,		0xC800, 0xC800},
-{T16_STORE_MULTIPLE_REGISTERS,		0xC000, 0xC000},
-{T16_MISC,				0xB000, 0xB000},
-{T16_SP_ADDR,				0xA800, 0xA800},
-{T16_PC_ADDR,				0xA000, 0xA000},
-{T16_LOAD_STORE,			0x8000, 0x8000},
-{T16_LOAD_STORE,			0x6000, 0x6000},
-{T16_LOAD_STORE,			0x5000, 0x5000},
-{T16_LDR,				0x4800, 0x4800},
-{T16_SPECIAL_AND_BRANCH_EXCHANGE,	0x4400, 0x4400},
-{T16_DATA_PROC,				0x4000, 0x4400},
-{T16_SHIFT,				0x0000, 0x0000}
+{T16_LOAD_MULTIPLE_REGISTERS,			0xC800, 0xC800},
+{T16_STORE_MULTIPLE_REGISTERS,			0xC000, 0xC000},
+{T16_MISC,								0xB000, 0xB000},
+{T16_SP_ADDR,							0xA800, 0xA800},
+{T16_PC_ADDR,							0xA000, 0xA000},
+{T16_LOAD_STORE,						0x8000, 0x8000},
+{T16_LOAD_STORE,						0x6000, 0x6000},
+{T16_LOAD_STORE,						0x5000, 0x5000},
+{T16_LDR,								0x4800, 0x4800},
+{T16_SPECIAL_AND_BRANCH_EXCHANGE,		0x4400, 0x4400},
+{T16_DATA_PROC,							0x4000, 0x4000},
+{T16_SHIFT,								0x3C00, 0x3C00}
 };
 
 
@@ -559,20 +559,46 @@ struct instruction32bit svcCoprocInstructions[] = {
 {-1, &undefinedInstruction, 0x00000000, 0x00000000, UNDEFINED_INSTRUCTION}
 };
 
+//-----------------------	THUMB INSTRUCTIONS	--------------------------//
+
+struct instruction32bit t16MiscInstructions[] = {
+{0, &stmInstruction, 0x0400, 0x0400, "PUSH {reglist}"},
+{0, &subInstruction, 0x0080, 0x0080, "SUB SP,SP,<imm7"}
+};
+
+struct instruction32bit t16LoadStoreInstructions[] = {
+{0, &strInstruction, 0x9000, 0x9000, "STR Rd, <imm8>"}
+};
+
+
+struct instruction32bit t32DataProcInstructions[] = {
+{0, &movInstruction, 	0x02400000, 0x02400000, "MOVW<c> <Rd>, #<imm12>"},
+{0, &movtInstruction, 	0x02C00000, 0x2C000000, "MOVT<c> <Rd>, #<imm16>"},
+};
+
+
+struct instruction32bit t32BranchMisc[] = {
+{1, &bInstruction,	0x00009000, 0x00009000, "B <imm17>"},
+{1, &bInstruction,	0x0000C000, 0x0000C000, "BL,(BLX), #<imm21>"},
+{1, &bInstruction,  0x0000D000, 0x0000D000, "BL,(BLX), #<imm21>"},
+};
 
 
 struct instruction32bit * decodeInstr(u32int instr)
 {
   
   GCONTXT* gc = getGuestContext();
-  u32int catCode = decodeTopLevelCategory(instr);
-  
+  u32int catCode = decodeTopLevelCategory(instr); 
   // Check the status of T bit again
   if(gc->CPSR & T_BIT)
   {
-	switch(instr & THUMB32)
+    printf("Code %x\n",catCode);
+	switch(instr & THUMB32<<16)
 	{
-		case THUMB32_1 || THUMB32_2 || THUMB32_3:
+		// instr is 32-bit so THUMB32 defs need to be extended to 32-bit
+		case THUMB32_1<<16:
+		case THUMB32_2<<16:
+		case THUMB32_3<<16:
 		{
 			switch(catCode){
 				case T32_LOAD_STORE_MULTIPLE:
@@ -706,8 +732,11 @@ u32int decodeTopLevelCategory(u32int instr)
 	if(gc->CPSR & T_BIT)
   	{
   		// we are in Thumb mode
-		switch(instr & THUMB32){
-			case THUMB32_1 || THUMB32_2 || THUMB32_3:
+		switch(instr & THUMB32<<16){
+			// Extend definitions to 32-bit
+			case THUMB32_1<<16:
+			case THUMB32_2<<16:
+			case THUMB32_3<<16:
 			{
 				if ( (instr & t32categories[index].mask) == t32categories[index].value)
 				{
@@ -939,127 +968,169 @@ void dumpInstruction(char * msg, u32int instr)
 // Thumb-2 32-bit functions
 struct instruction32bit * t32decodeLoadStoreMultiple(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 1");
 }
 
 struct instruction32bit * t32decodeLoadStoreDoubleExclusive(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 2");
 }
 
 struct instruction32bit * t32decodeDataProc(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+
+//#ifdef DECODER_DEBUG
+  printf("t32decodeDataProc %08x\n", instr);
+//#endif
+  u32int index = 0;
+  while (TRUE)
+  {
+    if ( (instr & t32DataProcInstructions[index].mask) == t32DataProcInstructions[index].value)
+    {
+      if (t32DataProcInstructions[index].mask == 0)
+      {
+        dumpInstruction("t32decodeDataProc", instr);
+      }
+      return &t32DataProcInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  DIE_NOW(getGuestContext(), "decoder: t32decodeDataProc unimplemented");
+  return 0;
 }
 
 struct instruction32bit * t32decodeCoproc(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 4");
 }
 
 struct instruction32bit * t32decodeBranchMisc(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 5");
 }
 
 struct instruction32bit * t32decodeStoreSingle(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 6");
 }
 
 struct instruction32bit * t32decodeSimdStructLoadStore(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 7");
 }
 
 struct instruction32bit * t32decodeLoadByte(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 8");
 }
 
 struct instruction32bit * t32decodeLoadHalfWord(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 9");
 }
 
 struct instruction32bit * t32decodeLoadWord(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 10");
 }
 
 struct instruction32bit * t32decodeMultiply(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 11");
 }
 
 struct instruction32bit * t32decodeLongMultiply(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 12");
 }
 
 
 // Thumb-2 16-bit functions
 struct instruction32bit * t16decodeUnconditionals(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+  dumpInstruction("decodeUnconditional", instr);
 }
 
 struct instruction32bit * t16decodeConditionalBranchSVC(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 14");
 }
 
 struct instruction32bit * t16decodeLoadMultipleRegisters(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 15");
 }
 
 struct instruction32bit * t16decodeStoreMultipleRegisters(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 16");
 }
 
 struct instruction32bit * t16decodeMisc(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+
+//#ifdef DECODER_DEBUG
+  printf("t16decodeMisc %08x\n", instr);
+//#endif
+  u32int index = 0;
+  while (TRUE)
+  {
+    if ( (instr & t16MiscInstructions[index].mask) == t16MiscInstructions[index].value)
+    {
+      if (t16MiscInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodeBranchBlockTransfer", instr);
+      }
+      return &t16MiscInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  DIE_NOW(getGuestContext(), "decoder: t16MiscInstruction unimplemented");
+  return 0;
 }
 
 struct instruction32bit * t16decodeSPAddr(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 17");
 }
 
 struct instruction32bit * t16decodePCAddr(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 18");
 }
 
 struct instruction32bit * t16decodeLoadStore(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 19");
 }
 
 struct instruction32bit * t16decodeLDR(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 20");
 }
 
 struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 21");
 }
 
 struct instruction32bit * t16decodeDataProc(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 22");
 }
 
 struct instruction32bit * t16decodeShift(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 23");
 }
 
 struct instruction16bit * t32tot16(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented");
+	DIE_NOW(0,"Unimplemented 24");
 }
