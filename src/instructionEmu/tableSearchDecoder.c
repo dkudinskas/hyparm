@@ -570,6 +570,9 @@ struct instruction32bit t16LoadStoreInstructions[] = {
 {0, &strInstruction, 0x9000, 0x9000, "STR Rd, <imm8>"}
 };
 
+struct instruction32bit t16UnconditionalInstructions[] = {
+{1, &bInstruction, 0xE000, 0xE000, "B<c> #<imm8>"}
+};
 
 struct instruction32bit t32DataProcInstructions[] = {
 {0, &movInstruction, 0xF6400000, 0xF6400000, "MOVW<c> <Rd>, #<imm12>"},
@@ -1076,7 +1079,27 @@ struct instruction32bit * t32decodeLongMultiply(u32int instr)
 // Thumb-2 16-bit functions
 struct instruction32bit * t16decodeUnconditionals(u16int instr)
 {
-   DIE_NOW(0,"Unimplemented 13");
+//#ifdef DECODER_DEBUG
+  printf("t16UnConditional %08x\n", instr);
+//#endif
+  u32int index = 0;
+  while (TRUE)
+  {
+    if ( (instr & t16UnconditionalInstructions[index].mask) == t16UnconditionalInstructions[index].value)
+    {
+      if (t16UnconditionalInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16UnConditional", instr);
+      }
+      return &t16UnconditionalInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  DIE_NOW(getGuestContext(), "decoder: t16UnconditionalInstruction unimplemented");
+  return 0;
 }
 
 struct instruction32bit * t16decodeConditionalBranchSVC(u16int instr)
