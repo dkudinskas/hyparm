@@ -1219,7 +1219,7 @@ u32int bInstruction(GCONTXT * context)
   u32int instr = context->endOfBlockInstr;
   u32int instrCC = 0;
   u32int sign = 0;
-  u32int link;
+  u32int link = 0 ;
   int target = 0;
   u32int nextPC = 0;
   bool isthumb32 = FALSE;
@@ -1336,7 +1336,7 @@ u32int bInstruction(GCONTXT * context)
   }
 
    /* eval condition flags only for Thumb-2 first encoding or ARM encoding*/
-  if( (context->CPSR & T_BIT && ( (instr & 0x00008000) == 0 ) && isthumb32 ) || !(context->CPSR & T_BIT) )
+  if( (context->CPSR & T_BIT && ( (instr & 0x00008000) == 0 ) && isthumb32 ) || !(context->CPSR & T_BIT) || (context->CPSR & T_BIT && ( (instr & 0x0000D000) == 0x0000D000 ) && !isthumb32 ) )
   {
   	u32int cpsrCC = (context->CPSR >> 28) & 0xF;
   	bool conditionMet = evalCC(instrCC, cpsrCC);
@@ -1347,6 +1347,11 @@ u32int bInstruction(GCONTXT * context)
    	 if(context->CPSR & T_BIT)
 	 {
 	 	currPC += 4;
+		//pipeline fix
+		if(!isthumb32)
+		{
+			currPC += 2;
+		}
 	 }
 	 else
 	 {

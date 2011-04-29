@@ -561,6 +561,11 @@ struct instruction32bit svcCoprocInstructions[] = {
 
 //-----------------------	THUMB INSTRUCTIONS	--------------------------//
 
+struct instruction32bit t16ConditionalBranchSvcInstructions[] = {
+{1, &svcInstruction, 0xDF00, 0xFF00, "SVC call"},
+{1, &bInstruction, 0xD000, 0xFE00, "B<c> <label>"}
+};
+
 struct instruction32bit t16SpecialBranchInstructions[] = {
 {0, &movInstruction, 0x4600, 0x4600, "MOV{L} Rd, Rm"},
 {1, &movInstruction, 0x4687, 0x4687, "MOV{H} PC, Rm"},
@@ -1179,7 +1184,27 @@ struct instruction32bit * t16decodeUnconditionals(u16int instr)
 
 struct instruction32bit * t16decodeConditionalBranchSVC(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented 14");
+//#ifdef DECODER_DEBUG
+  printf("t16ConditionalBranchSvc %08x\n", instr);
+//#endif
+  u32int index = 0;
+  while (TRUE)
+  {
+    if ( (instr & t16ConditionalBranchSvcInstructions[index].mask) == t16ConditionalBranchSvcInstructions[index].value)
+    {
+      if (t16ConditionalBranchSvcInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16ConditionalBranchSvc", instr);
+      }
+      return &t16ConditionalBranchSvcInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  DIE_NOW(getGuestContext(), "decoder: t16UnconditionalInstruction unimplemented");
+  return 0;
 }
 
 struct instruction32bit * t16decodeLoadMultipleRegisters(u16int instr)
