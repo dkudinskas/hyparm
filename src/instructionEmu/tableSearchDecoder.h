@@ -28,7 +28,7 @@
 #define T16_LDR								0x8
 #define T16_SPECIAL_AND_BRANCH_EXCHANGE		0x9
 #define T16_DATA_PROC						0xA
-#define T16_SHIFT							0xB
+#define T16_ARITHMETIC						0xB
 
 #define T32_LOAD_STORE_MULTIPLE				0x0
 #define T32_LOAD_STORE_DOUBLE_EXCLUSIVE		0x1
@@ -111,7 +111,7 @@ struct instruction32bit * t16decodeLoadStore(u16int instr);
 struct instruction32bit * t16decodeLDR(u16int instr);
 struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr);
 struct instruction32bit * t16decodeDataProc(u16int instr);
-struct instruction32bit * t16decodeShift(u16int instr);
+struct instruction32bit * t16decodeArithmetic(u16int instr);
 
 struct instruction16bit * t32tot16(u32int instr);
 #endif

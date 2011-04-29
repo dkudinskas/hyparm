@@ -238,7 +238,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 		*currhwAddress = INSTR_NOP_THUMB;
 		currhwAddress += 2; // go 4 bytes ahead
 		halfinstruction=*currhwAddress; // this holds the high halfword of the word holding the 2nd Thumb-32 halfword
-		*currAddress = (halfinstruction<<16)|(INSTR_SWI_THUMB | (( bcIndex +1 )<<7));
+		*currAddress = (halfinstruction<<16)|(INSTR_SWI_THUMB | (( bcIndex +1 ) & 0xFF)); // keep only the lowest 8 bits
 		printf("Thumb svc on %08x\n",(u32int)currAddress);
 #ifdef CONFIG_DECODER_TABLE_SEARCH
 	    gc->hdlFunct = decodedInstruction->hdlFunct;

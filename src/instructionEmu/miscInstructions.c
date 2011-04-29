@@ -7,8 +7,8 @@
 
 #include "guestManager/scheduler.h"
 #include "guestManager/guestExceptions.h"
+#include "instructionEmu/decoder.h"
 
-#define T_BIT 	0x20
 u32int nopInstruction(GCONTXT * context)
 {
   printf("ERROR: NOP instr %08x @ %08x should not have trapped!\n",
@@ -1222,6 +1222,7 @@ u32int bInstruction(GCONTXT * context)
   u32int link;
   int target = 0;
   u32int nextPC = 0;
+  bool isthumb32 = FALSE;
   
 #ifdef ARM_INSTR_TRACE
   printf("Branch instr %08x @ %08x\n", instr, context->R15);
@@ -1229,31 +1230,76 @@ u32int bInstruction(GCONTXT * context)
   // Are we on Thumb?
   if (context->CPSR & T_BIT)
   {
-    /* Reconstruct instruction */
-	if(!halfinstr) // !0 -> half instruction from previous word
+    /* Reconstruct instruction (just for Thumb 32bit). Check the previous halfword
+	 * for Thumb 32bit encoding and attach the next one if needed
+	 */
+	switch(halfinstr & THUMB32)
+	{
+		case THUMB32_1:
+		case THUMB32_2:
+		case THUMB32_3:
+			isthumb32 = TRUE;
+			break;
+		default:
+		{
+			isthumb32 = FALSE;
+			// adjust instruction. Keep only the right halfword
+			instr = 0x0000FFFF & instr;
+			break;
+		}
+	}
+
+	if(!halfinstr || isthumb32) // !0 -> half instruction from previous word
 	{
 		instr=(halfinstr<<16)|(instr & 0x0000FFFF);
 	}
 	// B has 2 different encodings in Thumb-2. Find out which one is
 	// WHAT A MESS! -> ARM-A manual : page 344
-	sign = ( (instr & 0x04000000 ) >> 26 );
-	u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
-	u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
-	target = (sign<<24)|(i1<<23)|(i2<<22)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
+	if(isthumb32)
+	{
+		sign = ( (instr & 0x04000000 ) >> 26 );
+		u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
+		u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
+		target = (sign<<24)|(i1<<23)|(i2<<22)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
 
-	if((instr & 0x00008000) == 0)
+		if((instr & 0x00008000) == 0)
+		{	
+			instrCC = (0x03C00000 & instr) >> 22;
+		}
+		link = 0x00005000 & instr;
+		if (link == 0x00005000 || link == 0x00004000)
+		{
+			link = 1 ;
+		}
+		else
+		{
+			link = 0;
+		}
+  	}
+	else // thumb 16bit
 	{
-	
-		instrCC = (0x03C00000 & instr) >> 22;
-	}
-	link = 0x00005000 & instr;
-	if (link == 0x00005000 || link == 0x00004000)
-	{
-		link = 1 ;
-	}
-	else
-	{
-		link = 0;
+		/* Yet again we have two encodings *sigh*
+		 * 1101<cond><8-bit imm> or
+		 * 11100<11-bit imm>
+		 */
+		if((instr & 0x0000D000) == 0x0000D000) // 8-bit imm
+		{
+			instrCC = (0x0F00 & instr) >> 8;
+			target = 0x00FF & instr;
+			if(instrCC == 0xE)
+			{
+				DIE_NOW(0,"Thumb-16 bit branch instruction is UNDEFINED. Unimplemented");
+			}
+			else if(instrCC == 0xF)
+			{
+				DIE_NOW(0,"Thumb-16 bit branch instruction is an SVC. Transition Unimplemented");
+			}
+			target = 0x00FF & instr;
+		}
+		else if((instr & 0x0000D000) == 0x0000C000) // 11-bit imm
+		{
+			target = instr & 0x07FF;
+		}
 	}
   }
   // ARM Mode
@@ -1290,7 +1336,7 @@ u32int bInstruction(GCONTXT * context)
   }
 
    /* eval condition flags only for Thumb-2 first encoding or ARM encoding*/
-  if( (context->CPSR & T_BIT && ( (instr & 0x00008000) == 0 ) ) || !(context->CPSR & T_BIT) )
+  if( (context->CPSR & T_BIT && ( (instr & 0x00008000) == 0 ) && isthumb32 ) || !(context->CPSR & T_BIT) )
   {
   	u32int cpsrCC = (context->CPSR >> 28) & 0xF;
   	bool conditionMet = evalCC(instrCC, cpsrCC);
@@ -1333,11 +1379,20 @@ u32int bInstruction(GCONTXT * context)
     }
   }
   // Thumb-2 second encoding were no CC flags exist. Store to R14 anyway
+  // OR thumb-2 16-bit encoding ( no link )
   else
   {
-   	 storeGuestGPR(14, context->R15+2, context);
+   	 if(isthumb32)
+	 {
+	 	storeGuestGPR(14, context->R15+2, context);
+	 }
      u32int currPC = context->R15;
    	 currPC += 4;
+	 //pipeline correction.
+	 if(!isthumb32)
+	 {
+	 	currPC += 2;
+	 }
    	 nextPC = currPC + target;
   }
   return nextPC;
