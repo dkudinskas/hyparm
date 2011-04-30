@@ -20,6 +20,7 @@ typedef u32int (*instructionHandler)(GCONTXT * context);
 #define LHALF			0x01
 #define HHALF			0x02
 #define WTHUMB32		0x03
+#define WHTHUMB32		0x04
 
 #ifdef CONFIG_DECODER_TABLE_SEARCH
 # include "instructionEmu/tableSearchDecoder.h"

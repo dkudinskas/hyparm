@@ -73,7 +73,6 @@ void softwareInterrupt(u32int code)
     instrHandler = gContext->hdlFunct;
     nextPC = instrHandler(gContext);
   }
-
   if (nextPC == 0)
   {
     DIE_NOW(gContext, "softwareInterrupt: Invalid nextPC. Instr to implement?");

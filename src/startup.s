@@ -339,7 +339,7 @@ continue1:
     MOV     R0, LR
     LDR		R3, =guestContextCPSR
 	LDR		R3, [R3]
-	AND 	R4, #0x20
+	AND 	R4, R3, #0x20
 	CMP		R4, #0x20
 	SUBNE   R0, R0, #4 @ARM
 	SUBEQ	R0, R0, #2 @Thumb

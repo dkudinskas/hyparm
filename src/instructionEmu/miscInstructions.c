@@ -19,29 +19,37 @@ u32int nopInstruction(GCONTXT * context)
 
 u32int bxInstruction(GCONTXT * context)
 {
-  u32int instr = context->endOfBlockInstr;
-  
+  u32int instr = 0;
   u32int nextPC = 0;
-
-  u32int instrCC = (instr >> 28) & 0xF;
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-
-  if (!evalCC(instrCC, cpsrCC))
+  u32int regDest = 0;
+  u32int addr = 0;
+  if(context->CPSR & T_BIT)
   {
-      nextPC = context->R15 + 4;
-      return nextPC;
+  		instr=decodeThumbInstr(context);
+		//this has NO 32-bit Thumb encoding
+		regDest = (instr & 0x0078)>>3;
+		nextPC = loadGuestGPR(regDest, context);
+  		printf("blx nextPC: %08x\n",nextPC);
   }
-
-  //check if switching to thumb mode
-  u32int regDest = (instr & 0x0000000F);
-  u32int addr = loadGuestGPR(regDest, context);
-
-  if (addr & 0x1)
+  else
   {
-    DIE_NOW(context, "BX Rm switching to Thumb. Unimplemented\n");
+	  instr = context->endOfBlockInstr;
+	  u32int instrCC =(instr >> 28) & 0xF;
+	  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
+	  if (!evalCC(instrCC, cpsrCC))
+  	  {
+      	nextPC = context->R15 + 4;
+	    return nextPC;
+  	  }
+	  //check if switching to thumb mode
+	  regDest = (instr & 0x0000000F);
+  	  addr = loadGuestGPR(regDest, context);
+	  if (addr & 0x1)
+  	  {
+    	DIE_NOW(context, "BX Rm switching to Thumb. Unimplemented\n");
+	  }
+      nextPC = addr & 0xFFFFFFFE;
   }
-
-  nextPC = addr & 0xFFFFFFFE;
   return nextPC;
 }
 
@@ -346,6 +354,12 @@ u32int qadd8Instruction(GCONTXT * context)
 u32int qaddsubxInstruction(GCONTXT * context)
 {
   DIE_NOW(context, "QADDSUBX unfinished\n");
+  return 0;
+}
+
+u32int ubxInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "UBXT unfinished\n");
   return 0;
 }
 
@@ -1222,7 +1236,7 @@ u32int bInstruction(GCONTXT * context)
   int target = 0;
   u32int nextPC = 0;
   bool thumb32 = FALSE;
-  
+  bool bl32 = FALSE;
 #ifdef ARM_INSTR_TRACE
   printf("Branch instr %08x @ %08x\n", instr, context->R15);
 #endif
@@ -1231,29 +1245,56 @@ u32int bInstruction(GCONTXT * context)
   {
 	instr = decodeThumbInstr(context);
 	thumb32 = isThumb32(instr);
-	// B has 2 different encodings in Thumb-2. Find out which one is
 	// WHAT A MESS! -> ARM-A manual : page 344
+	// B and BL have different encoding. Find which one is it
 	if(thumb32)
 	{
-		sign = ( (instr & 0x04000000 ) >> 26 );
-		u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
-		u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
-		target = (sign<<24)|(i1<<23)|(i2<<22)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
-
-		if((instr & 0x00008000) == 0)
-		{	
-			instrCC = (0x03C00000 & instr) >> 22;
-		}
-		link = 0x00005000 & instr;
-		if (link == 0x00005000 || link == 0x00004000)
+		if(instr & 0x00004000)
 		{
-			link = 1 ;
+			bl32 = TRUE;
 		}
 		else
 		{
-			link = 0;
+			bl32 = FALSE;
 		}
-  	}
+		if(!bl32)
+		{	
+			sign = ( (instr & 0x04000000 ) >> 26 );
+			u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
+			u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
+			target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
+			if((instr & 0x00008000) == 0)
+			{	
+				instrCC = (0x03C00000 & instr) >> 22;
+			}
+			link = 0x00005000 & instr;
+			if (link == 0x00005000 || link == 0x00004000)
+			{
+				link = 1 ;
+			}
+			else
+			{
+				link = 0;
+			}
+  		}
+		else // BL thumb 32
+		{
+			sign = ( (instr & 0x04000000 ) >> 26 );
+			u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
+			u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
+			// which encoding is it?
+			if(instr & 0x00001000)
+			{
+				target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
+				printf("Target %08x\n",target);
+			}
+			else
+			{
+				target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000003FF);
+				target = target << 1; // <-- remember me
+			}
+		}
+	}
 	else // thumb 16bit
 	{
 		/* Yet again we have two encodings *sigh*
@@ -1273,10 +1314,12 @@ u32int bInstruction(GCONTXT * context)
 				DIE_NOW(0,"Thumb-16 bit branch instruction is an SVC. Transition Unimplemented");
 			}
 			target = 0x00FF & instr;
+			sign = target >> 7;
 		}
 		else if((instr & 0x0000D000) == 0x0000C000) // 11-bit imm
 		{
 			target = instr & 0x07FF;
+			sign = target >> 10;
 		}
 	}
   }
@@ -1297,13 +1340,37 @@ u32int bInstruction(GCONTXT * context)
     	link = 0;
     }
   }
-
+  
   // sign extend 24 bit imm to 32 bit offset
   if (sign != 0)
   {
     // target negative!
-    target |= 0xFF000000;
+    if(context->CPSR & T_BIT)
+	{
+		printf("instr:%08x, negative\n",instr);
+		if(thumb32)
+		{
+			target |= 0xFF000000;
+		}
+		else
+		{
+			//which thumb 16 bit is?
+			if((instr & 0x0000D000) == 0x0000D000) // 8-bit imm
+			{
+				target |= 0xFFFFFF00;
+			}
+			else //11-bit
+			{
+				target |= 0xFFFFFE00;
+			}
+		}
+	}
+	else //ARM
+	{
+		target |= 0xFF000000;
+	}
   }
+
   if(context->CPSR & T_BIT)
   {
   	target = target << 1;
@@ -1314,7 +1381,7 @@ u32int bInstruction(GCONTXT * context)
   }
 
    /* eval condition flags only for Thumb-2 first encoding or ARM encoding*/
-  if( (context->CPSR & T_BIT && ( (instr & 0x00008000) == 0 ) && thumb32 ) || !(context->CPSR & T_BIT) || (context->CPSR & T_BIT && ( (instr & 0x0000D000) == 0x0000D000 ) && !thumb32 ) )
+  if( (context->CPSR & T_BIT && thumb32 && !bl32 ) || !(context->CPSR & T_BIT) || (context->CPSR & T_BIT && ( (instr & 0x0000D000) == 0x0000D000 ) && !thumb32 ) )
   {
   	u32int cpsrCC = (context->CPSR >> 28) & 0xF;
   	bool conditionMet = evalCC(instrCC, cpsrCC);
@@ -1325,27 +1392,17 @@ u32int bInstruction(GCONTXT * context)
    	 if(context->CPSR & T_BIT)
 	 {
 	 	currPC += 4;
-		//pipeline fix
-		if(!thumb32)
-		{
-			currPC += 2;
-		}
+		nextPC = currPC + target;
+		printf("new PC: %08x\n",nextPC);
 	 }
 	 else
 	 {
 	 	currPC += 8;
+	  	nextPC = currPC + target;
 	 }
-   	 nextPC = currPC + target;
    	 if (link)
   	 {
-		if(context->CPSR & T_BIT )
-		{
-			storeGuestGPR(14, context->R15+2, context);
-		}
-		else
-		{
-			storeGuestGPR(14, context->R15+4, context);
-		}
+		storeGuestGPR(14, context->R15+4, context);
   	 }
 	}
     else
@@ -1353,15 +1410,8 @@ u32int bInstruction(GCONTXT * context)
     	// condition not met!
 	    if(context->CPSR & T_BIT)
 		{
-			//pipeline fix
-			if(!thumb32)
-			{
-				nextPC = context->R15 + 4; // 2 + 2(pipeline adjustment)
-			}
-			else
-			{
-				nextPC = context->R15 + 2;
-			}
+			nextPC = context->R15 + 2;
+			printf("new PC: %08x\n",nextPC);
 		}
 		else
 		{
@@ -1373,18 +1423,20 @@ u32int bInstruction(GCONTXT * context)
   // OR thumb-2 16-bit encoding ( no link )
   else
   {
-   	 if(thumb32)
+   	 printf("Target: %08x\n",target);
+	 if(bl32)
 	 {
 	 	storeGuestGPR(14, context->R15+2, context);
 	 }
      u32int currPC = context->R15;
-   	 currPC += 4;
-	 //pipeline correction.
+   	 currPC += 2;
 	 if(!thumb32)
 	 {
-	 	currPC += 2;
+	 	//pipeline fix
+		currPC += 2;
 	 }
    	 nextPC = currPC + target;
+	 printf("new PC: %08x\n",nextPC);
   }
   return nextPC;
 }

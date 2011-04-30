@@ -49,11 +49,11 @@ struct TopLevelCategory t16categories[] = {
 struct TopLevelCategory t32categories[] = {
 {T32_LOAD_STORE_MULTIPLE,		0xFE400000,0xE8000000},
 {T32_LOAD_STORE_DOUBLE_EXCLUSIVE,	0xFE400000,0xE8400000},
+{T32_BRANCH_AND_MISC,		0xF8008000,0xF0008000},
 {T32_DATA_PROC,				0xFE000000,0xEA000000},
 {T32_COPROC,				0xFC000000,0xEC000000},
 {T32_DATA_PROC,				0xFA008000,0xF0000000},
 {T32_DATA_PROC,				0xF2000000,0xF2000000},
-{T32_BRANCH_AND_MISC,		0xF8008000,0xF0008000},
 {T32_STORE_SINGLE,			0xF8100000,0xF8000000},
 {T32_SIMD_STRUCT_LOAD_STORE,	0xF9000000,0xF9000000},
 {T32_LOAD_BYTE,				0xFE100000,0xF8100000},
@@ -563,10 +563,11 @@ struct instruction32bit svcCoprocInstructions[] = {
 
 struct instruction32bit t16ConditionalBranchSvcInstructions[] = {
 {1, &svcInstruction, 0xDF00, 0xFF00, "SVC call"},
-{1, &bInstruction, 0xD000, 0xFE00, "B<c> <label>"}
+{1, &bInstruction, 0xD000, 0xF000, "B<c> <label>"}
 };
 
 struct instruction32bit t16SpecialBranchInstructions[] = {
+{1, &bxInstruction, 0x4700, 0xFF80, "BX<c> <Rm>"},
 {0, &movInstruction, 0x4600, 0x4600, "MOV{L} Rd, Rm"},
 {1, &movInstruction, 0x4687, 0x4687, "MOV{H} PC, Rm"},
 {0, &movInstruction, 0x4600, 0x4600, "MOV{H} Rd, Rm"}
@@ -574,7 +575,8 @@ struct instruction32bit t16SpecialBranchInstructions[] = {
 
 struct instruction32bit t16MiscInstructions[] = {
 {0, &stmInstruction, 0x0400, 0x0400, "PUSH {reglist}"},
-{0, &subInstruction, 0x0080, 0x0080, "SUB SP,SP,<imm7"}
+{0, &subInstruction, 0x0080, 0x0080, "SUB SP,SP,<imm7"},
+{0, &uxtbInstruction, 0x02C0, 0x0FC0, "UXTB<c> <Rd>, <Rm>"}
 };
 
 struct instruction32bit t16LoadStoreInstructions[] = {
@@ -604,7 +606,10 @@ struct instruction32bit t32DataProcInstructions[] = {
 {0, &movInstruction, 0xF45F0000, 0xF45F0000, "MOV{S}<c>.W <Rd>, #<imm12>"},
 {0, &movInstruction, 0xF04F0000, 0xF45F0000, "MOV{S}<c>.W <Rd>, #imm12>"},
 {0, &movInstruction, 0xF05F0000, 0xF45F0000, "MOV{S}<c>.W <Rd>, #imm12>"},
-{0, &movtInstruction, 0x02C00000, 0x2C000000, "MOVT<c> <Rd>, #<imm16>"}
+{0, &movtInstruction, 0x02C00000, 0x2C000000, "MOVT<c> <Rd>, #<imm16>"},
+//trap for RD=15
+{1, &andInstruction, 0xF0000F00, 0xFBE08F00, "AND{S}<c> PC, <Rm>, #<imm12>"},
+{0, &andInstruction, 0xF0000000, 0xFBE08000, "AND{S}<c> <Rd>, <Rm>, #<imm12>"}
 };
 
 struct instruction32bit t32SingleStoreInstructions[] = {
@@ -1292,7 +1297,8 @@ struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr)
   u32int index = 0;
   while (TRUE)
   {
-    if ( (instr & t16SpecialBranchInstructions[index].mask) == t16SpecialBranchInstructions[index].value)
+    printf("indx: %08x\n",index);
+	if ( (instr & t16SpecialBranchInstructions[index].mask) == t16SpecialBranchInstructions[index].value)
     {
       if (t16SpecialBranchInstructions[index].mask == 0)
       {

@@ -403,11 +403,11 @@ u32int decodeThumbInstr(GCONTXT *gc)
 	{
 		return instr & 0x0000FFFF;
 	}
-	else if(halfinstr == WTHUMB32)
+	else if(halfinstr == WHTHUMB32) // high halfword is on the low word of the instr
 	{
-		return instr = instr<<16|instr>>16;
+		return instr = (instr<<16)|(instr>>16);
 	}
-	else // part thumb32 halfword in on halfnstr and the next one is on instr
+	else// thumb32 halfword in on halfnstr and the next one is on instr
 	{
 		return instr = (halfinstr<<16)|(instr & 0x0000FFFF);
 	}
