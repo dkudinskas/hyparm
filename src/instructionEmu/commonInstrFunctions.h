@@ -4,7 +4,7 @@
 #include "common/types.h"
 
 #include "guestManager/guestContext.h"
-
+#include "instructionEmu/decoder.h"
 
 /****************** all defines for CPSR (spsr's) ************/
 /* mode field / bits */
@@ -92,5 +92,11 @@ u32int decodeShift(u32int instrShiftType);
 
 // count the number of ones in a 32 bit stream
 u32int countBitsSet(u32int bitstream);
+
+// decode thumb instruction into 32-bit format
+u32int decodeThumbInstr(GCONTXT *gc);
+
+// check whether the instruction is thumb 16 or 32bit
+bool isThumb32(u32int instr);
 
 #endif

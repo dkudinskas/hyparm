@@ -39,7 +39,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   u32int instruction = *currAddress;
   u16int * currhwAddress = 0;
   u16int halfinstruction = 0;
-  bool is16bit = TRUE;
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
 
@@ -64,7 +63,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   // Adjust values for Thumb-2
   if(gc->CPSR & T_BIT)
   {
-    currhwAddress = (u16int*)currAddress;
+	currhwAddress = (u16int*)currAddress;
 	halfinstruction = *currhwAddress;
 	switch(halfinstruction & THUMB32)
 	{
@@ -269,7 +268,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 						currhwAddress++;
 						*currhwAddress = INSTR_SWI_THUMB|((bcIndex+1) & 0xFF);
 						gc->endOfBlockInstr = *currAddress;
-						gc->endOfBlockHalfInstr = 0;
+						gc->endOfBlockHalfInstr = WTHUMB32;
 						break;
 					}
 				}
@@ -300,9 +299,16 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 						//a single 16-bit as well
 						currhwAddress++;
 						// adjust currAddress
+						if(((u32int)currAddress & 0x3) < 0x2)
+						{
+							gc->endOfBlockHalfInstr = LHALF;
+						}
+						else
+						{
+							gc->endOfBlockHalfInstr = HHALF;
+						}
 						currAddress = (u32int*)((u32int)currAddress & 0xFFFFFFFC);
 						gc->endOfBlockInstr = *currAddress;
-						gc->endOfBlockHalfInstr = 0;
 						*currhwAddress=INSTR_SWI_THUMB | ((bcIndex + 1) & 0xFF);
 						break;
 					}

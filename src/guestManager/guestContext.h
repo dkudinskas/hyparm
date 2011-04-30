@@ -58,7 +58,7 @@ struct guestContext
   u32int R14_UND;
   u32int SPSR_UND;
   u32int endOfBlockInstr;
-  u16int endOfBlockHalfInstr;
+  u32int endOfBlockHalfInstr;
   u32int (*hdlFunct)(GCONTXT * context);
   CREG * coprocRegBank;
   BCENTRY * blockCache;

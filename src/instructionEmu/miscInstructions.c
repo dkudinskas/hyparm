@@ -1215,14 +1215,13 @@ u32int mrsInstruction(GCONTXT * context)
 
 u32int bInstruction(GCONTXT * context)
 {
-  u16int halfinstr = context->endOfBlockHalfInstr;
-  u32int instr = context->endOfBlockInstr;
+  u32int instr;
   u32int instrCC = 0;
   u32int sign = 0;
   u32int link = 0 ;
   int target = 0;
   u32int nextPC = 0;
-  bool isthumb32 = FALSE;
+  bool thumb32 = FALSE;
   
 #ifdef ARM_INSTR_TRACE
   printf("Branch instr %08x @ %08x\n", instr, context->R15);
@@ -1230,32 +1229,11 @@ u32int bInstruction(GCONTXT * context)
   // Are we on Thumb?
   if (context->CPSR & T_BIT)
   {
-    /* Reconstruct instruction (just for Thumb 32bit). Check the previous halfword
-	 * for Thumb 32bit encoding and attach the next one if needed
-	 */
-	switch(halfinstr & THUMB32)
-	{
-		case THUMB32_1:
-		case THUMB32_2:
-		case THUMB32_3:
-			isthumb32 = TRUE;
-			break;
-		default:
-		{
-			isthumb32 = FALSE;
-			// adjust instruction. Keep only the right halfword
-			instr = 0x0000FFFF & instr;
-			break;
-		}
-	}
-
-	if(!halfinstr || isthumb32) // !0 -> half instruction from previous word
-	{
-		instr=(halfinstr<<16)|(instr & 0x0000FFFF);
-	}
+	instr = decodeThumbInstr(context);
+	thumb32 = isThumb32(instr);
 	// B has 2 different encodings in Thumb-2. Find out which one is
 	// WHAT A MESS! -> ARM-A manual : page 344
-	if(isthumb32)
+	if(thumb32)
 	{
 		sign = ( (instr & 0x04000000 ) >> 26 );
 		u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
@@ -1336,7 +1314,7 @@ u32int bInstruction(GCONTXT * context)
   }
 
    /* eval condition flags only for Thumb-2 first encoding or ARM encoding*/
-  if( (context->CPSR & T_BIT && ( (instr & 0x00008000) == 0 ) && isthumb32 ) || !(context->CPSR & T_BIT) || (context->CPSR & T_BIT && ( (instr & 0x0000D000) == 0x0000D000 ) && !isthumb32 ) )
+  if( (context->CPSR & T_BIT && ( (instr & 0x00008000) == 0 ) && thumb32 ) || !(context->CPSR & T_BIT) || (context->CPSR & T_BIT && ( (instr & 0x0000D000) == 0x0000D000 ) && !thumb32 ) )
   {
   	u32int cpsrCC = (context->CPSR >> 28) & 0xF;
   	bool conditionMet = evalCC(instrCC, cpsrCC);
@@ -1348,7 +1326,7 @@ u32int bInstruction(GCONTXT * context)
 	 {
 	 	currPC += 4;
 		//pipeline fix
-		if(!isthumb32)
+		if(!thumb32)
 		{
 			currPC += 2;
 		}
@@ -1375,7 +1353,15 @@ u32int bInstruction(GCONTXT * context)
     	// condition not met!
 	    if(context->CPSR & T_BIT)
 		{
-			nextPC = context->R15 + 2;
+			//pipeline fix
+			if(!thumb32)
+			{
+				nextPC = context->R15 + 4; // 2 + 2(pipeline adjustment)
+			}
+			else
+			{
+				nextPC = context->R15 + 2;
+			}
 		}
 		else
 		{
@@ -1387,14 +1373,14 @@ u32int bInstruction(GCONTXT * context)
   // OR thumb-2 16-bit encoding ( no link )
   else
   {
-   	 if(isthumb32)
+   	 if(thumb32)
 	 {
 	 	storeGuestGPR(14, context->R15+2, context);
 	 }
      u32int currPC = context->R15;
    	 currPC += 4;
 	 //pipeline correction.
-	 if(!isthumb32)
+	 if(!thumb32)
 	 {
 	 	currPC += 2;
 	 }

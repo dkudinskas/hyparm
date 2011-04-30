@@ -389,3 +389,38 @@ u32int countBitsSet(u32int bitstream)
   }
   return bitsSet;
 }
+
+
+u32int decodeThumbInstr(GCONTXT *gc)
+{
+	u32int instr = gc->endOfBlockInstr;
+	u16int halfinstr = gc->endOfBlockHalfInstr;
+	if(halfinstr == HHALF)
+	{
+		return instr>>16;
+	}
+	else if(halfinstr == LHALF)
+	{
+		return instr & 0x0000FFFF;
+	}
+	else if(halfinstr == WTHUMB32)
+	{
+		return instr = instr<<16|instr>>16;
+	}
+	else // part thumb32 halfword in on halfnstr and the next one is on instr
+	{
+		return instr = (halfinstr<<16)|(instr & 0x0000FFFF);
+	}
+}	
+
+bool isThumb32(u32int instr)
+{
+	if(instr & 0xFFFF0000)
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}

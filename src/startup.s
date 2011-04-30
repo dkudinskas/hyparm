@@ -362,7 +362,7 @@ continue1:
 	CMP		R1, #0x20
 	LDRNE   R0, [LR, #-4] @Thumb bit = 0
     ANDNE   R0, #0xFFFFFF
-	LDREQ	R0, [LR, #-2] @Thumb bit = 1
+	LDREQB	R0, [LR, #-2]
 	ANDEQ	R0, #0x00FF
     BL      softwareInterrupt
     
@@ -843,6 +843,8 @@ guestContextSPSR_UND:
         .space 4
 guestContextEOB_INSTR:
         .space 4
+guestContextEOB_HALFINSTR:
+		.space 4
 guestContextHDL_FUNCT:
         .space 4
 guestContextCRB_ADDRESS:
