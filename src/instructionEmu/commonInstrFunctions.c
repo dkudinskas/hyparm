@@ -401,7 +401,6 @@ u32int decodeThumbInstr(GCONTXT *gc,u32int extinstr)
 		u16int halfinstr = gc->endOfBlockHalfInstr;
 		if(halfinstr == HHALF)
 		{
-			printf("HERE!");
 			return instr>>16;
 		}
 		else if(halfinstr == LHALF)

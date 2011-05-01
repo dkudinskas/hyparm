@@ -15,7 +15,7 @@ struct blockCacheEntry
   u32int startAddress;
   u32int endAddress;
   u32int hyperedInstruction;
-  u16int halfhyperedInstruction;
+  u32int halfhyperedInstruction;
   bool valid;
   u32int hdlFunct;
 };

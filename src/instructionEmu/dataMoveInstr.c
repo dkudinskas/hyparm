@@ -38,12 +38,12 @@ u32int strInstruction(GCONTXT * context)
   u32int baseAddress = 0;
   u32int valueToStore = 0;
   u32int imm32 = 0;
-  thumb32 = isThumb32(instr);
  
   if(context->CPSR & T_BIT)
   {	
 	bool regSP = FALSE; // page 666
 	instr = decodeThumbInstr(context,0);
+	thumb32 = isThumb32(instr);
 	printf("generic %08x\n",instr);
 	if(!thumb32)//16-bit
 	{
@@ -1288,162 +1288,216 @@ u32int popLdmInstruction(GCONTXT * context)
 
 u32int ldmInstruction(GCONTXT * context)
 {
-  u32int instr = context->endOfBlockInstr;
-#ifdef DATA_MOVE_TRACE
-  printf("LDM instruction: %08x @ PC = %08x\n", instr, context->R15);
-#endif
-  u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int prePost = instr & 0x01000000;
-  u32int upDown = instr & 0x00800000;
-  u32int forceUser = instr & 0x00400000;
-  u32int writeback = instr & 0x00200000;
-  u32int baseReg = (instr & 0x000F0000) >> 16;
-  u32int regList = instr & 0x0000FFFF;
-  u32int baseAddress = loadGuestGPR(baseReg, context);
-
-  if ( (baseReg == 15) || (countBitsSet(regList) == 0) )
-  {
-    DIE_NOW(0, "LDM UNPREDICTABLE: base=PC or no registers in list");
-  }
-
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
-  {
-    // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
-  }
-
-  u32int savedCPSR = 0;
-  bool cpySpsr = FALSE;
-  if (forceUser != 0)
-  {
-    // ok, is this exception return, or LDM user mode?
-    if ((instr & 0x00008000) != 0)
-    {
-      // force user bit set and PC in list: exception return
-      cpySpsr = TRUE;
-    }
-    else
-    {
-      // force user bit set and no PC in list: LDM user mode registers
-      savedCPSR = context->CPSR;
-      context->CPSR = (context->CPSR & ~0x1f) | CPSR_MODE_USER;
-    }
-  }
-  
+  u32int instr = 0;
+  u32int prePost = 0;
+  u32int upDown = 0;
+  u32int forceUser = 0;
+  u32int writeback = 0;
+  u32int baseReg = 0;
+  u32int regList = 0;
+  u32int baseAddress = 0;
+  u32int valueLoaded = 0;
+  u32int condcode = 0;
   int i = 0;
-  u32int address = 0;
-  if ( (upDown == 0) && (prePost != 0) ) // LDM decrement before
+  bool thumb32 = FALSE;
+  if(context->CPSR & T_BIT) // Thumb
   {
-    // address = baseAddress - 4*(number of registers to load);
-    address = baseAddress - 4 * countBitsSet(regList);
+  	// we trapped from Thumb mode. I assume the PC reg is in the list
+	instr = decodeThumbInstr(context,0);
+	printf("Thumb POP: %08x\n",instr);
+	thumb32 = isThumb32(instr);
+	if(!thumb32)
+	{
+		if((instr & 0x100) == 0)
+		{
+			DIE_NOW(0,"Thumb POP instruction trapped but PC is not on the list...");
+		}
+		regList = ( (instr & 0x0100) << 15 ) | (instr & 0x00FF);
+		baseReg = 0x0000000D; // hardcode SP register
+		baseAddress = loadGuestGPR(baseReg, context);
+		// for i = 0 to 7. POP accepts only low registers
+	    for (i = 0; i < 7; i++)
+		{
+    		// if current register set
+	    	if ( ((regList >> i) & 0x1) == 0x1)
+	   		{
+    	  		valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
+		     	printf("Storing %08x to %08x\n", valueLoaded, i);
+				storeGuestGPR(i, valueLoaded, context);
+	      		baseAddress = baseAddress + 4;
+		    }
+		} // for ends
+		// and now take care of the PC
+		valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
+		printf("Storing %08x to PC", valueLoaded);
+		storeGuestGPR(0xF, valueLoaded, context);
+		baseAddress += 4;
+		//thumb always update the SP
+		storeGuestGPR(baseReg, baseAddress, context);
+		return context->R15;
+  	}
+	else
+	{
+		DIE_NOW(0,"Thumb ldm unimplemented");
+	}
   }
-  else if ( (upDown == 0) && (prePost == 0) ) // LDM decrement after
+  else // ARM
   {
-    // address = baseAddress - 4*(number of registers to load) + 4;
-    address = baseAddress - 4 * countBitsSet(regList) + 4;
-  }
-  else if ( (upDown != 0) && (prePost != 0) ) // LDM increment before
-  {
-    // address = baseAddress + 4 - will be incremented as we go
-    address = baseAddress + 4;
-  }
-  else if ( (upDown != 0) && (prePost == 0) ) // LDM increment after
-  {
-    // address = baseAddress - will be incremented as we go
-    address = baseAddress;
-  }
-
-  bool isPCinRegList = FALSE;
-  // for i = 0 to 15
-  for (i = 0; i < 16; i++)
-  {
-    // if current register set
-    if ( ((regList >> i) & 0x1) == 0x1)
-    {
-      if (i == 15)
-      {
-        isPCinRegList = TRUE;
-      }
-      // R[i] = *(address);
-      u32int valueLoaded =
-        context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
-      storeGuestGPR(i, valueLoaded, context);
+  	instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-      printf("R[%x] = *(%08x) = %08x\n", i, address, valueLoaded);
+	printf("LDM instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
-      address = address + 4;
-    }
-  } // for ends
+	condcode = (instr & 0xF0000000) >> 28;
+	prePost = instr & 0x01000000;
+	upDown = instr & 0x00800000;
+	forceUser = instr & 0x00400000;
+ 	writeback = instr & 0x00200000;
+ 	baseReg = (instr & 0x000F0000) >> 16;
+ 	regList = instr & 0x0000FFFF;
+	baseAddress = loadGuestGPR(baseReg, context);
 
-  // if writeback then baseReg = baseReg +/- 4 * number of registers to load;
-  if (writeback != 0)
-  {
-    if (upDown == 0)
-    {
-      // decrement
-      baseAddress = baseAddress - 4 * countBitsSet(regList);
-    }
-    else
-    {
-      // increment
-      baseAddress = baseAddress + 4 * countBitsSet(regList);
-    }
-    storeGuestGPR(baseReg, baseAddress, context);
-  }
+	if ( (baseReg == 15) || (countBitsSet(regList) == 0) )
+	  {
+    	DIE_NOW(0, "LDM UNPREDICTABLE: base=PC or no registers in list");
+	  }
 
-  if (forceUser != 0)
-  {
-    // do we need to copy spsr? or return from userland?
-    if (cpySpsr)
-    {
-      // ok, exception return option: restore SPSR to CPSR
-      // SPSR! which?... depends what mode we are in...
-      u32int modeSpsr = 0;
-      switch (context->CPSR & CPSR_MODE_FIELD)
-      {
-        case CPSR_MODE_FIQ:
-          modeSpsr = context->SPSR_FIQ;
-          break;
-        case CPSR_MODE_IRQ:
-          modeSpsr = context->SPSR_IRQ;
-          break;
-        case CPSR_MODE_SVC:
-          modeSpsr = context->SPSR_SVC;
-          break;
-        case CPSR_MODE_ABORT:
-          modeSpsr = context->SPSR_ABT;
-          break;
-        case CPSR_MODE_UNDEF:
-          modeSpsr = context->SPSR_UND;
-          break;
-        case CPSR_MODE_USER:
-        case CPSR_MODE_SYSTEM:
-        default:
-          DIE_NOW(0, "LDM: exception return form sys/usr mode!");
-      }
-      if ((modeSpsr & CPSR_MODE_FIELD) == CPSR_MODE_USER)
-      {
-        DIE_NOW(context, "LDM: exception return to user mode!");
-      }
-      context->CPSR = modeSpsr;
-    }
-    else
-    {
-      context->CPSR = savedCPSR;
-    }
-  }
+	  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
+	  if (!evalCC(condcode, cpsrCC))
+	  {
+	    // condition not met! allright, we're done here. next instruction...
+	    return context->R15 + 4;
+	  }
+	
+	  u32int savedCPSR = 0;
+	  bool cpySpsr = FALSE;
+	  if (forceUser != 0)
+	  {
+    	// ok, is this exception return, or LDM user mode?
+	    if ((instr & 0x00008000) != 0)
+	    {
+    	  // force user bit set and PC in list: exception return
+	      cpySpsr = TRUE;
+    	}
+	    else
+    	{
+	      // force user bit set and no PC in list: LDM user mode registers
+    	  savedCPSR = context->CPSR;
+	      context->CPSR = (context->CPSR & ~0x1f) | CPSR_MODE_USER;
+    	}
+  	  }
+  
+	  u32int address = 0;
+	  if ( (upDown == 0) && (prePost != 0) ) // LDM decrement before
+	  {
+    	// address = baseAddress - 4*(number of registers to load);
+	    address = baseAddress - 4 * countBitsSet(regList);
+	  }
+	  else if ( (upDown == 0) && (prePost == 0) ) // LDM decrement after
+	  {
+	    // address = baseAddress - 4*(number of registers to load) + 4;
+	    address = baseAddress - 4 * countBitsSet(regList) + 4;
+  	  }
+	  else if ( (upDown != 0) && (prePost != 0) ) // LDM increment before
+	  {
+    	// address = baseAddress + 4 - will be incremented as we go
+	    address = baseAddress + 4;
+  	  }	
+	  else if ( (upDown != 0) && (prePost == 0) ) // LDM increment after
+	  {
+    	// address = baseAddress - will be incremented as we go
+	    address = baseAddress;
+	  }
 
-  if (isPCinRegList)
-  {
-    return context->R15;
-  }
-  else
-  {
-    return context->R15+4;
-  }
+	  bool isPCinRegList = FALSE;
+	  // for i = 0 to 15
+	  for (i = 0; i < 16; i++)
+	  {
+    	// if current register set
+	    if ( ((regList >> i) & 0x1) == 0x1)
+	    {
+	      if (i == 15)
+    	  {
+	        isPCinRegList = TRUE;
+    	  }
+	      // R[i] = *(address);
+    	  u32int valueLoaded =
+	      context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
+	      storeGuestGPR(i, valueLoaded, context);
+#ifdef DATA_MOVE_TRACE
+    	  printf("R[%x] = *(%08x) = %08x\n", i, address, valueLoaded);
+#endif
+	      address = address + 4;
+	    }
+	  } // for ends
+
+	  // if writeback then baseReg = baseReg +/- 4 * number of registers to load;
+	  if (writeback != 0)
+	  {
+    	if (upDown == 0)
+	    {
+	      // decrement
+	      baseAddress = baseAddress - 4 * countBitsSet(regList);
+	    }
+	    else
+	    {
+	      // increment
+    	  baseAddress = baseAddress + 4 * countBitsSet(regList);
+	    }
+    	storeGuestGPR(baseReg, baseAddress, context);
+	  }
+
+	  if (forceUser != 0)
+	  {
+    	// do we need to copy spsr? or return from userland?
+	    if (cpySpsr)
+	    {
+	      // ok, exception return option: restore SPSR to CPSR
+	      // SPSR! which?... depends what mode we are in...
+	      u32int modeSpsr = 0;
+	      switch (context->CPSR & CPSR_MODE_FIELD)
+	      {
+	        case CPSR_MODE_FIQ:
+	          modeSpsr = context->SPSR_FIQ;
+	          break;
+	        case CPSR_MODE_IRQ:
+	          modeSpsr = context->SPSR_IRQ;
+	          break;
+    	    case CPSR_MODE_SVC:
+	          modeSpsr = context->SPSR_SVC;
+	          break;
+	        case CPSR_MODE_ABORT:
+	          modeSpsr = context->SPSR_ABT;
+	          break;
+	        case CPSR_MODE_UNDEF:
+	          modeSpsr = context->SPSR_UND;
+	          break;
+	        case CPSR_MODE_USER:
+	        case CPSR_MODE_SYSTEM:
+	        default:
+	          DIE_NOW(0, "LDM: exception return form sys/usr mode!");
+	      }
+    	  if ((modeSpsr & CPSR_MODE_FIELD) == CPSR_MODE_USER)
+	      {
+    	    DIE_NOW(context, "LDM: exception return to user mode!");
+	      }
+    	  context->CPSR = modeSpsr;
+	    }
+    	else
+	    {
+	      context->CPSR = savedCPSR;
+	    }
+	  }
+
+	  if (isPCinRegList)
+	  {
+	    return context->R15;
+	  }
+	  else
+	  {
+    	return context->R15+4;
+  	  }
+	}
 }
-
 
 /* load dual */
 u32int ldrdInstruction(GCONTXT * context)

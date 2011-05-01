@@ -72,9 +72,9 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int halfhypI
 #endif
   if ((bcAddr[index].valid == TRUE) && (bcAddr[index].endAddress != blkEndAddr) )
   {
-    // somebody has been sleeping in our cache location!
+	// somebody has been sleeping in our cache location!
     resolveCacheConflict(index, bcAddr);
-    // now that we resolved the conflict, we can store the new entry data...
+	// now that we resolved the conflict, we can store the new entry data...
     bcAddr[index].startAddress = blkStartAddr;
     bcAddr[index].endAddress = blkEndAddr; 
 	bcAddr[index].halfhyperedInstruction = halfhypInstruction;
@@ -99,7 +99,6 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int halfhypI
     bcAddr[index].valid = TRUE;
   }
   
-  // set bitmap entry to executed
   setExecBitMap(blkEndAddr);
 }
 
@@ -201,10 +200,21 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 #ifdef BLOCK_CACHE_DBG
   printf("resolveCacheConflict: no other BB ends at same address.\n");
   // restore hypered instruction back!
-  printf("resolveCacheConflict: restoring hypercall %x back to %08x\n",
-        *((u32int*)(bcAddr[index].endAddress)), bcAddr[index].hyperedInstruction);
+  // this is broken for thumb. I have to fix it
+  
+  //printf("resolveCacheConflict: restoring hypercall %x back to %08x\n",
+    //    *((u32int*)(bcAddr[index].endAddress)), bcAddr[index].hyperedInstruction);
 #endif
-  *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
+	// pay  attention when old istruction is high halfword.
+	if( ( (u32int)(bcAddr[index].endAddress) & 0x3) >= 0x2 )
+	{
+		// hypered instruction is on high halfword
+		*((u16int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction & 0x0000FFFF;
+	}
+	else
+	{
+	  *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
+	}
 }
 
 

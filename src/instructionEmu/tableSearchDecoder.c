@@ -574,11 +574,14 @@ struct instruction32bit t16SpecialBranchInstructions[] = {
 };
 
 struct instruction32bit t16MiscInstructions[] = {
-{0, &stmInstruction, 0x0400, 0x0400, "PUSH {reglist}"},
-{0, &subInstruction, 0x0080, 0x0080, "SUB SP,SP,<imm7"},
-{0, &uxtbInstruction, 0x02C0, 0x0FC0, "UXTB<c> <Rd>, <Rm>"},
+{0, &stmInstruction, 0xB400, 0xFE00, "PUSH {reglist}"},
+{0, &subInstruction, 0xB080, 0xFF80, "SUB SP,SP,<imm7"},
+{0, &uxtbInstruction, 0xB2C0, 0xFFC0, "UXTB<c> <Rd>, <Rm>"},
 {0, &addInstruction, 0xA800, 0xF800, "ADD <Rd>, SP, #<imm8>"},
-{0, &addInstruction, 0xB000, 0xFF80, "ADD SP, SP, #<imm>"}
+{0, &addInstruction, 0xB000, 0xFF80, "ADD SP, SP, #<imm>"},
+// trap if PC is on POP reglist
+{1, &popLdmInstruction, 0xBD00, 0xBF00, "POP <reglist+PC>"},
+{0, &popLdmInstruction, 0xBC00, 0xBF00, "POP <reglist>"}
 };
 
 struct instruction32bit t16LoadStoreInstructions[] = {

@@ -224,7 +224,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 		printf("Trick instr %08x\n",instruction);
 		if ((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX)
  		{
-      		u32int svcCode = (instruction & 0x000000FF); // NOP|SVC -> Keep the last 8 bits
+			u32int svcCode = (instruction & 0x000000FF); // NOP|SVC -> Keep the last 8 bits
 	  		if(!((svcCode > 0) && (svcCode <= 0xFF)))
 	  		{
 				ishypersvc=TRUE;
@@ -361,7 +361,16 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 				break;
 			}
 		}
-
+			// In some cases the currAddress can be lower to blockAddress. This can happen
+			// if there are two privilege instructions next to each other. So make sure that
+			// the two different locations differ by a halfword and fix it
+		//printf("blkstart %08x\n",(u32int)blkStartAddr);
+		//printf("current  %08x\n",(u32int)currAddress);
+		//printf("adj: %08x\n",( ( ((u32int)blkStartAddr) & 0xFFFFFFF3) - ( ((u32int)currAddress) & 0xFFFFFFF3) ));
+		if( ( ( ((u32int)blkStartAddr) & 0xFFFFFFF3) - ( ((u32int)currAddress) & 0xFFFFFFF3) ) == 0x2)
+			{
+				currAddress = (u32int*)(((u32int)currAddress) | 0x2); // FIX ME!
+			} 
 		printf("Thumb svc on %08x\n",(u32int)currhwAddress);
 #ifdef CONFIG_DECODER_TABLE_SEARCH
 	    gc->hdlFunct = decodedInstruction->hdlFunct;
@@ -384,9 +393,9 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
    * Ehm... Do not do that for guest SVC code. It messes up everything so 
    * skipt it until I figure out what it going on
    */
-
   addToBlockCache(blkStartAddr, gc->endOfBlockInstr, gc->endOfBlockHalfInstr, (u32int)currAddress, 
                   bcIndex, (u32int)gc->hdlFunct, gc->blockCache);
+  printf("WHY");
   /* To ensure that subsequent fetches from eobAddress get a hypercall
    * rather than the old cached copy... 
    * 1. clean data cache entry by address
