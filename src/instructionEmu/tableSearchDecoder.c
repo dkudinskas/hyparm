@@ -576,12 +576,17 @@ struct instruction32bit t16SpecialBranchInstructions[] = {
 struct instruction32bit t16MiscInstructions[] = {
 {0, &stmInstruction, 0x0400, 0x0400, "PUSH {reglist}"},
 {0, &subInstruction, 0x0080, 0x0080, "SUB SP,SP,<imm7"},
-{0, &uxtbInstruction, 0x02C0, 0x0FC0, "UXTB<c> <Rd>, <Rm>"}
+{0, &uxtbInstruction, 0x02C0, 0x0FC0, "UXTB<c> <Rd>, <Rm>"},
+{0, &addInstruction, 0xA800, 0xF800, "ADD <Rd>, SP, #<imm8>"},
+{0, &addInstruction, 0xB000, 0xFF80, "ADD SP, SP, #<imm>"}
 };
 
 struct instruction32bit t16LoadStoreInstructions[] = {
-{0, &strInstruction, 0x9000, 0x9000, "STR Rd, #<imm8>"},
-{0, &ldrInstruction, 0x7800, 0x7800, "LDRB Rd, #<imm5>"},
+{0, &strInstruction, 0x6000, 0xF800, "STR Rd, [<Rn>, {#<imm5>}]"},
+{0, &strInstruction, 0x9000, 0xF800, "STR Rd, [SP,#<imm8]"},
+{0, &ldrInstruction, 0x6800, 0xF800, "LDR Rd, [<Rn> {,#<imm5>}]"},
+{0, &ldrInstruction, 0x9800, 0xF800, "LDR Rd, [SP {,#<imm8>}]"},
+{0, &ldrInstruction, 0x7800, 0x7800, "LDRB Rd, #<imm5>"}
 };
 
 struct instruction32bit t16UnconditionalInstructions[] = {
@@ -601,12 +606,12 @@ struct instruction32bit t16ArithmeticInstructions[] = {
 };
 
 struct instruction32bit t32DataProcInstructions[] = {
-{0, &movInstruction, 0xF6400000, 0xF6400000, "MOVW<c> <Rd>, #<imm12>"},
-{0, &movInstruction, 0xF2400000, 0xF6400000, "MOVW<c> <Rd>, #<imm12>"},
-{0, &movInstruction, 0xF45F0000, 0xF45F0000, "MOV{S}<c>.W <Rd>, #<imm12>"},
-{0, &movInstruction, 0xF04F0000, 0xF45F0000, "MOV{S}<c>.W <Rd>, #imm12>"},
-{0, &movInstruction, 0xF05F0000, 0xF45F0000, "MOV{S}<c>.W <Rd>, #imm12>"},
-{0, &movtInstruction, 0x02C00000, 0x2C000000, "MOVT<c> <Rd>, #<imm16>"},
+// this is for T2 encoding, page 480
+{0, &movInstruction, 0xF04F0000, 0xFBEF1000, "MOVW<c> <Rd>, #<imm12>"},
+// this is for T3 encoding
+{0, &movInstruction, 0xF2400000, 0xFBF00000, "MOVW<c> <Rd>, #<imm16>"},
+{0, &movtInstruction, 0xF2C00000, 0xFBF08000, "MOVT<c> <Rd>, #<imm16>"},
+{0, &orrInstruction, 0xEA000000, 0xFE000000, "ORR{S} <Rd>, <Rn>{,<shift>}"},
 //trap for RD=15
 {1, &andInstruction, 0xF0000F00, 0xFBE08F00, "AND{S}<c> PC, <Rm>, #<imm12>"},
 {0, &andInstruction, 0xF0000000, 0xFBE08000, "AND{S}<c> <Rd>, <Rm>, #<imm12>"}

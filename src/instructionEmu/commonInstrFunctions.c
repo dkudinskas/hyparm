@@ -391,26 +391,53 @@ u32int countBitsSet(u32int bitstream)
 }
 
 
-u32int decodeThumbInstr(GCONTXT *gc)
+u32int decodeThumbInstr(GCONTXT *gc,u32int extinstr)
 {
-	u32int instr = gc->endOfBlockInstr;
-	u16int halfinstr = gc->endOfBlockHalfInstr;
-	if(halfinstr == HHALF)
+	u32int instr = 0;
+	u16int halfinstr = 0;
+	if(extinstr == 0)
 	{
-		return instr>>16;
+		u32int instr = gc->endOfBlockInstr;
+		u16int halfinstr = gc->endOfBlockHalfInstr;
+		if(halfinstr == HHALF)
+		{
+			printf("HERE!");
+			return instr>>16;
+		}
+		else if(halfinstr == LHALF)
+		{
+			return instr & 0x0000FFFF;
+		}
+		else if(halfinstr == WHTHUMB32) // high halfword is on the low word of the instr
+		{
+			return instr = (instr<<16)|(instr>>16);
+		}
+		else// thumb32 halfword in on halfnstr and the next one is on instr
+		{
+			return instr = (halfinstr<<16)|(instr & 0x0000FFFF);
+		}
 	}
-	else if(halfinstr == LHALF)
+	else // an instruction is supplied as argument
 	{
-		return instr & 0x0000FFFF;
+		halfinstr = extinstr & 0x0000FFFF; // get the lowest part
+		switch(halfinstr & THUMB32) // is it thumb 32 ?
+		{
+			case THUMB32_1:
+			case THUMB32_2:
+			case THUMB32_3:
+			{
+				instr = (halfinstr<<16)|((extinstr & 0xFFFF0000)>>16);
+				break;
+			}
+			default: //single thumb 16-bit instr?
+			{
+				instr = halfinstr;
+				break;
+			}
+		}
+		return instr;
 	}
-	else if(halfinstr == WHTHUMB32) // high halfword is on the low word of the instr
-	{
-		return instr = (instr<<16)|(instr>>16);
-	}
-	else// thumb32 halfword in on halfnstr and the next one is on instr
-	{
-		return instr = (halfinstr<<16)|(instr & 0x0000FFFF);
-	}
+
 }	
 
 bool isThumb32(u32int instr)

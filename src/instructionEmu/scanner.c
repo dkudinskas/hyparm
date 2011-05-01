@@ -49,16 +49,16 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   bool inBlockCache = checkBlockCache(blkStartAddr, bcIndex, gc->blockCache);
   if (inBlockCache)
   {
-    BCENTRY * bcEntry = getBlockCacheEntry(bcIndex, gc->blockCache);
+	BCENTRY * bcEntry = getBlockCacheEntry(bcIndex, gc->blockCache);
     gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
     gc->endOfBlockInstr = bcEntry->hyperedInstruction;
+	gc->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
 #ifdef SCANNER_DEBUG
     printf("scanner: Block @ %08x hash value %x cache index %x HIT\n", 
            blkStartAddr, hashVal, bcIndex);
 #endif
     return;
   }
-  printf("Bar\n");
 
 #ifdef SCANNER_DEBUG
     printf("scanner: Block @ %08x hash value %x cache index %x MISS\n", 
@@ -221,6 +221,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 	// If we reach this point, it means we are on Thumb Mode
 	else
 	{
+		printf("Trick instr %08x\n",instruction);
 		if ((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX)
  		{
       		u32int svcCode = (instruction & 0x000000FF); // NOP|SVC -> Keep the last 8 bits
@@ -283,13 +284,14 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 						printf("BAH\n");
 						//so the previous halfword matches the Thumb-2 encoding so it
 						//*SHOULD* be the first halfword of a thumb2 32-bit instruction					
-						if(((u32int)currhwAddress & 0xF) >= 0x8)
+						if(((u32int)currhwAddress & 0x3 ) >= 0x2)
 						{
 							gc->endOfBlockInstr = *currAddress;
 							gc->endOfBlockHalfInstr = *currhwAddress;
 						}
 						else
 						{
+							printf("fomar: %08x\n",currhwAddress);
 							currAddress=(u32int*)currhwAddress;
 							gc->endOfBlockHalfInstr = WHTHUMB32;
 							gc->endOfBlockInstr = *currAddress; //!!!!
@@ -347,6 +349,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 						}
 						else
 						{
+							printf("CRAO\n");
 							gc->endOfBlockHalfInstr = HHALF;
 						}
 						currAddress = (u32int*)((u32int)currAddress & 0xFFFFFFFC);

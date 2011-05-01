@@ -130,8 +130,16 @@ void dataAbort()
       emulateLoadStoreGeneric(gc, getDFAR());
       if (!gc->guestDataAbtPending)
       {
-        // ONLY move to the next instruction, if the guest hasn't aborted...
-        gc->R15 = gc->R15 + 4;
+   		// ONLY move to the next instruction, if the guest hasn't aborted...
+		if(gc->CPSR & T_BIT)
+		{
+			gc->R15 = gc->R15 + 2;
+			printf("NextPC %08x\n",gc->R15);
+		}
+		else
+		{
+    	    gc->R15 = gc->R15 + 4;
+		}
       }
       else
       {

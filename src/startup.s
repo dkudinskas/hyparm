@@ -181,8 +181,8 @@ startup_hypervisor:
 
         .macro save_pc_abort
         /* store guest PC */
-        MOV     R0, LR
-        SUB     R0, R0, #8 /* Get offending instruction */
+		MOV     R0, LR
+		SUB   	R0, R0, #8 @ARM
         LDR     R1, =guestContextR15
         STR     R0, [R1]
         .endm
@@ -254,8 +254,8 @@ startup_hypervisor:
         /* Preserve condition flags */
         LDR     LR, [LR]
         AND     R0, LR, #0xf0000000
-        /* Preserve exception flags */
-        AND     LR, LR, #0x1C0
+        /* Preserve exception flags & Thumb bit */
+        AND     LR, LR, #0x1E0
         ORR     R0, LR, R0
         /* set user mode */
         ORR     R0, R0, #(USR_MODE)
@@ -425,7 +425,7 @@ continue2:
     LDR     LR, [LR]
     AND     R0, LR, #0xf0000000
     /* Preserve exception flags & Thumb state*/
-    AND     LR, LR, #0x1F0
+    AND     LR, LR, #0x1E0
     ORR     R0, LR, R0
     /* set user mode */
     ORR     R0, R0, #(USR_MODE)

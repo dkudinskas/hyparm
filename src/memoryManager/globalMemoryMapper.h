@@ -54,6 +54,8 @@
 #define LDREX_MASKED    0x01900f9f
 
 
+#define THUMB16_STR_IMM5	0x6000
+#define THUMB16_STR_IMM8	0x9000
 /* generic load store instruction emulation  *
  * called when we permission fault on memory *
  * access to a protected area - must emulate */

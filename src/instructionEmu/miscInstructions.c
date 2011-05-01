@@ -25,11 +25,12 @@ u32int bxInstruction(GCONTXT * context)
   u32int addr = 0;
   if(context->CPSR & T_BIT)
   {
-  		instr=decodeThumbInstr(context);
+  		instr=decodeThumbInstr(context,0);
 		//this has NO 32-bit Thumb encoding
+		printf("blxinstr %08x\n",instr);
 		regDest = (instr & 0x0078)>>3;
 		nextPC = loadGuestGPR(regDest, context);
-  		printf("blx nextPC: %08x\n",nextPC);
+  		printf("blx RegSRC= %08x nextPC: %08x\n",regDest,nextPC);
   }
   else
   {
@@ -1243,7 +1244,7 @@ u32int bInstruction(GCONTXT * context)
   // Are we on Thumb?
   if (context->CPSR & T_BIT)
   {
-	instr = decodeThumbInstr(context);
+	instr = decodeThumbInstr(context,0);
 	thumb32 = isThumb32(instr);
 	// WHAT A MESS! -> ARM-A manual : page 344
 	// B and BL have different encoding. Find which one is it
@@ -1426,7 +1427,8 @@ u32int bInstruction(GCONTXT * context)
    	 printf("Target: %08x\n",target);
 	 if(bl32)
 	 {
-	 	storeGuestGPR(14, context->R15+2, context);
+	 	printf("Preserve R14=%08x\n",context->R15+2);
+		storeGuestGPR(14, context->R15+2, context);
 	 }
      u32int currPC = context->R15;
    	 currPC += 2;
