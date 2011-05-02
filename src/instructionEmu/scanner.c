@@ -395,7 +395,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
    */
   addToBlockCache(blkStartAddr, gc->endOfBlockInstr, gc->endOfBlockHalfInstr, (u32int)currAddress, 
                   bcIndex, (u32int)gc->hdlFunct, gc->blockCache);
-  printf("WHY");
+  
   /* To ensure that subsequent fetches from eobAddress get a hypercall
    * rather than the old cached copy... 
    * 1. clean data cache entry by address

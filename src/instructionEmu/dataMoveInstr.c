@@ -51,15 +51,15 @@ u32int strInstruction(GCONTXT * context)
 		{
 			regSP = FALSE;
 			regSrc = instr & 0x00000007;
-			regDst = (instr & 0x000007C)>>3;
-			imm32 = (instr & 0x000007C0)>>6;
+			regDst = (instr & 0x000001C)>>3;
+			imm32 = ( (instr & 0x000007C0)>>6 )<<2; //extend
 		}
 		else
 		{
 			regSP = TRUE; //source register is SP for imm8
 			regDst = 0x0000000D; // hardcode SP register
 			regSrc = (instr & 0x00000700)>>8;
-			imm32 = instr & 0x000000FF;
+			imm32 = (instr & 0x000000FF) << 2 ; //extend
 			
 		}
 	baseAddress = loadGuestGPR(regDst, context);
@@ -1134,6 +1134,10 @@ u32int ldrbInstruction(GCONTXT * context)
 
 u32int ldrInstruction(GCONTXT * context)
 {
+  if(context->CPSR & T_BIT)
+  {
+  	DIE_NOW(0,"Thumb ldr unimplemented");
+  }
   u32int instr = context->endOfBlockInstr;
    
   u32int condcode = (instr & 0xF0000000) >> 28;

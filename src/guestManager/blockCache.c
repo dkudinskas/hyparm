@@ -209,7 +209,8 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 	if( ( (u32int)(bcAddr[index].endAddress) & 0x3) >= 0x2 )
 	{
 		// hypered instruction is on high halfword
-		*((u16int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction & 0x0000FFFF;
+		printf("Hyperd: %08x\n",(u32int)bcAddr[index].hyperedInstruction);
+		*((u16int*)(bcAddr[index].endAddress)) = (bcAddr[index].hyperedInstruction & 0xFFFF0000)>>16;
 	}
 	else
 	{

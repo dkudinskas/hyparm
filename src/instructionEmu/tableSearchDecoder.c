@@ -56,8 +56,8 @@ struct TopLevelCategory t32categories[] = {
 {T32_DATA_PROC,				0xF2000000,0xF2000000},
 {T32_STORE_SINGLE,			0xF8100000,0xF8000000},
 {T32_SIMD_STRUCT_LOAD_STORE,	0xF9000000,0xF9000000},
-{T32_LOAD_BYTE,				0xFE100000,0xF8100000},
-{T32_LOAD_HALFWORD,			0xF8300000,0xF8600000},
+{T32_LOAD_BYTE,				0xFE700000,0xF8100000},
+{T32_LOAD_HALFWORD,			0xFE700000,0xF8300000},
 {T32_LOAD_WORD,				0xF8500000,0xF8500000},
 {T32_UNDEFINED,				0xF8700000,0xF8700000},
 {T32_DATA_PROC,				0xFA000000,0xFA000000},
@@ -589,7 +589,8 @@ struct instruction32bit t16LoadStoreInstructions[] = {
 {0, &strInstruction, 0x9000, 0xF800, "STR Rd, [SP,#<imm8]"},
 {0, &ldrInstruction, 0x6800, 0xF800, "LDR Rd, [<Rn> {,#<imm5>}]"},
 {0, &ldrInstruction, 0x9800, 0xF800, "LDR Rd, [SP {,#<imm8>}]"},
-{0, &ldrInstruction, 0x7800, 0x7800, "LDRB Rd, #<imm5>"}
+{0, &ldrInstruction, 0x7800, 0x7800, "LDRB Rd, #<imm5>"},
+{0, &ldrhInstruction, 0x8800, 0xF800, "LDRH <Rt>, [<Rn>{, #<imm5>}]"}
 };
 
 struct instruction32bit t16UnconditionalInstructions[] = {
@@ -605,7 +606,12 @@ struct instruction32bit t16ArithmeticInstructions[] = {
 // Otherwise don't trap
 {0, &addInstruction, 0x4400, 0x4400, "ADD<c> Rd, Rm"},
 // CMP is fine
-{0, &cmpInstruction, 0x2800, 0xF800, "CMP<c> Rn, #<imm8>"}
+{0, &cmpInstruction, 0x2800, 0xF800, "CMP<c> Rn, #<imm8>"},
+{0, &cmpInstruction, 0x4280, 0xFFC0, "CMP<c> <Rn>, <Rm>"},
+{0, &cmpInstruction, 0x4600, 0xFF00, "CMP<c> <Rn>, <Rm>"},
+{0, &subInstruction, 0x1E00, 0xFE00, "SUB{S} <Rd>, <Rn>,#<imm3>"},
+{0, &subInstruction, 0x3800, 0xF800, "SUB{S} <Rdn>, #<imm8>"},
+{0, &subInstruction, 0x1A00, 0xFE00, "SUB{S} <Rd>, <Rn> <Rm>"}
 };
 
 struct instruction32bit t32DataProcInstructions[] = {
@@ -617,13 +623,27 @@ struct instruction32bit t32DataProcInstructions[] = {
 {0, &orrInstruction, 0xEA000000, 0xFE000000, "ORR{S} <Rd>, <Rn>{,<shift>}"},
 //trap for RD=15
 {1, &andInstruction, 0xF0000F00, 0xFBE08F00, "AND{S}<c> PC, <Rm>, #<imm12>"},
-{0, &andInstruction, 0xF0000000, 0xFBE08000, "AND{S}<c> <Rd>, <Rm>, #<imm12>"}
+{0, &andInstruction, 0xF0000000, 0xFBE08000, "AND{S}<c> <Rd>, <Rm>, #<imm12>"},
+{0, &addInstruction, 0xF1000000, 0xFBE08000, "ADD{S}.W <Rd>, <Rn>, #<imm8>"},
+//ADD -> RD=PC -> CMN page 306
+{1, addInstruction, 0xF1000F00, 0xFBE08F00, "ADD{S}.W PC, <Rn>, #<imm8>"},
+// RN=SP -> unimplemented. Should be OK
+{0, &addInstruction, 0xF10D8000, 0xFBEF8000, "ADD{S}.W <Rd>, SP, #<imm8>"},
+// Encoding T4
+{0, &addInstruction, 0xF2000000, 0xF2008000, "ADDW <Rd>, <Rn>, #<imm12>"},
+// RC=PC
+{1, &addInstruction, 0xF20F0000, 0xF20F8000, "ADDW PC, <Rn>, #<imm12>"},
+// RN=SP -> should be ok
+{0, &addInstruction, 0xF20D0000, 0xF20F8000, "ADDW <Rd>, SP, #<imm8>"},
+{0, &bicInstruction, 0xF0200000, 0xFBE08000, "BIC{S} <Rd>, <Rn>, #<imm12>"}
 };
 
 struct instruction32bit t32SingleStoreInstructions[] = {
-{0, &strInstruction, 0xF8800000, 0xF8900000, "STRB Rt, [Rn, #<imm12>]"},
-{0, &strInstruction, 0xF8000900, 0xF8900900, "STRB Rt, [Rn, +-#<imm8>]"},
-{0, &strInstruction, 0xF8000C00, 0xF8F00F00, "STRB Rt, [Rn, +-#<imm8>]!"}
+{0, &strInstruction, 0xF8800000, 0xFFF00000, "STRB Rt, [Rn, #<imm12>]"},
+{0, &strInstruction, 0xF8000800, 0xFFF00800, "STRB Rt, [Rn, +-#<imm8>]"},
+
+{0, &strInstruction, 0xF8A00000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm12>}]"},
+{0, &strInstruction, 0xF8200000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm8>}]!"}
 };
 
 struct instruction32bit t32LoadByteInstructions[] = {
@@ -633,10 +653,15 @@ struct instruction32bit t32LoadByteInstructions[] = {
 {0, &ldrInstruction, 0xF8100C00, 0xFFF00E00, "LDRB<c> Rt, [Rn,{#<imm12>}]"}
 };
 
+struct instruction32bit t32LoadHalfWordInstructions[] = {
+{0, &ldrhInstruction, 0xF8B00000, 0xFFF00000, "LDRH.W <Rt>, [<Rn>{. #<imm32>}]"}
+};
+
 struct instruction32bit t32BranchMiscInstructions[] = {
-{1, &bInstruction,	0x00009000, 0x00009000, "B <imm17>"},
-{1, &bInstruction,	0x0000C000, 0x0000C000, "BL,(BLX), #<imm21>"},
-{1, &bInstruction,  0x0000D000, 0x0000D000, "BL,(BLX), #<imm21>"}
+{1, &bInstruction, 0xF0008000, 0xF800D000, "B <imm17>"},
+{1, &bInstruction, 0xF0009000, 0xF800D000, "B <imm21>"},
+{1, &bInstruction, 0xF000D000, 0xF800D000, "BL, #<imm21>"},
+{1, &blxInstruction, 0xF000C000, 0xF800D000, "BLX, #<imm21>"}
 };
 
 
@@ -1074,7 +1099,7 @@ struct instruction32bit * t32decodeBranchMisc(u32int instr)
   {
     if ( (instr & t32BranchMiscInstructions[index].mask) == t32BranchMiscInstructions[index].value)
     {
-      if (t16MiscInstructions[index].mask == 0)
+      if (t32BranchMiscInstructions[index].mask == 0)
       {
         dumpInstruction("decodet32BranchMisc", instr);
       }
@@ -1150,7 +1175,27 @@ struct instruction32bit * t32decodeLoadByte(u32int instr)
 
 struct instruction32bit * t32decodeLoadHalfWord(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented 9");
+//#ifdef DECODER_DEBUG
+  printf("t32LoadHalfWord %08x\n", instr);
+//#endif
+  u32int index = 0;
+  while (TRUE)
+  {
+    if ( (instr & t32LoadHalfWordInstructions[index].mask) == t32LoadHalfWordInstructions[index].value)
+    {
+      if (t32LoadHalfWordInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet32BranchMisc", instr);
+      }
+      return &t32LoadHalfWordInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  DIE_NOW(getGuestContext(), "decoder: t32LoadHalfWordInstruction unimplemented");
+  return 0;
 }
 
 struct instruction32bit * t32decodeLoadWord(u32int instr)

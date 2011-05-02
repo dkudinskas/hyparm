@@ -821,51 +821,82 @@ u32int bkptInstruction(GCONTXT * context)
 
 u32int blxInstruction(GCONTXT * context)
 {
-  u32int instr = context->endOfBlockInstr;
+  u32int instr = 0;
   u32int nextPC = 0;
-  u32int sign = 0x00800000 & instr;
-  u32int instrCC = (instr >> 28) & 0xF;
-  u32int cpsrCC  = (context->CPSR >> 28) & 0xF;
-  u32int regDest = (instr & 0x0000000F); // holds dest addr and mode bit
-  u32int value = loadGuestGPR(regDest, context);
-  u32int thumbMode = value & 0x1;
-  u32int target = instr & 0x00FFFFFF;
-
-  if ((instr & 0xfe000000) == 0xfa000000)
+  u32int sign = 0;
+  u32int instrCC = 0;
+  u32int cpsrCC = 0;
+  u32int regDest = 0;
+  u32int value = 0;
+  u32int target = 0;
+  u32int currPC = 0;
+  bool thumb32 = 0;
+  if(context->CPSR & T_BIT)
   {
-  	if (sign != 0)
-  	{
-    	// target negative!
-    		target |= 0xFF000000;
-  	}
-  	target = target << 2;
-	
-	// blx <imm24>
-  	context->CPSR |= T_BIT;
-	storeGuestGPR(14, context->R15+4,context);
-
-	nextPC = context->R15 + 8 + target;
+  	//We are in Thumb mode, so we will probably want to switch back to ARM
+	instr = decodeThumbInstr(context,0);
+	thumb32=isThumb32(instr);
+	sign = ( (instr & 0x04000000 ) >> 26 );
+	u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
+	u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
+	target = (sign<<22)|(i1<<21)|(i2<<20)|(((instr & 0x03FF0000)>>16)<<10)| ( (instr & 0x000007FE) >>1);
+	// ensure target is word aligned
+	target &= ~0x1;
+	target = target << 2; // <-- remember me
+	if(sign !=0)
+	{
+		target |= 0xFF000000;
+	}
+	// set ARM mode (disable Thumb bit)
+	context->CPSR &= ~T_BIT;
+	currPC = context->R15;
+	//ensure it is word aligned
+	currPC &= ~0x3;
+	storeGuestGPR(14, currPC+2,context);
+	printf("Thumb BLX: %08x, LR: %08x, Target: %08x\n", instr, currPC+2,target);
+	nextPC = currPC + target;
+	printf("New PC=%08x\n",nextPC);
 	return nextPC;
-  }
 
-  if (!evalCC(instrCC, cpsrCC))
+  }
+  else
   {
-    nextPC = context->R15 + 4;
-    return nextPC;
-  }
+  	instr = context->endOfBlockInstr;
+	sign = 0x00800000 & instr;
+	instrCC = (instr >> 28) & 0xF;
+  	cpsrCC  = (context->CPSR >> 28) & 0xF;
+  	regDest = (instr & 0x0000000F); // holds dest addr and mode bit
+  	value = loadGuestGPR(regDest, context);
+  	target = instr & 0x00FFFFFF;
+	if ((instr & 0xfe000000) == 0xfa000000)
+  	{
+	 	if (sign != 0)
+  		{
+    		// target negative!
+    		target |= 0xFF000000;
+  		}	
+  		target = target << 2;
+	
+		// blx <imm24>
+  		context->CPSR |= T_BIT;
+		storeGuestGPR(14, context->R15+4,context);
 
-  if (thumbMode)
-  {
-      DIE_NOW(context, "BLX Rm switching to Thumb. Unimplemented.\n");
-  }
+		nextPC = context->R15 + 8 + target;
+		return nextPC;
+  	}
+	if (!evalCC(instrCC, cpsrCC))
+  	{
+		nextPC = context->R15 + 4;
+	    return nextPC;
+  	}
 
-  // link register
-  storeGuestGPR(14, context->R15+4, context);
+	  // link register
+	  storeGuestGPR(14, context->R15+4, context);
 
-  nextPC = value & 0xFFFFFFFE;
-  return nextPC;
+	  nextPC = value & 0xFFFFFFFE;
+	  return nextPC;
+	}
 }
-
 u32int clzInstruction(GCONTXT * context)
 {
   DIE_NOW(context, "CLZ unfinished\n");
@@ -1283,17 +1314,8 @@ u32int bInstruction(GCONTXT * context)
 			sign = ( (instr & 0x04000000 ) >> 26 );
 			u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
 			u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
-			// which encoding is it?
-			if(instr & 0x00001000)
-			{
-				target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
-				printf("Target %08x\n",target);
-			}
-			else
-			{
-				target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000003FF);
-				target = target << 1; // <-- remember me
-			}
+			target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
+			printf("Target %08x\n",target);
 		}
 	}
 	else // thumb 16bit
@@ -1304,6 +1326,7 @@ u32int bInstruction(GCONTXT * context)
 		 */
 		if((instr & 0x0000D000) == 0x0000D000) // 8-bit imm
 		{
+			printf("Conditional Branch decoded\n");
 			instrCC = (0x0F00 & instr) >> 8;
 			target = 0x00FF & instr;
 			if(instrCC == 0xE)
