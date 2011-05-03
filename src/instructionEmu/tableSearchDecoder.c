@@ -566,6 +566,10 @@ struct instruction32bit t16ConditionalBranchSvcInstructions[] = {
 {1, &bInstruction, 0xD000, 0xF000, "B<c> <label>"}
 };
 
+struct instruction32bit t16DataProcInstructions[] = {
+{0, &mvnInstruction, 0x43C0, 0xFFC, "MVN <Rd>, <Rm>"}
+};
+
 struct instruction32bit t16SpecialBranchInstructions[] = {
 {1, &bxInstruction, 0x4700, 0xFF80, "BX<c> <Rm>"},
 {0, &movInstruction, 0x4600, 0x4600, "MOV{L} Rd, Rm"},
@@ -646,7 +650,9 @@ struct instruction32bit t32DataProcInstructions[] = {
 {0, &subInstruction, 0xEBA00000, 0xFFE08000, "SUB{S}.W <Rd>, <Rn>, <Rm>{,<shitft>}"},
 // RN = SP -> should be ok
 {0, &subInstruction, 0xF2AB0000, 0xFBEF8000, "SUBW <Rd>, SP, #<imm12>"},
-{0, &subInstruction, 0xEBAB0000, 0xFFEF8000, "SUB{S} <Rd>, SP, <Rm>{,<shift>}"}
+{0, &subInstruction, 0xEBAB0000, 0xFFEF8000, "SUB{S} <Rd>, SP, <Rm>{,<shift>}"},
+{0, &mvnInstruction, 0xEA6F0000, 0xFFEF8000, "MVN<c> <Rd>, <Rm>{,<shift>}"},
+{0, &mvnInstruction, 0xE0AF0000, 0xFBEF8000, "MVN<c> <Rd>, #<imm12>"}
 };
 
 struct instruction32bit t32SingleStoreInstructions[] = {
@@ -1381,7 +1387,27 @@ struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr)
 
 struct instruction32bit * t16decodeDataProc(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented 22");
+//#ifdef DECODER_DEBUG
+  printf("t16decodeDataProc %08x\n", instr);
+//#endif
+  u32int index = 0;
+  while (TRUE)
+  {
+    if ( (instr & t16DataProcInstructions[index].mask) == t16DataProcInstructions[index].value)
+    {
+      if (t16DataProcInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16DataProc", instr);
+      }
+      return &t16DataProcInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  DIE_NOW(getGuestContext(), "decoder: t16DataProc unimplemented");
+  return 0;
 }
 
 struct instruction32bit * t16decodeArithmetic(u16int instr)

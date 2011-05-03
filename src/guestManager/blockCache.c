@@ -210,7 +210,16 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 	{
 		// hypered instruction is on high halfword
 		printf("Hyperd: %08x\n",(u32int)bcAddr[index].hyperedInstruction);
+		printf("Restoring %08x to %08x\n", (u32int)bcAddr[index].hyperedInstruction, (u16int)bcAddr[index].endAddress);
 		*((u16int*)(bcAddr[index].endAddress)) = (bcAddr[index].hyperedInstruction & 0xFFFF0000)>>16;
+		if((u32int)bcAddr[index].halfhyperedInstruction == 0x4) //0x4 = WHTHUMB32 -> first halfword on lower address
+		{
+			//restore the second part of the thumb instruction
+			u16int * endhwAddress = (u16int*)bcAddr[index].endAddress;
+			endhwAddress--;
+			*endhwAddress = bcAddr[index].hyperedInstruction & 0x0000FFFF;
+			printf("and %08x to %08x\n", bcAddr[index].hyperedInstruction & 0x0000FFFF, (u32int)endhwAddress);
+		}
 	}
 	else
 	{
@@ -222,6 +231,7 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 
 		*(u16int*)endhwAddress = (u16int)bcAddr[index].halfhyperedInstruction;
 	  }
+	  printf("Restoring %08x to %08x\n",(u32int)bcAddr[index].hyperedInstruction, (u32int)bcAddr[index].endAddress);
 	  *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
 	}
 }

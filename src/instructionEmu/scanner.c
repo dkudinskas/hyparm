@@ -39,6 +39,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   u32int instruction = 0;
   u16int * currhwAddress = 0;
   u16int halfinstruction = 0;
+  bool scanthumb=TRUE;
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
   
@@ -111,56 +112,88 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #endif
 	{	
 		// Thumb-2 is moving by 2 bytes at a time
+		scanthumb=TRUE;
 		if(gc->CPSR & T_BIT)
 		{
-			currhwAddress = (u16int*)currAddress; // point to half word instead of word
-			currhwAddress++;
-			halfinstruction = *currhwAddress;
-			switch(halfinstruction & THUMB32)
+			while(scanthumb)
 			{
-				case THUMB32_1:
-				case THUMB32_2:
-				case THUMB32_3:
+				currhwAddress = (u16int*)currAddress; // point to half word instead of word
+				currhwAddress++;
+				halfinstruction = *currhwAddress;
+				switch(halfinstruction & THUMB32)
 				{
-					// fetch the remaining halfword
-					currhwAddress++;
-					instruction = halfinstruction<<16|*currhwAddress;
-					// adjust word pointer
-					currAddress = (u32int*)currhwAddress;
-					break;
-				}
-				// if the halfword is a 16bit instruction
-				default:
-				{
-					// maybe this is the second half word of a thumb-2 instr?. Check the previous one
-					currhwAddress--;
-					switch(*currhwAddress & THUMB32)
+					case THUMB32_1:
+					case THUMB32_2:
+					case THUMB32_3:
 					{
-						case THUMB32_1:
-						case THUMB32_2:
-						case THUMB32_3:
-						{	// if we are here, it means the the current instruction is the second halfword
-							// of a thumb 32-bit instr
-							currhwAddress +=2;
-							instruction = *currhwAddress;
-							currAddress = (u32int*)currhwAddress;
-							break;
-						}
-						default:
+						// fetch the remaining halfword
+						currhwAddress++;
+						instruction = halfinstruction<<16|*currhwAddress;
+						// adjust word pointer
+						currAddress = (u32int*)currhwAddress;
+						break;
+					}
+					// if the halfword is a 16bit instruction
+					default:
+					{
+						// maybe this is the second half word of a thumb-2 instr?. Check the previous one
+						currhwAddress--;
+						switch(*currhwAddress & THUMB32)
 						{
-							// if we are here it means that the previous instruction was a 16bit standalone instruction
-							// and so it the next one
-							currhwAddress++;
-							//keep only the last 16 bits
+							case THUMB32_1:
+							case THUMB32_2:
+							case THUMB32_3:
+							{	// if we are here, it means the the current instruction is the second halfword
+								// of a thumb 32-bit instr
+								currhwAddress +=2;
+								instruction = *currhwAddress;
+								currAddress = (u32int*)currhwAddress;
+								break;
+							}
+							default:
+							{
+								// if we are here it means that the previous instruction was a 16bit standalone instruction
+								// and so it the next one
+								currhwAddress++;
+								//keep only the last 16 bits
+								currAddress = (u32int*)currhwAddress;
+								instruction = halfinstruction;
+								break;
+							}
+						}
+					}
+				}
+				scanthumb=FALSE;
+				printf("InAddr: %08x\n",(u32int)currAddress);
+				printf("Instr : %08x\n",(u32int)instruction);
+				/* Remember, we placed some NOPs, when a Thumb 32-bit is about to be replaced. If the
+				 * scanner hits a NOP, make sure it is not hours. If so, replace it with the original 
+				 * instruction. This might have some performance implications though
+				 */
+				if( (instruction & INSTR_NOP_THUMB) == INSTR_NOP_THUMB )
+				{
+					printf("Found a NOP @ %08x. Is it mine?\n", currAddress);
+					int i=0;
+					for(i=0; i<BLOCK_CACHE_SIZE; i++)
+					{
+						if(gc->blockCache[i].endAddress == (u32int)currAddress) //we found a cache entry in this address
+						{
+							// I suspect if you hit this point, then block cache failed really bad to
+		 					// restore an instruction. So DIE_NOW instead of trying to workaround it
+							DIE_NOW(0,"Hypered NOP found but it shouldn't. FIX ME");	
+							//retrieve real instruction
+							instruction = gc->blockCache[i].hyperedInstruction;
+							printf("Replacing NOP with %08x\n",instruction);
+							currhwAddress--;
 							currAddress = (u32int*)currhwAddress;
-							instruction = halfinstruction;
-							break;
+							scanthumb=TRUE; //rescan!
+							printf("Replacing NOP with %08x and rescaning from %08x\n",instruction,(u32int)currhwAddress);
+
 						}
 					}
 				}
 			}
-			printf("InAddr: %08x\n",(u32int)currAddress);
-			printf("Instr : %08x\n",(u32int)instruction);
+
 		}
 		// ARM Mode
 		else
@@ -169,9 +202,9 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 			instruction = *currAddress;
 		}
 	} // while ends
-  //ARM Mode
-  if(!(gc->CPSR & T_BIT))
-  {
+  	//ARM Mode
+	if(!(gc->CPSR & T_BIT))
+  	{
 	  if ((instruction & INSTR_SWI) == INSTR_SWI)
   	  {
       	u32int svcCode = (instruction & 0x00FFFFFF);
