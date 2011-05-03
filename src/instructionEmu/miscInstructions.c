@@ -27,10 +27,10 @@ u32int bxInstruction(GCONTXT * context)
   {
   		instr=decodeThumbInstr(context,0);
 		//this has NO 32-bit Thumb encoding
-		printf("blxinstr %08x\n",instr);
+		printf("bxinstr %08x\n",instr);
 		regDest = (instr & 0x0078)>>3;
 		nextPC = loadGuestGPR(regDest, context);
-  		printf("blx RegSRC= %08x nextPC: %08x\n",regDest,nextPC);
+  		printf("bx RegSRC= %08x nextPC: %08x\n",regDest,nextPC);
   }
   else
   {
@@ -47,7 +47,8 @@ u32int bxInstruction(GCONTXT * context)
   	  addr = loadGuestGPR(regDest, context);
 	  if (addr & 0x1)
   	  {
-    	DIE_NOW(context, "BX Rm switching to Thumb. Unimplemented\n");
+	  	printf("Back to thumb\n");
+    	context->CPSR |= T_BIT;
 	  }
       nextPC = addr & 0xFFFFFFFE;
   }
@@ -850,10 +851,11 @@ u32int blxInstruction(GCONTXT * context)
 	// set ARM mode (disable Thumb bit)
 	context->CPSR &= ~T_BIT;
 	currPC = context->R15;
-	//ensure it is word aligned
+	currPC +=3; // +1 page 347
+	storeGuestGPR(14, currPC,context);
+	printf("Thumb BLX: %08x, LR: %08x, Target: %08x\n", instr, currPC,target);
+	// word align it
 	currPC &= ~0x3;
-	storeGuestGPR(14, currPC+2,context);
-	printf("Thumb BLX: %08x, LR: %08x, Target: %08x\n", instr, currPC+2,target);
 	nextPC = currPC + target;
 	printf("New PC=%08x\n",nextPC);
 	return nextPC;
@@ -892,7 +894,6 @@ u32int blxInstruction(GCONTXT * context)
 
 	  // link register
 	  storeGuestGPR(14, context->R15+4, context);
-
 	  nextPC = value & 0xFFFFFFFE;
 	  return nextPC;
 	}
@@ -1277,6 +1278,8 @@ u32int bInstruction(GCONTXT * context)
   {
 	instr = decodeThumbInstr(context,0);
 	thumb32 = isThumb32(instr);
+	printf("Branch instr %08x @ %08x\n", instr, context->R15);
+
 	// WHAT A MESS! -> ARM-A manual : page 344
 	// B and BL have different encoding. Find which one is it
 	if(thumb32)
@@ -1294,11 +1297,19 @@ u32int bInstruction(GCONTXT * context)
 			sign = ( (instr & 0x04000000 ) >> 26 );
 			u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
 			u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
-			target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
-			if((instr & 0x00008000) == 0)
+			if((instr & 0x00001000) == 0)
 			{	
 				instrCC = (0x03C00000 & instr) >> 22;
+				printf("Instrcc: %08x\n",instrCC);
+				target = (sign<<19)|(i1<<18)|(i2<<17)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
+				printf("CCTarget: %08x\n",target);
+
 			}
+			else //T4 encoding
+			{
+				target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
+			}
+
 			link = 0x00005000 & instr;
 			if (link == 0x00005000 || link == 0x00004000)
 			{
@@ -1417,7 +1428,7 @@ u32int bInstruction(GCONTXT * context)
 	 {
 	 	currPC += 4;
 		nextPC = currPC + target;
-		printf("new PC: %08x\n",nextPC);
+		printf("woot new PC: %08x\n",nextPC);
 	 }
 	 else
 	 {

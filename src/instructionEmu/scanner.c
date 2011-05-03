@@ -53,10 +53,14 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
     gc->endOfBlockInstr = bcEntry->hyperedInstruction;
 	gc->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
-#ifdef SCANNER_DEBUG
-    printf("scanner: Block @ %08x hash value %x cache index %x HIT\n", 
-           blkStartAddr, hashVal, bcIndex);
-#endif
+//#ifdef SCANNER_DEBUG
+	if(gc->CPSR & T_BIT)
+	{
+	    printf("scanner: Block @ %08x hash value %x cache index %x HIT\n", 
+    	       blkStartAddr, hashVal, bcIndex);
+	 	printf("OriginFull %08x Half %08x\n", gc->endOfBlockInstr, gc->endOfBlockHalfInstr);
+	}
+//#endif
     return;
   }
 
@@ -222,35 +226,37 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 	else
 	{
 		printf("Trick instr %08x\n",instruction);
-		if ((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX)
+		if ( ((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX) || (instruction & 0xFFFFDF00) == INSTR_SWI_THUMB)
  		{
 			u32int svcCode = (instruction & 0x000000FF); // NOP|SVC -> Keep the last 8 bits
-	  		if(!((svcCode > 0) && (svcCode <= 0xFF)))
+	  		if(svcCode > 0)
 	  		{
 				ishypersvc=TRUE;
 				// we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
-    		  	u32int cacheIndex = (svcCode >> 8) - 1;
-      		if (cacheIndex >= BLOCK_CACHE_SIZE)
-      		{
-        		DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
-	      	}	
+    		  	u32int cacheIndex = svcCode - 1;
+				if (cacheIndex >= BLOCK_CACHE_SIZE)
+	      		{
+    	    		DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
+	    	  	}	
 #ifdef SCANNER_DEBUG
-    	  	printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)currAddress, cacheIndex);
+    	  		printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)currAddress, cacheIndex);
 #endif
-      		BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
-	        // retrieve end of block instruction and handler function pointer
-  		    gc->endOfBlockInstr = bcEntry->hyperedInstruction;
-    		gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
-	     }	
-		 else
-		 {
-		 	ishypersvc=FALSE;
-		 }
-	 	}
+	      		BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
+		        // retrieve end of block instruction and handler function pointer
+  			    gc->endOfBlockInstr = bcEntry->hyperedInstruction;
+				gc->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
+				gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
+				//printf("Retrieved %08x and %08x\n",gc->endOfBlockInstr, gc->endOfBlockHalfInstr);
+	    	 }
+		 	 else
+			 {
+			 	ishypersvc=FALSE;
+			 }
+		}	
 		/* If the instruction is not a SWI placed by the hypervisor OR 
 		 * it is a non-SWI instruction, then proceed as normal
 		 */
-	  	if((((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX) && ishypersvc==FALSE) ||  (instruction & INSTR_SWI_THUMB_MIX) != INSTR_SWI_THUMB_MIX)
+	  	if((((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX) && ishypersvc==FALSE) ||  (((instruction & 0xFFFFDFFF) != INSTR_SWI_THUMB) && ishypersvc==FALSE) )
 	  {	
     	
 		/* Replace policy:
@@ -288,6 +294,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 						{
 							gc->endOfBlockInstr = *currAddress;
 							gc->endOfBlockHalfInstr = *currhwAddress;
+							printf("Stored %08x and %08x\n", gc->endOfBlockInstr,gc->endOfBlockHalfInstr);
 						}
 						else
 						{

@@ -214,6 +214,14 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 	}
 	else
 	{
+	  if( ((u32int)bcAddr[index].halfhyperedInstruction) > 0x5)
+	  {
+	  	u16int * endhwAddress = (u16int*)bcAddr[index].endAddress;
+		endhwAddress--;
+		printf("Restoring %08x to %08x\n",(u16int)bcAddr[index].halfhyperedInstruction, (u32int)endhwAddress);
+
+		*(u16int*)endhwAddress = (u16int)bcAddr[index].halfhyperedInstruction;
+	  }
 	  *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
 	}
 }
