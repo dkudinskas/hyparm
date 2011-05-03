@@ -56,6 +56,9 @@
 
 #define THUMB16_STR_IMM5	0x6000
 #define THUMB16_STR_IMM8	0x9000
+#define THUMB32_STRB_IMM12	0xF8800000
+#define THUMB32_STRB_IMM8	0xF8008000
+#define THUMB32_STRB_REG		0xF8000000
 /* generic load store instruction emulation  *
  * called when we permission fault on memory *
  * access to a protected area - must emulate */

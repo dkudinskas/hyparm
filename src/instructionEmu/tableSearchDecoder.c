@@ -620,8 +620,11 @@ struct instruction32bit t32DataProcInstructions[] = {
 {0, &movInstruction, 0xF04F0000, 0xFBEF1000, "MOVW<c> <Rd>, #<imm12>"},
 // this is for T3 encoding
 {0, &movInstruction, 0xF2400000, 0xFBF00000, "MOVW<c> <Rd>, #<imm16>"},
+{0, &movInstruction, 0xF04F0000, 0xFBEF8000, "MOV{S}/W <Rd>, #<immt12>"},
+{0, &movInstruction, 0xF2400000, 0xFBF08000, "MOVW <Rd>, #<imm16>"},
 {0, &movtInstruction, 0xF2C00000, 0xFBF08000, "MOVT<c> <Rd>, #<imm16>"},
-{0, &orrInstruction, 0xEA000000, 0xFE000000, "ORR{S} <Rd>, <Rn>{,<shift>}"},
+{0, &orrInstruction, 0xEA400000, 0xFFE08000, "ORR{S} <Rd>, <Rn>{,<shift>}"},
+{0, &orrInstruction, 0xF0400000, 0xFBE08000, "ORR{S} <Rd>, <Rn>,#<imm12>"},
 //trap for RD=15
 {1, &andInstruction, 0xF0000F00, 0xFBE08F00, "AND{S}<c> PC, <Rm>, #<imm12>"},
 {0, &andInstruction, 0xF0000000, 0xFBE08000, "AND{S}<c> <Rd>, <Rm>, #<imm12>"},
@@ -636,7 +639,14 @@ struct instruction32bit t32DataProcInstructions[] = {
 {1, &addInstruction, 0xF20F0000, 0xF20F8000, "ADDW PC, <Rn>, #<imm12>"},
 // RN=SP -> should be ok
 {0, &addInstruction, 0xF20D0000, 0xF20F8000, "ADDW <Rd>, SP, #<imm8>"},
-{0, &bicInstruction, 0xF0200000, 0xFBE08000, "BIC{S} <Rd>, <Rn>, #<imm12>"}
+{0, &bicInstruction, 0xF0200000, 0xFBE08000, "BIC{S} <Rd>, <Rn>, #<imm12>"},
+{0, &rsbInstruction, 0xF1C00000, 0xFBE08000, "RSB <Rd>, <Rn>, #<imm12>"},
+{0, &subInstruction, 0xF1A00000, 0xFBE08000, "SUB{S}.W <Rd>, <Rn>, #<imm12>"},
+{0, &subInstruction, 0xF2A00000, 0xFBE08000, "SUB{S}W <Rd>, <Rn>, #<imm12>"},
+{0, &subInstruction, 0xEBA00000, 0xFFE08000, "SUB{S}.W <Rd>, <Rn>, <Rm>{,<shitft>}"},
+// RN = SP -> should be ok
+{0, &subInstruction, 0xF2AB0000, 0xFBEF8000, "SUBW <Rd>, SP, #<imm12>"},
+{0, &subInstruction, 0xEBAB0000, 0xFFEF8000, "SUB{S} <Rd>, SP, <Rm>{,<shift>}"}
 };
 
 struct instruction32bit t32SingleStoreInstructions[] = {

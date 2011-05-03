@@ -19,6 +19,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
   u32int instr = 0;
   u32int eobInstrBackup = 0;
   u32int eobHalfInstrBackup =0;
+  u32int oldinstr =0;
   bool thumb32 = 0;
   if(context->CPSR & T_BIT) //Thumb
   {
@@ -27,32 +28,53 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 	//take care on what you fetch. Segmentation fault is just around the corner
 	if((((u32int)context->R15) & 0x3 ) < 0x2)
 	{
-	  	instr = *((u32int*)context->R15);
+	  	oldinstr = *((u32int*)context->R15);
 	}
 	else
 	{	
-		instr = *((u16int*)context->R15);
+		oldinstr = *((u16int*)context->R15);
 	}
 	printf("Storing on %08x, full instr %08x\n",address,instr);
-	instr = decodeThumbInstr(context,instr);
-    printf("Found %08x\n",instr);
+	instr = decodeThumbInstr(context,oldinstr);
+    printf("DATA ABORT FROM THUMB on instr: %08x\n",instr);
 	thumb32 = isThumb32(instr);
 	if(thumb32)
 	{
-		DIE_NOW(0,"Unimplemented Thumb32 generic load/store");
+		if( ((instr & THUMB32_STRB_IMM12) == THUMB32_STRB_IMM12) || (instr & THUMB32_STRB_IMM8) == THUMB32_STRB_IMM8)
+		{
+			validateCachePreChange(context->blockCache, address);
+			context->endOfBlockInstr = oldinstr;
+			context->endOfBlockHalfInstr = WHTHUMB32;
+			strbInstruction(context);
+		}
+		else if ((instr & THUMB32_STRB_REG) == THUMB32_STRB_REG)
+		{
+			DIE_NOW(0,"Unimplemented Thumb32 register generic load/store");
+		}
+		else
+		{
+			DIE_NOW(0, "Unknown THUMB32 load/store instr");
+		}
 	}
-	if ( ( instr & THUMB16_STR_IMM5 ) || instr & THUMB16_STR_IMM8 )
+	else
 	{
-		// validate cache if needed
-		validateCachePreChange(context->blockCache, address);
-		// cheat strInstruction. We know that this is a thumb16 instr
-		// so make sure that decoder will recognize it :-/
-		context->endOfBlockInstr = instr;
-		context->endOfBlockHalfInstr = LHALF; 
-		strInstruction(context);
-	}
+		if ( ( instr & THUMB16_STR_IMM5 ) || instr & THUMB16_STR_IMM8 )
+		{
+			// validate cache if needed
+			validateCachePreChange(context->blockCache, address);
+			// cheat strInstruction. We know that this is a thumb16 instr
+			// so make sure that decoder will recognize it :-/
+			context->endOfBlockInstr = instr;
+			context->endOfBlockHalfInstr = LHALF; 
+			strInstruction(context);	
+		}
+		else
+		{
+			DIE_NOW(0,"Unimplemented Thumb16 Load/Store\n");
+		}
 	context->endOfBlockInstr = eobInstrBackup;
 	context->endOfBlockHalfInstr = eobHalfInstrBackup; 
+  	}
   }
   else //ARM
   {

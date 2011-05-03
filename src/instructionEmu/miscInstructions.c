@@ -851,10 +851,13 @@ u32int blxInstruction(GCONTXT * context)
 	// set ARM mode (disable Thumb bit)
 	context->CPSR &= ~T_BIT;
 	currPC = context->R15;
-	currPC +=3; // +1 page 347
-	storeGuestGPR(14, currPC,context);
-	printf("Thumb BLX: %08x, LR: %08x, Target: %08x\n", instr, currPC,target);
-	// word align it
+	currPC +=2; 
+	storeGuestGPR(14, currPC+1,context); //next instr + 1
+	printf("Thumb BLX: %08x, LR: %08x, Target: %08x\n", instr, currPC+1,target);
+	// currPC has to be word aligned
+	if( (currPC & 0x8) >= 0x8){
+		currPC +=2;
+	}
 	currPC &= ~0x3;
 	nextPC = currPC + target;
 	printf("New PC=%08x\n",nextPC);

@@ -420,9 +420,27 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 	:"r"(currAddress)
 	:"memory"
 	);
+
+	if( (gc->endOfBlockHalfInstr) > 0x5)
+	{
+		currhwAddress--;
+		printf("Cleaning up halfword @ %08x\n",currhwAddress);
+		asm("mcr p15, 0, %0, c7, c11, 1"
+		:
+		:"r"(currhwAddress)
+		:"memory"
+		);
+		asm("mcr p15, 0, %0, c7, c5, 1"
+		:
+		:"r"(currhwAddress)
+		:"memory"
+		);
+	}
   
+  printf("1");
   protectScannedBlock(blkStartAddr, (u32int)currAddress);
   // and we're done.
+  printf("2");
 }
 
 void protectScannedBlock(u32int startAddress, u32int endAddress)

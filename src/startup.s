@@ -584,7 +584,7 @@ prefetch_abort_handler:
   MRS    LR, SPSR
   AND    LR, LR, #0x0f
   CMP	 LR, #0x0f
-  BNE    prefetchAbortHandlerPrivilegedMode
+  BEQ    prefetchAbortHandlerPrivilegedMode
   
   /* We were in USR mode, we must have been running guest code */
   save_r0_to_r14 /* pops LR */
