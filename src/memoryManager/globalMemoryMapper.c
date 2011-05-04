@@ -60,6 +60,10 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
     // STM Rn, {reg list}
     stmInstruction(context);
   }
+  else if ((instr & STREX_MASK) == STREX_MASKED)
+  {
+    strexInstruction(context);
+  }
   else if ((instr & LDR_MASK) == LDR_MASKED)
   {
     // loads don't change memory. no need to validate cache

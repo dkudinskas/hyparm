@@ -95,7 +95,8 @@ void mmuEnableVirtAddr(void);
 void mmuDisableVirtAddr(void);
 bool isMmuEnabled(void);
 
-void clearCache(void);
+void clearInstructionCache(void);
+void clearDataCache(void);
 void clearTLB(void);
 void clearTLBbyMVA(u32int address);
 void dataBarrier(void);

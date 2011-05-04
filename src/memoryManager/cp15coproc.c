@@ -414,7 +414,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==5 && opc1==0 && CRm==0 && opc2==1)
   {
     // IFSR: instruction fault status register
-    printf("setCregVal: set IFSR to %x", val);
+    printf("setCregVal: set IFSR to %x\n", val);
   }
   else if (CRn==6 && opc1==0 && CRm==0 && opc2==0)
   {
@@ -540,10 +540,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==1)
   {
     // CONTEXTID: context ID register 
-    if (val != 0)
-    {
-      printf("setCregVal: WARN: CONTEXTID value %x\n", val);
-    }
+    printf("setCregVal: WARN: CONTEXTID value %x\n", val);
     asm("mcr p15, 0, %0, c13, c0, 1"
     :
     :"r"(val)

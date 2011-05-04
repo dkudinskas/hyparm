@@ -1072,7 +1072,9 @@ void copySectionEntry(sectionDescriptor* guest, sectionDescriptor* shadow)
       if(xn == 1)
       {
         // guest maps memory as EXECUTE NEVER.
+#ifdef PT_SHADOW_DBG
         printf("XN bit is set.  Protecting code space from self-modification block cache corruption.\n");
+#endif
         // When memory protection is properly implemented
         // then we should point to a function that deals with this!
         //Perhaps an optimised addProtection method for the pageTable class here
@@ -1512,7 +1514,9 @@ void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow)
     if(xn == 1)
     {
       // guest maps memory as EXECUTE NEVER.
+#ifdef PT_SHADOW_DBG
       printf("XN bit is set.  Protecting code space from self-modification block cache corruption.\n");
+#endif
       // When memory protection is properly implemented
       // then we should point to a function that deals with this!
       //Perhaps an optimised addProtection method for the pageTable class here
@@ -2218,11 +2222,6 @@ void pageTableEdit(u32int address, u32int newVal)
         // now changing misc PTE details
         // we so far ignore: C, B, TEX, s, nG, ns bits!!!
 
-        if (oldSd->xn != newSd->xn)
-        {
-          DIE_NOW(gc, "pageTableEdit: edit section PTE details XN bit toggle!");
-        }
-        
         // important: first remap domain, then access permission bits!!!
         ((sectionDescriptor*)shadowEntry)->domain = mapGuestDomain(newSd->domain);
 
@@ -2279,7 +2278,33 @@ void pageTableEdit(u32int address, u32int newVal)
       }
       else if (oldGuestEntry->type == SMALL_PAGE)
       {
-        DIE_NOW(gc, "pageTableEdit: edit small page case unimplemented");
+        smallDescriptor* newPtd = (smallDescriptor*)newGuestEntry;
+        smallDescriptor* oldPtd = (smallDescriptor*)oldGuestEntry;
+        smallDescriptor* shadowPtd = (smallDescriptor*)shadowEntry;
+        if(oldPtd->addr != newPtd->addr)
+        {
+          //Change in address is same as a removeEntry and addNew one
+          removeSmallPageEntry(shadowPtd);
+          copySmallEntry(newPtd, shadowPtd);
+        }
+
+        // now changing misc details
+        shadowPtd->c = newPtd->c;
+        
+        if (oldPtd->xn != newPtd->xn)
+        {
+          DIE_NOW(gc, "pageTableEdit: edit small page details XN bit toggle!");
+        }
+        shadowPtd->xn = newPtd->xn;
+        
+        if ((oldPtd->ap10 != newPtd->ap10) || (oldPtd->ap2 != newPtd->ap2))
+        {
+          // we need to get the domain number from the first level entry for this
+          // we get a 1st level descriptor from context->PT_os and virtualAddr
+          pageTableDescriptor* firstLevelEntry = 
+            (pageTableDescriptor*)get1stLevelPtDescriptorAddr(gc->PT_os, virtualAddr);
+          mapAPBitsSmallPage(virtualAddr, firstLevelEntry->domain, newPtd, shadowPtd);
+        }
       }
       else if (oldGuestEntry->type == FAULT)
       {
@@ -2589,9 +2614,96 @@ void mapAPBitsSection(u32int vAddr, sectionDescriptor* guestNewSD, descriptor* s
   }
 }
 
-void mapAPBitsPageTable(u32int vAddr, sectionDescriptor* guestNewSD, descriptor* shadowSD)
+void mapAPBitsPageTable(u32int vAddr, pageTableDescriptor* guestNew, pageTableDescriptor* shadow)
 {
-  printf("mapAPBitsPageTable: implement me.\n");
+#ifdef PT_SHADOW_DBG
+  printf("mapAPBitsPageTable: vAddr %08x, guestNew %08x @ %08x, shadow %08x @ %08x\n",
+    vAddr, *(u32int*)guestNew, (u32int)guestNew, *(u32int*)shadow, (u32int)shadow);
+#endif
+  u32int guestVA  = findVAforPA(guestNew->addr << 10);
+  u32int shadowVA = findVAforPA(shadow->addr << 10);
+
+  // loop through all second level entries
+  u32int i = 0;
+  for (i = 0; i < SECOND_LEVEL_PAGE_TABLE_ENTRIES; i++)
+  {
+    descriptor* guestEntry  = (descriptor*)(guestVA + i*4);
+    descriptor* shadowEntry = (descriptor*)(shadowVA + i*4);
+    switch (guestEntry->type)
+    {
+      case FAULT:
+      {
+        break;
+      }
+      case LARGE_PAGE:
+      {
+        DIE_NOW(0, "mapAPBitsPageTable hit large page!\n");
+        break;
+      }
+      case SMALL_PAGE:
+      case SMALL_PAGE_3:
+      {
+        // get domain, call mapAPBitsSmallPage
+        smallDescriptor* guest  = (smallDescriptor*)guestEntry;
+        smallDescriptor* shadow = (smallDescriptor*)shadowEntry;
+        // va now needs to be adjusted for each small page
+        u32int va = vAddr + SMALL_PAGE_SIZE * i;
+        mapAPBitsSmallPage(va, guestNew->domain, guest, shadow);
+      }
+    } // switch ends
+  } // for ends
+}
+
+void mapAPBitsSmallPage(u32int vAddr, u32int dom, smallDescriptor* guest, smallDescriptor* shadow)
+{
+#ifdef PT_SHADOW_DBG
+  printf("mapAPBitsSmallPage: vAddr %08x, dom %x, guest %08x @ %08x, shadow %08x @ %08x\n",
+         vAddr, dom, *(u32int*)guest, (u32int)guest, *(u32int*)shadow, (u32int)shadow);
+#endif
+
+  GCONTXT* context = getGuestContext();
+  bool containsPTEntry = FALSE;
+  if ((vAddr & 0xFFFFF000) == ((u32int)context->PT_os & 0xFFFFF000))
+  {
+    // 1st level page table lives in this section!
+    containsPTEntry = TRUE;
+  }
+  
+  if (!containsPTEntry)
+  {
+    // maybe second level page tables live in this section?
+    u32int guestPhysicalAddr = getPhysicalAddress(context->PT_os, vAddr);
+    u32int metaArrayIndex = 0;
+    while (guestSecondLvlPageTables[metaArrayIndex].valid != 0)
+    {
+      u32int pAddrPt2 = guestSecondLvlPageTables[metaArrayIndex].pAddr;
+      if ((pAddrPt2 >= guestPhysicalAddr) 
+      && ((pAddrPt2 + SECOND_LEVEL_PAGE_TABLE_SIZE -1) <= (guestPhysicalAddr + SECTION_SIZE-1)))
+      {
+        containsPTEntry = TRUE;
+        break;
+      }
+      metaArrayIndex++;
+    }
+  }
+
+  u32int apBits = mapAccessPermissionBits(((guest->ap2 << 2) | guest->ap10), dom);
+
+#ifdef PT_SHADOW_DBG
+  printf("mapAPBitsSmallPage: new ap bits %x\n", apBits);
+#endif
+
+  if (!containsPTEntry)
+  {
+    // this small page is free of guest page tables. WIN!
+    shadow->ap2  = (apBits >> 2) & 0x1;
+    shadow->ap10 =  apBits & 0x3;
+  }
+  else
+  {
+    shadow->ap2  = (PRIV_RW_USR_RO >> 2) & 0x1;
+    shadow->ap10 =  PRIV_RW_USR_RO & 0x3;
+  }
 }
 
 

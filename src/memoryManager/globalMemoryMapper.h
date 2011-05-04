@@ -28,7 +28,9 @@
 // multiple word store
 #define STM_MASK        0x0e100000
 #define STM_MASKED      0x08000000
-
+// store exclusive
+#define STREX_MASK      0x0ff00ff0
+#define STREX_MASKED    0x01800f90
 
 // halfword load
 #define LDRH_IMM_MASK   0x0e500090
