@@ -154,11 +154,20 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
     }
 
     context->R15 = nextPC;
+	//make sure it is word aligned
+	nextPC &= ~0x3;
     return nextPC;
   }
   else
   {
-    nextPC = context->R15 + 4;
+	if ( context->CPSR & T_BIT )
+	{
+		nextPC = context->R15 +2;
+	}
+	else
+	{
+		nextPC = context->R15 + 4;
+	}
     return nextPC;
   }
 }

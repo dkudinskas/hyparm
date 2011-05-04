@@ -53,12 +53,26 @@
 #define LDREX_MASK      0x0ff00fff
 #define LDREX_MASKED    0x01900f9f
 
+// Thumb 16 bit
+#define THUMB16_STR_IMM5_MASK		0xF800
+#define THUMB16_STR_IMM5			0x6000
+#define THUMB16_STR_IMM8_MASK		0xF800
+#define THUMB16_STR_IMM8			0x9000
 
-#define THUMB16_STR_IMM5	0x6000
-#define THUMB16_STR_IMM8	0x9000
-#define THUMB32_STRB_IMM12	0xF8800000
-#define THUMB32_STRB_IMM8	0xF8008000
+#define THUMB16_LDR_IMM5_MASK		0xF800
+#define THUMB16_LDR_IMM5			0x6800
+#define THUMB16_LDR_IMM8_MASK		0xF800
+#define THUMB16_LDR_IMM8			0x9800
+#define THUMB16_LDR_IMM8_LIT_MASK	0xF800
+#define THUMB16_LDR_IMM8_LIT		0x4800
+#define THUMB16_LDR_REG_MASK		0xFE00
+#define THUMB16_LDR_REG				0x5800
+
+// Thumb 32 bit
+#define THUMB32_STRB_IMM12		0xF8800000
+#define THUMB32_STRB_IMM8		0xF8008000
 #define THUMB32_STRB_REG		0xF8000000
+
 /* generic load store instruction emulation  *
  * called when we permission fault on memory *
  * access to a protected area - must emulate */

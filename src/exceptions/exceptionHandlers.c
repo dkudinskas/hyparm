@@ -134,7 +134,6 @@ void dataAbort()
 		if(gc->CPSR & T_BIT)
 		{
 			gc->R15 = gc->R15 + 2;
-			printf("NextPC %08x\n",gc->R15);
 		}
 		else
 		{

@@ -34,9 +34,9 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 	{	
 		oldinstr = *((u16int*)context->R15);
 	}
-	printf("Storing on %08x, full instr %08x\n",address,instr);
+	//printf("Storing on %08x, full instr %08x\n",address,instr);
 	instr = decodeThumbInstr(context,oldinstr);
-    printf("DATA ABORT FROM THUMB on instr: %08x\n",instr);
+    //printf("DATA ABORT FROM THUMB on instr: %08x\n",instr);
 	thumb32 = isThumb32(instr);
 	if(thumb32)
 	{
@@ -58,7 +58,8 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 	}
 	else
 	{
-		if ( ( instr & THUMB16_STR_IMM5 ) || instr & THUMB16_STR_IMM8 )
+		// STR emulation
+		if ( ( ( instr & THUMB16_STR_IMM5_MASK ) == THUMB16_STR_IMM5 ) || ( instr & THUMB16_STR_IMM8_MASK ) == THUMB16_STR_IMM8)
 		{
 			// validate cache if needed
 			validateCachePreChange(context->blockCache, address);
@@ -67,6 +68,16 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 			context->endOfBlockInstr = instr;
 			context->endOfBlockHalfInstr = LHALF; 
 			strInstruction(context);	
+		}
+		// LDR emulation
+		else if ( ( ( instr & THUMB16_LDR_IMM5_MASK ) == THUMB16_LDR_IMM5 ) 
+			|| ( ( instr & THUMB16_LDR_IMM8_MASK ) == THUMB16_LDR_IMM8 )
+			|| ( ( instr & THUMB16_LDR_IMM8_LIT_MASK ) == THUMB16_LDR_IMM8_LIT )
+			|| ( ( instr & THUMB16_LDR_REG_MASK ) == THUMB16_LDR_REG ) )
+		{
+			context->endOfBlockInstr = oldinstr;
+			context->endOfBlockHalfInstr = LHALF;
+			ldrInstruction(context);
 		}
 		else
 		{

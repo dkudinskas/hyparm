@@ -44,7 +44,6 @@ u32int strInstruction(GCONTXT * context)
 	bool regSP = FALSE; // page 666
 	instr = decodeThumbInstr(context,0);
 	thumb32 = isThumb32(instr);
-	printf("generic %08x\n",instr);
 	if(!thumb32)//16-bit
 	{
 		if((instr & 0x6000) == 0x6000) //imm5
@@ -71,7 +70,7 @@ u32int strInstruction(GCONTXT * context)
 		DIE_NOW(0,"Unimplemented thumb32 STR");
 	}
 
-	printf("strInstr: regsrc=%x, regdst=%x, address=%x, value=%x\n",regSrc,regDst,offsetAddress,valueToStore);
+	//printf("strInstr: regsrc=%x, regdst=%x, address=%x, value=%x\n",regSrc,regDst,offsetAddress,valueToStore);
 	context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, offsetAddress, valueToStore);
 	return context->R15+2;
 
@@ -242,7 +241,6 @@ u32int strbInstruction(GCONTXT * context)
   {	
 	instr = decodeThumbInstr(context,0);
 	thumb32 = isThumb32(instr);
-	printf("strb generic %08x\n",instr);
 	u32int address = 0;
   	if(!thumb32)
 	{
@@ -297,12 +295,12 @@ u32int strbInstruction(GCONTXT * context)
 		{
 			DIE_NOW(0,"Thumb32 STRB reg unimplemeted");
 		}
-		printf("strbInstr: regsrc=%x, regdst=%x, address=%x, value=%x, P=%x, U=%x, W=%x\n",regSrc,regDst,address,valueToStore, preOrPost, incOrDec, writeBack);
+		//printf("strbInstr: regsrc=%x, regdst=%x, address=%x, value=%x, P=%x, U=%x, W=%x\n",regSrc,regDst,address,valueToStore, preOrPost, incOrDec, writeBack);
 
 		context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valueToStore & 0xFF));
 		if(writeBack)
 		{
-			printf("STRB: storing %x to %x\n", address, regDst);
+			//printf("STRB: storing %x to %x\n", address, regDst);
 			storeGuestGPR(regDst, valueToStore, context);
 		}
 	}
@@ -1222,146 +1220,207 @@ u32int ldrbInstruction(GCONTXT * context)
 
 u32int ldrInstruction(GCONTXT * context)
 {
-  if(context->CPSR & T_BIT)
-  {
-  	DIE_NOW(0,"Thumb ldr unimplemented");
-  }
-  u32int instr = context->endOfBlockInstr;
-   
-  u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int regOrImm = instr & 0x02000000; // 1 = reg, 0 = imm
-  u32int preOrPost = instr & 0x01000000; // 1 = pre, 0 = post
-  u32int incOrDec = instr & 0x00800000; // 1 = inc, 0 = dec
-  u32int writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
-  u32int regSrc = (instr & 0x000F0000) >> 16; // Base Load address
-  u32int regDst = (instr & 0x0000F000) >> 12; // Destination - load to this
+  u32int condcode = 0;
+  u32int regOrImm = 0;
+  u32int preOrPost = 0;
+  u32int writeBack = 0;
+  u32int incOrDec = 0;
+  u32int regSrc = 0;
+  u32int regDst = 0;
   u32int offsetAddress = 0;
   u32int baseAddress = 0;
-
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
-  {
-    // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
+  u32int imm32 = 0;
+  u32int instr = 0;
+  bool thumb32 = FALSE; 
+  if(context->CPSR & T_BIT)
+  {	
+	instr = decodeThumbInstr(context,0);
+	thumb32 = isThumb32(instr);
+	if(!thumb32)//16-bit
+	{
+		if( ( instr & THUMB16_LDR_IMM5_MASK ) == THUMB16_LDR_IMM5 )
+		{
+			imm32 = ( instr & 0x07C0 )>>6;
+			regSrc = ( instr & 0x0038 )>>3;
+			regDst = ( instr & 0x0007 );
+			baseAddress = loadGuestGPR(regSrc,context);
+			offsetAddress = baseAddress + imm32;
+		}
+		else if ( ( instr & THUMB16_LDR_IMM8_MASK ) == THUMB16_LDR_IMM8 )
+		{
+			imm32 = ( instr & 0x00FF );
+			// Source register is SP
+			regSrc = 0xD;
+			regDst = ( instr & 0x0700 )>>8;
+			baseAddress = loadGuestGPR(regSrc,context);
+			offsetAddress = baseAddress + imm32;
+		}
+		else if ( ( instr & THUMB16_LDR_IMM8_LIT_MASK ) == THUMB16_LDR_IMM8_LIT )
+		{
+			imm32 = ( instr & 0x00FF );
+			regDst = ( instr & 0x0700 )>>8;
+			offsetAddress = imm32;
+		}
+		else if ( ( instr & THUMB16_LDR_REG_MASK ) == THUMB16_LDR_REG )
+		{
+			u32int regSrc2 = ( instr & 0x01C0 )>>6;
+			regSrc = ( instr & 0x0038 )>>3;
+			regDst = ( instr & 0x0003 );
+			baseAddress = loadGuestGPR(regSrc, context);
+			imm32 = loadGuestGPR(regSrc2, context);
+			offsetAddress = baseAddress + imm32;
+		}
+		else
+		{
+			DIE_NOW(0,"Unimplemented thumb16 LDR instr");
+		}
+		u32int valueLoaded =
+		    	  context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, offsetAddress);
+		storeGuestGPR(regDst, valueLoaded, context);
+		//printf("Thumb 16 LDR: loaded %x from %x to %x\n",valueLoaded,regSrc, regDst);
+	}
+	else
+	{
+		DIE_NOW(0,"Unimplemented Thumb32 LDR");
+	}
+	return context->R15+2;
   }
-
-  if (regOrImm == 0)
+  else //ARM
   {
-    // immediate case
-    u32int imm32 = instr & 0x00000FFF;
-    baseAddress = loadGuestGPR(regSrc, context);
-    if (regSrc == 15)
-    {
-      baseAddress = baseAddress + 8;
-    }
+  	instr = context->endOfBlockInstr;
+   	condcode = (instr & 0xF0000000) >> 28;
+  	regOrImm = instr & 0x02000000; // 1 = reg, 0 = imm
+  	preOrPost = instr & 0x01000000; // 1 = pre, 0 = post
+ 	incOrDec = instr & 0x00800000; // 1 = inc, 0 = dec
+  	writeBack = instr & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
+  	regSrc = (instr & 0x000F0000) >> 16; // Base Load address
+  	regDst = (instr & 0x0000F000) >> 12; // Destination - load to this
+ 	offsetAddress = 0;
+  	baseAddress = 0;
+	u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
+	if (!evalCC(condcode, cpsrCC))
+  	{
+    	// condition not met! allright, we're done here. next instruction...
+	    return context->R15 + 4;
+  	}
+	if (regOrImm == 0)
+	{
+    	// immediate case
+	    imm32 = instr & 0x00000FFF;
+    	baseAddress = loadGuestGPR(regSrc, context);
+	    if (regSrc == 15)
+    	{
+	      baseAddress = baseAddress + 8;
+    	}
 
-    // offsetAddress = if increment then base + imm32 else base - imm32
-    if (incOrDec != 0)
-    {
-      offsetAddress = baseAddress + imm32;
-    }
-    else
-    {
-      offsetAddress = baseAddress - imm32;
-    }
-  } // Immediate case ends
-  else
-  {
-    // register case
-    u32int regSrc2 = instr & 0x0000000F;
-    baseAddress = loadGuestGPR(regSrc, context);
-    if (regSrc == 15)
-    {
-      baseAddress = baseAddress + 8;
-    }
-    // regSrc2 == PC then UNPREDICTABLE
-    if (regSrc2 == 15)
-    {
-        DIE_NOW(0, "LDR reg Rm == PC UNPREDICTABLE case!");
-    }
-    u32int offsetRegisterValue = loadGuestGPR(regSrc2, context);
+	    // offsetAddress = if increment then base + imm32 else base - imm32
+    	if (incOrDec != 0)
+	    {
+    	  offsetAddress = baseAddress + imm32;
+	    }
+    	else
+	    {
+    	  offsetAddress = baseAddress - imm32;
+	    }
+	  } // Immediate case ends
+	  else
+  	  {
+	    // register case
+    	u32int regSrc2 = instr & 0x0000000F;
+	    baseAddress = loadGuestGPR(regSrc, context);
+	    if (regSrc == 15)
+	    {
+    	  baseAddress = baseAddress + 8;
+	    }
+    	// regSrc2 == PC then UNPREDICTABLE
+	    if (regSrc2 == 15)
+    	{
+	        DIE_NOW(0, "LDR reg Rm == PC UNPREDICTABLE case!");
+    	}
+	    u32int offsetRegisterValue = loadGuestGPR(regSrc2, context);
 
-    // (shift_t, shift_n) = DecodeImmShift(type, imm5)
-    u32int shiftAmount = 0;
-    u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5),
+    	// (shift_t, shift_n) = DecodeImmShift(type, imm5)
+	    u32int shiftAmount = 0;
+	    u32int shiftType = decodeShiftImmediate(((instr & 0x060)>>5),
                                             ((instr & 0xF80)>>7), &shiftAmount);
-    u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
+	    u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
 
-    // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
-    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
+    	// offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
+	    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
 
-    // if increment then base + offset else base - offset
-    if (incOrDec != 0)
-    {
-      // increment
-      offsetAddress = baseAddress + offset;
-    }
-    else
-    {
-      // decrement
-      offsetAddress = baseAddress - offset;
-    }
-  } // Register case ends
+    	// if increment then base + offset else base - offset
+	    if (incOrDec != 0)
+    	{
+	      // increment
+    	  offsetAddress = baseAddress + offset;
+	    }
+    	else
+	    {
+    	  // decrement
+	      offsetAddress = baseAddress - offset;
+    	}
+	  } // Register case ends
 
-  u32int address = 0;
-  // if preIndex then use offsetAddress else baseAddress
-  if (preOrPost != 0)
-  {
-    address = offsetAddress;
-  }
-  else
-  {
-    address = baseAddress;
-  }
+	  u32int address = 0;
+	  // if preIndex then use offsetAddress else baseAddress
+	  if (preOrPost != 0)
+	  {
+	    address = offsetAddress;
+	  }
+	  else
+	  {
+	    address = baseAddress;
+	  }
 
-  if ((address & 0x3) != 0x0)
-  {
-    DIE_NOW(context, "LDR Rd [Rn, Rm/#imm] unaligned address!\n");
-  }
+	  if ((address & 0x3) != 0x0)
+	  {
+	    DIE_NOW(context, "LDR Rd [Rn, Rm/#imm] unaligned address!\n");
+	  }
 
-  // P = 0 and W == 1 then LDR as if user mode
-  if ((preOrPost == 0) && (writeBack != 0))
-  {
-    bool abort = shouldDataAbort(FALSE, FALSE, address);
-    if (abort)
-    {
-      return context->R15;
-    }
-  }
+	  // P = 0 and W == 1 then LDR as if user mode
+	  if ((preOrPost == 0) && (writeBack != 0))
+	  {
+	    bool abort = shouldDataAbort(FALSE, FALSE, address);
+	    if (abort)
+	    {
+	      return context->R15;
+	    }
+	  }
 
-  // DO the actual load from memory
-  u32int valueLoaded =
-      context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
+	  // DO the actual load from memory
+	  u32int valueLoaded =
+    	  context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
 
-  // LDR loading to PC should load a word-aligned value
-  if ((regDst == 15) && ((valueLoaded & 0x3) != 0))
-  {
-    printf("LDR: regDst = %x, load from addr %08x\n", regDst, valueLoaded);
-    DIE_NOW(context, "LDR Rd [Rn, Rm/#imm] load unaligned value to PC!\n");
-  }
-  // put loaded val to reg
-  storeGuestGPR(regDst, valueLoaded, context);
+	  // LDR loading to PC should load a word-aligned value
+	  if ((regDst == 15) && ((valueLoaded & 0x3) != 0))
+	  {
+    	printf("LDR: regDst = %x, load from addr %08x\n", regDst, valueLoaded);
+	    DIE_NOW(context, "LDR Rd [Rn, Rm/#imm] load unaligned value to PC!\n");
+	  }
+	  // put loaded val to reg
+	  storeGuestGPR(regDst, valueLoaded, context);
 
-  // wback = (P = 0) or (W = 1)
-  bool wback = (preOrPost == 0) || (writeBack != 0);
-  if (wback)
-  {
-    // if Rn == Rt then UNPREDICTABLE
-    if (regDst == regSrc)
-    {
-      DIE_NOW(0, "LDR writeback UNPREDICTABLE case!");
-    }
-    // Rn = offsetAddr;
-    storeGuestGPR(regSrc, offsetAddress, context);
-  }
-  if (regDst == 15)
-  {
-    return context->R15;
-  }
-  else
-  {
-    return context->R15+4;
-  }
+	  // wback = (P = 0) or (W = 1)
+	  bool wback = (preOrPost == 0) || (writeBack != 0);
+	  if (wback)
+	  {
+	    // if Rn == Rt then UNPREDICTABLE
+	    if (regDst == regSrc)
+    	{
+	      DIE_NOW(0, "LDR writeback UNPREDICTABLE case!");
+    	}
+	    // Rn = offsetAddr;
+    	storeGuestGPR(regSrc, offsetAddress, context);
+	  }
+	  if (regDst == 15)
+	  {
+	    return context->R15;
+	  }
+	  else
+	  {
+	    return context->R15+4;
+	  }
+	}
 }
 
 
@@ -1396,7 +1455,6 @@ u32int ldmInstruction(GCONTXT * context)
   {
   	// we trapped from Thumb mode. I assume the PC reg is in the list
 	instr = decodeThumbInstr(context,0);
-	printf("Thumb POP: %08x\n",instr);
 	thumb32 = isThumb32(instr);
 	if(!thumb32)
 	{
@@ -1414,14 +1472,14 @@ u32int ldmInstruction(GCONTXT * context)
 	    	if ( ((regList >> i) & 0x1) == 0x1)
 	   		{
     	  		valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
-		     	printf("Storing %08x to %08x\n", valueLoaded, i);
+	//	     	printf("Storing %08x to %08x\n", valueLoaded, i);
 				storeGuestGPR(i, valueLoaded, context);
 	      		baseAddress = baseAddress + 4;
 		    }
 		} // for ends
 		// and now take care of the PC
 		valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
-		printf("Storing %08x to PC", valueLoaded);
+	//	printf("Storing %08x to PC", valueLoaded);
 		storeGuestGPR(0xF, valueLoaded, context);
 		baseAddress += 4;
 		//thumb always update the SP
