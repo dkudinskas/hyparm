@@ -551,109 +551,172 @@ u32int strhInstruction(GCONTXT * context)
 
 u32int stmInstruction(GCONTXT * context)
 {
-  u32int instr = context->endOfBlockInstr;
+  u32int instr = 0;
+  u32int condcode = 0;
+  u32int prePost = 0;
+  u32int upDown = 0;
+  u32int forceUser = 0;
+  u32int writeback = 0;
+  u32int baseReg = 0;
+  u32int regList = 0;
+  u32int baseAddress = 0;
+  u32int address = 0; 
+  bool thumb32 = FALSE;
+  u32int valueLoaded = 0;
+  if(context->CPSR & T_BIT) // Thumb
+  {
+  	// we trapped from Thumb mode.
+	instr = decodeThumbInstr(context,0);
+	thumb32 = isThumb32(instr);
+	if(!thumb32)
+	{
+		if( ( instr & THUMB16_PUSH_MASK ) == THUMB16_PUSH )
+		{
+			regList = ( ( ((instr & 0x0100)>>8) << 15) ) | (instr & 0x00FF);
+			baseReg = 0xD; // hardcode SP register
+			address = loadGuestGPR(baseReg, context);
+			baseAddress = address;
+			// for i = 0 to 7. PUSH accepts only low registers
+		    int i = 0;
+			for (i = 0; i < 7; i++)
+			{
+    			// if current register set
+	    		if ( ((regList >> i) & 0x1) == 0x1)
+	   			{
+   	  	      		valueLoaded = loadGuestGPR(i, context);
+			        // emulating store. Validate cache if needed
+		    	    validateCachePreChange(context->blockCache, address);
+					context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueLoaded);
+	    	  		address = address + 4;
+		    	}
+			} // for ends
+			if( regList & 0x00008000)//LR is on the list
+			{
+				valueLoaded = loadGuestGPR(0xE, context);
+				context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueLoaded);
+				//printf("Stored LR = %x @ %x\n", instr, valueLoaded, address);
+			}
+			//thumb always update the SP to point to the start address
+			storeGuestGPR(baseReg, baseAddress, context);
+			//printf("Restore PC : %08x\n", context->R15+2);
+			return context->R15+2;
+		}
+		else
+		{
+			DIE_NOW(0,"Unimplemented Thumb16 STM");
+		}
+	}
+	else
+	{
+		DIE_NOW(0,"Unimplemented Thumb32 STM");
+	}
+  }
+  else//ARM
+  {
+	instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-  printf("STM instruction: %08x @ PC = %08x\n", instr, context->R15);
+  	printf("STM instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
 
-  u32int condcode = (instr & 0xF0000000) >> 28;
-  u32int prePost = instr & 0x01000000;
-  u32int upDown = instr & 0x00800000;
-  u32int forceUser = instr & 0x00400000;
-  u32int writeback = instr & 0x00200000;
+	condcode = (instr & 0xF0000000) >> 28;
+  	prePost = instr & 0x01000000;
+  	upDown = instr & 0x00800000;
+  	forceUser = instr & 0x00400000;
+  	writeback = instr & 0x00200000;
 
-  u32int baseReg = (instr & 0x000F0000) >> 16;
-  u32int regList = instr & 0x0000FFFF;
-  u32int baseAddress = loadGuestGPR(baseReg, context);
+  	baseReg = (instr & 0x000F0000) >> 16;
+  	regList = instr & 0x0000FFFF;
+  	baseAddress = loadGuestGPR(baseReg, context);
 
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
-  {
-    // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
-  }
+	u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
+	if (!evalCC(condcode, cpsrCC))
+  	{
+    	// condition not met! allright, we're done here. next instruction...
+	    return context->R15 + 4;
+  	}
 
-  u32int savedCPSR = 0;
-  if (forceUser != 0)
-  {
-    // force user bit set: STM user mode registers
-    savedCPSR = context->CPSR;
-    context->CPSR = (context->CPSR & ~0x1f) | CPSR_MODE_USER;
-  }
+	u32int savedCPSR = 0;
+	if (forceUser != 0)
+    {
+    	// force user bit set: STM user mode registers
+	    savedCPSR = context->CPSR;
+    	context->CPSR = (context->CPSR & ~0x1f) | CPSR_MODE_USER;
+    }
 
-  int i = 0;
-  u32int address = 0;
-  if ( (upDown == 0) && (prePost != 0) ) // STM decrement before
-  {
-    // address = baseAddress - 4*(number of registers to store);
-    address = baseAddress - 4 * countBitsSet(regList);
-  }
-  else if ( (upDown == 0) && (prePost == 0) ) // STM decrement after
-  {
-    // address = baseAddress - 4*(number of registers to store) + 4;
-    address = baseAddress - 4 * countBitsSet(regList) + 4;
-  }
-  else if ( (upDown != 0) && (prePost != 0) ) // STM increment before
-  {
-    // address = baseAddress + 4 - will be incremented as we go
-    address = baseAddress + 4;
-  }
-  else if ( (upDown != 0) && (prePost == 0) ) // STM increment after
-  {
-    // address = baseAddress - will be incremented as we go
-    address = baseAddress;
-  }
+	int i = 0;
+	u32int address = 0;
+	if ( (upDown == 0) && (prePost != 0) ) // STM decrement before
+    {
+    	// address = baseAddress - 4*(number of registers to store);
+	    address = baseAddress - 4 * countBitsSet(regList);
+    }
+	else if ( (upDown == 0) && (prePost == 0) ) // STM decrement after
+    {
+    	// address = baseAddress - 4*(number of registers to store) + 4;
+	    address = baseAddress - 4 * countBitsSet(regList) + 4;
+    }
+	else if ( (upDown != 0) && (prePost != 0) ) // STM increment before
+    {
+  	  // address = baseAddress + 4 - will be incremented as we go
+      address = baseAddress + 4;
+    }
+	else if ( (upDown != 0) && (prePost == 0) ) // STM increment after
+    {
+    	// address = baseAddress - will be incremented as we go
+	    address = baseAddress;
+    }  
   
-  // for i = 0 to 14
-  for (i = 0; i < 15; i++)
-  {
-    // if current register set
-    if ( ((regList >> i) & 0x1) == 0x1)
+	// for i = 0 to 14
+	for (i = 0; i < 15; i++)
     {
+  	  	// if current register set
+    	if ( ((regList >> i) & 0x1) == 0x1)
+   		{
 #ifdef DATA_MOVE_TRACE
-      printf("*(%08x) = R[%x] = %08x\n", address, i, loadGuestGPR(i, context));
+		printf("*(%08x) = R[%x] = %08x\n", address, i, loadGuestGPR(i, context));
 #endif
-      u32int valueLoaded = loadGuestGPR(i, context);
-      // emulating store. Validate cache if needed
-      validateCachePreChange(context->blockCache, address);
-      // *(address)= R[i];
-      context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueLoaded);
-      address = address + 4;
-    }
-  } // for ends
-  // if store PC...
-  if ( ((regList >> 15) & 0x1) == 0x1)
-  {
-    // emulating store. Validate cache if needed
-    validateCachePreChange(context->blockCache, address);
-    // *(address)= PC+8 - architectural feature due to pipeline..
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD,
+	      valueLoaded = loadGuestGPR(i, context);
+	      // emulating store. Validate cache if needed
+    	  validateCachePreChange(context->blockCache, address);
+    	  // *(address)= R[i];
+	      context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueLoaded);
+    	  address = address + 4;
+    	}
+	  } // for ends
+	  // if store PC...
+	  if ( ((regList >> 15) & 0x1) == 0x1)
+	  {
+    	// emulating store. Validate cache if needed
+	    validateCachePreChange(context->blockCache, address);
+    	// *(address)= PC+8 - architectural feature due to pipeline..
+	    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD,
                                             address, (loadGuestGPR(15, context)+8));
-  }
+  	  }
 
-  // if writeback then baseReg = baseReg - 4 * number of registers to store;
-  if (writeback != 0)
-  {
-    if (upDown == 0)
-    {
-      // decrement
-      baseAddress = baseAddress - 4 * countBitsSet(regList);
-    }
-    else
-    {
-      // increment
-      baseAddress = baseAddress + 4 * countBitsSet(regList);
-    }
-    storeGuestGPR(baseReg, baseAddress, context);
-  }
+	  // if writeback then baseReg = baseReg - 4 * number of registers to store;
+	  if (writeback != 0)
+	  {
+	    if (upDown == 0)
+    	{
+	      // decrement
+    	  baseAddress = baseAddress - 4 * countBitsSet(regList);
+	    }
+    	else
+	    {
+    	  // increment
+	      baseAddress = baseAddress + 4 * countBitsSet(regList);
+	    }
+    	storeGuestGPR(baseReg, baseAddress, context);
+	  }
 
-  // if we stored to user mode registers, lets restore the CPSR
-  if (forceUser != 0)
-  {
-    context->CPSR = savedCPSR;
-  }
+	  // if we stored to user mode registers, lets restore the CPSR
+	  if (forceUser != 0)
+	  {
+    	context->CPSR = savedCPSR;
+	  }
 
-  return context->R15+4;
+	  return context->R15+4;
+	}
 }
 
 /* store dual */
@@ -1462,28 +1525,36 @@ u32int ldmInstruction(GCONTXT * context)
 		{
 			DIE_NOW(0,"Thumb POP instruction trapped but PC is not on the list...");
 		}
-		regList = ( (instr & 0x0100) << 15 ) | (instr & 0x00FF);
-		baseReg = 0x0000000D; // hardcode SP register
+		regList = ( ((instr & 0x0100)>>8) << 15 ) | (instr & 0x00FF);
+		baseReg = 0xD; // hardcode SP register
 		baseAddress = loadGuestGPR(baseReg, context);
 		// for i = 0 to 7. POP accepts only low registers
-	    for (i = 0; i < 7; i++)
+	    //printf("ff %08x\n",regList);
+		for (i = 0; i < 7; i++)
 		{
     		// if current register set
 	    	if ( ((regList >> i) & 0x1) == 0x1)
 	   		{
     	  		valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
-	//	     	printf("Storing %08x to %08x\n", valueLoaded, i);
+		     	//printf("Storing %08x to %08x\n", valueLoaded, i);
 				storeGuestGPR(i, valueLoaded, context);
 	      		baseAddress = baseAddress + 4;
 		    }
 		} // for ends
 		// and now take care of the PC
-		valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
-	//	printf("Storing %08x to PC", valueLoaded);
-		storeGuestGPR(0xF, valueLoaded, context);
-		baseAddress += 4;
+		if( ( regList & 0x00008000)){
+			valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
+			//printf("Storing %08x to PC\n", valueLoaded);
+			storeGuestGPR(0xF, valueLoaded, context);
+			baseAddress += 4;
+		}
 		//thumb always update the SP
 		storeGuestGPR(baseReg, baseAddress, context);
+		if ( (context->R15 & 0x1)==0) // In which mode are we returning to?
+		{
+			context->CPSR &= ~T_BIT;
+		}
+		context->R15 &= ~0x1;
 		return context->R15;
   	}
 	else

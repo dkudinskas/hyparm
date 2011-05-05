@@ -60,9 +60,9 @@ struct TopLevelCategory t32categories[] = {
 {T32_LOAD_HALFWORD,			0xFE700000,0xF8300000},
 {T32_LOAD_WORD,				0xF8500000,0xF8500000},
 {T32_UNDEFINED,				0xF8700000,0xF8700000},
-{T32_DATA_PROC,				0xFA000000,0xFA000000},
-{T32_MULTIPLY,				0xFB000000,0xFB000000},
-{T32_LONG_MULTIPLY,			0xFB800000,0xFB800000},
+{T32_DATA_PROC,				0xFF000000,0xFA000000},
+{T32_MULTIPLY,				0xFF000000,0xFB000000},
+{T32_LONG_MULTIPLY,			0xFF800000,0xFB800000},
 {T32_COPROC,				0xFC000000,0xFC000000},
 };
 
@@ -561,6 +561,11 @@ struct instruction32bit svcCoprocInstructions[] = {
 
 //-----------------------	THUMB INSTRUCTIONS	--------------------------//
 
+struct instruction32bit t16SPInstructions[] = {
+{0,	&addInstruction, 0xA800, 0xF800, "ADD <Rd>, SP, #<imm>"},
+{0, &addInstruction, 0xB000, 0xFF80, "ADD SP, SP, #<imm>"}
+};
+
 struct instruction32bit t16ConditionalBranchSvcInstructions[] = {
 {1, &svcInstruction, 0xDF00, 0xFF00, "SVC call"},
 {1, &bInstruction, 0xD000, 0xF000, "B<c> <label>"}
@@ -674,6 +679,10 @@ struct instruction32bit t32LoadHalfWordInstructions[] = {
 {0, &ldrhInstruction, 0xF8B00000, 0xFFF00000, "LDRH.W <Rt>, [<Rn>{. #<imm32>}]"}
 };
 
+struct instruction32bit t32MultiplyInstructions[] = {
+{0, &mulInstruction, 0xFB00F000, 0x0FFF0F0F0, "MULW <Rd>, <Rn>, <Rm>"}
+};
+
 struct instruction32bit t32BranchMiscInstructions[] = {
 {1, &bInstruction, 0xF0008000, 0xF800D000, "B <imm17>"},
 {1, &bInstruction, 0xF0009000, 0xF800D000, "B <imm21>"},
@@ -682,11 +691,11 @@ struct instruction32bit t32BranchMiscInstructions[] = {
 };
 
 
-struct instruction32bit * decodeInstr(u32int instr)
+struct instruction32bit * decodeInstr(u32int instr,u32int *currAddress)
 {
   
   GCONTXT* gc = getGuestContext();
-  u32int catCode = decodeTopLevelCategory(instr); 
+  u32int catCode = decodeTopLevelCategory(instr, currAddress); 
   // Check the status of T bit again
   if(gc->CPSR & T_BIT)
   {
@@ -818,13 +827,13 @@ struct instruction32bit * decodeInstr(u32int instr)
   return 0;
 }
 
-u32int decodeTopLevelCategory(u32int instr)
+u32int decodeTopLevelCategory(u32int instr,u32int *currAddress)
 {
   
   GCONTXT* gc = getGuestContext();
   int index = 0;
-  /* LOOP through all ARM instruction encoding categories */
-  //printf("Incomig instr: %08x\n", instr);	
+  /* LOOP through all ARM and Thumb instruction encoding categories */
+  //printf("Incomig instr: %08x@%08x\n", instr,(u32int)currAddress);	
   while (TRUE)
   {
 	if(gc->CPSR & T_BIT)
@@ -1222,9 +1231,28 @@ struct instruction32bit * t32decodeLoadWord(u32int instr)
 
 struct instruction32bit * t32decodeMultiply(u32int instr)
 {
-	DIE_NOW(0,"Unimplemented 11");
+#ifdef DECODER_DEBUG
+  printf("t32decodeMultiply %08x\n", instr);
+#endif
+  u32int index = 0;
+  while (TRUE)
+  {
+    if ( (instr & t32MultiplyInstructions[index].mask) == t32MultiplyInstructions[index].value)
+    {
+      if (t32MultiplyInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet32Multiply", instr);
+      }
+      return &t32MultiplyInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  DIE_NOW(getGuestContext(), "decoder: t32MultiplyInstruction unimplemented");
+  return 0;
 }
-
 struct instruction32bit * t32decodeLongMultiply(u32int instr)
 {
 	DIE_NOW(0,"Unimplemented 12");
@@ -1320,7 +1348,27 @@ struct instruction32bit * t16decodeMisc(u16int instr)
 
 struct instruction32bit * t16decodeSPAddr(u16int instr)
 {
-	DIE_NOW(0,"Unimplemented 17");
+#ifdef DECODER_DEBUG
+  printf("t16SPInstruction %08x\n", instr);
+#endif
+  u32int index = 0;
+  while (TRUE)
+  {
+    if ( (instr & t16SPInstructions[index].mask) == t16SPInstructions[index].value)
+    {
+      if (t16SPInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16SPInstruction", instr);
+      }
+      return &t16SPInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  DIE_NOW(getGuestContext(), "decoder: t16UnconditionalInstruction unimplemented");
+  return 0;
 }
 
 struct instruction32bit * t16decodePCAddr(u16int instr)
@@ -1433,9 +1481,4 @@ struct instruction32bit * t16decodeArithmetic(u16int instr)
   }
   DIE_NOW(getGuestContext(), "decoder: t16Arithmetic unimplemented");
   return 0;
-}
-
-struct instruction16bit * t32tot16(u32int instr)
-{
-	DIE_NOW(0,"Unimplemented 24");
 }

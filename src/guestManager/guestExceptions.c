@@ -17,8 +17,17 @@ void deliverServiceCall(void)
   context->SPSR_SVC = context->CPSR;
   // 3. put guest CPSR in SVC mode
   context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_SVC;
-  // 5. set LR to PC+4
-  context->R14_SVC = context->R15 + 4;
+  // 4. set LR to PC+4
+  if(context->CPSR & 0x20)// Were we on Thumb?
+  {
+  	context->R14_SVC = context->R15 + 2;
+  }
+  else
+  {
+  	context->R14_SVC = context->R15 + 4;
+  }
+  // 5. Clear Thumb bit
+  context->CPSR &= ~0x20;
   // 6. set PC to guest svc handler address
   if (context->virtAddrEnabled)
   {
@@ -108,9 +117,11 @@ void deliverInterrupt(void)
   context->SPSR_IRQ = context->CPSR;
   // 3. put guest CPSR in IRQ mode
   context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_IRQ;
-  // 4. set LR to PC+4
+  // 4. clear Thumb bit
+  context->CPSR &= ~0x20; // FIX ME. This needs to be hardcoded somewhere
+  // 5. set LR to PC+4
   context->R14_IRQ = context->R15 + 4;
-  // 5. set PC to guest irq handler address
+  // 6. set PC to guest irq handler address
   if (context->virtAddrEnabled)
   {
     if (context->guestHighVectorSet)

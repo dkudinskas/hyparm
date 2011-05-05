@@ -72,9 +72,9 @@ struct instruction16bit
 	u16int	mask;
 };
 
-struct instruction32bit * decodeInstr(u32int instr);
+struct instruction32bit * decodeInstr(u32int instr, u32int* currAddress);
 
-u32int decodeTopLevelCategory(u32int instr);
+u32int decodeTopLevelCategory(u32int instr, u32int* currAddress);
 
 struct instruction32bit * decodeDataProcMisc(u32int instr);
 struct instruction32bit * decodeLoadStoreWordByte(u32int instr);

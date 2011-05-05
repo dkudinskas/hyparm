@@ -177,6 +177,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
 /*********************************/
 u32int andInstruction(GCONTXT * context)
 {
+  printf("%08x\n",context->endOfBlockInstr);
   DIE_NOW(context, "Unimplemented AND trap");
 }
 

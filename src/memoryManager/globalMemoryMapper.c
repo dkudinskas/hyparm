@@ -79,13 +79,20 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 			context->endOfBlockHalfInstr = LHALF;
 			ldrInstruction(context);
 		}
+		// PUSH emulation
+		else if ( ( instr & THUMB16_PUSH_MASK ) == THUMB16_PUSH )
+		{
+			context->endOfBlockInstr = oldinstr;
+			context->endOfBlockHalfInstr = LHALF;
+			stmInstruction(context);
+		}
 		else
 		{
 			DIE_NOW(0,"Unimplemented Thumb16 Load/Store\n");
 		}
+	}
 	context->endOfBlockInstr = eobInstrBackup;
 	context->endOfBlockHalfInstr = eobHalfInstrBackup; 
-  	}
   }
   else //ARM
   {

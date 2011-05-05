@@ -156,7 +156,7 @@ void dataAbort()
       /* I think this means that the guest was trying to write within its
        * allowed memory area in user mode
        */
-      bool isPrivAccess = (gc->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
+	  bool isPrivAccess = (gc->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
       if ( shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()) )
       {
 		deliverDataAbort();

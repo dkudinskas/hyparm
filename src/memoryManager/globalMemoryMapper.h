@@ -54,11 +54,18 @@
 #define LDREX_MASKED    0x01900f9f
 
 // Thumb 16 bit
+//STR Instructions
 #define THUMB16_STR_IMM5_MASK		0xF800
 #define THUMB16_STR_IMM5			0x6000
 #define THUMB16_STR_IMM8_MASK		0xF800
 #define THUMB16_STR_IMM8			0x9000
+// STM, PUSH Instructions
+#define THUMB16_PUSH_MASK			0xFE00
+#define THUMB16_PUSH				0xB400
+#define THUMB16_STM_MASK			0xF800
+#define THUMB16_STM					0xC000
 
+//LDR Instructions
 #define THUMB16_LDR_IMM5_MASK		0xF800
 #define THUMB16_LDR_IMM5			0x6800
 #define THUMB16_LDR_IMM8_MASK		0xF800

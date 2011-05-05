@@ -30,6 +30,11 @@ u32int bxInstruction(GCONTXT * context)
 		//printf("bxinstr %08x\n",instr);
 		regDest = (instr & 0x0078)>>3;
 		nextPC = loadGuestGPR(regDest, context);
+		// return to ARM if needed
+		if ( (nextPC & 0x1) == 0)
+		{
+			context->CPSR &= ~T_BIT;
+		}
   		//printf("bx RegSRC= %08x nextPC: %08x\n",regDest,nextPC);
   }
   else
@@ -51,6 +56,8 @@ u32int bxInstruction(GCONTXT * context)
 	  }
       nextPC = addr & 0xFFFFFFFE;
   }
+  //fix return address
+  nextPC &= ~0x1;
   return nextPC;
 }
 
@@ -1277,6 +1284,8 @@ u32int bInstruction(GCONTXT * context)
 	thumb32 = isThumb32(instr);
 	//printf("Branch instr %08x @ %08x\n", instr, context->R15);
 
+	//printf("Branch instr %08x @ %08x\n", instr, context->R15);
+
 	// WHAT A MESS! -> ARM-A manual : page 344
 	// B and BL have different encoding. Find which one is it
 	if(thumb32)
@@ -1297,9 +1306,7 @@ u32int bInstruction(GCONTXT * context)
 			if((instr & 0x00001000) == 0)
 			{	
 				instrCC = (0x03C00000 & instr) >> 22;
-		//		printf("Instrcc: %08x\n",instrCC);
 				target = (sign<<19)|(i1<<18)|(i2<<17)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
-		//		printf("CCTarget: %08x\n",target);
 
 			}
 			else //T4 encoding
@@ -1413,17 +1420,19 @@ u32int bInstruction(GCONTXT * context)
   }
 
    /* eval condition flags only for Thumb-2 first encoding or ARM encoding*/
-  if( (context->CPSR & T_BIT && thumb32 && !bl32 ) || !(context->CPSR & T_BIT) || (context->CPSR & T_BIT && ( (instr & 0x0000D000) == 0x0000D000 ) && !thumb32 ) )
+  if( (context->CPSR & T_BIT && thumb32 && !bl32 && (instr & 0x00001000) == 0)
+  		|| !(context->CPSR & T_BIT) 
+		|| (context->CPSR & T_BIT && ( (instr & 0x0000D000) == 0x0000D000 ) && !thumb32 ) )
   {
   	u32int cpsrCC = (context->CPSR >> 28) & 0xF;
   	bool conditionMet = evalCC(instrCC, cpsrCC);
   	if (conditionMet)
   	{
-   	 // condition met
+	 // condition met
    	 u32int currPC = context->R15;
    	 if(context->CPSR & T_BIT)
 	 {
-	 	currPC += 4;
+		currPC += 4;
 		nextPC = currPC + target;
 		//printf("woot new PC: %08x\n",nextPC);
 	 }
@@ -1434,7 +1443,14 @@ u32int bInstruction(GCONTXT * context)
 	 }
    	 if (link)
   	 {
-		storeGuestGPR(14, context->R15+4, context);
+		if(context->CPSR & T_BIT)
+		{
+			storeGuestGPR(14, context->R15+5, context);
+		}
+		else
+		{
+			storeGuestGPR(14, context->R15+4, context);
+		}
   	 }
 	}
     else
@@ -1442,8 +1458,7 @@ u32int bInstruction(GCONTXT * context)
     	// condition not met!
 	    if(context->CPSR & T_BIT)
 		{
-			nextPC = context->R15 + 2;
-			//printf("new PC: %08x\n",nextPC);
+			nextPC = context->R15 +2;
 		}
 		else
 		{
@@ -1459,7 +1474,7 @@ u32int bInstruction(GCONTXT * context)
 	 if(bl32)
 	 {
 	 	//printf("Preserve R14=%08x\n",context->R15+2);
-		storeGuestGPR(14, context->R15+2, context);
+		storeGuestGPR(14, context->R15+3, context);
 	 }
      u32int currPC = context->R15;
    	 currPC += 2;
@@ -1471,11 +1486,17 @@ u32int bInstruction(GCONTXT * context)
    	 nextPC = currPC + target;
 	 //printf("new PC: %08x\n",nextPC);
   }
+  //align it
+  //nextPC &= ~0x1;
   return nextPC;
 }
 
 u32int svcInstruction(GCONTXT * context)
 {
+  if(context->CPSR & T_BIT)
+  {
+	  DIE_NOW(0,"Why am I here??");
+  }
   u32int nextPC = 0;
 #ifdef ARM_INSTR_TRACE
   u32int instr = context->endOfBlockInstr;

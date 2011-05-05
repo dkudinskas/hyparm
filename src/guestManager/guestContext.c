@@ -78,6 +78,7 @@ void dumpGuestContext(GCONTXT * gc)
   printf("R15: %08x\n", gc->R15);
   printf("CPSR: %08x\n", gc->CPSR);
   printf("endOfBlockInstr: %08x\n", gc->endOfBlockInstr);
+  printf("endOfBlockHalfInstr: %08x\n", gc->endOfBlockHalfInstr);
   printf("handler function addr: %08x\n", (u32int)gc->hdlFunct);
 
   /* Virtual Memory */

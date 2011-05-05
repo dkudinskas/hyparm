@@ -147,6 +147,7 @@ void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex)
   bcAddr[cacheIndex].endAddress = 0;
   bcAddr[cacheIndex].hdlFunct = 0;
   bcAddr[cacheIndex].hyperedInstruction = 0;
+  bcAddr[cacheIndex].halfhyperedInstruction = 0;
   return;
 }
 
