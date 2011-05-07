@@ -205,7 +205,6 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
       printf("resolveCacheConflict: found another BB to end at same address.\n");
       printf("resolveCacheConflict: replace hypercall with %x\n", hypercallSWI);
 #endif
-      *((u32int*)(bcAddr[index].endAddress)) = hypercallSWI;
       return;
     }
   }
@@ -379,6 +378,9 @@ u32int resolveSWI( u32int index, u32int * endAddress)
 		hypercall = *halfendAddress;
 		//adjust the hypercall
 		hypercall = ( (hypercall & 0xFF00) | (index+1));
+
+		//store it
+		*halfendAddress = hypercall;
 	}
 	// Tricky. It can be a Thumb or an ARM SWI. Check!
 	else
@@ -393,6 +395,7 @@ u32int resolveSWI( u32int index, u32int * endAddress)
 			hypercall = *halfendAddress;
 			//adjust the hypercall
 			hypercall = ( (hypercall & 0xFF00) | (index+1));
+			* halfendAddress = hypercall;
 		}
 		else if ( (halfinstruction & 0xDFFF) == INSTR_SWI_THUMB)
 		{
@@ -402,6 +405,7 @@ u32int resolveSWI( u32int index, u32int * endAddress)
 		{
 			hypercall = *endAddress;
 			hypercall = (hypercall & 0xFF000000) | ((index + 1) << 8);
+			*endAddress = hypercall;
 		}
 	}
 	return hypercall;
