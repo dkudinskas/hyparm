@@ -76,8 +76,11 @@
 #define THUMB16_LDR_REG				0x5800
 
 // Thumb 32 bit
+#define THUMB32_STRB_IMM12_MASK 0xFFF00000
 #define THUMB32_STRB_IMM12		0xF8800000
+#define THUMB32_STRB_IMM8_MASK	0xFFF08000
 #define THUMB32_STRB_IMM8		0xF8008000
+#define THUMB32_STRB_REG_MASK	0xFFF00FC0
 #define THUMB32_STRB_REG		0xF8000000
 
 /* generic load store instruction emulation  *

@@ -19,8 +19,8 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
   u32int instr = 0;
   u32int eobInstrBackup = 0;
   u32int eobHalfInstrBackup =0;
-  u32int oldinstr =0;
   bool thumb32 = 0;
+  u32int oldinstr = 0;
   if(context->CPSR & T_BIT) //Thumb
   {
 	eobInstrBackup = context->endOfBlockInstr;
@@ -35,19 +35,18 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 		oldinstr = *((u16int*)context->R15);
 	}
 	//printf("Storing on %08x, full instr %08x\n",address,instr);
-	instr = decodeThumbInstr(context,oldinstr);
+	instr = decodeThumbInstr(oldinstr);
     //printf("DATA ABORT FROM THUMB on instr: %08x\n",instr);
 	thumb32 = isThumb32(instr);
 	if(thumb32)
 	{
-		if( ((instr & THUMB32_STRB_IMM12) == THUMB32_STRB_IMM12) || (instr & THUMB32_STRB_IMM8) == THUMB32_STRB_IMM8)
+		if( ((instr & THUMB32_STRB_IMM12_MASK) == THUMB32_STRB_IMM12) || (instr & THUMB32_STRB_IMM8_MASK) == THUMB32_STRB_IMM8)
 		{
 			validateCachePreChange(context->blockCache, address);
-			context->endOfBlockInstr = oldinstr;
-			context->endOfBlockHalfInstr = WHTHUMB32;
+			context->endOfBlockInstr = instr;
 			strbInstruction(context);
 		}
-		else if ((instr & THUMB32_STRB_REG) == THUMB32_STRB_REG)
+		else if ((instr & THUMB32_STRB_REG_MASK) == THUMB32_STRB_REG)
 		{
 			DIE_NOW(0,"Unimplemented Thumb32 register generic load/store");
 		}
@@ -66,7 +65,6 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 			// cheat strInstruction. We know that this is a thumb16 instr
 			// so make sure that decoder will recognize it :-/
 			context->endOfBlockInstr = instr;
-			context->endOfBlockHalfInstr = LHALF; 
 			strInstruction(context);	
 		}
 		// LDR emulation
@@ -75,19 +73,18 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 			|| ( ( instr & THUMB16_LDR_IMM8_LIT_MASK ) == THUMB16_LDR_IMM8_LIT )
 			|| ( ( instr & THUMB16_LDR_REG_MASK ) == THUMB16_LDR_REG ) )
 		{
-			context->endOfBlockInstr = oldinstr;
-			context->endOfBlockHalfInstr = LHALF;
+			context->endOfBlockInstr = instr;
 			ldrInstruction(context);
 		}
 		// PUSH emulation
 		else if ( ( instr & THUMB16_PUSH_MASK ) == THUMB16_PUSH )
 		{
-			context->endOfBlockInstr = oldinstr;
-			context->endOfBlockHalfInstr = LHALF;
+			context->endOfBlockInstr = instr;
 			stmInstruction(context);
 		}
 		else
 		{
+			printf("Unimplemented Thumb16 %08x@%08x\n",instr,address);
 			DIE_NOW(0,"Unimplemented Thumb16 Load/Store\n");
 		}
 	}

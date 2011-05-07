@@ -41,36 +41,36 @@ u32int strInstruction(GCONTXT * context)
  
   if(context->CPSR & T_BIT)
   {	
-	bool regSP = FALSE; // page 666
-	instr = decodeThumbInstr(context,0);
+	instr = context->endOfBlockInstr;
 	thumb32 = isThumb32(instr);
 	if(!thumb32)//16-bit
 	{
-		if((instr & 0x6000) == 0x6000) //imm5
+		if((instr & 0xF800) == 0x6000) //imm5
 		{
-			regSP = FALSE;
-			regSrc = instr & 0x00000007;
-			regDst = (instr & 0x000001C)>>3;
-			imm32 = ( (instr & 0x000007C0)>>6 )<<2; //extend
+			regSrc = instr & 0x7;
+			regDst = (instr & 0x38)>>3;
+			imm32 = ( (instr & 0x7C0)>>6 )<<2; //extend
+		}
+		else if ( (instr & 0xF800 ) == 0x9000)
+		{
+			regDst = 0xD; // hardcode SP register
+			regSrc = (instr & 0x700)>>8;
+			imm32 = (instr & 0xFF) << 2 ; //extend
+			
 		}
 		else
 		{
-			regSP = TRUE; //source register is SP for imm8
-			regDst = 0x0000000D; // hardcode SP register
-			regSrc = (instr & 0x00000700)>>8;
-			imm32 = (instr & 0x000000FF) << 2 ; //extend
-			
+			DIE_NOW(0,"Unimplemented Thumb16 STR instruction");
 		}
-	baseAddress = loadGuestGPR(regDst, context);
-	valueToStore = loadGuestGPR(regSrc, context);
-	offsetAddress = baseAddress + imm32; 
-	}
+		baseAddress = loadGuestGPR(regDst, context);
+		valueToStore = loadGuestGPR(regSrc, context);
+		offsetAddress = baseAddress + imm32; 
+		}
 	else //thats for 32bit thumb instr
 	{
 		DIE_NOW(0,"Unimplemented thumb32 STR");
-	}
-
-	//printf("strInstr: regsrc=%x, regdst=%x, address=%x, value=%x\n",regSrc,regDst,offsetAddress,valueToStore);
+	}	
+	//printf("strInstr@%08x: regsrc=%x, regdst=%x, address=%x, value=%x\n",context->R15,regSrc,regDst,offsetAddress,valueToStore);
 	context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, offsetAddress, valueToStore);
 	return context->R15+2;
 
@@ -239,7 +239,7 @@ u32int strbInstruction(GCONTXT * context)
   bool thumb32 = FALSE;
   if(context->CPSR & T_BIT)
   {	
-	instr = decodeThumbInstr(context,0);
+	instr = context->endOfBlockInstr;
 	thumb32 = isThumb32(instr);
 	u32int address = 0;
   	if(!thumb32)
@@ -248,7 +248,7 @@ u32int strbInstruction(GCONTXT * context)
 	}
 	else // thumb32
 	{
-		if((instr & THUMB32_STRB_IMM12)==THUMB32_STRB_IMM12)
+		if((instr & THUMB32_STRB_IMM12_MASK)==THUMB32_STRB_IMM12)
 		{
 			regOrImm = 0;
 			regSrc = (instr & 0x0000F000)>>12;
@@ -263,7 +263,7 @@ u32int strbInstruction(GCONTXT * context)
 			//just be compatible
 			address = offsetAddress;
 		}
-		else if ((instr & THUMB32_STRB_IMM8) == THUMB32_STRB_IMM8)
+		else if ((instr & THUMB32_STRB_IMM8_MASK) == THUMB32_STRB_IMM8)
 		{
 			regOrImm = 0;
 			regSrc = (instr & 0x0000F000)>>12;
@@ -566,7 +566,7 @@ u32int stmInstruction(GCONTXT * context)
   if(context->CPSR & T_BIT) // Thumb
   {
   	// we trapped from Thumb mode.
-	instr = decodeThumbInstr(context,0);
+	instr = context->endOfBlockInstr;
 	thumb32 = isThumb32(instr);
 	if(!thumb32)
 	{
@@ -575,10 +575,22 @@ u32int stmInstruction(GCONTXT * context)
 			regList = ( ( ((instr & 0x0100)>>8) << 15) ) | (instr & 0x00FF);
 			baseReg = 0xD; // hardcode SP register
 			address = loadGuestGPR(baseReg, context);
-			baseAddress = address;
-			// for i = 0 to 7. PUSH accepts only low registers
-		    int i = 0;
-			for (i = 0; i < 7; i++)
+			address -= 4; // First item 4 bytes below the Stack pointer
+			// Everything has to be stored in reverse order ( page 532 ).
+			// Last item has to be just below the stack pointer
+			
+			// Is LR on the List?
+			if( instr & 0x0100)//LR is on the list
+			{
+				valueLoaded = loadGuestGPR(0xE, context);
+				validateCachePreChange(context->blockCache, address);
+				context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueLoaded);
+				address -= 4;
+			}
+
+			// for i = 7 to 0. PUSH accepts only low registers
+		    int i = 7;
+			for (i = 7; i >= 0; i--)
 			{
     			// if current register set
 	    		if ( ((regList >> i) & 0x1) == 0x1)
@@ -587,17 +599,12 @@ u32int stmInstruction(GCONTXT * context)
 			        // emulating store. Validate cache if needed
 		    	    validateCachePreChange(context->blockCache, address);
 					context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueLoaded);
-	    	  		address = address + 4;
+	    	  		address -= 4;
 		    	}
 			} // for ends
-			if( regList & 0x00008000)//LR is on the list
-			{
-				valueLoaded = loadGuestGPR(0xE, context);
-				context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueLoaded);
-				//printf("Stored LR = %x @ %x\n", instr, valueLoaded, address);
-			}
 			//thumb always update the SP to point to the start address
-			storeGuestGPR(baseReg, baseAddress, context);
+			address += 4; // FIX ME -> Not very smart, is it?
+			storeGuestGPR(baseReg, address, context);
 			//printf("Restore PC : %08x\n", context->R15+2);
 			return context->R15+2;
 		}
@@ -1297,7 +1304,7 @@ u32int ldrInstruction(GCONTXT * context)
   bool thumb32 = FALSE; 
   if(context->CPSR & T_BIT)
   {	
-	instr = decodeThumbInstr(context,0);
+	instr = context->endOfBlockInstr;
 	thumb32 = isThumb32(instr);
 	if(!thumb32)//16-bit
 	{
@@ -1340,7 +1347,6 @@ u32int ldrInstruction(GCONTXT * context)
 		u32int valueLoaded =
 		    	  context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, offsetAddress);
 		storeGuestGPR(regDst, valueLoaded, context);
-		//printf("Thumb 16 LDR: loaded %x from %x to %x\n",valueLoaded,regSrc, regDst);
 	}
 	else
 	{
@@ -1512,12 +1518,12 @@ u32int ldmInstruction(GCONTXT * context)
   u32int baseAddress = 0;
   u32int valueLoaded = 0;
   u32int condcode = 0;
-  int i = 0;
   bool thumb32 = FALSE;
+  int i = 0;
   if(context->CPSR & T_BIT) // Thumb
   {
   	// we trapped from Thumb mode. I assume the PC reg is in the list
-	instr = decodeThumbInstr(context,0);
+	instr = context->endOfBlockInstr;
 	thumb32 = isThumb32(instr);
 	if(!thumb32)
 	{
@@ -1529,26 +1535,26 @@ u32int ldmInstruction(GCONTXT * context)
 		baseReg = 0xD; // hardcode SP register
 		baseAddress = loadGuestGPR(baseReg, context);
 		// for i = 0 to 7. POP accepts only low registers
-	    //printf("ff %08x\n",regList);
-		for (i = 0; i < 7; i++)
+		for (i = 7; i >= 0; i--)
 		{
     		// if current register set
 	    	if ( ((regList >> i) & 0x1) == 0x1)
 	   		{
     	  		valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
-		     	//printf("Storing %08x to %08x\n", valueLoaded, i);
+//		     	printf("Storing %08x@%08x to %08x\n", valueLoaded, baseAddress, i);
 				storeGuestGPR(i, valueLoaded, context);
 	      		baseAddress = baseAddress + 4;
 		    }
 		} // for ends
 		// and now take care of the PC
-		if( ( regList & 0x00008000)){
+		//thumb always update the SP
+		if( ( instr & 0x0100)){
 			valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
-			//printf("Storing %08x to PC\n", valueLoaded);
+//			printf("Storing %08x@%08x to PC\n", valueLoaded,baseAddress);
 			storeGuestGPR(0xF, valueLoaded, context);
 			baseAddress += 4;
 		}
-		//thumb always update the SP
+
 		storeGuestGPR(baseReg, baseAddress, context);
 		if ( (context->R15 & 0x1)==0) // In which mode are we returning to?
 		{

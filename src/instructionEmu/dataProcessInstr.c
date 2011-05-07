@@ -154,9 +154,9 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
     }
 
     context->R15 = nextPC;
-	//make sure it is word aligned
-	nextPC &= ~0x3;
-    return nextPC;
+    // clear thumb bit if needed
+	nextPC &= ~0x1;
+	return nextPC;
   }
   else
   {

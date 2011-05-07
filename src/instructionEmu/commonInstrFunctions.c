@@ -391,52 +391,31 @@ u32int countBitsSet(u32int bitstream)
 }
 
 
-u32int decodeThumbInstr(GCONTXT *gc,u32int extinstr)
+u32int decodeThumbInstr(u32int extinstr)
 {
 	u32int instr = 0;
 	u16int halfinstr = 0;
-	if(extinstr == 0)
+#ifdef DECODE_THUMB
+	printf("Thumb word instruction %08x, half %08x, extinstr %08x\n",gc->endOfBlockInstr,gc->endOfBlockHalfInstr,
+		extinstr);
+#endif
+	halfinstr = extinstr & 0x0000FFFF; // get the lowest part
+	switch(halfinstr & THUMB32) // is it thumb 32 ?
 	{
-		u32int instr = gc->endOfBlockInstr;
-		u16int halfinstr = gc->endOfBlockHalfInstr;
-		if(halfinstr == HHALF)
+		case THUMB32_1:
+		case THUMB32_2:
+		case THUMB32_3:
 		{
-			return instr>>16;
+			instr = (halfinstr<<16)|((extinstr & 0xFFFF0000)>>16);
+			break;
 		}
-		else if(halfinstr == LHALF)
+		default: //single thumb 16-bit instr?
 		{
-			return instr & 0x0000FFFF;
-		}
-		else if(halfinstr == WHTHUMB32) // high halfword is on the low word of the instr
-		{
-			return instr = (instr<<16)|(instr>>16);
-		}
-		else// thumb32 halfword in on halfnstr and the next one is on instr
-		{
-			return instr = (halfinstr<<16)|(instr & 0x0000FFFF);
+			instr = halfinstr;
+			break;
 		}
 	}
-	else // an instruction is supplied as argument
-	{
-		halfinstr = extinstr & 0x0000FFFF; // get the lowest part
-		switch(halfinstr & THUMB32) // is it thumb 32 ?
-		{
-			case THUMB32_1:
-			case THUMB32_2:
-			case THUMB32_3:
-			{
-				instr = (halfinstr<<16)|((extinstr & 0xFFFF0000)>>16);
-				break;
-			}
-			default: //single thumb 16-bit instr?
-			{
-				instr = halfinstr;
-				break;
-			}
-		}
-		return instr;
-	}
-
+	return instr;
 }	
 
 bool isThumb32(u32int instr)

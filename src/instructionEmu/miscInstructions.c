@@ -25,7 +25,7 @@ u32int bxInstruction(GCONTXT * context)
   u32int addr = 0;
   if(context->CPSR & T_BIT)
   {
-  		instr=decodeThumbInstr(context,0);
+  		instr=context->endOfBlockInstr;
 		//this has NO 32-bit Thumb encoding
 		//printf("bxinstr %08x\n",instr);
 		regDest = (instr & 0x0078)>>3;
@@ -841,7 +841,7 @@ u32int blxInstruction(GCONTXT * context)
   if(context->CPSR & T_BIT)
   {
   	//We are in Thumb mode, so we will probably want to switch back to ARM
-	instr = decodeThumbInstr(context,0);
+	instr = context->endOfBlockInstr;
 	thumb32=isThumb32(instr);
 	sign = ( (instr & 0x04000000 ) >> 26 );
 	u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
@@ -904,6 +904,7 @@ u32int blxInstruction(GCONTXT * context)
 	  // link register
 	  storeGuestGPR(14, context->R15+4, context);
 	  nextPC = value & 0xFFFFFFFE;
+	  printf("NextpC %08x\n",nextPC);
 	  return nextPC;
 	}
 }
@@ -1280,17 +1281,16 @@ u32int bInstruction(GCONTXT * context)
   // Are we on Thumb?
   if (context->CPSR & T_BIT)
   {
-	instr = decodeThumbInstr(context,0);
+	instr = context->endOfBlockInstr;
 	thumb32 = isThumb32(instr);
 	//printf("Branch instr %08x @ %08x\n", instr, context->R15);
 
-	//printf("Branch instr %08x @ %08x\n", instr, context->R15);
 
 	// WHAT A MESS! -> ARM-A manual : page 344
 	// B and BL have different encoding. Find which one is it
 	if(thumb32)
 	{
-		if(instr & 0x00004000)
+		if( (instr & 0x00004000))
 		{
 			bl32 = TRUE;
 		}
@@ -1301,16 +1301,18 @@ u32int bInstruction(GCONTXT * context)
 		if(!bl32)
 		{	
 			sign = ( (instr & 0x04000000 ) >> 26 );
-			u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
-			u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
 			if((instr & 0x00001000) == 0)
 			{	
-				instrCC = (0x03C00000 & instr) >> 22;
-				target = (sign<<19)|(i1<<18)|(i2<<17)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
+				instrCC = (0x03C00000 & instr) >> 20;
+				u8int j1 = (instr & 0x00002000) >> 13;
+				u8int j2 = (instr & 0x00000800) >> 11;
+				target = (sign<<19)|(j2<<18)|(j1<<17)|(((instr & 0x003F0000)>>16)<<11)|(instr & 0x000007FF);
 
 			}
 			else //T4 encoding
 			{
+				u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
+				u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
 				target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
 			}
 
@@ -1330,7 +1332,6 @@ u32int bInstruction(GCONTXT * context)
 			u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;  // NOT ( I1 EOR sign )
 			u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;  // NOT ( I2 EOR sign )
 			target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
-		//	printf("Target %08x\n",target);
 		}
 	}
 	else // thumb 16bit
@@ -1339,7 +1340,7 @@ u32int bInstruction(GCONTXT * context)
 		 * 1101<cond><8-bit imm> or
 		 * 11100<11-bit imm>
 		 */
-		if((instr & 0x0000D000) == 0x0000D000) // 8-bit imm
+		if((instr & 0xF000) == 0xD000) // 8-bit imm
 		{
 			//printf("Conditional Branch decoded\n");
 			instrCC = (0x0F00 & instr) >> 8;
@@ -1355,7 +1356,7 @@ u32int bInstruction(GCONTXT * context)
 			target = 0x00FF & instr;
 			sign = target >> 7;
 		}
-		else if((instr & 0x0000D000) == 0x0000C000) // 11-bit imm
+		else if((instr & 0xF000) == 0xE000) // 11-bit imm
 		{
 			target = instr & 0x07FF;
 			sign = target >> 10;
@@ -1434,7 +1435,7 @@ u32int bInstruction(GCONTXT * context)
 	 {
 		currPC += 4;
 		nextPC = currPC + target;
-		//printf("woot new PC: %08x\n",nextPC);
+		//printf("new PC: %08x\n",nextPC);
 	 }
 	 else
 	 {
@@ -1452,6 +1453,7 @@ u32int bInstruction(GCONTXT * context)
 			storeGuestGPR(14, context->R15+4, context);
 		}
   	 }
+	 //printf("Next PC %08x\n");
 	}
     else
     {
@@ -1464,7 +1466,9 @@ u32int bInstruction(GCONTXT * context)
 		{
 			nextPC = context->R15 + 4;
 		}
+	//printf("Next PC %08x\n", nextPC);
     }
+
   }
   // Thumb-2 second encoding were no CC flags exist. Store to R14 anyway
   // OR thumb-2 16-bit encoding ( no link )
@@ -1484,37 +1488,22 @@ u32int bInstruction(GCONTXT * context)
 		currPC += 2;
 	 }
    	 nextPC = currPC + target;
-	 //printf("new PC: %08x\n",nextPC);
   }
-  //align it
-  //nextPC &= ~0x1;
   return nextPC;
 }
 
 u32int svcInstruction(GCONTXT * context)
 {
-  if(context->CPSR & T_BIT)
-  {
-	  DIE_NOW(0,"Why am I here??");
-  }
-  u32int nextPC = 0;
+  DIE_NOW(0,"I shouldn't be here");
 #ifdef ARM_INSTR_TRACE
   u32int instr = context->endOfBlockInstr;
-  printf("SVC instr %08x @ %08x\n", instr, context->R15);
+  serial_putstring("SVC instr ");
+  serial_putint(instr);
+  serial_putstring(" @ ");
+  serial_putint(context->R15);
+  serial_newline();
 #endif
-	// save cpsr
-	context->SPSR_SVC =context->CPSR;
-	// set guest to svc
-	context->CPSR = (context->CPSR & 0xffffffe0) | CPSR_MODE_SVC;
-	// now disable the interrupts
-	context->CPSR |= CPSR_IRQ_DIS; 
-	// preserve program counter
-  	storeGuestGPR(14, context->R15+4, context);
-
-	// set pc to swi handler
-  	nextPC = context->guestSwiHandler;
-
-	return nextPC;
+  return 0;
 }
 
 u32int undefinedInstruction(GCONTXT * context)

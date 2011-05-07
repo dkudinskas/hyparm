@@ -2,10 +2,11 @@
 
 #include "guestManager/blockCache.h"
 
-
 #ifdef DUMP_COLLISION_COUNTER
 static u32int collisionCounter = 0;
 #endif
+
+#define BLCOK_CACHE_DBG
 
 #define NUMBER_OF_BITMAPS       16
 #define MEMORY_PER_BITMAP       0x10000000
@@ -66,10 +67,14 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr)
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int halfhypInstruction, u32int blkEndAddr,
                      u32int index, u32int hdlFunct, BCENTRY * bcAddr)
 {
-#ifdef BLOCK_CACHE_DBG
-  printf("blockCache: ADD[%02x] start @ %x end @ %x hdlPtr %x eobInstr %08x\n",
+//#ifdef BLOCK_CACHE_DBG
+  if(index==0x53)
+  {
+  	printf("blockCache: ADD[%02x] start @ %x end @ %x hdlPtr %x eobInstr %08x\n",
          index, blkStartAddr, blkEndAddr, hdlFunct, hypInstruction);
-#endif
+  }
+//#endif
+
   if ((bcAddr[index].valid == TRUE) && (bcAddr[index].endAddress != blkEndAddr) )
   {
 	// somebody has been sleeping in our cache location!
@@ -84,7 +89,7 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int halfhypI
   }
   else if ((bcAddr[index].valid == TRUE) && (bcAddr[index].endAddress == blkEndAddr) )
   {
-    /* NOTE: if entry valid, but blkEndAddress is the same as new block to add      *
+	/* NOTE: if entry valid, but blkEndAddress is the same as new block to add      *
      * then the block starts at another address but ends on the same instruction    *
      * and by chance - has the same index. just modify existing entry, don't remove */
     bcAddr[index].startAddress = blkStartAddr;
@@ -163,8 +168,9 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
     2.2. if not found, restore hypered instruction back!
    */
   int i = 0;
+  struct thumbEntry tb;
 #ifdef BLOCK_CACHE_DBG
-  printf("resolveCacheConflict: collision at index %x\n", index);
+	printf("resolveCacheConflict: collision at index %x\n", index);
 #endif
 #ifdef DUMP_COLLISION_COUNTER
   collisionCounter++;
@@ -185,11 +191,22 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
         (bcAddr[i].endAddress == bcAddr[index].endAddress) &&
         (i != index) )
     {
-      // found a valid entry in the cache, that BB ends @ the same address as
+	  // found a valid entry in the cache, that BB ends @ the same address as
       // the block of the entry that we collided with.
       u32int hypercallSWI = *((u32int*)(bcAddr[index].endAddress));
-      // SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
-      hypercallSWI = (hypercallSWI & 0xFF000000) | ((i + 1) << 8);
+      /* ARM: SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
+	   * Thumb: SWI 0xDF<code> is replaced with SWI<newcode> where newcode points new entry\
+	   */
+	  
+	  //is this a Thumb SWI?
+	  if( (hypercallSWI & 0xFFFFDF00) == 0xDF00)
+	  {
+	  	hypercallSWI = ( (hypercallSWI & 0xFF00) | (i+1) );
+	  }
+	  else
+	  {
+		  hypercallSWI = (hypercallSWI & 0xFF000000) | ((i + 1) << 8);
+	  }
 #ifdef BLOCK_CACHE_DBG
       printf("resolveCacheConflict: found another BB to end at same address.\n");
       printf("resolveCacheConflict: replace hypercall with %x\n", hypercallSWI);
@@ -198,42 +215,41 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
       return;
     }
   }
+
 #ifdef BLOCK_CACHE_DBG
   printf("resolveCacheConflict: no other BB ends at same address.\n");
   // restore hypered instruction back!
-  // this is broken for thumb. I have to fix it
+  // FIX ME -> this is broken for thumb. I have to fix it
   
   //printf("resolveCacheConflict: restoring hypercall %x back to %08x\n",
     //    *((u32int*)(bcAddr[index].endAddress)), bcAddr[index].hyperedInstruction);
 #endif
-	// pay  attention when old istruction is high halfword.
-	if( ( (u32int)(bcAddr[index].endAddress) & 0x3) >= 0x2 )
+
+	
+	tb = BreakDownThumb(bcAddr,index);
+	if(tb.isthumb==0)
 	{
-		// hypered instruction is on high halfword
-		//printf("Hyperd: %08x\n",(u32int)bcAddr[index].hyperedInstruction);
-		//printf("Restoring %08x to %08x\n", (u32int)bcAddr[index].hyperedInstruction, (u16int)bcAddr[index].endAddress);
-		*((u16int*)(bcAddr[index].endAddress)) = (bcAddr[index].hyperedInstruction & 0xFFFF0000)>>16;
-		if((u32int)bcAddr[index].halfhyperedInstruction == 0x4) //0x4 = WHTHUMB32 -> first halfword on lower address
-		{
-			//restore the second part of the thumb instruction
-			u16int * endhwAddress = (u16int*)bcAddr[index].endAddress;
-			endhwAddress--;
-			*endhwAddress = bcAddr[index].hyperedInstruction & 0x0000FFFF;
-			//printf("and %08x to %08x\n", bcAddr[index].hyperedInstruction & 0x0000FFFF, (u32int)endhwAddress);
-		}
+	  *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
 	}
 	else
 	{
-	  if( ((u32int)bcAddr[index].halfhyperedInstruction) > 0x5)
-	  {
-	  	u16int * endhwAddress = (u16int*)bcAddr[index].endAddress;
-		endhwAddress--;
-		//printf("Restoring %08x to %08x\n",(u16int)bcAddr[index].halfhyperedInstruction, (u32int)endhwAddress);
+		//Assuming endAddress points to the end address of the block then...
+		if(tb.second==0)// this is a thumb 16
+		{
+			printf("Restoring %08x@%08x",tb.first,(bcAddr[index].endAddress));
+			*((u16int*)(bcAddr[index].endAddress)) = tb.first;
+		}
+		else
+		{ 
+			u16int *bpointer = 0;
+			printf("Restoring %08x@%08x  ",tb.second,(bcAddr[index].endAddress));
+			bpointer = (u16int*)(bcAddr[index].endAddress);
+			*bpointer = tb.second;
+			bpointer --;
+			printf("and %08x@%08x",tb.first,bpointer);
 
-		*(u16int*)endhwAddress = (u16int)bcAddr[index].halfhyperedInstruction;
-	  }
-	  //printf("Restoring %08x to %08x\n",(u32int)bcAddr[index].hyperedInstruction, (u32int)bcAddr[index].endAddress);
-	  *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
+			*bpointer = tb.first;
+		}
 	}
 }
 
@@ -325,3 +341,34 @@ bool isBitmapSetForAddress(u32int addr)
   return (bitResult != 0);
 }
 
+struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int index)
+{
+	struct thumbEntry tb;
+	printf("I will restore %08x[%08x]\n",bcAddr[index].hyperedInstruction,index);
+	switch(bcAddr[index].halfhyperedInstruction)
+	{
+		case 0: // this is an ARM entry
+		{
+			tb.isthumb=FALSE;
+			break;
+		}
+		case THUMB16:
+		{
+			tb.isthumb=TRUE;
+			tb.first=bcAddr[index].hyperedInstruction;
+			tb.second = 0;
+			break;
+		}
+		case THUMB32_HIGH:
+		case THUMB32_LOW:
+		{
+			tb.isthumb=TRUE;
+			tb.first = ( (bcAddr[index].hyperedInstruction) & 0xFFFF0000) >> 16;
+			tb.second =(bcAddr[index].hyperedInstruction) & 0x0000FFFF;
+			break;
+		}
+		default:
+			DIE_NOW(0,"BreakDownThumb is b0rked. Fix me");
+	}
+	return tb;
+}

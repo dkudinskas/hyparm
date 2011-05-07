@@ -2,7 +2,7 @@
 #define __GUEST_MANAGER__BLOCK_CACHE_H__
 
 #include "common/types.h"
-
+#include "common/thumbdefs.h"
 
 #define BLOCK_CACHE_SIZE    96
 
@@ -18,6 +18,13 @@ struct blockCacheEntry
   u32int halfhyperedInstruction;
   bool valid;
   u32int hdlFunct;
+};
+
+struct thumbEntry
+{
+	u16int first;
+	u16int second;
+	bool isthumb;
 };
 
 typedef struct blockCacheEntry BCENTRY;
@@ -51,4 +58,5 @@ void clearExecBitMap(u32int addr);
 
 bool isBitmapSetForAddress(u32int addr);
 
+struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int bcIndex);
 #endif
