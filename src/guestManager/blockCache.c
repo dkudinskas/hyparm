@@ -6,7 +6,7 @@
 static u32int collisionCounter = 0;
 #endif
 
-#define BLCOK_CACHE_DBG
+#define BLOCK_CACHE_DBG
 
 #define NUMBER_OF_BITMAPS       16
 #define MEMORY_PER_BITMAP       0x10000000
@@ -29,7 +29,8 @@ void initialiseBlockCache(BCENTRY * bcache)
     bcache[i].startAddress = 0;
     bcache[i].endAddress = 0;
     bcache[i].hyperedInstruction = 0;
-    bcache[i].valid = FALSE;
+    bcache[i].halfhyperedInstruction = 0;
+	bcache[i].valid = FALSE;
     bcache[i].hdlFunct = 0;
   }
   
@@ -191,22 +192,15 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
         (bcAddr[i].endAddress == bcAddr[index].endAddress) &&
         (i != index) )
     {
-	  // found a valid entry in the cache, that BB ends @ the same address as
-      // the block of the entry that we collided with.
-      u32int hypercallSWI = *((u32int*)(bcAddr[index].endAddress));
-      /* ARM: SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
-	   * Thumb: SWI 0xDF<code> is replaced with SWI<newcode> where newcode points new entry\
+	  /* found a valid entry in the cache, that BB ends @ the same address as
+	   * the block of the entry that we collided with.
+	   * Call the resolve function to ensure that conflicts between Thumb and ARM SWIs
+	   * will be resolved as approprate otherwise say 'hello' to segfault ^_^ 
+	   * ARM: SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
+	   * Thumb: SWI 0xDF<code> is replaced with SWI<newcode> where newcode points new entry
 	   */
 	  
-	  //is this a Thumb SWI?
-	  if( (hypercallSWI & 0xFFFFDF00) == 0xDF00)
-	  {
-	  	hypercallSWI = ( (hypercallSWI & 0xFF00) | (i+1) );
-	  }
-	  else
-	  {
-		  hypercallSWI = (hypercallSWI & 0xFF000000) | ((i + 1) << 8);
-	  }
+	  u32int hypercallSWI = resolveSWI(i, (u32int*)bcAddr[index].endAddress);
 #ifdef BLOCK_CACHE_DBG
       printf("resolveCacheConflict: found another BB to end at same address.\n");
       printf("resolveCacheConflict: replace hypercall with %x\n", hypercallSWI);
@@ -372,3 +366,44 @@ struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int index)
 	}
 	return tb;
 }
+
+u32int resolveSWI( u32int index, u32int * endAddress)
+{
+	u32int hypercall = 0;
+	// Ok so endAddress holds the SWI we collided with. Check if it is word aligned
+	if(((u32int)endAddress & 0x3) >= 0x2)
+	{
+		//Not word aligned. It must be a Thumb SWI
+		u16int * halfendAddress = (u16int*)endAddress;
+		//fetch the SWI
+		hypercall = *halfendAddress;
+		//adjust the hypercall
+		hypercall = ( (hypercall & 0xFF00) | (index+1));
+	}
+	// Tricky. It can be a Thumb or an ARM SWI. Check!
+	else
+	{
+		u16int * halfendAddress = (u16int*)endAddress;
+		u16int halfinstruction = 0;
+		halfinstruction = *halfendAddress;
+		// SVC 0 is not ours. Do not touch it but die instead and let me think on how to fix it :/
+		if( ( (halfinstruction & 0xDFFF) > INSTR_SWI_THUMB) && ( (halfinstruction & 0xDFFF) <= 0xDFFF ) )
+		{
+			//Ok so this is a thumb SWI
+			hypercall = *halfendAddress;
+			//adjust the hypercall
+			hypercall = ( (hypercall & 0xFF00) | (index+1));
+		}
+		else if ( (halfinstruction & 0xDFFF) == INSTR_SWI_THUMB)
+		{
+			DIE_NOW(0,"Damn. Seems like you hit a guest SVC. Fix me");
+		}
+		else// OK this is an ARM SWI
+		{
+			hypercall = *endAddress;
+			hypercall = (hypercall & 0xFF000000) | ((index + 1) << 8);
+		}
+	}
+	return hypercall;
+}
+

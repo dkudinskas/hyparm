@@ -241,9 +241,10 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     	// iCacheFlushByMVA((u32int)currAddress);
   	  }
 	}
+	
+	//------------------------------ THUMB ---------------------------------//
 	else
 	{
-		// If we reach this point, it means we are on Thumb Mode
 		if ( 
 				(	
 					(instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX)
