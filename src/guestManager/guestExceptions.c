@@ -13,6 +13,9 @@ extern GCONTXT * getGuestContext(void);
 void deliverServiceCall(void)
 {
   GCONTXT * context = getGuestContext();
+#ifdef GUEST_EXCEPTIONS_DBG
+  printf("deliverServiceCall: @pc %08x\n", context->R15);
+#endif
   // 2. copy guest CPSR into SPSR_SVC
   context->SPSR_SVC = context->CPSR;
   // 3. put guest CPSR in SVC mode
@@ -33,11 +36,11 @@ void deliverServiceCall(void)
   {
     if (context->guestHighVectorSet)
     {
-      context->R15 = 0xffff0008;
+      context->R15 = EXC_VECT_HIGH_SVC;
     }
     else
     {
-      context->R15 = 0x00000008;
+      context->R15 = EXC_VECT_LOW_SVC;
     }
   }
   else
@@ -126,11 +129,11 @@ void deliverInterrupt(void)
   {
     if (context->guestHighVectorSet)
     {
-      context->R15 = 0xffff0018;
+      context->R15 = EXC_VECT_HIGH_IRQ;
     }
     else
     {
-      context->R15 = 0x00000018;
+      context->R15 = EXC_VECT_LOW_IRQ;
     }
   }
   else
@@ -158,11 +161,11 @@ void deliverDataAbort()
   {
     if (context->guestHighVectorSet)
     {
-      context->R15 = 0xffff0010;
+      context->R15 = EXC_VECT_HIGH_DABT;
     }
     else
     {
-      context->R15 = 0x00000010;
+      context->R15 = EXC_VECT_LOW_DABT;
     }
   }
   else
@@ -177,6 +180,7 @@ void deliverDataAbort()
 void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
 {
   GCONTXT* context = getGuestContext();
+
   // set CP15 Data Fault Status Register
   u32int dfsr = (faultType & 0xF) | ((faultType & 0x10) << 6);
   dfsr |= domain << 4;
@@ -211,11 +215,11 @@ void deliverPrefetchAbort(void)
   {
     if (context->guestHighVectorSet)
     {
-      context->R15 = 0xffff000c;
+      context->R15 = EXC_VECT_HIGH_IABT;
     }
     else
     {
-      context->R15 = 0x0000000c;
+      context->R15 = EXC_VECT_LOW_IABT;
     }
   }
   else

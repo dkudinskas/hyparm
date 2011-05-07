@@ -486,7 +486,13 @@ void protectScannedBlock(u32int startAddress, u32int endAddress)
     {
       if ((startAddress & 0xFFF00000) != (endAddress & 0xFFF00000))
       {
-        DIE_NOW(0, "protectScannedBlock: Basic block crosses section boundary!");
+        u32int mbStart = startAddress & 0xFFF00000;
+        u32int mbEnd   = endAddress & 0xFFF00000;
+        if (mbStart != (mbEnd - 0x00100000))
+        {
+          printf("startAddress %08x, endAddress %08x\n", startAddress, endAddress); 
+          DIE_NOW(0, "protectScannedBlock: Basic block crosses non-sequential section boundary!");
+        }
       }
       addProtection(startAddress, endAddress, 0, PRIV_RW_USR_RO);
       break;

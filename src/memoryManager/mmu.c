@@ -3,6 +3,9 @@
 
 #include "memoryManager/mmu.h"
 
+#include "cpuArch/cpu.h"
+
+extern void v7_flush_dcache_all(u32int dev);
 
 static const char* dataAbtFaultString[] =
 {
@@ -78,7 +81,7 @@ void mmuInit()
 
   dataBarrier();
   clearTLB();
-  clearCache();
+  clearInstructionCache();
   setTTBCR(0);
 }
 
@@ -127,7 +130,7 @@ void clearTLBbyMVA(u32int address)
       );
 }
 
-void clearCache()
+void clearInstructionCache()
 {
 #ifdef MMU_DBG
   printf("Clearing caches\n");
@@ -140,8 +143,21 @@ void clearCache()
       );
 }
 
-//Need to set range of TTBCR
 
+void clearDataCache(void)
+{
+  /* turn off L2 cache */
+  l2_cache_disable();
+  /* invalidate L2 cache also */
+  v7_flush_dcache_all(BOARD_DEVICE_TYPE);
+
+  /* mem barrier to sync up things */
+  asm("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
+
+  l2_cache_enable();
+}
+
+//Need to set range of TTBCR
 void setTTBCR(u32int value)
 {
   /* Page: 1348

@@ -52,11 +52,11 @@ void createVirtualMachineGPAtoRPA(GCONTXT* gc)
 /* Intercept Linux enabling virtual memory */
 void initialiseGuestShadowPageTable(u32int guestPtAddr)
 {
-#ifdef ADDRESSING_DEBUG
-  printf("initialiseGuestShadowPageTable: new pt addr %08x\n", guestPtAddr);
-#endif
-
   GCONTXT* context = getGuestContext();
+
+#ifdef ADDRESSING_DEBUG
+  printf("initialiseGuestShadowPageTable: new pt addr %08x @ pc %08x\n", guestPtAddr, context->R15);
+#endif
 
   //This needs changing to, or similar
   //if(gc->decompressionDone)
@@ -114,7 +114,8 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
     
     // clean tlb and cache entries
     clearTLB();
-    clearCache();
+    clearInstructionCache();
+    clearDataCache();
     
     // add protection to guest page table.
     u32int guestPtVirtualEndAddr = ptGuestVirtual + PAGE_TABLE_SIZE - 1;
@@ -192,7 +193,7 @@ void guestEnableVirtMem()
   dataBarrier();  //anything in caches needs to be written back now
   setTTBCR((u32int)sPT); //swap shadow PT
   clearTLB(); //clean out all TLB entries - may have conflicting entries
-  clearCache(); //just to make sure
+  clearInstructionCache(); //just to make sure
 
 #ifdef ADDRESSING_DEBUG
   printf("guestEnableVirtMem: Using sPT. Continuing\n");
@@ -275,7 +276,8 @@ void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
               printf("changeGuestDomainAccessControl: remap AP for page table entry\n");
 #endif
               descriptor* shadowPtEntry = &(context->PT_shadow[y]);
-              mapAPBitsPageTable(y*1024*1024, ptEntry, shadowPtEntry);
+              mapAPBitsPageTable(y*1024*1024, (pageTableDescriptor*)ptEntry,
+                                         (pageTableDescriptor*)shadowPtEntry);
             }
           }
 

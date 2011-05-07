@@ -111,6 +111,7 @@ void dumpGuestContext(GCONTXT * gc)
   
   }
   dumpSdramStats();
+  printf("Debug Flag: %x\n", (u32int)gc->debugFlag);
 }
 
 void initGuestContext(GCONTXT * gContext)
@@ -179,11 +180,15 @@ void initGuestContext(GCONTXT * gContext)
   gContext->guestDataAbtPending = FALSE;
   gContext->guestPrefetchAbtPending = FALSE;
   gContext->guestIdle = FALSE;
+#ifdef GUEST_CONTEXT_DBG
+  printf("Block Trace @ address %08x\n", (u32int)&(gContext->blockHistory));
+#endif
   int i = 0;
   for (i = 0; i < BLOCK_HISOTRY_SIZE; i++)
   {
     gContext->blockHistory[i] = 0;
   }
+  gContext->debugFlag = FALSE;
 }
 
 void registerCrb(GCONTXT * gc, CREG * coprocRegBank)

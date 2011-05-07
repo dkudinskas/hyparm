@@ -125,6 +125,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 	  }
 	  else if ( ((instr & STRD_IMM_MASK) == STRD_IMM_MASKED) ||
             ((instr & STRD_REG_MASK) == STRD_REG_MASKED) )
+<<<<<<< HEAD
   	  {
 	    // storing to a protected area.. adjust block cache if needed
     	validateCachePreChange(context->blockCache, address);
