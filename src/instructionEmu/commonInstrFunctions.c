@@ -391,27 +391,25 @@ u32int countBitsSet(u32int bitstream)
 }
 
 
-u32int decodeThumbInstr(u32int extinstr)
+u32int decodeThumbInstr(u16int * currhwAddress)
 {
 	u32int instr = 0;
 	u16int halfinstr = 0;
-#ifdef DECODE_THUMB
-	printf("Thumb word instruction %08x, half %08x, extinstr %08x\n",gc->endOfBlockInstr,gc->endOfBlockHalfInstr,
-		extinstr);
-#endif
-	halfinstr = extinstr & 0x0000FFFF; // get the lowest part
+	u16int * tempAddress = currhwAddress;
+	halfinstr = * tempAddress;
 	switch(halfinstr & THUMB32) // is it thumb 32 ?
 	{
 		case THUMB32_1:
 		case THUMB32_2:
 		case THUMB32_3:
 		{
-			instr = (halfinstr<<16)|((extinstr & 0xFFFF0000)>>16);
+			tempAddress++;
+			instr = (halfinstr<<16)|*tempAddress;
 			break;
 		}
 		default: //single thumb 16-bit instr?
 		{
-			instr = halfinstr;
+			instr = *tempAddress;
 			break;
 		}
 	}

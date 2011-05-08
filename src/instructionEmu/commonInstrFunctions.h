@@ -94,7 +94,7 @@ u32int decodeShift(u32int instrShiftType);
 u32int countBitsSet(u32int bitstream);
 
 // decode thumb instruction into 32-bit format
-u32int decodeThumbInstr(u32int instr);
+u32int decodeThumbInstr(u16int * address);
 
 // check whether the instruction is thumb 16 or 32bit
 bool isThumb32(u32int instr);

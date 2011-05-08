@@ -20,22 +20,12 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
   u32int eobInstrBackup = 0;
   u32int eobHalfInstrBackup =0;
   bool thumb32 = 0;
-  u32int oldinstr = 0;
   if(context->CPSR & T_BIT) //Thumb
   {
 	eobInstrBackup = context->endOfBlockInstr;
 	eobHalfInstrBackup = context->endOfBlockHalfInstr;
-	//take care on what you fetch. Segmentation fault is just around the corner
-	if((((u32int)context->R15) & 0x3 ) < 0x2)
-	{
-	  	oldinstr = *((u32int*)context->R15);
-	}
-	else
-	{	
-		oldinstr = *((u16int*)context->R15);
-	}
-	//printf("Storing on %08x, full instr %08x\n",address,instr);
-	instr = decodeThumbInstr(oldinstr);
+	u16int * currhwAddress = (u16int*)(context->R15);	
+	instr = decodeThumbInstr(currhwAddress);
     //printf("DATA ABORT FROM THUMB on instr: %08x\n",instr);
 	thumb32 = isThumb32(instr);
 	if(thumb32)
@@ -62,11 +52,8 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 		// STR emulation
 		if ( ( ( instr & THUMB16_STR_IMM5_MASK ) == THUMB16_STR_IMM5 ) || ( instr & THUMB16_STR_IMM8_MASK ) == THUMB16_STR_IMM8)
 		{
-			// validate cache if needed
-			validateCachePreChange(context->blockCache, address);
-			// cheat strInstruction. We know that this is a thumb16 instr
-			// so make sure that decoder will recognize it :-/
 			context->endOfBlockInstr = instr;
+			validateCachePreChange(context->blockCache, address);
 			strInstruction(context);	
 		}
 		// LDR emulation
@@ -81,8 +68,8 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 		// PUSH emulation
 		else if ( ( instr & THUMB16_PUSH_MASK ) == THUMB16_PUSH )
 		{
-			validateCachePreChange(context->blockCache,address);
 			context->endOfBlockInstr = instr;
+			validateCachePreChange(context->blockCache,address);
 			stmInstruction(context);
 		}
 
@@ -95,8 +82,8 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 		// STRB
 		else if ( ((instr & THUMB16_STRB_IMM5_MASK ) == THUMB16_STRB_IMM5) || ((instr & THUMB16_STRB_REG_MASK ) == THUMB16_STRB_REG))
 		{
-			validateCachePreChange(context->blockCache,address);
 			context->endOfBlockInstr = instr;
+			validateCachePreChange(context->blockCache,address);
 			strbInstruction(context);
 		}
 		else
