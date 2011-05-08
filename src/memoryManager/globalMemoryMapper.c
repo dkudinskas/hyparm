@@ -40,6 +40,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 	thumb32 = isThumb32(instr);
 	if(thumb32)
 	{
+	// ------------------------------ THUMB 32 bit Instructions -------------------------------------------------------//
 		if( ((instr & THUMB32_STRB_IMM12_MASK) == THUMB32_STRB_IMM12) || (instr & THUMB32_STRB_IMM8_MASK) == THUMB32_STRB_IMM8)
 		{
 			validateCachePreChange(context->blockCache, address);
@@ -55,6 +56,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 			DIE_NOW(0, "Unknown THUMB32 load/store instr");
 		}
 	}
+	// ----------------------------- THUMB 16 bit Instructions -------------------------------------------------------//
 	else
 	{
 		// STR emulation
@@ -79,8 +81,23 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 		// PUSH emulation
 		else if ( ( instr & THUMB16_PUSH_MASK ) == THUMB16_PUSH )
 		{
+			validateCachePreChange(context->blockCache,address);
 			context->endOfBlockInstr = instr;
 			stmInstruction(context);
+		}
+
+		//LDRB
+		else if( ((instr & THUMB16_LDRB_IMM5_MASK ) == THUMB16_LDRB_IMM5) || ((instr & THUMB16_LDRB_REG_MASK ) == THUMB16_LDRB_REG))
+		{
+			context->endOfBlockInstr = instr;
+			ldrbInstruction(context);
+		}
+		// STRB
+		else if ( ((instr & THUMB16_STRB_IMM5_MASK ) == THUMB16_STRB_IMM5) || ((instr & THUMB16_STRB_REG_MASK ) == THUMB16_STRB_REG))
+		{
+			validateCachePreChange(context->blockCache,address);
+			context->endOfBlockInstr = instr;
+			strbInstruction(context);
 		}
 		else
 		{

@@ -40,7 +40,6 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   u16int * currtmpAddress = 0;
   u32int instruction = 0;
   u32int halfinstruction = 0;
-  bool thumb32 = FALSE;
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
   
