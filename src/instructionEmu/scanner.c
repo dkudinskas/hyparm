@@ -39,7 +39,8 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   u16int * currhwAddress = (u16int*)blkStartAddr;
   u16int * currtmpAddress = 0;
   u32int instruction = 0;
-  u16int halfinstruction = 0;
+  u32int halfinstruction = 0;
+  bool thumb32 = FALSE;
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
   
@@ -52,14 +53,11 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     gc->endOfBlockInstr = bcEntry->hyperedInstruction;
 	gc->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
 
-//#ifdef SCANNER_DEBUG
-	if(gc->CPSR & T_BIT)
-	{
-	    printf("scanner: Block @ %08x hash value %x cache index %x HIT\n", 
-    	       blkStartAddr, hashVal, bcIndex);
-	 	printf("OriginFull %08x Half %08x\n", gc->endOfBlockInstr, gc->endOfBlockHalfInstr);
-	}
-//#endif
+#ifdef SCANNER_DEBUG
+	printf("scanner: Block @ %08x hash value %x cache index %x HIT\n", 
+           blkStartAddr, hashVal, bcIndex);
+		printf("OriginFull %08x Half %08x\n", gc->endOfBlockInstr, gc->endOfBlockHalfInstr);
+#endif
     return;
   }
 
@@ -77,55 +75,37 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 	//backup pointer
 	currtmpAddress = currhwAddress;
 #ifdef SCANNER_DEBUG
-	printf("Thumb 16-bit Instruction: %08x\n",halfinstruction);
+	printf("Thumb 16-bit Instruction: %08x@%08x\n",halfinstruction,(u32int)currhwAddress);
 #endif
-	switch(halfinstruction & THUMB32)
-	{
-		// Is this halfword a thumb32 encoding?
-		case THUMB32_1:
+	 // We have to assume that currhwAddress cannot point to the middle of nowhere. It must point to a single Thumb-16
+	 // word or the first halfword of a Thumb32 instruction. If scanner points to anything else, then we did something really wrong
+	 switch(halfinstruction & THUMB32)
+	 {
+	 	case THUMB32_1:
 		case THUMB32_2:
 		case THUMB32_3:
 		{
-			// If this is a thumb32 encoding, then move one instruction ahead and concatenate both
+			halfinstruction = * currhwAddress;
 			currhwAddress++;
-			instruction = halfinstruction<<16|*currhwAddress;
+			instruction = (halfinstruction << 16) | *currhwAddress;
 			break;
 		}
 		default:
 		{
-			// Maybe this instruction is the second word of a 32-bit Thumb instruction. Check!
-			currhwAddress--; // move one instruction before
-			switch(*currhwAddress & THUMB32)
-			{
-				case THUMB32_1:
-				case THUMB32_2:
-				case THUMB32_3:
-				{
-					// the previous instruction was a Thumb-32 first halfword. Concatenate them
-					halfinstruction = *currhwAddress; // <- this holds the first word of the Thumb-32 instruction
-					// move back to the original instruction
-					currhwAddress++;
-					instruction = halfinstruction<<16|*currhwAddress;
-				}
-				default:
-				{
-					// OK the previous halfword wasn't a Thumb-32 encoding. Move again to our instruction
-					currhwAddress++;
-					instruction = halfinstruction;
-				}
+			instruction = * currhwAddress;
 			break;
 		}
 	}
-//#ifdef SCANNER_DEBUG
+	// reset variables
+#ifdef SCANNER_DEBUG
 	printf("Thumb: %08x@%08x\n",instruction,(u32int)currhwAddress);
-//#endif
-   }
+#endif
   }
-   else
-   {
+  else
+  {
    	//grab the ARM instruction
 	instruction = *currAddress;
-   }
+  }
 #ifdef CONFIG_DECODER_TABLE_SEARCH
   while ((decodedInstruction = decodeInstr(instruction,currhwAddress))->replaceCode == 0)
 #else
@@ -142,9 +122,14 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 		{
 			currhwAddress++;
 			halfinstruction = *currhwAddress;
+#ifdef SCANNER_DEBUG
+			printf("Thumb 16-bit Instruction: %08x@%08x\n@",halfinstruction,(u32int)currhwAddress);
+#endif
 			// backup pointer
 			currtmpAddress = currhwAddress;
 			// check for Thumb-32 bit encoding
+			
+			//---------------------FIX ME: This has to be converted to a while() loop like before ------//
 			switch(halfinstruction & THUMB32) 
 			{
 				case THUMB32_1:
@@ -159,30 +144,8 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 				// if the halfword is a 16bit instruction
 				default:
 				{
-					// maybe this is the second half word of a thumb-2 instruction?. Check the previous one
-					currhwAddress--;
-					switch(*currhwAddress & THUMB32)
-					{
-						case THUMB32_1:
-						case THUMB32_2:
-						case THUMB32_3:
-						{	// if we are here, it means the the current instruction is the second halfword
-							// of a thumb 32-bit instr
-							halfinstruction = *currhwAddress; // fetch the first half word of Thumb-32
-							currhwAddress++; // move forward, fetch the next one, and concatenate them
-							instruction = halfinstruction<<16|*currhwAddress;
-							break;
-						}
-						default:
-						{
-							// if we are here it means that the previous instruction was a 16bit standalone instruction
-							// and so is this one
-							currhwAddress++;
-							//keep only the last 16 bits
-							instruction = halfinstruction;
-							break;
-						}
-					}
+					instruction = * currhwAddress;
+					break;
 				}
 			}
 		}
@@ -245,16 +208,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 	//------------------------------ THUMB ---------------------------------//
 	else
 	{
-		if ( 
-				(	
-					(instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX)
-				|| 
-				( 
-					((instruction & 0xFFFFDFFF) >= 0xDF00)
-					&& 
-					((instruction & 0xFFFFDFFF) <= 0xDFFF)
-				)
-			) // FIX ME -> This doesn't look right
+		if (((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX) ||  (((instruction & 0xFFFFDFFF) >= 0xDF00) && ((instruction & 0xFFFFDFFF) <= 0xDFFF))) // FIX ME -> This doesn't look right
  		{
 			u32int svcCode = (instruction & 0x000000FF); // NOP|SVC -> Keep the last 8 bits
 	  		if(svcCode > 0)
@@ -274,6 +228,13 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 				gc->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
 				gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
 	    	 }
+			else
+			{
+				gc->endOfBlockInstr = instruction;
+				gc->endOfBlockHalfInstr = THUMB16;
+     			gc->hdlFunct = decodedInstruction->hdlFunct;
+			}
+
 		}	
 		/* If the instruction is not a SWI placed by the hypervisor OR 
 		 * it is a non-SWI instruction, then proceed as normal
@@ -281,105 +242,48 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 	  	else
 	  	{	
     	
-		/* Replace policy:
-		 * CurrAddress can point to any of these
-		 * 1) 32-bit word where lowest halfword is a single Thumb 16-bit instruction
-		 * 2) 32-bit word where lowest halfword is the second halfword of a Thumb 32-bit instruction
-		 * . In this case, the high halfword instruction is located in CurrAddres-2bytes
-		 * 3) 32-bit word where lowest halfword is the high halfword of a Thumb-32 instruction. In
-		 * this case, the remaining halfword is located in CurrAddress+2 bytes
-		 * To identify what kind of instruction this is, each 16bit portion has to be checked for 
-		 * Thumb-32 compatible encoding.
-		 */
-		currhwAddress = currtmpAddress; // restore starting pointer and do what we did before
-		halfinstruction = * currhwAddress;
-		switch(halfinstruction & THUMB32)
-		{
-			case THUMB32_1:
-			case THUMB32_2:
-			case THUMB32_3:
+			/* Replace policy:
+			 * CurrAddress can point to any of these
+			 * 1) 32-bit word where lowest halfword is a single Thumb 16-bit instruction
+			 * 2) 32-bit word where lowest halfword is the second halfword of a Thumb 32-bit instruction
+			 * . In this case, the high halfword instruction is located in CurrAddres-2bytes
+			 * 3) 32-bit word where lowest halfword is the high halfword of a Thumb-32 instruction. In
+			 * this case, the remaining halfword is located in CurrAddress+2 bytes
+			 * To identify what kind of instruction this is, each 16bit portion has to be checked for 
+			 * Thumb-32 compatible encoding.
+			 */
+			currhwAddress = currtmpAddress; // restore starting pointer and do what we did before
+			halfinstruction = * currhwAddress;
+			switch(halfinstruction & THUMB32)
 			{
-				// This looks like the first halfword of a thumb 32-bit instruction but
-				// it may as well be a lower halfword. So check the previous word as well
-				currhwAddress--;
-				switch(*currhwAddress & THUMB32)
+				case THUMB32_1:
+				case THUMB32_2:
+				case THUMB32_3:
 				{
-					case THUMB32_1:
-					case THUMB32_2:
-					case THUMB32_3:
-					{
-						//so the previous halfword matches the Thumb-2 encoding so it
-						//*SHOULD* be the first halfword of a thumb2 32-bit instruction					
-						halfinstruction = *currhwAddress;
-						currhwAddress++;
-						instruction = halfinstruction<<16|*currhwAddress;
-						// Mark this entry as Thumb 32
-						gc->endOfBlockHalfInstr = THUMB32_LOW;
-						gc->endOfBlockInstr = instruction;
-						
-						// replace what needs to be replaced
-						currhwAddress--; // First Thumb word gets a NOT
-						*currhwAddress = INSTR_NOP_THUMB;
-						currhwAddress++; // Second Thumb word is replaced by SWI
-						*currhwAddress = INSTR_SWI_THUMB|((bcIndex+1) & 0xFF);
-						break;
-					}
-					default:
-					{
-						// so the previous instruction is not a Thumb-32. We need to fetch the next instruction is concatenate with the thumb32 instruction
-						currhwAddress ++; // this points to the first instruction of thumb
-						halfinstruction = *currhwAddress;
-						currhwAddress ++; // this points to the next one
-						instruction = halfinstruction<<16|*currhwAddress;
-						gc->endOfBlockHalfInstr = THUMB32_HIGH;
-						gc->endOfBlockInstr = instruction;
-						currhwAddress --; // this points to the first instruction of thumb
-						*currhwAddress = INSTR_NOP_THUMB;
-						currhwAddress ++;
-						*currhwAddress = INSTR_SWI_THUMB|((bcIndex+1) & 0xFF);
-					}
+					halfinstruction = *currhwAddress;
+					currhwAddress ++;
+					instruction = (halfinstruction<<16)|*currhwAddress;
+					gc->endOfBlockInstr = instruction;
+					gc->endOfBlockHalfInstr = THUMB32;
+					currhwAddress --;
+					*currhwAddress = INSTR_NOP_THUMB;
+					currhwAddress ++;
+					*currhwAddress = INSTR_SWI_THUMB|((bcIndex+1) & 0xFF);
+					break;
 				}
-				break;
-			}
-			default:
-			{
-				//This seems to be a single 16-bit instruction or a low Thumb 32bit instruction.
-				//check the previous halfword to see if it is the high halfword instruction there
-				currhwAddress--;
-				switch((*currhwAddress) & THUMB32)
+				default:
 				{
-					case THUMB32_1:
-					case THUMB32_2:
-					case THUMB32_3:
-					{
-						halfinstruction = *currhwAddress; // Fetch the first thumb-32 instruction
-						currhwAddress++;//fetch the next one and construct the instruction
-						instruction = halfinstruction<<16|*currhwAddress;
-						gc->endOfBlockHalfInstr = THUMB32_HIGH; // Mark it as Thumb-32
-						gc->endOfBlockInstr = instruction;
-						
-						// replace what needs to be replaced
-						currhwAddress--;
-						*currhwAddress = INSTR_NOP_THUMB;
-						currhwAddress++; // go 2 bytes ahead
-						*currhwAddress = INSTR_SWI_THUMB | (( bcIndex +1 ) & 0xFF); // keep only the lowest 8 bits
-						break;
-					}
-					default:
-					{
-						//The previous instruction was a standalone 16-bit instruction, so is the current one
-						currhwAddress++;
-						instruction = *currhwAddress;
-						gc->endOfBlockInstr = instruction;
-						gc->endOfBlockHalfInstr = THUMB16;
-						*currhwAddress=INSTR_SWI_THUMB | ((bcIndex + 1) & 0xFF);
-						break;
-					}
+					instruction = *currhwAddress;
+					gc->endOfBlockInstr = instruction;
+					gc->endOfBlockHalfInstr = THUMB16;
+					*currhwAddress = INSTR_SWI_THUMB|((bcIndex+1) & 0xFF); 
+					break;
 				}
-				break;
 			}
-		}
+#ifdef	SCANNER_DBG
 		printf("Thumb svc on %08x\n",(u32int)currhwAddress);
+#endif
+
 #ifdef CONFIG_DECODER_TABLE_SEARCH
 	    gc->hdlFunct = decodedInstruction->hdlFunct;
 #else

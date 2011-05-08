@@ -60,5 +60,5 @@ bool isBitmapSetForAddress(u32int addr);
 
 struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int bcIndex);
 
-u32int resolveSWI(u32int index, u32int* endAddress);
+void resolveSWI(u32int index, u32int* endAddress);
 #endif
