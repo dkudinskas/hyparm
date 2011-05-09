@@ -208,7 +208,9 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 
 void explodeCache(BCENTRY * bcache)
 {
+#ifdef BLOCK_CACHE_DBG
   printf("========BLOCK CACHE EXPLODE!!!=========\n");
+#endif
 
   int i = 0;
 

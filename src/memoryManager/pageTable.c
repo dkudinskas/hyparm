@@ -2280,7 +2280,11 @@ void pageTableEdit(u32int address, u32int newVal)
       {
         smallDescriptor* newPtd = (smallDescriptor*)newGuestEntry;
         smallDescriptor* oldPtd = (smallDescriptor*)oldGuestEntry;
-        smallDescriptor* shadowPtd = (smallDescriptor*)shadowEntry;
+        // to copySmallEntry and copyLargeEntry:
+        // need to get second level page table address, not first level PTE
+        u32int secondLvlEntryAddr = (*(u32int*)shadowEntry) & 0xFFFFFC00;
+        secondLvlEntryAddr = secondLvlEntryAddr | ((virtualAddr >> 10) & 0x3FC);
+        smallDescriptor* shadowPtd = (smallDescriptor*)secondLvlEntryAddr;
         if(oldPtd->addr != newPtd->addr)
         {
           //Change in address is same as a removeEntry and addNew one
