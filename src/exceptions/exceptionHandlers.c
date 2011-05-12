@@ -172,10 +172,10 @@ void dataAbort()
   enableInterrupts();
 }
 
-void dataAbortPrivileged()
+void dataAbortPrivileged(u32int pc)
 {
   /* Here if we abort in a priviledged mode, i.e its the Hypervisors fault */
-  printf("dataAbortPrivileged: Hypervisor data abort in priviledged mode.\n");
+  printf("dataAbortPrivileged: Hypervisor dabt in priv mode @ pc %08x\n", pc);
   
   printDataAbort();
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
