@@ -20,6 +20,28 @@ arm-none-eabi-objcopy -O binary -R .note -R .note.gnu.build-id -R .comment -S vm
 2. Invoke mkimage on the Image file instead:
 mkimage -A arm -O linux -T kernel -C none -a 0x80008000 -e 0x80008000 -n 'Linux-2.6.28.1' -d arch/arm/boot/Image arch/arm/boot/uImage 
 
+FREERTOS:
+
+Clone the following git repository
+
+git clone git://git.silverarrow.org/shared/freertos-ported.git
+
+1. Open the Makefile located at Demo/ARM_OMAP3/Makefile.
+
+2. Set USE_THUMB_MODE = YES for Thumb-2 binary or NO for ARMv7 binary.
+
+3. Set USE_HYPERVISOR = 1 for starting a single LED task or 0 for starting all the demo tasks ( except comtask ).
+
+4. Set configUSE_PREEMPTION in Demo/ARM_OMAP3/FreeRTOSConfig.h to the desired value ( 0 or 1 ).
+
+5. Compile the hypervisor ( see instructions below )
+
+6. Run the program by invoking:
+	
+go 0x8c000000 -rtos 0x80300000
+
+Note: Remember to change the default memory locations as appropriate.
+
 
 COMPILING THE HYPERVISOR:
 
