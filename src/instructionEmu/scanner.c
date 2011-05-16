@@ -176,7 +176,13 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 	        // retrieve end of block instruction and handler function pointer
   		    gc->endOfBlockInstr = bcEntry->hyperedInstruction;
     		gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
-	     }	
+	    }
+		else //Handle guest SVC
+		{
+	 		gc->endOfBlockInstr = instruction;
+			gc->endOfBlockHalfInstr = 0;
+			gc->hdlFunct = decodedInstruction->hdlFunct;
+		}
 	 }
 		/* If the instruction is not a SWI placed by the hypervisor OR 
 		 * it is a non-SWI instruction, then proceed as normal

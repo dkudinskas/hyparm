@@ -594,7 +594,7 @@ struct instruction32bit t16MiscInstructions[] = {
 {0, &addInstruction, 0xB000, 0xFF80, "ADD SP, SP, #<imm>"},
 // trap if PC is on POP reglist
 {1, &popLdmInstruction, 0xBD00, 0xFF00, "POP <reglist+PC>"},
-{0, &popLdmInstruction, 0xBC00, 0xFF00, "POP <reglist>"},
+{0, &popLdmInstruction, 0xBC00, 0xFE00, "POP <reglist>"},
 {0, &nopInstruction, 0xBF00,0xFFFF, "NOP"}
 };
 

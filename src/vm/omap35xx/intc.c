@@ -118,6 +118,9 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
 	case REG_INTCPS_MIR1:
 	  val = irqController->intcMir1;
 	  break;
+	case REG_INTCPS_MIR2:
+	  val = irqController->intcMir2;
+	  break;
     case REG_INTCPS_SIR_FIQ:
     case REG_INTCPS_PROTECTION:
     case REG_INTCPS_IDLE:
