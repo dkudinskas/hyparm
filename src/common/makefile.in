@@ -2,3 +2,4 @@ SRCS += src/common/debug.c
 SRCS += src/common/memFunctions.c
 SRCS += src/common/stringFunctions.c
 SRCS += src/common/div.c
+SRCS += src/common/alignFunctions.c
