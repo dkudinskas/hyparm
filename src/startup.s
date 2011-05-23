@@ -55,44 +55,19 @@
 .global registerGuestPointer
 .func   registerGuestPointer
 registerGuestPointer:
-  PUSH    {R0, R1, R2}
+  PUSH    {R0, R1}
   LDR     R1, =guestContextSpace
   STR     R0, [R1]
 
-  /* write guest stack pointers for now */
-  ADD     R1, R0, #GC_R13_OFFS
-  LDR     R2, =guestStackUser
-  STR     R2, [R1]
-
-  ADD     R1, R0, #GC_R13_FIQ_OFFS
-  LDR     R2, =guestStackFIQ
-  STR     R2, [R1]
-
-  ADD     R1, R0, #GC_R13_SVC_OFFS
-  LDR     R2, =guestStackSVC
-  STR     R2, [R1]
-
-  ADD     R1, R0, #GC_R13_ABT_OFFS
-  LDR     R2, =guestStackABT
-  STR     R2, [R1]
-
-  ADD     R1, R0, #GC_R13_IRQ_OFFS
-  LDR     R2, =guestStackIRQ
-  STR     R2, [R1]
-
-  ADD     R1, R0, #GC_R13_UND_OFFS
-  LDR     R2, =guestStackUND
-  STR     R2, [R1]
-
   /* restore dirty registers */
-  POP     {R0, R1, R2}
+  POP     {R0, R1}
   MOV     PC, LR
 .endfunc
 
 
-.global startup_hypervisor
-.func   startup_hypervisor
-startup_hypervisor:
+.global startupHypervisor
+.func   startupHypervisor
+startupHypervisor:
 
 /* Initialize stacks for all modes */
   /* set IRQ stack */

@@ -33,30 +33,22 @@
 #define HIDDEN_RAM_START   0x8f000000
 #define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
 
-extern void startup_hypervisor(void);
+
+extern void startupHypervisor(void);
 extern void registerGuestPointer(u32int gContext);
 
 void printUsage(void);
 int parseCommandline(int argc, char *argv[]);
 void registerGuestContext(u32int gcAddr);
-GCONTXT * getGuestContext(void);
 
 u32int kernAddr;
 u32int initrdAddr;
 
-// guest context
-GCONTXT * gContext;
-
-extern struct mmc *mmcDevice;
-extern fatfs mainFilesystem;
-extern partitionTable primaryPartitionTable;
-
 int main(int argc, char *argv[])
 {
-  int ret = 0;
   kernAddr = 0;
   initrdAddr = 0;
-  gContext = 0;
+  GCONTXT * gContext = 0;
 
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
@@ -79,73 +71,16 @@ int main(int argc, char *argv[])
   initialiseFrameTable();
 
   /* sets up stack addresses and exception handlers */
-  startup_hypervisor();
+  startupHypervisor();
 
   /* initialize guest context */
-  gContext = (GCONTXT*)mallocBytes(sizeof(GCONTXT));
-  if (gContext == 0)
-  {
-    DIE_NOW(0, "Failed to allocate guest context.");
-  }
-#ifdef STARTUP_DEBUG
-  else
-  {
-    printf("Guest context at%x\n", (u32int)gContext);
-  }
-#endif
+  gContext = allocateGuest();   
   registerGuestPointer((u32int)gContext);
-  initGuestContext(gContext);
-
-  /* initialise coprocessor register bank */
-  CREG * coprocRegBank = (CREG*)mallocBytes(MAX_CRB_SIZE * sizeof(CREG));
-  if (coprocRegBank == 0)
-  {
-    DIE_NOW(0, "Failed to allocate coprocessor register bank.");
-  }
-  else
-  {
-    memset((void*)coprocRegBank, 0x0, MAX_CRB_SIZE * sizeof(CREG));
-#ifdef STARTUP_DEBUG
-    printf("Coprocessor register bank at %x\n", (u32int)coprocRegBank);
-#endif
-  }
-  registerCrb(gContext, coprocRegBank);
-  
-  /* initialise block cache */
-  BCENTRY * blockCache = (BCENTRY*)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
-  if (blockCache == 0)
-  {
-    DIE_NOW(0, "Failed to allocate basic block cache.\n");
-  }
-  else
-  {
-    memset((void*)blockCache, 0x0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
-#ifdef STARTUP_DEBUG
-    printf("Basic block cache at %x\n", (u32int)blockCache);
-#endif
-  }
-  registerBlockCache(gContext, blockCache);
-
-  /* initialise virtual hardware devices */
-  device * libraryPtr;
-  if ((libraryPtr = initialiseHardwareLibrary()) != 0)
-  {
-    /* success. register with guest context */
-    registerHardwareLibrary(gContext, libraryPtr);
-  }
-  else
-  {
-    DIE_NOW(0, "Hardware library initialisation failed.");
-  }
 
   /* Setup MMU for Hypervisor */
   initialiseVirtualAddressing();
 
-  /* Setup guest memory protection */
-  registerMemoryProtection(gContext);
-
-  ret = parseCommandline(argc, argv);
-  if ( ret < 0 )
+  if (parseCommandline(argc, argv) < 0)
   {
     printUsage();
     DIE_NOW(0, "Hypervisor startup aborted.");
@@ -172,29 +107,8 @@ int main(int argc, char *argv[])
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
 
-  u32int err = mmcMainInit();
-  printf("mmcMainInit ret %x\n", err);
-  
-  err = partTableRead(&mmcDevice->blockDev, &primaryPartitionTable);
-  printf("partTableRead ret %x\n", err);
-
-  err = fatMount(&mainFilesystem, &mmcDevice->blockDev, 1);
-  printf("fatMount ret %x\n", err);
-
-/*  char * filename = "testfile";
-  char * writeText = "The quick brown fox jumps over the lazy dog.\n";
-  u32int len = fatWriteFile(&mainFilesystem, filename, writeText, stringlen(writeText));
-  printf("writen %x bytes to '%s'\n", len, filename);*/
-
-  fatRootLs(&mainFilesystem);
-
   // does not return
   doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
-}
-
-GCONTXT * getGuestContext()
-{
-  return gContext;
 }
 
 void printUsage(void)
