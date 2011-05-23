@@ -6,14 +6,15 @@
 #include "guestManager/guestContext.h"
 
 
-// uncomment me to enable scanner debug: #define SCANNER_DEBUG
+// uncomment me to enable scanner debug:
+//#define SCANNER_DEBUG
 
 // uncomment me to enable scanner debug for blockCopyCache: #define SCANNER_DEBUG_BLOCKCOPY
 
 // uncomment me to enable scanner request counter: #define DUMP_SCANNER_COUNTER
 
 //uncomment to dump scanner counter on DIE_NOW:
-#define DIE_NOW_SCANNER_COUNTER
+//#define DIE_NOW_SCANNER_COUNTER
 
 #ifdef DIE_NOW_SCANNER_COUNTER
   #define SCANNER_COUNTER

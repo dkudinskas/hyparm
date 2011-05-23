@@ -1,0 +1,18 @@
+
+testcase1.elf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+80300000 <_stack+0x80280000>:
+80300000:	e3a00000 	mov	r0, #0
+80300004:	eaffffff 	b	80300008 <bb2>
+
+80300008 <bb2>:
+80300008:	e51f1010 	ldr	r1, [pc, #-16]	; 80300000 <__data_start+0xffff7fe4>
+8030000c:	e51f2010 	ldr	r2, [pc, #-16]	; 80300004 <__data_start+0xffff7fe8>
+80300010:	e0811002 	add	r1, r1, r2
+
+80300014 <loop>:
+80300014:	e3500000 	cmp	r0, #0
+80300018:	0afffffd 	beq	80300014 <loop>

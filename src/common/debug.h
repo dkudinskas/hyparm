@@ -6,7 +6,7 @@
 #include "guestManager/guestContext.h"
 
 
-#define DIE_NOW_SCANNER_COUNTER
+//#define DIE_NOW_SCANNER_COUNTER
 
 __attribute((noreturn)) void DIE_NOW(GCONTXT * context, char* msg);
 

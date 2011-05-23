@@ -1,4 +1,4 @@
-#
+
 # BeagleBoard specific configuration
 #
 
@@ -20,3 +20,4 @@ TARGET_CCFLAGS = \
   -DCONFIG_BLOCK_COPY \
   -DCONFIG_BLOCK_COPY_NO_IRQ \
   -mcpu=cortex-a8
+

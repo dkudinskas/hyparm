@@ -31,11 +31,11 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 {
 #ifdef SCANNER_COUNTER
   scannerReqCounter++;
-
-  if(scannerReqCounter == 0x1ad7d5)
+  DIE_NOW(0,"ScanneriReqCounter on");
+  if(scannerReqCounter == 0xb)
             {
               //DIE_NOW(0,"Time is up!");
-              //asm volatile("BKPT #0");
+              asm volatile("BKPT #0");
             }
 
 #endif
@@ -252,9 +252,11 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
         serial_putstring(" blockCopyCache@");
         serial_putint(((u32int)blockCopyCacheStartAddress));
         serial_newline();
+#ifdef SCANNER_COUNTER
         serial_putstring("Block nr:");
         serial_putint(scannerReqCounter);
-        asm volatile("BKPT #0");
+#endif
+//        asm volatile("BKPT #0");
       }
       /* add the block we just scanned to block cache */
       addToBlockCache(blkStartAddr, (u32int)currAddress, bcIndex, blockCopyCacheSize,
