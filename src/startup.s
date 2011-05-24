@@ -93,7 +93,7 @@ startupHypervisor:
   /* set user/system stack */
   MSR     CPSR_c,#(SYS_MODE | I_BIT | F_BIT)
   /* since we will start the guest thinking its in SVC mode, choose this stack*/
-  LDR     sp,=guestStackSVC
+  LDR     sp,=userStack
 
   /* switch back to svc mode */
   MSR     CPSR_c,#(SVC_MODE | I_BIT | F_BIT)
@@ -128,7 +128,7 @@ startupHypervisor:
     /* This section of code is order dependant */
     .ifndef CONFIG_CPU_TI_OMAP_35XX
       /* On the TI OMAP 35xx R4 is already correct */
-      LDR     R4,=undefined_addr @First interupt handler address
+      LDR     R4,=exception_vector @First interupt handler address
       LDR     R4, [R4]
     .endif
     LDR     R3,=undHandler
@@ -525,11 +525,8 @@ fiqHandler:
   LDMFD SP!, {PC}^
 
  
-        .data
-var_data:
-        .word   0x12345678
-/* only this addr is used in code, others are here for reference */
-undefined_addr:
+.data
+exception_vector:
         .ifdef TARGET_BEAGLE
           .word 0x4020FFE4
         .else
@@ -539,22 +536,8 @@ undefined_addr:
             .err @Unknown target
           .endif
         .endif
-/*
-swi_addr:
-        .word   0x4020FFE8
-prefetch_abort_addr:
-        .word   0x4020FFEC
-data_abort_addr:
-        .word   0x4020FFF0
-monitor_mode_addr:
-        .word   0x4020FFF4
-irq_addr:
-        .word   0x4020FFF8
-fiq_addr:
-        .word   0x4020FFFC */
 
-        .bss
-
+.bss
 /* pointer to current guest context structure lives here */
 guestContextSpace:
         .space 4
@@ -572,22 +555,5 @@ irqStack:
         .space 1024
 fiqStack:
         .space 1024
-systemStack:
-        .space 1024
 
-/* guest OS stacks */
-guestStackUser:
-        .space 1024
-guestStackFIQ:
-        .space 1024
-guestStackSVC:
-        .space 1024
-guestStackABT:
-        .space 1024
-guestStackIRQ:
-        .space 1024
-guestStackUND:
-        .space 1024
-var_zero:
-        .space  4
-        .section .rodata
+.section .rodata

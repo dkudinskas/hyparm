@@ -53,7 +53,7 @@ typedef struct DirectoryEntry
 
 int fatMount(fatfs *fs, blockDevice *dev, int part_num);
 
-void fatRootLs(fatfs *fs);
+void tree(fatfs *fs, u32int currentCluster, u32int level);
 
 void loadFatDirEntry(char *record, dentry *d);
 
@@ -77,7 +77,7 @@ u32int fatGetNextClus(fatfs *fs, u32int clus);
 
 void nameToUpper(char *s);
 
-int filenameMatch(char *user, char *fatname);
+bool filenameMatch(char *user, char *fatname);
 
 dentry getPathDirEntry(fatfs *fs, char *fname, int createNew);
 

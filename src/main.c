@@ -44,6 +44,10 @@ void registerGuestContext(u32int gcAddr);
 u32int kernAddr;
 u32int initrdAddr;
 
+extern fatfs mainFilesystem;
+extern partitionTable primaryPartitionTable;
+extern struct mmc *mmcDevice;
+
 int main(int argc, char *argv[])
 {
   kernAddr = 0;
@@ -74,7 +78,7 @@ int main(int argc, char *argv[])
   startupHypervisor();
 
   /* initialize guest context */
-  gContext = allocateGuest();   
+  gContext = allocateGuest();
   registerGuestPointer((u32int)gContext);
 
   /* Setup MMU for Hypervisor */

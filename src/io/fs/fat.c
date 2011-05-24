@@ -115,7 +115,8 @@ void loadFatDirEntry(char *record, dentry *d)
 
   d->firstCluster = (*(record+0x1A)) | (*(record+0x1B)) << 8 |
                      (*(record+0x14)) << 16 | (*(record+0x15)) << 24;
-  d->fileSize = *((u32int*)(record+0x1C)); //should always be word aligned, right?
+  //should always be word aligned, right?
+  d->fileSize = *((u32int*)(record+0x1C));
 }
 
 /* Write a directory entry to a dentry-index position */
@@ -150,8 +151,9 @@ void writeFatDirEntry(fatfs *fs, dentry *dirEntry, u32int position)
                 fs->sectorsPerCluster, buf);
 }
 
-/* Simple function to list the root directory, for now */
-void fatRootLs(fatfs *fs)
+
+/* prints file structure tree */
+void tree(fatfs *fs, u32int currentCluster, u32int level)
 {
   int i = 0;
   char * buf = (char*)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
@@ -164,19 +166,17 @@ void fatRootLs(fatfs *fs)
     memset((void*)buf, 0x0, fs->sectorsPerCluster * fs->bytesPerSector);
   }
 
-  u32int currentCluster = fs->rootDirFirstCluster;
   do
   {
     fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buf);
     dentry dirEntry;
-    //each sector can hold 16 dentry records
+    // each sector can hold 16 dentry records
     for (i = 0; i < (16 * fs->sectorsPerCluster); i++)
     {
       loadFatDirEntry(buf + 32*i, &dirEntry);
 
       if (!(dirEntry.filename[0]))
       {
-        printf("End of directory\n");
         return;
       }
 
@@ -191,36 +191,76 @@ void fatRootLs(fatfs *fs)
         continue;
       }
 
+      u32int lvlIndex = 0;
+      for (lvlIndex = 0; lvlIndex < level; lvlIndex++)
+      {
+        printf("|   ");
+      }
+      printf("|-- ");
+
       //anything now is directory data, check attrib for file/dir
       if (dirEntry.attrib & FAT_DE_DIR_MASK)
       {
-        printf("D\t");
+        // print folder name
+        int nameIndex;
+        for (nameIndex = 0; nameIndex < 11; nameIndex++)
+        {
+          //spaces not allowed
+          if (dirEntry.filename[nameIndex] == 0x20)
+          {
+            break;
+          }
+          printf("%c", dirEntry.filename[nameIndex]);
+        }
+        printf("\n");
+
+        char this[11] = ".\0";
+        char prev[11] = "..\0";
+        bool dontCall = filenameMatch(this, dirEntry.filename) || 
+                        filenameMatch(prev, dirEntry.filename);
+        if (!dontCall)
+        {
+          tree(fs, dirEntry.firstCluster, level+1);
+        }
       }
       else
       {
-        printf("F\t");
-      }
+        // print filename
+        int index;
 
-      int j;
-      for (j = 0; j < 11; j++)
-      {
-        //spaces not allowed
-        if (dirEntry.filename[j] == 0x20)
+        for (index = 0; index < 8; index++)
         {
-          break;
+          // spaces not allowed
+          if (dirEntry.filename[index] == 0x20)
+          {
+            break;
+          }
+          printf("%c", dirEntry.filename[index]);
         }
-        printf("%c", dirEntry.filename[j]);
-      }
 
-      printf("\t\t");
-      printf("sz: ");
-      printf("%x\n", dirEntry.fileSize);
+        if (dirEntry.filename[8] != 0x20)
+        {
+          printf(".");
+          for (index = 8; index < 11; index++)
+          {
+            //spaces not allowed
+            if (dirEntry.filename[index] == 0x20)
+            {
+              break;
+            }
+            printf("%c", dirEntry.filename[index]);
+          }
+        }
+
+        printf("\n");
+      }
     }
     //we've still not reached EOD, repeat
     currentCluster = fatGetNextClus(fs, currentCluster);
   }
   while (!FAT_EOC_MARKER(currentCluster));
 }
+
 
 /* Convert a null-termed normal filename string into upper case */
 void nameToUpper(char *s)
@@ -234,19 +274,19 @@ void nameToUpper(char *s)
 }
 
 /* Sees if the user filename matches the format in the FAT */
-int filenameMatch(char *user, char *fatname)
+bool filenameMatch(char *user, char *fatname)
 {
   int i;
   for (i = 0; i < 11; i++)
   {
     if (fatname[i] == 0x20 && user[i] == '\0')
     {
-      return (i > 0) ? 1 : 0;
+      return (i > 0) ? TRUE : FALSE;
     }
 
     if (fatname[i] != user[i])
     {
-      return 0;
+      return FALSE;
     }
   }
 
@@ -267,14 +307,11 @@ u32int fatLoadClusFatSector(fatfs *fs, u32int clus, char *buf)
 /* Gets the cluster number which is pointed to by clus */
 u32int fatGetNextClus(fatfs *fs, u32int clus)
 {
-#ifdef FAT_DEBUG
-  printf("fatGetNextClus: current cluster = %08x\n", clus);
-#endif
   char buf[512];
   u32int offset = fatLoadClusFatSector(fs, clus, buf);
   u32int next = *(u32int*)(buf+offset);
 #ifdef FAT_DEBUG
-  printf("fatGetNextClus: next cluster = %08x\n", next);
+  printf("fatGetNextClus: current clusteer %08x, next cluster = %08x\n", clus, next);
 #endif
   return next;
 }
