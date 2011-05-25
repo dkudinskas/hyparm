@@ -31,6 +31,8 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 	if(thumb32)
 	{
 	// ------------------------------ THUMB 32 bit Instructions -------------------------------------------------------//
+		
+		// STRB
 		if( ((instr & THUMB32_STRB_IMM12_MASK) == THUMB32_STRB_IMM12) || (instr & THUMB32_STRB_IMM8_MASK) == THUMB32_STRB_IMM8)
 		{
 			validateCachePreChange(context->blockCache, address);
@@ -41,8 +43,38 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 		{
 			DIE_NOW(0,"Unimplemented Thumb32 register generic load/store");
 		}
+		
+		// STRH
+		else if ( ((instr & THUMB32_STRH_REG_IMM5_MASK) == THUMB32_STRH_REG_IMM5)
+			|| ((instr & THUMB32_STRH_REG_IMM8_MASK) == THUMB32_STRH_REG_IMM8)
+			|| ((instr & THUMB32_STRH_REG_MASK) == THUMB32_STRH_REG))
+		{
+			validateCachePreChange(context->blockCache, address);
+			context->endOfBlockInstr = instr;
+			strhInstruction(context);
+		}
+
+		// LDRSH
+		else if ( ((instr & THUMB32_LDRSH_REG_IMM8_MASK) == THUMB32_LDRSH_REG_IMM8)
+			|| ((instr & THUMB32_LDRSH_REG_IMM12_MASK) == THUMB32_LDRSH_REG_IMM12)
+			|| ((instr & THUMB32_LDRSH_IMM12_MASK) == THUMB32_LDRSH_IMM12)
+			|| ((instr & THUMB32_LDRSH_REG_MASK) == THUMB32_LDRSH_REG))
+		{
+
+				context->endOfBlockInstr = instr;
+				ldrhInstruction(context);
+		}
+
+		// STRD
+		else if ( ((instr & THUMB32_STRD_IMM8_MASK) == THUMB32_STRD_IMM8))
+		{
+				validateCachePreChange(context->blockCache, address);
+				context->endOfBlockInstr = instr;
+				strdInstruction(context);
+		}
 		else
 		{
+			printf("Instruction: %08x@%08x\n",instr, context->R15);
 			DIE_NOW(0, "Unknown THUMB32 load/store instr");
 		}
 	}
@@ -80,11 +112,21 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 			ldrbInstruction(context);
 		}
 		// STRB
-		else if ( ((instr & THUMB16_STRB_IMM5_MASK ) == THUMB16_STRB_IMM5) || ((instr & THUMB16_STRB_REG_MASK ) == THUMB16_STRB_REG))
+		else if ( ((instr & THUMB16_STRB_IMM5_MASK ) == THUMB16_STRB_IMM5) 
+			|| ((instr & THUMB16_STRB_REG_MASK ) == THUMB16_STRB_REG))
 		{
 			context->endOfBlockInstr = instr;
 			validateCachePreChange(context->blockCache,address);
 			strbInstruction(context);
+		}
+		
+		//STRH
+		else if ( ((instr & THUMB16_STRH_IMM5_MASK) == THUMB16_STRH_IMM5) 
+			|| ((instr & THUMB16_STRH_REG_MASK) == THUMB16_STRH_REG))
+		{
+			context->endOfBlockInstr = instr;
+			validateCachePreChange(context->blockCache, address);
+			strhInstruction(context);
 		}
 		else
 		{

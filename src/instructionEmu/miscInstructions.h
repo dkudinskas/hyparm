@@ -146,6 +146,7 @@ u32int smulbtInstruction(GCONTXT * context);
 u32int smulttInstruction(GCONTXT * context);
 u32int smulwbInstruction(GCONTXT * context);
 u32int smulwtInstruction(GCONTXT * context);
+u32int smullInstruction(GCONTXT * context);
 u32int qaddInstruction(GCONTXT * context);
 u32int qdaddInstruction(GCONTXT * context);
 u32int qsubInstruction(GCONTXT * context);
@@ -157,4 +158,6 @@ u32int bInstruction  (GCONTXT * context);
 u32int svcInstruction(GCONTXT * context);
 u32int undefinedInstruction(GCONTXT * context);
 
+/* Exclusive Thumb Instructions. */
+u32int itInstruction(GCONTXT * context);
 #endif

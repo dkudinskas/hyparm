@@ -23,7 +23,8 @@ void deliverServiceCall(void)
   // 4. set LR to PC+4
   if(context->CPSR & 0x20)// Were we on Thumb?
   {
-  	context->R14_SVC = context->R15 + 2;
+  	//printf("SVC R14 %08x\n",context->R15+2);
+	context->R14_SVC = context->R15 + 2;
   }
   else
   {

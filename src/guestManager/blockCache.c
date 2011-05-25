@@ -213,6 +213,9 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 	tb = BreakDownThumb(bcAddr,index);
 	if(tb.isthumb==0)
 	{
+#ifdef BLOCK_CACHE_DBG
+	  printf("Restoring %08x@%08x\n",bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
+#endif
 	  *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
 	}
 	else

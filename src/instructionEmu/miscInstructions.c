@@ -856,9 +856,10 @@ u32int blxInstruction(GCONTXT * context)
 	}
 	// set ARM mode (disable Thumb bit)
 	context->CPSR &= ~T_BIT;
+	
+	// In Thumb-32, R15 points to the first halfword, so LR must be 4+1(T) bytes ahead
 	currPC = context->R15; 
 	storeGuestGPR(14, currPC+3,context); //next instr + 1
-	//printf("Thumb BLX: %08x, LR: %08x, Target: %08x\n", instr, currPC+3,target);
 	// currPC has to be word aligned
 	currPC += 2;
 	if( (currPC & 0x3) >= 0x2)
@@ -866,7 +867,7 @@ u32int blxInstruction(GCONTXT * context)
 		currPC &= ~0x3;
 	}
 	nextPC = currPC + target;
-	//printf("New PC=%08x\n",nextPC);
+	//printf("Thumb BLX: %08x, LR: %08x, Target: %08x\n", instr, currPC+3,nextPC);
 	return nextPC;
 
   }
@@ -980,6 +981,12 @@ u32int smlalttInstruction(GCONTXT * context)
 {
   DIE_NOW(context, "SMLALTT unfinished\n");
   return 0;
+}
+
+u32int smullInstruction(GCONTXT * context)
+{
+	DIE_NOW(context, "SMULL unfinished\n");
+	return 0;
 }
 
 u32int smulbbInstruction(GCONTXT * context)
@@ -1267,7 +1274,7 @@ u32int mrsInstruction(GCONTXT * context)
 
 u32int bInstruction(GCONTXT * context)
 {
-  u32int instr;
+  u32int instr = context->endOfBlockInstr;
   u32int instrCC = 0;
   u32int sign = 0;
   u32int link = 0 ;
@@ -1275,13 +1282,13 @@ u32int bInstruction(GCONTXT * context)
   u32int nextPC = 0;
   bool thumb32 = FALSE;
   bool bl32 = FALSE;
+
 #ifdef ARM_INSTR_TRACE
   printf("Branch instr %08x @ %08x\n", instr, context->R15);
 #endif
   // Are we on Thumb?
   if (context->CPSR & T_BIT)
   {
-	instr = context->endOfBlockInstr;
 	thumb32 = isThumb32(instr);
 	//printf("Branch instr %08x @ %08x\n", instr, context->R15);
 
@@ -1423,9 +1430,9 @@ u32int bInstruction(GCONTXT * context)
    /* eval condition flags only for Thumb-2 first encoding or ARM encoding*/
   if( (context->CPSR & T_BIT && thumb32 && !bl32 && (instr & 0x00001000) == 0)
   		|| !(context->CPSR & T_BIT) 
-		|| (context->CPSR & T_BIT && ( (instr & 0x0000D000) == 0x0000D000 ) && !thumb32 ) )
+		|| (context->CPSR & T_BIT && ( (instr & 0xF000) == 0xD000 ) && !thumb32 ) )
   {
-  	u32int cpsrCC = (context->CPSR >> 28) & 0xF;
+	u32int cpsrCC = (context->CPSR >> 28) & 0xF;
   	bool conditionMet = evalCC(instrCC, cpsrCC);
   	if (conditionMet)
   	{
@@ -1433,7 +1440,15 @@ u32int bInstruction(GCONTXT * context)
    	 u32int currPC = context->R15;
    	 if(context->CPSR & T_BIT)
 	 {
-		currPC += 4;
+		// FIXME: This seems like a horrible workaround ( or not -.- )
+		if(thumb32)
+		{
+			currPC += 2;
+		}
+		else
+		{
+			currPC += 4;
+		}
 		nextPC = currPC + target;
 		//printf("new PC: %08x\n",nextPC);
 	 }
@@ -1460,7 +1475,8 @@ u32int bInstruction(GCONTXT * context)
     	// condition not met!
 	    if(context->CPSR & T_BIT)
 		{
-			nextPC = context->R15 +2;
+			// FIXME: What is this? Is this a pipeline fix or a workaround?
+			nextPC = context->R15 + 2;
 		}
 		else
 		{
@@ -1510,4 +1526,9 @@ u32int undefinedInstruction(GCONTXT * context)
 {
   invalidInstruction(context->endOfBlockInstr, "undefined instruction");
   return 0;
+}
+
+u32int itInstruction(GCONTXT * context)
+{
+	DIE_NOW(0,"Unimplemented If-Then-Else Instruction");
 }

@@ -568,9 +568,21 @@ struct instruction32bit t16SPInstructions[] = {
 {0, &addInstruction, 0xB000, 0xFF80, "ADD SP, SP, #<imm>"}
 };
 
+struct instruction32bit t16PCRelInstructions[] = {
+// ADR instruction is add or sub but in any case it does not trap
+{0, &addInstruction, 0xA000,0xF800, "ADR <Rd>, <label>"}
+};
+
 struct instruction32bit t16ConditionalBranchSvcInstructions[] = {
 {1, &svcInstruction, 0xDF00, 0xFF00, "SVC call"},
 {1, &bInstruction, 0xD000, 0xF000, "B<c> <label>"}
+};
+
+struct instruction32bit t16ldrInstructions[] = {
+{0, &ldrInstruction, 0x6800, 0xF800, "LDR<c> <Rt>, [<Rn>{,#<imm5>}]"},
+{0, &ldrInstruction, 0x9800, 0xF800, "LDR<c> <Rt>, [SP{,#<imm8>}]"},
+{0, &ldrInstruction, 0x4800, 0xF800, "LDR<c> <Rt>, <label>"},
+{0, &ldrInstruction, 0x5800, 0xFE00, "LDR<c> <Rt>, [<Rn>,<Rm>]"}
 };
 
 struct instruction32bit t16DataProcInstructions[] = {
@@ -590,12 +602,15 @@ struct instruction32bit t16MiscInstructions[] = {
 {0, &stmInstruction, 0xB400, 0xFE00, "PUSH {reglist}"},
 {0, &subInstruction, 0xB080, 0xFF80, "SUB SP,SP,<imm7"},
 {0, &uxtbInstruction, 0xB2C0, 0xFFC0, "UXTB<c> <Rd>, <Rm>"},
+{0, &uxthInstruction, 0xB280, 0xFFC0, "UXTH<C> <Rd>, <Rm>"},
 {0, &addInstruction, 0xA800, 0xF800, "ADD <Rd>, SP, #<imm8>"},
 {0, &addInstruction, 0xB000, 0xFF80, "ADD SP, SP, #<imm>"},
 // trap if PC is on POP reglist
 {1, &popLdmInstruction, 0xBD00, 0xFF00, "POP <reglist+PC>"},
 {0, &popLdmInstruction, 0xBC00, 0xFE00, "POP <reglist>"},
-{0, &nopInstruction, 0xBF00,0xFFFF, "NOP"}
+{0, &nopInstruction, 0xBF00,0xFFFF, "NOP"},
+// I think that the If-Then-Else Instruction does not need to trap -.-
+{0, &itInstruction, 0xBF00,0xFF00, "IT"}
 };
 
 struct instruction32bit t16LoadStoreInstructions[] = {
@@ -606,7 +621,9 @@ struct instruction32bit t16LoadStoreInstructions[] = {
 {0, &ldrInstruction, 0x7800, 0x7800, "LDRB Rd, #<imm5>"},
 {0, &ldrhInstruction, 0x8800, 0xF800, "LDRH <Rt>, [<Rn>{, #<imm5>}]"},
 {0, &strbInstruction, 0x7000, 0xF800, "STRB <Rt>, [<Rn>, #<imm5>]"},
-{0, &strbInstruction, 0xA400, 0xFE00, "STRB <Rt>, [<Rn>, <Rm>]"}
+{0, &strbInstruction, 0xA400, 0xFE00, "STRB <Rt>, [<Rn>, <Rm>]"},
+{0, &strhInstruction, 0x8000, 0xF800, "STRH <Rt>,[<Rn>,{,#<imm>}]"},
+{0, &strhInstruction, 0x5200, 0xFE00, "STRH <Rt>, [<Rn>,{,<Rm>}"}
 };
 
 struct instruction32bit t16UnconditionalInstructions[] = {
@@ -625,7 +642,8 @@ struct instruction32bit t16ArithmeticInstructions[] = {
 {0, &cmpInstruction, 0x2800, 0xF800, "CMP<c> Rn, #<imm8>"},
 {0, &subInstruction, 0x1E00, 0xFE00, "SUB{S} <Rd>, <Rn>,#<imm3>"},
 {0, &subInstruction, 0x3800, 0xF800, "SUB{S} <Rdn>, #<imm8>"},
-{0, &subInstruction, 0x1A00, 0xFE00, "SUB{S} <Rd>, <Rn> <Rm>"}
+{0, &subInstruction, 0x1A00, 0xFE00, "SUB{S} <Rd>, <Rn> <Rm>"},
+{0, &movInstruction, 0x2000, 0xF800, "MOV<c> <Rd>, #<imm8>"}
 };
 
 struct instruction32bit t32DataProcInstructions[] = {
@@ -666,33 +684,45 @@ struct instruction32bit t32DataProcInstructions[] = {
 };
 
 struct instruction32bit t32SingleStoreInstructions[] = {
-{0, &strInstruction, 0xF8800000, 0xFFF00000, "STRB Rt, [Rn, #<imm12>]"},
-{0, &strInstruction, 0xF8000800, 0xFFF00800, "STRB Rt, [Rn, +-#<imm8>]"},
+{0, &strbInstruction, 0xF8800000, 0xFFF00000, "STRB Rt, [Rn, #<imm12>]"},
+{0, &strbInstruction, 0xF8000800, 0xFFF00800, "STRB Rt, [Rn, +-#<imm8>]"},
 
-{0, &strInstruction, 0xF8A00000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm12>}]"},
-{0, &strInstruction, 0xF8200000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm8>}]!"}
+{0, &strhInstruction, 0xF8A00000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm12>}]"},
+{0, &strhInstruction, 0xF8200000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm8>}]!"}
 };
 
 struct instruction32bit t32LoadByteInstructions[] = {
-{1, &ldrInstruction, 0xF81FF000, 0xFEFFFFC0, "LDRB<c> PC ,#<label>"},
-{0, &ldrInstruction, 0xF8900000, 0xFFF00000, "LDRB<c> Rt, [Rn{,#<imm12>}]"},
-{0, &ldrInstruction, 0xF8100900, 0xFFF00900, "LDRB<c> Rt, [Rn,{#<imm12>}]"},
-{0, &ldrInstruction, 0xF8100C00, 0xFFF00E00, "LDRB<c> Rt, [Rn,{#<imm12>}]"}
+{1, &ldrbInstruction, 0xF81FF000, 0xFEFFFFC0, "LDRB<c> PC ,#<label>"},
+{0, &ldrbInstruction, 0xF8900000, 0xFFF00000, "LDRB<c> Rt, [Rn{,#<imm12>}]"},
+{0, &ldrbInstruction, 0xF8100900, 0xFFF00900, "LDRB<c> Rt, [Rn,{#<imm12>}]"},
+{0, &ldrbInstruction, 0xF8100C00, 0xFFF00E00, "LDRB<c> Rt, [Rn,{#<imm12>}]"}
 };
 
 struct instruction32bit t32LoadHalfWordInstructions[] = {
-{0, &ldrhInstruction, 0xF8B00000, 0xFFF00000, "LDRH.W <Rt>, [<Rn>{. #<imm32>}]"}
+{0, &ldrhInstruction, 0xF8B00000, 0xFFF00000, "LDRH.W <Rt>, [<Rn>{. #<imm32>}]"},
+{0, &ldrhInstruction, 0xF83F0000, 0xFEFF0000, "LDRH <Rt>, <label>"},
+{0, &ldrhInstruction, 0xF8300000, 0xFFF00FE0, "LDRH, <Rt>, [<Rn>{,LSL #<imm2>}]"},
+{0, &ldrhInstruction, 0xF9B00000, 0xFFF00000, "LDRSH<c> <Rt>, [<Rn>, #<imm12>]"},
+{0, &ldrhInstruction, 0xF9300800, 0xFFFF0800, "LDRSH<c> <Rt>, [<Rn>, #<Rn>, +/-#imm8]"}, // Page 454, A8-168
+{0, &ldrhInstruction, 0xF9300FC0, 0xFFF00FC0, "LDRSH<c> <Rt>, [<Rn>, <Rm>]"}
 };
 
 struct instruction32bit t32MultiplyInstructions[] = {
-{0, &mulInstruction, 0xFB00F000, 0x0FFF0F0F0, "MULW <Rd>, <Rn>, <Rm>"}
+{0, &mulInstruction, 0xFB00F000, 0xFFF0F0F0, "MULW <Rd>, <Rn>, <Rm>"},
+{0, &smullInstruction, 0xFB800000, 0xFFE000F0, "SMULL <RdLo>, <RdHi>, <Rn>, <Rm>"}
 };
 
 struct instruction32bit t32BranchMiscInstructions[] = {
 {1, &bInstruction, 0xF0008000, 0xF800D000, "B <imm17>"},
 {1, &bInstruction, 0xF0009000, 0xF800D000, "B <imm21>"},
 {1, &bInstruction, 0xF000D000, 0xF800D000, "BL, #<imm21>"},
-{1, &blxInstruction, 0xF000C000, 0xF800D000, "BLX, #<imm21>"},
+{1, &blxInstruction, 0xF000C000, 0xF800D000, "BLX, #<imm21>"}
+};
+
+struct instruction32bit t32LoadStoreDoubleExclusiveInstructions[] = {
+{0, &ldrdInstruction, 0xE8500000, 0xFE500000, "LDRD <Rt>, <Rt2>, [<Rn>,{,#+/-<imm>}]"},
+{0, &ldrdInstruction, 0xE85F0000, 0xFE7F0000, "LDRD <Rt>, <Rt2>, <label>"},
+{0, &strdInstruction, 0xE8400000, 0xFE500000, "STRD <Rt>, <Rt2>, [<Rn>,{,#+/-<imm>}]"}
 };
 
 
@@ -903,7 +933,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
   u32int index = 0;
   if (op == 0)
   {
-    while (TRUE)
+    while (index < INDEX_OF(dataProcMiscInstructions_op0))
     {
       if ( (instr & dataProcMiscInstructions_op0[index].mask) == dataProcMiscInstructions_op0[index].value)
       {
@@ -921,7 +951,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
   }
   else
   {
-    while (TRUE)
+    while (index < INDEX_OF(dataProcMiscInstructions_op0))
     {
       if ( (instr & dataProcMiscInstructions_op1[index].mask) == dataProcMiscInstructions_op1[index].value)
       {
@@ -948,7 +978,7 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
   dumpInstruction("decodeLoadStoreWordByte", instr);
 #endif
   u32int index = 0;
-  while (TRUE)
+  while (index < INDEX_OF(loadStoreWordByteInstructions))
   {
     if ( (instr & loadStoreWordByteInstructions[index].mask) == loadStoreWordByteInstructions[index].value)
     {
@@ -974,7 +1004,7 @@ struct instruction32bit * decodeMedia(u32int instr)
   dumpInstruction("decodeMedia", instr);
 #endif
   u32int index = 0;
-  while (TRUE)
+  while (index < INDEX_OF(mediaInstructions))
   {
     if ( (instr & mediaInstructions[index].mask) == mediaInstructions[index].value)
     {
@@ -1000,7 +1030,7 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
   dumpInstruction("decodeBranchBlockTransfer", instr);
 #endif
   u32int index = 0;
-  while (TRUE)
+  while (index < INDEX_OF(branchBlockTransferInstructions))
   {
     if ( (instr & branchBlockTransferInstructions[index].mask) == branchBlockTransferInstructions[index].value)
     {
@@ -1026,7 +1056,7 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
   dumpInstruction("decodeSvcCoproc", instr);
 #endif
   u32int index = 0;
-  while (TRUE)
+  while (index < INDEX_OF(svcCoprocInstructions))
   {
     if ( (instr & svcCoprocInstructions[index].mask) == svcCoprocInstructions[index].value)
     {
@@ -1051,7 +1081,7 @@ struct instruction32bit * decodeUnconditional(u32int instr)
   dumpInstruction("decodeUnconditional", instr);
 #endif
   u32int index = 0;
-  while (TRUE)
+  while (index < INDEX_OF(unconditionalInstructions))
   {
     if ( (instr & unconditionalInstructions[index].mask) == unconditionalInstructions[index].value)
     {
@@ -1088,8 +1118,29 @@ struct instruction32bit * t32decodeLoadStoreMultiple(u32int instr)
 
 struct instruction32bit * t32decodeLoadStoreDoubleExclusive(u32int instr)
 {
-	printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-	DIE_NOW(0,"Unimplemented 2");
+#ifdef DECODER_DEBUG
+  printf("t32decodeLoadStoreDoubleExclusivec %08x\n", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t32LoadStoreDoubleExclusiveInstructions))
+  {
+//    printf("Index: %08x\n", index);
+	if ( (instr & t32LoadStoreDoubleExclusiveInstructions[index].mask) == t32LoadStoreDoubleExclusiveInstructions[index].value)
+    {
+      if (t32LoadStoreDoubleExclusiveInstructions[index].mask == 0)
+      {
+        dumpInstruction("t32LoadStoreDoubleExclusive", instr);
+      }
+      return &t32LoadStoreDoubleExclusiveInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t32LoadStoreDoubleExclusive unimplemented");
+  return 0;
 }
 
 struct instruction32bit * t32decodeDataProc(u32int instr)
@@ -1397,8 +1448,28 @@ struct instruction32bit * t16decodeSPAddr(u16int instr)
 
 struct instruction32bit * t16decodePCAddr(u16int instr)
 {
-	printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-	DIE_NOW(0,"Unimplemented 18");
+#ifdef DECODER_DEBUG
+  printf("t16decodePCAddr %08x\n", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16PCRelInstructions))
+  {
+    if ( (instr & t16PCRelInstructions[index].mask) == t16PCRelInstructions[index].value)
+    {
+      if (t16PCRelInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16PCRel", instr);
+      }
+      return &t16PCRelInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16PCRel unimplemented");
+  return 0;
 }
 
 struct instruction32bit * t16decodeLoadStore(u16int instr)
@@ -1407,7 +1478,7 @@ struct instruction32bit * t16decodeLoadStore(u16int instr)
   printf("t16decodeLoadStore %08x\n", instr);
 #endif
   u32int index = 0;
-  while (index < (sizeof(t16LoadStoreInstructions)/sizeof(t16LoadStoreInstructions[0])))
+  while (index < INDEX_OF(t16LoadStoreInstructions))
   {
     if ( (instr & t16LoadStoreInstructions[index].mask) == t16LoadStoreInstructions[index].value)
     {
@@ -1429,8 +1500,28 @@ struct instruction32bit * t16decodeLoadStore(u16int instr)
 
 struct instruction32bit * t16decodeLDR(u16int instr)
 {
-     printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-	DIE_NOW(0,"Unimplemented 20");
+#ifdef DECODER_DEBUG
+  printf("t16decodeLDR %08x\n", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16ldrInstructions))
+  {
+    if ( (instr & t16ldrInstructions[index].mask) == t16ldrInstructions[index].value)
+    {
+      if (t16ldrInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16LDR", instr);
+      }
+      return &t16ldrInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16LDR unimplemented");
+  return 0;
 }
 
 struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr)

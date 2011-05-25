@@ -42,7 +42,8 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   u32int halfinstruction = 0;
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
-  
+ 
+
   bool inBlockCache = checkBlockCache(blkStartAddr, bcIndex, gc->blockCache);
   if (inBlockCache)
   {
@@ -167,7 +168,8 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     	  	u32int cacheIndex = (svcCode >> 8) - 1;
       		if (cacheIndex >= BLOCK_CACHE_SIZE)
       		{
-        		DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
+        		printf("Instr %08x@%08x", instruction, currAddress);
+				DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
 	      	}	
 #ifdef SCANNER_DEBUG
     	  	printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)currAddress, cacheIndex);
@@ -175,6 +177,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
       		BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, gc->blockCache);
 	        // retrieve end of block instruction and handler function pointer
   		    gc->endOfBlockInstr = bcEntry->hyperedInstruction;
+			gc->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
     		gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
 	    }
 		else //Handle guest SVC
@@ -213,16 +216,17 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 	//------------------------------ THUMB ---------------------------------//
 	else
 	{
-		if (((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX) ||  (((instruction & 0xFFFFDFFF) >= 0xDF00) && ((instruction & 0xFFFFDFFF) <= 0xDFFF))) // FIX ME -> This doesn't look right
+		if (((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX) || ( ((instruction & 0xFFFF) >= 0xDF00) && ((instruction & 0xFFFF) <= 0xDFFF) ) ) // FIX ME -> This doesn't look right
  		{
-			u32int svcCode = (instruction & 0x000000FF); // NOP|SVC -> Keep the last 8 bits
+			u32int svcCode = (instruction & 0xFF); // NOP|SVC -> Keep the last 8 bits
 	  		if(svcCode > 0)
 	  		{
 				// we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
     		  	u32int cacheIndex = svcCode - 1;
 				if (cacheIndex >= BLOCK_CACHE_SIZE)
 	      		{
-    	    		DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
+    	    		printf("Instr %08x@%08x", instruction, currAddress);
+					DIE_NOW(gc, "scanner: block cache index in SWI out of range.");
 	    	  	}	
 #ifdef SCANNER_DEBUG
     	  		printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)currAddress, cacheIndex);
@@ -315,6 +319,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   {
   	currAddress=(u32int*)(u32int)(currhwAddress);
   }
+
   addToBlockCache(blkStartAddr, gc->endOfBlockInstr, gc->endOfBlockHalfInstr, (u32int)currAddress, 
                   bcIndex, (u32int)gc->hdlFunct, gc->blockCache);
   /* To ensure that subsequent fetches from eobAddress get a hypercall
