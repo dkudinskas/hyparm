@@ -7,8 +7,7 @@
 #include "common/types.h"
 
 
-// uncomment me to enable debug: 
-#define FAT_DEBUG
+// uncomment me to enable debug: #define FAT_DEBUG
 
 #define CLUSTER_REL_LBA(fs, x) (fs->clusterBegin + (x - 2) * fs->sectorsPerCluster)
 #define FAT_EOC_MARKER(x) (x >= 0x0FFFFFF8 && x <= 0x0FFFFFFF)

@@ -297,11 +297,8 @@ bool filenameMatch(char *user, char *fatname)
    Returns the pointer offset into the buffer of the cluster's fat entry */
 u32int fatLoadClusFatSector(fatfs *fs, u32int clus, char *buf)
 {
-  printf("fatLoadClusFatSector: clus %x\n", clus);
   u32int sector = clus >> 7;
-  printf("fatLoadClusFatSector: sector %x\n", sector);
   u32int offset = (clus & 0x7f) * 4;
-  printf("fatLoadClusFatSector: offset %x\n", offset);
   fatBlockRead(fs, fs->fatBegin + sector, 1, buf);
   return offset;
 }
@@ -318,11 +315,8 @@ u32int fatGetNextClus(fatfs *fs, u32int clus)
   {
     memset((void*)buf, 0x0, fs->bytesPerSector);
   }
-  printf("fatGetNextClus: clus %x\n", clus);
   u32int offset = fatLoadClusFatSector(fs, clus, buf);
-  printf("fatGetNextClus: offs %x\n", offset);
   u32int next = *(u32int*)(buf+offset);
-  printf("fatGetNextClus: next %x\n", next);
 #ifdef FAT_DEBUG
   printf("fatGetNextClus: current cluster %08x, next cluster = %08x\n", clus, next);
 #endif
@@ -517,7 +511,7 @@ int fatWriteFile(fatfs *fs, char *fname, void *src, u32int lenToWrite)
     return 0;
   }
 
-  //write a really simple filename, ignore extensions
+  // write a really simple filename, ignore extensions
   for (i=0; i < 8; i++)
   {
     if (fname[i] == '\0')
@@ -538,7 +532,7 @@ int fatWriteFile(fatfs *fs, char *fname, void *src, u32int lenToWrite)
 
   if (lenToWrite == 0)
   {
-    //create empty file
+    // create empty file
     dirEntry.firstClusterHigh = 0;
     dirEntry.firstClusterLow = 0;
     dirEntry.firstCluster = 0;
@@ -547,7 +541,7 @@ int fatWriteFile(fatfs *fs, char *fname, void *src, u32int lenToWrite)
     return 0;
   }
 
-  //find a free cluster to start writing this file
+  // find a free cluster to start writing this file
   u32int clusterNr = fatGetFreeClus(fs);
   if (!clusterNr)
   {
@@ -566,14 +560,14 @@ int fatWriteFile(fatfs *fs, char *fname, void *src, u32int lenToWrite)
   {
     if (count + clusterSize > lenToWrite)
     {
-      //current cluster is final and will only be partially used
+      // current cluster is final and will only be partially used
       for (i = 0; count < lenToWrite; i++, count++)
       {
         buf[i] = ((char *)src)[count];
       }
 
       fatBlockWrite(fs, CLUSTER_REL_LBA(fs, clusterNr), fs->sectorsPerCluster, buf);
-      //write the end of chain marker
+      // write the end of chain marker
       fatSetClusterValue(fs, clusterNr, FAT_EOC_VAL);
       return count;
     }
@@ -632,7 +626,7 @@ int fatReadFile(fatfs *fs, char *fname, void *out, u32int maxlen)
   {
     fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buf);
 
-    //for now ignore maxlen
+    // for now ignore maxlen
     if ((dirEntry.fileSize - currentLength) < 
         (fs->sectorsPerCluster * fs->bytesPerSector))
     {
@@ -728,7 +722,6 @@ int fatDeleteFile(fatfs *fs, char *fname)
 
       if (filenameMatch(fname, dirEntry.filename))
       {
-        printf("fatDeleteFile: found filename match.\n");
         if (dirEntry.attrib & FAT_DE_DIR_MASK)
         {
           // filename match is a folder.
@@ -765,10 +758,8 @@ int fatDeleteFile(fatfs *fs, char *fname)
   // buf holds the block with the file entry
   // dirEntry.position now holds the position of directory entry in block
   // currentCluster holds the cluster number to write back to.
-  printf("fatDeleteFile: file %s found in cluster %x\n", fname, dirEntry.firstCluster);
-  printf("fatDeleteFile: position in cluster %x\n", dirEntry.position);
   
-  // make entry 'unused'
+  // mark entry 'unused'
   buf[dirEntry.position * FAT32_DIR_ENTRY_LENGTH] = FAT_DE_UNUSED;
   
   for (i = 0; i < FAT32_DIR_ENTRY_LENGTH; i++)
@@ -796,11 +787,7 @@ int fatDeleteFile(fatfs *fs, char *fname)
 
     u32int sectorNr = (fatSect << 7) + offset;
     u32int* entry = (u32int*)(&buf[offset*4]);
-
-    printf("fatDeleteFile: offs @ FAT %x for sector %08x: %08x\n", offset, sectorNr, *entry);
-
     workingCluster = *entry;
-
     *entry = 0x0;
 
     // update FAT table block
