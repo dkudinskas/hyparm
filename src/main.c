@@ -23,10 +23,6 @@
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/frameAllocator.h"
 
-#include "io/mmc.h"
-#include "io/partitions.h"
-#include "io/fs/fat.h"
-
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 

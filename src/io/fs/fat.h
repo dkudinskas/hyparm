@@ -7,15 +7,19 @@
 #include "common/types.h"
 
 
-// uncomment me to enable debug: #define FAT_DEBUG
+// uncomment me to enable debug: 
+#define FAT_DEBUG
 
 #define CLUSTER_REL_LBA(fs, x) (fs->clusterBegin + (x - 2) * fs->sectorsPerCluster)
 #define FAT_EOC_MARKER(x) (x >= 0x0FFFFFF8 && x <= 0x0FFFFFFF)
 
-#define FAT_DE_UNUSED 0xE5
+#define FAT32_DIR_ENTRY_LENGTH  32  // well, obviously
+
+#define FAT_DE_UNUSED   0xE5
 #define FAT_DE_DIR_MASK 0x10
-#define FAT_LF_MASK 0xF
-#define FAT_EOC_VAL 0x0FFFFFFFF
+#define FAT_DE_EOD      0x0
+#define FAT_LF_MASK     0xF
+#define FAT_EOC_VAL     0x0FFFFFFFF
 
 /* Representation of a "mounted" fat filesystem. */
 typedef struct FAT
@@ -59,13 +63,20 @@ void loadFatDirEntry(char *record, dentry *d);
 
 void writeFatDirEntry(fatfs *fs, dentry *d, u32int position);
 
+
+/*** READ / WRITE / DELETE FILES ***/
 int fatReadFile(fatfs *fs, char *fname, void *out, u32int maxlen);
 
 int fatWriteFile(fatfs *fs, char *fname, void *src, u32int n);
 
+int fatDeleteFile(fatfs *fs, char *fname);
+
+
+/*** READ / WRITE BLOCKS ***/
 u32int fatBlockRead(fatfs *fs, u32int start, u64int blkCount, void *dst);
 
 u32int fatBlockWrite(fatfs *fs, u32int start, u64int blkCount, const void *src);
+
 
 u32int fatLoadClusFatSector(fatfs *fs, u32int clus, char *buf);
 

@@ -126,7 +126,7 @@ void writeFatDirEntry(fatfs *fs, dentry *dirEntry, u32int position)
   char * buf = (char*)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
   if (buf == 0)
   {
-    DIE_NOW(0, "getPathDirEntry: failed to allocate read buffer.\n");
+    DIE_NOW(0, "writeFatDirEntry: failed to allocate read buffer.\n");
   }
   else
   {
@@ -289,17 +289,19 @@ bool filenameMatch(char *user, char *fatname)
       return FALSE;
     }
   }
-
   //matched all 11 characters so far
-  return 1;
+  return TRUE;
 }
 
 /* Read the FAT sector which contains the dentry for the given cluster.
-   Returns the pointer offset into the buffer of the cluster's fatent */
+   Returns the pointer offset into the buffer of the cluster's fat entry */
 u32int fatLoadClusFatSector(fatfs *fs, u32int clus, char *buf)
 {
-  u32int sector = clus / 128;
-  u32int offset = (clus - 128 * sector) * 4;
+  printf("fatLoadClusFatSector: clus %x\n", clus);
+  u32int sector = clus >> 7;
+  printf("fatLoadClusFatSector: sector %x\n", sector);
+  u32int offset = (clus & 0x7f) * 4;
+  printf("fatLoadClusFatSector: offset %x\n", offset);
   fatBlockRead(fs, fs->fatBegin + sector, 1, buf);
   return offset;
 }
@@ -307,11 +309,22 @@ u32int fatLoadClusFatSector(fatfs *fs, u32int clus, char *buf)
 /* Gets the cluster number which is pointed to by clus */
 u32int fatGetNextClus(fatfs *fs, u32int clus)
 {
-  char buf[512];
+  char * buf = (char*)mallocBytes(fs->bytesPerSector);
+  if (buf == 0)
+  {
+    DIE_NOW(0, "fatGetNextClus: failed to allocate read buffer.\n");
+  }
+  else
+  {
+    memset((void*)buf, 0x0, fs->bytesPerSector);
+  }
+  printf("fatGetNextClus: clus %x\n", clus);
   u32int offset = fatLoadClusFatSector(fs, clus, buf);
+  printf("fatGetNextClus: offs %x\n", offset);
   u32int next = *(u32int*)(buf+offset);
+  printf("fatGetNextClus: next %x\n", next);
 #ifdef FAT_DEBUG
-  printf("fatGetNextClus: current clusteer %08x, next cluster = %08x\n", clus, next);
+  printf("fatGetNextClus: current cluster %08x, next cluster = %08x\n", clus, next);
 #endif
   return next;
 }
@@ -596,7 +609,7 @@ int fatReadFile(fatfs *fs, char *fname, void *out, u32int maxlen)
   char * buf = (char*)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
   if (buf == 0)
   {
-    DIE_NOW(0, "getPathDirEntry: failed to allocate read buffer.\n");
+    DIE_NOW(0, "fatReadFile: failed to allocate read buffer.\n");
   }
   else
   {
@@ -658,3 +671,142 @@ int fatReadFile(fatfs *fs, char *fname, void *out, u32int maxlen)
   return currentLength;
 }
 
+
+/* delete a file in the root directory. */
+int fatDeleteFile(fatfs *fs, char *fname)
+{
+#ifdef FAT_DEBUG
+  printf("fatDeleteFile: %s\n", fname);
+#endif
+
+  /* what is involved in deleting a file in the root folder?
+     we need to get the root directory file listing cluster
+     find the directory entry of the file in question
+     make the first byte of the entry 0xE5 (a.k.a. unused)
+     now file doesnt exist.
+     also need to free up all (if any) of the clusters occupied by the file
+     look at the file's directory entry to get it's first cluster number
+     load the FAT, find the entry for that cluster, and mark it as free
+     follow the file chain in FAT marking all following (if any) clusters as free */
+
+  char * buf = (char*)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
+  if (buf == 0)
+  {
+    DIE_NOW(0, "fatDeleteFile: failed to allocate read buffer.\n");
+  }
+  else
+  {
+    memset((void*)buf, 0x0, fs->sectorsPerCluster * fs->bytesPerSector);
+  }
+
+  // root dir searching only, assume its a single file we're searching for
+  nameToUpper(fname);
+  dentry dirEntry = {{0}}; //stop gcc complaining about uninitialized...
+  dirEntry.free = 0;
+  int i = 0;
+  bool found = FALSE;
+
+  u32int currentCluster =  fs->rootDirFirstCluster;
+
+  do
+  {
+    fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buf);
+    for (i = 0; i < 16 * fs->sectorsPerCluster; i++)
+    {
+      loadFatDirEntry(buf + FAT32_DIR_ENTRY_LENGTH * i, &dirEntry);
+      if (dirEntry.filename[0] == FAT_DE_EOD)
+      {
+        // end of directory! file wasn't found, return an a free directory entry.
+        printf("fatDeleteFile: EOD foudn! '%s' not in root directory\n", fname);
+        return -1;
+      }
+
+      if (dirEntry.attrib & FAT_LF_MASK)
+      {
+        continue; //lfname, we support only 8.3 atm
+      }
+
+      if (filenameMatch(fname, dirEntry.filename))
+      {
+        printf("fatDeleteFile: found filename match.\n");
+        if (dirEntry.attrib & FAT_DE_DIR_MASK)
+        {
+          // filename match is a folder.
+          // TODO: implement delete folder 
+          printf("fatDeleteFile: file '%s' is a folder, unimplemented\n", fname);
+          return -1;
+        }
+
+        // found a file
+#ifdef FAT_DEBUG
+        printf("fatDeleteFile: found file! first cluster: %08x\n",
+               dirEntry.firstCluster);
+#endif
+        dirEntry.parentCluster = currentCluster;
+        dirEntry.isDirectory = FALSE;
+        dirEntry.free = FALSE;
+        dirEntry.valid = TRUE;
+        dirEntry.position = i;
+        found = TRUE;
+        break;
+      } // filename match
+    } // for loop
+    currentCluster = fatGetNextClus(fs, currentCluster);
+  }
+  while (!FAT_EOC_MARKER(currentCluster) && !found);
+
+  if (!found)
+  {
+    printf("fatDeleteFile: file '%s' not found in root directory\n", fname);
+    return -1;
+  }
+
+  // file was found, information now in direntry;
+  // buf holds the block with the file entry
+  // dirEntry.position now holds the position of directory entry in block
+  // currentCluster holds the cluster number to write back to.
+  printf("fatDeleteFile: file %s found in cluster %x\n", fname, dirEntry.firstCluster);
+  printf("fatDeleteFile: position in cluster %x\n", dirEntry.position);
+  
+  // make entry 'unused'
+  buf[dirEntry.position * FAT32_DIR_ENTRY_LENGTH] = FAT_DE_UNUSED;
+  
+  for (i = 0; i < FAT32_DIR_ENTRY_LENGTH; i++)
+  {
+    printf("%02x ", buf[dirEntry.position * FAT32_DIR_ENTRY_LENGTH + i]);
+  }
+  printf("\n");
+
+  // write buf back to position
+  fatBlockWrite(fs, CLUSTER_REL_LBA(fs, dirEntry.parentCluster),
+                fs->sectorsPerCluster, buf);
+
+  u32int workingCluster = dirEntry.firstCluster;
+  u32int fatSect = fs->sectorsPerFat+1;
+  u32int offset = 0;
+  do
+  {
+    // get FAT
+    if (fatSect != (workingCluster >> 7))
+    {
+      fatSect = workingCluster >> 7;
+      fatBlockRead(fs, fs->fatBegin + fatSect, 1, buf);
+    }
+    offset = workingCluster & 0x7F;
+
+    u32int sectorNr = (fatSect << 7) + offset;
+    u32int* entry = (u32int*)(&buf[offset*4]);
+
+    printf("fatDeleteFile: offs @ FAT %x for sector %08x: %08x\n", offset, sectorNr, *entry);
+
+    workingCluster = *entry;
+
+    *entry = 0x0;
+
+    // update FAT table block
+    fatBlockWrite(fs, fs->fatBegin + fatSect, 1, buf);
+  }
+  while (!FAT_EOC_MARKER(workingCluster));
+
+  return 0;
+} // end fuction
