@@ -23,6 +23,10 @@
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/frameAllocator.h"
 
+#include "io/mmc.h"
+#include "io/partitions.h"
+#include "io/fs/fat.h"
+
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 
@@ -106,6 +110,45 @@ int main(int argc, char *argv[])
 
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
+
+  u32int err = mmcMainInit();
+  printf("mmcMainInit ret %x\n", err);
+
+  err = partTableRead(&mmcDevice->blockDev, &primaryPartitionTable);
+  printf("partTableRead ret %x\n", err);
+
+  err = fatMount(&mainFilesystem, &mmcDevice->blockDev, 1);
+  printf("fatMount ret %x\n", err);
+
+  char * fname = "testfile";
+  char text[0x2008];
+  int x, y, index = 0;
+  for (x = 0; x < (0x2008 / 8); x++)
+  {
+    for (y = 0x30; y < 0x38; y++)
+    {
+      text[index] = y;
+      index++;
+    }
+  }
+//  err = fatWriteFile(&mainFilesystem, fname, text, 0x2008);
+//  err = fatAppendToFile(&mainFilesystem, fname, text, 0x2008);
+  err = fatDeleteFile(&mainFilesystem, fname);
+/*  char * out = (char*)mallocBytes(0x5000);
+  if (out == 0)
+  {
+    DIE_NOW(0, "main: failed to allocate read buffer.\n");
+  }
+  else
+  {
+    memset((void*)out, 0x0, 0x5000);
+  }
+  err = fatReadFile(&mainFilesystem, fname, out, 0x5000);*/
+
+  printf("ret %x\n", err);
+  tree(&mainFilesystem, mainFilesystem.rootDirFirstCluster, 0);
+  printf("HALT");
+  infiniteIdleLoop();
 
   // does not return
   doLinuxBoot(&imageHeader, kernAddr, initrdAddr);

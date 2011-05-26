@@ -10,7 +10,7 @@
 // uncomment me to enable debug: #define FAT_DEBUG
 
 #define CLUSTER_REL_LBA(fs, x) (fs->clusterBegin + (x - 2) * fs->sectorsPerCluster)
-#define FAT_EOC_MARKER(x) (x >= 0x0FFFFFF8 && x <= 0x0FFFFFFF)
+#define FAT_EOC_MARKER(x) ((x & 0x0FFFFFFF) >= 0x0FFFFFF8 && (x & 0x0FFFFFFF) <= 0x0FFFFFFF)
 
 #define FAT32_DIR_ENTRY_LENGTH  32  // well, obviously
 
@@ -18,7 +18,7 @@
 #define FAT_DE_DIR_MASK 0x10
 #define FAT_DE_EOD      0x0
 #define FAT_LF_MASK     0xF
-#define FAT_EOC_VAL     0x0FFFFFFFF
+#define FAT_EOC_VAL     0xFFFFFFFF
 
 /* Representation of a "mounted" fat filesystem. */
 typedef struct FAT
@@ -47,9 +47,9 @@ typedef struct DirectoryEntry
   u32int firstCluster;
   u32int fileSize;
   u32int parentCluster;
-  int free;
+  bool free;
   int isDirectory;
-  int valid;
+  bool valid;
   u32int position; // position in parent cluster - used during write
 } dentry;
 
@@ -60,7 +60,7 @@ void tree(fatfs *fs, u32int currentCluster, u32int level);
 
 void loadFatDirEntry(char *record, dentry *d);
 
-void writeFatDirEntry(fatfs *fs, dentry *d, u32int position);
+void setFatDirEntry(fatfs *fs, dentry *d, u32int position);
 
 
 /*** READ / WRITE / DELETE FILES ***/
@@ -69,6 +69,8 @@ int fatReadFile(fatfs *fs, char *fname, void *out, u32int maxlen);
 int fatWriteFile(fatfs *fs, char *fname, void *src, u32int n);
 
 int fatDeleteFile(fatfs *fs, char *fname);
+
+int fatAppendToFile(fatfs *fs, char *fname, void *src, u32int length);
 
 
 /*** READ / WRITE BLOCKS ***/
