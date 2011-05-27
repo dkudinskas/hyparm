@@ -11,6 +11,9 @@
 //HACK implement a better fs system, this is clearly not going to work
 //for anything more sophisticated than a single fs
 
+
+char * buffer;
+
 fatfs mainFilesystem;
 partitionTable primaryPartitionTable;
 
@@ -37,6 +40,16 @@ u32int fatBlockWrite(fatfs *fs, u32int start, u64int blkCount, const void *src)
 /* Mount a fat filesystem located on the partNum-th partition on block device dev. */
 int fatMount(fatfs *fs, blockDevice *dev, int partNum)
 {
+  buffer = (char*)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
+  if (buffer == 0)
+  {
+    DIE_NOW(0, "fatMount: failed to allocate block buffer.\n");
+  }
+  else
+  {
+    memset((void*)buffer, 0x0, fs->sectorsPerCluster * fs->bytesPerSector);
+  }
+
 #ifdef FAT_DEBUG
   printf("fatMount: mount partition %x\n", partNum);
 #endif
@@ -50,8 +63,7 @@ int fatMount(fatfs *fs, blockDevice *dev, int partNum)
   fs->blockDevice = dev;
 
   //load first sector
-  char sector[512];
-  int blksRead = fatBlockRead(fs, 0, 1, sector);
+  int blksRead = fatBlockRead(fs, 0, 1, buffer);
   if (blksRead != 1)
   {
     printf("Could not read FAT volume ID\n");
@@ -59,18 +71,18 @@ int fatMount(fatfs *fs, blockDevice *dev, int partNum)
   }
 
   //initial checks for fs validity
-  if (sector[510] != 0x55 || sector[511] != 0xAA)
+  if (buffer[510] != 0x55 || buffer[511] != 0xAA)
   {
     printf("Invalid FAT volume ID signature, must be 0xAA");
     return -1;
   }
   
-  fs->bytesPerSector = uaLoadHWord(sector+0x0B);
-  fs->sectorsPerCluster = sector[0x0D];
-  fs->numReservedSectors = uaLoadHWord(sector+0x0E);
-  fs->numFats = sector[0x10];
-  fs->sectorsPerFat = uaLoadWord(sector+0x24); //don't really need ua_load here
-  fs->rootDirFirstCluster = uaLoadWord(sector+0x2C);
+  fs->bytesPerSector = uaLoadHWord(buffer+0x0B);
+  fs->sectorsPerCluster = buffer[0x0D];
+  fs->numReservedSectors = uaLoadHWord(buffer+0x0E);
+  fs->numFats = buffer[0x10];
+  fs->sectorsPerFat = uaLoadWord(buffer+0x24); //don't really need ua_load here
+  fs->rootDirFirstCluster = uaLoadWord(buffer+0x2C);
 #ifdef FAT_DEBUG
   printf("fatMount: bytesPerSector %x, sectorsPerCluster %x, numReservedSectors %x\n",
         fs->bytesPerSector, fs->sectorsPerCluster, fs->numReservedSectors);
@@ -292,24 +304,15 @@ u32int fatGetNextClus(fatfs *fs, u32int clus)
 /* Set the value of the FAT entry to val */
 void fatSetClusterValue(fatfs *fs, u32int clus, u32int val)
 {
-  char * buf = (char*)mallocBytes(fs->bytesPerSector);
-  if (buf == 0)
-  {
-    DIE_NOW(0, "fatGetNextClus: failed to allocate read buffer.\n");
-  }
-  else
-  {
-    memset((void*)buf, 0x0, fs->bytesPerSector);
-  }
   u32int offset = (clus & 0x7f) * 4;
-  fatBlockRead(fs, fs->fatBegin + (clus >> 7), 1, buf);
+  fatBlockRead(fs, fs->fatBegin + (clus >> 7), 1, buffer);
 #ifdef FAT_DEBUG
   printf("fatSetClusterValue: Writing %x to cluster: %08x\n", val, clus);
 #endif
-  *(u32int*)(buf+offset) = val;
+  *(u32int*)(buffer+offset) = val;
 
   //write back change
-  fatBlockWrite(fs, fs->fatBegin + (clus >> 7), 1, buf);
+  fatBlockWrite(fs, fs->fatBegin + (clus >> 7), 1, buffer);
 }
 
 
@@ -321,24 +324,14 @@ dentry getPathDirEntry(fatfs *fs, char *fname, int createNew)
   dirEntry.free = FALSE;
 
   int i;
-  char * buf = (char*)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
-  if (buf == 0)
-  {
-    DIE_NOW(0, "getPathDirEntry: failed to allocate read buffer.\n");
-  }
-  else
-  {
-    memset((void*)buf, 0x0, fs->sectorsPerCluster * fs->bytesPerSector);
-  }
-
   u32int currentCluster =  fs->rootDirFirstCluster;
 
   do
   {
-    fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buf);
+    fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buffer);
     for (i = 0; i < 16 * fs->sectorsPerCluster; i++)
     {
-      loadFatDirEntry(buf + 32*i, &dirEntry);
+      loadFatDirEntry(buffer + 32*i, &dirEntry);
       dirEntry.position = i;
       if (!(dirEntry.filename[0]))
       {
@@ -427,32 +420,22 @@ dentry getPathDirEntry(fatfs *fs, char *fname, int createNew)
 void setFatDirEntry(fatfs *fs, dentry *dirEntry, u32int position)
 {
   u32int offset = position * 32;
-  char * buf = (char*)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
-  if (buf == 0)
-  {
-    DIE_NOW(0, "setFatDirEntry: failed to allocate read buffer.\n");
-  }
-  else
-  {
-    memset((void*)buf, 0x0, fs->sectorsPerCluster * fs->bytesPerSector);
-  }
 
   fatBlockRead(fs, CLUSTER_REL_LBA(fs, dirEntry->parentCluster),
-               fs->sectorsPerCluster, buf);
-
+               fs->sectorsPerCluster, buffer);
   int i;
   for (i = 0; i < 11; i++)
   {
-    buf[offset+i] = dirEntry->filename[i];
+    buffer[offset+i] = dirEntry->filename[i];
   }
-  buf[offset + 0xB] = dirEntry->attrib;
+  buffer[offset + 0xB] = dirEntry->attrib;
 
   //assume that the caller has sorted out the cluster hi/lows
-  *((u16int*)(buf+offset+0x14)) = dirEntry->firstClusterHigh;
-  *((u16int*)(buf+offset+0x1A)) = dirEntry->firstClusterLow;
-  *((u32int*)(buf+offset+0x1C)) = dirEntry->fileSize;
+  *((u16int*)(buffer+offset+0x14)) = dirEntry->firstClusterHigh;
+  *((u16int*)(buffer+offset+0x1A)) = dirEntry->firstClusterLow;
+  *((u32int*)(buffer+offset+0x1C)) = dirEntry->fileSize;
   fatBlockWrite(fs, CLUSTER_REL_LBA(fs, dirEntry->parentCluster),
-                fs->sectorsPerCluster, buf);
+                fs->sectorsPerCluster, buffer);
 }
 
 
@@ -498,15 +481,6 @@ int fatWriteFile(fatfs *fs, char *fname, void *src, u32int lenToWrite)
 #ifdef FAT_DEBUG
   printf("fatWriteFile: file '%s' data length %x\n", fname, lenToWrite);
 #endif
-  char * buf = (char*)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
-  if (buf == 0)
-  {
-    DIE_NOW(0, "fatWriteFile: failed to allocate read buffer.\n");
-  }
-  else
-  {
-    memset((void*)buf, 0x0, fs->sectorsPerCluster * fs->bytesPerSector);
-  }
 
   int i;
   dentry dirEntry = getPathDirEntry(fs, fname, TRUE);
@@ -579,11 +553,11 @@ int fatWriteFile(fatfs *fs, char *fname, void *src, u32int lenToWrite)
       // current cluster is final and will only be partially used
       for (i = 0; count < lenToWrite; i++)
       {
-        buf[i] = ((char *)src)[count];
+        buffer[i] = ((char *)src)[count];
         count++;
       }
 
-      fatBlockWrite(fs, CLUSTER_REL_LBA(fs, clusterNr), fs->sectorsPerCluster, buf);
+      fatBlockWrite(fs, CLUSTER_REL_LBA(fs, clusterNr), fs->sectorsPerCluster, buffer);
       // write the end of chain marker
       fatSetClusterValue(fs, clusterNr, FAT_EOC_VAL);
       return count;
@@ -592,11 +566,11 @@ int fatWriteFile(fatfs *fs, char *fname, void *src, u32int lenToWrite)
     {
       for (i=0; i < clusterSize; i++)
       {
-        buf[i] = ((u8int *)src)[count];
+        buffer[i] = ((u8int *)src)[count];
         count++;
       }
 
-      fatBlockWrite(fs, CLUSTER_REL_LBA(fs, clusterNr), fs->sectorsPerCluster, buf);
+      fatBlockWrite(fs, CLUSTER_REL_LBA(fs, clusterNr), fs->sectorsPerCluster, buffer);
       u32int nextClusterNr = fatGetFreeClus(fs);
       
       if (count < lenToWrite)
@@ -623,15 +597,6 @@ int fatReadFile(fatfs *fs, char *fname, void *out, u32int maxlen)
 #ifdef FAT_DEBUG
   printf("fatReadFile: to file '%s' max data length %x\n", fname, maxlen);
 #endif
-  char * buf = (char*)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
-  if (buf == 0)
-  {
-    DIE_NOW(0, "fatReadFile: failed to allocate read buffer.\n");
-  }
-  else
-  {
-    memset((void*)buf, 0x0, fs->sectorsPerCluster * fs->bytesPerSector);
-  }
 
   int i;
 
@@ -647,7 +612,7 @@ int fatReadFile(fatfs *fs, char *fname, void *out, u32int maxlen)
 
   do
   {
-    fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buf);
+    fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buffer);
 
     // for now ignore maxlen
     if ((dirEntry.fileSize - currentLength) < 
@@ -659,7 +624,7 @@ int fatReadFile(fatfs *fs, char *fname, void *out, u32int maxlen)
       {
         if (currentLength < maxlen)
         {
-          *((char*)out) = buf[i];
+          *((char*)out) = buffer[i];
           out = ((char*)out)+1;
           currentLength++;
         }
@@ -675,7 +640,7 @@ int fatReadFile(fatfs *fs, char *fname, void *out, u32int maxlen)
       {
         if (currentLength < maxlen)
         {
-          *((char*)out) = buf[i];
+          *((char*)out) = buffer[i];
           out = ((char*)out)+1;
           currentLength++;
         }
@@ -706,16 +671,6 @@ int fatDeleteFile(fatfs *fs, char *fname)
      load the FAT, find the entry for that cluster, and mark it as free
      follow the file chain in FAT marking all following (if any) clusters as free */
 
-  char * buf = (char*)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
-  if (buf == 0)
-  {
-    DIE_NOW(0, "fatDeleteFile: failed to allocate read buffer.\n");
-  }
-  else
-  {
-    memset((void*)buf, 0x0, fs->sectorsPerCluster * fs->bytesPerSector);
-  }
-
   // root dir searching only, assume its a single file we're searching for
   nameToUpper(fname);
   dentry dirEntry = {{0}}; //stop gcc complaining about uninitialized...
@@ -724,13 +679,12 @@ int fatDeleteFile(fatfs *fs, char *fname)
   bool found = FALSE;
 
   u32int currentCluster =  fs->rootDirFirstCluster;
-
   do
   {
-    fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buf);
+    fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buffer);
     for (i = 0; i < 16 * fs->sectorsPerCluster; i++)
     {
-      loadFatDirEntry(buf + FAT32_DIR_ENTRY_LENGTH * i, &dirEntry);
+      loadFatDirEntry(buffer + FAT32_DIR_ENTRY_LENGTH * i, &dirEntry);
       if (dirEntry.filename[0] == FAT_DE_EOD)
       {
         // end of directory! file wasn't found, return an a free directory entry.
@@ -783,11 +737,11 @@ int fatDeleteFile(fatfs *fs, char *fname)
   // currentCluster holds the cluster number to write back to.
   
   // mark entry 'unused'
-  buf[dirEntry.position * FAT32_DIR_ENTRY_LENGTH] = FAT_DE_UNUSED;
+  buffer[dirEntry.position * FAT32_DIR_ENTRY_LENGTH] = FAT_DE_UNUSED;
   
   // write buf back to position
   fatBlockWrite(fs, CLUSTER_REL_LBA(fs, dirEntry.parentCluster),
-                fs->sectorsPerCluster, buf);
+                fs->sectorsPerCluster, buffer);
 
   u32int workingCluster = dirEntry.firstCluster;
   u32int fatSect = fs->sectorsPerFat+1;
@@ -798,16 +752,16 @@ int fatDeleteFile(fatfs *fs, char *fname)
     if (fatSect != (workingCluster >> 7))
     {
       fatSect = workingCluster >> 7;
-      fatBlockRead(fs, fs->fatBegin + fatSect, 1, buf);
+      fatBlockRead(fs, fs->fatBegin + fatSect, 1, buffer);
     }
     offset = workingCluster & 0x7F;
 
-    u32int* entry = (u32int*)(&buf[offset*4]);
+    u32int* entry = (u32int*)(&buffer[offset*4]);
     workingCluster = *entry;
     *entry = 0x0;
 
     // update FAT table block
-    fatBlockWrite(fs, fs->fatBegin + fatSect, 1, buf);
+    fatBlockWrite(fs, fs->fatBegin + fatSect, 1, buffer);
   }
   while (!FAT_EOC_MARKER(workingCluster));
 
@@ -820,15 +774,7 @@ int fatAppendToFile(fatfs *fs, char *fname, void *src, u32int length)
 #ifdef FAT_DEBUG
   printf("fatAppendToFile: to file '%s' data length %x\n", fname, length);
 #endif
-  char * buf = (char*)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
-  if (buf == 0)
-  {
-    DIE_NOW(0, "fatAppendToFile: failed to allocate read buffer.\n");
-  }
-  else
-  {
-    memset((void*)buf, 0x0, fs->sectorsPerCluster * fs->bytesPerSector);
-  }
+
   u8int* outputData = (u8int*)src; 
   dentry dirEntry = getPathDirEntry(fs, fname, FALSE);
 
@@ -859,12 +805,12 @@ int fatAppendToFile(fatfs *fs, char *fname, void *src, u32int length)
     if (fatSect != (currentCluster >> 7))
     {
       fatSect = currentCluster >> 7;
-      fatBlockRead(fs, fs->fatBegin + fatSect, 1, buf);
+      fatBlockRead(fs, fs->fatBegin + fatSect, 1, buffer);
     }
 
     offset = currentCluster & 0x7F;
     tempCluster = currentCluster;
-    currentCluster = *(u32int*)(&buf[offset*4]);
+    currentCluster = *(u32int*)(&buffer[offset*4]);
     if (!FAT_EOC_MARKER(currentCluster))
     {
       fileSizeLeft = fileSizeLeft - fs->sectorsPerCluster * fs->bytesPerSector;
@@ -879,19 +825,19 @@ int fatAppendToFile(fatfs *fs, char *fname, void *src, u32int length)
   while (byteNumber < length)
   {
     // get current cluster into buffer
-    fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buf);
+    fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buffer);
     
-    // loop through output data, writing it by-byte into buffer
+    // loop through output data, writing it byte-by-byte into buffer
     while (byteNumber < length && bytesLeftInCluster != 0)
     {
-      buf[nextByteIndex] = outputData[byteNumber];
+      buffer[nextByteIndex] = outputData[byteNumber];
       bytesLeftInCluster--;
       byteNumber++;
       nextByteIndex++;
       dirEntry.fileSize++;
     }
 
-    fatBlockWrite(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buf);
+    fatBlockWrite(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buffer);
     if (bytesLeftInCluster == 0)
     {
       // we filled the cluster with data. write cluster back to device
