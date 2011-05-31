@@ -146,7 +146,25 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
 		}
 		break;
 	}
-    case GPIO_LEVELDETECT0:
+    case GPIO_CLEARDATAOUT:
+	{
+		val = gpio[gpioNum]->gpioClearDataOut;
+		if(gpioNum==4 || gpioNum==5)
+		{
+			val = beGetGPIO(regOffset,gpioNum);
+		}
+		break;
+	}
+    case GPIO_SETDATAOUT:
+	{
+		val = gpio[gpioNum]->gpioSetDataOut;
+		if(gpioNum==4 || gpioNum==5)
+		{
+			val = beGetGPIO(regOffset,gpioNum);
+		}
+		break;
+	}
+	case GPIO_LEVELDETECT0:
     case GPIO_LEVELDETECT1:
     case GPIO_RISINGDETECT:
     case GPIO_FALLINGDETECT:
@@ -158,8 +176,6 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
     case GPIO_SETIRQENABLE2:
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
-    case GPIO_CLEARDATAOUT:
-    case GPIO_SETDATAOUT:
       printf("GPIO: load from unimplemented register %x\n", regOffset);
       DIE_NOW(0, "panic.");
       break;
