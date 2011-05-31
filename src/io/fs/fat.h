@@ -42,8 +42,8 @@ typedef struct DirectoryEntry
 {
   char filename[11];
   char attrib;
-  u16int firstClusterHigh;  // TODO may be able to remove these later as we already
-  u16int firstClusterLow;   // calculate the first cluster
+  u16int firstClusterHigh;
+  u16int firstClusterLow;
   u32int firstCluster;
   u32int fileSize;
   u32int parentCluster;
@@ -54,6 +54,14 @@ typedef struct DirectoryEntry
 } dentry;
 
 
+typedef struct FatFileHandle
+{
+  dentry *dirEntry;
+  u32int lastCluster;
+  u32int bytesInLastCluster;
+} file;
+
+
 int fatMount(fatfs *fs, blockDevice *dev, int part_num);
 
 void tree(fatfs *fs, u32int currentCluster, u32int level);
@@ -62,22 +70,16 @@ void loadFatDirEntry(char *record, dentry *d);
 
 void setFatDirEntry(fatfs *fs, dentry *d, u32int position);
 
-
-/*** READ / WRITE / DELETE FILES ***/
-int fatReadFile(fatfs *fs, char *fname, void *out, u32int maxlen);
-
-int fatWriteFile(fatfs *fs, char *fname, void *src, u32int n);
-
-int fatDeleteFile(fatfs *fs, char *fname);
-
-int fatAppendToFile(fatfs *fs, char *fname, void *src, u32int length);
-
+/*** operations on files ***/
+int fread(fatfs *fs, file *handle, void *out, u32int maxlen);
+int fwrite(fatfs *fs, file *handle, void *src, u32int length);
+int fdelete(fatfs *fs, file *handle);
+file* fopen(fatfs *fs, char *fname);
+file* fnew(fatfs *fs, char *fname);
 
 /*** READ / WRITE BLOCKS ***/
 u32int fatBlockRead(fatfs *fs, u32int start, u64int blkCount, void *dst);
-
 u32int fatBlockWrite(fatfs *fs, u32int start, u64int blkCount, const void *src);
-
 
 u32int fatLoadClusFatSector(fatfs *fs, u32int clus, char *buf);
 
@@ -87,10 +89,8 @@ u32int fatGetFreeClus(fatfs *fs);
 
 u32int fatGetNextClus(fatfs *fs, u32int clus);
 
-void nameToUpper(char *s);
-
 bool filenameMatch(char *user, char *fatname);
 
-dentry getPathDirEntry(fatfs *fs, char *fname, int createNew);
+dentry *getPathDirEntry(fatfs *fs, char *fname, int createNew);
 
 #endif
