@@ -21,7 +21,7 @@ GCONTXT * allocateGuest(void)
 #ifdef GUEST_CONTEXT_DBG
   else
   {
-    printf("allocateGuest: Guest context at%x\n", (u32int)context);
+    printf("allocateGuest: Guest context at %x\n", (u32int)context);
   }
 #endif
   guest = context;

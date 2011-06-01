@@ -14,8 +14,8 @@
 
 char * buffer;
 
-fatfs mainFilesystem;
-partitionTable primaryPartitionTable;
+extern fatfs mainFilesystem;
+extern partitionTable primaryPartitionTable;
 
 /* Function to abstract away partition lba offsets.
    The fs object must have it's partition and block devices associated. */
@@ -40,6 +40,9 @@ u32int fatBlockWrite(fatfs *fs, u32int start, u64int blkCount, const void *src)
 /* Mount a fat filesystem located on the partNum-th partition on block device dev. */
 int fatMount(fatfs *fs, blockDevice *dev, int partNum)
 {
+#ifdef FAT_DEBUG
+  printf("fatMount: mount partition %x\n", partNum);
+#endif
   buffer = (char*)mallocBytes(0x1000);
   if (buffer == 0)
   {
@@ -50,9 +53,6 @@ int fatMount(fatfs *fs, blockDevice *dev, int partNum)
     memset((void*)buffer, 0x0, fs->sectorsPerCluster * fs->bytesPerSector);
   }
 
-#ifdef FAT_DEBUG
-  printf("fatMount: mount partition %x\n", partNum);
-#endif
   //assume partitions have already been read
   fs->part = &primaryPartitionTable.partitions[partNum-1];
   if (!(fs->part->type == 0x0B || fs->part->type == 0x0C))
@@ -288,6 +288,9 @@ void fatSetClusterValue(fatfs *fs, u32int clus, u32int val)
 
 dentry *getPathDirEntry(fatfs *fs, char *fname, int createNew)
 {
+#ifdef FAT_DEBUG
+  printf("getPathDirEntry: %s\n", fname);
+#endif
   //root dir searching only, assume its a single file we're searching for
   dentry * dirEntry = (dentry*)mallocBytes(sizeof(dentry));
   if (dirEntry == 0)
@@ -456,7 +459,6 @@ int fwrite(fatfs *fs, file *handle, void *src, u32int length)
   u32int byteNumber = 0;
   u32int bytesLeftInCluster = (fs->sectorsPerCluster * fs->bytesPerSector) -
                               handle->bytesInLastCluster;
-
   while (byteNumber < length)
   {
     // get current cluster into buffer
@@ -667,7 +669,6 @@ file* fopen(fatfs* fs, char* fname)
     {
       fileSizeLeft = fileSizeLeft - fs->sectorsPerCluster * fs->bytesPerSector;
     }
-    printf("fopen: fileSizeLeft %x\n", fileSizeLeft);
   }
   while (!FAT_EOC_MARKER(currentCluster));
 

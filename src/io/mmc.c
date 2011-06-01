@@ -9,7 +9,7 @@
 
 #include "cpuArch/cpu.h"
 
-struct mmc *mmcDevice;
+extern struct mmc *mmcDevice;
 
 u32int mmcRegisteredNumber = 0;
 
@@ -95,11 +95,6 @@ u32int mmcBlockRead(int devid, u32int start, u64int blockCount, void *dst)
     return 0;
   }
 
-  if (mmcSetBlocklen(mmc, mmc->readBlockLength))
-  {
-    return 0;
-  }
-
   //ignore the 16 bit counter case unless we have to deal with it in practice
   struct mmcCommand cmd;
   struct mmcData data;
@@ -158,11 +153,6 @@ u32int mmcBlockRead(int devid, u32int start, u64int blockCount, void *dst)
 u32int mmcBlockWrite(int devid, u32int start, u64int blockCount, const void *src)
 {
   struct mmc *mmc = getMMCDevice(devid);
-
-  if (mmcSetBlocklen(mmc, mmc->writeBlockLength))
-  {
-    return 0;
-  }
 
   //ignore the 16 bit block counter constraint for now
 

@@ -23,6 +23,9 @@
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/frameAllocator.h"
 
+#include "io/mmc.h"
+#include "io/partitions.h"
+#include "io/fs/fat.h"
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 
@@ -37,6 +40,10 @@ void printUsage(void);
 int parseCommandline(int argc, char *argv[]);
 void registerGuestContext(u32int gcAddr);
 
+fatfs mainFilesystem;
+partitionTable primaryPartitionTable;
+struct mmc *mmcDevice;
+file * debugStream;
 u32int kernAddr;
 u32int initrdAddr;
 
@@ -102,6 +109,28 @@ int main(int argc, char *argv[])
 
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
+
+  u32int err = 0;
+  if ((err = mmcMainInit()) != 0)
+  {
+    DIE_NOW(0, "Failed to initialize mmc code.\n");
+  }
+
+  if ((err = partTableRead(&mmcDevice->blockDev, &primaryPartitionTable)) != 0)
+  {
+    DIE_NOW(0, "Failed to read partition table.\n");
+  }
+  
+  if ((err = fatMount(&mainFilesystem, &mmcDevice->blockDev, 1)) != 0)
+  {
+    DIE_NOW(0, "Failed to mount FAT partition.\n");
+  }
+
+  debugStream = fopen(&mainFilesystem, "debug");
+  if (debugStream == 0)
+  {
+    DIE_NOW(0, "Failed to open (create) debug steam file.\n");
+  }
 
   // does not return
   doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
