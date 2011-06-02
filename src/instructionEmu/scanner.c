@@ -544,8 +544,18 @@ void resetScannerCounter()
 /* allSrcRegNonPC will return true if all source registers of an instruction are zero  */
 u32int allSrcRegNonPC(u32int instruction)
 {
-  //Source registers correspond with the bits [0..3],[8..11] or [16..19]
-  if((instruction & 0xF0000)==0xF0000 || (instruction & 0xF00)==0xF00 || (instruction & 0xF)==0xF )
+  /*Source registers correspond with the bits [0..3],[8..11] or [16..19],  STMDB and PUSH may not write PC to mem :
+   * STM   1000|10?0
+   * STMDA 1000|00?0
+   * STMDB 1001|00?0
+   * STMIB 1001|10?0
+         * --------
+         * 100?|?0?0
+   * mask    E |  5
+   * value   8 |  0
+   * In registerlist only the bit of PC has to be checked.  And the source register for memory location is not important
+   */
+  if((instruction & 0xF0000)==0xF0000 || (instruction & 0xF00)==0xF00 || (instruction & 0xF)==0xF || (instruction & 0x0E508000)==0x08008000)
   {
 # ifdef PC_DEBUG
     serial_putstring("Instruction 0x");
