@@ -30,7 +30,7 @@ typedef struct FAT
   u8int numFats;              // always 2
   u32int sectorsPerFat;
   u32int rootDirFirstCluster; // usually 0x2
-  int mounted;
+  bool mounted;
   blockDevice *blockDevice;
   struct Partition *part;     // partition in primary table where this fs is located
   u32int fatBegin;            // partition relative fat location

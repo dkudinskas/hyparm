@@ -413,7 +413,6 @@ int sdChangeFreq(struct mmc *mmc)
 int mmcStartup(struct mmc *mmc)
 {
   u32int mult, freq;
-  u64int cmult, csize;
   int err = 0;
 
   struct mmcCommand cmd;
@@ -495,7 +494,7 @@ int mmcStartup(struct mmc *mmc)
 
   if (mmc->highCapacity)
   {
-    csize = ((mmc->csd[1] & 0x3f) << 16) | ((mmc->csd[2] & 0xffff0000) >> 16);
+    u32int csize = ((mmc->csd[1] & 0x3f) << 16) | ((mmc->csd[2] & 0xffff0000) >> 16);
     // memory capacity = (C_SIZE+1) * 512K byte
     mmc->capacity = (csize+1) * 512 * 1024;  
 #ifdef MMC_DEBUG
@@ -504,13 +503,13 @@ int mmcStartup(struct mmc *mmc)
   }
   else
   {
-    csize = (mmc->csd[1] & 0x3ff) << 2 | (mmc->csd[2] & 0xc0000000) >> 30;
-    cmult = (mmc->csd[2] & 0x00038000) >> 15;
-
-    u32int mult = 2 ^ (cmult + 2);
+    u32int csize = ((mmc->csd[1] & 0x3ff) << 2) | ((mmc->csd[2] & 0xc0000000) >> 30);
+    u32int cmult = (mmc->csd[2] & 0x00038000) >> 15;
+    
+    u32int mult = 1 << (cmult + 2);
     u32int blockNumber = (csize + 1) * mult;
    
-    u32int blockLength = 2 ^ ((mmc->csd[1] & 0x000f0000) >> 16);
+    u32int blockLength = 1 << ((mmc->csd[1] & 0x000f0000) >> 16);
     mmc->capacity = blockNumber * blockLength;
 
 #ifdef MMC_DEBUG

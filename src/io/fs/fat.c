@@ -107,7 +107,7 @@ int fatMount(fatfs *fs, blockDevice *dev, int partNum)
   printf("fatMount: fatBegin %x\n", fs->fatBegin);
   printf("fatMount: clusterBegin %x\n", fs->clusterBegin);
 #endif
-  fs->mounted = 1;
+  fs->mounted = TRUE;
   return 0;
 }
 
@@ -623,6 +623,11 @@ file* fopen(fatfs* fs, char* fname)
   printf("fopen: file '%s'\n", fname);
 #endif
 
+  if (!fs->mounted)
+  {
+    return 0;
+  }
+
   file* f = (file*)mallocBytes(sizeof(file));
   if (f == 0)
   {
@@ -697,6 +702,11 @@ file* fnew(fatfs *fs, char *fname)
 #ifdef FAT_DEBUG
   printf("fnew: file '%s'\n", fname);
 #endif
+
+  if (!fs->mounted)
+  {
+    return 0;
+  }
 
   file* f = (file*)mallocBytes(sizeof(file));
   if (f == 0)

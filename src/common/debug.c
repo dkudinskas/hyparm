@@ -91,8 +91,6 @@ u32int fprintf(const char *fmt, ...)
   va_end(args);
 
   /* Print the string */
-  serialPuts("fprintf: ");
-  serialPuts(printbuffer);
   fwrite(&mainFilesystem, debugStream, printbuffer, stringlen(printbuffer));
 
   return i;
