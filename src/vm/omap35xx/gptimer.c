@@ -281,7 +281,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPT_REG_TCRR:
     {
       // make sure we dont throw irq's too often...
-      u32int adjustedValue = value << 14;
+      u32int adjustedValue = value << 12;
       storeToGPTimer(2, regOffs, adjustedValue);
 #ifdef GPTIMER_DBG
       printf(dev->deviceName);
@@ -292,7 +292,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPT_REG_TLDR:
     {
       // make sure we dont throw irq's too often...
-      u32int adjustedValue = value << 14;
+      u32int adjustedValue = value << 12;
       storeToGPTimer(2, regOffs, adjustedValue);
 #ifdef GPTIMER_DBG
       printf(dev->deviceName);

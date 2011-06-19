@@ -644,7 +644,7 @@ void uartTxByte(u8int byte, u32int uartID)
 {
   u32int uID = uartID - 1;
 #ifdef UART_DBG
-    printf("uartTxByte: send ASCII %x\n", byte);
+    printf("uartTxByte: send '%c' out via serial\n", (char)byte);
 #endif
 
   if (uart[uID]->loopback)

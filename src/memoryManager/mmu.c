@@ -379,8 +379,9 @@ void printDataAbort()
   printf("Data Abort Address: %08x\n", dfar);
   printf("Fault type: ");
   printf((char*)dataAbtFaultString[dfsr.fs3_0]);
-  printf(" (%x), domain %x, Write not Read: %x, External: %x\n",
+  printf(" (%x), domain %x, Write not Read: %x, External: %x",
          faultStatus, dfsr.domain, dfsr.WnR, dfsr.ExT);
+  /* Perhaps read out the domain and spit out the permission bits set for that domain at this point? */
 }
 
 void printPrefetchAbort()

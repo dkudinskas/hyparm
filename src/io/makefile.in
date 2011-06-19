@@ -1,2 +1,0 @@
-SRCS += src/io/mmc.c
-SRCS += src/io/partitions.c

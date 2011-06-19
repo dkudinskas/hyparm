@@ -13,7 +13,7 @@ void serialPuts(char * c)
 {
   int index = 0;
 
-  while (c[index] != '\0')
+  while (printableChar(c[index]))
   {
     serialPutc(c[index]);
     index++;

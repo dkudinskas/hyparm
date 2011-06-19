@@ -255,10 +255,6 @@ void toggleTimerFclk(u32int clockID, bool enable);
 
 void cmDisableDssClocks(void);
 
-u32int clkManRegReadBE(u32int module, u32int regOffs);
-void clkManRegWriteBE(u32int module, u32int regOffs, u32int value);
-
-
 struct ClockManagerBE
 {
   // add stuff if needed

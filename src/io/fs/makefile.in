@@ -1,2 +1,0 @@
-SRCS += src/io/fs/fat.c
-

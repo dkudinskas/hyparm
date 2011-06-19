@@ -26,8 +26,6 @@ LDFLAGS = -g -Ttext $(TARGET_BASE_ADDRESS) -e main -o $(APP_NAME).elf -Map $(APP
 
 include $(DEPTH)/src/makefile.in
 include $(DEPTH)/src/common/makefile.in
-include $(DEPTH)/src/io/makefile.in
-include $(DEPTH)/src/io/fs/makefile.in
 include $(DEPTH)/src/cpuArch/makefile.in
 include $(DEPTH)/src/exceptions/makefile.in
 include $(DEPTH)/src/vm/omap35xx/makefile.in
