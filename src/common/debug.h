@@ -21,7 +21,12 @@ __attribute((noreturn)) void DIE_NOW(GCONTXT * context, char* msg);
 #define PRINTABLE_START        0x20
 #define PRINTABLE_END          0x7E
 
+/* output to serial */
 u32int printf(const char *fmt, ...);
+
+/* output to mmc */
+u32int fprintf(const char *fmt, ...);
+
 u32int vsprintf(char *buf, const char *fmt, va_list args);
 
 int printableChar(char c);

@@ -5,7 +5,14 @@
 
 #include "drivers/beagle/beUart.h"
 
+#include "io/fs/fat.h"
+
+
 extern GCONTXT * getGuestContext(void); //from main.c
+
+extern fatfs mainFilesystem;
+
+extern file * debugStream;
 
 void banner(char* msg)
 {
@@ -69,6 +76,23 @@ u32int printf(const char *fmt, ...)
 
   /* Print the string */
   serialPuts(printbuffer);
+
+  return i;
+}
+
+u32int fprintf(const char *fmt, ...)
+{
+  va_list args;
+  u32int i;
+  char printbuffer[256];
+  va_start(args, fmt);
+
+  i = vsprintf(printbuffer, fmt, args);
+  va_end(args);
+
+  /* Print the string */
+  fwrite(&mainFilesystem, debugStream, printbuffer, stringlen(printbuffer));
+
   return i;
 }
 
