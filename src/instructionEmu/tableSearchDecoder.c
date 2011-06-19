@@ -595,7 +595,9 @@ struct instruction32bit t16SpecialBranchInstructions[] = {
 {1, &bxInstruction, 0x4700, 0xFF80, "BX<c> <Rm>"},
 {1, &blxInstruction, 0x4780, 0xFF80, "BLX<c> <Rm>"},
 {1, &movInstruction, 0x4607, 0xFF07, "MOV PC, Rm"},
-{0, &movInstruction, 0x4600, 0xFF00,  "MOV Rd, Rm"}
+{0, &movInstruction, 0x4600, 0xFF00,  "MOV Rd, Rm"},
+{0, &addInstruction, 0x1800, 0xFE00, "ADD <Rd>, <Rn>, <Rm>"},
+{0, &addInstruction, 0x4400, 0xFF00, "ADD <Rdn>, <Rm>"}
 };
 
 struct instruction32bit t16MiscInstructions[] = {
@@ -661,6 +663,7 @@ struct instruction32bit t32DataProcInstructions[] = {
 {1, &andInstruction, 0xF0000F00, 0xFBE08F00, "AND{S}<c> PC, <Rm>, #<imm12>"},
 {0, &andInstruction, 0xF0000000, 0xFBE08000, "AND{S}<c> <Rd>, <Rm>, #<imm12>"},
 {0, &addInstruction, 0xF1000000, 0xFBE08000, "ADD{S}.W <Rd>, <Rn>, #<imm8>"},
+{0, &addInstruction, 0xEB000000, 0xFFE08000, "ADD{S}.W <Rd>, <Rn>, <Rm>{, <shift>}"},
 //ADD -> RD=PC -> CMN page 306
 {1, addInstruction, 0xF1000F00, 0xFBE08F00, "ADD{S}.W PC, <Rn>, #<imm8>"},
 // RN=SP -> unimplemented. Should be OK
@@ -673,6 +676,7 @@ struct instruction32bit t32DataProcInstructions[] = {
 {0, &addInstruction, 0xF20D0000, 0xF20F8000, "ADDW <Rd>, SP, #<imm8>"},
 {0, &bicInstruction, 0xF0200000, 0xFBE08000, "BIC{S} <Rd>, <Rn>, #<imm12>"},
 {0, &rsbInstruction, 0xF1C00000, 0xFBE08000, "RSB <Rd>, <Rn>, #<imm12>"},
+{0, &rsbInstruction, 0xEBC00000, 0xFFE08000, "RSB <Rd>, <Rn>, <Rm>{,<shift>}"},
 {0, &subInstruction, 0xF1A00000, 0xFBE08000, "SUB{S}.W <Rd>, <Rn>, #<imm12>"},
 {0, &subInstruction, 0xF2A00000, 0xFBE08000, "SUB{S}W <Rd>, <Rn>, #<imm12>"},
 {0, &subInstruction, 0xEBA00000, 0xFFE08000, "SUB{S}.W <Rd>, <Rn>, <Rm>{,<shitft>}"},
