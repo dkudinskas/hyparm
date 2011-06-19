@@ -6,9 +6,6 @@
 
 struct ClockManagerBE * clkManBE;
 
-static inline u32int clkManRegReadBE(u32int module, u32int regOffs);
-static inline void clkManRegWriteBE(u32int module, u32int regOffs, u32int value);
-
 void clkManBEInit()
 {
   clkManBE = (struct ClockManagerBE*)mallocBytes(sizeof(struct ClockManagerBE));
@@ -28,14 +25,14 @@ void clkManBEInit()
 
 }
 
-static inline u32int clkManRegReadBE(u32int module, u32int regOffs)
+u32int clkManRegReadBE(u32int module, u32int regOffs)
 {
   u32int * regPtr = (u32int*)(module | regOffs);
   volatile u32int value = *regPtr;
   return value;
 }
 
-static inline void clkManRegWriteBE(u32int module, u32int regOffs, u32int value)
+void clkManRegWriteBE(u32int module, u32int regOffs, u32int value)
 {
   volatile u32int * regPtr = (u32int*)(module | regOffs);
   *regPtr = value;

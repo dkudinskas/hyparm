@@ -15,6 +15,8 @@
 
 #define BLOCK_HISOTRY_SIZE     5
 
+#define GUEST_STACK_SIZE    1024
+
 struct guestContext;
 typedef struct guestContext GCONTXT;
 
@@ -90,18 +92,12 @@ struct guestContext
   bool debugFlag;
 };
 
-
-
+GCONTXT * allocateGuest(void);
+   
 void dumpGuestContext(GCONTXT * gc);
 
 void initGuestContext(GCONTXT * gContext);
 
-void registerCrb(GCONTXT * gc, CREG * coprocRegBank);
-
-void registerBlockCache(GCONTXT * gc, BCENTRY * blockCacheStart);
-
-void registerHardwareLibrary(GCONTXT * gc, device * libraryPtr);
-
-void registerMemoryProtection(GCONTXT * gc);
+GCONTXT * getGuestContext(void);
 
 #endif

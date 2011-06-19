@@ -248,7 +248,9 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 
 void explodeCache(BCENTRY * bcache)
 {
+#ifdef BLOCK_CACHE_DBG
   printf("========BLOCK CACHE EXPLODE!!!=========\n");
+#endif
 
   int i = 0;
 
@@ -336,6 +338,8 @@ bool isBitmapSetForAddress(u32int addr)
 struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int index)
 {
 	struct thumbEntry tb;
+	tb.first = 0;
+	tb.second = 0;
 #ifdef BLOCK_CACHE_DBG
 	printf("I will restore %08x[%08x]\n",bcAddr[index].hyperedInstruction,index);
 #endif

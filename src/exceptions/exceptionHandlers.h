@@ -11,7 +11,7 @@
 void softwareInterrupt(u32int code);
 
 void dataAbort(void);
-void dataAbortPrivileged(void);
+void dataAbortPrivileged(u32int pc);
 void undefined(void);
 void undefinedPrivileged(void);
 void prefetchAbort(void);

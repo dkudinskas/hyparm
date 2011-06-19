@@ -4,3 +4,4 @@ SRCS += src/drivers/beagle/beClockMan.c
 SRCS += src/drivers/beagle/be32kTimer.c
 SRCS += src/drivers/beagle/beUart.c
 SRCS += src/drivers/beagle/beGPIO.c
+SRCS += src/drivers/beagle/beMMC.c
