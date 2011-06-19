@@ -44,7 +44,7 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
       // for now, just load the real counter value.
       volatile u32int * memPtr = (u32int*)address;
       val = *memPtr;
-      val = val >> 6;
+      val = val >> 5;
 #ifdef TIMER32K_DBG
       printf(dev->deviceName);
       printf(" load counter value %x\n", val);

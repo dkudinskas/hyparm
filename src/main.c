@@ -8,7 +8,7 @@
 #include "drivers/beagle/beGPTimer.h"
 #include "drivers/beagle/beClockMan.h"
 #include "drivers/beagle/beUart.h"
-#include "drivers/beagle/beGPIO.h"
+#include "drivers/beagle/beMMC.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/LED.h"
@@ -25,6 +25,9 @@
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/frameAllocator.h"
 
+#include "io/mmc.h"
+#include "io/partitions.h"
+#include "io/fs/fat.h"
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 
@@ -33,26 +36,28 @@
 #define HIDDEN_RAM_START   0x8f000000
 #define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
 
-extern void startup_hypervisor(void);
+
+extern void startupHypervisor(void);
+extern void registerGuestPointer(u32int gContext);
 
 void printUsage(void);
 int parseCommandline(int argc, char *argv[]);
 void registerGuestContext(u32int gcAddr);
-GCONTXT * getGuestContext(void);
 
+fatfs mainFilesystem;
+partitionTable primaryPartitionTable;
+struct mmc *mmcDevice;
+file * debugStream;
 u32int kernAddr;
 u32int initrdAddr;
-
-// guest context
-GCONTXT * gContext;
+image_header_t imageHeader;
 
 int main(int argc, char *argv[])
 {
-  int ret = 0;
   kernAddr = 0;
   initrdAddr = 0;
-  gContext = 0;
-  image_header_t imageHeader;
+  GCONTXT * gContext = 0;
+  int ret = 0;	
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
   
@@ -74,58 +79,17 @@ int main(int argc, char *argv[])
   initialiseFrameTable();
 
   /* sets up stack addresses and exception handlers */
-  startup_hypervisor();
+  startupHypervisor();
 
-  /* initialise coprocessor register bank */
-  CREG * coprocRegBank = (CREG*)mallocBytes(MAX_CRB_SIZE * sizeof(CREG));
-  if (coprocRegBank == 0)
-  {
-    DIE_NOW(0, "Failed to allocate coprocessor register bank.");
-  }
-  else
-  {
-    memset((void*)coprocRegBank, 0x0, MAX_CRB_SIZE * sizeof(CREG));
-#ifdef STARTUP_DEBUG
-    printf("Coprocessor register bank at %x\n", (u32int)coprocRegBank);
-#endif
-  }
-  registerCrb(gContext, coprocRegBank);
-  
-  /* initialise block cache */
-  BCENTRY * blockCache = (BCENTRY*)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
-  if (blockCache == 0)
-  {
-    DIE_NOW(0, "Failed to allocate basic block cache.");
-  }
-  else
-  {
-    memset((void*)blockCache, 0x0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
-#ifdef STARTUP_DEBUG
-    printf("Basic block cache at %x\n", (u32int)blockCache);
-#endif
-  }
-  registerBlockCache(gContext, blockCache);
-
-  /* initialise virtual hardware devices */
-  device * libraryPtr;
-  if ((libraryPtr = initialiseHardwareLibrary()) != 0)
-  {
-    /* success. register with guest context */
-    registerHardwareLibrary(gContext, libraryPtr);
-  }
-  else
-  {
-    DIE_NOW(0, "Hardware library initialisation failed.");
-  }
+  /* initialize guest context */
+  gContext = allocateGuest();
+  registerGuestPointer((u32int)gContext);
 
   /* Setup MMU for Hypervisor */
   initialiseVirtualAddressing();
 
-  /* Setup guest memory protection */
-  registerMemoryProtection(gContext);
-
-  ret = parseCommandline(argc, argv);
-  if ( ret < 0 )
+  ret  = parseCommandline(argc, argv);
+  if (ret < 0)
   {
     printUsage();
     DIE_NOW(0, "Hypervisor startup aborted.");
@@ -156,20 +120,31 @@ int main(int argc, char *argv[])
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
 
+  u32int err = 0;
+  if ((err = mmcMainInit()) != 0)
+  {
+    DIE_NOW(0, "Failed to initialize mmc code.\n");
+  }
+
+  if ((err = partTableRead(&mmcDevice->blockDev, &primaryPartitionTable)) != 0)
+  {
+    DIE_NOW(0, "Failed to read partition table.\n");
+  }
+  
+  if ((err = fatMount(&mainFilesystem, &mmcDevice->blockDev, 1)) != 0)
+  {
+    DIE_NOW(0, "Failed to mount FAT partition.\n");
+  }
+
+  debugStream = fopen(&mainFilesystem, "debug");
+  if (debugStream == 0)
+  {
+    DIE_NOW(0, "Failed to open (create) debug steam file.\n");
+  }
+
   // does not return
   if(ret==2)doRtosBoot(kernAddr);
   else doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
-}
-
-void registerGuestContext(u32int gcAddr)
-{
-  gContext = (GCONTXT *)gcAddr;
-  initGuestContext(gContext);
-}
-
-GCONTXT * getGuestContext()
-{
-  return gContext;
 }
 
 void printUsage(void)

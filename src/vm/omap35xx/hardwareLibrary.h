@@ -37,8 +37,14 @@
 #define UART1_SIZE                       0x00002000
 #define UART2                            0x4806c000
 #define UART2_SIZE                       0x00002000
+#define SD_MMC1                          0x4809C000
+#define SD_MMC1_SIZE                     0x00002000
+#define SD_MMC3                          0x480AD000
+#define SD_MMC3_SIZE                     0x00002000
+#define SD_MMC2                          0x480B4000
+#define SD_MMC2_SIZE                     0x00002000
 #define INTERRUPT_CONTROLLER             0x48200000
-#define INTERRUPT_CONTROLLER_SIZE        0x00001000
+#define INTERRUPT_CONTROLLER_SIZE        0x00002000
 #define L4_CORE_WAKEUP_INT               0x48300000
 #define L4_CORE_WAKEUP_INT_SIZE          0x00040FFF
 #define PRM                                0x48306000
