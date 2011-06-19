@@ -165,6 +165,8 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
    */
   int i = 0;
   struct thumbEntry tb;
+  tb.first = 0;
+  tb.second = 0;
 #ifdef BLOCK_CACHE_DBG
 	printf("resolveCacheConflict: collision at index %x\n", index);
 #endif
