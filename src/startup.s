@@ -3,6 +3,7 @@
   .equ  A_BIT,          0x100     /* when set, async aborts are disabled */
   .equ  I_BIT,          0x80      /* when set, IRQ is disabled */
   .equ  F_BIT,          0x40      /* when set, FIQ is disabled */
+  .equ  T_BIT,			0x20      /* when set, Thumb mode is enabled */
 
   .equ  USR_MODE,       0x10
   .equ  FIQ_MODE,       0x11
@@ -159,7 +160,8 @@ startupHypervisor:
   MOV     R1, R0
   ADD     R0, R0, #GC_CPSR_OFFS
   LDR     R0, [R0]
-  ANDS    R0, R0, #0x1F
+  AND     R0, R0, #0x1F
+  CMP	  R0, #0x1F
   ADDEQ   R1, R1, #GC_R13_OFFS
   CMP     R0, #0x10
   ADDEQ   R1, R1, #GC_R13_OFFS
@@ -200,7 +202,16 @@ startupHypervisor:
 .macro save_pc
   /* store guest PC */
   MOV     R0, LR
-  SUB     R0, R0, #4
+  PUSH	  {R3}
+  LDR	  R3, =guestContextSpace
+  LDR	  R3, [R3]
+  ADD	  R3, R3, #GC_CPSR_OFFS
+  LDR     R3, [R3]
+  AND     R3, R3, #0x20
+  CMP	  R3, #0x20	
+  SUBNE   R0, R0, #4 @ARM
+  SUBEQ	  R0, R0, #2 @Thumb
+  POP	  {R3}
   LDR     R1, =guestContextSpace
   LDR     R1, [R1]
   ADD     R1, R1, #GC_R15_OFFS
@@ -271,9 +282,18 @@ startupHypervisor:
   LDR     LR, [LR]
   /* Preserve condition flags */
   AND     LR, LR, #0xf0000000
-  /* set user mode, disable async abts and fiqs, but enable irqs */
-  ORR     LR, LR, #(USR_MODE | A_BIT | F_BIT)
+  /* set user mode, disable async abts and fiqs, but enable irqs and check for Thumb Bit */
+  PUSH    {R3}
+  LDR	  R3, =guestContextSpace
+  LDR     R3, [R3]
+  ADD     R3, R3, #GC_CPSR_OFFS
+  LDR     R3, [R3]
+  AND     R3, R3, #0x20
+  CMP	  R3, #0x20
+  ORREQ   LR, LR, #(USR_MODE | A_BIT | F_BIT | T_BIT)
+  ORRNE   LR, LR, #(USR_MODE | A_BIT | F_BIT)
   MSR     SPSR, LR
+  POP     {R3}
   /* get PC and save on stack */
   LDR     LR, =guestContextSpace
   LDR     LR, [LR]
@@ -294,8 +314,8 @@ startupHypervisor:
   /* Preserve condition flags */
   LDR     LR, [LR]
   AND     R0, LR, #0xf0000000
-  /* Preserve exception flags */
-  AND     LR, LR, #0x1C0
+  /* Preserve exception flags & Thumb state*/
+  AND     LR, LR, #0x1E0
   ORR     R0, LR, R0
   /* set user mode */
   ORR     R0, R0, #(USR_MODE)
@@ -338,7 +358,8 @@ swiHandler:
     /* get SVC code into @parameter1 and call C function */
     LDR		R0, =guestContextSpace
 	LDR		R0, [R0]
-	ADD		R0, #GC_CPSR_OFFS
+	ADD		R0, R0, #GC_CPSR_OFFS
+	LDR		R0, [R0]
 	AND		R1, R0, #0x20 @Check thumb bit
 	CMP		R1, #0x20
 	LDRNE   R0, [LR, #-4] @Thumb bit = 0
@@ -356,8 +377,9 @@ dabtHandler:
     Push   {LR}
     /* Test SPSR -> are we from USR mode? */
     MRS    LR, SPSR
-    ANDS   LR, LR, #0x0f
-    BNE    dabtHandlerPriv
+    AND    LR, LR, #0x0f
+	CMP	   LR, #0x0f
+    BEQ    dabtHandlerPriv
   
     /* We were in USR mode, we must have been running guest code */
     save_r0_to_r14
@@ -389,7 +411,8 @@ dabtPrivLoop:
 undHandler:
   PUSH   {LR}
   MRS    LR, SPSR
-  ANDS   LR, LR, #0x0f
+  AND    LR, LR, #0x0f
+  CMP	 LR, #0x0f
   BNE    undHandlerPriv /* Abort occured in Hypervisor (privileged) code */
 
   /* We were in USR mode, we must have been running guest code */
@@ -423,8 +446,9 @@ pabthandler:
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
-  ANDS   LR, LR, #0x0f
-  BNE    pabtHandlerPriv
+  AND    LR, LR, #0x0f
+  CMP	 LR, #0x0f
+  BEQ    pabtHandlerPriv
   
   /* We were in USR mode, we must have been running guest code */
   save_r0_to_r14
