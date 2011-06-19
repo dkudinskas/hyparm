@@ -336,8 +336,9 @@ swiHandler:
     save_cc_flags
 
     /* get SVC code into @parameter1 and call C function */
-    LDR		R0, =guestContextCPSR
+    LDR		R0, =guestContextSpace
 	LDR		R0, [R0]
+	ADD		R0, #GC_CPSR_OFFS
 	AND		R1, R0, #0x20 @Check thumb bit
 	CMP		R1, #0x20
 	LDRNE   R0, [LR, #-4] @Thumb bit = 0

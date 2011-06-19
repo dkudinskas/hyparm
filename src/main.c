@@ -50,13 +50,14 @@ struct mmc *mmcDevice;
 file * debugStream;
 u32int kernAddr;
 u32int initrdAddr;
+image_header_t imageHeader;
 
 int main(int argc, char *argv[])
 {
   kernAddr = 0;
   initrdAddr = 0;
   GCONTXT * gContext = 0;
-
+  int ret = 0;	
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
   
@@ -87,7 +88,8 @@ int main(int argc, char *argv[])
   /* Setup MMU for Hypervisor */
   initialiseVirtualAddressing();
 
-  if (parseCommandline(argc, argv) < 0)
+  ret  = parseCommandline(argc, argv);
+  if (ret < 0)
   {
     printUsage();
     DIE_NOW(0, "Hypervisor startup aborted.");
