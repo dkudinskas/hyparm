@@ -160,7 +160,8 @@ startupHypervisor:
   MOV     R1, R0
   ADD     R0, R0, #GC_CPSR_OFFS
   LDR     R0, [R0]
-  ANDS    R0, R0, #0x1F
+  AND     R0, R0, #0x1F
+  CMP	  R0, #0x1F
   ADDEQ   R1, R1, #GC_R13_OFFS
   CMP     R0, #0x10
   ADDEQ   R1, R1, #GC_R13_OFFS
