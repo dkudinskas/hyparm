@@ -37,6 +37,8 @@ include $(DEPTH)/src/instructionEmu/makefile.in
 include $(DEPTH)/src/memoryManager/makefile.in
 include $(DEPTH)/src/drivers/beagle/makefile.in
 
+SRCS += ${MMC_SRCS-y}
+
 OBJS = $(addprefix $(DEPTH)/, $(SRCS:.c=.o))
 ASM_OBJS = $(addprefix $(DEPTH)/, $(RAW_ASMS:.s=.o))
 
