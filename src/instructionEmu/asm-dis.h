@@ -5,6 +5,7 @@
 
 #include "guestManager/guestContext.h"
 
+#define INDEX_OF(x)	(sizeof(x)/sizeof(x[0]))
 
 #define UNDEFINED_INSTRUCTION    0x0
 
@@ -19,6 +20,6 @@ struct opcode32
 
 struct opcode32 * decodeInstruction(u32int instr);
 
-void dumpInstrString(u32int instr);
+void dumpInstrString(GCONTXT * context, u32int instr);
 
 #endif

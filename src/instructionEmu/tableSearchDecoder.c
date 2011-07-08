@@ -8,7 +8,7 @@
 #include "instructionEmu/miscInstructions.h"
 
 
-//#define DECODER_DEBUG
+#define DECODER_DEBUG
 
 u16int * currAddress = 0;
 
@@ -1107,9 +1107,10 @@ struct instruction32bit * decodeUnconditional(u32int instr)
 
 void dumpInstruction(char * msg, u32int instr)
 {
+  GCONTXT* gc = getGuestContext();
   printf(msg);
   printf(": Instruction: %08x ", instr);
-  dumpInstrString(instr);
+  dumpInstrString(gc, instr);
   printf("\n");
 }
 
@@ -1123,12 +1124,11 @@ struct instruction32bit * t32decodeLoadStoreMultiple(u32int instr)
 struct instruction32bit * t32decodeLoadStoreDoubleExclusive(u32int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t32decodeLoadStoreDoubleExclusivec %08x\n", instr);
+  dumpInstruction("t32decodeLoadStoreDoubleExclusivec %08x\n", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t32LoadStoreDoubleExclusiveInstructions))
   {
-//    printf("Index: %08x\n", index);
 	if ( (instr & t32LoadStoreDoubleExclusiveInstructions[index].mask) == t32LoadStoreDoubleExclusiveInstructions[index].value)
     {
       if (t32LoadStoreDoubleExclusiveInstructions[index].mask == 0)
@@ -1151,12 +1151,11 @@ struct instruction32bit * t32decodeDataProc(u32int instr)
 {
 
 #ifdef DECODER_DEBUG
-  printf("t32decodeDataProc %08x\n", instr);
+  dumpInstruction("t32decodeDataProc", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t32DataProcInstructions))
   {
-//    printf("Index: %08x\n", index);
 	if ( (instr & t32DataProcInstructions[index].mask) == t32DataProcInstructions[index].value)
     {
       if (t32DataProcInstructions[index].mask == 0)
@@ -1184,7 +1183,7 @@ struct instruction32bit * t32decodeCoproc(u32int instr)
 struct instruction32bit * t32decodeBranchMisc(u32int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t32BranchMisc %08x\n", instr);
+  dumpInstruction("t32BranchMisc", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t32BranchMiscInstructions))
@@ -1211,7 +1210,7 @@ struct instruction32bit * t32decodeStoreSingle(u32int instr)
 {
 
 #ifdef DECODER_DEBUG
-  printf("t32decodeSingleStore %08x\n", instr);
+  dumpInstruction("t32decodeSingleStore", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t32SingleStoreInstructions))
@@ -1244,7 +1243,7 @@ struct instruction32bit * t32decodeLoadByte(u32int instr)
 {
 
 #ifdef DECODER_DEBUG
-  printf("t32decodeLoadByte %08x\n", instr);
+  dumpInstruction("t32decodeLoadByte", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t32LoadByteInstructions))
@@ -1270,7 +1269,7 @@ struct instruction32bit * t32decodeLoadByte(u32int instr)
 struct instruction32bit * t32decodeLoadHalfWord(u32int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t32LoadHalfWord %08x\n", instr);
+  dumpInstruction("t32LoadHalfWord", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t32LoadHalfWordInstructions))
@@ -1302,7 +1301,7 @@ struct instruction32bit * t32decodeLoadWord(u32int instr)
 struct instruction32bit * t32decodeMultiply(u32int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t32decodeMultiply %08x\n", instr);
+  dumpInstruction("t32decodeMultiply", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t32MultiplyInstructions))
@@ -1336,7 +1335,7 @@ struct instruction32bit * t32decodeLongMultiply(u32int instr)
 struct instruction32bit * t16decodeUnconditionals(u16int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t16UnConditional %08x\n", instr);
+  dumpInstruction("t16UnConditional", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t16UnconditionalInstructions))
@@ -1362,7 +1361,7 @@ struct instruction32bit * t16decodeUnconditionals(u16int instr)
 struct instruction32bit * t16decodeConditionalBranchSVC(u16int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t16ConditionalBranchSvc %08x\n", instr);
+  dumpInstruction("t16ConditionalBranchSvc", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t16ConditionalBranchSvcInstructions))
@@ -1401,7 +1400,7 @@ struct instruction32bit * t16decodeMisc(u16int instr)
 {
 
 #ifdef DECODER_DEBUG
-  printf("t16decodeMisc %08x\n", instr);
+  dumpInstruction("t16decodeMisc", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t16MiscInstructions))
@@ -1427,7 +1426,7 @@ struct instruction32bit * t16decodeMisc(u16int instr)
 struct instruction32bit * t16decodeSPAddr(u16int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t16SPInstruction %08x\n", instr);
+	dumpInstruction("t16SPInstruction", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t16SPInstructions))
@@ -1453,7 +1452,7 @@ struct instruction32bit * t16decodeSPAddr(u16int instr)
 struct instruction32bit * t16decodePCAddr(u16int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t16decodePCAddr %08x\n", instr);
+  dumpInstruction("t16decodePCAddr", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t16PCRelInstructions))
@@ -1479,7 +1478,7 @@ struct instruction32bit * t16decodePCAddr(u16int instr)
 struct instruction32bit * t16decodeLoadStore(u16int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t16decodeLoadStore %08x\n", instr);
+  dumpInstruction("t16decodeLoadStore", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t16LoadStoreInstructions))
@@ -1505,7 +1504,7 @@ struct instruction32bit * t16decodeLoadStore(u16int instr)
 struct instruction32bit * t16decodeLDR(u16int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t16decodeLDR %08x\n", instr);
+  dumpInstruction("t16decodeLDR", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t16ldrInstructions))
@@ -1532,12 +1531,11 @@ struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr)
 {
 
 #ifdef DECODER_DEBUG
-  printf("t16decodeSpecialBranch %08x\n", instr);
+  dumpInstruction("t16decodeSpecialBranch", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t16SpecialBranchInstructions))
   {
-//    printf("indx: %08x\n",index);
 	if ( (instr & t16SpecialBranchInstructions[index].mask) == t16SpecialBranchInstructions[index].value)
     {
       if (t16SpecialBranchInstructions[index].mask == 0)
@@ -1559,7 +1557,7 @@ struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr)
 struct instruction32bit * t16decodeDataProc(u16int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t16decodeDataProc %08x\n", instr);
+  dumpInstruction("t16decodeDataProc", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t16DataProcInstructions))
@@ -1585,7 +1583,7 @@ struct instruction32bit * t16decodeDataProc(u16int instr)
 struct instruction32bit * t16decodeArithmetic(u16int instr)
 {
 #ifdef DECODER_DEBUG
-  printf("t16decodeArithmetic %08x\n", instr);
+  dumpInstruction("t16decodeArithmetic", instr);
 #endif
   u32int index = 0;
   while (index < INDEX_OF(t16ArithmeticInstructions))

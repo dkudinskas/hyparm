@@ -153,6 +153,8 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 		else
 		{
 			currAddress++;
+			//for decoder compatibility with Thumb
+			currhwAddress = currAddress;
 			instruction = *currAddress;
 		}
 	} // while ends
