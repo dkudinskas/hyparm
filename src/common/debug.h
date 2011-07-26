@@ -24,8 +24,10 @@ __attribute((noreturn)) void DIE_NOW(GCONTXT * context, char* msg);
 /* output to serial */
 u32int printf(const char *fmt, ...);
 
+#ifdef CONFIG_MMC
 /* output to mmc */
 u32int fprintf(const char *fmt, ...);
+#endif
 
 u32int vsprintf(char *buf, const char *fmt, va_list args);
 

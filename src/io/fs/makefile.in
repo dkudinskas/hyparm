@@ -1,2 +1,2 @@
-SRCS += src/io/fs/fat.c
+MMC_SRCS-${CONFIG_MMC} += src/io/fs/fat.c
 
