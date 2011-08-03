@@ -51,23 +51,15 @@
   .equ  GC_SPSR_UND_OFFS, 0x90
 
 
-/* address of guest contest in R0 */
-.global registerGuestPointer
-.func   registerGuestPointer
-registerGuestPointer:
-  PUSH    {R0, R1}
-  LDR     R1, =guestContextSpace
-  STR     R0, [R1]
-
-  /* restore dirty registers */
-  POP     {R0, R1}
-  MOV     PC, LR
-.endfunc
-
-
 .global startupHypervisor
 .func   startupHypervisor
 startupHypervisor:
+
+  /*
+   * The hypervisor is started through U-Boot, and any command line arguments are passed as following:
+   * - r0 contains the number of arguments;
+   * - r1 is a pointer to an array of null-terminated C strings;
+   */
 
 /* Initialize stacks for all modes */
   /* set IRQ stack */
@@ -97,9 +89,6 @@ startupHypervisor:
 
   /* switch back to svc mode */
   MSR     CPSR_c,#(SVC_MODE | I_BIT | F_BIT)
-
-  /* save to-be-dirty registers */
-  PUSH    {R1, R2, R3, R4, lr}
 
   /* register allocated guest context */
   .ifdef CONFIG_CPU_HAS_ARM_SEC_EXT
@@ -147,8 +136,20 @@ startupHypervisor:
     STR     R3, [R4], #4
   .endif
 
+  /* call hypervisor main */
+    B main
+.endfunc
+
+/* address of guest contest in R0 */
+.global registerGuestPointer
+.func   registerGuestPointer
+registerGuestPointer:
+  PUSH    {R0, R1}
+  LDR     R1, =guestContextSpace
+  STR     R0, [R1]
+
   /* restore dirty registers */
-  POP     {R1, R2, R3, R4, lr}
+  POP     {R0, R1}
   MOV     PC, LR
 .endfunc
 

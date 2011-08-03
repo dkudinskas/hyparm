@@ -38,7 +38,6 @@
 #define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
 
 
-extern void startupHypervisor(void);
 extern void registerGuestPointer(u32int gContext);
 
 void printUsage(void);
@@ -80,9 +79,6 @@ int main(int argc, char *argv[])
 
   /* create the frametable from which we can alloc memory */
   initialiseFrameTable();
-
-  /* sets up stack addresses and exception handlers */
-  startupHypervisor();
 
   /* initialize guest context */
   gContext = allocateGuest();
