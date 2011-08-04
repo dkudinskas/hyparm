@@ -34,9 +34,10 @@
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 
+#define CLI_BUFFER_SIZE 64
+
 #define HIDDEN_RAM_START   0x8f000000
 #define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
-
 
 extern void registerGuestPointer(u32int gContext);
 
@@ -86,6 +87,46 @@ int main(int argc, char *argv[])
 
   /* Setup MMU for Hypervisor */
   initialiseVirtualAddressing();
+
+#ifdef CONFIG_CLI
+
+  char buffer[CLI_BUFFER_SIZE];
+  char *const bufferEnd = buffer + (CLI_BUFFER_SIZE - 1);
+  while(1)
+  {
+    serialPuts("H> ");
+    char *bufferPtr = buffer;
+    while (bufferPtr < bufferEnd)
+    {
+      *bufferPtr = serialGetc();
+      switch (*bufferPtr)
+      {
+      case 0:
+        continue;
+      case '\b':
+        serialPuts("backspace");
+        break;
+      }
+      if (*bufferPtr < ' ')
+      {
+        break;
+      }
+      serialPutc(*bufferPtr);
+      ++bufferPtr;
+    }
+    serialPuts("\r\n");
+    if (bufferPtr == bufferEnd)
+    {
+    	serialPuts("Error: line too long\r\n");
+    	continue;
+    }
+    *bufferPtr = 0;
+    serialPuts("\r\nBuffer is [");
+    serialPuts(buffer);
+    serialPuts("]\r\n");
+  }
+
+#else
 
   if (parseCommandline(argc, argv) < 0)
   {
@@ -140,6 +181,8 @@ int main(int argc, char *argv[])
 
   // does not return
   doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
+
+#endif /* CONFIG_CLI */
 }
 
 void printUsage(void)
