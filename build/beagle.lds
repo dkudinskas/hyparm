@@ -1,6 +1,7 @@
 OUTPUT_ARCH("arm")
 OUTPUT_FORMAT("elf32-littlearm")
 TARGET("elf32-littlearm")
+ENTRY("_start")
 
 MEMORY
 {

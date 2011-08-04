@@ -1,144 +1,187 @@
 /* Standard definitions */
 
-  .equ  A_BIT,          0x100     /* when set, async aborts are disabled */
-  .equ  I_BIT,          0x80      /* when set, IRQ is disabled */
-  .equ  F_BIT,          0x40      /* when set, FIQ is disabled */
+.equ A_BIT,            0x100     /* when set, async aborts are disabled */
+.equ I_BIT,             0x80      /* when set, IRQ is disabled */
+.equ F_BIT,             0x40      /* when set, FIQ is disabled */
 
-  .equ  USR_MODE,       0x10
-  .equ  FIQ_MODE,       0x11
-  .equ  IRQ_MODE,       0x12
-  .equ  SVC_MODE,       0x13
-  .equ  ABT_MODE,       0x17
-  .equ  UND_MODE,       0x1B
-  .equ  SYS_MODE,       0x1F
+.equ USR_MODE,          0x10
+.equ FIQ_MODE,          0x11
+.equ IRQ_MODE,          0x12
+.equ SVC_MODE,          0x13
+.equ ABT_MODE,          0x17
+.equ UND_MODE,          0x1B
+.equ SYS_MODE,          0x1F
 
-  .equ  GC_R0_OFFS,       0x0
-  .equ  GC_R1_OFFS,       0x4
-  .equ  GC_R2_OFFS,       0x8
-  .equ  GC_R3_OFFS,       0xc
-  .equ  GC_R4_OFFS,       0x10
-  .equ  GC_R5_OFFS,       0x14
-  .equ  GC_R6_OFFS,       0x18
-  .equ  GC_R7_OFFS,       0x1c
-  .equ  GC_R8_OFFS,       0x20
-  .equ  GC_R9_OFFS,       0x24
-  .equ  GC_R10_OFFS,      0x28
-  .equ  GC_R11_OFFS,      0x2c
-  .equ  GC_R12_OFFS,      0x30
-  .equ  GC_R13_OFFS,      0x34
-  .equ  GC_R14_OFFS,      0x38
-  .equ  GC_R15_OFFS,      0x3c
-  .equ  GC_CPSR_OFFS,     0x40
-  .equ  GC_R8_FIQ_OFFS,   0x44
-  .equ  GC_R9_FIQ_OFFS,   0x48
-  .equ  GC_R10_FIQ_OFFS,  0x4c
-  .equ  GC_R11_FIQ_OFFS,  0x50
-  .equ  GC_R12_FIQ_OFFS,  0x54
-  .equ  GC_R13_FIQ_OFFS,  0x58
-  .equ  GC_R14_FIQ_OFFS,  0x5c
-  .equ  GC_SPSR_FIQ_OFFS, 0x60
-  .equ  GC_R13_SVC_OFFS,  0x64
-  .equ  GC_R14_SVC_OFFS,  0x68
-  .equ  GC_SPSR_SVC_OFFS, 0x6c
-  .equ  GC_R13_ABT_OFFS,  0x70
-  .equ  GC_R14_ABT_OFFS,  0x74
-  .equ  GC_SPSR_ABT_OFFS, 0x78
-  .equ  GC_R13_IRQ_OFFS,  0x7c
-  .equ  GC_R14_IRQ_OFFS,  0x80
-  .equ  GC_SPSR_IRQ_OFFS, 0x84
-  .equ  GC_R13_UND_OFFS,  0x88
-  .equ  GC_R14_UND_OFFS,  0x8c
-  .equ  GC_SPSR_UND_OFFS, 0x90
+.equ GC_R0_OFFS,        0x00
+.equ GC_R1_OFFS,        0x04
+.equ GC_R2_OFFS,        0x08
+.equ GC_R3_OFFS,        0x0C
+.equ GC_R4_OFFS,        0x10
+.equ GC_R5_OFFS,        0x14
+.equ GC_R6_OFFS,        0x18
+.equ GC_R7_OFFS,        0x1C
+.equ GC_R8_OFFS,        0x20
+.equ GC_R9_OFFS,        0x24
+.equ GC_R10_OFFS,       0x28
+.equ GC_R11_OFFS,       0x2C
+.equ GC_R12_OFFS,       0x30
+.equ GC_R13_OFFS,       0x34
+.equ GC_R14_OFFS,       0x38
+.equ GC_R15_OFFS,       0x3C
+.equ GC_CPSR_OFFS,      0x40
+.equ GC_R8_FIQ_OFFS,    0x44
+.equ GC_R9_FIQ_OFFS,    0x48
+.equ GC_R10_FIQ_OFFS,   0x4C
+.equ GC_R11_FIQ_OFFS,   0x50
+.equ GC_R12_FIQ_OFFS,   0x54
+.equ GC_R13_FIQ_OFFS,   0x58
+.equ GC_R14_FIQ_OFFS,   0x5C
+.equ GC_SPSR_FIQ_OFFS,  0x60
+.equ GC_R13_SVC_OFFS,   0x64
+.equ GC_R14_SVC_OFFS,   0x68
+.equ GC_SPSR_SVC_OFFS,  0x6C
+.equ GC_R13_ABT_OFFS,   0x70
+.equ GC_R14_ABT_OFFS,   0x74
+.equ GC_SPSR_ABT_OFFS,  0x78
+.equ GC_R13_IRQ_OFFS,   0x7C
+.equ GC_R14_IRQ_OFFS,   0x80
+.equ GC_SPSR_IRQ_OFFS,  0x84
+.equ GC_R13_UND_OFFS,   0x88
+.equ GC_R14_UND_OFFS,   0x8C
+.equ GC_SPSR_UND_OFFS,  0x90
 
 
-.global startupHypervisor
-.func   startupHypervisor
-startupHypervisor:
+.text
+
+/*
+ * Entry point of the hypervisor.
+ */
+.global _start
+_start:
 
   /*
    * The hypervisor is started through U-Boot, and any command line arguments are passed as following:
-   * - r0 contains the number of arguments;
-   * - r1 is a pointer to an array of null-terminated C strings;
+   * - R0 contains the number of arguments;
+   * - R1 is a pointer to an array of null-terminated C strings.
    */
 
-/* Initialize stacks for all modes */
-  /* set IRQ stack */
-  MSR     CPSR_c,#(IRQ_MODE | I_BIT | F_BIT)
-  LDR     sp,=irqStack
-
-  /* set FIQ stack */
-  MSR     CPSR_c,#(FIQ_MODE | I_BIT | F_BIT)
-  LDR     sp,=fiqStack
-
-  /* set SVC stack */
-  MSR     CPSR_c,#(SVC_MODE | I_BIT | F_BIT)
-  LDR     sp,=serviceStack
-
-  /* set ABT stack */
-  MSR     CPSR_c,#(ABT_MODE | I_BIT | F_BIT)
-  LDR     sp,=abortStack
-
-  /* set UND stack */
-  MSR     CPSR_c,#(UND_MODE | I_BIT | F_BIT)
-  LDR     sp,=undefinedStack
-
-  /* set user/system stack */
-  MSR     CPSR_c,#(SYS_MODE | I_BIT | F_BIT)
-  /* since we will start the guest thinking its in SVC mode, choose this stack*/
-  LDR     sp,=userStack
-
-  /* switch back to svc mode */
-  MSR     CPSR_c,#(SVC_MODE | I_BIT | F_BIT)
-
-  /* register allocated guest context */
-  .ifdef CONFIG_CPU_HAS_ARM_SEC_EXT
-    /* Set VBAR to exceptionVectorBase. On the OMAP35xx, this eliminates a few branches through the NAND and the SRAM */
-    LDR     r4, =exceptionVectorBase
-    MCR     p15, 0, r4, c12, c0, 0
+  /*
+   * Set up stack pointer for all modes (SVC,FIQ,IRQ,ABT,UND,SYS/USR) and switch back to SVC mode.
+   * We do not make use of secure modes, so we do not set up a stack pointer for MON mode.
+   * Hence, the hypervisor and its guests must never execute the SMC instruction.
+   */
+  .ifdef CONFIG_CPU_ARCH_ARMV7_A
+    CPSID   if, #FIQ_MODE
+    LDR     SP, =fiqStack
+    CPS     #IRQ_MODE
+    LDR     SP, =irqStack
+    CPS     #ABT_MODE
+    LDR     SP, =abtStack
+    CPS     #UND_MODE
+    LDR     SP, =undStack
+    CPS     #SYS_MODE
+    LDR     SP, =usrStack
+    CPS     #SVC_MODE
   .else
-    /* Fix RAM exception vectors on TI OMAP 35xx */
-    .ifdef CONFIG_CPU_TI_OMAP_35XX
-      LDR     R4, [pc, #0x20]
-      LDR     R3, [pc, #0x20]
-      STR     R3, [R4], #4
-      STR     R3, [R4], #4
-      STR     R3, [R4], #4
-      STR     R3, [R4], #4
-      STR     R3, [R4], #4
-      STR     R3, [R4], #4
-      STR     R3, [R4], #4
-      ADD     pc, pc, #0x4
-      /* next 2 lines are data */
-      .word 0x4020FFC8
-      LDR     pc, [pc, #0x14]
-    .endif
-
-    /* Batch installation of interupt handlers */
-    /* This section of code is order dependant */
-    .ifndef CONFIG_CPU_TI_OMAP_35XX
-      /* On the TI OMAP 35xx R4 is already correct */
-      LDR     R4,=exception_vector @First interupt handler address
-      LDR     R4, [R4]
-    .endif
-    LDR     R3,=undHandler
-    STR     R3, [R4], #4       @auto increment to the next handler address
-    LDR     R3,=swiHandler
-    STR     R3, [R4], #4       @install swi handler
-    LDR     R3,=pabthandler
-    STR     R3, [R4], #4
-    LDR     R3,=dabtHandler
-    STR     R3, [R4], #4
-    LDR     R3,=monHandler
-    STR     R3, [R4], #4
-    LDR     R3,=irqHandler
-    STR     R3, [R4], #4
-    LDR     R3,=fiqHandler
-    STR     R3, [R4], #4
+    MSR     CPSR_c, #(FIQ_MODE | I_BIT | F_BIT)
+    LDR     SP, =fiqStack
+    MSR     CPSR_c, #(IRQ_MODE | I_BIT | F_BIT)
+    LDR     SP, =irqStack
+    MSR     CPSR_c, #(ABT_MODE | I_BIT | F_BIT)
+    LDR     SP, =abtStack
+    MSR     CPSR_c, #(UND_MODE | I_BIT | F_BIT)
+    LDR     SP, =undStack
+    MSR     CPSR_c, #(SYS_MODE | I_BIT | F_BIT)
+    LDR     SP, =usrStack
+    MSR     CPSR_c, #(SVC_MODE | I_BIT | F_BIT)
   .endif
+  LDR     SP, =svcStack
+  /*
+   * Install exception handlers
+   */
+  .ifdef CONFIG_CPU_HAS_ARM_SEC_EXT
+    /*
+     * The security extensions introduce a register to set the exception vector base address (VBAR).
+     * On the TI OMAP 35xx, this eliminates a few branches through the NAND and the SRAM.
+     */
+    LDR     R2, =exceptionVectorBase
+    MCR     P15, 0, R2, C12, C0, 0
+  .else
+    .ifdef CONFIG_CPU_TI_OMAP_35XX
+      /*
+       * On the TI OMAP 35xx, U-Boot overwrites the default RAM exception vectors, which can normally be used as they are.
+       * Restore them.
+       */
+      LDR     R2, [PC, #0x20]
+      LDR     R3, [PC, #0x20]
+      STR     R3, [R2], #4
+      STR     R3, [R2], #4
+      STR     R3, [R2], #4
+      STR     R3, [R2], #4
+      STR     R3, [R2], #4
+      STR     R3, [R2], #4
+      STR     R3, [R2], #4
+      ADD     PC, PC, #4
+      /*
+       * The next two lines are data; they contain:
+       * - the start address of the RAM exception vectors;
+       * - the default instruction to be executed for all exceptions as defined in the TI OMAP 35xx TRM.
+       */
+      .word   0x4020FFC8
+      LDR     PC, [PC, #0x14]
+    .endif
+    /*
+     * Batch install exception handler addresses.
+     */
+    .ifndef CONFIG_CPU_TI_OMAP_35XX
+      /*
+       * Set R2 to the first exception handler address to be written.
+       * On the TI OMAP 35xx R2 is already correct.
+       */
+      LDR     R2, =exception_vector
+      LDR     R2, [R2]
+    .endif
+    LDR     R3, =undHandler
+    STR     R3, [R2], #4
+    LDR     R3, =swiHandler
+    STR     R3, [R2], #4
+    LDR     R3, =pabthandler
+    STR     R3, [R2], #4
+    LDR     R3, =dabtHandler
+    STR     R3, [R2], #4
+    LDR     R3, =monHandler
+    STR     R3, [R2], #4
+    LDR     R3, =irqHandler
+    STR     R3, [R2], #4
+    LDR     R3, =fiqHandler
+    STR     R3, [R2], #4
+  .endif
+  /*
+   * Branch to main.
+   * This function must never return.
+   */
+  B       main
+infiniteLoopAfterMain:
+  B       =infiniteLoopAfterMain
 
-  /* call hypervisor main */
-    B main
-.endfunc
+
+/*
+ * Exception vector; only used in case security extensions are implemented.
+ */
+.ifdef CONFIG_CPU_HAS_ARM_SEC_EXT
+  .balign 0x20
+  .global exceptionVectorBase
+exceptionVectorBase:
+  MOV     PC, #0x00014000
+  B       undHandler
+  B       svcHandler
+  B       pabthandler
+  B       dabtHandler
+  B       monHandler
+  B       irqHandler
+  B       fiqHandler
+.endif
+
 
 /* address of guest contest in R0 */
 .global registerGuestPointer
@@ -313,22 +356,11 @@ registerGuestPointer:
 .endm
 
 
-.ifdef CONFIG_CPU_HAS_ARM_SEC_EXT
-  .align 5
-exceptionVectorBase:
-  MOV     pc, #0x00014000
-  B       undHandler
-  B       swiHandler
-  B       pabthandler
-  B       dabtHandler
-  B       monHandler
-  B       irqHandler
-  B       fiqHandler
-.endif
 
 
-.global swiHandler
-swiHandler:
+
+.global svcHandler
+svcHandler:
     /* We can NOT assume that the data abort is guest code */
     push   {LR}
   
@@ -538,23 +570,25 @@ exception_vector:
           .endif
         .endif
 
+
 .bss
+
 /* pointer to current guest context structure lives here */
 guestContextSpace:
-        .space 4
+  .space 4
 
 /* physical real mode stacks */
-userStack:
-        .space 1024
-serviceStack:
-        .space 1024
-abortStack:
-        .space 1024
-undefinedStack:
-        .space 1024
+usrStack:
+  .space 1024
+svcStack:
+  .space 1024
+abtStack:
+  .space 1024
+undStack:
+  .space 1024
 irqStack:
-        .space 1024
+  .space 1024
 fiqStack:
-        .space 1024
+  .space 1024
 
 .section .rodata
