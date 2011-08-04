@@ -8,4 +8,7 @@ int stringcmp (const char * s1, const char * s2);
 u32int strtoi(char * str);
 u32int stringlen(char * s);
 char * stringcpy(char * dest, char *src);
+
+char *strncpy(char *destination, const char *source, u32int num);
+
 #endif
