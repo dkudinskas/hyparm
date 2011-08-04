@@ -31,6 +31,15 @@ void serialPutc(char c)
 
 char serialGetc()
 {
+  while ((beLoadUart(UART_LSR_REG, 3) & UART_LSR_RX_FIFO_E) == 0)
+  {
+    // do nothing
+  }
+  return (char)beLoadUart(UART_RHR_REG, 3);
+}
+
+char serialGetcAsync()
+{
   return (char)beLoadUart(UART_RHR_REG, 3);
 }
 
