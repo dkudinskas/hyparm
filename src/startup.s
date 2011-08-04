@@ -63,9 +63,8 @@ _start:
    * The hypervisor is started through U-Boot, and any command line arguments are passed as following:
    * - R0 contains the number of arguments;
    * - R1 is a pointer to an array of null-terminated C strings.
-   */
-
-  /*
+   * These arguments will be used by main and will be preserved if we don't touch R0 and R1.
+   *
    * Set up stack pointer for all modes (SVC,FIQ,IRQ,ABT,UND,SYS/USR) and switch back to SVC mode.
    * We do not make use of secure modes, so we do not set up a stack pointer for MON mode.
    * Hence, the hypervisor and its guests must never execute the SMC instruction.
