@@ -1,4 +1,5 @@
-#include "cli.h"
+#include "cli/cli.h"
+#include "cli/cliLoad.h"
 
 #include "common/ctype.h"
 #include "common/stringFunctions.h"
@@ -18,15 +19,48 @@
  * CAUTION: for each token, a buffer of size CLI_BUFFER_SIZE is allocated on the stack.
  * Only increase this number if you are sure you will not cause a stack overflow!
  */
-#define CLI_MAX_TOKENS   4
+#define CLI_MAX_TOKENS    4
 
+/*
+ * Command handler function pointer type.
+ *
+ * Each command handler must be of the following form:
+ * void handler(int argc, char **argv);
+ */
+typedef void (*cliCommandHandler)(int argc, const char *const *argv);
 
+/*
+ * Command
+ */
+struct cliCommand
+{
+  const char *const command;
+  cliCommandHandler const handler;
+};
+
+/*
+ * Number of commands in the command table.
+ */
+#define CLI_NUM_COMMANDS  2
+
+/*
+ * Command table (in alphabetical order of command names).
+ */
+static struct cliCommand commandTable[CLI_NUM_COMMANDS] =
+{
+    {"loadBinary", cliLoadBinary},
+    {"loadImage", cliLoadImage}
+};
+
+/*
+ * Structure to hold the state of the CLI parser.
+ */
 struct parseState
 {
-  unsigned quoted : 8;
-  unsigned escape : 8;
-  unsigned loop : 8;
-  unsigned tokenCount : 8;
+  unsigned quoted       : 8;
+  unsigned escape       : 8;
+  unsigned loop         : 8;
+  unsigned tokenCount   : 8;
 };
 
 
@@ -53,7 +87,7 @@ void enterCliLoop()
           *bufferPtr = serialGetc();
           if (*bufferPtr == '[')
           {
-            *bufferPtr == serialGetc();
+            *bufferPtr = serialGetc();
             continue;
           }
           break;
@@ -95,11 +129,30 @@ void enterCliLoop()
       continue;
     }
     *bufferPtr = 0;
-    serialPuts("Buffer is [");
-    serialPuts(buffer);
-    serialPuts("]\r\n");
     run(buffer);
   }
+}
+
+s32int findCommand(const char *command)
+{
+  s32int min = 0;
+  s32int max = CLI_NUM_COMMANDS - 1;
+  s32int cmp, mid;
+  do
+  {
+    mid = (min + max) >> 1;
+    cmp = strcmp(command, commandTable[mid].command);
+    if (cmp > 0)
+    {
+      min = mid + 1;
+    }
+    else
+    {
+      max = mid - 1;
+    }
+  }
+  while (cmp && min <= max);
+  return cmp ? -1 : mid;
 }
 
 void run(const char *buffer)
@@ -189,6 +242,7 @@ void run(const char *buffer)
   }
   if (state.tokenCount > 0)
   {
+#ifdef TEST_CLI
     int i;
     serialPuts("Command: '");
     serialPuts(tokens[0]);
@@ -201,5 +255,15 @@ void run(const char *buffer)
       serialPuts("'\r\n");
     }
     serialPuts("Done\r\n");
+#endif
+    s32int commandIndex = findCommand(tokens[0]);
+    if (commandIndex < 0)
+    {
+      printf("Error: command '%s' not found\r\n", tokens[0]);
+      return;
+    }
+#ifndef TEST_CLI
+    (*(commandTable[commandIndex].handler))(state.tokenCount - 1, &tokens[1]);
+#endif
   }
 }

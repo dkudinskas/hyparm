@@ -1,6 +1,10 @@
+#include "cli/cli.h"
 #include "drivers/beagle/beUart.h"
 
 void run(const char *buffer);
+
+CLI_COMMAND_HANDLER(cliLoadBinary) {}
+CLI_COMMAND_HANDLER(cliLoadImage) {}
 
 int main(int argc, char **argv)
 {

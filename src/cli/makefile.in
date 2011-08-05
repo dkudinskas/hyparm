@@ -1,1 +1,2 @@
 SRCS += src/cli/cli.c
+SRCS += src/cli/cliLoad.c

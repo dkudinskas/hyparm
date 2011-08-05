@@ -3,22 +3,8 @@
 
 #include <stdio.h>
 
-char serialGetc()
-{
-  return '\0';
-}
-
-void serialPuts(char *c)
-{
-  while (*c)
-  {
-    putchar(*c++);
-  }
-}
-
-void serialPutc(char c)
-{
-  putchar(c);
-}
+char serialGetc();
+void serialPuts(char *c);
+void serialPutc(char c);
 
 #endif

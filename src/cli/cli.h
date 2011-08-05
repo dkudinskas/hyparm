@@ -1,11 +1,14 @@
-#ifndef __CLI_H__
-#define __CLI_H__ 1
+#ifndef __CLI__CLI_H__
+#define __CLI__CLI_H__ 1
 
 
-#ifdef TEST_CLI
-void enterCliLoop(void);
-#else
-void enterCliLoop(void) __attribute__((noreturn));
+#define CLI_COMMAND_HANDLER(name)  void name(int argc, const char *const *argv)
+
+
+void enterCliLoop(void)
+#ifndef TEST_CLI
+  __attribute__((noreturn))
 #endif
+  ;
 
 #endif
