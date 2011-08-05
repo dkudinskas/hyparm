@@ -1,4 +1,3 @@
 SRCS += src/main.c
-SRCS += src/cli.c
 
 RAW_ASMS += src/startup.s

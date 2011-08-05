@@ -26,6 +26,7 @@ CCFLAGS = -g -O3 -fno-common -ffixed-r8 -msoft-float -D__KERNEL__ -DTEXT_BASE=$(
 LDFLAGS = -T beagle.lds -g -o $(APP_NAME).elf -Map $(APP_NAME).map --cref
 
 include $(DEPTH)/src/makefile.in
+include $(DEPTH)/src/cli/makefile.in
 include $(DEPTH)/src/common/makefile.in
 include $(DEPTH)/src/io/makefile.in
 include $(DEPTH)/src/io/fs/makefile.in

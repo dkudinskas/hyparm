@@ -1,5 +1,5 @@
 #ifdef CONFIG_CLI
-#include "cli.h"
+#include "cli/cli.h"
 #endif
 
 #include "common/debug.h"
