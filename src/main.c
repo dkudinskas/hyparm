@@ -43,8 +43,8 @@
 
 extern void registerGuestPointer(u32int gContext);
 
-void printUsage(void);
-int parseCommandline(int argc, char *argv[]);
+static void printUsage(void);
+static int parseCommandline(int argc, char *argv[]);
 void registerGuestContext(u32int gcAddr);
 
 #ifdef CONFIG_MMC
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 #endif /* CONFIG_CLI */
 }
 
-void printUsage(void)
+static void printUsage(void)
 {
   printf("Loader usage:\n");
   printf("go <loaderAddr> -kernel <kernAddress> -initrd <initrdAddr>\n");
@@ -162,7 +162,7 @@ void printUsage(void)
   return;
 }
 
-int parseCommandline(int argc, char *argv[])
+static int parseCommandline(int argc, char *argv[])
 {
   int cmpFlag = 0;
   /***************** Check given arguments ************************/
@@ -209,3 +209,4 @@ int parseCommandline(int argc, char *argv[])
   }
   return 1;
 }
+

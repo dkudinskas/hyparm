@@ -64,7 +64,8 @@ struct parseState
 };
 
 
-void run(const char *command);
+static s32int findCommand(const char *command);
+static void run(const char *command);
 
 
 void enterCliLoop()
@@ -133,7 +134,7 @@ void enterCliLoop()
   }
 }
 
-s32int findCommand(const char *command)
+static s32int findCommand(const char *command)
 {
   s32int min = 0;
   s32int max = CLI_NUM_COMMANDS - 1;
@@ -155,7 +156,7 @@ s32int findCommand(const char *command)
   return cmp ? -1 : mid;
 }
 
-void run(const char *buffer)
+static void run(const char *buffer)
 {
   /*
    * Parse the string in the buffer into an array of tokens.
