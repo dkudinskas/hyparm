@@ -15,7 +15,7 @@ int isalpha(int c)
 
 int iscntrl(int c)
 {
-  return (c >= '\0' && c <= ASCII_US) || (c == ASCII_DEL);
+  return (c >= ASCII_CONTROL_BEGIN && c <= ASCII_CONTROL_END) || (c == ASCII_DEL);
 }
 
 int isdigit(int c)
@@ -35,7 +35,7 @@ int islower(int c)
 
 int isprint(int c)
 {
-  return c >= ASCII_SPACE && c <= ASCII('~');
+  return c >= ASCII_PRINTABLE_BEGIN && c <= ASCII_PRINTABLE_END;
 }
 
 int ispunct(int c)
