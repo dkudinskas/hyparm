@@ -15,7 +15,7 @@ int isalpha(int c)
 
 int iscntrl(int c)
 {
-  return (c >= ASCII_NUL && c <= ASCII_US) || (c == ASCII_DEL);
+  return (c >= '\0' && c <= ASCII_US) || (c == ASCII_DEL);
 }
 
 int isdigit(int c)
@@ -154,6 +154,3 @@ int toupper(int c)
 {
   return islower(c) ? c - ASCII('a') + ASCII('A') : c;
 }
-
-#endif
-

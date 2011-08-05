@@ -9,6 +9,4 @@ u32int strtoi(char * str);
 u32int stringlen(char * s);
 char * stringcpy(char * dest, char *src);
 
-char *strncpy(char *destination, const char *source, u32int num);
-
 #endif

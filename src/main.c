@@ -1,3 +1,7 @@
+#ifdef CONFIG_CLI
+#include "cli.h"
+#endif
+
 #include "common/debug.h"
 #include "common/memFunctions.h"
 #include "common/stringFunctions.h"

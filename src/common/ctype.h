@@ -1,7 +1,6 @@
 #ifndef __COMMON__CTYPE_H__
 #define __COMMON__CTYPE_H__ 1
 
-#define ASCII_NUL    0x00
 #define ASCII_SOH    0x01
 #define ASCII_STX    0x02
 #define ASCII_ETX    0x03
