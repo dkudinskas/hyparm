@@ -38,12 +38,7 @@ void enterCliLoop()
   char buffer[CLI_BUFFER_SIZE];
   char *const bufferEnd = buffer + (CLI_BUFFER_SIZE - 1);
   int ignore_n = 1;
-#ifdef TEST_CLI
-  int loopCount = 0;
-  for (loopCount = 0; loopCount < 10; ++loopCount)
-#else
   while (1)
-#endif
   {
     serialPuts("H> ");
     char *bufferPtr = buffer;
