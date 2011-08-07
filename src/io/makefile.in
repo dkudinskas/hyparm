@@ -1,2 +1,2 @@
-SRCS += src/io/mmc.c
-SRCS += src/io/partitions.c
+MMC_SRCS-${CONFIG_MMC} += src/io/mmc.c
+MMC_SRCS-${CONFIG_MMC} += src/io/partitions.c

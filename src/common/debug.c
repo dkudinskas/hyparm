@@ -10,9 +10,10 @@
 
 extern GCONTXT * getGuestContext(void); //from main.c
 
+#ifdef CONFIG_MMC
 extern fatfs mainFilesystem;
-
 extern file * debugStream;
+#endif
 
 void banner(char* msg)
 {
@@ -80,6 +81,7 @@ u32int printf(const char *fmt, ...)
   return i;
 }
 
+#if CONFIG_MMC
 u32int fprintf(const char *fmt, ...)
 {
   va_list args;
@@ -95,7 +97,7 @@ u32int fprintf(const char *fmt, ...)
 
   return i;
 }
-
+#endif
 
 u32int vsprintf(char *buf, const char *fmt, va_list args)
 {

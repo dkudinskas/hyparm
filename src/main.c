@@ -9,7 +9,10 @@
 #include "drivers/beagle/beClockMan.h"
 #include "drivers/beagle/beUart.h"
 #include "drivers/beagle/beGPIO.h"
+
+#ifdef CONFIG_MMC
 #include "drivers/beagle/beMMC.h"
+#endif
 
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/LED.h"
@@ -26,9 +29,11 @@
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/frameAllocator.h"
 
+#ifdef CONFIG_MMC
 #include "io/mmc.h"
 #include "io/partitions.h"
 #include "io/fs/fat.h"
+#endif
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
 
@@ -45,10 +50,13 @@ void printUsage(void);
 int parseCommandline(int argc, char *argv[]);
 void registerGuestContext(u32int gcAddr);
 
+#ifdef CONFIG_MMC
 fatfs mainFilesystem;
 partitionTable primaryPartitionTable;
 struct mmc *mmcDevice;
 file * debugStream;
+#endif
+
 u32int kernAddr;
 u32int initrdAddr;
 
@@ -123,7 +131,8 @@ int main(int argc, char *argv[])
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
 
-  /*u32int err = 0;
+#ifdef CONFIG_MMC
+  u32int err = 0;
   if ((err = mmcMainInit()) != 0)
   {
     DIE_NOW(0, "Failed to initialize mmc code.\n");
@@ -142,15 +151,13 @@ int main(int argc, char *argv[])
   debugStream = fopen(&mainFilesystem, "debug");
   if (debugStream == 0)
   {
-    DIE_NOW(0, "Failed to open (create) debug steam file.\n");
+    DIE_NOW(0, "Failed to open (create) debug stream file.\n");
   }
-  
-  */
+#endif
 
 // does not return
   if(ret==2)doRtosBoot(kernAddr);
   else doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
-
 }
 
 void printUsage(void)
