@@ -8,10 +8,7 @@
 #include "drivers/beagle/beGPTimer.h"
 #include "drivers/beagle/beClockMan.h"
 #include "drivers/beagle/beUart.h"
-<<<<<<< HEAD
 #include "drivers/beagle/beGPIO.h"
-=======
->>>>>>> 0670a1d5c3adef6d4bad6f159417178b29bda893
 
 #ifdef CONFIG_MMC
 #include "drivers/beagle/beMMC.h"
