@@ -1,0 +1,9 @@
+The folder contains images for FreeRTOS v7.0.1
+
+*-dbg images contain debug messages for task switching proof
+
+The source code for these images is located on "hypervisor" branch in the following git repository
+
+http://git.silverarrow.org/?p=shared/freertos-ported.git;a=summary
+
+To build your own images, refer to the README file in the root directory
