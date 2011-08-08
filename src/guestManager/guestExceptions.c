@@ -9,6 +9,7 @@
 #include "drivers/beagle/beGPTimer.h"
 
 extern GCONTXT * getGuestContext(void);
+extern bool rtos;
 
 void deliverServiceCall(void)
 {
@@ -93,7 +94,6 @@ void throwInterrupt(u32int irqNumber)
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
         context->guestIrqPending = TRUE;
-		maskInterrupt(GPT1_IRQ);
       }
       break;
     case UART3_IRQ:

@@ -384,9 +384,9 @@ dabtHandler:
     Push   {LR}
     /* Test SPSR -> are we from USR mode? */
     MRS    LR, SPSR
-    AND    LR, LR, #0x0f
-	CMP	   LR, #0x0f
-    BEQ    dabtHandlerPriv
+    AND    LR, LR, #0x1F
+	CMP	   LR, #0x10
+    BNE    dabtHandlerPriv
 
     /* We were in USR mode, we must have been running guest code */
     save_r0_to_r14
@@ -418,7 +418,8 @@ dabtPrivLoop:
 undHandler:
   PUSH   {LR}
   MRS    LR, SPSR
-  ANDS   LR, LR, #0x0f
+  AND    LR, LR, #0x1F
+  CMP	 LR, #0x10
   BNE    undHandlerPriv /* Abort occured in Hypervisor (privileged) code */
 
   /* We were in USR mode, we must have been running guest code */
@@ -452,7 +453,8 @@ pabthandler:
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
-  ANDS   LR, LR, #0x0f
+  AND    LR, LR, #0x1F
+  CMP	 LR, #0x10
   BNE    pabtHandlerPriv
   
   /* We were in USR mode, we must have been running guest code */
@@ -484,7 +486,8 @@ pabtPrivLoop:
 monHandler:
   PUSH   {LR}
   MRS    LR, SPSR
-  ANDS   LR, LR, #0x0f
+  AND    LR, LR, #0x1F
+  CMP	 LR, #0x10
   BNE    monHandlerPriv /* Call occured in Hypervisor (privileged) code */
 
   /* We were in USR mode, we must have been running guest code */
@@ -521,7 +524,8 @@ irqHandler:
   /* need to check if we came from guest mode, or were inside the hypervisor */
   PUSH   {LR}
   MRS    LR, SPSR
-  ANDS   LR, LR, #0x0f
+  AND    LR, LR, #0x1F
+  CMP	 LR, #0x10
   /* interrupt occured whilst running hypervisor */
   BNE    irqHandlerPriv
 

@@ -32,7 +32,6 @@ extern GCONTXT * getGuestContext(void);
 void softwareInterrupt(u32int code)
 {
   
-  disableInterrupts();
 #ifdef EXC_HDLR_DBG
   printf("softwareInterrupt(%x)\n", code);
 #endif
@@ -309,8 +308,8 @@ void prefetchAbort(void)
 		{
 			deliverPrefetchAbort();
 			scanBlock(gc, gc->R15);
-		}
-		break;
+	    }
+    	break;
 	}
     case ifsPermissionFaultPage:
     case ifsImpDepLockdown:
@@ -383,14 +382,10 @@ void irq()
     { 
 	  throwInterrupt(activeIrqNumber);
       gptBEClearOverflowInterrupt(2);
-	  /* Guest will handle the timer from now on.
-	   * Just clear the interrupt to make sure that
-	   * host wont loop on irq handler
-	   */
 	  if(rtos)
 	  {
-	  	storeToGPTimer(2,GPT_REG_TCRR,0x0);
-	  	gptBEClearMatchInterrupt(2);
+		storeToGPTimer(2,GPT_REG_TCRR,0x0);
+		gptBEClearMatchInterrupt(2);
 	  }
       acknowledgeIrqBE();
       break;
@@ -432,7 +427,6 @@ void irqPrivileged()
     case GPT1_IRQ:
     {
       gptBEClearOverflowInterrupt(1);
-	  gptBEClearMatchInterrupt(1);
       acknowledgeIrqBE();
       break;
     }
@@ -440,17 +434,13 @@ void irqPrivileged()
     {
       throwInterrupt(activeIrqNumber);
 	  gptBEClearOverflowInterrupt(2);
-     /* Guest will handle the timer from now on.
-	  * Just clear the interrupt to make sure that
-	  * host wont loop on irq handler
-	  */
 	  if(rtos)
 	  {
 	  	storeToGPTimer(2,GPT_REG_TCRR,0x0);
 	  	gptBEClearMatchInterrupt(2);
 	  }
       acknowledgeIrqBE();
-	break;
+	  break;
     }
     case UART3_IRQ:
     {

@@ -12,6 +12,7 @@
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 
+extern bool rtos;
 extern GCONTXT * getGuestContext(void);
 
 struct GeneralPurposeTimer * gptimer;
@@ -316,12 +317,15 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       break;
     case GPT_REG_TMAR:
 	{
-	  /* Use a higher TMAR value to make sure that Guest is ready to accept interrupts.
-	   * This needs some fixing but should work for now. FreeRTOS set the TMAR value to
-	   * 0x6590. This is way too low for hypervisor to prepare guest CPSR.
-	   */
-      u32int adjustedvalue = value<<3;
-	  storeToGPTimer(2, regOffs, adjustedvalue);
+	  if(rtos)
+	  {
+	  	/* Use a higher TMAR value to make sure that Guest is ready to accept interrupts.
+	    * This needs some fixing but should work for now. FreeRTOS set the TMAR value to
+	    * 0x6590. This is way too low for hypervisor to prepare guest CPSR.
+	    */
+		value=value<<3;
+	  }
+	  storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
       printf(dev->deviceName);
       printf(": store to match register value %08x\n", value);
