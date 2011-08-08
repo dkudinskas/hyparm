@@ -8,8 +8,6 @@
 #include "instructionEmu/miscInstructions.h"
 
 
-#define DECODER_DEBUG
-
 u16int * currAddress = 0;
 
 extern GCONTXT * getGuestContext(void);

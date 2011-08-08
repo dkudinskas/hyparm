@@ -905,7 +905,6 @@ u32int blxInstruction(GCONTXT * context)
 	  // link register
 	  storeGuestGPR(14, context->R15+4, context);
 	  nextPC = value & 0xFFFFFFFE;
-	  printf("NextpC %08x\n",nextPC);
 	  return nextPC;
 	}
 }

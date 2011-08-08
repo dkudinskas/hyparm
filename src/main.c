@@ -59,6 +59,7 @@ file * debugStream;
 
 u32int kernAddr;
 u32int initrdAddr;
+bool rtos=FALSE;
 
 int main(int argc, char *argv[])
 {
@@ -156,7 +157,11 @@ int main(int argc, char *argv[])
 #endif
 
 // does not return
-  if(ret==2)doRtosBoot(kernAddr);
+  if(ret==2)
+  {
+  	rtos=TRUE;
+	doRtosBoot(kernAddr);
+  }
   else doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
 }
 

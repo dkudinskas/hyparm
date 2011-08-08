@@ -25,6 +25,8 @@
 #include "memoryManager/mmu.h"
 #include "memoryManager/memoryConstants.h"
 
+extern bool rtos;
+
 extern GCONTXT * getGuestContext(void);
 
 void softwareInterrupt(u32int code)
@@ -385,8 +387,11 @@ void irq()
 	   * Just clear the interrupt to make sure that
 	   * host wont loop on irq handler
 	   */
-	  storeToGPTimer(2,GPT_REG_TCRR,0x0);
-	  gptBEClearMatchInterrupt(2);
+	  if(rtos)
+	  {
+	  	storeToGPTimer(2,GPT_REG_TCRR,0x0);
+	  	gptBEClearMatchInterrupt(2);
+	  }
       acknowledgeIrqBE();
       break;
     }
@@ -439,8 +444,11 @@ void irqPrivileged()
 	  * Just clear the interrupt to make sure that
 	  * host wont loop on irq handler
 	  */
-	  storeToGPTimer(2,GPT_REG_TCRR,0x0);
-	  gptBEClearMatchInterrupt(2);
+	  if(rtos)
+	  {
+	  	storeToGPTimer(2,GPT_REG_TCRR,0x0);
+	  	gptBEClearMatchInterrupt(2);
+	  }
       acknowledgeIrqBE();
 	break;
     }
