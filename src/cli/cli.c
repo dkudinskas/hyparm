@@ -2,6 +2,7 @@
 #include "cli/cliLoad.h"
 
 #include "common/ctype.h"
+#include "common/debug.h"
 #include "common/stringFunctions.h"
 
 #include "drivers/beagle/beUart.h"
