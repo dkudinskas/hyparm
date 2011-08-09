@@ -1,6 +1,5 @@
 #include "common/ctype.h"
-
-#define ASCII(c)    ((int) (unsigned char) (c))
+#include "common/types.h"
 
 
 int isalnum(int c)
@@ -86,9 +85,9 @@ int ispunct(int c)
   case ASCII('|'):
   case ASCII('}'):
   case ASCII('~'):
-    return 1;
+    return TRUE;
   default:
-    return 0;
+    return FALSE;
   }
 }
 
@@ -102,9 +101,9 @@ int isspace(int c)
   case ASCII('\f'):
   case ASCII('\r'):
   case ASCII(' '):
-    return 1;
+    return TRUE;
   default:
-    return 0;
+    return FALSE;
   }
 }
 
@@ -139,9 +138,9 @@ int isxdigit(int c)
   case ASCII('d'):
   case ASCII('e'):
   case ASCII('f'):
-    return 1;
+    return TRUE;
   default:
-    return 0;
+    return FALSE;
   }
 }
 
