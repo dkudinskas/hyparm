@@ -66,7 +66,11 @@ struct parseState
 
 
 static s32int findCommand(const char *command);
-static void run(const char *command);
+
+#ifndef TEST
+static
+#endif
+  void run(const char *command);
 
 
 void enterCliLoop()
@@ -157,7 +161,10 @@ static s32int findCommand(const char *command)
   return cmp ? -1 : mid;
 }
 
-static void run(const char *buffer)
+#ifndef TEST
+static
+#endif
+  void run(const char *buffer)
 {
   /*
    * Parse the string in the buffer into an array of tokens.

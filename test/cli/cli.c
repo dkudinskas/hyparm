@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "cli/cli.h"
 #include "drivers/beagle/beUart.h"
 
