@@ -41,53 +41,53 @@ int ispunct(int c)
 {
   switch (c)
   {
-  /*
-   * Punctuation range 1: 0x21..0x2F
-   */
-  case ASCII('!'):
-  case ASCII('"'):
-  case ASCII('#'):
-  case ASCII('$'):
-  case ASCII('%'):
-  case ASCII('&'):
-  case ASCII('\''):
-  case ASCII('('):
-  case ASCII(')'):
-  case ASCII('*'):
-  case ASCII('+'):
-  case ASCII(','):
-  case ASCII('-'):
-  case ASCII('.'):
-  case ASCII('/'):
-  /*
-   * Punctuation range 2: 0x3A..0x40
-   */
-  case ASCII(':'):
-  case ASCII(';'):
-  case ASCII('<'):
-  case ASCII('='):
-  case ASCII('>'):
-  case ASCII('?'):
-  case ASCII('@'):
-  /*
-   * Punctuation range 3: 0x5B..0x60
-   */
-  case ASCII('['):
-  case ASCII('\\'):
-  case ASCII(']'):
-  case ASCII('^'):
-  case ASCII('_'):
-  case ASCII('`'):
-  /*
-   * Punctuation range 4: 0x7B..0x7E
-   */
-  case ASCII('{'):
-  case ASCII('|'):
-  case ASCII('}'):
-  case ASCII('~'):
-    return TRUE;
-  default:
-    return FALSE;
+    /*
+     * Punctuation range 1: 0x21..0x2F
+     */
+    case ASCII('!'):
+    case ASCII('"'):
+    case ASCII('#'):
+    case ASCII('$'):
+    case ASCII('%'):
+    case ASCII('&'):
+    case ASCII('\''):
+    case ASCII('('):
+    case ASCII(')'):
+    case ASCII('*'):
+    case ASCII('+'):
+    case ASCII(','):
+    case ASCII('-'):
+    case ASCII('.'):
+    case ASCII('/'):
+    /*
+     * Punctuation range 2: 0x3A..0x40
+     */
+    case ASCII(':'):
+    case ASCII(';'):
+    case ASCII('<'):
+    case ASCII('='):
+    case ASCII('>'):
+    case ASCII('?'):
+    case ASCII('@'):
+    /*
+     * Punctuation range 3: 0x5B..0x60
+     */
+    case ASCII('['):
+    case ASCII('\\'):
+    case ASCII(']'):
+    case ASCII('^'):
+    case ASCII('_'):
+    case ASCII('`'):
+    /*
+     * Punctuation range 4: 0x7B..0x7E
+     */
+    case ASCII('{'):
+    case ASCII('|'):
+    case ASCII('}'):
+    case ASCII('~'):
+      return TRUE;
+    default:
+      return FALSE;
   }
 }
 
@@ -95,15 +95,15 @@ int isspace(int c)
 {
   switch (c)
   {
-  case ASCII('\t'):
-  case ASCII('\n'):
-  case ASCII('\v'):
-  case ASCII('\f'):
-  case ASCII('\r'):
-  case ASCII(' '):
-    return TRUE;
-  default:
-    return FALSE;
+    case ASCII('\t'):
+    case ASCII('\n'):
+    case ASCII('\v'):
+    case ASCII('\f'):
+    case ASCII('\r'):
+    case ASCII(' '):
+      return TRUE;
+    default:
+      return FALSE;
   }
 }
 
@@ -116,31 +116,31 @@ int isxdigit(int c)
 {
   switch (c)
   {
-  case ASCII('0'):
-  case ASCII('1'):
-  case ASCII('2'):
-  case ASCII('3'):
-  case ASCII('4'):
-  case ASCII('5'):
-  case ASCII('6'):
-  case ASCII('7'):
-  case ASCII('8'):
-  case ASCII('9'):
-  case ASCII('A'):
-  case ASCII('B'):
-  case ASCII('C'):
-  case ASCII('D'):
-  case ASCII('E'):
-  case ASCII('F'):
-  case ASCII('a'):
-  case ASCII('b'):
-  case ASCII('c'):
-  case ASCII('d'):
-  case ASCII('e'):
-  case ASCII('f'):
-    return TRUE;
-  default:
-    return FALSE;
+    case ASCII('0'):
+    case ASCII('1'):
+    case ASCII('2'):
+    case ASCII('3'):
+    case ASCII('4'):
+    case ASCII('5'):
+    case ASCII('6'):
+    case ASCII('7'):
+    case ASCII('8'):
+    case ASCII('9'):
+    case ASCII('A'):
+    case ASCII('B'):
+    case ASCII('C'):
+    case ASCII('D'):
+    case ASCII('E'):
+    case ASCII('F'):
+    case ASCII('a'):
+    case ASCII('b'):
+    case ASCII('c'):
+    case ASCII('d'):
+    case ASCII('e'):
+    case ASCII('f'):
+      return TRUE;
+    default:
+      return FALSE;
   }
 }
 

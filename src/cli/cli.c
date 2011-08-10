@@ -49,8 +49,8 @@ struct cliCommand
  */
 static struct cliCommand commandTable[CLI_NUM_COMMANDS] =
 {
-    {"loadBinary", cliLoadBinary},
-    {"loadImage", cliLoadImage}
+  { "loadBinary", cliLoadBinary },
+  { "loadImage", cliLoadImage }
 };
 
 /*
@@ -89,31 +89,31 @@ void enterCliLoop()
       {
         switch (*bufferPtr)
         {
-        case ASCII_ESC:
-          *bufferPtr = serialGetc();
-          if (*bufferPtr == '[')
-          {
+          case ASCII_ESC:
             *bufferPtr = serialGetc();
+            if (*bufferPtr == '[')
+            {
+              *bufferPtr = serialGetc();
+              continue;
+            }
+            break;
+          case '\b':
+            if (bufferPtr > buffer)
+            {
+              --bufferPtr;
+              serialPuts("\b \b");
+            }
             continue;
-          }
-          break;
-        case '\b':
-          if (bufferPtr > buffer)
-          {
-            --bufferPtr;
-            serialPuts("\b \b");
-          }
-          continue;
-        case '\n':
-          if (ignore_n)
-          {
-            ignore_n = 0;
+          case '\n':
+            if (ignore_n)
+            {
+              ignore_n = 0;
+              continue;
+            }
+          case '\r':
+            break;
+          default:
             continue;
-          }
-        case '\r':
-          break;
-        default:
-          continue;
         }
       }
       serialPutc(*bufferPtr);
@@ -181,70 +181,70 @@ static
       state.escape = 0;
       switch (*readPtr)
       {
-      case '\'':
-      case '\\':
-        *writePtr++ = *readPtr;
-        break;
-      default:
-        serialPuts("Error: invalid escape sequence");
-        if (isprint(*readPtr))
-        {
-          serialPuts(" '\\");
-          serialPutc(*readPtr);
-          serialPutc('\'');
-        }
-        serialPuts("\r\n");
-        return;
+        case '\'':
+        case '\\':
+          *writePtr++ = *readPtr;
+          break;
+        default:
+          serialPuts("Error: invalid escape sequence");
+          if (isprint(*readPtr))
+          {
+            serialPuts(" '\\");
+            serialPutc(*readPtr);
+            serialPutc('\'');
+          }
+          serialPuts("\r\n");
+          return;
       }
     }
     else
     {
       switch (*readPtr)
       {
-      case '\\':
-        state.escape = 1;
-        continue;
-      case '\'':
-        state.quoted = !state.quoted;
-        continue;
-      case '\0':
-      case ASCII_SPACE:
-        if (!state.quoted)
-        {
-          /*
-           * Outside single quotes, space acts as a token separator.
-           * Only split when there is already some content in the token buffer;
-           * this avoids creating multiple tokens for subsequent spaces.
-           */
-          if (writePtr != token)
+        case '\\':
+          state.escape = 1;
+          continue;
+        case '\'':
+          state.quoted = !state.quoted;
+          continue;
+        case '\0':
+        case ASCII_SPACE:
+          if (!state.quoted)
           {
-            *writePtr++ = '\0';
-            stringcpy(tokens[state.tokenCount], token);
-            writePtr = token;
-            ++state.tokenCount;
+            /*
+             * Outside single quotes, space acts as a token separator.
+             * Only split when there is already some content in the token buffer;
+             * this avoids creating multiple tokens for subsequent spaces.
+             */
+            if (writePtr != token)
+            {
+              *writePtr++ = '\0';
+              stringcpy(tokens[state.tokenCount], token);
+              writePtr = token;
+              ++state.tokenCount;
+            }
+            state.loop = *readPtr;
+            break;
           }
-          state.loop = *readPtr;
-          break;
-        }
-      default:
-        if (isprint(*readPtr))
-        {
-          if (state.tokenCount < CLI_MAX_TOKENS)
+        default:
+          if (isprint(*readPtr))
           {
-            *writePtr++ = *readPtr;
+            if (state.tokenCount < CLI_MAX_TOKENS)
+            {
+              *writePtr++ = *readPtr;
+            }
+            else
+            {
+              serialPuts("Error: maximum number of tokens exceeded\r\n");
+              return;
+            }
           }
           else
           {
-            serialPuts("Error: maximum number of tokens exceeded\r\n");
+            serialPuts("Error: invalid character\r\n");
             return;
           }
-        }
-        else
-        {
-          serialPuts("Error: invalid character\r\n");
-          return;
-        }
-        break;
+          break;
       }
     }
     ++readPtr;
