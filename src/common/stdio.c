@@ -508,14 +508,16 @@ static int _vsscanf(const char *s, const char *format, va_list args)
             TEST_PRINTF("No width given; reverting to default width for specifier '%%%c': %d\n", *format, width);
           }
           /*
-           * Check for prefix (we can safely skip a leading zero).
+           * Check for prefix (we can safely skip a leading zero) if the set maximum width allows for one..
            */
-          if (*s == '0')
+          if (width > 2 && *s == '0')
           {
             ++s;
+            --width;
             if (*s == 'x' || *s == 'X')
             {
               ++s;
+              --width;
               TEST_PRINTF("Found hexadecimal prefix\n");
             }
           }

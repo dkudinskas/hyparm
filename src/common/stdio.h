@@ -15,6 +15,14 @@
 
 int
 #ifdef TEST
+  test_sscanf
+#else
+  sscanf
+#endif
+  (const char *s, const char *format, ...);
+
+int
+#ifdef TEST
   test_vsscanf
 #else
   vsscanf
