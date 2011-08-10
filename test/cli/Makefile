@@ -8,7 +8,7 @@ TST_PATH      = ../include
 TST_FILES     = drivers/beagle/beUart.c
 TST_FILES_FP  = $(foreach TST_FILE, $(TST_FILES), $(TST_PATH)/$(TST_FILE))
 
-CFLAGS        = -Wall -Wextra -DTEST=1 -DTEST_CLI=1 -iquote $(TST_PATH) -iquote $(SRC_PATH)
+CFLAGS        = -m32 -Wall -Wextra -DTEST=1 -DTEST_CLI=1 -iquote $(TST_PATH) -iquote $(SRC_PATH)
 LDFLAGS       =
 
 .PHONY: clean run
