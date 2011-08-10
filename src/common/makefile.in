@@ -3,4 +3,5 @@ SRCS += src/common/ctype.c
 SRCS += src/common/debug.c
 SRCS += src/common/div.c
 SRCS += src/common/memFunctions.c
+SRCS += src/common/stdio.c
 SRCS += src/common/stringFunctions.c
