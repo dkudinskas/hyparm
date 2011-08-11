@@ -375,7 +375,7 @@ static int _vsscanf(const char *s, const char *format, va_list args)
           if (!ignore && !modifier && width < 0)
           {
             u32int *pointer = va_arg(args, u32int *);
-            *pointer = s - sOrigin;
+            *pointer = (u32int)s - (u32int)sOrigin;
           }
           else
           {
