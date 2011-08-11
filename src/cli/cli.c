@@ -9,28 +9,6 @@
 
 
 /*
- * Size of the buffer in which command line input is stored.
- */
-#define CLI_BUFFER_SIZE  64
-
-/*
- * Maximum number of tokens the input is split into.
- * The maximum number of 'arguments' to any 'command' is (CLI_MAX_TOKENS - 1).
- *
- * CAUTION: for each token, a buffer of size CLI_BUFFER_SIZE is allocated on the stack.
- * Only increase this number if you are sure you will not cause a stack overflow!
- */
-#define CLI_MAX_TOKENS    4
-
-/*
- * Command handler function pointer type.
- *
- * Each command handler must be of the following form:
- * void handler(int argc, char **argv);
- */
-typedef void (*cliCommandHandler)(int argc, const char *const *argv);
-
-/*
  * Command
  */
 struct cliCommand
