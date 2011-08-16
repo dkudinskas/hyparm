@@ -87,6 +87,7 @@ int main()
   test("% 10.8x", 0xBAD123);
   test("%#10.8x", 0xBAD123);
   test("%# 10.8x", 0xBAD123);
+  test("%#.8x", 0xBAD123);
 
   printf("\n%12s%10d\n%12s%10d\n\n", "SUCCEEDED:", testsSucceeded, "FAILED:", testsFailed);
 

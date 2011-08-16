@@ -546,7 +546,7 @@ int
           /*
            * Also force minimum number of digits to be printed...
            */
-          precision = (sizeof(u32int) << 1) + 2;
+          precision = (sizeof(u32int) << 1);
           /*
            * Fall-through!
            */
