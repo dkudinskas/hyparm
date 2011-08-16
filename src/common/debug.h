@@ -2,6 +2,7 @@
 #define __COMMON__DEBUG_H__
 
 #include "common/stdarg.h"
+#include "common/stdio.h"
 #include "common/types.h"
 
 #include "guestManager/guestContext.h"
@@ -18,6 +19,5 @@ u32int printf(const char *fmt, ...);
 u32int fprintf(const char *fmt, ...);
 #endif
 
-u32int vsprintf(char *buf, const char *fmt, va_list args);
 
 #endif

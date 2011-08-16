@@ -13,6 +13,9 @@
 #endif
 
 
+#define EOL  "\r\n"
+
+
 int
 #ifdef TEST
   test_sscanf
@@ -29,5 +32,12 @@ int
 #endif
   (const char *str, const char *format, va_list args);
 
+int
+#ifdef TEST
+  test_vsprintf
+#else
+  vsprintf
+#endif
+  (char *buf, const char *fmt, va_list args);
 
 #endif

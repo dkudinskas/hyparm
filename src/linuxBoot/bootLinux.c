@@ -113,7 +113,7 @@ static void setup_memory_tags()
     paramTag->u.mem.start = dramBanks[i].start;
     paramTag->u.mem.size = dramBanks[i].size;
 
-    paramTag = tag_next (paramTag);
+    paramTag = tag_next(paramTag);
   }
 }
 
@@ -138,7 +138,7 @@ static void setup_commandline_tag(char *commandline)
   }
 
   paramTag->hdr.tag = ATAG_CMDLINE;
-  paramTag->hdr.size = (sizeof (struct tag_header) + stringlen(p) + 1 + 4) >> 2;
+  paramTag->hdr.size = (sizeof(struct tag_header) + strlen(p) + 1 + 4) >> 2;
 
   stringcpy(paramTag->u.cmdline.cmdline, p);
 
