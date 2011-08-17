@@ -3,9 +3,8 @@
 
 #include "common/ctype.h"
 #include "common/debug.h"
+#include "common/stdio.h"
 #include "common/stringFunctions.h"
-
-#include "drivers/beagle/beUart.h"
 
 
 /*
@@ -55,49 +54,52 @@ void enterCliLoop()
 {
   char buffer[CLI_BUFFER_SIZE];
   char *const bufferEnd = buffer + (CLI_BUFFER_SIZE - 1);
-  int ignore_n = 1;
+  bool escape = FALSE;
+  bool ignore_n = TRUE;
   while (1)
   {
-    serialPuts("H> ");
+    printf("H> ");
     char *bufferPtr = buffer;
     while (bufferPtr < bufferEnd)
     {
-      *bufferPtr = serialGetc();
+      *bufferPtr = getchar();
       if (iscntrl(*bufferPtr))
       {
         switch (*bufferPtr)
         {
-          case ASCII_ESC:
-            *bufferPtr = serialGetc();
-            if (*bufferPtr == '[')
-            {
-              *bufferPtr = serialGetc();
-              continue;
-            }
-            break;
           case '\b':
             if (bufferPtr > buffer)
             {
               --bufferPtr;
-              serialPuts("\b \b");
+              printf("\b \b");
             }
             continue;
           case '\n':
             if (ignore_n)
             {
-              ignore_n = 0;
+              ignore_n = FALSE;
               continue;
             }
           case '\r':
             break;
+          case ASCII_ESC:
+            escape = TRUE;
+            continue;
           default:
             continue;
         }
       }
-      serialPutc(*bufferPtr);
+      else if (escape)
+      {
+        escape = FALSE;
+        /*
+         * FIXME: deal with escape sequences, possibly in state machine rather than 'if'...
+         */
+      }
+      putchar(*bufferPtr);
       if (*bufferPtr == '\r')
       {
-        serialPutc('\n');
+        putchar('\n');
         ignore_n = 1;
         break;
       }
@@ -109,7 +111,7 @@ void enterCliLoop()
     }
     if (bufferPtr == bufferEnd)
     {
-      serialPuts("\r\nError: line too long\r\n");
+      printf("\r\nError: line too long\r\n");
       continue;
     }
     *bufferPtr = 0;
@@ -164,14 +166,16 @@ static
           *writePtr++ = *readPtr;
           break;
         default:
-          serialPuts("Error: invalid escape sequence");
+          printf("Error: invalid escape sequence '\\");
           if (isprint(*readPtr))
           {
-            serialPuts(" '\\");
-            serialPutc(*readPtr);
-            serialPutc('\'');
+            putchar(*readPtr);
           }
-          serialPuts("\r\n");
+          else
+          {
+            printf("{%#.2x}", (u32int)*readPtr);
+          }
+          printf("\\'" EOL);
           return;
       }
     }
@@ -213,13 +217,13 @@ static
             }
             else
             {
-              serialPuts("Error: maximum number of tokens exceeded\r\n");
+              printf("Error: maximum number of tokens exceeded" EOL);
               return;
             }
           }
           else
           {
-            serialPuts("Error: invalid character\r\n");
+            printf("Error: invalid character (%#.2x)" EOL, (u32int)*readPtr);
             return;
           }
           break;
@@ -231,22 +235,18 @@ static
   {
 #ifdef TEST_CLI
     int i;
-    serialPuts("Command: '");
-    serialPuts(tokens[0]);
-    serialPuts("'\r\n");
-    serialPuts("Arguments:\r\n");
+    printf("Command: '%s'" EOL, tokens[0]);
+    printf("Arguments:" EOL);
     for (i = 1; i < state.tokenCount; ++i)
     {
-      serialPutc('\'');
-      serialPuts(tokens[i]);
-      serialPuts("'\r\n");
+      printf("'%s'" EOL, tokens[i]);
     }
-    serialPuts("Done\r\n");
+    printf("Done" EOL);
 #endif
     s32int commandIndex = findCommand(tokens[0]);
     if (commandIndex < 0)
     {
-      printf("Error: command '%s' not found\r\n", tokens[0]);
+      printf("Error: command '%s' not found" EOL, tokens[0]);
       return;
     }
 #ifndef TEST_CLI
