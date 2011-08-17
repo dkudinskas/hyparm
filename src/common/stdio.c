@@ -2,13 +2,20 @@
 #include <stdio.h>
 #include <string.h>
 #else
-#include <common/debug.h>
-#include <common/stringFunctions.h>
+#include "common/debug.h"
+#include "common/stringFunctions.h"
 #endif
 
 #include "common/ctype.h"
 #include "common/stdio.h"
 #include "common/types.h"
+
+/*
+ * FIXME dirty
+ */
+#ifndef TEST
+#include "drivers/beagle/beUart.h"
+#endif
 
 
 /*
@@ -161,6 +168,17 @@
 
 static inline int _vsscanf(const char *s, const char *format, va_list args);
 
+
+int getchar()
+{
+  return serialGetc();
+}
+
+int putchar(int c)
+{
+  serialPutc(c);
+  return c;
+}
 
 int
 #ifdef TEST

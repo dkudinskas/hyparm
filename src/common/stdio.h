@@ -15,6 +15,13 @@
 
 #define EOL  "\r\n"
 
+#ifndef TEST
+
+int getchar(void);
+
+int putchar(int c);
+
+#endif
 
 int
 #ifdef TEST
