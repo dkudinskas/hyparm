@@ -3,13 +3,13 @@
 
 #include "guestManager/guestContext.h"
 
-#include "vm/omap35xx/sdram.h"
-
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/miscInstructions.h"
 
-GCONTXT * guest;
+#include "vm/omap35xx/sdram.h"
 
+
+static void initGuestContext(GCONTXT *gContext);
 
 GCONTXT * allocateGuest(void)
 {
@@ -19,12 +19,8 @@ GCONTXT * allocateGuest(void)
     DIE_NOW(0, "allocateGuest: Failed to allocate guest context.");
   }
 #ifdef GUEST_CONTEXT_DBG
-  else
-  {
-    printf("allocateGuest: Guest context at %x\n", (u32int)context);
-  }
+  printf("allocateGuest: Guest context at %p" EOL, context);
 #endif
-  guest = context;
   initGuestContext(context);
 
   /* initialise coprocessor register bank */
@@ -33,13 +29,10 @@ GCONTXT * allocateGuest(void)
   {
     DIE_NOW(0, "Failed to allocate coprocessor register bank.");
   }
-  else
-  {
-    memset((void*)coprocRegBank, 0x0, MAX_CRB_SIZE * sizeof(CREG));
-  }
+  memset((void*)coprocRegBank, 0x0, MAX_CRB_SIZE * sizeof(CREG));
   initCRB(coprocRegBank);
 #ifdef GUEST_CONTEXT_DBG
-  printf("allocateGuest: Coprocessor register bank at %x\n", (u32int)coprocRegBank);
+  printf("allocateGuest: Coprocessor register bank at %p" EOL, coprocRegBank);
 #endif
   context->coprocRegBank = coprocRegBank;
 
@@ -48,42 +41,37 @@ GCONTXT * allocateGuest(void)
   BCENTRY * blockCache = (BCENTRY*)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   if (blockCache == 0)
   {
-    DIE_NOW(0, "Failed to allocate basic block cache.\n");
+    DIE_NOW(0, "Failed to allocate basic block cache");
   }
-  else
-  {
-    memset((void*)blockCache, 0x0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
-  }
+  memset((void*)blockCache, 0x0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   initialiseBlockCache(blockCache);
 #ifdef GUEST_CONTEXT_DBG
-  printf("allocateGuest: basic block cache at %x\n", (u32int)blockCache);
+  printf("allocateGuest: basic block cache at %p" EOL, blockCache);
 #endif
   context->blockCache = blockCache;
 
 
   /* initialise virtual hardware devices */
   device * libraryPtr;
-  if ((libraryPtr = initialiseHardwareLibrary()) != 0)
-  {
-    /* great success. register with guest context */
-    context->hardwareLibrary = libraryPtr;
-  }
-  else
+  if ((libraryPtr = initialiseHardwareLibrary()) == 0)
   {
     DIE_NOW(0, "Hardware library initialisation failed.");
   }
+  /* great success. register with guest context */
+  context->hardwareLibrary = libraryPtr;
 
   /* Setup guest memory protection */
   context->memProt = initialiseMemoryProtection();
 
-
   return context;
 }
 
-void initGuestContext(GCONTXT * gContext)
+static void initGuestContext(GCONTXT *gContext)
 {
+  u32int i;
+
 #ifdef GUEST_CONTEXT_DBG
-  printf("initGuestContext: Initializing guest context @ %x\n", (u32int)gContext);
+  printf("initGuestContext: Initializing guest context @ %p\n", gContext);
 #endif
 
   /* zero context!!! */
@@ -174,7 +162,7 @@ void initGuestContext(GCONTXT * gContext)
 #ifdef GUEST_CONTEXT_DBG
   printf("initGuestContext: Block Trace @ address %08x\n", (u32int)&(gContext->blockHistory));
 #endif
-  int i = 0;
+
   for (i = 0; i < BLOCK_HISOTRY_SIZE; i++)
   {
     gContext->blockHistory[i] = 0;
@@ -285,9 +273,4 @@ void dumpGuestContext(GCONTXT * gc)
   }
   dumpSdramStats();
   printf("Debug Flag: %x\n", (u32int)gc->debugFlag);
-}
-
-GCONTXT * getGuestContext()
-{
-  return guest;
 }

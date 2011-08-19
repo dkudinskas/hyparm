@@ -95,8 +95,10 @@ GCONTXT * allocateGuest(void);
    
 void dumpGuestContext(GCONTXT * gc);
 
-void initGuestContext(GCONTXT * gContext);
-
+/*
+ * Gets the guest context pointer.
+ * Defined in startup.s!
+ */
 GCONTXT * getGuestContext(void);
 
 #endif

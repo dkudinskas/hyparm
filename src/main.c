@@ -41,11 +41,10 @@
 #define HIDDEN_RAM_START   0x8f000000
 #define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
 
-extern void registerGuestPointer(u32int gContext);
+extern void registerGuestPointer(GCONTXT *gContext);
 
 static void printUsage(void);
 static int parseCommandline(int argc, char *argv[], u32int *kernAddr, u32int *initrdAddr);
-void registerGuestContext(u32int gcAddr);
 
 #ifdef CONFIG_MMC
 fatfs mainFilesystem;
@@ -55,11 +54,10 @@ file * debugStream;
 #endif
 
 
-int main(int argc, char *argv[])
+void main(int argc, char *argv[])
 {
   u32int kernAddr = 0;
   u32int initrdAddr = 0;
-  GCONTXT * gContext = 0;
 
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
@@ -78,18 +76,21 @@ int main(int argc, char *argv[])
   beUartStartup(3, 115200);
 #endif
 
+#ifndef CONFIG_CLI
+  if (parseCommandline(argc, argv, &kernAddr, &initrdAddr) < 0)
+  {
+    printUsage();
+    DIE_NOW(0, "Hypervisor startup aborted.");
+  }
+#endif
+
   /* create the frametable from which we can alloc memory */
   initialiseFrameTable();
 
   /* initialize guest context */
-  gContext = allocateGuest();
-  registerGuestPointer((u32int)gContext);
+  registerGuestPointer(allocateGuest());
 
   /* Setup MMU for Hypervisor */
-/*
- * FIXME: setting up MMU might remap argv !!
- * Parse arguments before setting up MMU!!!!
- */
   initialiseVirtualAddressing();
 
 #ifdef CONFIG_CLI
@@ -101,12 +102,6 @@ int main(int argc, char *argv[])
   enterCliLoop();
 
 #else
-
-  if (parseCommandline(argc, argv, &kernAddr, &initrdAddr) < 0)
-  {
-    printUsage();
-    DIE_NOW(0, "Hypervisor startup aborted.");
-  }
 
 #ifdef STARTUP_DEBUG
   printf("Kernel address: %x, Initrd address: %x\n", kernAddr, initrdAddr);
