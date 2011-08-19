@@ -749,7 +749,7 @@ struct instruction32bit * decodeUnconditional(u32int instr)
   return 0;
 }
 
-void dumpInstruction(char * msg, u32int instr)
+void dumpInstruction(const char * msg, u32int instr)
 {
   printf(msg);
   printf(": Instruction: %08x ", instr);

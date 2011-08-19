@@ -60,7 +60,7 @@
 #define SHIFT_TYPE_ROR    0x4
 
 /* a function to serve as a dead-loop if we decode something invalid */
-void invalidInstruction(u32int instr, char * msg);
+void invalidInstruction(u32int instr, const char * msg);
 
 /* a function to evaluate if guest is in priviledge mode or user mode */
 bool guestInPrivMode(GCONTXT * context);

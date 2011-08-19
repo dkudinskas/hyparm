@@ -87,7 +87,7 @@ void unmaskInterruptBE(u32int interruptNumber)
   u32int bitMask = 0;
   u32int bankNumber = 0;
 
-  if ((interruptNumber < 0) || (interruptNumber >= INTCPS_NR_OF_INTERRUPTS))
+  if (interruptNumber >= INTCPS_NR_OF_INTERRUPTS)
   {
     DIE_NOW(0, "INTC_BE: mask interrupt number out of range.");
   }
@@ -101,7 +101,7 @@ void maskInterruptBE(u32int interruptNumber)
   u32int bitMask = 0;
   u32int bankNumber = 0;
 
-  if ((interruptNumber < 0) || (interruptNumber >= INTCPS_NR_OF_INTERRUPTS))
+  if (interruptNumber >= INTCPS_NR_OF_INTERRUPTS)
   {
     DIE_NOW(0, "INTC_BE: mask interrupt number out of range.");
   }

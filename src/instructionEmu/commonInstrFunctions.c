@@ -6,7 +6,7 @@
 extern GCONTXT * getGuestContext(void); //from main.c
 
 /* a function to serve as a dead-loop if we decode something invalid */
-void invalidInstruction(u32int instr, char * msg)
+void invalidInstruction(u32int instr, const char * msg)
 {
   printf("Invalid instruction detected! %08x\n", instr);
   printf(msg);
@@ -124,7 +124,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
 {
   u32int guestMode = (context->CPSR) & CPSR_MODE_FIELD;
 
-  if ( ((regDest >= 0) && (regDest < 8)) || (regDest == 15) )
+  if ((regDest < 8) || (regDest == 15))
   {
     // dont care about modes here. just store.
     u32int * strPtr = &(context->R0);
@@ -186,7 +186,7 @@ u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
   u32int guestMode = context->CPSR & CPSR_MODE_FIELD;
   u32int value = 0;
 
-  if ( ((regSrc >= 0) && (regSrc < 8)) || (regSrc == 15) )
+  if ((regSrc < 8) || (regSrc == 15))
   {
     // dont care about modes here. just get the value.
     u32int * ldPtr = &(context->R0);

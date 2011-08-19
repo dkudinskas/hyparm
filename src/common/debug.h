@@ -8,7 +8,7 @@
 #include "guestManager/guestContext.h"
 
 
-__attribute((noreturn)) void DIE_NOW(GCONTXT * context, char* msg);
+__attribute((noreturn)) void DIE_NOW(GCONTXT *context, const char *msg);
 
 
 /* output to serial */

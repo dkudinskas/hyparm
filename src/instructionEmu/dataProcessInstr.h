@@ -33,9 +33,9 @@ typedef enum
   ROR  
 } OPTYPE;
 
-void invalidDataProcTrap(char * msg, GCONTXT * gc);
+void invalidDataProcTrap(const char * msg, GCONTXT * gc);
 
-u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString);
+u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString);
 
 // Arithmetic operations
 u32int rsbInstruction(GCONTXT * context);

@@ -1,12 +1,14 @@
 #include "cpuArch/cpu.h"
 
 #include "common/debug.h"
-#include "common/stringFunctions.h"
+#include "common/string.h"
 
 #include "drivers/beagle/beUart.h"
 
 #include "io/fs/fat.h"
 
+
+#define TERMINAL_WIDTH  80
 
 extern GCONTXT * getGuestContext(void); //from main.c
 
@@ -15,39 +17,35 @@ extern fatfs mainFilesystem;
 extern file * debugStream;
 #endif
 
-void banner(char* msg)
+
+static void banner(const char *msg)
 {
-  printf("\r\n");
-  printf("\r\n");
-  int messageLength, paddingLength, i;
-  char* pos = msg;
-  while(*pos != '\0')
+  u32int msgLength, paddingLength, i;
+  char padding[TERMINAL_WIDTH >> 1];
+  /*
+   * Determine length of message and truncate if it exceeds the available space.
+   */
+  msgLength = strlen(msg);
+  if (msgLength > (TERMINAL_WIDTH - 4))
   {
-    pos++;
+    msgLength = TERMINAL_WIDTH - 4;
   }
-  messageLength = pos - msg;
-  paddingLength = (76 - messageLength)/2;
-  
-  for(i = 0; i < paddingLength; i++)
+  paddingLength = (TERMINAL_WIDTH - 2 - msgLength) >> 1;
+  /*
+   * Creating padding string
+   */
+  for(i = 0; i < paddingLength; ++i)
   {
-    printf("=");
+    padding[i] = '=';
   }
-  printf("[");
-  printf(msg);
-  printf("]");
-  for(i = 0; i < paddingLength; i++)
-  {
-    printf("=");
-  }
-  if(messageLength % 2 == 1)
-  {
-    printf("=");
-  }
-  printf("\r\n");
-  printf("\r\n");
+  padding[paddingLength] = 0;
+  /*
+   * Print it all at once
+   */
+  printf(EOL EOL "%s[%s]%s%s" EOL EOL, padding, msg, ((msgLength & 1) ? "" : "="), padding);
 }
 
-void DIE_NOW(GCONTXT* context, char* msg)
+void DIE_NOW(GCONTXT *context, const char *msg)
 {
   banner("ERROR");
   printf(msg);
@@ -60,7 +58,7 @@ void DIE_NOW(GCONTXT* context, char* msg)
   {
     dumpGuestContext(context);
   }
-  banner("HALT\0");
+  banner("HALT");
   
   infiniteIdleLoop();
 }

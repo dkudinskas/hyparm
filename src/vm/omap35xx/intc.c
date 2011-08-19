@@ -547,7 +547,7 @@ void maskInterrupt(u32int interruptNumber)
   u32int bitMask = 0;
   u32int bankNumber = 0;
 
-  if ((interruptNumber < 0) || (interruptNumber >= INTCPS_NR_OF_INTERRUPTS))
+  if (interruptNumber >= INTCPS_NR_OF_INTERRUPTS)
   {
     DIE_NOW(0, "INTC: mask interrupt number out of range.");
   }
@@ -577,7 +577,7 @@ void unmaskInterrupt(u32int interruptNumber)
   u32int bitMask = 0;
   u32int bankNumber = 0;
 
-  if ((interruptNumber < 0) || (interruptNumber >= INTCPS_NR_OF_INTERRUPTS))
+  if (interruptNumber >= INTCPS_NR_OF_INTERRUPTS)
   {
     DIE_NOW(0, "INTC: unmask interrupt number out of range.");
   }
@@ -604,7 +604,7 @@ bool isGuestIrqMasked(u32int interruptNumber)
   u32int bitMask = 0;
   u32int bankNumber = 0;
 
-  if ((interruptNumber < 0) || (interruptNumber >= INTCPS_NR_OF_INTERRUPTS))
+  if (interruptNumber >= INTCPS_NR_OF_INTERRUPTS)
   {
     DIE_NOW(0, "INTC: isMasked interrupt number out of range.");
   }
@@ -640,7 +640,7 @@ void setInterrupt(u32int irqNum)
   u32int bitMask = 0;
   u32int bankNumber = 0;
 
-  if ((irqNum < 0) || (irqNum >= INTCPS_NR_OF_INTERRUPTS))
+  if (irqNum >= INTCPS_NR_OF_INTERRUPTS)
   {
     DIE_NOW(0, "INTC: setInterrupt interrupt number out of range.");
   }
@@ -690,7 +690,7 @@ void clearInterrupt(u32int irqNum)
   u32int bitMask = 0;
   u32int bankNumber = 0;
 
-  if ((irqNum < 0) || (irqNum >= INTCPS_NR_OF_INTERRUPTS))
+  if (irqNum >= INTCPS_NR_OF_INTERRUPTS)
   {
     DIE_NOW(0, "INTC: setInterrupt interrupt number out of range.");
   }

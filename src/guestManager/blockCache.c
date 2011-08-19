@@ -133,7 +133,7 @@ u32int findEntryForAddress(BCENTRY * bcAddr, u32int addr)
       }
     }
   }
-  return -1;
+  return (u32int)-1;
 }
 
 /* remove a specific cache entry */
@@ -160,7 +160,7 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
     2.1. if found, get hypercall, and update SWIcode to point to found entry
     2.2. if not found, restore hypered instruction back!
    */
-  int i = 0;
+  u32int i = 0;
 #ifdef BLOCK_CACHE_DBG
   printf("resolveCacheConflict: collision at index %x\n", index);
 #endif
@@ -233,7 +233,7 @@ void validateCachePreChange(BCENTRY * bcache, u32int address)
   if (isBitmapSetForAddress(address))
   {
     u32int cacheIndex = 0;
-    while( (cacheIndex = findEntryForAddress(bcache, address)) != -1 )
+    while( (cacheIndex = findEntryForAddress(bcache, address)) != (u32int)-1 )
     {
       removeCacheEntry(bcache, cacheIndex);
     }

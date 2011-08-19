@@ -168,11 +168,11 @@ void dumpMallocs()
 /* This version of memcpy assumes disjoint ptrs src, dst */
 void *memcpy(void *dst, const void *src, u32int count)
 {
-  int i;
+  u32int i;
   char *dst_tmp = dst;
   const char *src_tmp = src;
 
-  if (!((unsigned int)src & 0xC) && !((unsigned int)dst & 0xC))
+  if (!((u32int)src & 0xC) && !((u32int)dst & 0xC))
   {
     //word aligned so we can safely do word copies
     for (i=0; i < count; i+=4)

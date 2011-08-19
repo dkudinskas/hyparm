@@ -1,5 +1,5 @@
 #include "common/memFunctions.h"
-#include "common/stringFunctions.h"
+#include "common/string.h"
 
 #include "cpuArch/cpu.h"
 
@@ -18,7 +18,7 @@ static void setup_start_tag(void);
 static void setup_revision_tag(void);
 static void setup_initrd_tag(ulong initrd_start, ulong initrd_end);
 static void setup_memory_tags(void);
-static void setup_commandline_tag(char *commandline);
+static void setup_commandline_tag(const char *commandline);
 static void setup_end_tag(void);
 
 static struct tag * paramTag;
@@ -32,7 +32,7 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
   u32int targetAddress = imageHeader->ih_load;
   u32int entryPoint = imageHeader->ih_ep;
   u32int sizeInBytes = imageHeader->ih_size;
-  char * commandline = "\0";
+  const char * commandline = "\0";
 
   paramTag = (struct tag *)BOARD_PARAMS;
 
@@ -117,9 +117,9 @@ static void setup_memory_tags()
   }
 }
 
-static void setup_commandline_tag(char *commandline)
+static void setup_commandline_tag(const char *commandline)
 {
-  char *p;
+  const char *p;
 
   if (!commandline)
   {
@@ -140,7 +140,7 @@ static void setup_commandline_tag(char *commandline)
   paramTag->hdr.tag = ATAG_CMDLINE;
   paramTag->hdr.size = (sizeof(struct tag_header) + strlen(p) + 1 + 4) >> 2;
 
-  stringcpy(paramTag->u.cmdline.cmdline, p);
+  strcpy(paramTag->u.cmdline.cmdline, p);
 
   paramTag = tag_next(paramTag);
 }

@@ -4,13 +4,13 @@
 #include "instructionEmu/dataProcessInstr.h"
 
 
-void invalidDataProcTrap(char * msg, GCONTXT * gc)
+void invalidDataProcTrap(const char * msg, GCONTXT * gc)
 {
   printf("%08x @ %08x should not have trapped!\n", gc->endOfBlockInstr, gc->R15);
   DIE_NOW(gc, msg);
 }
 
-u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
+u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
 {
   u32int instr = context->endOfBlockInstr;
   u32int cpsrCC = (context->CPSR >> 28) & 0xF;

@@ -14,7 +14,7 @@
 
 char * buffer;
 
-extern fatfs mainFilesystem;
+//extern fatfs mainFilesystem;
 extern partitionTable primaryPartitionTable;
 
 /* Function to abstract away partition lba offsets.
@@ -233,7 +233,7 @@ void tree(fatfs *fs, u32int currentCluster, u32int level)
 
 
 /* Sees if the user filename matches the format in the FAT */
-bool filenameMatch(char *user, char *fatname)
+bool filenameMatch(const char *user, char *fatname)
 {
   int i;
   for (i = 0; i < 11; i++)
@@ -286,7 +286,7 @@ void fatSetClusterValue(fatfs *fs, u32int clus, u32int val)
 }
 
 
-dentry *getPathDirEntry(fatfs *fs, char *fname, int createNew)
+dentry *getPathDirEntry(fatfs *fs, const char *fname, int createNew)
 {
 #ifdef FAT_DEBUG
   printf("getPathDirEntry: %s\n", fname);
@@ -392,9 +392,9 @@ void setFatDirEntry(fatfs *fs, dentry *dirEntry, u32int position)
 /* Scan the FAT for the first free cluster, returns the cluster number */
 u32int fatGetFreeClus(fatfs *fs)
 {
+  u32int index;
   u32int val = 0;
 
-  int index = 0;
   for (index = 0; index < fs->sectorsPerFat; index++)
   {
     fatBlockRead(fs, fs->fatBegin + index, 1, buffer);
@@ -514,7 +514,7 @@ int fread(fatfs *fs, file *handle, void *out, u32int maxlen)
   printf("fread: file '%s' max data length %x\n", handle->dirEntry->filename, maxlen);
 #endif
 
-  int i;
+  u32int i;
 
   u32int currentCluster = handle->dirEntry->firstCluster;
   u32int currentLength = 0;
@@ -617,7 +617,7 @@ int fdelete(fatfs *fs, file *handle)
 } // end fuction
 
 
-file* fopen(fatfs* fs, char* fname)
+file* fopen(fatfs* fs, const char* fname)
 {
 #ifdef FAT_DEBUG
   printf("fopen: file '%s'\n", fname);
@@ -697,7 +697,7 @@ file* fopen(fatfs* fs, char* fname)
   return f;
 }
 
-file* fnew(fatfs *fs, char *fname)
+file* fnew(fatfs *fs, const char *fname)
 {
 #ifdef FAT_DEBUG
   printf("fnew: file '%s'\n", fname);

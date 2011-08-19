@@ -8,7 +8,7 @@
 
 // uncomment me for LOAD/STORE instruction trace: #define DATA_MOVE_TRACE
 
-void invalidDataProcTrap(char * msg, GCONTXT * gc);
+void invalidDataMoveTrap(const char * msg, GCONTXT * gc);
 
 u32int strInstruction(GCONTXT * context);
 u32int strbInstruction(GCONTXT * context);

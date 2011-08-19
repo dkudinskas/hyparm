@@ -74,8 +74,8 @@ void setFatDirEntry(fatfs *fs, dentry *d, u32int position);
 int fread(fatfs *fs, file *handle, void *out, u32int maxlen);
 int fwrite(fatfs *fs, file *handle, void *src, u32int length);
 int fdelete(fatfs *fs, file *handle);
-file* fopen(fatfs *fs, char *fname);
-file* fnew(fatfs *fs, char *fname);
+file* fopen(fatfs *fs, const char *fname);
+file* fnew(fatfs *fs, const char *fname);
 
 /*** READ / WRITE BLOCKS ***/
 u32int fatBlockRead(fatfs *fs, u32int start, u64int blkCount, void *dst);
@@ -89,8 +89,8 @@ u32int fatGetFreeClus(fatfs *fs);
 
 u32int fatGetNextClus(fatfs *fs, u32int clus);
 
-bool filenameMatch(char *user, char *fatname);
+bool filenameMatch(const char *user, char *fatname);
 
-dentry *getPathDirEntry(fatfs *fs, char *fname, int createNew);
+dentry *getPathDirEntry(fatfs *fs, const char *fname, int createNew);
 
 #endif
