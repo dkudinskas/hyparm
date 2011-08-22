@@ -1,0 +1,72 @@
+#!/usr/bin/perl -w
+#
+# Pre-commit git hook.
+#
+# To enable, create a symbolic link from /contrib/hooks to /.git/hooks and make sure this file is marked as executable.
+# When enabled, this script can be bypassed with 'git commit --no-verify ...'.
+#
+# TODO: check for binary files (these shouldn't be put under source control in the first place, but we did it anyway), and do not complain about tabs in Makefiles.
+#
+
+use strict;
+use warnings;
+
+my $diffIndexAgainst = 'HEAD';
+my $handle;
+my $preventCommit = 0;
+my %stagedObjects = ();
+
+print "Executing pre-commit hook\n";
+
+# Initial commit: diff against an empty tree object
+$diffIndexAgainst='4b825dc642cb6eb9a060e54bf8d69288fbee4904' if system('git rev-parse --verify HEAD >/dev/null 2>&1');
+
+# Find all objects staged for the next commit
+open $handle, "git diff-index --cached $diffIndexAgainst | tr -d '\r' |";
+while (<$handle>)
+{
+  chomp;
+  if (!m/^:(?:[0-7]{6} ){2}[0-f]{40} ([0-f]{40}) [ACDMRU][0-9]*\t([^\t]+)(?:\t([^\t]+))?$/)
+  {
+    print STDERR "Fatal: cannot parse output of git diff-index\n";
+    exit 1;
+  }
+  my $id = $1;
+  my $name = (defined $3) ? $3 : $2;
+  $stagedObjects{$id} = $name;
+}
+close $handle;
+
+# For all objects, do some basic checks
+for my $id (keys %stagedObjects)
+{
+  my $name = $stagedObjects{$id};
+  open $handle, "git cat-file -p $id |";
+  while (<$handle>)
+  {
+    chomp;
+    while (m/([\x00-\x08\x0B-\x1F\x7F])/g)
+    {
+      $preventCommit = 1;
+      printf "%s:%u:%u: found ASCII control character %#.2x\n", $name, $., pos, ord($1);
+    }
+    while (m/([\x80-\xFF])/g)
+    {
+      $preventCommit = 1;
+      printf "%s:%u:%u: found non-ASCII character %#.2x\n", $name, $., pos, ord($1);
+    }
+    while (m/\t/g)
+    {
+      $preventCommit = 1;
+      printf "%s:%u:%u: found tab character\n", $name, $., pos;
+    }
+    if (m/^\s+$/)
+    {
+      $preventCommit = 1;
+      printf "%s:%u: line has trailing whitespace\n", $name, $.;
+    }
+  }
+}
+
+print "Commit aborted!\n" if $preventCommit;
+exit $preventCommit;
