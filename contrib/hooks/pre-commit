@@ -16,6 +16,27 @@ my $handle;
 my $preventCommit = 0;
 my %stagedObjects = ();
 
+# This map is a mapping of a regular expression to an ignore mask.
+# The names of changed files are matched to the keys in random order (!); only the first match is used.
+# Valid ignore mask characters are:
+#   T  - ignore tab characters
+#   *  - ignore this file completely
+my %ignoreMap =
+  (
+    # Ignore tab characters in Makefiles
+    '/Makefile$' => 'T',
+    '\.mk$' => 'T',
+
+    # Don't check files in contrib
+    '^/contrib' => '*',
+
+    # Ignore tab characters in linker scripts
+    '^/scripts/.*\.lds' => 'T',
+
+    # Don't check files in scripts/kconfig
+    '^/scripts/kconfig/' => 'T',
+  );
+
 print "Executing pre-commit hook\n";
 
 # Initial commit: diff against an empty tree object
@@ -41,29 +62,44 @@ close $handle;
 for my $id (keys %stagedObjects)
 {
   my $name = $stagedObjects{$id};
-  open $handle, "git cat-file -p $id |";
-  while (<$handle>)
+  my $ignore = '';
+  foreach (keys %ignoreMap)
   {
-    chomp;
-    while (m/([\x00-\x08\x0B-\x1F\x7F])/g)
+    if ("/$name" =~ /$_/)
     {
-      $preventCommit = 1;
-      printf "%s:%u:%u: found ASCII control character %#.2x\n", $name, $., pos, ord($1);
+      $ignore = $ignoreMap{$_};
+      last;
     }
-    while (m/([\x80-\xFF])/g)
+  }
+  if ($ignore !~ /\*/)
+  {
+    open $handle, "git cat-file -p $id |";
+    while (<$handle>)
     {
-      $preventCommit = 1;
-      printf "%s:%u:%u: found non-ASCII character %#.2x\n", $name, $., pos, ord($1);
-    }
-    while (m/\t/g)
-    {
-      $preventCommit = 1;
-      printf "%s:%u:%u: found tab character\n", $name, $., pos;
-    }
-    if (m/^\s+$/)
-    {
-      $preventCommit = 1;
-      printf "%s:%u: line has trailing whitespace\n", $name, $.;
+      chomp;
+      while (m/([\x00-\x08\x0B-\x1F\x7F])/g)
+      {
+        $preventCommit = 1;
+        printf "%s:%u:%u: found ASCII control character %#.2x\n", $name, $., pos, ord($1);
+      }
+      while (m/([\x80-\xFF])/g)
+      {
+        $preventCommit = 1;
+        printf "%s:%u:%u: found non-ASCII character %#.2x\n", $name, $., pos, ord($1);
+      }
+      if ($ignore !~ /T/)
+      {
+        while (m/\t/g)
+        {
+          $preventCommit = 1;
+          printf "%s:%u:%u: found tab character\n", $name, $., pos;
+        }
+      }
+      if (m/^\s+$/)
+      {
+        $preventCommit = 1;
+        printf "%s:%u: line has trailing whitespace\n", $name, $.;
+      }
     }
   }
 }
