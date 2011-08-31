@@ -81,14 +81,8 @@ void l2_cache_disable(void);
     __asm__ __volatile__ ("MCR p15, 0, %0, c7, c5, 1": :"r" (vAddress) ); \
   }
 
-#ifdef CONFIG_CPU_ARCH_ARMV7_A
 
-#define CONFIG_CPU_ARCH_ARMV7
-
-#endif
-
-
-#if (defined(CONFIG_CPU_ARCH_ARMV6) || defined(CONFIG_CPU_ARCH_ARMV7))
+#if (defined(CONFIG_ARCH_V6) || defined(CONFIG_ARCH_V7))
 
 #define enableInterrupts() \
   { \
@@ -100,7 +94,7 @@ void l2_cache_disable(void);
     __asm__ __volatile__ ("CPSID i"); \
   }
 
-#elif defined(CONFIG_CPU_ARCH_ARMV5)
+#elif defined(CONFIG_ARCH_V5)
 
 #define enableInterrupts() \
   { \
@@ -119,7 +113,7 @@ void l2_cache_disable(void);
 #endif
 
 
-#if defined(CONFIG_CPU_ARCH_ARMV7)
+#if defined(CONFIG_ARCH_V7)
 
 /*
  * Infinite loop waiting for interrupts (even if they are masked)
@@ -132,7 +126,7 @@ void l2_cache_disable(void);
     } \
   }
 
-#elif (defined(CONFIG_CPU_ARCH_ARMV5T) || defined(CONFIG_CPU_ARCH_ARMV6))
+#elif (defined(CONFIG_ARCH_V5_T) || defined(CONFIG_ARCH_V6))
 
 /*
  * Infinite loop entering debug mode, which puts the processor in a low-power state

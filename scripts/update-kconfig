@@ -1,0 +1,142 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+use Cwd 'abs_path';
+use File::Basename;
+use Getopt::Long;
+
+
+my $SCRIPT_PATH = 'scripts';
+
+
+# Map of files in the hypervisor's $SCRIPT_PATH/kconfig directory to files in the Linux kernel's
+# scripts/kconfig directory.
+my %fileMapping =
+  (
+    'makefile.mk' => '.',
+    'COPYING' => '../../COPYING',
+    'VERSION' => '.',
+    'zconf.hash.c' => 'zconf.hash.c_shipped',
+    'zconf.lex.c' => 'zconf.lex.c_shipped',
+    'zconf.tab.c' => 'zconf.tab.c_shipped',
+  );
+
+
+sub getFiles($)
+{
+  my $dir = shift;
+  my $handle;
+  my @files;
+
+  opendir($handle, $dir) or die "Error: cannot list contents of '$dir'\n";
+  while (readdir($handle))
+  {
+    # Ignore '.', '..' and dot-files
+    next if /^\./;
+
+    # Ignore dependency files, object files, stack usage files, swap files and temporary files
+    next if /\.(d|o|su|swp|~)$/;
+
+    # Ignore subdirectories
+    next unless -f "$dir/$_";
+
+    push @files, $_;
+  }
+  closedir $handle;
+
+  return sort @files;
+}
+
+sub compareKConfigDirs($$)
+{
+  my $kernelKConfigDir = shift;
+  my $hyparmKConfigDir = shift;
+
+  my @hyparmFiles = getFiles($hyparmKConfigDir);
+
+  foreach my $hyparmFile (@hyparmFiles)
+  {
+    my $kernelFile = $hyparmFile;
+
+    # If there is a mapping defined for this file, use it
+    if (defined $fileMapping{$hyparmFile})
+    {
+      # If a file is mapped to '.', ignore it
+      next if $fileMapping{$hyparmFile} eq '.';
+      
+      # Otherwise, set the target filename in the kernel tree
+      $kernelFile = $fileMapping{$hyparmFile};
+    }
+
+    print "DIFF $SCRIPT_PATH/kconfig/$hyparmFile\n";
+
+    if (!-f "$kernelKConfigDir/$kernelFile" )
+    {
+      print "Warning: file '$kernelKConfigDir/$kernelFile' does not exist!\n";
+      next;
+    }
+
+    system('diff', "$hyparmKConfigDir/$hyparmFile", "$kernelKConfigDir/$kernelFile");
+    die "Error: failed to execute diff: $!\n" if ($? == -1);
+    die 'Error: child died with signal ' . ($? & 127) . "\n" if ($? & 127);
+  }
+}
+
+sub main
+{
+  # Kernel tree must be specified.
+  my $kernelTree = undef;
+
+  # Where are we? Determine path to hypervisor tree as default value.
+  my ($fileName, $path) = fileparse(__FILE__);
+  my $hyparmTree = abs_path("$path/..");
+
+  # Flag to request help; off by default.
+  my $help = 0;
+
+  my $result = GetOptions
+    (
+      'kernel=s' => \$kernelTree,
+      'hyparm=s' => \$hyparmTree,
+      'help'     => \$help
+    );
+
+  if ($help)
+  {
+    print "Usage: $0 --kernel=kernel-tree [--hyparm=hypervisor-tree]\n";
+    return 0;
+  }
+
+  if (!$kernelTree)
+  {
+    print STDERR "Error: location of the Linux kernel must be specified\n";
+    return 1;
+  }
+  
+  if (!$hyparmTree)
+  {
+    print STDERR "Error: location of the hypervisor cannot be empty\n";
+    return 1;
+  }
+  
+  $kernelTree = abs_path("$kernelTree/scripts/kconfig");
+  $hyparmTree = abs_path("$hyparmTree/$SCRIPT_PATH/kconfig");
+  
+  if (!$kernelTree || !-d $kernelTree)
+  {
+    print STDERR "Error: cannot locate Kconfig in kernel tree\n";
+    return 1;
+  }
+  
+  if (!$hyparmTree || !-d $hyparmTree)
+  {
+    print STDERR "Error: cannot locate Kconfig in hypervisor tree\n";
+    return 1;
+  }
+
+  compareKConfigDirs $kernelTree, $hyparmTree;
+}
+
+exit main;

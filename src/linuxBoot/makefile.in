@@ -1,4 +1,0 @@
-SRCS += src/linuxBoot/bootLinux.c
-SRCS += src/linuxBoot/image.c
-
-RAW_ASMS += src/linuxBoot/callKernel.s

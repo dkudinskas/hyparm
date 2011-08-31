@@ -10,8 +10,8 @@
  * This driver is for the CM Module of the TI OMAP 35xx only.
  * Sanity check!
  */
-#ifndef CONFIG_CPU_TI_OMAP_35XX
-#error Incompatible driver 
+#ifndef CONFIG_SOC_TI_OMAP_35XX
+#error Incompatible driver
 #endif
 
 

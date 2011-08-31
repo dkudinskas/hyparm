@@ -10,3 +10,7 @@ hooks/pre-commit
 
   A pre-commit git hook to check for all kinds of things we usually want
   to avoid committing.
+
+linux/*
+
+  Contains pre-built Linux kernel images for testing the hypervisor.
