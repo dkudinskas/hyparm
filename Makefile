@@ -199,8 +199,8 @@ $(OUTPUT_PATH)/$(APP_NAME).elf: $(HYPARM_OBJS) $(KCONFIG_CONFIG)
 	@$(LD) -o $@ $(LDFLAGS) $(filter-out $(KCONFIG_CONFIG), $+)
 
 
-$(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_CONFIG)
-	@echo DEP $<
+$(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_OK)
+	@echo $(MAKELEVEL) DEP $<
 	@$(CC) -M $(CPPFLAGS) -MP -MT $(patsubst %.c,%.c.o,$<) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm $@.$$$$
