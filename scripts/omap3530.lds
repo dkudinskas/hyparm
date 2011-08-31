@@ -14,7 +14,7 @@ SECTIONS
 	. = ALIGN(4);
 	.text :
 	{
-		:startup.o (.text)
+		src/startup.s.o (.text)
 		*(.text)
 	}
 }

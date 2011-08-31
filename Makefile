@@ -30,7 +30,8 @@ CFLAGS       := -pipe \
 		-Wall -Wextra -Winline -Wstrict-prototypes -Wwrite-strings \
 		-Wno-empty-body -Wno-unused-label -Wno-unused-parameter
 CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc
-LDFLAGS      := -L $(SOURCE_PATH)
+LDFLAGS      :=
+#-L $(SOURCE_PATH)
 
 
 CLEAN_GOALS  := clean clean_%
@@ -200,7 +201,7 @@ $(OUTPUT_PATH)/$(APP_NAME).elf: $(HYPARM_OBJS) $(KCONFIG_CONFIG)
 
 
 $(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_OK)
-	@echo $(MAKELEVEL) DEP $<
+	@echo DEP $<
 	@$(CC) -M $(CPPFLAGS) -MP -MT $(patsubst %.c,%.c.o,$<) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm $@.$$$$
