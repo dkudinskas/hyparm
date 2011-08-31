@@ -31,7 +31,6 @@ CFLAGS       := -pipe \
 		-Wno-empty-body -Wno-unused-label -Wno-unused-parameter
 CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc
 LDFLAGS      :=
-#-L $(SOURCE_PATH)
 
 
 CLEAN_GOALS  := clean clean_%
