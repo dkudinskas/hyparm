@@ -8,7 +8,20 @@
 #include "vm/omap35xx/intc.h"
 
 
+/*
+ * FIXME
+ *
+ * A guest can set an exception handler on an invalid address. The hypervisor will try to scan this
+ * block and get a data abort in privileged mode, and then it crashes...
+ */
+
+
+#ifdef CONFIG_GUEST_FREERTOS
+extern bool rtos;
+#endif
+
 extern GCONTXT * getGuestContext(void);
+
 
 void deliverServiceCall(void)
 {
@@ -20,8 +33,24 @@ void deliverServiceCall(void)
   context->SPSR_SVC = context->CPSR;
   // 3. put guest CPSR in SVC mode
   context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_SVC;
-  // 5. set LR to PC+4
-  context->R14_SVC = context->R15 + 4;
+  // 4. set LR to PC+4
+#ifdef CONFIG_THUMB2
+  if(context->CPSR & 0x20)// Were we on Thumb?
+  {
+    context->R14_SVC = context->R15 + 2;
+  }
+  else
+  {
+#endif
+    context->R14_SVC = context->R15 + 4;
+#ifdef CONFIG_THUMB2
+  }
+  /*
+   * FIXME Niels: I think this depends on a CP15 value
+   */
+  // 5. Clear Thumb bit
+  context->CPSR &= ~0x20;
+#endif
   // 6. set PC to guest svc handler address
   if (context->virtAddrEnabled)
   {
@@ -36,7 +65,11 @@ void deliverServiceCall(void)
   }
   else
   {
+#ifdef CONFIG_GUEST_FREERTOS
+    context->R15 = context->guestSwiHandler;
+#else
     DIE_NOW(0, "deliverInterrupt: SVC to be delivered with guest vmem off.");
+#endif
   }
   // update AFI bits for SVC:
   context->CPSR |= CPSR_IRQ_DIS;
@@ -53,12 +86,21 @@ void throwInterrupt(u32int irqNumber)
       // set it pending in emulated interrupt controller
       setInterrupt(GPT1_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending() && ((context->CPSR & CPSR_IRQ_DIS) == 0) )
+      if (isIrqPending() && ((context->CPSR & CPSR_IRQ_DIS) == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
+#ifdef GUEST_EXCEPTIONS_DBG
+        printf("Enable guest Interrupts\n");
+#endif
         context->guestIrqPending = TRUE;
       }
+#ifdef GUEST_EXCEPTIONS_DBG
+      else
+      {
+        printf("Guest is not ready to handle IRQ: %x\n", context->R15);
+      }
+#endif
       break;
     case UART1_IRQ:
       setInterrupt(UART1_IRQ);
@@ -104,9 +146,16 @@ void deliverInterrupt(void)
   context->SPSR_IRQ = context->CPSR;
   // 3. put guest CPSR in IRQ mode
   context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_IRQ;
-  // 4. set LR to PC+4
+#ifdef CONFIG_THUMB2
+  /*
+   * FIXME Niels: I think this depends on a CP15 value
+   */
+  // 4. clear Thumb bit
+  context->CPSR &= ~0x20; // FIX ME. This needs to be hardcoded somewhere
+#endif
+  // 5. set LR to PC+4
   context->R14_IRQ = context->R15 + 4;
-  // 5. set PC to guest irq handler address
+  // 6. set PC to guest irq handler address
   if (context->virtAddrEnabled)
   {
     if (context->guestHighVectorSet)
@@ -120,7 +169,11 @@ void deliverInterrupt(void)
   }
   else
   {
+#ifdef CONFIG_GUEST_FREERTOS
+    context->R15 = context->guestIrqHandler;
+#else
     DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
+#endif
   }
   // update AFI bits for IRQ:
   context->CPSR |= CPSR_IRQ_DIS;
@@ -152,7 +205,11 @@ void deliverDataAbort()
   }
   else
   {
+#ifdef CONFIG_GUEST_FREERTOS
+    context->R15 = context->guestDataAbortHandler;
+#else
     DIE_NOW(0, "deliverInterrupt: Data abort to be delivered with guest vmem off.");
+#endif
   }
   // update AFI bits for IRQ:
   context->CPSR |= CPSR_IRQ_DIS;
@@ -171,7 +228,7 @@ void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domai
     dfsr |= 0x800; // write-not-read bit
   }
 #ifdef GUEST_EXCEPTIONS_DBG
-  printf("throwDataAbort(%08x): faultType %x, isWrite %x, dom %x, @pc %08x, dfsr %08x\n", 
+  printf("throwDataAbort(%08x): faultType %x, isWrite %x, dom %x, @pc %08x, dfsr %08x\n",
          address, faultType, isWrite, domain, context->R15, dfsr);
 #endif
   setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);

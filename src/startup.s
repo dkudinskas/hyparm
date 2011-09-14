@@ -1,8 +1,9 @@
 /* Standard definitions */
 
-.equ A_BIT,            0x100     /* when set, async aborts are disabled */
+.equ A_BIT,            0x100      /* when set, async aborts are disabled */
 .equ I_BIT,             0x80      /* when set, IRQ is disabled */
 .equ F_BIT,             0x40      /* when set, FIQ is disabled */
+.equ T_BIT,             0x20      /* when set, Thumb mode is enabled */
 
 .equ USR_MODE,          0x10
 .equ FIQ_MODE,          0x11
@@ -160,15 +161,15 @@ _start:
    * This function must never return.
    */
   B       main
-infiniteLoopAfterMain:
-  B       =infiniteLoopAfterMain
 
 
 /*
  * Exception vector; only used in case security extensions are implemented.
  */
 .ifdef CONFIG_ARCH_EXT_SECURITY
+
   .balign 0x20
+
   .global exceptionVectorBase
 exceptionVectorBase:
   B       exceptionVectorBase
@@ -179,7 +180,34 @@ exceptionVectorBase:
   B       monHandler
   B       irqHandler
   B       fiqHandler
-.endif
+
+.endif /* CONFIG_ARCH_EXT_SECURITY */
+
+
+/*
+ * Emergency exception vector (depends on CONFIG_ARCH_EXT_SECURITY).
+ */
+.ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
+
+  .balign 0x20
+  .global emergencyExceptionVectorBase
+emergencyExceptionVectorBase:
+  B       emergencyExceptionVectorBase
+  B       emergencyExceptionVectorBase
+  B       emergencyExceptionVectorBase
+  B       emergencyExceptionVectorBase
+  B       emergencyExceptionVectorBase
+  B       emergencyExceptionVectorBase
+  B       emergencyExceptionVectorBase
+  B       emergencyExceptionVectorBase
+
+  .global setEmergencyExceptionVector
+setEmergencyExceptionVector:
+  LDR     R0, =emergencyExceptionVectorBase
+  MCR     P15, 0, R0, C12, C0, 0
+  MOV     PC, LR
+
+.endif /* CONFIG_EMERGENCY_EXCEPTION_VECTOR */
 
 
 .global getGuestContext
@@ -188,18 +216,13 @@ getGuestContext:
   LDR     R0, [R0]
   MOV     PC, LR
 
-/* address of guest contest in R0 */
-.global registerGuestPointer
-.func   registerGuestPointer
-registerGuestPointer:
-  PUSH    {R0, R1}
+
+.global setGuestContext
+setGuestContext:
   LDR     R1, =guestContextSpace
   STR     R0, [R1]
-
-  /* restore dirty registers */
-  POP     {R0, R1}
   MOV     PC, LR
-.endfunc
+
 
 /* Loads guest mode into R0, loads addr into R1 */
 .macro get_emulated_mode
@@ -208,7 +231,9 @@ registerGuestPointer:
   MOV     R1, R0
   ADD     R0, R0, #GC_CPSR_OFFS
   LDR     R0, [R0]
-  ANDS    R0, R0, #0x1F
+
+  AND     R0, R0, #0x1F
+  CMP     R0, #0x1F
   ADDEQ   R1, R1, #GC_R13_OFFS
   CMP     R0, #0x10
   ADDEQ   R1, R1, #GC_R13_OFFS
@@ -249,7 +274,23 @@ registerGuestPointer:
 .macro save_pc
   /* store guest PC */
   MOV     R0, LR
+  /*
+   * FIXME in all CONFIG_THUMB2 blocks: is PUSH/POP really needed? Niels: i don't think so.
+   */
+.ifdef CONFIG_THUMB2
+  PUSH    {R3}
+  LDR     R3, =guestContextSpace
+  LDR     R3, [R3]
+  ADD     R3, R3, #GC_CPSR_OFFS
+  LDR     R3, [R3]
+  AND     R3, R3, #0x20
+  CMP     R3, #0x20
+  SUBNE   R0, R0, #4 @ARM
+  SUBEQ   R0, R0, #2 @Thumb
+  POP     {R3}
+.else
   SUB     R0, R0, #4
+.endif
   LDR     R1, =guestContextSpace
   LDR     R1, [R1]
   ADD     R1, R1, #GC_R15_OFFS
@@ -320,14 +361,40 @@ registerGuestPointer:
   LDR     LR, [LR]
   /* Preserve condition flags */
   AND     LR, LR, #0xf0000000
+.ifdef CONFIG_THUMB2
+  /* set user mode, disable async abts and fiqs, but enable irqs and check for Thumb Bit */
+  PUSH    {R3}
+  LDR     R3, =guestContextSpace
+  LDR     R3, [R3]
+  ADD     R3, R3, #GC_CPSR_OFFS
+  LDR     R3, [R3]
+  AND     R3, R3, #0x20
+  CMP     R3, #0x20
+  ORREQ   LR, LR, #(USR_MODE | A_BIT | F_BIT | T_BIT)
+  ORRNE   LR, LR, #(USR_MODE | A_BIT | F_BIT)
+  MSR     SPSR, LR
+  POP     {R3}
+.else
   /* set user mode, disable async abts and fiqs, but enable irqs */
   ORR     LR, LR, #(USR_MODE | A_BIT | F_BIT)
   MSR     SPSR, LR
+.endif
   /* get PC and save on stack */
   LDR     LR, =guestContextSpace
   LDR     LR, [LR]
   ADD     LR, LR, #GC_R15_OFFS
   LDR     LR, [LR]
+.ifdef CONFIG_THUMB2
+  PUSH    {R3}
+  LDR     R3, =guestContextSpace
+  LDR     R3, [R3]
+  ADD     R3, R3, #GC_CPSR_OFFS
+  LDR     R3, [R3]
+  AND     R3, R3, #0x20
+  CMP     R3, #0x20
+  SUBEQ   LR, LR, #2
+  POP  {R3}
+.endif
   STM     SP, {LR}
   LDM     SP, {PC}^
 .endm
@@ -343,8 +410,13 @@ registerGuestPointer:
   /* Preserve condition flags */
   LDR     LR, [LR]
   AND     R0, LR, #0xf0000000
+.ifdef CONFIG_THUMB2
+  /* Preserve exception flags & Thumb state*/
+  AND     LR, LR, #0x1E0
+.else
   /* Preserve exception flags */
   AND     LR, LR, #0x1C0
+.endif
   ORR     R0, LR, R0
   /* set user mode */
   ORR     R0, R0, #(USR_MODE)
@@ -361,9 +433,6 @@ registerGuestPointer:
 .endm
 
 
-
-
-
 .global svcHandler
 svcHandler:
     /* We can NOT assume that the data abort is guest code */
@@ -374,8 +443,21 @@ svcHandler:
     save_cc_flags
 
     /* get SVC code into @parameter1 and call C function */
+.ifdef CONFIG_THUMB2
+    LDR     R0, =guestContextSpace
+    LDR     R0, [R0]
+    ADD     R0, R0, #GC_CPSR_OFFS
+    LDR     R0, [R0]
+    AND     R1, R0, #0x20 @Check thumb bit
+    CMP     R1, #0x20
+    LDRNE   R0, [LR, #-4] @Thumb bit = 0
+    ANDNE   R0, #0xFFFFFF
+    LDREQB  R0, [LR, #-2]
+    ANDEQ   R0, #0x00FF
+.else
     LDR     R0, [LR, #-4]
     AND     R0, #0xFFFFFF
+.endif
     BL      softwareInterrupt
 
     restore_r13_r14
@@ -388,7 +470,12 @@ dabtHandler:
     Push   {LR}
     /* Test SPSR -> are we from USR mode? */
     MRS    LR, SPSR
+.ifdef CONFIG_HACKS_MARKOS
+    AND    LR, LR, #0x1F
+    CMP    LR, #0x10
+.else
     ANDS   LR, LR, #0x0f
+.endif
     BNE    dabtHandlerPriv
 
     /* We were in USR mode, we must have been running guest code */
@@ -421,7 +508,12 @@ dabtPrivLoop:
 undHandler:
   PUSH   {LR}
   MRS    LR, SPSR
+.ifdef CONFIG_HACKS_MARKOS
+  AND    LR, LR, #0x1F
+  CMP    LR, #0x10
+.else
   ANDS   LR, LR, #0x0f
+.endif
   BNE    undHandlerPriv /* Abort occured in Hypervisor (privileged) code */
 
   /* We were in USR mode, we must have been running guest code */
@@ -455,7 +547,12 @@ pabthandler:
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
+.ifdef CONFIG_HACKS_MARKOS
+  AND    LR, LR, #0x1F
+  CMP    LR, #0x10
+.else
   ANDS   LR, LR, #0x0f
+.endif
   BNE    pabtHandlerPriv
 
   /* We were in USR mode, we must have been running guest code */
@@ -487,7 +584,12 @@ pabtPrivLoop:
 monHandler:
   PUSH   {LR}
   MRS    LR, SPSR
+.ifdef CONFIG_HACKS_MARKOS
+  AND    LR, LR, #0x1F
+  CMP    LR, #0x10
+.else
   ANDS   LR, LR, #0x0f
+.endif
   BNE    monHandlerPriv /* Call occured in Hypervisor (privileged) code */
 
   /* We were in USR mode, we must have been running guest code */
@@ -524,7 +626,12 @@ irqHandler:
   /* need to check if we came from guest mode, or were inside the hypervisor */
   PUSH   {LR}
   MRS    LR, SPSR
+.ifdef CONFIG_HACKS_MARKOS
+  AND    LR, LR, #0x1F
+  CMP    LR, #0x10
+.else
   ANDS   LR, LR, #0x0f
+.endif
   /* interrupt occured whilst running hypervisor */
   BNE    irqHandlerPriv
 
@@ -570,14 +677,25 @@ exception_vector:
   .err @ Unknown target
 .endif
 
-
-.bss
-
-/* pointer to current guest context structure lives here */
+/*
+ * 32-bit space for the guest context pointer.
+ * This space must be in a .data section to make sure it is initialized to zero.
+ */
 guestContextSpace:
   .space 4
 
-/* physical real mode stacks */
+
+/*
+ * Space allocated in the BSS section is *not* initialized to zero.
+ */
+.bss
+
+/*
+ * Allocate stack space.
+ *
+ * WARNING: EABI requires 8-byte aligned stacks!!!
+ */
+  .balign 8
 usrStack:
   .space 1024
 svcStack:
@@ -590,5 +708,3 @@ irqStack:
   .space 1024
 fiqStack:
   .space 1024
-
-.section .rodata

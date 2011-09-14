@@ -28,10 +28,13 @@ void initialiseBlockCache(BCENTRY * bcache)
     bcache[i].startAddress = 0;
     bcache[i].endAddress = 0;
     bcache[i].hyperedInstruction = 0;
+#ifdef CONFIG_THUMB2
+    bcache[i].halfhyperedInstruction = 0;
+#endif
     bcache[i].valid = FALSE;
     bcache[i].hdlFunct = 0;
   }
-  
+
   for (i = 0; i < NUMBER_OF_BITMAPS; i++)
   {
     execBitMap[i] = 0;
@@ -63,7 +66,11 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr)
   }
 }
 
+#ifdef CONFIG_THUMB2
+void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int halfhypInstruction, u32int blkEndAddr,
+#else
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
+#endif
                      u32int index, u32int hdlFunct, BCENTRY * bcAddr)
 {
 #ifdef BLOCK_CACHE_DBG
@@ -77,6 +84,9 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAd
     // now that we resolved the conflict, we can store the new entry data...
     bcAddr[index].startAddress = blkStartAddr;
     bcAddr[index].endAddress = blkEndAddr;
+#ifdef CONFIG_THUMB2
+    bcAddr[index].halfhyperedInstruction = halfhypInstruction;
+#endif
     bcAddr[index].hyperedInstruction = hypInstruction;
     bcAddr[index].hdlFunct = hdlFunct;
     bcAddr[index].valid = TRUE;
@@ -93,10 +103,13 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAd
     bcAddr[index].startAddress = blkStartAddr;
     bcAddr[index].endAddress = blkEndAddr;
     bcAddr[index].hyperedInstruction = hypInstruction;
+#ifdef CONFIG_THUMB2
+    bcAddr[index].halfhyperedInstruction = halfhypInstruction;
+#endif
     bcAddr[index].hdlFunct = hdlFunct;
     bcAddr[index].valid = TRUE;
   }
-  
+
   // set bitmap entry to executed
   setExecBitMap(blkEndAddr);
 }
@@ -146,6 +159,9 @@ void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex)
   bcAddr[cacheIndex].endAddress = 0;
   bcAddr[cacheIndex].hdlFunct = 0;
   bcAddr[cacheIndex].hyperedInstruction = 0;
+#ifdef CONFIG_THUMB2
+  bcAddr[cacheIndex].halfhyperedInstruction = 0;
+#endif
   return;
 }
 
@@ -161,6 +177,9 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
     2.2. if not found, restore hypered instruction back!
    */
   u32int i = 0;
+#ifdef CONFIG_THUMB2
+  struct thumbEntry tb;
+#endif
 #ifdef BLOCK_CACHE_DBG
   printf("resolveCacheConflict: collision at index %x\n", index);
 #endif
@@ -183,6 +202,16 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
         (bcAddr[i].endAddress == bcAddr[index].endAddress) &&
         (i != index) )
     {
+#ifdef CONFIG_THUMB2
+      /* found a valid entry in the cache, that BB ends @ the same address as
+      * the block of the entry that we collided with.
+      * Call the resolve function to ensure that conflicts between Thumb and ARM SWIs
+      * will be resolved as approprate otherwise say 'hello' to segfault ^_^
+      * ARM: SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
+      * Thumb: SWI 0xDF<code> is replaced with SWI<newcode> where newcode points new entry
+      */
+      resolveSWI(i, (u32int*)bcAddr[index].endAddress);
+#else
       // found a valid entry in the cache, that BB ends @ the same address as
       // the block of the entry that we collided with.
       u32int hypercallSWI = *((u32int*)(bcAddr[index].endAddress));
@@ -193,16 +222,60 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
       printf("resolveCacheConflict: replace hypercall with %x\n", hypercallSWI);
 #endif
       *((u32int*)(bcAddr[index].endAddress)) = hypercallSWI;
+#endif
       return;
     }
   }
+
 #ifdef BLOCK_CACHE_DBG
   printf("resolveCacheConflict: no other BB ends at same address.\n");
   // restore hypered instruction back!
+# ifndef CONFIG_THUMB2
+  /*
+   * FIXME Markos: this is broken for thumb. I have to fix it
+   */
   printf("resolveCacheConflict: restoring hypercall %x back to %08x\n",
         *((u32int*)(bcAddr[index].endAddress)), bcAddr[index].hyperedInstruction);
+# endif /* CONFIG_THUMB2 */
+#endif /* BLOCK_CACHE_DBG */
+
+#ifdef CONFIG_THUMB2
+  tb = BreakDownThumb(bcAddr,index);
+  if (tb.isthumb==0)
+  {
+#ifdef BLOCK_CACHE_DBG
+    printf("Restoring %08x@%08x\n",bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
 #endif
+    *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
+  }
+  else
+  {
+    //Assuming endAddress points to the end address of the block then...
+    if(tb.second==0)// this is a thumb 16
+    {
+#ifdef BLOCK_CACHE_DBG
+      printf("Restoring %08x@%08x\n",tb.first,(bcAddr[index].endAddress));
+#endif
+      *((u16int*)(bcAddr[index].endAddress)) = tb.first;
+    }
+    else
+    {
+      u16int *bpointer = 0;
+#ifdef BLOCK_CACHE_DBG
+      printf("Restoring %08x@%08x  ",tb.second,(bcAddr[index].endAddress));
+#endif
+      bpointer = (u16int*)(bcAddr[index].endAddress);
+      *bpointer = tb.second;
+      bpointer --;
+#ifdef BLOCK_CACHE_DBG
+      printf("and %08x@%08x\n",tb.first,bpointer);
+#endif
+      *bpointer = tb.first;
+    }
+  }
+#else
   *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
+#endif
 }
 
 
@@ -273,7 +346,7 @@ void dumpBlockCacheEntry(u32int index, BCENTRY * bcache)
 
 void setExecBitMap(u32int addr)
 {
-  u32int index = addr / MEMORY_PER_BITMAP; 
+  u32int index = addr / MEMORY_PER_BITMAP;
   u32int bitNumber = (addr & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
 
   execBitMap[index] = execBitMap[index] | (1 << bitNumber);
@@ -281,7 +354,7 @@ void setExecBitMap(u32int addr)
 
 void clearExecBitMap(u32int addr)
 {
-  u32int index = addr / MEMORY_PER_BITMAP; 
+  u32int index = addr / MEMORY_PER_BITMAP;
   u32int bitNumber = (addr & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
 
   execBitMap[index] = execBitMap[index] & ~(1 << bitNumber);
@@ -289,9 +362,93 @@ void clearExecBitMap(u32int addr)
 
 bool isBitmapSetForAddress(u32int addr)
 {
-  u32int index = addr / MEMORY_PER_BITMAP; 
+  u32int index = addr / MEMORY_PER_BITMAP;
   u32int bitNumber = (addr & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
-  u32int bitResult = execBitMap[index] & (1 << bitNumber); 
+  u32int bitResult = execBitMap[index] & (1 << bitNumber);
   return (bitResult != 0);
 }
+
+
+#ifdef CONFIG_THUMB2
+
+struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int index)
+{
+  struct thumbEntry tb;
+  tb.first = 0;
+  tb.second = 0;
+#ifdef BLOCK_CACHE_DBG
+  printf("I will restore %08x[%08x]\n",bcAddr[index].hyperedInstruction,index);
+#endif
+  switch(bcAddr[index].halfhyperedInstruction)
+  {
+    case 0: // this is an ARM entry
+      tb.isthumb=FALSE;
+      break;
+    case THUMB16:
+      tb.isthumb=TRUE;
+      tb.first=bcAddr[index].hyperedInstruction;
+      tb.second = 0;
+      break;
+    case THUMB32:
+      tb.isthumb=TRUE;
+      tb.first = ( (bcAddr[index].hyperedInstruction) & 0xFFFF0000) >> 16;
+      tb.second =(bcAddr[index].hyperedInstruction) & 0x0000FFFF;
+      break;
+    default:
+      DIE_NOW(0,"BreakDownThumb is b0rked. Fix me");
+  }
+  return tb;
+}
+
+void resolveSWI( u32int index, u32int * endAddress)
+{
+  u32int hypercall = 0;
+  // Ok so endAddress holds the SWI we collided with. Check if it is word aligned
+  if(((u32int)endAddress & 0x3) >= 0x2)
+  {
+    //Not word aligned. It must be a Thumb SWI
+    u16int * halfendAddress = (u16int*)endAddress;
+    //fetch the SWI
+    hypercall = *halfendAddress;
+    //adjust the hypercall
+    hypercall = ( (hypercall & 0xFF00) | (index+1));
+
+    //store it
+    *halfendAddress = hypercall;
+  }
+  // Tricky. It can be a Thumb or an ARM SWI. Check!
+  else
+  {
+    u16int * halfendAddress = (u16int*)endAddress;
+    u16int halfinstruction = 0;
+    halfinstruction = *halfendAddress;
+    // SVC 0 is not ours. Do not touch it but die instead and let me think on how to fix it :/
+    if( ( (halfinstruction & 0xDFFF) > INSTR_SWI_THUMB) && ( (halfinstruction & 0xDFFF) <= 0xDFFF ) )
+    {
+      //Ok so this is a thumb SWI
+      hypercall = *halfendAddress;
+      //adjust the hypercall
+      hypercall = ( (hypercall & 0xFF00) | (index+1));
+      * halfendAddress = hypercall;
+    }
+    else if ( (halfinstruction & 0xDFFF) == INSTR_SWI_THUMB)
+    {
+      DIE_NOW(0,"Damn. Seems like you hit a guest SVC. Fix me");
+    }
+    else // OK this is an ARM SWI
+    {
+      hypercall = *endAddress;
+      hypercall = (hypercall & 0xFF000000) | ((index + 1) << 8);
+      *endAddress = hypercall;
+    }
+  }
+#ifdef BLOCK_CACHE_DBG
+  printf(
+      "resolveCacheConflict: found another BB to end at same address.\n"
+      "resolveCacheConflict: replace hypercall with %x\n", hypercall
+    );
+#endif
+}
+
+#endif
 

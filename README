@@ -18,7 +18,29 @@ You can manually build a uImage from an uncompressed kernel:
 1. Build an Image file:
 arm-none-eabi-objcopy -O binary -R .note -R .note.gnu.build-id -R .comment -S vmlinux arch/arm/boot/Image
 2. Invoke mkimage on the Image file instead:
-mkimage -A arm -O linux -T kernel -C none -a 0x80008000 -e 0x80008000 -n 'Linux-2.6.28.1' -d arch/arm/boot/Image arch/arm/boot/uImage 
+mkimage -A arm -O linux -T kernel -C none -a 0x80008000 -e 0x80008000 -n 'Linux-2.6.28.1' -d arch/arm/boot/Image arch/arm/boot/uImage
+
+FREERTOS:
+
+Clone the following git repository
+
+git clone git://git.silverarrow.org/shared/freertos-ported.git
+
+1. Open the Makefile located at Demo/ARM_OMAP3/Makefile.
+
+2. Set USE_THUMB_MODE = YES for Thumb-2 binary or NO for ARMv7 binary.
+
+3. Set USE_HYPERVISOR = 1 for starting a single LED task or 0 for starting all the demo tasks ( except comtask ).
+
+4. Set USE_PREEMPTION in Demo/ARM_OMAP3/FreeRTOSConfig.h to the desired value ( 0 or 1 ).
+
+5. Compile the hypervisor ( see instructions below )
+
+6. Run the program by invoking:
+
+go 0x8c000000 -rtos 0x80300000
+
+Note: Remember to change the default memory locations as appropriate.
 
 
 COMPILING THE HYPERVISOR:
@@ -50,7 +72,7 @@ GIT:
   git config --global user.name "Your Name"
   git config --global user.email "email"
   Add your public key
-        
+
 Next steps:
   mkdir hyparm
   cd hyparm
@@ -60,15 +82,15 @@ Next steps:
   git commit -m 'first commit'
   git remote add origin git@github.com:gendalfas/hyparm.git
   git push origin master
-      
+
 Existing Git Repo?
   cd existing_git_repo
   git remote add origin git@github.com:gendalfas/hyparm.git
   git push origin master
-      
+
 Importing a Subversion Repo?
   Click here
-      
+
 ssh-keygen -t rsa -C "email@provider.com"
 Generating public/private rsa key pair.
 Enter file in which to save the key (/home/tekkub/.ssh/id_rsa):

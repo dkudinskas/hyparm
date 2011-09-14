@@ -8,6 +8,12 @@
 
 // uncomment me for ARM instruction trace: #define ARM_INSTR_TRACE
 
+#define SXTH_R0     0
+#define SXTH_R8     8
+#define SXTH_R16   16
+#define SXTH_R24   24
+
+
 /* ARM instructions.  */
 u32int nopInstruction(GCONTXT * context);
 u32int bxInstruction(GCONTXT * context);
@@ -140,6 +146,7 @@ u32int smulbtInstruction(GCONTXT * context);
 u32int smulttInstruction(GCONTXT * context);
 u32int smulwbInstruction(GCONTXT * context);
 u32int smulwtInstruction(GCONTXT * context);
+u32int smullInstruction(GCONTXT * context);
 u32int qaddInstruction(GCONTXT * context);
 u32int qdaddInstruction(GCONTXT * context);
 u32int qsubInstruction(GCONTXT * context);
@@ -150,5 +157,10 @@ u32int mrsInstruction(GCONTXT * context);
 u32int bInstruction  (GCONTXT * context);
 u32int svcInstruction(GCONTXT * context);
 u32int undefinedInstruction(GCONTXT * context);
+
+#ifdef CONFIG_THUMB2
+/* Exclusive Thumb Instructions. */
+u32int itInstruction(GCONTXT * context);
+#endif
 
 #endif

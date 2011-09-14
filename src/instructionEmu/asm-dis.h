@@ -6,6 +6,13 @@
 #include "guestManager/guestContext.h"
 
 
+#if defined(CONFIG_THUMB2) || defined(CONFIG_HACKS_MARKOS)
+
+#define INDEX_OF(x)  (sizeof(x)/sizeof(x[0]))
+
+#endif
+
+
 #define UNDEFINED_INSTRUCTION    0x0
 
 struct opcode32
@@ -19,6 +26,16 @@ struct opcode32
 
 struct opcode32 * decodeInstruction(u32int instr);
 
+
+#ifdef CONFIG_THUMB2
+
+void dumpInstrString(GCONTXT * context, u32int instr);
+
+#else
+
 void dumpInstrString(u32int instr);
+
+#endif
+
 
 #endif

@@ -26,7 +26,7 @@ MEMPROT* initialiseMemoryProtection(void)
   //grab a 4KB chunk of mem
   u32int* addr = allocFrame(HYPERVISOR_FA_DOMAIN);
 
-  if(0 == addr)
+  if (0 == addr)
   {
     DIE_NOW(0, "Unable to allocate memory for initialiseProtectionArray() in memoryProtection.c");
   }
@@ -63,7 +63,7 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
   printf("addProtection: Start Addr: %08x, End Addr: %08x\n", startAddr, endAddr);
 #endif
 
-  if(startAddr > endAddr)
+  if (startAddr > endAddr)
   {
     printf("Start addr: %08x, is greater than the end addr: %08x\n", startAddr, endAddr);
     DIE_NOW(gc, "Entering infinite loop.");
@@ -78,7 +78,7 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
   printf("addProtection: pageEndAddr = %08x\n", pageEndAddr);
 #endif
 
-  if(pageEndAddr == 0)
+  if (pageEndAddr == 0)
   {
     DIE_NOW(0, "ERROR: invalid getPageEndAddr return value. Entering infinite loop");
   }
@@ -102,21 +102,21 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
     u32int pageStartAddr = startAddr;
 
     //We are dealing with multiple pages, loop to mark all pages USR_ read only
-    while(endAddr > pageEndAddr)
+    while (endAddr > pageEndAddr)
     {
 #ifdef MEM_PROT_DBG
       printf("addProtection: CurrentStartAddr: %x, currentEndAddr: %x\n", pageStartAddr, pageEndAddr);
 #endif
 
       result = setAccessBits(ptd, pageStartAddr, protection);
-      if(result > 7)
+      if (result > 7)
       {
         //Last addEntry failed, remove all Multi entries (could be the first)
         DIE_NOW(0, "setAccessBits failed, while loop");
       }
       pageStartAddr = pageEndAddr+1;
       pageEndAddr = getPageEndAddr(ptd, pageStartAddr);
-      if(0 == pageEndAddr)
+      if (0 == pageEndAddr)
       {
         DIE_NOW(0, "ERROR: invalid getPageEndAddr return value. Entering infinite loop");
       }
@@ -125,7 +125,7 @@ u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TY
     //exited while loop, the end of the range we want to protect is not greater than the current pageEntry
     result = setAccessBits(ptd, pageStartAddr, protection);
   }
-  if(result > 7)
+  if (result > 7)
   {
       //Last addEntry failed, remove the previous ones
     DIE_NOW(0, "setAccessBits failed");
@@ -147,10 +147,9 @@ u32int removeProtection(u32int startAddr)
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
 
   u32int result = setAccessBits(ptd, startAddr, PRIV_RW_USR_RW);
-  if( result > 7)
+  if (result > 7)
   {
     DIE_NOW(0, "removeProtection Failed. Infinite Loop");
-    return result;
   }
   return 0;
 }
@@ -163,7 +162,6 @@ returns the function ptr of found.
 memProtPtr checkProtectionArray(u32int address)
 {
   DIE_NOW(0, "UNIMPLEMENTED: checkProtectionArray");
-  return 0;
 }
 
 
@@ -180,13 +178,25 @@ void compile_time_check_memory_protection(void)
 bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 {
   GCONTXT* context = getGuestContext();
+  descriptor* pt1Entry;
 
-  // get page table entry for address
-  descriptor* pt1Entry = get1stLevelPtDescriptorAddr(context->PT_os, address);
+  /* get page table entry for address
+   * If the Guest OS does not support virtual
+   * addressing, The table that maps the guest physical
+   * to host virtual must be used */
+  if (context->virtAddrEnabled == 1)
+  {
+    pt1Entry = get1stLevelPtDescriptorAddr(context->PT_os, address);
+  }
+  else
+  {
+    pt1Entry = get1stLevelPtDescriptorAddr(context->PT_physical, address);
+  }
+
   // check guest domain: if manager, allow access.
   u32int dacr = getCregVal(3, 0, 0, 0, &context->coprocRegBank[0]);
   u32int dom  = ((sectionDescriptor*)pt1Entry)->domain;
-    
+
   u32int domBits = (dacr >> (dom*2)) & 0x3;
 
   switch (domBits)
@@ -289,7 +299,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
         case PAGE_TABLE:
         {
           pageTableDescriptor* ptDesc = (pageTableDescriptor*)pt1Entry;
-          smallDescriptor* ptEntry = 
+          smallDescriptor* ptEntry =
              (smallDescriptor*)get2ndLevelPtDescriptor((pageTableDescriptor*)ptDesc, address);
           switch (((descriptor*)ptEntry)->type)
           {
@@ -418,9 +428,16 @@ bool shouldPrefetchAbort(u32int address)
 #ifdef MEM_PROT_DBG
   printf("shouldPrefetchAbort(%08x)\n", address);
 #endif
-
+  descriptor* ptEntry;
   // get page table entry for address
-  descriptor* ptEntry = get1stLevelPtDescriptorAddr(context->PT_os, address);
+  if(context->virtAddrEnabled==1)
+  {
+    ptEntry = get1stLevelPtDescriptorAddr(context->PT_os, address);
+  }
+  else
+  {
+    ptEntry = get1stLevelPtDescriptorAddr(context->PT_physical, address);
+  }
 
   // client access: need to check page table entry access control bits
   switch (ptEntry->type)

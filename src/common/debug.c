@@ -17,6 +17,10 @@ extern fatfs mainFilesystem;
 extern file * debugStream;
 #endif
 
+#ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
+extern void setEmergencyExceptionVector(void);
+#endif
+
 
 static void banner(const char *msg)
 {
@@ -34,7 +38,7 @@ static void banner(const char *msg)
   /*
    * Creating padding string
    */
-  for(i = 0; i < paddingLength; ++i)
+  for (i = 0; i < paddingLength; ++i)
   {
     padding[i] = '=';
   }
@@ -47,9 +51,12 @@ static void banner(const char *msg)
 
 void DIE_NOW(GCONTXT *context, const char *msg)
 {
+#ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
+  setEmergencyExceptionVector();
+#endif
+
   banner("ERROR");
-  printf(msg);
-  printf("\r\n");
+  printf("%s" EOL, msg);
   if (context == 0)
   {
     context = getGuestContext();
@@ -59,7 +66,7 @@ void DIE_NOW(GCONTXT *context, const char *msg)
     dumpGuestContext(context);
   }
   banner("HALT");
-  
+
   infiniteIdleLoop();
 }
 

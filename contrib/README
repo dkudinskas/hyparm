@@ -13,4 +13,9 @@ hooks/pre-commit
 
 linux/*
 
-  Contains pre-built Linux kernel images for testing the hypervisor.
+  Contains pre-built Linux kernel images and build instructions for
+  testing the hypervisor.
+
+freertos/*
+
+  Contains pre-built FreeRTOS images for testing the hypervisor.

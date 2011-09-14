@@ -26,25 +26,32 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
   printf(instrString);
   printf(" %08x @ %08x\n", instr, context->R15);
 #endif
-  
+
   int instrCC = (instr >> 28) & 0xF;
   bool conditionMet = evalCC(instrCC, cpsrCC);
   if (conditionMet)
   {
     // set-flags case is tricky! depends on guest mode.
-    u32int setFlags = (instr & 0x00100000);
+    u32int setFlags = (instr & 0x00100000); // S bit on intruction binary respresentation
     // source operand1
     u32int regSrc = (instr & 0x000F0000) >> 16;
-    // source operand2 - register or immediate?    
-    u32int regOrImm = instr & 0x02000000;
+    // source operand2 - register or immediate?
+    u32int regOrImm = instr & 0x02000000; // 1 = imm, 0 = reg
     if (regOrImm != 0)
     {
-      // source operand2 immediate: pc = regSrc + ror(immediate)
+      // source operand2 immediate: pc = regSrc +/- ror(immediate)
       u32int imm12 = instr & 0x00000FFF;
       switch (opType)
       {
         case ADD:
           nextPC = loadGuestGPR(regSrc, context) + armExpandImm12(imm12);
+          if (regSrc == 0xF)
+          {
+            nextPC += 8;
+          }
+          break;
+        case SUB:
+          nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
           if (regSrc == 0xF)
           {
             nextPC += 8;
@@ -69,8 +76,14 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
         switch (opType)
         {
           case ADD:
-            nextPC = loadGuestGPR(regSrc, context) +
-               shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+            nextPC = loadGuestGPR(regSrc, context) + shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+            if (regSrc == 0xF)
+            {
+              nextPC += 8;
+            }
+            break;
+          case SUB:
+            nextPC = loadGuestGPR(regSrc, context) - shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
             if (regSrc == 0xF)
             {
               nextPC += 8;
@@ -140,15 +153,31 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
     }
 
     context->R15 = nextPC;
+#ifdef CONFIG_THUMB2
+    /*
+     * FIXME: Niels: WHY ??
+     * Did you mean interworking bit ?
+     */
+    // clear thumb bit if needed
+    nextPC &= ~0x1;
+#endif
     return nextPC;
   }
   else
   {
-    nextPC = context->R15 + 4;
+#ifdef CONFIG_THUMB2
+    if (context->CPSR & T_BIT)
+    {
+      nextPC = context->R15 +2;
+    }
+    else
+#endif
+    {
+      nextPC = context->R15 + 4;
+    }
     return nextPC;
   }
 }
-
 
 
 /*********************************/
@@ -156,6 +185,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
 /*********************************/
 u32int andInstruction(GCONTXT * context)
 {
+  printf("%08x\n",context->endOfBlockInstr);
   DIE_NOW(context, "Unimplemented AND trap");
 }
 
@@ -183,7 +213,8 @@ u32int rscInstruction(GCONTXT * context)
 /*********************************/
 u32int subInstruction(GCONTXT * context)
 {
-  DIE_NOW(context, "Unimplemented SUB trap");
+  OPTYPE opType = SUB;
+  return arithLogicOp(context, opType, "SUB instr ");
 }
 
 

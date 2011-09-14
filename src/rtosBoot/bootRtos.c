@@ -1,4 +1,3 @@
-#include "common/debug.h"
 #include "common/memFunctions.h"
 #include "common/string.h"
 
@@ -11,13 +10,13 @@
 #include "memoryManager/addressing.h"
 #include "memoryManager/pageTable.h"
 
+#include "rtosBoot/bootRtos.h"
 
-extern GCONTXT * getGuestContext(void);
+
 extern void callKernel(int, int, u32int, u32int) __attribute__((noreturn));
 
 static void setup_start_tag(void);
 static void setup_revision_tag(void);
-static void setup_initrd_tag(u32int initrd_start, u32int initrd_end);
 static void setup_memory_tags(void);
 static void setup_commandline_tag(const char *commandline);
 static void setup_end_tag(void);
@@ -25,65 +24,40 @@ static void setup_end_tag(void);
 static struct tag * paramTag;
 static struct RamConfig dramBanks[NR_DRAM_BANKS];
 
-static int builtInInitrd = 0;
 
-void doLinuxBoot(image_header_t *imageHeader, u32int loadAddr, u32int initrdAddr)
+void doRtosBoot(ulong loadAddr)
 {
-  u32int currentAddress = loadAddr + sizeof(image_header_t);
-  u32int targetAddress = imageHeader->ih_load;
-  u32int entryPoint = imageHeader->ih_ep;
-  u32int sizeInBytes = imageHeader->ih_size;
-  const char * commandline = "\0";
+  ulong targetAddr = loadAddr;
+  const char * commandline = "";
 
   paramTag = (struct tag *)BOARD_PARAMS;
-
-#ifdef CONFIG_DEBUG_STARTUP
-  printf("Current address = %08x\n", currentAddress);
-  printf("Load address = %08x\n", targetAddress);
-  printf("Entry point = %08x\n", entryPoint);
-#endif
 
   /* TODO: add virtual addressing startup for the new VM here
   need to create a Global Page table/map for the VM and add mappings for where the kernel is to be copied?
   */
   createVirtualMachineGPAtoRPA(getGuestContext());
 
-  if (currentAddress != targetAddress)
-  {
-    memmove((void*)targetAddress, (const void*)currentAddress, sizeInBytes);
-  }
   populateDramBanks();
 
   setup_start_tag();
   setup_revision_tag();
   setup_memory_tags();
   setup_commandline_tag(commandline);
-  if (builtInInitrd)
-  {
-    setup_initrd_tag(initrdAddr, initrdAddr + BOARD_INITRD_LEN);
-  }
   setup_end_tag();
 
-#ifdef CONFIG_DEBUG_SCANNER_COUNT_BLOCKS
-  resetScannerCounter();
-#endif
 #ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
   setScanBlockCallSource(SCANNER_CALL_SOURCE_BOOT);
 #endif
-  scanBlock(getGuestContext(), entryPoint);
+#ifdef CONFIG_DEBUG_SCANNER_COUNT_BLOCKS
+  resetScannerCounter();
+#endif
+  scanBlock(getGuestContext(), targetAddr);
 
+  /* This seems to be OS independent */
   cleanupBeforeLinux();
 
   /* does not return */
-  callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, entryPoint);
-}
-
-void populateDramBanks()
-{
-  dramBanks[0].start = DRAM_BANK_1_START;
-  dramBanks[0].size  = DRAM_BANK_1_SIZE;
-  dramBanks[1].start = DRAM_BANK_2_START;
-  dramBanks[1].size  = DRAM_BANK_2_SIZE;
+  callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, targetAddr);
 }
 
 static void setup_start_tag()
@@ -120,7 +94,7 @@ static void setup_memory_tags()
     paramTag->u.mem.start = dramBanks[i].start;
     paramTag->u.mem.size = dramBanks[i].size;
 
-    paramTag = tag_next(paramTag);
+    paramTag = tag_next (paramTag);
   }
 }
 
@@ -145,25 +119,11 @@ static void setup_commandline_tag(const char *commandline)
   }
 
   paramTag->hdr.tag = ATAG_CMDLINE;
-  paramTag->hdr.size = (sizeof(struct tag_header) + strlen(p) + 1 + 4) >> 2;
+  paramTag->hdr.size = (sizeof (struct tag_header) + strlen(p) + 1 + 4) >> 2;
 
   strcpy(paramTag->u.cmdline.cmdline, p);
 
   paramTag = tag_next(paramTag);
-}
-
-static void setup_initrd_tag(u32int initrd_start, u32int initrd_end)
-{
-  /* an ATAG_INITRD node tells the kernel where the compressed
-   * ramdisk can be found. ATAG_RDIMG is a better name, actually.
-   */
-  paramTag->hdr.tag = ATAG_INITRD2;
-  paramTag->hdr.size = tag_size (tag_initrd);
-
-  paramTag->u.initrd.start = initrd_start;
-  paramTag->u.initrd.size = initrd_end - initrd_start;
-
-  paramTag = tag_next (paramTag);
 }
 
 static void setup_end_tag ()
@@ -171,3 +131,4 @@ static void setup_end_tag ()
   paramTag->hdr.tag = ATAG_NONE;
   paramTag->hdr.size = 0;
 }
+

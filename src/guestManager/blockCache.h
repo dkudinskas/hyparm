@@ -1,6 +1,10 @@
 #ifndef __GUEST_MANAGER__BLOCK_CACHE_H__
 #define __GUEST_MANAGER__BLOCK_CACHE_H__
 
+#ifdef CONFIG_THUMB2
+# include "common/thumbdefs.h"
+#endif
+
 #include "common/types.h"
 
 
@@ -15,9 +19,25 @@ struct blockCacheEntry
   u32int startAddress;
   u32int endAddress;
   u32int hyperedInstruction;
+#ifdef CONFIG_THUMB2
+  u32int halfhyperedInstruction;
+#endif
   bool valid;
   u32int hdlFunct;
 };
+
+
+#ifdef CONFIG_THUMB2
+
+struct thumbEntry
+{
+  u16int first;
+  u16int second;
+  bool isthumb;
+};
+
+#endif
+
 
 typedef struct blockCacheEntry BCENTRY;
 
@@ -25,8 +45,12 @@ void initialiseBlockCache(BCENTRY * bcache);
 
 bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr);
 
+#ifdef CONFIG_THUMB2
+void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int HalfhypInstruction, u32int blkEndAddr,
+#else
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
-                     u32int index, u32int hdlFunct, BCENTRY * bcAddr);
+#endif
+  u32int index, u32int hdlFunct, BCENTRY * bcAddr);
 
 BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr);
 
@@ -49,5 +73,15 @@ void setExecBitMap(u32int addr);
 void clearExecBitMap(u32int addr);
 
 bool isBitmapSetForAddress(u32int addr);
+
+
+#ifdef CONFIG_THUMB2
+
+struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int bcIndex);
+
+void resolveSWI(u32int index, u32int* endAddress);
+
+#endif
+
 
 #endif

@@ -33,6 +33,9 @@ my %ignoreMap =
     # Ignore tab characters in linker scripts
     '^/scripts/.*\.lds' => 'T',
 
+    # Allow tabs in kconfig.data file
+    '^/scripts/kconfig\.data$' => 'T',
+
     # Don't check files in scripts/kconfig
     '^/scripts/kconfig/' => 'T',
   );

@@ -14,7 +14,7 @@ struct GeneralPurposeTimerBE* gpts[BE_GPTIMER_COUNT];
 
 void gptBEInit(u32int id)
 {
-  struct GeneralPurposeTimerBE* addr 
+  struct GeneralPurposeTimerBE* addr
      = (struct GeneralPurposeTimerBE*)mallocBytes(sizeof(struct GeneralPurposeTimerBE));
 
   if (addr == 0)
@@ -26,7 +26,7 @@ void gptBEInit(u32int id)
     gpts[id-1] = addr;
     memset((void*)addr, 0x0, sizeof(struct GeneralPurposeTimerBE));
     gpts[id-1]->baseAddress = gptBEgetBaseAddr(id);
- 
+
 #ifdef GPTIMER_BE_DBG
     printf("GPT_BE%x: Initializing at %x\n", id, (u32int)gpts[id-1]);
 #endif
@@ -34,6 +34,19 @@ void gptBEInit(u32int id)
   // reset the device
   gptBEReset(id);
 }
+
+#ifdef CONFIG_GUEST_FREERTOS
+
+void gptBEResetCount(u32int id)
+{
+  /*
+   * FIXME: bare value in register write
+   * Markos: Reset the timer? -- I dont like that --
+   */
+  gptBEregWrite(id, GPT_REG_TTGR, 0x1);
+}
+
+#endif
 
 void gptBEReset(u32int id)
 {
@@ -44,14 +57,14 @@ void gptBEReset(u32int id)
   // reset the device
   gptBEregWrite(id, GPT_REG_TSICR, GPT_TSICR_SFTRESET);
   // .. and put into posted mode
-  gptBEregWrite(id, GPT_REG_TSICR, gptBEregRead(id, GPT_REG_TSICR)|GPT_TSICR_POSTED); 
+  gptBEregWrite(id, GPT_REG_TSICR, gptBEregRead(id, GPT_REG_TSICR)|GPT_TSICR_POSTED);
 
   // now lets configure it:
   u32int configReg = gptBEregRead(id, GPT_REG_TIOCP_CFG);
-  // set to smartidle  
-  configReg &= ~GPT_TIOCP_CFG_IDLEMODE; 
+  // set to smartidle
+  configReg &= ~GPT_TIOCP_CFG_IDLEMODE;
   configReg |= GPT_TIOCP_CFG_IDLEMODE_SMART;
-  
+
   // set clock activity to perserve f-clock on idle
   configReg &= ~GPT_TIOCP_CFG_CLOCKACTIVITY;
   configReg |= GPT_TIOCP_CFG_CLOCKACTIVITY_FCLK;
@@ -100,19 +113,28 @@ static inline u32int gptBEregRead(u32int id, u32int reg)
 {
   volatile u32int * regPtr = (volatile u32int *) (gpts[id-1]->baseAddress + reg);
   return  *regPtr;
-} 
+}
 
 static inline void gptBEregWrite(u32int id, u32int reg, u32int val)
 {
   volatile u32int * regPtr = (volatile u32int *) (gpts[id-1]->baseAddress + reg);
   *regPtr = val;
-} 
+}
 
 
 void gptBEClearOverflowInterrupt(u32int id)
 {
   gptBEregWrite(id, GPT_REG_TISR, GPT_TISR_OVERFLOW);
 }
+
+#ifdef CONFIG_GUEST_FREERTOS
+
+void gptBEClearMatchInterrupt(u32int id)
+{
+  gptBEregWrite(id, GPT_REG_TISR, GPT_TISR_MATCH);
+}
+
+#endif
 
 void gptBEDisableOverflowInterrupt(u32int id)
 {

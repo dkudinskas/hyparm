@@ -32,7 +32,10 @@ void createVirtualMachineGPAtoRPA(GCONTXT* gc)
   printf("createVirtualMachineGPAtoRPA: TODO createVirtualMachineGPAtoRPA (addressing.c)\n");
 #endif
 
-  //The hypervisor ptd is the guest physical ptd for now
+  /*
+   * The hypervisor ptd is the guest physical ptd for now
+   * Markos: Well, what this means is the the hypervisor page table is the page table the the guest will use to access memory
+   */
   setGuestPhysicalPt(gc);
 
   /*Alex: implementation thoughts
@@ -73,21 +76,21 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   {
     // explode block cache
     explodeCache(context->blockCache);
-    
+
     // create a new shadow page table. Mapping in hypervisor address space
     descriptor* newShadowPt = createGuestOSPageTable();
-  
+
     // remove metadata about old sPT1
     removePT2Metadata();
 
     // update guest context entries
-    // map new page table address to a 1-2-1 virtual address 
+    // map new page table address to a 1-2-1 virtual address
     // (now we can safely tamper with sPT, as it will be discarded soon)
     sectionMapMemory(context->PT_shadow, (guestPtAddr & 0xFFF00000),
-                 (guestPtAddr & 0xFFF00000)+(SECTION_SIZE-1), 
+                 (guestPtAddr & 0xFFF00000)+(SECTION_SIZE-1),
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000);
     // in this new 1st level sPT, find guestVirtual address for 1st lvl gPT address
-    // update 1st level shadow page table pointer    
+    // update 1st level shadow page table pointer
     context->PT_os_real = (descriptor*)guestPtAddr;
     context->PT_os = (descriptor*)guestPtAddr;
     u32int ptGuestVirtual = findGuestVAforPA(guestPtAddr);
@@ -96,7 +99,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
     // update 1st level shadow page table pointer
     descriptor* oldShadowPt = context->PT_shadow;
     context->PT_shadow = newShadowPt;
-    
+
     // copy new gPT1 entries to new sPT1
     copyPageTable((descriptor*)guestPtAddr, context->PT_shadow);
 #ifdef ADDRESSING_DEBUG
@@ -105,20 +108,20 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
 
     // anything in caches needs to be written back now
     dataBarrier();
-    
+
     // tell CP15 of this new base PT
     setTTBCR((u32int)context->PT_shadow);
-    
+
     // clean tlb and cache entries
     clearTLB();
     clearInstructionCache();
     clearDataCache();
-    
+
     // add protection to guest page table.
     u32int guestPtVirtualEndAddr = ptGuestVirtual + PAGE_TABLE_SIZE - 1;
     //function ptr to the routine that handler gOS edits to its PT
     addProtection(ptGuestVirtual, guestPtVirtualEndAddr, &pageTableEdit, PRIV_RW_USR_RO);
-  
+
     // 9. clean old shadow page table
     invalidateSPT1(oldShadowPt);
 
@@ -247,7 +250,7 @@ void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
         u32int y = 0;
         for (y = 0; y < PAGE_TABLE_ENTRIES; y++)
         {
-          // if page table entry is assigned to that domain remap AP bits 
+          // if page table entry is assigned to that domain remap AP bits
           sectionDescriptor* ptEntry = (sectionDescriptor*)&context->PT_os[y];
           if ((ptEntry->type == FAULT) || (ptEntry->type == RESERVED))
           {
@@ -279,7 +282,7 @@ void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
           }
 
         } // for loop - all page table entries
-                
+
       } // if - domain config changed
 
     } // for loop - through all domain entries

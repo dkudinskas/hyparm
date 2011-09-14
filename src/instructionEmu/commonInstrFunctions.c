@@ -3,14 +3,11 @@
 #include "instructionEmu/commonInstrFunctions.h"
 
 
-extern GCONTXT * getGuestContext(void); //from main.c
-
 /* a function to serve as a dead-loop if we decode something invalid */
-void invalidInstruction(u32int instr, const char * msg)
+void invalidInstruction(u32int instr, const char *msg)
 {
-  printf("Invalid instruction detected! %08x\n", instr);
-  printf(msg);
-  printf("\n");
+  printf("Invalid instruction detected! %.8x" EOL, instr);
+  DIE_NOW(0, msg);
 }
 
 bool guestInPrivMode(GCONTXT * context)
@@ -371,6 +368,7 @@ u32int decodeShift(u32int instrShiftType)
       DIE_NOW(0,"voodoo dolls everywhere!");
   } // switch ends
 
+  // FIXME : is there a return path ?
   // compiler happy!
   return 0;
 }
@@ -389,3 +387,34 @@ u32int countBitsSet(u32int bitstream)
   }
   return bitsSet;
 }
+
+
+#ifdef CONFIG_THUMB2
+
+u32int decodeThumbInstr(u16int *currhwAddress)
+{
+  u16int narrowInstr = *currhwAddress;
+  switch (narrowInstr & THUMB32)
+  {
+    case THUMB32_1:
+    case THUMB32_2:
+    case THUMB32_3:
+      /*
+       * 32-bit Thumb instruction -- need to fetch next halfword.
+       */
+      return (narrowInstr << 16) | *++currhwAddress;
+    default:
+      /*
+       * 16-bit Thumb instruction (?)
+       * FIXME check coverage of masks
+       */
+      return narrowInstr;
+  }
+}
+
+bool isThumb32(u32int instr)
+{
+  return (instr & 0xFFFF0000) ? TRUE : FALSE;
+}
+
+#endif

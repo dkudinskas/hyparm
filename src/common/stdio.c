@@ -8,6 +8,7 @@
 
 #include "common/ctype.h"
 #include "common/stdio.h"
+#include "common/stdlib.h"
 #include "common/types.h"
 
 /*
@@ -23,8 +24,12 @@
  *
  * DO NOT
  *  - panic;
- *  - try to be clever and circumvent the use of macros by performing expensive 64-bit arithmetic;
- *  - use anything other than constant expressions or variable names as arguments to macros;
+ *  - try to be clever and extract 16-bit values from using va_arg, because they are promoted to
+ *    32-bit-wide types and you will mess up things badly;
+ *  - try to be clever and circumvent the use of macros by performing expensive 64-bit arithmetic
+ *    in cases where 32-bit arithmetic is sufficient (dump the generated assembly code to check);
+ *  - use anything other than emptiness, constant expressions, function names or variable names as
+ *    arguments to macros;
  *  - use auto-increment or auto-decrement operations anywhere in macro arguments.
  */
 
@@ -44,130 +49,312 @@
 #define VSPRINTF_FLAG_ALTERNATE      0x02
 
 
-#define VSSCANF_DECIMAL(specifierString, integralType, isSigned) \
-  { \
-    if (ignore) \
-    { \
-      while (width > 0 && isdigit(*s)) \
-      { \
-        TEST_PRINTF("Consumed '%c'" EOL, *s); \
-        ++s; \
-      } \
-    } \
-    else \
-    { \
-      integralType value = 0; \
-      while (width > 0 && isdigit(*s)) \
-      { \
-        value = (value * 10) + (integralType)(ASCII(*s) - ASCII('0')); \
-        TEST_PRINTF("Consumed '%c'" EOL, *s); \
-        ++s; \
-      } \
-      integralType *pointer = va_arg(args, integralType *); \
-      if (isSigned) \
-      { \
-        value *= (integralType)sign; \
-      } \
-      TEST_PRINTF("Read value: %" specifierString EOL, value); \
-      *pointer = value; \
-      ++convertedItemCount; \
-    } \
+#define VSPRINTF_DECIMAL(integralType, unsignedIntegralType, isSigned, absFunction)                \
+  {                                                                                                \
+    integralType rawValue = va_arg(args, integralType);                                            \
+    unsignedIntegralType value = absFunction(rawValue);                                            \
+    /*                                                                                             \
+     * When signed, check the sign of the value and set the sign character accordingly.            \
+     */                                                                                            \
+    char signChar = (isSigned) ? (rawValue < (integralType)0 ? '-' : defaultSign) : 0;             \
+    /*                                                                                             \
+     * The digit width of the decimal string cannot be calculated without performing the same      \
+     * operations required to make the string. Hence, convert into a buffer first, then assign the \
+     * number of digits from the number of characters in the buffer.                               \
+     *                                                                                             \
+     * When both precision and value are zero, no digits should be printed at all.                 \
+     *                                                                                             \
+     * NOTE: after execution of the loop below, value will be zero. Hence, any checks on value     \
+     * must occur prior to the actual conversion.                                                  \
+     */                                                                                            \
+    char buffer[MAX_INTEGER_64_DECIMAL_WIDTH];                                                     \
+    u32int bufferIndex = sizeof(buffer);                                                           \
+    if (precision != 0 || value != 0)                                                              \
+    {                                                                                              \
+      do                                                                                           \
+      {                                                                                            \
+        buffer[--bufferIndex] = (char)((value % (unsignedIntegralType)10) + ASCII('0'));           \
+      }                                                                                            \
+      while (value /= (unsignedIntegralType)10);                                                   \
+    }                                                                                              \
+    s32int digitWidth = sizeof(buffer) - bufferIndex;                                              \
+    /*                                                                                             \
+     * The precision specifies the minimum number of digits we must print. Zero padding must       \
+     * be added if the initial width is less than precision!                                       \
+     */                                                                                            \
+    s32int precisionPadding = (digitWidth < precision) ? (precision - digitWidth) : 0;             \
+    /*                                                                                             \
+     * If we have a sign character, it has to be printed outside the zero padding specified by     \
+     * the precision, but inside the space reserved by width. Add one to the digit width if we     \
+     * have a sign character.                                                                      \
+     */                                                                                            \
+    s32int innerWidth = digitWidth + precisionPadding + (signChar ? 1 : 0);                        \
+    /*                                                                                             \
+     * When zero padding, the sign goes first!                                                     \
+     */                                                                                            \
+    if (padChar == '0' && signChar)                                                                \
+    {                                                                                              \
+      *s++ = signChar;                                                                             \
+      signChar = 0;                                                                                \
+    }                                                                                              \
+    /*                                                                                             \
+     * Default is to align right; pad left if VSPRINTF_FLAG_ADJUST_LEFT is not set.                \
+     */                                                                                            \
+    if (!(flags & VSPRINTF_FLAG_ADJUST_LEFT))                                                      \
+    {                                                                                              \
+      while (innerWidth < width)                                                                   \
+      {                                                                                            \
+        *s++ = padChar;                                                                            \
+        ++innerWidth;                                                                              \
+      }                                                                                            \
+    }                                                                                              \
+    /*                                                                                             \
+     * Print sign unless printed before.                                                           \
+     */                                                                                            \
+    if (signChar)                                                                                  \
+    {                                                                                              \
+      *s++ = signChar;                                                                             \
+    }                                                                                              \
+    /*                                                                                             \
+     * Print zero-padding as needed by precision.                                                  \
+     */                                                                                            \
+    while (precisionPadding-- > 0)                                                                 \
+    {                                                                                              \
+      *s++ = '0';                                                                                  \
+    }                                                                                              \
+    /*                                                                                             \
+     * Print digits.                                                                               \
+     */                                                                                            \
+    TEST_PRINTF("For d, start at bufferIndex=%u but limit < %u" EOL, bufferIndex, sizeof(buffer)); \
+    while (bufferIndex < sizeof(buffer))                                                           \
+    {                                                                                              \
+      *s++ = buffer[bufferIndex++];                                                                \
+    }                                                                                              \
+    /*                                                                                             \
+     * If VSPRINTF_FLAG_ADJUST_LEFT is set, the alignment is left so pad right. The test for the   \
+     * flag can be omitted as length >= width in case it was not set.                              \
+     */                                                                                            \
+    while (innerWidth < width)                                                                     \
+    {                                                                                              \
+      *s++ = padChar;                                                                              \
+      ++innerWidth;                                                                                \
+    }                                                                                              \
+  }
+
+#define VSPRINTF_HEXADECIMAL(integralType, countLeadingZerosFunction)                              \
+  {                                                                                                \
+    integralType value = va_arg(args, integralType);                                               \
+    /*                                                                                             \
+     * The digit width of the hexadecimal string representation is calculated as follows:          \
+     *  - if value is zero, it can be represented by a single '0' character, so the digit width is \
+     *    1 unless precision is zero, in which case no digits should be printed at all;            \
+     *  - if value is not zero, the number of significant digits can be computed by subtracting    \
+     *    the number of leading zeros divided by the number of bits per digit, from the total      \
+     *    number of digits.                                                                        \
+     */                                                                                            \
+    s32int digitWidth;                                                                             \
+    if (value == 0)                                                                                \
+    {                                                                                              \
+      digitWidth = precision != 0 ? 1 : 0;                                                         \
+      /*                                                                                           \
+       * According to the ANSI C standard, the prefix is not printed when the number is zero.      \
+       * For pointers, however, the resulting string is implementation dependent, and it just      \
+       * looks better to have the prefix on all pointers, even on a null pointer.                  \
+       */                                                                                          \
+      if (specifierChar != 'p')                                                                    \
+      {                                                                                            \
+        flags &= ~VSPRINTF_FLAG_ALTERNATE;                                                         \
+      }                                                                                            \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+      digitWidth = (sizeof(integralType) << 1) - (countLeadingZerosFunction(value) >> 2);          \
+    }                                                                                              \
+    /*                                                                                             \
+     * The precision specifies the minimum number of digits we must print. Zero padding must be    \
+     * added if the initial width is less than precision!                                          \
+     */                                                                                            \
+    if (digitWidth < precision)                                                                    \
+    {                                                                                              \
+      digitWidth = precision;                                                                      \
+    }                                                                                              \
+    /*                                                                                             \
+     * Now calculate the width including the prefix. Precision excludes the prefix string!         \
+     * Since VSPRINTF_FLAG_ALTERNATE == 2, the prefix length will be added if the flag is set.     \
+     */                                                                                            \
+    s32int prefixedWidth = digitWidth + (flags & VSPRINTF_FLAG_ALTERNATE);                         \
+    /*                                                                                             \
+     * Default is to align right; pad left if VSPRINTF_FLAG_ADJUST_LEFT is not set.                \
+     */                                                                                            \
+    if (!(flags & VSPRINTF_FLAG_ADJUST_LEFT))                                                      \
+    {                                                                                              \
+      while (prefixedWidth < width)                                                                \
+      {                                                                                            \
+        *s++ = padChar;                                                                            \
+        ++prefixedWidth;                                                                           \
+      }                                                                                            \
+    }                                                                                              \
+    /*                                                                                             \
+     * Print prefix, if requested.                                                                 \
+     */                                                                                            \
+    if ((flags & VSPRINTF_FLAG_ALTERNATE))                                                         \
+    {                                                                                              \
+      *s++ = '0';                                                                                  \
+      *s++ = specifierChar;                                                                        \
+    }                                                                                              \
+    /*                                                                                             \
+     * Print up to digitWidth digits.                                                              \
+     */                                                                                            \
+    s32int i;                                                                                      \
+    for (i = digitWidth - 1; i >= 0; --i)                                                          \
+    {                                                                                              \
+      u8int nibble = (value >> (i << 2)) & 0xF;                                                    \
+      if (nibble <= 9)                                                                             \
+      {                                                                                            \
+        *s++ = (char)(ASCII('0') + nibble);                                                        \
+      }                                                                                            \
+      else                                                                                         \
+      {                                                                                            \
+        *s++ = (char)(ASCII('A') + (specifierChar - ASCII('X')) + (nibble - 10));                  \
+      }                                                                                            \
+    }                                                                                              \
+    /*                                                                                             \
+     * If VSPRINTF_FLAG_ADJUST_LEFT is set, the alignment is left so pad right. The test for the   \
+     * flag can be omitted as length >= width in case it was not set.                              \
+     */                                                                                            \
+    while (prefixedWidth < width)                                                                  \
+    {                                                                                              \
+      *s++ = padChar;                                                                              \
+      ++prefixedWidth;                                                                             \
+    }                                                                                              \
+  }
+
+#define VSSCANF_DECIMAL(specifierString, integralType, isSigned)                                   \
+  {                                                                                                \
+    if (ignore)                                                                                    \
+    {                                                                                              \
+      while (width > 0 && isdigit(*s))                                                             \
+      {                                                                                            \
+        TEST_PRINTF("Consumed '%c'" EOL, *s);                                                      \
+        ++s;                                                                                       \
+      }                                                                                            \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+      integralType value = 0;                                                                      \
+      while (width > 0 && isdigit(*s))                                                             \
+      {                                                                                            \
+        value = (value * 10) + (integralType)(ASCII(*s) - ASCII('0'));                             \
+        TEST_PRINTF("Consumed '%c'" EOL, *s);                                                      \
+        ++s;                                                                                       \
+      }                                                                                            \
+      integralType *pointer = va_arg(args, integralType *);                                        \
+      if (isSigned)                                                                                \
+      {                                                                                            \
+        value *= (integralType)sign;                                                               \
+      }                                                                                            \
+      TEST_PRINTF("Read value: %" specifierString EOL, value);                                     \
+      *pointer = value;                                                                            \
+      ++convertedItemCount;                                                                        \
+    }                                                                                              \
   }
 
 
-#define VSSCANF_HEXADECIMAL(modifierString, unsignedIntegralType) \
-  { \
-    if (ignore) \
-    { \
-      while (width > 0 && isxdigit(*s)) \
-      { \
-        TEST_PRINTF("Consumed '%c'" EOL, *s); \
-        ++s; \
-      } \
-    } \
-    else \
-    { \
-      unsignedIntegralType value = 0; \
-      while (width > 0) \
-      { \
-        switch (*s) \
-        { \
-          case '0': \
-          case '1': \
-          case '2': \
-          case '3': \
-          case '4': \
-          case '5': \
-          case '6': \
-          case '7': \
-          case '8': \
-          case '9': \
-            value = (value << 4) | (unsignedIntegralType)(ASCII(*s) - ASCII('0')); \
-            TEST_PRINTF("Consumed '%c'" EOL, *s); \
-            ++s; \
-            break; \
-          case 'a': \
-          case 'b': \
-          case 'c': \
-          case 'd': \
-          case 'e': \
-          case 'f': \
-            value = (value << 4) | (unsignedIntegralType)(10 + ASCII(*s) - ASCII('a')); \
-            TEST_PRINTF("Consumed '%c'" EOL, *s); \
-            ++s; \
-            break; \
-          case 'A': \
-          case 'B': \
-          case 'C': \
-          case 'D': \
-          case 'E': \
-          case 'F': \
-            value = (value << 4) | (unsignedIntegralType)(10 + ASCII(*s) - ASCII('A')); \
-            TEST_PRINTF("Consumed '%c'" EOL, *s); \
-            ++s; \
-            break; \
-          default: \
-            width = 0; \
-            break; \
-        } \
-      } \
-      unsignedIntegralType *pointer = va_arg(args, unsignedIntegralType *); \
-      TEST_PRINTF("Read value: %" modifierString "x" EOL, value); \
-      *pointer = value; \
-      ++convertedItemCount; \
-    } \
+#define VSSCANF_HEXADECIMAL(modifierString, unsignedIntegralType)                                  \
+  {                                                                                                \
+    if (ignore)                                                                                    \
+    {                                                                                              \
+      while (width > 0 && isxdigit(*s))                                                            \
+      {                                                                                            \
+        TEST_PRINTF("Consumed '%c'" EOL, *s);                                                      \
+        ++s;                                                                                       \
+      }                                                                                            \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+      unsignedIntegralType value = 0;                                                              \
+      while (width > 0)                                                                            \
+      {                                                                                            \
+        switch (*s)                                                                                \
+        {                                                                                          \
+          case '0':                                                                                \
+          case '1':                                                                                \
+          case '2':                                                                                \
+          case '3':                                                                                \
+          case '4':                                                                                \
+          case '5':                                                                                \
+          case '6':                                                                                \
+          case '7':                                                                                \
+          case '8':                                                                                \
+          case '9':                                                                                \
+            value = (value << 4) | (unsignedIntegralType)(ASCII(*s) - ASCII('0'));                 \
+            TEST_PRINTF("Consumed '%c'" EOL, *s);                                                  \
+            ++s;                                                                                   \
+            break;                                                                                 \
+          case 'a':                                                                                \
+          case 'b':                                                                                \
+          case 'c':                                                                                \
+          case 'd':                                                                                \
+          case 'e':                                                                                \
+          case 'f':                                                                                \
+            value = (value << 4) | (unsignedIntegralType)(10 + ASCII(*s) - ASCII('a'));            \
+            TEST_PRINTF("Consumed '%c'" EOL, *s);                                                  \
+            ++s;                                                                                   \
+            break;                                                                                 \
+          case 'A':                                                                                \
+          case 'B':                                                                                \
+          case 'C':                                                                                \
+          case 'D':                                                                                \
+          case 'E':                                                                                \
+          case 'F':                                                                                \
+            value = (value << 4) | (unsignedIntegralType)(10 + ASCII(*s) - ASCII('A'));            \
+            TEST_PRINTF("Consumed '%c'" EOL, *s);                                                  \
+            ++s;                                                                                   \
+            break;                                                                                 \
+          default:                                                                                 \
+            width = 0;                                                                             \
+            break;                                                                                 \
+        }                                                                                          \
+      }                                                                                            \
+      unsignedIntegralType *pointer = va_arg(args, unsignedIntegralType *);                        \
+      TEST_PRINTF("Read value: %" modifierString "x" EOL, value);                                  \
+      *pointer = value;                                                                            \
+      ++convertedItemCount;                                                                        \
+    }                                                                                              \
   }
 
 
-#define VSSCANF_OCTAL(modifierString, unsignedIntegralType) \
-  { \
-    if (ignore) \
-    { \
-      while (width > 0 && *s >= ASCII('0') && *s <= ASCII('7')) \
-      { \
-        TEST_PRINTF("Consumed '%c'" EOL, *s); \
-        ++s; \
-      } \
-    } \
-    else \
-    { \
-      unsignedIntegralType value = 0; \
-      while (width > 0 && *s >= ASCII('0') && *s <= ASCII('7')) \
-      { \
-        value = (value << 3) | (unsignedIntegralType)(ASCII(*s) - ASCII('0')); \
-        TEST_PRINTF("Consumed '%c'" EOL, *s); \
-        ++s; \
-      } \
-      unsignedIntegralType *pointer = va_arg(args, unsignedIntegralType *); \
-      TEST_PRINTF("Read value: %" modifierString "o" EOL, value); \
-      *pointer = value; \
-      ++convertedItemCount; \
-    } \
+#define VSSCANF_OCTAL(modifierString, unsignedIntegralType)                                        \
+  {                                                                                                \
+    if (ignore)                                                                                    \
+    {                                                                                              \
+      while (width > 0 && *s >= ASCII('0') && *s <= ASCII('7'))                                    \
+      {                                                                                            \
+        TEST_PRINTF("Consumed '%c'" EOL, *s);                                                      \
+        ++s;                                                                                       \
+      }                                                                                            \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+      unsignedIntegralType value = 0;                                                              \
+      while (width > 0 && *s >= ASCII('0') && *s <= ASCII('7'))                                    \
+      {                                                                                            \
+        value = (value << 3) | (unsignedIntegralType)(ASCII(*s) - ASCII('0'));                     \
+        TEST_PRINTF("Consumed '%c'" EOL, *s);                                                      \
+        ++s;                                                                                       \
+      }                                                                                            \
+      unsignedIntegralType *pointer = va_arg(args, unsignedIntegralType *);                        \
+      TEST_PRINTF("Read value: %" modifierString "o" EOL, value);                                  \
+      *pointer = value;                                                                            \
+      ++convertedItemCount;                                                                        \
+    }                                                                                              \
   }
 
 
 static int _vsscanf(const char *s, const char *format, va_list args);
 
+
+#ifndef TEST
 
 int getchar()
 {
@@ -179,6 +366,9 @@ int putchar(int c)
   serialPutc(c);
   return c;
 }
+
+#endif /* TEST */
+
 
 int
 #ifdef TEST
@@ -327,7 +517,8 @@ int
       if (isdigit(*format))
       {
         /*
-         * Read width; this specifies the maximum number of characters to be read from the input string.
+         * Read width; this specifies the maximum number of characters to be read from the input
+         * string.
          */
         do
         {
@@ -350,47 +541,55 @@ int
       if (*format == '.')
       {
         ++format;
+        /*
+         * If no digits follow, precision must be set to zero.
+         */
+        precision = 0;
+        /*
+         * Check what's behind the dot...
+         */
         if (isdigit(*format))
         {
           /*
            * Read precision.
            */
-          precision = 0;
           do
           {
             precision = (precision * 10) + (s32int)(ASCII(*format) - ASCII('0'));
             ++format;
           } while (isdigit(*format));
-          TEST_PRINTF("Read precision specifier: %d" EOL, precision);
+          TEST_PRINTF("Read precision specifier from format string: %d" EOL, precision);
         }
         else if (*format == '*')
         {
           /*
            * Precision must be read from next argument.
            */
+          TEST_PRINTF("Reading precision specifier from argument" EOL);
           precision = va_arg(args, s32int);
         }
         else
         {
-          TEST_PRINTF("Warning: incomplete precision specifier!" EOL);
+          TEST_PRINTF("Found empty precision specifier in format string" EOL);
         }
+        TEST_PRINTF("Set precision to: %d" EOL, precision);
+        /*
+         * Force the padding character to be a space, because setting the precision means zero
+         * padding within the number of characters specified by precision only.
+         */
+        padChar = ' ';
       }
       /*
        * The next character is either a modifier character or a specifier character. Check for
        * a modifier character.
        *
        * Valid modifiers are: 'h', 'l' and 'L'. In ANSI C, L is only used with floating point types.
+       * In this implementation, 'L' denotes a 64-bit numeric type (see comment in stdio.h).
+       *
+       * Note that catching 'h' further on is not a necessity as a 'short int' is always promoted to
+       * an 'int' when using '...' parameters.
        */
-      if (
-#if 0
-          *format == 'h' || *format == 'l'
-#ifdef CONFIG_STDIO_FP
-            || *format == 'L'
-#endif
-#else
-          0 /* TODO */
-#endif
-        )
+      if (*format == 'h' || *format == 'l' || *format == 'L')
       {
         modifier = *format;
         ++format;
@@ -423,18 +622,21 @@ int
           }
           break;
         }
-        /*case 'd':
+        case 'd':
         case 'i':
-        {*/
           /*
            * Signed decimal.
            */
-          //s32int value = va_arg(args, s32int);
-          /*
-           * TODO
-           */
-        /*  break;
-        }*/
+          switch (modifier)
+          {
+            case 'L':
+              VSPRINTF_DECIMAL(s64int, u64int, TRUE, llabs);
+              break;
+            default:
+              VSPRINTF_DECIMAL(s32int, u32int, TRUE, abs);
+              break;
+          }
+          break;
         case 'n':
         {
           /*
@@ -454,18 +656,27 @@ int
            * TODO
            */
         /*  break;
-        }
+        }*/
         case 'u':
-        {*/
           /*
            * Unsigned decimal.
+           *
+           * Every VSPRINTF_DECIMAL below will cause the following warning to be emitted:
+           *   "warning: comparison of unsigned expression < 0 is always false"
+           * This is because the macro is shared between signed and unsigned types, and for unsigned
+           * types some checks are always false. This is normal, it allows code that deals with the
+           * sign to be optimized away through constant propagation and dead code elimination.
            */
-          //s32int value = va_arg(args, s32int);
-          /*
-           * TODO
-           */
-        /*  break;
-        }*/
+          switch (modifier)
+          {
+            case 'L':
+              VSPRINTF_DECIMAL(u64int, u64int, FALSE, /* no abs function required */);
+              break;
+            default:
+              VSPRINTF_DECIMAL(u32int, u32int, FALSE, /* no abs function required */);
+              break;
+          }
+          break;
         case 's':
         {
           /*
@@ -546,7 +757,6 @@ int
           break;
         }
         case 'p':
-        {
           /*
            * Pointer.
            *
@@ -568,90 +778,20 @@ int
           /*
            * Fall-through!
            */
-        }
         case 'x':
         case 'X':
         {
           /*
            * Unsigned hexadecimal notation
-           *
-           * TODO check modifier and do it for 16/64-bit
            */
-          u32int value = va_arg(args, u32int);
-          /*
-           * The digit width of the hexadecimal string representation is calculated as follows:
-           *  - if value is zero, it can be represented by a single '0' character, so the digit
-           *    width is 1;
-           *  - if value is not zero, the number of significant digits can be computed by
-           *    substracting the the number of leading zeros divided by the number of bits per
-           *    digit, from the total number of digits.
-           */
-          s32int digitWidth;
-          if (value == 0)
+          switch (modifier)
           {
-            digitWidth = 1;
-            flags &= ~VSPRINTF_FLAG_ALTERNATE;
-          }
-          else
-          {
-            digitWidth = (sizeof(u32int) << 1) - (__builtin_clz(value) >> 2);
-          }
-          /*
-           * The precision specifies the minimum number of digits we must print. Zero padding must
-           * be added if the initial width is less than precision!
-           */
-          if (digitWidth < precision)
-          {
-            digitWidth = precision;
-          }
-          /*
-           * Now calculate the width including the prefix. Precision excludes the prefix string!
-           * Since VSPRINTF_FLAG_ALTERNATE == 2, the prefix length will be added if the flag is set.
-           */
-          s32int prefixedWidth = digitWidth + (flags & VSPRINTF_FLAG_ALTERNATE);
-          /*
-           * Default is to align right; pad left if VSPRINTF_FLAG_ADJUST_LEFT is not set.
-           */
-          if (!(flags & VSPRINTF_FLAG_ADJUST_LEFT))
-          {
-            while (prefixedWidth < width)
-            {
-              *s++ = padChar;
-              ++prefixedWidth;
-            }
-          }
-          /*
-           * Print prefix, if requested.
-           */
-          if ((flags & VSPRINTF_FLAG_ALTERNATE))
-          {
-            *s++ = '0';
-            *s++ = specifierChar;
-          }
-          /*
-           * Print up to digitWidth digits.
-           */
-          s32int i;
-          for (i = digitWidth - 1; i >= 0; --i)
-          {
-            u8int nibble = (value >> (i << 2)) & 0xF;
-            if (nibble <= 9)
-            {
-              *s++ = (char)(ASCII('0') + nibble);
-            }
-            else
-            {
-              *s++ = (char)(ASCII('A') + (specifierChar - ASCII('X')) + (nibble - 10));
-            }
-          }
-          /*
-           * If VSPRINTF_FLAG_ADJUST_LEFT is set, the alignment is left so pad right. The test for
-           * the flag can be omitted as length >= width in case it was not set.
-           */
-          while (prefixedWidth < width)
-          {
-            *s++ = padChar;
-            ++prefixedWidth;
+            case 'L':
+              VSPRINTF_HEXADECIMAL(u64int, __builtin_clzll);
+              break;
+            default:
+              VSPRINTF_HEXADECIMAL(u32int, __builtin_clz);
+              break;
           }
           break;
         }
@@ -698,7 +838,8 @@ int
   (const char *s, const char *format, va_list args)
 {
   /*
-   * This function is a wrapper around _vsscanf to avoid duplicating the code to compute the return value.
+   * This function is a wrapper around _vsscanf to avoid duplicating the code to compute the return
+   * value.
    */
   TEST_PRINTF("vsscanf wrapper: string = '%s'; format = '%s'" EOL, s, format);
   int result = _vsscanf(s, format, args);
@@ -718,7 +859,8 @@ static int _vsscanf(const char *s, const char *format, va_list args)
     {
       TEST_PRINTF("Format contains whitespace!" EOL);
       /*
-       * Any amount of whitespace in the format string maps to any amount of whitespace in the input string.
+       * Any amount of whitespace in the format string maps to any amount of whitespace in the input
+       * string.
        */
       ++format;
       if (isspace(*s))
@@ -781,7 +923,8 @@ static int _vsscanf(const char *s, const char *format, va_list args)
       if (isdigit(*format))
       {
         /*
-         * Read width; this specifies the maximum number of characters to be read from the input string.
+         * Read width; this specifies the maximum number of characters to be read from the input
+         * string.
          */
         width = 0;
         do
@@ -801,18 +944,9 @@ static int _vsscanf(const char *s, const char *format, va_list args)
        * a modifier character.
        *
        * Valid modifiers are: 'h', 'l' and 'L'. In ANSI C, L is only used with floating point types.
-       *
-       * WARNING: adding a custom modifier here requires modification of ALL tests on the modifier
-       * below, as without CONFIG_STDIO_FP, the only possible values of modifier are 0, 'h', and
-       * 'l', and the default case will be compiled out! Not adapting these tests will break
-       * consistent handling of erroneous format strings.
+       * In this implementation, 'L' denotes a 64-bit numeric type (see comment in stdio.h).
        */
-      if (
-          *format == 'h' || *format == 'l'
-#ifdef CONFIG_STDIO_FP
-            || *format == 'L'
-#endif
-        )
+      if (*format == 'h' || *format == 'l' || *format == 'L')
       {
         modifier = *format++;
         TEST_PRINTF("Modifier '%c' is set for this format specifier" EOL, modifier);
@@ -825,7 +959,8 @@ static int _vsscanf(const char *s, const char *format, va_list args)
       {
         case 'c':
           /*
-           * Character: a single character, unless a width is given, then [width] characters are read.
+           * Character: a single character, unless a width is given, then [width] characters are
+           * read.
            */
           if (modifier != 0)
           {
@@ -883,20 +1018,15 @@ static int _vsscanf(const char *s, const char *format, va_list args)
           }
           switch (modifier)
           {
-            case 0:
-              VSSCANF_DECIMAL("d", s32int, 1);
-              break;
             case 'h':
               VSSCANF_DECIMAL("hd", s16int, 1);
               break;
-            case 'l':
-              VSSCANF_DECIMAL("ld", s64int, 1);
+            case 'L':
+              VSSCANF_DECIMAL("Ld", s64int, 1);
               break;
-#ifdef CONFIG_STDIO_FP
             default:
-              TEST_PRINTF("Error: invalid modifier '%c' for specifier '%%d'" EOL, modifier);
-              return convertedItemCount;
-#endif
+              VSSCANF_DECIMAL("d", s32int, 1);
+              break;
           }
           break; /* format specifier: 'd' */
         case 'n':
@@ -935,24 +1065,20 @@ static int _vsscanf(const char *s, const char *format, va_list args)
             TEST_PRINTF("No width given; reverting to default width for specifier '%%o': %d" EOL, width);
           }
           /*
-           * There is no need to check for the prefix here, as it is optional and we can safely use the leading zero.
+           * There is no need to check for the prefix here, as it is optional and we can safely use
+           * the leading zero.
            */
           switch (modifier)
           {
-            case 0:
-              VSSCANF_OCTAL("", u32int);
-              break;
             case 'h':
               VSSCANF_OCTAL("h", u16int);
               break;
-            case 'l':
-              VSSCANF_OCTAL("l", u64int);
+            case 'L':
+              VSSCANF_OCTAL("L", u64int);
               break;
-#ifdef CONFIG_STDIO_FP
             default:
-              TEST_PRINTF("Error: invalid modifier '%c' for specifier '%%o'" EOL, modifier);
-              return convertedItemCount;
-#endif
+              VSSCANF_OCTAL("", u32int);
+              break;
           }
           break; /* format specifier: 'o' */
         case 's':
@@ -1003,20 +1129,15 @@ static int _vsscanf(const char *s, const char *format, va_list args)
           }
           switch (modifier)
           {
-            case 0:
-              VSSCANF_DECIMAL("u", u32int, 0);
-              break;
             case 'h':
               VSSCANF_DECIMAL("hu", u16int, 0);
               break;
-            case 'l':
-              VSSCANF_DECIMAL("lu", u64int, 0);
+            case 'L':
+              VSSCANF_DECIMAL("Lu", u64int, 0);
               break;
-#ifdef CONFIG_STDIO_FP
             default:
-              TEST_PRINTF("Error: invalid modifier '%c' for specifier '%%u'" EOL, modifier);
-              return convertedItemCount;
-#endif
+              VSSCANF_DECIMAL("u", u32int, 0);
+              break;
           }
           break; /* format specifier: 'u' */
         case 'p':
@@ -1041,7 +1162,8 @@ static int _vsscanf(const char *s, const char *format, va_list args)
             TEST_PRINTF("No width given; reverting to default width for specifier '%%%c': %d" EOL, *format, width);
           }
           /*
-           * Check for prefix (we can safely skip a leading zero) if the set maximum width allows for one..
+           * Check for prefix (we can safely skip a leading zero) if the set maximum width allows
+           * for one..
            */
           if (width > 2 && *s == '0')
           {
@@ -1056,20 +1178,15 @@ static int _vsscanf(const char *s, const char *format, va_list args)
           }
           switch (modifier)
           {
-            case 0:
-              VSSCANF_HEXADECIMAL("", u32int);
-              break;
             case 'h':
               VSSCANF_HEXADECIMAL("h", u16int);
               break;
-            case 'l':
-              VSSCANF_HEXADECIMAL("l", u64int);
+            case 'L':
+              VSSCANF_HEXADECIMAL("L", u64int);
               break;
-#ifdef CONFIG_STDIO_FP
             default:
-              TEST_PRINTF("Error: invalid modifier '%c' for specifier '%%%c'" EOL, modifier, *format);
-              return convertedItemCount;
-#endif
+              VSSCANF_HEXADECIMAL("", u32int);
+              break;
           }
           break; /* format specifier: 'p','x' */
         default:
@@ -1091,7 +1208,8 @@ static int _vsscanf(const char *s, const char *format, va_list args)
     else
     {
       /*
-       * Any non-whitespace character in the format string, other than the percentage sign, must match the next character in the input string.
+       * Any non-whitespace character in the format string, other than the percentage sign, must
+       * match the next character in the input string.
        */
       if (*s == *format)
       {
@@ -1101,7 +1219,8 @@ static int _vsscanf(const char *s, const char *format, va_list args)
       else
       {
         /*
-         * Error: the input string does not contain the same non-whitespace character as the format string!
+         * Error: the input string does not contain the same non-whitespace character as the format
+         * string!
          */
         TEST_PRINTF("Error: the input string does not contain the same non-whitespace character as the format string ('%%%c' vs. '%%%c')" EOL, *s, *format);
         return convertedItemCount;
