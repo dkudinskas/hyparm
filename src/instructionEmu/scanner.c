@@ -76,9 +76,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   {
     printf("scanBlock: gc = %p, blkStartAddr = %.8x\n", gc, blkStartAddr);
     printf("scanBlock: called from source %u\n", (u32int)scanBlockCallSource);
-#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
-    printf("scanBlock: scanned block count is %#Lx" EOL, scanBlockCounter);
-#endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
+    DEBUG(SCANNER_COUNT_BLOCKS, "scanBlock: scanned block count is %#Lx" EOL, scanBlockCounter);
     DIE_NOW(gc, "scanBlock() called with NULL pointer");
   }
 #endif /* CONFIG_DEBUG_SCANNER_CALL_SOURCE */
@@ -117,9 +115,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
       (inBlockCache ? "HIT" : "MISS")
     );
 
-#if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
   scanBlockCallSource = SCANNER_CALL_SOURCE_NOT_SET;
-#endif /* CONFIG_DEBUG_SCANNER_CALL_SOURCE */
 
   if (inBlockCache)
   {
@@ -488,7 +484,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   if ((instruction & INSTR_SWI) == INSTR_SWI)
   {
     u32int svcCode = (instruction & 0x00FFFFFF);
-    if ((svcCode >= 0) && (svcCode <= 0xFF))
+    if (svcCode <= 0xFF)
     {
       printf("scanBlock: SWI code = %x\n", svcCode);
       DIE_NOW(gc, "scanBlock: SVC instruction not placed by hypervisor!");
