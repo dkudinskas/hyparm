@@ -16,14 +16,14 @@
 // uncomment to enable remaining debug code not triggered from config: #define SCANNER_DEBUG
 
 
-#ifdef CONFIG_DEBUG_SCANNER_COUNT_BLOCKS
+#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
 
 static u64int scanBlockCounter;
 
 #endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
 
 
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+#if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
 
 static u8int scanBlockCallSource;
 
@@ -44,7 +44,7 @@ static inline u32int getHash(u32int key)
 }
 
 
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+#if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
 
 void setScanBlockCallSource(u8int source)
 {
@@ -62,11 +62,11 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   instructionHandler decodedInstruction = 0;
 #endif
 
-#ifdef CONFIG_DEBUG_SCANNER_COUNT_BLOCKS
+#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
   ++scanBlockCounter;
 #endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
 
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+#if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
   if (scanBlockCallSource == SCANNER_CALL_SOURCE_NOT_SET)
   {
     printf("scanBlock: gc = %p, blkStartAddr = %08x\n", gc, blkStartAddr);
@@ -76,7 +76,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   {
     printf("scanBlock: gc = %p, blkStartAddr = %.8x\n", gc, blkStartAddr);
     printf("scanBlock: called from source %u\n", (u32int)scanBlockCallSource);
-#ifdef CONFIG_DEBUG_SCANNER_COUNT_BLOCKS
+#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
     printf("scanBlock: scanned block count is %#Lx" EOL, scanBlockCounter);
 #endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
     DIE_NOW(gc, "scanBlock() called with NULL pointer");
@@ -96,29 +96,28 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 
   bool inBlockCache = checkBlockCache(blkStartAddr, bcIndex, gc->blockCache);
 
-#ifdef CONFIG_DEBUG_SCANNER_BLOCK_TRACE
-  printf
+  DEBUG
     (
+      SCANNER_BLOCK_TRACE,
       "scanBlock: @%.8x"
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+#if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
       ", source = %#x"
 #endif /* CONFIG_DEBUG_SCANNER_CALL_SOURCE */
-#ifdef CONFIG_DEBUG_SCANNER_COUNT_BLOCKS
+#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
       ", count = %#Lx"
 #endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
       "; %s" EOL,
       blkStartAddr,
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+#if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
       scanBlockCallSource,
 #endif /* CONFIG_DEBUG_SCANNER_CALL_SOURCE */
-#ifdef CONFIG_DEBUG_SCANNER_COUNT_BLOCKS
+#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
       scanBlockCounter,
 #endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
       (inBlockCache ? "HIT" : "MISS")
     );
-#endif /* CONFIG_DEBUG_SCANNER_BLOCK_TRACE */
 
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+#if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
   scanBlockCallSource = SCANNER_CALL_SOURCE_NOT_SET;
 #endif /* CONFIG_DEBUG_SCANNER_CALL_SOURCE */
 
@@ -170,14 +169,10 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     //grab the ARM instruction
     instruction = *currAddress;
   }
-#ifdef CONFIG_DECODER_TABLE_SEARCH
+#if defined(CONFIG_DECODER_TABLE_SEARCH)
   while ((decodedInstruction = decodeInstr(instruction,currhwAddress))->replaceCode == 0)
-#else
-# ifdef CONFIG_DECODER_AUTO
+#elif defined(CONFIG_DECODER_AUTO)
   while ((decodedInstruction = decodeInstr(instruction)) == 0)
-# else
-#  error Decoder must be set!
-# endif
 #endif
   {
     // Thumb-2 is moving by 2 bytes at a time
@@ -630,7 +625,7 @@ void protectScannedBlock(u32int startAddress, u32int endAddress)
 }
 
 
-#ifdef CONFIG_DEBUG_SCANNER_COUNT_BLOCKS
+#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
 
 void resetScannerCounter()
 {

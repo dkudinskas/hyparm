@@ -118,9 +118,7 @@ void softwareInterrupt(GCONTXT *context, u32int code)
   if ((context->CPSR & CPSR_MODE) != CPSR_MODE_USR)
   {
     // guest in privileged mode! scan...
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
     setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
-#endif
     scanBlock(context, context->R15);
   }
 }
@@ -150,9 +148,7 @@ void dataAbort(GCONTXT *context)
         if ( shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
         {
           deliverDataAbort(context);
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
           setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION);
-#endif
           scanBlock(context, context->R15);
           break;
         }
@@ -182,9 +178,7 @@ void dataAbort(GCONTXT *context)
       {
         // deliver the abort!
         deliverDataAbort(context);
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
         setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_PERMISSION);
-#endif
         scanBlock(context, context->R15);
       }
       break;
@@ -201,9 +195,7 @@ void dataAbort(GCONTXT *context)
       if (shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
       {
         deliverDataAbort(context);
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
         setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_TRANSLATION);
-#endif
         scanBlock(context, context->R15);
       }
       break;
@@ -320,9 +312,7 @@ void prefetchAbort(GCONTXT *context)
       if (shouldPrefetchAbort(ifar))
       {
         deliverPrefetchAbort(context);
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
         setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_TRANSLATION);
-#endif
         scanBlock(context, context->R15);
       }
       break;
@@ -343,9 +333,7 @@ void prefetchAbort(GCONTXT *context)
       if (shouldPrefetchAbort(ifar))
       {
         deliverPrefetchAbort(context);
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
         setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_FREERTOS);
-#endif
         scanBlock(context, context->R15);
       }
       break;

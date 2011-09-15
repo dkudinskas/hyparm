@@ -158,20 +158,17 @@ void main(s32int argc, char *argv[])
 #ifdef CONFIG_GUEST_FREERTOS
   if (ret == 2)
   {
+    DEBUG(STARTUP, "RTOS address: %x\n", kernAddr);
     rtos = TRUE;
-#ifdef CONFIG_DEBUG_STARTUP
-    printf("RTOS address: %x\n", kernAddr);
-#endif
     doRtosBoot(context, kernAddr);
   }
   else
 #endif
   {
-#ifdef CONFIG_DEBUG_STARTUP
-    printf("Kernel address: %x, Initrd address: %x\n", kernAddr, initrdAddr);
-#endif
+    DEBUG(STARTUP, "Kernel address: %x, Initrd address: %x" EOL, kernAddr, initrdAddr);
+
     image_header_t imageHeader = getImageHeader(kernAddr);
-#ifdef CONFIG_DEBUG_STARTUP
+#if (CONFIG_DEBUG_STARTUP)
     dumpHdrInfo(&imageHeader);
 #endif
     doLinuxBoot(context, &imageHeader, kernAddr, initrdAddr);
@@ -195,20 +192,16 @@ static void printUsage(void)
 
 static int parseCommandline(s32int argc, char *argv[], u32int *kernAddr, u32int *initrdAddr)
 {
-#ifdef CONFIG_DEBUG_STARTUP
   s32int i;
-#endif
 #ifdef CONFIG_GUEST_FREERTOS
   bool rtos;
 #endif
 
-#ifdef CONFIG_DEBUG_STARTUP
-  printf("parseCommandline: argc = %d" EOL, argc);
+  DEBUG(STARTUP, "parseCommandline: argc = %d" EOL, argc);
   for (i = 0; i < argc; ++i)
   {
-    printf("parseCommandline: argv[%d] = %p" EOL, i, argv[i]);
+    DEBUG(STARTUP, "parseCommandline: argv[%d] = %p" EOL, i, argv[i]);
   }
-#endif
 
   if (argc < 3)
   {
@@ -227,17 +220,13 @@ static int parseCommandline(s32int argc, char *argv[], u32int *kernAddr, u32int 
   }
   else
   {
-#ifdef CONFIG_DEBUG_STARTUP
-    printf("parseCommandline: parameter -kernel or -rtos not found" EOL);
-#endif
+    DEBUG(STARTUP, "parseCommandline: parameter -kernel or -rtos not found" EOL);
     return -1;
   }
 
   if (sscanf(argv[2], "%x", kernAddr) != 1)
   {
-#ifdef CONFIG_DEBUG_STARTUP
-    printf("parseCommandline: parameter value for %s is not a valid address: '%s'" EOL, argv[1], argv[2]);
-#endif
+    DEBUG(STARTUP, "parseCommandline: parameter value for %s is not a valid address: '%s'" EOL, argv[1], argv[2]);
     return -1;
   }
 
@@ -255,17 +244,13 @@ static int parseCommandline(s32int argc, char *argv[], u32int *kernAddr, u32int 
 
   if (strcmp("-initrd", argv[3]) != 0)
   {
-#ifdef CONFIG_DEBUG_STARTUP
-    printf("parseCommandline: parameter -initrd not found" EOL);
-#endif
+    DEBUG(STARTUP, "parseCommandline: parameter -initrd not found" EOL);
     return -1;
   }
 
   if (sscanf(argv[4], "%x", initrdAddr) != 1)
   {
-#ifdef CONFIG_DEBUG_STARTUP
-    printf("parseCommandline: parameter value for -initrd is not a valid address: '%s'" EOL, argv[4]);
-#endif
+    DEBUG(STARTUP, "parseCommandline: parameter value for -initrd is not a valid address: '%s'" EOL, argv[4]);
     return -1;
   }
 

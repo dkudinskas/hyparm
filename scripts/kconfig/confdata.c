@@ -495,6 +495,8 @@ header_print_symbol(FILE *fp, struct symbol *sym, const char *value, void *arg)
 
 		switch (*value) {
 		case 'n':
+			if (strncmp(sym->name, "DEBUG_", 6) == 0)
+				fprintf(fp, "#define %s%s 0\n", CONFIG_, sym->name);
 			break;
 		case 'm':
 			suffix = "_MODULE";
@@ -503,6 +505,7 @@ header_print_symbol(FILE *fp, struct symbol *sym, const char *value, void *arg)
 			fprintf(fp, "#define %s%s%s 1\n",
 			    CONFIG_, sym->name, suffix);
 		}
+#if 0
 		/*
 		 * Generate the __enabled_CONFIG_* and
 		 * __enabled_CONFIG_*_MODULE macros for use by the
@@ -514,6 +517,7 @@ header_print_symbol(FILE *fp, struct symbol *sym, const char *value, void *arg)
 				sym->name, (*value == 'y'));
 		fprintf(fp, "#define __enabled_" CONFIG_ "%s_MODULE %d\n",
 				sym->name, (*value == 'm'));
+#endif
 		break;
 	}
 	case S_HEX: {

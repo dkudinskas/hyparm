@@ -8,6 +8,14 @@
 #include "guestManager/guestContext.h"
 
 
+#define DEBUG(what, ...)                                                                           \
+  {                                                                                                \
+    if (CONFIG_DEBUG_ ## what)                                                                     \
+    {                                                                                              \
+      printf(__VA_ARGS__);                                                                         \
+    }                                                                                              \
+  }
+
 void DIE_NOW(GCONTXT *context, const char *msg)
   __attribute__((noreturn));
 
