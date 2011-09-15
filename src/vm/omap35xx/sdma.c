@@ -8,7 +8,6 @@
 #include "vm/omap35xx/sdma.h"
 
 
-extern GCONTXT * getGuestContext(void);
 struct Sdma * sdma;
 
 void initSdma()

@@ -25,7 +25,7 @@ static struct tag * paramTag;
 static struct RamConfig dramBanks[NR_DRAM_BANKS];
 
 
-void doRtosBoot(ulong loadAddr)
+void doRtosBoot(GCONTXT *context, ulong loadAddr)
 {
   ulong targetAddr = loadAddr;
   const char * commandline = "";
@@ -35,7 +35,7 @@ void doRtosBoot(ulong loadAddr)
   /* TODO: add virtual addressing startup for the new VM here
   need to create a Global Page table/map for the VM and add mappings for where the kernel is to be copied?
   */
-  createVirtualMachineGPAtoRPA(getGuestContext());
+  createVirtualMachineGPAtoRPA(context);
 
   populateDramBanks();
 
@@ -51,7 +51,7 @@ void doRtosBoot(ulong loadAddr)
 #ifdef CONFIG_DEBUG_SCANNER_COUNT_BLOCKS
   resetScannerCounter();
 #endif
-  scanBlock(getGuestContext(), targetAddr);
+  scanBlock(context, targetAddr);
 
   /* This seems to be OS independent */
   cleanupBeforeLinux();
@@ -131,4 +131,3 @@ static void setup_end_tag ()
   paramTag->hdr.tag = ATAG_NONE;
   paramTag->hdr.size = 0;
 }
-

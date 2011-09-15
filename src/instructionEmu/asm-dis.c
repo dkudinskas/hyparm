@@ -7,8 +7,6 @@
 #include "instructionEmu/miscInstructions.h"
 
 
-extern GCONTXT * getGuestContext(void);
-
 struct opcode32 arm_coproc_opcodes[] = {
 /* Generic coprocessor instructions.  */
 {3,  &mcrrInstruction,  0x0c400000, 0x0ff00000, "mcrr%c\t%8-11d, %4-7d, %12-15r, %16-19r, cr%0-3d"},

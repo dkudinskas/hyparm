@@ -9,8 +9,6 @@
 #include "vm/omap35xx/clockManager.h"
 
 
-extern GCONTXT * getGuestContext(void);
-
 struct ClockManager * clockMan;
 
 

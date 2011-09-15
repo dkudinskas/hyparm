@@ -17,7 +17,6 @@
 extern bool rtos;
 #endif
 
-extern GCONTXT * getGuestContext(void);
 
 struct GeneralPurposeTimer * gptimer;
 

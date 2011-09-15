@@ -105,7 +105,8 @@ void main(s32int argc, char *argv[])
   initialiseFrameTable();
 
   /* initialize guest context */
-  setGuestContext(allocateGuest());
+  GCONTXT *context = allocateGuest();
+  setGuestContext(context);
 
   /* Setup MMU for Hypervisor */
   initialiseVirtualAddressing();
@@ -161,7 +162,7 @@ void main(s32int argc, char *argv[])
 #ifdef CONFIG_DEBUG_STARTUP
     printf("RTOS address: %x\n", kernAddr);
 #endif
-    doRtosBoot(kernAddr);
+    doRtosBoot(context, kernAddr);
   }
   else
 #endif
@@ -173,7 +174,7 @@ void main(s32int argc, char *argv[])
 #ifdef CONFIG_DEBUG_STARTUP
     dumpHdrInfo(&imageHeader);
 #endif
-    doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
+    doLinuxBoot(context, &imageHeader, kernAddr, initrdAddr);
   }
 #endif /* CONFIG_CLI */
 }

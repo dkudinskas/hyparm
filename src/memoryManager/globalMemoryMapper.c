@@ -11,9 +11,6 @@
 #include "memoryManager/globalMemoryMapper.h"
 
 
-extern GCONTXT * getGuestContext(void); //from main.c
-
-
 /* generic load store instruction emulation  *
  * called when we permission fault on memory *
  * access to a protected area - must emulate */

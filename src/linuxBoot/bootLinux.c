@@ -12,7 +12,6 @@
 #include "memoryManager/pageTable.h"
 
 
-extern GCONTXT * getGuestContext(void);
 extern void callKernel(int, int, u32int, u32int) __attribute__((noreturn));
 
 static void setup_start_tag(void);
@@ -27,7 +26,7 @@ static struct RamConfig dramBanks[NR_DRAM_BANKS];
 
 static int builtInInitrd = 0;
 
-void doLinuxBoot(image_header_t *imageHeader, u32int loadAddr, u32int initrdAddr)
+void doLinuxBoot(GCONTXT *context, image_header_t *imageHeader, u32int loadAddr, u32int initrdAddr)
 {
   u32int currentAddress = loadAddr + sizeof(image_header_t);
   u32int targetAddress = imageHeader->ih_load;
@@ -46,7 +45,7 @@ void doLinuxBoot(image_header_t *imageHeader, u32int loadAddr, u32int initrdAddr
   /* TODO: add virtual addressing startup for the new VM here
   need to create a Global Page table/map for the VM and add mappings for where the kernel is to be copied?
   */
-  createVirtualMachineGPAtoRPA(getGuestContext());
+  createVirtualMachineGPAtoRPA(context);
 
   if (currentAddress != targetAddress)
   {
@@ -70,7 +69,7 @@ void doLinuxBoot(image_header_t *imageHeader, u32int loadAddr, u32int initrdAddr
 #ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
   setScanBlockCallSource(SCANNER_CALL_SOURCE_BOOT);
 #endif
-  scanBlock(getGuestContext(), entryPoint);
+  scanBlock(context, entryPoint);
 
   cleanupBeforeLinux();
 

@@ -10,8 +10,6 @@
 #include "vm/omap35xx/intc.h"
 
 
-extern GCONTXT * getGuestContext(void);
-
 static inline u32int getUartNumber(u32int phyAddr);
 static inline u32int getUartBaseAddr(u32int id);
 

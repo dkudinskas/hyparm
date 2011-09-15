@@ -11,8 +11,6 @@
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 
 
-extern GCONTXT * getGuestContext(void);
-
 struct InterruptController * irqController;
 
 void initIntc()

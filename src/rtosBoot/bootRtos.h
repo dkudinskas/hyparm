@@ -3,7 +3,9 @@
 
 #include "common/types.h"
 
+#include "guestManager/guestContext.h"
 
-void doRtosBoot(ulong loadAddr)  __attribute__((noreturn));
+
+void doRtosBoot(GCONTXT *context, ulong loadAddr)  __attribute__((noreturn));
 
 #endif

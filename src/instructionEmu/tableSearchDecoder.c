@@ -15,7 +15,6 @@
 u16int * currAddress = 0;
 #endif
 
-extern GCONTXT * getGuestContext(void);
 
 /* Top level instruction categories */
 struct TopLevelCategory categories[] = {

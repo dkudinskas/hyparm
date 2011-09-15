@@ -7,8 +7,6 @@
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 
 
-extern GCONTXT * getGuestContext(void);
-
 u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int address)
 {
   DIE_NOW(0, "SRAM_INTERNAL load unimplemented.");

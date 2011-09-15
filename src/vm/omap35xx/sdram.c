@@ -9,8 +9,6 @@
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 
 
-extern GCONTXT * getGuestContext(void);
-
 struct SdramController * sdram;
 
 void initSdram(void)

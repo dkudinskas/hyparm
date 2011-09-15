@@ -9,7 +9,6 @@
 #include "memoryManager/pageTable.h"
 
 
-extern GCONTXT * getGuestContext(void); //from main.c
 extern void setGuestPhysicalPt(GCONTXT* gc);
 
 

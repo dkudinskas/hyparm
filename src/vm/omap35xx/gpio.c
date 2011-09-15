@@ -13,8 +13,6 @@
 #include "vm/omap35xx/gpio.h"
 
 
-extern GCONTXT * getGuestContext(void);
-
 struct Gpio * gpio[6];
 
 void initGpio(u32int gpioNumber)

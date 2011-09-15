@@ -18,8 +18,6 @@
 #include "vm/omap35xx/uart.h"
 
 
-extern GCONTXT * getGuestContext(void);
-
 device * initialiseHardwareLibrary()
 {
 #ifdef HARDWARE_LIB_DBG

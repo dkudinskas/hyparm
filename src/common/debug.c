@@ -10,7 +10,6 @@
 
 #define TERMINAL_WIDTH  80
 
-extern GCONTXT * getGuestContext(void); //from main.c
 
 #ifdef CONFIG_MMC
 extern fatfs mainFilesystem;

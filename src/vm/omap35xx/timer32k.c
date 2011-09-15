@@ -8,8 +8,6 @@
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 
 
-extern GCONTXT * getGuestContext(void);
-
 static u32int timer32SysconfReg = 0;
 static u32int counterVal = 0;
 
