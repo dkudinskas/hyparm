@@ -49,6 +49,7 @@ defconfig: $(OUTPUT_PATH)/conf
 
 $(KCONFIG_OK): $(KCONFIG_CONFIG)
 	@if [ ! -f $(KCONFIG_AUTOHEADER) -o $(KCONFIG_CONFIG) -nt $(KCONFIG_AUTOHEADER) ]; then \
+	  mkdir -p $(OUTPUT_PATH) \
 	  echo SUBMAKE; \
 	  $(MAKE) silentoldconfig; \
 	  touch $@; \
