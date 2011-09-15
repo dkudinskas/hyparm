@@ -527,6 +527,6 @@ void irqPrivileged()
 
 void fiq(void)
 {
-  DIE_NOW(getGuestContext(), "fiq: FIQ handler unimplemented!");
+  DIE_NOW(0, "fiq: FIQ handler unimplemented!");
 }
 

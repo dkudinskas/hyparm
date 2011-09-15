@@ -516,7 +516,7 @@ struct opcode32 thumb16_opcodes[] = {
 
 struct opcode32 * decodeInstruction(u32int instr)
 {
-  int index = 0;
+  u32int index = 0;
   struct opcode32 * retInstr = 0;
 
   /* LOOP through all ARM instructions looking for match */

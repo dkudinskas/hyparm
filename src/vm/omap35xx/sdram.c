@@ -24,7 +24,7 @@ void initSdram(void)
   {
     memset((void*)sdram, 0x0, sizeof(struct SdramController));
 #ifdef SDRAM_DBG
-    printf("Sdram instance at %08x\n", (u32int)sdram);
+    printf("Sdram instance at %.8x" EOL, (u32int)sdram);
 #endif
   }
 
@@ -39,10 +39,10 @@ void initSdram(void)
   else
   {
     memset((void*)storeTrace, 0x0, MEGABYTE_COUNT*sizeof(u32int));
-    printf("Store trace at %08x\n", (u32int)storeTrace);
+    printf("Store trace at %.8x" EOL, (u32int)storeTrace);
   }
   sdram->storeCounters = storeTrace;
-  
+
   u32int y = 0;
   for (y = 0; y < MEGABYTE_COUNT; y++)
   {
@@ -54,14 +54,14 @@ void initSdram(void)
 void dumpSdramStats()
 {
 #ifdef SDRAM_STORE_COUNTER
-  printf("Store trace:\n");
+  printf("Store trace:" EOL);
 
   u32int i = 0;
   for (i = 0; i < MEGABYTE_COUNT; i++)
   {
     if (sdram->storeCounters[i] != 0)
     {
-      printf("%x: %x\n", i << 20, sdram->storeCounters[i]);
+      printf("%x: %x" EOL, i << 20, sdram->storeCounters[i]);
     }
   }
 #endif
@@ -78,9 +78,8 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef SDRAM_DBG
-  printf(dev->deviceName);
-  printf(" load from physical address: %08x, vAddr %08x, access size %x\n",
-          phyAddr, address, (u32int)size);
+  printf("%s load from physical address: %.8x, vAddr %.8x, access size %x" EOL, dev->deviceName,
+      phyAddr, address, (u32int)size);
 #endif
 
   switch (size)
@@ -104,11 +103,9 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address)
       break;
     }
     default:
-    {
-      printf(dev->deviceName);
-      printf(" load from physical address: %08x, vAddr %08x\n", phyAddr, address);
+      printf("%s load from physical address: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr,
+          address);
       DIE_NOW(gc, "Invalid access size.");
-    }
   }
   return val;
 }
@@ -121,16 +118,15 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef SDRAM_DBG
-  printf(dev->deviceName);
-  printf(" store to physical address: %08x, vAddr %08x, aSize %x, val %08x\n",
-         phyAddr, address, (u32int)size, value);
+  printf("%s store to physical address: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL, dev->deviceName,
+      phyAddr, address, (u32int)size, value);
 #endif
 
 #ifdef SDRAM_STORE_COUNTER
   u32int index = (address >> 20) & 0xFFF;
   sdram->storeCounters[index] = sdram->storeCounters[index] + 1;
 #endif
-  
+
   switch (size)
   {
     case WORD:
@@ -160,11 +156,8 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       break;
     }
     default:
-    {
-      printf(dev->deviceName);
-      printf(" store to physical address: %08x, vAddr %08x, aSize %x, val %08x\n",
-             phyAddr, address, (u32int)size, value);
+      printf("%s store to physical address: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL,
+          dev->deviceName, phyAddr, address, (u32int)size, value);
       DIE_NOW(gc, "Invalid access size.");
-    }
   }
 }

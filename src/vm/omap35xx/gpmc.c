@@ -24,10 +24,10 @@ void initGpmc()
   {
     memset((void*)gpmc, 0x0, sizeof(struct Gpmc));
 #ifdef GPMC_DBG
-    printf("Initializing GPMC at %08x\n", (u32int)gpmc);
+    printf("Initializing GPMC at %.8x" EOL, (u32int)gpmc);
 #endif
   }
-  
+
   // register default values
   gpmc->gpmcSysConfig = 0x00000010; // OMAP reference manual: 0x00000000
   gpmc->gpmcSysStatus = 0x00000001;
@@ -89,7 +89,7 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
       break;
     case GPMC_SYSCONFIG:
       // TODO
-      printf("WARN reading GPMC_SYSCONFIG %08x\n", gpmc->gpmcSysConfig);
+      printf("WARN reading GPMC_SYSCONFIG %.8x" EOL, gpmc->gpmcSysConfig);
       val = gpmc->gpmcSysConfig;
       break;
     case GPMC_NAND_COMMAND_0:
@@ -159,14 +159,13 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
       val = gpmc->gpmcConfig7_7;
       break;
     default:
-      printf(dev->deviceName);
-      printf(" load from pAddr: %08x, vAddr: %08x, accSize %x\n", phyAddr, address, (u32int)size);
+      printf("%s load from pAddr: %.8x, vAddr: %.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+          address, (u32int)size);
       DIE_NOW(gc, "Gpmc: load on invalid register.");
   }
-  
+
 #ifdef GPMC_DBG
-  printf(dev->deviceName);
-  printf(" load from pAddr: %08x, vAddr: %08x, accSize %x, val %08x\n",
+  printf("%s load from pAddr: %.8x, vAddr: %.8x, accSize %x, val %.8x" EOL, dev->deviceName,
         phyAddr, address, (u32int)size);
 #endif
 
@@ -183,9 +182,8 @@ void storeGpmc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef GPMC_DBG
-  printf(dev->deviceName);
-  printf(" store to pAddr: %08x, vAddr %08x, aSize %x, val %08x\n",
-         phyAddr, address, (u32int)size, value);
+  printf("%s store to pAddr: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL, dev->deviceName, phyAddr,
+      address, (u32int)size, value);
 #endif
 
   u32int regOffset = phyAddr - Q1_L3_GPMC;
@@ -193,10 +191,10 @@ void storeGpmc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   {
     case GPMC_SYSCONFIG:
       // TODO
-      printf("WARN writing to GPMC_SYSCONFIG %08x\n", value);
+      printf("WARN writing to GPMC_SYSCONFIG %.8x" EOL, value);
       if (value & GPMC_SYSCONFIG_SOFTRESET)
       {
-        printf("WARN should do soft reset of GPMC\n");
+        printf("WARN should do soft reset of GPMC" EOL);
       }
       gpmc->gpmcSysConfig = value & GPMC_SYSCONFIG_MASK;
       break;

@@ -28,7 +28,7 @@ void initGpio(u32int gpioNumber)
   {
     memset((void*)gpio[gpioNumber-1], 0x0, sizeof(struct Gpio));
 #ifdef GPIO_DBG
-    printf("Initializing GPIO%x at %08x\n", gpioNumber, (u32int)gpio[gpioNumber-1]);
+    printf("Initializing GPIO%x at %.8x" EOL, gpioNumber, (u32int)gpio[gpioNumber-1]);
 #endif
   }
 
@@ -180,15 +180,14 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
     case GPIO_SETIRQENABLE2:
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
-      printf("GPIO: load from unimplemented register %x\n", regOffset);
+      printf("GPIO: load from unimplemented register %x" EOL, regOffset);
       DIE_NOW(0, "panic.");
     default:
       DIE_NOW(0, "Gpio: load on invalid register.");
   }
 #ifdef GPIO_DBG
-  printf(dev->deviceName);
-  printf(" load from pAddr: %08x, vAddr: %08x access size %x val = %08x\n",
-         phyAddr, address, (u32int)size, val);
+  printf("%s load from pAddr: %.8x, vAddr: %.8x access size %x val = %.8x" EOL, dev->deviceName,
+      phyAddr, address, (u32int)size, val);
 #endif
   return val;
 }
@@ -203,9 +202,8 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef GPIO_DBG
-  printf(dev->deviceName);
-  printf(" store to pAddr: %08x, vAddr: %08x, access size: %x, val %08x\n",
-        phyAddr, address, (u32int)size, value);
+  printf("%s store to pAddr: %.8x, vAddr: %.8x, access size: %x, val %.8x" EOL, dev->deviceName,
+      phyAddr, address, (u32int)size, value);
 #endif
 
   u32int regOffset = 0;
@@ -249,7 +247,7 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       if ((value & GPIO_SYSCONFIG_SOFTRESET) == GPIO_SYSCONFIG_SOFTRESET)
       {
 #ifdef GPIO_DBG
-        printf("GPIO: soft reset.\n");
+        printf("GPIO: soft reset" EOL);
 #endif
         resetGpio(gpioNum);
       }
@@ -346,7 +344,7 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPIO_SETIRQENABLE2:
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
-      printf("GPIO: store to unimplemented register %x\n", regOffset);
+      printf("GPIO: store to unimplemented register %x" EOL, regOffset);
       DIE_NOW(gc, "panic.");
     default:
       DIE_NOW(gc, "Gpio: store to invalid register.");

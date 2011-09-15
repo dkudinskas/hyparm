@@ -23,9 +23,8 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef TIMER32K_DBG
-  printf(dev->deviceName);
-  printf(" load from physical address: %08x, vAddr %08x, aSize %x\n",
-          phyAddr, address, (u32int)size);
+  printf("%s load from physical address: %.8x, vAddr %.8x, aSize %x" EOL, dev->deviceName, phyAddr,
+      address, (u32int)size);
 #endif
 
   if (size == WORD)
@@ -35,8 +34,7 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
     {
       val = timer32SysconfReg;
 #ifdef TIMER32K_DBG
-      printf(dev->deviceName);
-      printf(" load sys cfg value %x\n", val);
+      printf("%s load sys cfg value %x" EOL, dev->deviceName, val);
 #endif
     }
     else if (regAddr == REG_TIMER_32K_COUNTER)
@@ -46,21 +44,18 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
       val = *memPtr;
       val = val >> 5;
 #ifdef TIMER32K_DBG
-      printf(dev->deviceName);
-      printf(" load counter value %x\n", val);
+      printf("%s load counter value %x" EOL, dev->deviceName, val);
 #endif
     }
     else
     {
-      printf(dev->deviceName);
-      printf(" load from physical address: %08x, vAddr %08x\n", phyAddr, address);
+      printf("%s load from physical address: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr, address);
       DIE_NOW(gc, "Invalid register!");
     }
   }
   else
   {
-    printf(dev->deviceName);
-    printf(" load from physical address: %08x, vAddr %08x\n", phyAddr, address);
+    printf("%s load from physical address: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr, address);
     DIE_NOW(gc, "Invalid register access size (non32bit)");
   }
   return val;

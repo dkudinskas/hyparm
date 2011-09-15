@@ -76,7 +76,7 @@ void mmu_compile_time_check(void)
 void mmuInit()
 {
 #ifdef MMU_DBG
-  printf("MMU init\n");
+  printf("MMU init" EOL);
 #endif
 
   dataBarrier();
@@ -88,7 +88,7 @@ void mmuInit()
 void dataBarrier()
 {
 #ifdef MMU_DBG
-  printf("Data Barrier\n");
+  printf("Data Barrier" EOL);
 #endif
   /*
    * It doesn't matter which register it written/nor the value inside it
@@ -104,7 +104,7 @@ void dataBarrier()
 void clearTLB()
 {
 #ifdef MMU_DBG
-  printf("Clearing TLB\n");
+  printf("Clearing TLB" EOL);
 #endif
   /*
    * It doesn't matter which register it written/nor the value inside it
@@ -122,7 +122,7 @@ void clearTLBbyMVA(u32int address)
 {
   address &= 0xFFFFF000;
 #ifdef MMU_DBG
-  printf("Clearing TLB of virt addr: %08x\n", address);
+  printf("Clearing TLB of virt addr: %.8x" EOL, address);
 #endif
   // mcr coproc opc1 Rt CRn CRm opc2
   asm ("mcr p15, 0, %0, c8, c7, 1"
@@ -135,7 +135,7 @@ void clearTLBbyMVA(u32int address)
 void clearInstructionCache()
 {
 #ifdef MMU_DBG
-  printf("Clearing caches\n");
+  printf("Clearing caches" EOL);
 #endif
   // Page: 1361
   asm ("mcr p15, 0, r0, c7, c5, 0"
@@ -177,7 +177,7 @@ void setDomain(u8int domain, access_type access)
 {
   //access is a two bit field 00 = no access, 01=client, 10=reserved, 11=manager
 #ifdef MMU_DBG
-  printf("Setting domain: %x, with access bits %x\n", domain, (u8int)access);
+  printf("Setting domain: %x, with access bits %x" EOL, domain, (u8int)access);
 #endif
 
   u32int value;
@@ -187,7 +187,7 @@ void setDomain(u8int domain, access_type access)
   : "memory"
      );
 #ifdef MMU_DBG
-  printf("Domain Register before update: %x\n", value);
+  printf("Domain Register before update: %x" EOL, value);
 #endif
   //clear the current domain
   u32int mask = ~(0b11 << (domain*2));
@@ -206,7 +206,7 @@ void setDomain(u8int domain, access_type access)
   :
   : "memory"
               );
-  printf("Domain Register after update: %x\n", value);
+  printf("Domain Register after update: %x" EOL, value);
 #endif
 }
 
@@ -214,7 +214,7 @@ void setDomain(u8int domain, access_type access)
 void setTexRemap(bool enable)
 {
 #ifdef MMU_DBG
-  printf("setTexRemap: %x\n", enable);
+  printf("setTexRemap: %x" EOL, enable);
 #endif
 
   u32int value;
@@ -225,7 +225,7 @@ void setTexRemap(bool enable)
      );
 #ifdef MMU_DBG
   u32int treEnabled = ((value & 0x10000000) == 0x10000000) ? TRUE : FALSE;
-  printf("setTexRemap: currently SCTRL.TRE = %x\n", treEnabled);
+  printf("setTexRemap: currently SCTRL.TRE = %x" EOL, treEnabled);
 #endif
 
   if (enable)
@@ -249,7 +249,7 @@ void setTexRemap(bool enable)
   :
   : "memory"
               );
-  printf("setTexRemap: SCTRL after update %x\n", value);
+  printf("setTexRemap: SCTRL after update %x" EOL, value);
 #endif
 }
 
@@ -257,7 +257,7 @@ void setTexRemap(bool enable)
 void mmuInsertPt0(descriptor* addr)
 {
 #ifdef MMU_DBG
-  printf("Add entry into TTBR0: %08x\n", (u32int)addr);
+  printf("Add entry into TTBR0: %.8x" EOL, (u32int)addr);
 #endif
   /* TODO: need to improve this to insert the correct bit masks
    * TTBR0(1348): base address of translation table 0
@@ -271,7 +271,7 @@ void mmuInsertPt0(descriptor* addr)
 void mmuInsertPt1(descriptor* addr)
 {
 #ifdef MMU_DBG
-  printf("Add entry into TTBR1: %08x\n", (u32int)addr);
+  printf("Add entry into TTBR1: %.8x" EOL, (u32int)addr);
 #endif
   //TODO: need to improve this to insert the correct bit masks
   asm("mcr p15, 0, %0,c2,c0,1"
@@ -289,7 +289,7 @@ descriptor* mmuGetPt0()
       :
       );
 #ifdef MMU_DBG
-  printf("Get TTBR0: %08x\n", (u32int)regVal);
+  printf("Get TTBR0: %.8x" EOL, (u32int)regVal);
 #endif
   return (descriptor*)regVal;
 }
@@ -377,11 +377,9 @@ void printDataAbort()
   u32int dfar = getDFAR();
   u32int faultStatus = dfsr.fs4 << 4 | dfsr.fs3_0;
 
-  printf("Data Abort Address: %08x\n", dfar);
-  printf("Fault type: ");
-  printf((char*)dataAbtFaultString[dfsr.fs3_0]);
-  printf(" (%x), domain %x, Write not Read: %x, External: %x\n",
-         faultStatus, dfsr.domain, dfsr.WnR, dfsr.ExT);
+  printf("Data Abort Address: %.8x" EOL, dfar);
+  printf("Fault type: %s (%x), domain %x, Write not Read: %x, External: %x" EOL,
+      dataAbtFaultString[dfsr.fs3_0], faultStatus, dfsr.domain, dfsr.WnR, dfsr.ExT);
 }
 
 void printPrefetchAbort()
@@ -390,8 +388,7 @@ void printPrefetchAbort()
   u32int ifar = getIFAR();
   u32int faultStatus = ifsr.fs3_0 | (ifsr.fs4 << 4);
 
-  printf("Prefetch Abort Address: %08x\n", ifar);
-  printf("Fault type: ");
-  printf((char*)prefetchAbtFaultString[faultStatus]);
-  printf(" (%x),  External: %x\n", faultStatus, ifsr.ExT);
+  printf("Prefetch Abort Address: %.8x" EOL, ifar);
+  printf("Fault type: %s (%x), External: %x" EOL, prefetchAbtFaultString[faultStatus], faultStatus,
+      ifsr.ExT);
 }
