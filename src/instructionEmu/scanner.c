@@ -115,7 +115,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
       (inBlockCache ? "HIT" : "MISS")
     );
 
-  scanBlockCallSource = SCANNER_CALL_SOURCE_NOT_SET;
+  setScanBlockCallSource(SCANNER_CALL_SOURCE_NOT_SET);
 
   if (inBlockCache)
   {
