@@ -118,7 +118,7 @@ $(KCONFIG_CONFIG):
   CPPFLAGS-y := -imacros $(KCONFIG_AUTOHEADER)
   LDFLAGS-y :=
 
-  ifeq ($(CONFIG_BUILD-SAVE_TEMPS),y)
+  ifeq ($(CONFIG_BUILD_SAVE_TEMPS),y)
     CFLAGS-y += -save-temps=obj
   else
     CFLAGS-y += -pipe
