@@ -30,7 +30,7 @@ extern bool rtos;
 #endif
 
 
-void softwareInterrupt(GCONTXT *context, u32int code)
+GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 {
 #ifdef EXC_HDLR_DBG
   printf("softwareInterrupt(%x)\n", code);
@@ -121,6 +121,8 @@ void softwareInterrupt(GCONTXT *context, u32int code)
     setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
     scanBlock(context, context->R15);
   }
+
+  return context;
 }
 
 void dataAbort(GCONTXT *context)

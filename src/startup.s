@@ -224,102 +224,141 @@ setGuestContext:
   MOV     PC, LR
 
 
-/* Loads guest mode into R0, loads addr into R1 */
+/*
+ * get_emulated_mode
+ *
+ * In:
+ * - R0: pointer to guest context
+ * Out:
+ * - R0: pointer to guest context
+ * - R1: pointer to CPSR in guest context
+ * - R2: value from CPSR in guest context
+ * - R3: mode bits from CPSR in guest context
+ * - R4: pointer to mode-dependent R13 field in guest-context
+ * Assumes guest context is in R0 and keeps it there.
+ * Loads CPSR from guest context into R1 and stores pointer to mode-dependent R13 in guest context to R2.
+ */
 .macro get_emulated_mode
-  LDR     R0, =guestContextSpace
-  LDR     R0, [R0]
-  MOV     R1, R0
-  ADD     R0, R0, #GC_CPSR_OFFS
-  LDR     R0, [R0]
-
-  AND     R0, R0, #0x1F
-  CMP     R0, #0x1F
-  ADDEQ   R1, R1, #GC_R13_OFFS
-  CMP     R0, #0x10
-  ADDEQ   R1, R1, #GC_R13_OFFS
-  CMP     R0, #0x11
-  ADDEQ   R1, R1, #GC_R13_FIQ_OFFS
-  CMP     R0, #0x12
-  ADDEQ   R1, R1, #GC_R13_IRQ_OFFS
-  CMP     R0, #0x13
-  ADDEQ   R1, R1, #GC_R13_SVC_OFFS
-  CMP     R0, #0x17
-  ADDEQ   R1, R1, #GC_R13_ABT_OFFS
-  CMP     R0, #0x1B
-  ADDEQ   R1, R1, #GC_R13_UND_OFFS
+  /*
+   * Load CPSR from guest context into R1 to figure out emulated mode.
+   */
+  ADD     R1, R0, #GC_CPSR_OFFS
+  LDR     R2, [R1]
+  /*
+   * Store pointer to mode-dependent R13 field of guest context in R4.
+   */
+  AND     R3, R2, #0x1F
+  CMP     R3, #SYS_MODE
+  ADDEQ   R4, R0, #GC_R13_OFFS
+  CMP     R3, #USR_MODE
+  ADDEQ   R4, R0, #GC_R13_OFFS
+  CMP     R3, #FIQ_MODE
+  ADDEQ   R4, R0, #GC_R13_FIQ_OFFS
+  CMP     R3, #IRQ_MODE
+  ADDEQ   R4, R0, #GC_R13_IRQ_OFFS
+  CMP     R3, #SVC_MODE
+  ADDEQ   R4, R0, #GC_R13_SVC_OFFS
+  CMP     R3, #ABT_MODE
+  ADDEQ   R4, R0, #GC_R13_ABT_OFFS
+  CMP     R3, #UND_MODE
+  ADDEQ   R4, R0, #GC_R13_UND_OFFS
 .endm
 
-.macro save_r0_to_r14
+/*
+ * save_cc_r0_to_r14
+ *
+ * In:
+ * - LR must be PUSHed on stack
+ * Out:
+ * - R0: pointer to guest context
+ * - R1: pointer to CPSR in guest context
+ * - R2: pointer to mode-dependent R8 field in guest context
+ * - R3: mode bits from CPSR in guest context
+ * - R4: pointer to mode-dependent R13 field in guest-context
+ * - R5: condition flags extracted from SPSR
+ */
+.macro save_cc_r0_to_r14
+  /*
+   * Load guest context into LR and store R0--R7 into guest context.
+   */
   LDR     LR, =guestContextSpace
   LDR     LR, [LR]
   STMIA   LR, {R0-R7}
-  POP     {LR}
-  /* store SP & LR to the correct places.*/
-  get_emulated_mode
-  /* use system mode to extract guest stack pointer and link register */
-  MRS     R2, CPSR
-  CPS     SYS_MODE
-  STMIA   R1, {R13, R14}
-  /* switch back to previous mode */
-  MSR     CPSR, R2
-  /* store r8-r12, guest mode still in R0 */
-  LDR     R1, =guestContextSpace
-  LDR     R1, [R1]
-  CMP     R0, #0x11
-  ADDNE   R1, R1, #GC_R8_OFFS
-  ADDEQ   R1, R1, #GC_R8_FIQ_OFFS
-  STMIA   R1, {R8-R12}
-.endm
-
-.macro save_pc
-  /* store guest PC */
+  /*
+   * R0--R7 is now usable, move guest context in there.
+   */
   MOV     R0, LR
   /*
-   * FIXME in all CONFIG_THUMB2 blocks: is PUSH/POP really needed? Niels: i don't think so.
+   * Restore the original value of LR (has to be PUSHed earlier)
    */
+  POP     {LR}
+  /*
+   * Load CPSR from guest context and figure out the pointer to the mode-dependent R13 field
+   */
+  get_emulated_mode
+  /*
+   * Save condition flags from SPSR into guest context CPSR field; exclude the other bits (AIF)
+   */
+  AND     R2, #0x0FFFFFFF
+  MRS     R5, SPSR
+  AND     R5, #0xF0000000
+  ORR     R2, R2, R5
+  STR     R2, [R1]
+  /*
+   * Temporarily switch to system mode to extract the values of banked R13 and R14
+   */
+  MRS     R2, CPSR
+  CPS     SYS_MODE
+  STMIA   R4, {R13, R14}
+  MSR     CPSR, R2
+  /*
+   * Store R8--R12; the location depends on whether we were emulating FIQ mode
+   */
+  CMP     R3, #0x11
+  ADDNE   R2, R0, #GC_R8_OFFS
+  ADDEQ   R2, R0, #GC_R8_FIQ_OFFS
+  STMIA   R2, {R8-R12}
+.endm
+
+/*
+ * save_pc
+ *
+ * In:
+ * - R0: pointer to guest context
+ * - R1: pointer to CPSR in guest context
+ * Out:
+ * - R0: pointer to guest context
+ * - R1: pointer to PC in guest context
+ * - R2: value of PC in guest context
+ * - R3: value of CPSR in guest context
+ */
+.macro save_pc
+  /*
+   * Copy guest PC to R2
+   */
+  MOV     R2, LR
 .ifdef CONFIG_THUMB2
-  PUSH    {R3}
-  LDR     R3, =guestContextSpace
-  LDR     R3, [R3]
-  ADD     R3, R3, #GC_CPSR_OFFS
-  LDR     R3, [R3]
-  AND     R3, R3, #0x20
-  CMP     R3, #0x20
-  SUBNE   R0, R0, #4 @ARM
-  SUBEQ   R0, R0, #2 @Thumb
-  POP     {R3}
+  /*
+   * Load CPSR value from guest context
+   */
+  LDR     R3, [R1]
+  TST     R3, #T_BIT
+  SUBEQ   R2, R2, #4 @ARM
+  SUBNE   R2, R2, #2 @Thumb
 .else
-  SUB     R0, R0, #4
+  SUB     R2, R2, #4
 .endif
-  LDR     R1, =guestContextSpace
-  LDR     R1, [R1]
-  ADD     R1, R1, #GC_R15_OFFS
-  STR     R0, [R1]
+  ADD     R1, R0, #GC_R15_OFFS
+  STR     R2, [R1]
 .endm
 
 .macro save_pc_abort
   /* store guest PC */
-  MOV     R0, LR
-  SUB     R0, R0, #8
-  LDR     R1, =guestContextSpace
-  LDR     R1, [R1]
-  ADD     R1, R1, #GC_R15_OFFS
-  STR     R0, [R1]
+  MOV     R2, LR
+  SUB     R2, R2, #8
+  ADD     R1, R0, #GC_R15_OFFS
+  STR     R2, [R1]
 .endm
-
-.macro save_cc_flags
-  /* saving condition flags, but no other (AIF) bits */
-  LDR     R0, =guestContextSpace
-  LDR     R0, [R0]
-  ADD     R0, R0, #GC_CPSR_OFFS
-  LDR     R1, [R0]
-  AND     R1, #0x0FFFFFFF
-  MRS     R2, SPSR
-  AND     R2, #0xF0000000
-  ORR     R1, R1, R2
-  STR     R1, [R0]
-.endm
-
 
 .macro restore_r0_to_r12
   /* general purpose registers common to all modes, using LR as scratch */
@@ -338,17 +377,19 @@ setGuestContext:
 .endm
 
 
-/* Uses R0,R1,R2 as scratch registers */
+/* Uses R0,R1,R2,R3,R4 as scratch registers */
 .macro restore_r13_r14
   /* Use guest CPSR to work out which mode we are meant to be emulating */
+  LDR     R0, =guestContextSpace
+  LDR     R0, [R0]
   get_emulated_mode
   /* switch to system mode to restore SP & LR */
-  MRS     R2, CPSR
+  MRS     R1, CPSR
   CPS     SYS_MODE
-  LDR     SP, [R1]
-  LDR     LR, [R1, #4]
+  LDR     SP, [R4]
+  LDR     LR, [R4, #4]
   /* switch back to previous mode */
-  MSR     CPSR, R2
+  MSR     CPSR, R1
 .endm
 
 
@@ -438,16 +479,14 @@ svcHandler:
     /* We can NOT assume that the data abort is guest code */
     push   {LR}
 
-    save_r0_to_r14 /* pops LR */
+    save_cc_r0_to_r14 /* pops LR */
     save_pc
-    save_cc_flags
 
     /*
-     * void softwareInterrupt(GCONTXT *gContext, u32int code);
-     * Store guest context pointer in R0 and SVC code in R1.
+     * GCONTXT *softwareInterrupt(GCONTXT *gContext, u32int code);
+     * Guest context pointer is already in R0!
+     * Store SVC code in R1.
      */
-    LDR     R0, =guestContextSpace
-    LDR     R0, [R0]
 .ifdef CONFIG_THUMB2
     ADD     R1, R0, #GC_CPSR_OFFS
     LDR     R1, [R1]
@@ -479,13 +518,13 @@ dabtHandler:
     BNE    dabtHandlerPriv
 
     /* We were in USR mode, we must have been running guest code */
-    save_r0_to_r14
+    save_cc_r0_to_r14 /* pops LR */
     /* Get the instr that aborted, after we fix up we probably want to re-try it */
     save_pc_abort
-    save_cc_flags
 
-    LDR    R0, =guestContextSpace
-    LDR    R0, [R0]
+    /*
+     * Pointer to guest context is already in R0!
+     */
     BL     dataAbort
 
     /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
@@ -515,9 +554,8 @@ undHandler:
   BNE    undHandlerPriv /* Abort occured in Hypervisor (privileged) code */
 
   /* We were in USR mode, we must have been running guest code */
-  save_r0_to_r14
+  save_cc_r0_to_r14 /* pops LR */
   save_pc_abort
-  save_cc_flags
 
   BL undefined
 
@@ -550,13 +588,13 @@ pabthandler:
   BNE    pabtHandlerPriv
 
   /* We were in USR mode, we must have been running guest code */
-  save_r0_to_r14
+  save_cc_r0_to_r14 /* pops LR */
   /* Get the instr that aborted, after we fix up we probably want to re-try it */
   save_pc_abort
-  save_cc_flags
 
-  LDR    R0, =guestContextSpace
-  LDR    R0, [R0]
+  /*
+   * Pointer to guest context is already in R0!
+   */
   BL     prefetchAbort
 
   /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
@@ -585,10 +623,9 @@ monHandler:
   BNE    monHandlerPriv /* Call occured in Hypervisor (privileged) code */
 
   /* We were in USR mode, we must have been running guest code */
-  save_r0_to_r14
+  save_cc_r0_to_r14 /* pops LR */
   /* Get the instr that aborted, after we fix up we probably want to re-try it */
   save_pc_abort
-  save_cc_flags
 
   BL monitorMode
 
@@ -624,10 +661,9 @@ irqHandler:
   BNE    irqHandlerPriv
 
   /* We were in USR mode running guest code, need to save context */
-  save_r0_to_r14
+  save_cc_r0_to_r14 /* pops LR */
   /* save the PC of the guest, during which we got the interrupt */
   save_pc
-  save_cc_flags
   BL irq
   restore_r13_r14
   restore_r0_to_r12
