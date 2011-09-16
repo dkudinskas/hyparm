@@ -473,12 +473,8 @@ dabtHandler:
     Push   {LR}
     /* Test SPSR -> are we from USR mode? */
     MRS    LR, SPSR
-.ifdef CONFIG_HACKS_MARKOS
     AND    LR, LR, #0x1F
     CMP    LR, #0x10
-.else
-    ANDS   LR, LR, #0x0f
-.endif
 
     BNE    dabtHandlerPriv
 
@@ -514,12 +510,8 @@ dabtPrivLoop:
 undHandler:
   PUSH   {LR}
   MRS    LR, SPSR
-.ifdef CONFIG_HACKS_MARKOS
   AND    LR, LR, #0x1F
   CMP    LR, #0x10
-.else
-  ANDS   LR, LR, #0x0f
-.endif
   BNE    undHandlerPriv /* Abort occured in Hypervisor (privileged) code */
 
   /* We were in USR mode, we must have been running guest code */
@@ -553,12 +545,8 @@ pabthandler:
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
-.ifdef CONFIG_HACKS_MARKOS
   AND    LR, LR, #0x1F
   CMP    LR, #0x10
-.else
-  ANDS   LR, LR, #0x0f
-.endif
   BNE    pabtHandlerPriv
 
   /* We were in USR mode, we must have been running guest code */
@@ -592,12 +580,8 @@ pabtPrivLoop:
 monHandler:
   PUSH   {LR}
   MRS    LR, SPSR
-.ifdef CONFIG_HACKS_MARKOS
   AND    LR, LR, #0x1F
   CMP    LR, #0x10
-.else
-  ANDS   LR, LR, #0x0f
-.endif
   BNE    monHandlerPriv /* Call occured in Hypervisor (privileged) code */
 
   /* We were in USR mode, we must have been running guest code */
@@ -634,12 +618,8 @@ irqHandler:
   /* need to check if we came from guest mode, or were inside the hypervisor */
   PUSH   {LR}
   MRS    LR, SPSR
-.ifdef CONFIG_HACKS_MARKOS
   AND    LR, LR, #0x1F
   CMP    LR, #0x10
-.else
-  ANDS   LR, LR, #0x0f
-.endif
   /* interrupt occured whilst running hypervisor */
   BNE    irqHandlerPriv
 
