@@ -16,11 +16,27 @@
 // uncomment to enable remaining debug code not triggered from config: #define SCANNER_DEBUG
 
 
-#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
+#ifdef CONFIG_SCANNER_COUNT_BLOCKS
 
-static u64int scanBlockCounter;
+u64int scanBlockCounter;
 
-#endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
+static inline void incrementScanBlockCounter(void);
+
+static inline void incrementScanBlockCounter()
+{
+  ++scanBlockCounter;
+}
+
+void resetScanBlockCounter()
+{
+  scanBlockCounter = 0;
+}
+
+#else
+
+#define incrementScanBlockCounter()
+
+#endif /* CONFIG_SCANNER_COUNT_BLOCKS */
 
 
 #if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
@@ -62,9 +78,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   instructionHandler decodedInstruction = 0;
 #endif
 
-#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
-  ++scanBlockCounter;
-#endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
+  incrementScanBlockCounter();
 
 #if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
   if (scanBlockCallSource == SCANNER_CALL_SOURCE_NOT_SET)
@@ -101,17 +115,17 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
       ", source = %#x"
 #endif /* CONFIG_DEBUG_SCANNER_CALL_SOURCE */
-#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
+#ifdef CONFIG_SCANNER_COUNT_BLOCKS
       ", count = %#Lx"
-#endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
+#endif /* CONFIG_SCANNER_COUNT_BLOCKS */
       "; %s" EOL,
       blkStartAddr,
 #if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
       scanBlockCallSource,
 #endif /* CONFIG_DEBUG_SCANNER_CALL_SOURCE */
-#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
+#ifdef CONFIG_SCANNER_COUNT_BLOCKS
       scanBlockCounter,
-#endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
+#endif /* CONFIG_SCANNER_COUNT_BLOCKS */
       (inBlockCache ? "HIT" : "MISS")
     );
 
@@ -619,13 +633,3 @@ void protectScannedBlock(u32int startAddress, u32int endAddress)
       DIE_NOW(0, "Unrecognized second level entry. Error.");
   }
 }
-
-
-#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
-
-void resetScannerCounter()
-{
-  scanBlockCounter = 0;
-}
-
-#endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */

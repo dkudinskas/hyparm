@@ -45,12 +45,8 @@ void doRtosBoot(GCONTXT *context, ulong loadAddr)
   setup_commandline_tag(commandline);
   setup_end_tag();
 
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
   setScanBlockCallSource(SCANNER_CALL_SOURCE_BOOT);
-#endif
-#ifdef CONFIG_DEBUG_SCANNER_COUNT_BLOCKS
-  resetScannerCounter();
-#endif
+  resetScanBlockCounter();
   scanBlock(context, targetAddr);
 
   /* This seems to be OS independent */

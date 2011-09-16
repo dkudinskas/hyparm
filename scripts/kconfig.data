@@ -128,8 +128,9 @@ config DEBUG_SCANNER_CALL_SOURCE
   depends on DEBUG_SCANNER
 
 config DEBUG_SCANNER_COUNT_BLOCKS
-  bool "Count number of scanned blocks"
+  bool "Print number of scanned blocks"
   depends on DEBUG_SCANNER
+  select SCANNER_COUNT_BLOCKS
 
 config DEBUG_SCANNER_BLOCK_TRACE
   bool "Print block trace"
@@ -151,5 +152,8 @@ config EMERGENCY_EXCEPTION_VECTOR
 
 config HACKS_MARKOS
 	bool "Markos' hacks (exception handlers in startup.s, MSR instruction)"
+
+config SCANNER_COUNT_BLOCKS
+	bool "Count number of scanned blocks"
 
 endmenu

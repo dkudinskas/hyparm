@@ -42,10 +42,10 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr);
 
 void protectScannedBlock(u32int startAddress, u32int endAddress);
 
-#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
-void resetScannerCounter(void);
+#ifdef CONFIG_SCANNER_COUNT_BLOCKS
+void resetScanBlockCounter(void);
 #else
-#define resetScannerCounter()
+#define resetScanBlockCounter()
 #endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
 
 #endif
