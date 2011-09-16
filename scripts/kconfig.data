@@ -79,6 +79,7 @@ config BOARD_TI_PANDA_BOARD
 	bool "Texas Instruments PandaBoard"
 	select ARCH_V7
 	select ARCH_V7_A
+	select ARCH_EXT_SECURITY
 	select CPU_CORTEX_A9
 	select SOC_TI_OMAP_4
 	select SOC_TI_OMAP_4430
