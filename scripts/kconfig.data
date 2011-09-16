@@ -150,9 +150,6 @@ config EMERGENCY_EXCEPTION_VECTOR
   default y
   depends on ARCH_EXT_SECURITY
 
-config HACKS_MARKOS
-	bool "Markos' hacks (exception handlers in startup.s, MSR instruction)"
-
 config SCANNER_COUNT_BLOCKS
 	bool "Count number of scanned blocks"
 

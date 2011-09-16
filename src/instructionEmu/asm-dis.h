@@ -6,7 +6,7 @@
 #include "guestManager/guestContext.h"
 
 
-#if defined(CONFIG_THUMB2) || defined(CONFIG_HACKS_MARKOS)
+#ifdef CONFIG_THUMB2
 
 #define INDEX_OF(x)  (sizeof(x)/sizeof(x[0]))
 

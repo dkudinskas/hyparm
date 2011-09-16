@@ -962,11 +962,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
   u32int index = 0;
   if (op == 0)
   {
-#ifdef CONFIG_HACKS_MARKOS
-    while (index < INDEX_OF(dataProcMiscInstructions_op0))
-#else
     while (TRUE)
-#endif
     {
       if ( (instr & dataProcMiscInstructions_op0[index].mask) == dataProcMiscInstructions_op0[index].value)
       {
@@ -984,11 +980,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
   }
   else
   {
-#ifdef CONFIG_HACKS_MARKOS
-    while (index < INDEX_OF(dataProcMiscInstructions_op1))
-#else
     while (TRUE)
-#endif
     {
       if ( (instr & dataProcMiscInstructions_op1[index].mask) == dataProcMiscInstructions_op1[index].value)
       {
@@ -1004,8 +996,6 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
       }
     }
   }
-  DIE_NOW(0, "decoder: decodeDataProcMisc unimplemented");
-  return 0;
 }
 
 
@@ -1015,11 +1005,7 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
   dumpInstruction("decodeLoadStoreWordByte", instr);
 #endif
   u32int index = 0;
-#ifdef CONFIG_HACKS_MARKOS
-  while (index < INDEX_OF(loadStoreWordByteInstructions))
-#else
   while (TRUE)
-#endif
   {
     if ( (instr & loadStoreWordByteInstructions[index].mask) == loadStoreWordByteInstructions[index].value)
     {
@@ -1034,8 +1020,6 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
       index = index + 1;
     }
   }
-  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
-  return 0;
 }
 
 
@@ -1045,11 +1029,7 @@ struct instruction32bit * decodeMedia(u32int instr)
   dumpInstruction("decodeMedia", instr);
 #endif
   u32int index = 0;
-#ifdef CONFIG_HACKS_MARKOS
-  while (index < INDEX_OF(mediaInstructions))
-#else
   while (TRUE)
-#endif
   {
     if ( (instr & mediaInstructions[index].mask) == mediaInstructions[index].value)
     {
@@ -1064,8 +1044,6 @@ struct instruction32bit * decodeMedia(u32int instr)
       index = index + 1;
     }
   }
-  DIE_NOW(0, "decoder: decodeMedia unimplemented");
-  return 0;
 }
 
 
@@ -1075,11 +1053,7 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
   dumpInstruction("decodeBranchBlockTransfer", instr);
 #endif
   u32int index = 0;
-#ifdef CONFIG_HACKS_MARKOS
-  while (index < INDEX_OF(branchBlockTransferInstructions))
-#else
   while (TRUE)
-#endif
   {
     if ( (instr & branchBlockTransferInstructions[index].mask) == branchBlockTransferInstructions[index].value)
     {
@@ -1094,8 +1068,6 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
       index = index + 1;
     }
   }
-  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
-  return 0;
 }
 
 
@@ -1105,11 +1077,7 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
   dumpInstruction("decodeSvcCoproc", instr);
 #endif
   u32int index = 0;
-#ifdef CONFIG_HACKS_MARKOS
-  while (index < INDEX_OF(svcCoprocInstructions))
-#else
   while (TRUE)
-#endif
   {
     if ( (instr & svcCoprocInstructions[index].mask) == svcCoprocInstructions[index].value)
     {
@@ -1124,8 +1092,6 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
       index = index + 1;
     }
   }
-  DIE_NOW(0, "decoder: decodeSvcCoproc unimplemented");
-  return 0;
 }
 
 struct instruction32bit * decodeUnconditional(u32int instr)
@@ -1134,11 +1100,7 @@ struct instruction32bit * decodeUnconditional(u32int instr)
   dumpInstruction("decodeUnconditional", instr);
 #endif
   u32int index = 0;
-#ifdef CONFIG_HACKS_MARKOS
-  while (index < INDEX_OF(unconditionalInstructions))
-#else
   while (TRUE)
-#endif
   {
     if ( (instr & unconditionalInstructions[index].mask) == unconditionalInstructions[index].value)
     {
@@ -1153,9 +1115,6 @@ struct instruction32bit * decodeUnconditional(u32int instr)
       index = index + 1;
     }
   }
-
-  DIE_NOW(0, "decoder: decodeUnconditional unimplemented");
-  return 0;
 }
 
 void dumpInstruction(const char * msg, u32int instr)
