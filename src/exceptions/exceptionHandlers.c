@@ -125,7 +125,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   return context;
 }
 
-void dataAbort(GCONTXT *context)
+GCONTXT *dataAbort(GCONTXT *context)
 {
   /*
    * FIXME: what is the following comment about???
@@ -229,6 +229,7 @@ void dataAbort(GCONTXT *context)
       DIE_NOW(0, "Entering infinite loop\n");
   }
   enableInterrupts();
+  return context;
 }
 
 void dataAbortPrivileged(u32int pc)
@@ -284,7 +285,7 @@ void dataAbortPrivileged(u32int pc)
   DIE_NOW(0, "At end of hypervisor data abort handler. Stopping\n");
 }
 
-void undefined(void)
+GCONTXT *undefined(GCONTXT *context)
 {
   DIE_NOW(0, "undefined: undefined handler, Implement me!\n");
 }
@@ -294,7 +295,7 @@ void undefinedPrivileged(void)
   DIE_NOW(0, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!\n");
 }
 
-void prefetchAbort(GCONTXT *context)
+GCONTXT *prefetchAbort(GCONTXT *context)
 {
   /*
    * FIXME: what is the following comment about???
@@ -351,6 +352,7 @@ void prefetchAbort(GCONTXT *context)
       DIE_NOW(context, "Unimplemented guest prefetch abort.");
   }
   enableInterrupts();
+  return context;
 }
 
 void prefetchAbortPrivileged(void)
@@ -382,7 +384,7 @@ void prefetchAbortPrivileged(void)
    }
 }
 
-void monitorMode(void)
+GCONTXT *monitorMode(GCONTXT *context)
 {
   /*
    * TODO
@@ -402,7 +404,7 @@ void monitorModePrivileged(void)
   DIE_NOW(0, "monitorMode: monitor/secure mode handler, privileged mode. Implement me!");
 }
 
-void irq()
+GCONTXT *irq(GCONTXT *context)
 {
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
@@ -453,6 +455,7 @@ void irq()
   asm volatile("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
+  return context;
 }
 
 

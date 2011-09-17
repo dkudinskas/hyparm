@@ -12,16 +12,21 @@
 
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code);
 
-void dataAbort(GCONTXT *context);
+GCONTXT *dataAbort(GCONTXT *context);
 void dataAbortPrivileged(u32int pc);
-void undefined(void);
+
+GCONTXT *undefined(GCONTXT *context);
 void undefinedPrivileged(void);
-void prefetchAbort(GCONTXT *context);
+
+GCONTXT *prefetchAbort(GCONTXT *context);
 void prefetchAbortPrivileged(void);
-void monitorMode(void);
+
+GCONTXT *monitorMode(GCONTXT *context);
 void monitorModePrivileged(void);
-void irq(void);
+
+GCONTXT *irq(GCONTXT *context);
 void irqPrivileged(void);
+
 void fiq(void);
 
 #endif

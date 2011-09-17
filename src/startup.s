@@ -235,8 +235,6 @@ setGuestContext:
  * - R2: value from CPSR in guest context
  * - R3: mode bits from CPSR in guest context
  * - R4: pointer to mode-dependent R13 field in guest-context
- * Assumes guest context is in R0 and keeps it there.
- * Loads CPSR from guest context into R1 and stores pointer to mode-dependent R13 in guest context to R2.
  */
 .macro get_emulated_mode
   /*
@@ -360,44 +358,51 @@ setGuestContext:
   STR     R2, [R1]
 .endm
 
-.macro restore_r0_to_r12
-  /* general purpose registers common to all modes, using LR as scratch */
-  LDR     R8, =guestContextSpace
-  LDR     R8, [R8]
-  LDMIA   R8, {R0-R7}
-  /* now either R8-12_FIQ or R8_12_common */
-  ADD     LR, R8, #GC_CPSR_OFFS
-  LDR     LR, [LR]
-  AND     LR, LR, #0x1F
-  CMP     LR, #0x11
-  ADDNE   R8, R8, #GC_R8_OFFS
-  ADDEQ   R8, R8, #GC_R8_FIQ_OFFS
-  LDMIA   R8, {R8-R12}
-  /* now r0-r7, r8-r12 have been restored */
-.endm
 
-
-/* Uses R0,R1,R2,R3,R4 as scratch registers */
-.macro restore_r13_r14
+/*
+ * restore_r0_r14
+ *
+ * In:
+ * - R0: pointer to guest context
+ * Out:
+ * - R0--R12: restored register values from guest context
+ * - R14: pointer to guest context
+ */
+.macro restore_r0_r14
   /* Use guest CPSR to work out which mode we are meant to be emulating */
-  LDR     R0, =guestContextSpace
-  LDR     R0, [R0]
   get_emulated_mode
-  /* switch to system mode to restore SP & LR */
+  /*
+   * Temporarily switch to system mode to restore the values of R13 and R14 to the banked registers
+   */
   MRS     R1, CPSR
   CPS     SYS_MODE
   LDR     SP, [R4]
   LDR     LR, [R4, #4]
-  /* switch back to previous mode */
   MSR     CPSR, R1
+  /*
+   * Move some things out of the way:
+   * - R8: pointer to guest context
+   * - R14: mode bits from CPSR in guest context
+   */
+  MOV     R8, R3
+  MOV     LR, R0
+  /*
+   * Restore general purpose registers R0--R7 common to all modes
+   */
+  LDMIA   LR, {R0-R7}
+  /*
+   * Restore mode-dependent registers R8--R12
+   */
+  CMP     R8, #0x11
+  ADDNE   R8, LR, #GC_R8_OFFS
+  ADDEQ   R8, LR, #GC_R8_FIQ_OFFS
+  LDMIA   R8, {R8-R12}
 .endm
 
 
 /* Restores the cpsr to USR mode (& cc flags) then restore pc */
 .macro restore_cpsr_pc_usr_mode_irq
   /* fixup spsr first */
-  LDR     LR, =guestContextSpace
-  LDR     LR, [LR]
   ADD     LR, LR, #GC_CPSR_OFFS
   LDR     LR, [LR]
   /* Preserve condition flags */
@@ -445,8 +450,6 @@ setGuestContext:
 .macro restore_cpsr_pc_usr_mode
   /* fixup spsr first */
   PUSH    {R0}
-  LDR     LR, =guestContextSpace
-  LDR     LR, [LR]
   ADD     LR, LR, #GC_CPSR_OFFS
   /* Preserve condition flags */
   LDR     LR, [LR]
@@ -502,8 +505,7 @@ svcHandler:
 .endif
     BL      softwareInterrupt
 
-    restore_r13_r14
-    restore_r0_to_r12
+    restore_r0_r14
     restore_cpsr_pc_usr_mode
 
 .global dabtHandler
@@ -528,8 +530,7 @@ dabtHandler:
     BL     dataAbort
 
     /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
-    restore_r13_r14
-    restore_r0_to_r12
+    restore_r0_r14
     restore_cpsr_pc_usr_mode
 
 .global dabtHandlerPriv
@@ -560,8 +561,7 @@ undHandler:
   BL undefined
 
   /* We came from usr mode (emulation or not of guest state) lets restore it and resume */
-  restore_r13_r14
-  restore_r0_to_r12
+  restore_r0_r14
   restore_cpsr_pc_usr_mode
   /* End restore code */
 
@@ -598,8 +598,8 @@ pabthandler:
   BL     prefetchAbort
 
   /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
-  restore_r13_r14
-  restore_r0_to_r12
+
+  restore_r0_r14
   restore_cpsr_pc_usr_mode
   /* End restore code */
 
@@ -630,8 +630,8 @@ monHandler:
   BL monitorMode
 
   /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
-  restore_r13_r14
-  restore_r0_to_r12
+
+  restore_r0_r14
   restore_cpsr_pc_usr_mode
   /* End restore code */
 
@@ -665,8 +665,8 @@ irqHandler:
   /* save the PC of the guest, during which we got the interrupt */
   save_pc
   BL irq
-  restore_r13_r14
-  restore_r0_to_r12
+
+  restore_r0_r14
   restore_cpsr_pc_usr_mode_irq
   /* End restore code */
 

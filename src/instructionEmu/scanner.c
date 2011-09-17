@@ -180,9 +180,9 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     instruction = *currAddress;
   }
 #if defined(CONFIG_DECODER_TABLE_SEARCH)
-  while ((decodedInstruction = decodeInstr(instruction,currhwAddress))->replaceCode == 0)
+  while ((decodedInstruction = decodeInstr(gc, instruction,currhwAddress))->replaceCode == 0)
 #elif defined(CONFIG_DECODER_AUTO)
-  while ((decodedInstruction = decodeInstr(instruction)) == 0)
+  while ((decodedInstruction = decodeInstr(gc, instruction)) == 0)
 #endif
   {
     // Thumb-2 is moving by 2 bytes at a time
@@ -482,10 +482,10 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #endif
 
 #ifdef CONFIG_DECODER_TABLE_SEARCH
-  while ((decodedInstruction = decodeInstr(instruction))->replaceCode == 0)
+  while ((decodedInstruction = decodeInstr(gc, instruction))->replaceCode == 0)
 #else
 # ifdef CONFIG_DECODER_AUTO
-  while ((decodedInstruction = decodeInstr(instruction)) == 0)
+  while ((decodedInstruction = decodeInstr(gc, instruction)) == 0)
 # else
 #  error Decoder must be set!
 # endif
