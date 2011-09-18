@@ -400,79 +400,116 @@ setGuestContext:
 .endm
 
 
-/* Restores the cpsr to USR mode (& cc flags) then restore pc */
+/*
+ * restore_cpsr_pc_usr_mode_irq
+ *
+ * Restore the guest CPSR and switch to guest.
+ *
+ * Pseudocode:
+ * spsr = ((context->cpsr & 0xf0000000) | A_BIT | F_BIT) | USR_MODE;
+ * guest_pc = context->pc;
+ * if (context->cpsr & T_BIT)
+ * {
+ *   spsr |= T_BIT;
+ *   guest_pc -= 2;
+ * }
+ */
 .macro restore_cpsr_pc_usr_mode_irq
-  /* fixup spsr first */
-  ADD     LR, LR, #GC_CPSR_OFFS
-  LDR     LR, [LR]
-  /* Preserve condition flags */
-  AND     LR, LR, #0xf0000000
+  PUSH    {R0}
+  /*
+   * Get value of CPSR saved in guest context into R0
+   */
+  ADD     R0, LR, #GC_CPSR_OFFS
+  LDR     R0, [R0]
 .ifdef CONFIG_THUMB2
-  /* set user mode, disable async abts and fiqs, but enable irqs and check for Thumb Bit */
-  PUSH    {R3}
-  LDR     R3, =guestContextSpace
-  LDR     R3, [R3]
-  ADD     R3, R3, #GC_CPSR_OFFS
-  LDR     R3, [R3]
-  AND     R3, R3, #0x20
-  CMP     R3, #0x20
-  ORREQ   LR, LR, #(USR_MODE | A_BIT | F_BIT | T_BIT)
-  ORRNE   LR, LR, #(USR_MODE | A_BIT | F_BIT)
-  MSR     SPSR, LR
-  POP     {R3}
-.else
-  /* set user mode, disable async abts and fiqs, but enable irqs */
-  ORR     LR, LR, #(USR_MODE | A_BIT | F_BIT)
-  MSR     SPSR, LR
-.endif
-  /* get PC and save on stack */
-  LDR     LR, =guestContextSpace
-  LDR     LR, [LR]
+  /*
+   * Get value of PC saved in guest context into LR
+   */
   ADD     LR, LR, #GC_R15_OFFS
   LDR     LR, [LR]
-.ifdef CONFIG_THUMB2
-  PUSH    {R3}
-  LDR     R3, =guestContextSpace
-  LDR     R3, [R3]
-  ADD     R3, R3, #GC_CPSR_OFFS
-  LDR     R3, [R3]
-  AND     R3, R3, #0x20
-  CMP     R3, #0x20
-  SUBEQ   LR, LR, #2
-  POP  {R3}
+  /*
+   * Construct SPSR in R0: restore condition flags from the value of the CPSR saved in the guest
+   * context, set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and restore the
+   * Thumb bit
+   */
+  TST     R0, #T_BIT
+  AND     R0, R0, #0xf0000000
+  ORREQ   R0, R0, #(USR_MODE | A_BIT | F_BIT)
+  ORRNE   R0, R0, #(USR_MODE | A_BIT | F_BIT | T_BIT)
+  /*
+   * Also update guest PC when guest is in Thumb mode, then save SPSR
+   */
+  SUBNE   LR, LR, #2
+  MSR     SPSR, R0
+  POP     {R0}
+.else
+  /*
+   * Construct SPSR in R0: restore condition flags from the value of the CPSR saved in the guest
+   * context, set user mode, disable asynchronous aborts and FIQs, but enable IRQs, then save SPSR
+   */
+  AND     R0, R0, #0xf0000000
+  ORR     R0, R0, #(USR_MODE | A_BIT | F_BIT)
+  MSR     SPSR, R0
+  POP     {R0}
+  /*
+   * Get value of PC saved in guest context into LR
+   */
+  ADD     LR, LR, #GC_R15_OFFS
+  LDR     LR, [LR]
 .endif
+  /*
+   * Save guest PC on stack, then perform exception return (pop PC and restore SPSR to CPSR)
+   */
   STM     SP, {LR}
   LDM     SP, {PC}^
 .endm
 
 
-/* Restores the cpsr to USR mode (& cc flags) then restore pc */
+/*
+ * restore_cpsr_pc_usr_mode
+ *
+ * Restore the guest CPSR and switch to guest.
+ *
+ * Pseudocode:
+ * spsr = (context->cpsr & (0xf0000000 | A_BIT | F_BIT)) | USR_MODE;
+ * guest_pc = context->pc;
+ * if (context->cpsr & T_BIT)
+ * {
+ *   spsr |= T_BIT;
+ * }
+ */
 .macro restore_cpsr_pc_usr_mode
-  /* fixup spsr first */
-  PUSH    {R0}
-  ADD     LR, LR, #GC_CPSR_OFFS
-  /* Preserve condition flags */
-  LDR     LR, [LR]
-  AND     R0, LR, #0xf0000000
+  /* FIXME: this can be done better */
+  PUSH    {R0, R1}
+  /*
+   * Get value of CPSR saved in guest context into R1
+   */
+  ADD     R1, LR, #GC_CPSR_OFFS
+  LDR     R1, [R1]
+  /* Extract condition flags into R0 */
+  AND     R0, R1, #0xf0000000
 .ifdef CONFIG_THUMB2
-  /* Preserve exception flags & Thumb state*/
-  AND     LR, LR, #0x1E0
+  /* Extract exception flags & Thumb state*/
+  AND     R1, R1, #(A_BIT | I_BIT | F_BIT | T_BIT)
 .else
-  /* Preserve exception flags */
-  AND     LR, LR, #0x1C0
+  /* Extract exception flags */
+  AND     R1, R1, #(A_BIT | I_BIT | F_BIT)
 .endif
-  ORR     R0, LR, R0
+  /* R0= exc flags|thumb state|cc */
+  ORR     R0, R1, R0
   /* set user mode */
-  ORR     R0, R0, #(USR_MODE)
+  ORR     R0, R0, #USR_MODE
   MSR     SPSR, R0
-  POP     {R0}
-  /* get PC and save on stack */
-  LDR     LR, =guestContextSpace
-  LDR     LR, [LR]
+  POP     {R0, R1}
+  /*
+   * Get value of PC saved in guest context into LR
+   */
   ADD     LR, LR, #GC_R15_OFFS
   LDR     LR, [LR]
-  STM     SP, {LR} /* Store the PC on the stack for the final restore PC & CPSR instruction, no indexing */
-  /* restore PC and load the SPSR into the CPSR */
+  /*
+   * Save guest PC on stack, then perform exception return (pop PC and restore SPSR to CPSR)
+   */
+  STM     SP, {LR}
   LDM     SP, {PC}^
 .endm
 
