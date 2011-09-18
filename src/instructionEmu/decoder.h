@@ -8,14 +8,14 @@
 
 typedef u32int (*instructionHandler)(GCONTXT * context);
 
-#ifdef CONFIG_DECODER_TABLE_SEARCH
-# include "instructionEmu/tableSearchDecoder.h"
-#else
-# ifdef CONFIG_DECODER_AUTO
-#  include "instructionEmu/autoDecoder.h"
-# else
-#  error Decoder must be set!
-# endif
-#endif
+
+instructionHandler decodeArmInstruction(GCONTXT *context, u32int instruction);
+
+
+#ifdef CONFIG_THUMB2
+
+instructionHandler decodeThumbInstruction(GCONTXT *context, u32int instruction);
+
+#endif /* CONFIG_THUMB2 */
 
 #endif

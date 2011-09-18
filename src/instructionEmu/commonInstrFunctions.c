@@ -391,7 +391,7 @@ u32int countBitsSet(u32int bitstream)
 
 #ifdef CONFIG_THUMB2
 
-u32int decodeThumbInstr(u16int *currhwAddress)
+u32int fetchThumbInstr(u16int *currhwAddress)
 {
   u16int narrowInstr = *currhwAddress;
   switch (narrowInstr & THUMB32)
