@@ -147,7 +147,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
    * Find the next sensitive instruction
    */
   end = start;
-  while ((handler = decodeArmInstruction(context, *end)) == NULL)
+  while ((handler = decodeArmInstruction(*end)) == NULL)
   {
     end++;
   }
@@ -290,7 +290,7 @@ static void scanThumbBlock(GCONTXT *context, void *blkStartAddr, u32int cacheInd
   // Thumb-2 is moving by 2 bytes at a time
   // We start by scanning two byte at a time.
   instructionHandler decodedInstruction = NULL;
-  while ((decodedInstruction = decodeThumbInstruction(context, instruction)) == NULL)
+  while ((decodedInstruction = decodeThumbInstruction(instruction)) == NULL)
   {
     currhwAddress++;
     halfinstruction = *currhwAddress;
