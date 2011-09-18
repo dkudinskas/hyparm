@@ -45,13 +45,12 @@ endif # ifeq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
 .PHONY: defconfig silentoldconfig
 
 defconfig: $(OUTPUT_PATH)/conf
-	$< $(KCONFIG_DATA) --$@
+	@$< $(KCONFIG_DATA) --$@
 
 $(KCONFIG_OK): $(KCONFIG_CONFIG)
-	@if [ ! -f $(KCONFIG_AUTOHEADER) -o $(KCONFIG_CONFIG) -nt $(KCONFIG_AUTOHEADER) ]; then \
+	@if [ ! -f $(KCONFIG_AUTOHEADER) -o $(KCONFIG_CONFIG) -nt $(KCONFIG_AUTOHEADER) -o ! -f $(KCONFIG_OK) ]; then \
 	  echo 'MAKE     silentoldconfig'; \
 	  $(MAKE) silentoldconfig; \
-	  touch $@; \
 	fi
 
 silentoldconfig $(KCONFIG_AUTOHEADER) $(KCONFIG_AUTOCONFIG): $(OUTPUT_PATH)/conf $(KCONFIG_DATA) $(KCONFIG_CONFIG)
@@ -59,11 +58,12 @@ ifneq ($(VERBOSE),)
 	@echo 'GEN      $(KCONFIG_AUTOHEADER) $(KCONFIG_AUTOCONFIG)'
 endif
 	@$< $(KCONFIG_DATA) --silentoldconfig
+	@touch $(KCONFIG_OK)
 
 $(OUTPUT_PATH)/conf: $(CONF_OBJS)
 	@echo 'HOSTLD   $@'
 	@mkdir -p $(OUTPUT_PATH)
-	$(HOSTCC) $(HOSTCFLAGS) $(HOSTCPPFLAGS) -o $@ $^
+	@$(HOSTCC) $(HOSTCFLAGS) $(HOSTCPPFLAGS) -o $@ $^
 
 
 .PHONY: config menuconfig nconfig clean_kconfig
@@ -85,8 +85,8 @@ $(KCONFIG_SOURCE_PATH)/%.d: $(KCONFIG_SOURCE_PATH)/%.c
 ifneq ($(VERBOSE),)
 	@echo 'HOSTDEP  $@'
 endif
-	@$(HOSTCC) -M $(HOSTCPPFLAGS) -MP -MT $(patsubst %.c,%.o,$<) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	@$(HOSTCC) -M $(HOSTCPPFLAGS) -MP -MT $(patsubst %.c,%.o,$<) $< > $@.$$$$ && \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@ && \
 	rm $@.$$$$
 
 $(KCONFIG_SOURCE_PATH)/%.o: $(KCONFIG_SOURCE_PATH)/%.c

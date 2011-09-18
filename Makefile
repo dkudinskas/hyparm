@@ -224,8 +224,8 @@ $(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_OK)
 ifneq ($(VERBOSE),)
 	@echo 'DEP      $<'
 endif
-	@$(CC) -M $(CPPFLAGS) -MP -MT $(patsubst %.c,%.c.o,$<) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	@$(CC) -M $(CPPFLAGS) -MP -MT $(patsubst %.c,%.c.o,$<) $< > $@.$$$$ && \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@ && \
 	rm $@.$$$$
 
 $(SOURCE_PATH)/%.c.o: $(SOURCE_PATH)/%.c
