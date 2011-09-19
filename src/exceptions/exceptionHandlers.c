@@ -32,9 +32,8 @@ extern bool rtos;
 
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 {
-#ifdef EXC_HDLR_DBG
-  printf("softwareInterrupt(%x)\n", code);
-#endif
+  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)\n", code);
+
   // parse the instruction to find the start address of next block
   u32int nextPC = 0;
 #ifdef CONFIG_THUMB2
@@ -57,9 +56,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   {
     if (code <= 0xFF)
     {
-#ifdef EXC_HDLR_DBG
-      printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, context->R15);
-#endif
+      DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt %#.2x @ %#.8x is a guest system call" EOL, code, context->R15);
       gSVC = TRUE;
     }
   }
@@ -71,9 +68,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 #else
   if (code <= 0xFF)
   {
-# ifdef EXC_HDLR_DBG
-    printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, context->R15);
-# endif
+    DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt %#.2x @ %#.8x is a guest system call" EOL, code, context->R15);
     deliverServiceCall(context);
 #endif
     nextPC = context->R15;
@@ -111,9 +106,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     }
   }
 
-#ifdef EXC_HDLR_DBG
-  printf("softwareInterrupt: Next PC = 0x%x\n", nextPC);
-#endif
+  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = 0x%x\n", nextPC);
 
   if ((context->CPSR & CPSR_MODE) != CPSR_MODE_USR)
   {
@@ -169,12 +162,10 @@ GCONTXT *dataAbort(GCONTXT *context)
           context->R15 = context->R15 + 2;
         }
         else
+#endif
         {
-#endif
           context->R15 = context->R15 + 4;
-#ifdef CONFIG_THUMB2
         }
-#endif
       }
       else
       {
@@ -516,4 +507,3 @@ void fiq(void)
 {
   DIE_NOW(0, "fiq: FIQ handler unimplemented!");
 }
-

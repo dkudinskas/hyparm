@@ -123,6 +123,10 @@ config DEBUG_DECODER
 	bool "Debug instruction decoding"
 	depends on DEBUG
 
+config DEBUG_EXCEPTION_HANDLERS
+  bool "Debug exception handlers"
+  depends on DEBUG
+
 menuconfig DEBUG_SCANNER
   bool "Debug scanner"
   depends on DEBUG
