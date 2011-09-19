@@ -24,7 +24,7 @@ OBJDUMP       = $(CROSS_COMPILE)objdump
 
 AFLAGS       := --fatal-warnings
 CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
-                -O3 -ffreestanding -fno-common -fno-stack-protector -fno-toplevel-reorder \
+                -O3 -ffreestanding -fno-common -fno-stack-protector \
                 -Wall -Wextra -Wformat=2 -Winline -Wstrict-prototypes -Wwrite-strings \
                 -Wno-empty-body -Wno-unused-label -Wno-unused-parameter \
                 -Werror=implicit-function-declaration
