@@ -183,11 +183,8 @@ $(KCONFIG_CONFIG):
 endif # ifneq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
 
 
-HYPARM_DIRS-y := common cpuArch drivers/beagle exceptions guestManager instructionEmu linuxBoot \
+HYPARM_DIRS-y := common cpuArch drivers/beagle exceptions guestBoot guestManager instructionEmu \
                  memoryManager vm/omap35xx
-
-# Guest support
-HYPARM_DIRS-$(CONFIG_GUEST_FREERTOS) += rtosBoot
 
 # Debugging
 HYPARM_DIRS-$(CONFIG_MMC) += io io/fs

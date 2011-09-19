@@ -1,6 +1,11 @@
+/*
+ * callKernel
+ *
+ * 4 arguments are passed in r0-r3.
+ * r0-r2 are unused here and must be passed as is to the guest.
+ */
 .global callKernel
 callKernel:
-
   /*
    * Modify the SPSR: set USR mode, disable asynchronous aborts and FIQs
    */

@@ -67,7 +67,7 @@
 
 #define arch_align_stack(x) (x)
 
-int cleanupBeforeLinux(void);
+int cleanupBeforeBoot(void);
 
 void icache_enable(void);
 void icache_disable(void);

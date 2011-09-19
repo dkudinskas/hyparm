@@ -98,7 +98,7 @@ void l2_cache_disable()
   __asm__ __volatile__("mcr p15, 0, %0, c1, c0, 1":"=r"(i));
 }
 
-int cleanupBeforeLinux()
+int cleanupBeforeBoot()
 {
   /*
    * this function is called just before we call linux

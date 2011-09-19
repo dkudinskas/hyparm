@@ -31,16 +31,15 @@
 #include "io/fs/fat.h"
 #endif
 
-#include "linuxBoot/bootLinux.h"
-#include "linuxBoot/image.h"
+#ifdef CONFIG_GUEST_FREERTOS
+#include "guestBoot/freertos.h"
+#endif
+#include "guestBoot/linux.h"
+#include "guestBoot/image.h"
 
 #include "memoryManager/addressing.h" /* For virtual addressing initialisation */
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/frameAllocator.h"
-
-#ifdef CONFIG_GUEST_FREERTOS
-#include "rtosBoot/bootRtos.h"
-#endif
 
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/LED.h"
@@ -160,7 +159,7 @@ void main(s32int argc, char *argv[])
   {
     DEBUG(STARTUP, "RTOS address: %x\n", kernAddr);
     rtos = TRUE;
-    doRtosBoot(context, kernAddr);
+    bootFreeRtos(context, kernAddr);
   }
   else
 #endif
@@ -171,7 +170,7 @@ void main(s32int argc, char *argv[])
 #if (CONFIG_DEBUG_STARTUP)
     dumpHdrInfo(&imageHeader);
 #endif
-    doLinuxBoot(context, &imageHeader, kernAddr, initrdAddr);
+    bootLinux(context, &imageHeader, kernAddr, initrdAddr);
   }
 #endif /* CONFIG_CLI */
 }
