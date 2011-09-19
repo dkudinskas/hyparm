@@ -3,6 +3,9 @@ menu "General setup"
 config CROSS_COMPILE
 	string "Cross-compiler toolchain prefix"
 
+config BUILD_LTO
+	bool "Link-time optimization (requires toolchain support)"
+
 config BUILD_SAVE_TEMPS
 	bool "Save intermediate files during build (requires GCC >= 4.5)"
 

@@ -5,7 +5,7 @@ ENTRY("_start")
 
 MEMORY
 {
-	RAM (rwx) : ORIGIN = 0x8c000000, LENGTH = 16M
+	RAM (rwx) : ORIGIN = 0x8c000000 LENGTH = 16777216
 }
 
 SECTIONS
@@ -16,6 +16,14 @@ SECTIONS
 	{
 		src/startup.s.o (.text)
 		*(.text)
+	}
+	.data :
+	{
+		*(.data)
+	}
+	.bss :
+	{
+		*(.bss)
 	}
 }
 
