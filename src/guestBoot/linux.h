@@ -5,10 +5,8 @@
 
 #include "guestManager/guestContext.h"
 
-#include "guestBoot/image.h"
 
-
-void bootLinux(GCONTXT *context, image_header_t *imageHeader, u32int loadAddress, u32int initrdAddress)
+void bootLinux(GCONTXT *context, u32int loadAddress, u32int initrdAddress)
   __attribute__((noreturn));
 
 #endif
