@@ -38,7 +38,7 @@ static inline u64int getScanBlockCounter()
 
 static inline void incrementScanBlockCounter()
 {
-  ++scanBlockCounter;
+  scanBlockCounter++;
 }
 
 void resetScanBlockCounter()

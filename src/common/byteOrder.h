@@ -1,5 +1,5 @@
-#ifndef __BYTEORDER_H__ 
-#define __BYTEORDER_H__ 
+#ifndef __COMMON__BYTE_ORDER_H__
+#define __COMMON__BYTE_ORDER_H__ 1
 
 #define ___swap32(x) \
   ((u32int)( \
@@ -10,5 +10,5 @@
 
 #define __be32_to_cpu(x) ___swap32(x)
 
-#endif
+#endif /* __COMMON__BYTE_ORDER_H__ */
 
