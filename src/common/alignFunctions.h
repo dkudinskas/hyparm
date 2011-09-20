@@ -1,5 +1,5 @@
 #ifndef __COMMON__ALIGN_FUNCTIONS_H__
-#define __COMMON__ALIGN_FUNCTIONS_H__ 1
+#define __COMMON__ALIGN_FUNCTIONS_H__
 
 #include "common/types.h"
 

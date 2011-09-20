@@ -1,5 +1,5 @@
 #ifndef __COMMON__STDLIB_H__
-#define __COMMON__STDLIB_H__ 1
+#define __COMMON__STDLIB_H__
 
 #include "common/types.h"
 

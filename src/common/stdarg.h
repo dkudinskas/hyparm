@@ -1,5 +1,5 @@
 #ifndef __COMMON__STDARG_H__
-#define __COMMON__STDARG_H__ 1
+#define __COMMON__STDARG_H__
 
 
 #ifdef __GNUC__

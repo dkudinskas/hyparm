@@ -1,5 +1,5 @@
 #ifndef __CLI__CLI_H__
-#define __CLI__CLI_H__ 1
+#define __CLI__CLI_H__
 
 
 /*
