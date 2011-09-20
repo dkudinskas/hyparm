@@ -91,7 +91,6 @@ struct guestContext
   bool guestDataAbtPending;
   bool guestPrefetchAbtPending;
   bool guestIdle;
-  bool debugFlag;
 };
 
 GCONTXT * allocateGuest(void);
