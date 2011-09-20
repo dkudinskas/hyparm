@@ -21,6 +21,8 @@ static inline u32int getHash(u32int key);
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex);
 static void scanThumbBlock(GCONTXT *context, void *start, u32int cacheIndex);
 
+static void protectScannedBlock(u32int startAddress, u32int endAddress);
+
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
 
@@ -465,7 +467,7 @@ printf("scanner: EOB @ %08x insr %08x SVC code %x hdlrFuncPtr %x\n",
 #endif
 
 
-void protectScannedBlock(u32int startAddress, u32int endAddress)
+static void protectScannedBlock(u32int startAddress, u32int endAddress)
 {
   // 1. get page table entry for this address
   descriptor* ptBase = mmuGetPt0();

@@ -32,6 +32,7 @@
 
 #endif /* CONFIG_THUMB2 */
 
+
 #if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
 void setScanBlockCallSource(u8int source);
 #else
@@ -40,7 +41,6 @@ void setScanBlockCallSource(u8int source);
 
 void scanBlock(GCONTXT * gc, u32int blkStartAddr);
 
-void protectScannedBlock(u32int startAddress, u32int endAddress);
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
 void resetScanBlockCounter(void);
