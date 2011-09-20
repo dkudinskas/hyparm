@@ -19,7 +19,9 @@
 static inline u32int getHash(u32int key);
 
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex);
-static void scanThumbBlock(GCONTXT *context, void *start, u32int cacheIndex);
+static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex);
+
+static void protectScannedBlock(u32int startAddress, u32int endAddress);
 
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
@@ -36,7 +38,7 @@ static inline u64int getScanBlockCounter()
 
 static inline void incrementScanBlockCounter()
 {
-  ++scanBlockCounter;
+  scanBlockCounter++;
 }
 
 void resetScanBlockCounter()
@@ -90,6 +92,9 @@ static inline u32int getHash(u32int key)
 
 void scanBlock(GCONTXT *context, u32int startAddress)
 {
+  /*
+   * WARNING: startAddress is not checked! Data aborts may follow and hide bugs elsewhere.
+   */
   incrementScanBlockCounter();
 
 #if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
@@ -152,7 +157,6 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
     end++;
   }
   instruction = *end;
-
   /*
    *
    */
@@ -216,10 +220,6 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
         currAddress, context->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)context->hdlFunct);
   #endif
 
-  /* add the block we just scanned to block cache
-   * Ehm... Do not do that for guest SVC code. It messes up everything so
-   * skipt it until I figure out what it going on
-   */
 #ifdef CONFIG_THUMB2
   addToBlockCache(start, context->endOfBlockInstr, context->endOfBlockHalfInstr, (u32int)end,
       cacheIndex, (u32int)context->hdlFunct, context->blockCache);
@@ -250,77 +250,36 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 
 #ifdef CONFIG_THUMB2
 
-static void scanThumbBlock(GCONTXT *context, void *blkStartAddr, u32int cacheIndex)
+static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 {
-  u32int *currAddress = blkStartAddr;
-  u16int *currhwAddress = blkStartAddr;
-  // point to halfword rather than a whole word
-  u32int halfinstruction = *currhwAddress;
+  u16int *end;
+  instructionHandler handler;
   u32int instruction;
-  //backup pointer
-  u16int *currtmpAddress = currhwAddress;
 
-#ifdef SCANNER_DEBUG
-  printf("Thumb 16-bit Instruction: %.8x@%p\n",halfinstruction, currhwAddress);
-#endif
-  // We have to assume that currhwAddress cannot point to the middle of nowhere. It must point to a single Thumb-16
-  // word or the first halfword of a Thumb32 instruction. If scanner points to anything else, then we did something really wrong
-  switch(halfinstruction & THUMB32)
+  u16int *currtmpAddress = start;   //backup pointer  ?? seems to be start address of last instruction
+
+  end = start;
+  while (TRUE)
   {
-    case THUMB32_1:
-    case THUMB32_2:
-    case THUMB32_3:
-    {
-      halfinstruction = *currhwAddress++;
-      instruction = (halfinstruction << 16) | *currhwAddress;
-      break;
-    }
-    default:
-    {
-      instruction = * currhwAddress;
-      break;
-    }
-  }
-  // reset variables
-#ifdef SCANNER_DEBUG
-  printf("Thumb: %08x@%p\n",instruction,currhwAddress);
-#endif
+    instruction = *end;
+    currtmpAddress = end;
 
-
-  // Thumb-2 is moving by 2 bytes at a time
-  // We start by scanning two byte at a time.
-  instructionHandler decodedInstruction = NULL;
-  while ((decodedInstruction = decodeThumbInstruction(instruction)) == NULL)
-  {
-    currhwAddress++;
-    halfinstruction = *currhwAddress;
-#ifdef SCANNER_DEBUG
-    printf("Thumb 16-bit Instruction: %08x@%p\n@",halfinstruction,currhwAddress);
-#endif
-    // backup pointer
-    currtmpAddress = currhwAddress;
-    // check for Thumb-32 bit encoding
-
-    //---------------------FIX ME: This has to be converted to a while() loop like before ------//
-    switch(halfinstruction & THUMB32)
+    switch (instruction & THUMB32)
     {
       case THUMB32_1:
       case THUMB32_2:
       case THUMB32_3:
-      {
-        // fetch the remaining halfword
-        currhwAddress++;
-        instruction = halfinstruction << 16 | *currhwAddress;
+        instruction = (instruction << 16) | *++end;
         break;
-      }
-      // if the halfword is a 16bit instruction
-      default:
-      {
-        instruction = * currhwAddress;
-        break;
-      }
     }
-  } // while ends
+
+    if ((handler = decodeThumbInstruction(instruction)) != NULL)
+    {
+      break;
+    }
+
+    end++;
+  }
 
   if (((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX) || ( ((instruction & 0xFFFF) >= 0xDF00) && ((instruction & 0xFFFF) <= 0xDFFF) ) ) // FIX ME -> This doesn't look right
   {
@@ -331,11 +290,11 @@ static void scanThumbBlock(GCONTXT *context, void *blkStartAddr, u32int cacheInd
       u32int cacheIndex = svcCode - 1;
       if (cacheIndex >= BLOCK_CACHE_SIZE)
       {
-        printf("Instr %.8x@%p", instruction, currAddress);
+        printf("Instr %.8x@%p", instruction, start);
         DIE_NOW(context, "scanThumbBlock: block cache index in SWI out of range");
       }
 #ifdef SCANNER_DEBUG
-      printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)currAddress, cacheIndex);
+      printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)start, cacheIndex);
 #endif
       BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, context->blockCache);
       // retrieve end of block instruction and handler function pointer
@@ -347,7 +306,7 @@ static void scanThumbBlock(GCONTXT *context, void *blkStartAddr, u32int cacheInd
     {
       context->endOfBlockInstr = instruction;
       context->endOfBlockHalfInstr = THUMB16;
-      context->hdlFunct = decodedInstruction;
+      context->hdlFunct = handler;
     }
 
   }
@@ -366,53 +325,52 @@ static void scanThumbBlock(GCONTXT *context, void *blkStartAddr, u32int cacheInd
      * To identify what kind of instruction this is, each 16bit portion has to be checked for
      * Thumb-32 compatible encoding.
      */
-    currhwAddress = currtmpAddress; // restore starting pointer and do what we did before
-    halfinstruction = * currhwAddress;
-    switch(halfinstruction & THUMB32)
+    end = currtmpAddress; // restore starting pointer and do what we did before
+    instruction = * end;
+    switch(instruction & THUMB32)
     {
       case THUMB32_1:
       case THUMB32_2:
       case THUMB32_3:
       {
-        halfinstruction = *currhwAddress;
-        currhwAddress ++;
-        instruction = (halfinstruction<<16)|*currhwAddress;
+        instruction = *end;
+        end ++;
+        instruction = (instruction<<16)|*end;
         context->endOfBlockInstr = instruction;
         context->endOfBlockHalfInstr = THUMB32;
-        currhwAddress --;
-        *currhwAddress = INSTR_NOP_THUMB;
-        currhwAddress ++;
-        *currhwAddress = INSTR_SWI_THUMB|((cacheIndex+1) & 0xFF);
+        end --;
+        *end = INSTR_NOP_THUMB;
+        end ++;
+        *end = INSTR_SWI_THUMB|((cacheIndex+1) & 0xFF);
         break;
       }
       default:
       {
-        instruction = *currhwAddress;
+        instruction = *end;
         context->endOfBlockInstr = instruction;
         context->endOfBlockHalfInstr = THUMB16;
-        *currhwAddress = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
+        *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
         break;
       }
     }
-#ifdef    SCANNER_DBG
-    printf("Thumb svc on %08x\n",(u32int)currhwAddress);
+#ifdef SCANNER_DBG
+    printf("Thumb svc on %08x\n",(u32int)end);
 #endif
 
-    context->hdlFunct = decodedInstruction;
+    context->hdlFunct = handler;
   }
 
 #ifdef SCANNER_DEBUG
 printf("scanner: EOB @ %08x insr %08x SVC code %x hdlrFuncPtr %x\n",
-    currAddress, context->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)context->hdlFunct);
+    start, context->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)context->hdlFunct);
 #endif
 
 /* add the block we just scanned to block cache
  * Ehm... Do not do that for guest SVC code. It messes up everything so
  * skipt it until I figure out what it going on
  */
-//currAddress has to point to be in sync with currhwAddress
-  currAddress= (u32int *)(u32int)(currhwAddress);
-  addToBlockCache(blkStartAddr, context->endOfBlockInstr, context->endOfBlockHalfInstr, (u32int)currAddress,
+
+  addToBlockCache(start, context->endOfBlockInstr, context->endOfBlockHalfInstr, (u32int)end,
         cacheIndex, (u32int)context->hdlFunct, context->blockCache);
   /* To ensure that subsequent fetches from eobAddress get a hypercall
        * rather than the old cached copy...
@@ -425,12 +383,12 @@ printf("scanner: EOB @ %08x insr %08x SVC code %x hdlrFuncPtr %x\n",
       {
         asm("mcr p15, 0, %0, c7, c11, 1"
             :
-            :"r"(currhwAddress)
+            :"r"(end)
             :"memory"
         );
         asm("mcr p15, 0, %0, c7, c5, 1"
             :
-            :"r"(currhwAddress)
+            :"r"(end)
             :"memory"
         );
       }
@@ -439,33 +397,33 @@ printf("scanner: EOB @ %08x insr %08x SVC code %x hdlrFuncPtr %x\n",
         //currhwAddress points to the second halfword
         asm("mcr p15, 0, %0, c7, c11, 1"
             :
-            :"r"(currhwAddress)
+            :"r"(end)
             :"memory"
         );
         asm("mcr p15, 0, %0, c7, c5, 1"
             :
-            :"r"(currhwAddress)
+            :"r"(end)
             :"memory"
         );
-        currhwAddress--;
+        end--;
         asm("mcr p15, 0, %0, c7, c11, 1"
             :
-            :"r"(currhwAddress)
+            :"r"(end)
             :"memory"
         );
         asm("mcr p15, 0, %0, c7, c5, 1"
             :
-            :"r"(currhwAddress)
+            :"r"(end)
             :"memory"
         );
       }
-  protectScannedBlock(blkStartAddr, (u32int)currAddress);
+  protectScannedBlock(start, end);
 }
 
 #endif
 
 
-void protectScannedBlock(u32int startAddress, u32int endAddress)
+static void protectScannedBlock(u32int startAddress, u32int endAddress)
 {
   // 1. get page table entry for this address
   descriptor* ptBase = mmuGetPt0();

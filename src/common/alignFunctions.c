@@ -1,5 +1,4 @@
 #include "common/alignFunctions.h"
-#include "common/types.h"
 
 /* Loads a word from a buffer, allowing unaligned accesses.
    WARNING: Assumes data is little-endian in memory */

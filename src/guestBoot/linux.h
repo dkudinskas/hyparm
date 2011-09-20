@@ -1,5 +1,5 @@
 #ifndef __GUEST_BOOT__LINUX_H__
-#define __GUEST_BOOT__LINUX_H__ 1
+#define __GUEST_BOOT__LINUX_H__
 
 #include "common/types.h"
 

@@ -1,5 +1,5 @@
 #ifndef __GUEST_BOOT__FREE_RTOS_H__
-#define __GUEST_BOOT__FREE_RTOS_H__ 1
+#define __GUEST_BOOT__FREE_RTOS_H__
 
 #include "common/types.h"
 
