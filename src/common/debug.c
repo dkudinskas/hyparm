@@ -1,4 +1,4 @@
-#include "cpuArch/cpu.h"
+#include "cpuArch/armv7.h"
 
 #include "common/debug.h"
 #include "common/string.h"

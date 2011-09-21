@@ -2,8 +2,6 @@
 #define __COMMON__THUMB_DEFS_H__
 
 
-#define T_BIT  0x20 // 5th bit of CPSR
-
 // 3 different thumb-32 bit encodings.
 #define THUMB32              0xF800
 #define  THUMB32_1           0xE800

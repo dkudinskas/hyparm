@@ -1,18 +1,6 @@
+#include "cpuArch/constants.h"
+
 /* Standard definitions */
-
-.equ A_BIT,            0x100      /* when set, async aborts are disabled */
-.equ I_BIT,             0x80      /* when set, IRQ is disabled */
-.equ F_BIT,             0x40      /* when set, FIQ is disabled */
-.equ T_BIT,             0x20      /* when set, Thumb mode is enabled */
-
-.equ USR_MODE,          0x10
-.equ FIQ_MODE,          0x11
-.equ IRQ_MODE,          0x12
-.equ SVC_MODE,          0x13
-.equ ABT_MODE,          0x17
-.equ UND_MODE,          0x1B
-.equ SYS_MODE,          0x1F
-
 .equ GC_R0_OFFS,        0x00
 .equ GC_R1_OFFS,        0x04
 .equ GC_R2_OFFS,        0x08
@@ -70,44 +58,30 @@ _start:
    * We do not make use of secure modes, so we do not set up a stack pointer for MON mode.
    * Hence, the hypervisor and its guests must never execute the SMC instruction.
    */
-  .ifdef CONFIG_ARCH_V7_A
-    CPSID   if, #FIQ_MODE
-    LDR     SP, =fiqStack
-    CPS     #IRQ_MODE
-    LDR     SP, =irqStack
-    CPS     #ABT_MODE
-    LDR     SP, =abtStack
-    CPS     #UND_MODE
-    LDR     SP, =undStack
-    CPS     #SYS_MODE
-    MOV     SP, #0
-    CPS     #SVC_MODE
-  .else
-    MSR     CPSR_c, #(FIQ_MODE | I_BIT | F_BIT)
-    LDR     SP, =fiqStack
-    MSR     CPSR_c, #(IRQ_MODE | I_BIT | F_BIT)
-    LDR     SP, =irqStack
-    MSR     CPSR_c, #(ABT_MODE | I_BIT | F_BIT)
-    LDR     SP, =abtStack
-    MSR     CPSR_c, #(UND_MODE | I_BIT | F_BIT)
-    LDR     SP, =undStack
-    MSR     CPSR_c, #(SYS_MODE | I_BIT | F_BIT)
-    MOV     SP, #0
-    MSR     CPSR_c, #(SVC_MODE | I_BIT | F_BIT)
-  .endif
+  CPSID   if, #PSR_FIQ_MODE
+  LDR     SP, =fiqStack
+  CPS     #PSR_IRQ_MODE
+  LDR     SP, =irqStack
+  CPS     #PSR_ABT_MODE
+  LDR     SP, =abtStack
+  CPS     #PSR_UND_MODE
+  LDR     SP, =undStack
+  CPS     #PSR_SYS_MODE
+  MOV     SP, #0
+  CPS     #PSR_SVC_MODE
   LDR     SP, =svcStack
   /*
    * Install exception handlers
    */
-  .ifdef CONFIG_ARCH_EXT_SECURITY
+#ifdef CONFIG_ARCH_EXT_SECURITY
     /*
      * The security extensions introduce a register to set the exception vector base address (VBAR).
      * On the TI OMAP 35xx, this eliminates a few branches through the NAND and the SRAM.
      */
     LDR     R2, =exceptionVectorBase
     MCR     P15, 0, R2, C12, C0, 0
-  .else
-    .ifdef CONFIG_SOC_TI_OMAP_35XX
+#else
+# ifdef CONFIG_SOC_TI_OMAP_35XX
       /*
        * On the TI OMAP 35xx, U-Boot overwrites the default RAM exception vectors, which can normally be used as they are.
        * Restore them.
@@ -129,18 +103,15 @@ _start:
        */
       .word   0x4020FFC8
       LDR     PC, [PC, #0x14]
-    .endif
+# else
     /*
      * Batch install exception handler addresses.
+     * Set R2 to the first exception handler address to be written.
+     * On the TI OMAP 35xx R2 is already correct.
      */
-    .ifndef CONFIG_SOC_TI_OMAP_35XX
-      /*
-       * Set R2 to the first exception handler address to be written.
-       * On the TI OMAP 35xx R2 is already correct.
-       */
-      LDR     R2, =exception_vector
-      LDR     R2, [R2]
-    .endif
+    LDR     R2, =exception_vector
+    LDR     R2, [R2]
+# endif /* CONFIG_SOC_TI_OMAP_35XX */
     LDR     R3, =undHandler
     STR     R3, [R2], #4
     LDR     R3, =svcHandler
@@ -155,7 +126,7 @@ _start:
     STR     R3, [R2], #4
     LDR     R3, =fiqHandler
     STR     R3, [R2], #4
-  .endif
+#endif /* CONFIG_ARCH_EXT_SECURITY */
   /*
    * Branch to main.
    * This function must never return.
@@ -166,7 +137,7 @@ _start:
 /*
  * Exception vector; only used in case security extensions are implemented.
  */
-.ifdef CONFIG_ARCH_EXT_SECURITY
+#ifdef CONFIG_ARCH_EXT_SECURITY
 
   .balign 0x20
 
@@ -181,13 +152,13 @@ exceptionVectorBase:
   B       irqHandler
   B       fiqHandler
 
-.endif /* CONFIG_ARCH_EXT_SECURITY */
+#endif /* CONFIG_ARCH_EXT_SECURITY */
 
 
 /*
  * Emergency exception vector (depends on CONFIG_ARCH_EXT_SECURITY).
  */
-.ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
+#ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
 
   .balign 0x20
   .global emergencyExceptionVectorBase
@@ -207,7 +178,7 @@ setEmergencyExceptionVector:
   MCR     P15, 0, R0, C12, C0, 0
   MOV     PC, LR
 
-.endif /* CONFIG_EMERGENCY_EXCEPTION_VECTOR */
+#endif /* CONFIG_EMERGENCY_EXCEPTION_VECTOR */
 
 
 .global getGuestContext
@@ -246,19 +217,19 @@ setGuestContext:
    * Store pointer to mode-dependent R13 field of guest context in R4.
    */
   AND     R3, R2, #0x1F
-  CMP     R3, #SYS_MODE
+  CMP     R3, #PSR_SYS_MODE
   ADDEQ   R4, R0, #GC_R13_OFFS
-  CMP     R3, #USR_MODE
+  CMP     R3, #PSR_USR_MODE
   ADDEQ   R4, R0, #GC_R13_OFFS
-  CMP     R3, #FIQ_MODE
+  CMP     R3, #PSR_FIQ_MODE
   ADDEQ   R4, R0, #GC_R13_FIQ_OFFS
-  CMP     R3, #IRQ_MODE
+  CMP     R3, #PSR_IRQ_MODE
   ADDEQ   R4, R0, #GC_R13_IRQ_OFFS
-  CMP     R3, #SVC_MODE
+  CMP     R3, #PSR_SVC_MODE
   ADDEQ   R4, R0, #GC_R13_SVC_OFFS
-  CMP     R3, #ABT_MODE
+  CMP     R3, #PSR_ABT_MODE
   ADDEQ   R4, R0, #GC_R13_ABT_OFFS
-  CMP     R3, #UND_MODE
+  CMP     R3, #PSR_UND_MODE
   ADDEQ   R4, R0, #GC_R13_UND_OFFS
 .endm
 
@@ -306,7 +277,7 @@ setGuestContext:
    * Temporarily switch to system mode to extract the values of banked R13 and R14
    */
   MRS     R2, CPSR
-  CPS     SYS_MODE
+  CPS     PSR_SYS_MODE
   STMIA   R4, {R13, R14}
   MSR     CPSR, R2
   /*
@@ -335,17 +306,17 @@ setGuestContext:
    * Copy guest PC to R2
    */
   MOV     R2, LR
-.ifdef CONFIG_THUMB2
+#ifdef CONFIG_THUMB2
   /*
    * Load CPSR value from guest context
    */
   LDR     R3, [R1]
-  TST     R3, #T_BIT
+  TST     R3, #PSR_T_BIT
   SUBEQ   R2, R2, #4 @ARM
   SUBNE   R2, R2, #2 @Thumb
-.else
+#else
   SUB     R2, R2, #4
-.endif
+#endif
   ADD     R1, R0, #GC_R15_OFFS
   STR     R2, [R1]
 .endm
@@ -375,7 +346,7 @@ setGuestContext:
    * Temporarily switch to system mode to restore the values of R13 and R14 to the banked registers
    */
   MRS     R1, CPSR
-  CPS     SYS_MODE
+  CPS     PSR_SYS_MODE
   LDR     SP, [R4]
   LDR     LR, [R4, #4]
   MSR     CPSR, R1
@@ -393,7 +364,7 @@ setGuestContext:
   /*
    * Restore mode-dependent registers R8--R12
    */
-  CMP     R8, #0x11
+  CMP     R8, #PSR_FIQ_MODE
   ADDNE   R8, LR, #GC_R8_OFFS
   ADDEQ   R8, LR, #GC_R8_FIQ_OFFS
   LDMIA   R8, {R8-R12}
@@ -408,9 +379,9 @@ setGuestContext:
  * Pseudocode:
  * spsr = ((context->cpsr & 0xf0000000) | A_BIT | F_BIT) | USR_MODE;
  * guest_pc = context->pc;
- * if (context->cpsr & T_BIT)
+ * if (context->cpsr & PSR_T_BIT)
  * {
- *   spsr |= T_BIT;
+ *   spsr |= PSR_T_BIT;
  *   guest_pc -= 2;
  * }
  */
@@ -421,7 +392,7 @@ setGuestContext:
    */
   ADD     R0, LR, #GC_CPSR_OFFS
   LDR     R0, [R0]
-.ifdef CONFIG_THUMB2
+#ifdef CONFIG_THUMB2
   /*
    * Get value of PC saved in guest context into LR
    */
@@ -432,23 +403,23 @@ setGuestContext:
    * context, set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and restore the
    * Thumb bit
    */
-  TST     R0, #T_BIT
-  AND     R0, R0, #0xf0000000
-  ORREQ   R0, R0, #(USR_MODE | A_BIT | F_BIT)
-  ORRNE   R0, R0, #(USR_MODE | A_BIT | F_BIT | T_BIT)
+  TST     R0, #PSR_T_BIT
+  AND     R0, R0, #PSR_NZCV
+  ORREQ   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
+  ORRNE   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT | PSR_T_BIT)
   /*
    * Also update guest PC when guest is in Thumb mode, then save SPSR
    */
   SUBNE   LR, LR, #2
   MSR     SPSR, R0
   POP     {R0}
-.else
+#else
   /*
    * Construct SPSR in R0: restore condition flags from the value of the CPSR saved in the guest
    * context, set user mode, disable asynchronous aborts and FIQs, but enable IRQs, then save SPSR
    */
-  AND     R0, R0, #0xf0000000
-  ORR     R0, R0, #(USR_MODE | A_BIT | F_BIT)
+  AND     R0, R0, #PSR_NZCV
+  ORR     R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
   MSR     SPSR, R0
   POP     {R0}
   /*
@@ -456,7 +427,7 @@ setGuestContext:
    */
   ADD     LR, LR, #GC_R15_OFFS
   LDR     LR, [LR]
-.endif
+#endif
   /*
    * Save guest PC on stack, then perform exception return (pop PC and restore SPSR to CPSR)
    */
@@ -473,9 +444,9 @@ setGuestContext:
  * Pseudocode:
  * spsr = (context->cpsr & (0xf0000000 | A_BIT | F_BIT)) | USR_MODE;
  * guest_pc = context->pc;
- * if (context->cpsr & T_BIT)
+ * if (context->cpsr & PSR_T_BIT)
  * {
- *   spsr |= T_BIT;
+ *   spsr |= PSR_T_BIT;
  * }
  */
 .macro restore_cpsr_pc_usr_mode
@@ -487,18 +458,18 @@ setGuestContext:
   ADD     R1, LR, #GC_CPSR_OFFS
   LDR     R1, [R1]
   /* Extract condition flags into R0 */
-  AND     R0, R1, #0xf0000000
-.ifdef CONFIG_THUMB2
+  AND     R0, R1, #PSR_NZCV
+#ifdef CONFIG_THUMB2
   /* Extract exception flags & Thumb state*/
-  AND     R1, R1, #(A_BIT | I_BIT | F_BIT | T_BIT)
-.else
+  AND     R1, R1, #(PSR_A_BIT | PSR_I_BIT | PSR_F_BIT | PSR_T_BIT)
+#else
   /* Extract exception flags */
-  AND     R1, R1, #(A_BIT | I_BIT | F_BIT)
-.endif
+  AND     R1, R1, #(PSR_A_BIT | PSR_I_BIT | PSR_F_BIT)
+#endif
   /* R0= exc flags|thumb state|cc */
   ORR     R0, R1, R0
   /* set user mode */
-  ORR     R0, R0, #USR_MODE
+  ORR     R0, R0, #PSR_USR_MODE
   MSR     SPSR, R0
   POP     {R0, R1}
   /*
@@ -527,19 +498,19 @@ svcHandler:
      * Guest context pointer is already in R0!
      * Store SVC code in R1.
      */
-.ifdef CONFIG_THUMB2
+#ifdef CONFIG_THUMB2
     ADD     R1, R0, #GC_CPSR_OFFS
     LDR     R1, [R1]
-    AND     R2, R1, #0x20 @Check thumb bit
-    CMP     R2, #0x20
+    AND     R2, R1, #PSR_T_BIT
+    CMP     R2, #PSR_T_BIT
     LDRNE   R1, [LR, #-4] @Thumb bit = 0
     ANDNE   R1, #0xFFFFFF
     LDREQB  R1, [LR, #-2]
     ANDEQ   R1, #0x00FF
-.else
+#else
     LDR     R1, [LR, #-4]
     AND     R1, #0xFFFFFF
-.endif
+#endif
     BL      softwareInterrupt
 
     restore_r0_r14
@@ -551,8 +522,8 @@ dabtHandler:
     Push   {LR}
     /* Test SPSR -> are we from USR mode? */
     MRS    LR, SPSR
-    AND    LR, LR, #0x1F
-    CMP    LR, #0x10
+    AND    LR, LR, #PSR_MODE
+    CMP    LR, #PSR_USR_MODE
 
     BNE    dabtHandlerPriv
 
@@ -587,8 +558,8 @@ dabtPrivLoop:
 undHandler:
   PUSH   {LR}
   MRS    LR, SPSR
-  AND    LR, LR, #0x1F
-  CMP    LR, #0x10
+  AND    LR, LR, #PSR_MODE
+  CMP    LR, #PSR_USR_MODE
   BNE    undHandlerPriv /* Abort occured in Hypervisor (privileged) code */
 
   /* We were in USR mode, we must have been running guest code */
@@ -620,8 +591,8 @@ pabthandler:
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
-  AND    LR, LR, #0x1F
-  CMP    LR, #0x10
+  AND    LR, LR, #PSR_MODE
+  CMP    LR, #PSR_USR_MODE
   BNE    pabtHandlerPriv
 
   /* We were in USR mode, we must have been running guest code */
@@ -655,8 +626,8 @@ pabtPrivLoop:
 monHandler:
   PUSH   {LR}
   MRS    LR, SPSR
-  AND    LR, LR, #0x1F
-  CMP    LR, #0x10
+  AND    LR, LR, #PSR_MODE
+  CMP    LR, #PSR_USR_MODE
   BNE    monHandlerPriv /* Call occured in Hypervisor (privileged) code */
 
   /* We were in USR mode, we must have been running guest code */
@@ -692,8 +663,8 @@ irqHandler:
   /* need to check if we came from guest mode, or were inside the hypervisor */
   PUSH   {LR}
   MRS    LR, SPSR
-  AND    LR, LR, #0x1F
-  CMP    LR, #0x10
+  AND    LR, LR, #PSR_MODE
+  CMP    LR, #PSR_USR_MODE
   /* interrupt occured whilst running hypervisor */
   BNE    irqHandlerPriv
 
@@ -733,10 +704,10 @@ fiqHandler:
 
 .data
 
-.ifndef CONFIG_SOC_TI_OMAP_35XX
+#ifndef CONFIG_SOC_TI_OMAP_35XX
 exception_vector:
   .err @ Unknown target
-.endif
+#endif
 
 /*
  * 32-bit space for the guest context pointer.

@@ -1,21 +1,10 @@
-#ifndef __CPU_ARCH__CPU_H__
-#define __CPU_ARCH__CPU_H__
+#ifndef __CPU_ARCH__ARM_V7_H__
+#define __CPU_ARCH__ARM_V7_H__
 
 #include "common/types.h"
 
+#define BOARD_DEVICE_TYPE        3
 
-#define BOARD_DEVICE_TYPE           3
-
-#define CPU_ARCH_UNKNOWN  0
-#define CPU_ARCH_ARMv3    1
-#define CPU_ARCH_ARMv4    2
-#define CPU_ARCH_ARMv4T    3
-#define CPU_ARCH_ARMv5    4
-#define CPU_ARCH_ARMv5T    5
-#define CPU_ARCH_ARMv5TE  6
-#define CPU_ARCH_ARMv5TEJ  7
-#define CPU_ARCH_ARMv6    8
-#define CPU_ARCH_ARMv7    9
 
 /*
  * CR1 bits (CP#15 CR1)
@@ -48,6 +37,9 @@
 #define CR_AFE  (1 << 29)  /* Access flag enable      */
 #define CR_TE  (1 << 30)  /* Thumb exception enable    */
 
+
+
+
 /*
  * This is used to ensure the compiler did actually allocate the register we
  * asked it for some inline assembly sequences.  Apparently we can't trust
@@ -65,7 +57,7 @@
  */
 #define nop() __asm__ __volatile__("mov\tr0,r0\t@ nop\n\t");
 
-#define arch_align_stack(x) (x)
+
 
 int cleanupBeforeBoot(void);
 
@@ -78,11 +70,9 @@ void l2_cache_disable(void);
 
 #define iCacheFlushByMVA(vAddress) \
   { \
-    __asm__ __volatile__ ("MCR p15, 0, %0, c7, c5, 1": :"r" (vAddress) ); \
+    __asm__ __volatile__ ("MCR p15, 0, %0, c7, c5, 1": :"r"(vAddress)); \
   }
 
-
-#if (defined(CONFIG_ARCH_V6) || defined(CONFIG_ARCH_V7))
 
 #define enableInterrupts() \
   { \
@@ -94,26 +84,6 @@ void l2_cache_disable(void);
     __asm__ __volatile__ ("CPSID i"); \
   }
 
-#elif defined(CONFIG_ARCH_V5)
-
-#define enableInterrupts() \
-  { \
-    __asm__ __volatile__ ("MRS %0, cpsr; BIC %0, %0, #0x80; MSR cpsr, %0"::"r"(0)); \
-  }
-
-#define disableInterrupts() \
-  { \
-    __asm__ __volatile__ ("MRS %0, cpsr; ORR %0, %0, #0x80; MSR cpsr, %0"::"r"(0)); \
-  }
-
-#else
-
-#error Unsupported CPU architecture!
-
-#endif
-
-
-#if defined(CONFIG_ARCH_V7)
 
 /*
  * Infinite loop waiting for interrupts (even if they are masked)
@@ -126,25 +96,5 @@ void l2_cache_disable(void);
     } \
   }
 
-#elif (defined(CONFIG_ARCH_V5_T) || defined(CONFIG_ARCH_V6))
 
-/*
- * Infinite loop entering debug mode, which puts the processor in a low-power state
- * TODO: must be in halting mode for this to work (usually true)
- */
-#define infiniteIdleLoop() \
-  { \
-    while (TRUE) \
-    { \
-      __asm__ __volatile__ ("BKPT 0xbad"); \
-    } \
-  }
-
-#else
-
-#error Unsupported CPU architecture!
-
-#endif
-
-
-#endif
+#endif /* __CPU_ARCH__ARM_V7_H__ */

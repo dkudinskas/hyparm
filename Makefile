@@ -123,6 +123,7 @@ $(KCONFIG_CONFIG):
   CPPFLAGS-y := -imacros $(KCONFIG_AUTOHEADER)
   LDFLAGS-y :=
 
+
   CFLAGS-$(CONFIG_BUILD_LTO) += -flto=jobserver -fuse-linker-plugin
 
   ifeq ($(CONFIG_BUILD_SAVE_TEMPS),y)
@@ -131,13 +132,6 @@ $(KCONFIG_CONFIG):
     CFLAGS-y += -pipe
   endif
 
-  # TODO AFLAGS IS A HACK
-  AFLAGS-$(CONFIG_ARCH_V7_A) += --defsym CONFIG_ARCH_V7_A=1
-
-
-  # TODO AFLAGS IS A HACK
-  AFLAGS-$(CONFIG_ARCH_EXT_SECURITY) += --defsym CONFIG_ARCH_EXT_SECURITY=1
-
 
   AFLAGS-$(CONFIG_CPU_CORTEX_A8) += -mcpu=cortex-a8
   CFLAGS-$(CONFIG_CPU_CORTEX_A8) += -mcpu=cortex-a8
@@ -145,15 +139,7 @@ $(KCONFIG_CONFIG):
   AFLAGS-$(CONFIG_CPU_CORTEX_A9) += -mcpu=cortex-a9
   CFLAGS-$(CONFIG_CPU_CORTEX_A9) += -mcpu=cortex-a9
 
-
-  # TODO AFLAGS IS A HACK
-  AFLAGS-$(CONFIG_SOC_TI_OMAP_35XX) += --defsym CONFIG_SOC_TI_OMAP_35XX=1
-
-
   LDFLAGS-$(CONFIG_SOC_TI_OMAP_3530) += -T $(SCRIPT_PATH)/omap3530.lds
-
-
-  AFLAGS-$(CONFIG_THUMB2) += --defsym CONFIG_THUMB2=1
 
 
   CFLAGS-$(CONFIG_DEBUG)  += -ggdb3
@@ -161,14 +147,21 @@ $(KCONFIG_CONFIG):
   LDFLAGS-$(CONFIG_DEBUG) += -Map $(OUTPUT_PATH)/$(APP_NAME).map --cref
   OBJDUMPFLAGS-$(CONFIG_DEBUG) += -lS
 
-  # TODO AFLAGS IS A HACK
-  AFLAGS-$(CONFIG_EMERGENCY_EXCEPTION_VECTOR) += --defsym CONFIG_EMERGENCY_EXCEPTION_VECTOR=1
 
-  AFLAGS   += $(AFLAGS-y)
-  CFLAGS   += $(CFLAGS-y)
-  CPPFLAGS += $(CPPFLAGS-y)
-  LDFLAGS  += $(LDFLAGS-y)
+  AFLAGS       += $(AFLAGS-y)
+  CFLAGS       += $(CFLAGS-y)
+  CPPFLAGS     += $(CPPFLAGS-y)
+  LDFLAGS      += $(LDFLAGS-y)
   OBJDUMPFLAGS += $(OBJDUMPFLAGS-y)
+
+
+  # Some assembly files are preprocessed by the C preprocessor (.S extension) and assembler flags
+  # are passed through the C compiler rather than directly to the assembler. Adapt AFLAGS to a
+  # format understood by the compiler.
+  CPP_AFLAGS := $(foreach AFLAG,$(AFLAGS),$(AFLAG))
+  ifneq ($(CPP_AFLAGS),)
+    CPP_AFLAGS := -Wa,$(subst $(SPACE),$(COMMA),$(CPP_AFLAGS))
+  endif
 
   # With LTO, the linker is invoked by the compiler. Hence, linker flags are passed through the
   # compiler rather than directly to the linker, so we need to adapt LDFLAGS to a format understood
@@ -193,7 +186,7 @@ HYPARM_DIRS-$(CONFIG_MMC) += io io/fs
 HYPARM_DIRS-$(CONFIG_CLI) += cli
 
 HYPARM_SRCS_C-y := main.c
-HYPARM_SRCS_S-y := startup.s
+HYPARM_SRCS_S-y := startup.S
 
 
 # Include all makefile.mk files from HYPARM_DIRS-y
@@ -240,7 +233,7 @@ ifneq ($(CONFIG_BUILD_LTO),y)
 	@echo 'LD       $@'
 	@$(LD) -o $@ $(LDFLAGS) $(HYPARM_OBJS)
 else
-	@echo 'CC/GOLD  $@'
+	@echo 'CC/LD    $@'
 	+@$(CC) $(CFLAGS) -nostartfiles -nostdlib -o $@ $(LDFLAGS) $(HYPARM_OBJS)
 endif
 
@@ -260,6 +253,10 @@ $(SOURCE_PATH)/%.c.o: $(SOURCE_PATH)/%.c
 $(SOURCE_PATH)/%.s.o: $(SOURCE_PATH)/%.s $(KCONFIG_CONFIG)
 	@echo 'AS       $<'
 	@$(AS) $(AFLAGS) -o $@ $<
+
+$(SOURCE_PATH)/%.S.o: $(SOURCE_PATH)/%.S $(KCONFIG_CONFIG)
+	@echo 'CPP/AS   $<'
+	@$(CC) $(CPP_AFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 endif # ifeq ($(filter $(NO_BUILD_GOALS)),)
 

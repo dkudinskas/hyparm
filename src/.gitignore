@@ -9,6 +9,7 @@
 # Ignore object files
 *.c.o
 *.s.o
+*.S.o
 
 # Ignore stack usage files generated with 'gcc -fstack-usage ...'
 *.su

@@ -1,4 +1,4 @@
-#include "cpuArch/cpu.h"
+#include "cpuArch/armv7.h"
 
 
 static inline unsigned int get_cr(void);

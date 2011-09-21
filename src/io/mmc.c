@@ -7,7 +7,7 @@
 
 #include "drivers/beagle/be32kTimer.h"
 
-#include "cpuArch/cpu.h"
+#include "cpuArch/armv7.h"
 
 extern struct mmc *mmcDevice;
 
@@ -136,7 +136,7 @@ u32int mmcBlockRead(int devid, u32int start, u64int blockCount, void *dst)
     cmd.arg = 0;
     cmd.responseType = MMC_RSP_R1b;
     cmd.flags = 0;
-    
+
     if (mmc->sendCommand(mmc, &cmd, 0))
     {
       printf("mmcBlockRead: stop cmd failed\n");
@@ -182,7 +182,7 @@ u32int mmcBlockWrite(int devid, u32int start, u64int blockCount, const void *src
   {
     cmd.arg = start * mmc->writeBlockLength;
   }
-  
+
   cmd.responseType = MMC_RSP_R1;
   cmd.flags = 0;
 
@@ -330,7 +330,7 @@ int sdChangeFreq(struct mmc *mmc)
     data.blocksize = 8;
     data.blocks = 1;
     data.flags = MMC_DATA_READ;
-  
+
     err = mmc->sendCommand(mmc, &cmd, &data);
     if (err)
     {
@@ -430,7 +430,7 @@ int mmcStartup(struct mmc *mmc)
 #endif
     return err;
   }
-  
+
   memcpy(mmc->cid, cmd.resp, 16);
 
   cmd.idx = SD_CMD_SEND_RELATIVE_ADDR;
@@ -505,10 +505,10 @@ int mmcStartup(struct mmc *mmc)
   {
     u32int csize = ((mmc->csd[1] & 0x3ff) << 2) | ((mmc->csd[2] & 0xc0000000) >> 30);
     u32int cmult = (mmc->csd[2] & 0x00038000) >> 15;
-    
+
     u32int mult = 1 << (cmult + 2);
     u32int blockNumber = (csize + 1) * mult;
-   
+
     u32int blockLength = 1 << ((mmc->csd[1] & 0x000f0000) >> 16);
     mmc->capacity = blockNumber * blockLength;
 
@@ -607,7 +607,7 @@ int mmcSendIfCond(struct mmc *mmc)
 {
   struct mmcCommand cmd;
   int err;
-  
+
   cmd.idx = SD_CMD_SEND_IF_COND;
   /* We set the bit if the host supports voltages between 2.7 and 3.6 V */
   cmd.arg = ((mmc->voltages & 0xff8000) != 0) << 8 | 0xaa;
@@ -712,7 +712,7 @@ int mmcMainInit()
   mmcRegisteredNumber = 0; 
   //initialise the host controller, mmc device is now registered
   mmcDevice = mmcInterfaceInit(); 
-  
+
   struct mmc *mmc = mmcDevice;
 
   // need to perform backend device controller initialization

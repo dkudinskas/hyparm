@@ -1,5 +1,7 @@
 #include "common/debug.h"
 
+#include "cpuArch/constants.h"
+
 #include "instructionEmu/commonInstrFunctions.h"
 
 
@@ -12,8 +14,8 @@ void invalidInstruction(u32int instr, const char *msg)
 
 bool guestInPrivMode(GCONTXT * context)
 {
-  u32int modeField = context->CPSR & CPSR_MODE_FIELD;
-  return (modeField == CPSR_MODE_USER) ? FALSE : TRUE;
+  u32int modeField = context->CPSR & PSR_MODE;
+  return (modeField == PSR_USR_MODE) ? FALSE : TRUE;
 }
 
 
@@ -119,7 +121,7 @@ bool evalCC(u32int instrCC, u32int cpsrCC)
 /* function to store a register value, evaluates modes. */
 void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
 {
-  u32int guestMode = (context->CPSR) & CPSR_MODE_FIELD;
+  u32int guestMode = (context->CPSR) & PSR_MODE;
 
   if ((regDest < 8) || (regDest == 15))
   {
@@ -134,7 +136,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
     u32int * strPtr = 0;
     if ( (regDest >=8) && (regDest <= 12) )
     {
-      if (guestMode == CPSR_MODE_FIQ)
+      if (guestMode == PSR_FIQ_MODE)
       {
         strPtr = &(context->R8_FIQ);
       }
@@ -150,23 +152,23 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
       // R13 / R14 left
       switch (guestMode)
       {
-        case CPSR_MODE_USER:
-        case CPSR_MODE_SYSTEM:
+        case PSR_USR_MODE:
+        case PSR_SYS_MODE:
           strPtr = (regDest == 13) ? (&(context->R13_USR)) : (&(context->R14_USR));
           break;
-        case CPSR_MODE_FIQ:
+        case PSR_FIQ_MODE:
           strPtr = (regDest == 13) ? (&(context->R13_FIQ)) : (&(context->R14_FIQ));
           break;
-        case CPSR_MODE_IRQ:
+        case PSR_IRQ_MODE:
           strPtr = (regDest == 13) ? (&(context->R13_IRQ)) : (&(context->R14_IRQ));
           break;
-        case CPSR_MODE_SVC:
+        case PSR_SVC_MODE:
           strPtr = (regDest == 13) ? (&(context->R13_SVC)) : (&(context->R14_SVC));
           break;
-        case CPSR_MODE_ABORT:
+        case PSR_ABT_MODE:
           strPtr = (regDest == 13) ? (&(context->R13_ABT)) : (&(context->R14_ABT));
           break;
-        case CPSR_MODE_UNDEF:
+        case PSR_UND_MODE:
           strPtr = (regDest == 13) ? (&(context->R13_UND)) : (&(context->R14_UND));
           break;
         default:
@@ -180,7 +182,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
 /* function to load a register value, evaluates modes. */
 u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
 {
-  u32int guestMode = context->CPSR & CPSR_MODE_FIELD;
+  u32int guestMode = context->CPSR & PSR_MODE;
   u32int value = 0;
 
   if ((regSrc < 8) || (regSrc == 15))
@@ -195,7 +197,7 @@ u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
     u32int * ldPtr = 0;
     if ( (regSrc >=8) && (regSrc <= 12) )
     {
-      if (guestMode == CPSR_MODE_FIQ)
+      if (guestMode == PSR_FIQ_MODE)
       {
         ldPtr = &(context->R8_FIQ);
       }
@@ -210,23 +212,23 @@ u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
       // R13 / R14 left
       switch (guestMode)
       {
-        case CPSR_MODE_USER:
-        case CPSR_MODE_SYSTEM:
+        case PSR_USR_MODE:
+        case PSR_SYS_MODE:
           ldPtr = (regSrc == 13) ? (&(context->R13_USR)) : (&(context->R14_USR));
           break;
-        case CPSR_MODE_FIQ:
+        case PSR_FIQ_MODE:
           ldPtr = (regSrc == 13) ? (&(context->R13_FIQ)) : (&(context->R14_FIQ));
           break;
-        case CPSR_MODE_IRQ:
+        case PSR_IRQ_MODE:
           ldPtr = (regSrc == 13) ? (&(context->R13_IRQ)) : (&(context->R14_IRQ));
           break;
-        case CPSR_MODE_SVC:
+        case PSR_SVC_MODE:
           ldPtr = (regSrc == 13) ? (&(context->R13_SVC)) : (&(context->R14_SVC));
           break;
-        case CPSR_MODE_ABORT:
+        case PSR_ABT_MODE:
           ldPtr = (regSrc == 13) ? (&(context->R13_ABT)) : (&(context->R14_ABT));
           break;
-        case CPSR_MODE_UNDEF:
+        case PSR_UND_MODE:
           ldPtr = (regSrc == 13) ? (&(context->R13_UND)) : (&(context->R14_UND));
           break;
         default:

@@ -4,7 +4,8 @@
 
 #include "vm/omap35xx/intc.h"
 
-#include "cpuArch/cpu.h"
+#include "cpuArch/armv7.h"
+
 
 void scheduleGuest()
 {

@@ -1,6 +1,8 @@
 #include "common/debug.h"
 #include "common/defines.h"
 
+#include "cpuArch/constants.h"
+
 #include "guestManager/blockCache.h"
 
 #include "instructionEmu/commonInstrFunctions.h"
@@ -41,7 +43,7 @@ u32int strInstruction(GCONTXT * context)
   u32int offsetAddress;
 
 #ifdef CONFIG_THUMB2
-  if (context->CPSR & T_BIT)
+  if (context->CPSR & PSR_T_BIT)
   {
     bool thumb32;
     u32int imm32;
@@ -241,7 +243,7 @@ u32int strbInstruction(GCONTXT * context)
   u32int valueToStore = 0;
 
 #ifdef CONFIG_THUMB2
-  if(context->CPSR & T_BIT)
+  if(context->CPSR & PSR_T_BIT)
   {
     u32int imm32 = 0;
     bool thumb32 = isThumb32(instr);
@@ -471,7 +473,7 @@ u32int strhInstruction(GCONTXT * context)
   u32int regSrc = 0;
 
 #ifdef CONFIG_THUMB2
-  if(context->CPSR & T_BIT)
+  if(context->CPSR & PSR_T_BIT)
   {
     u32int offset = 0;
     bool thumb32 = FALSE;
@@ -670,7 +672,7 @@ u32int stmInstruction(GCONTXT * context)
   u32int baseAddress = 0;
 
 #ifdef CONFIG_THUMB2
-  if(context->CPSR & T_BIT) // Thumb
+  if(context->CPSR & PSR_T_BIT) // Thumb
   {
     u32int address = 0;
     bool thumb32 = FALSE;
@@ -758,7 +760,7 @@ u32int stmInstruction(GCONTXT * context)
     {
       // force user bit set: STM user mode registers
       savedCPSR = context->CPSR;
-      context->CPSR = (context->CPSR & ~0x1f) | CPSR_MODE_USER;
+      context->CPSR = (context->CPSR & ~0x1f) | PSR_USR_MODE;
     }
 
     int i = 0;
@@ -850,7 +852,7 @@ u32int strdInstruction(GCONTXT * context)
   u32int regSrc2 = 0;
 
 #ifdef CONFIG_THUMB2
-  if(context->CPSR & T_BIT)
+  if(context->CPSR & PSR_T_BIT)
   {
     u32int address = 0;
     u32int imm8 = 0;
@@ -1228,7 +1230,7 @@ u32int ldrhInstruction(GCONTXT * context)
 
 #ifdef CONFIG_THUMB2
   // Are we on Thumb mode?
-  if(context->CPSR & T_BIT)
+  if(context->CPSR & PSR_T_BIT)
   {
     u32int imm12 = 0;
     bool thumb32 = FALSE;
@@ -1426,7 +1428,7 @@ u32int ldrbInstruction(GCONTXT * context)
   u32int baseAddress = 0;
 
 #ifdef CONFIG_THUMB2
-  if(context->CPSR & T_BIT)
+  if(context->CPSR & PSR_T_BIT)
   {
     bool thumb32 = isThumb32(instr);
     if(thumb32)
@@ -1591,7 +1593,7 @@ u32int ldrInstruction(GCONTXT * context)
   u32int baseAddress = 0;
 
 #ifdef CONFIG_THUMB2
-  if(context->CPSR & T_BIT)
+  if(context->CPSR & PSR_T_BIT)
   {
     u32int imm32 = 0;
     u32int instr = 0;
@@ -1817,7 +1819,7 @@ u32int ldmInstruction(GCONTXT * context)
   u32int baseAddress = 0;
 
 #ifdef CONFIG_THUMB2
-  if(context->CPSR & T_BIT) // Thumb
+  if(context->CPSR & PSR_T_BIT) // Thumb
   {
 
     u32int valueLoaded = 0;
@@ -1859,7 +1861,7 @@ u32int ldmInstruction(GCONTXT * context)
       storeGuestGPR(baseReg, baseAddress, context);
       if ( (context->R15 & 0x1)==0) // In which mode are we returning to?
       {
-        context->CPSR &= ~T_BIT;
+        context->CPSR &= ~PSR_T_BIT;
       }
       context->R15 &= ~0x1;
       return context->R15;
@@ -1911,7 +1913,7 @@ u32int ldmInstruction(GCONTXT * context)
       {
         // force user bit set and no PC in list: LDM user mode registers
         savedCPSR = context->CPSR;
-        context->CPSR = (context->CPSR & ~0x1f) | CPSR_MODE_USER;
+        context->CPSR = (context->CPSR & ~0x1f) | PSR_USR_MODE;
       }
     }
 
@@ -1982,29 +1984,27 @@ u32int ldmInstruction(GCONTXT * context)
         // ok, exception return option: restore SPSR to CPSR
         // SPSR! which?... depends what mode we are in...
         u32int modeSpsr = 0;
-        switch (context->CPSR & CPSR_MODE_FIELD)
+        switch (context->CPSR & PSR_MODE)
         {
-          case CPSR_MODE_FIQ:
+          case PSR_FIQ_MODE:
             modeSpsr = context->SPSR_FIQ;
             break;
-          case CPSR_MODE_IRQ:
+          case PSR_IRQ_MODE:
             modeSpsr = context->SPSR_IRQ;
             break;
-          case CPSR_MODE_SVC:
+          case PSR_SVC_MODE:
             modeSpsr = context->SPSR_SVC;
             break;
-          case CPSR_MODE_ABORT:
+          case PSR_ABT_MODE:
             modeSpsr = context->SPSR_ABT;
             break;
-          case CPSR_MODE_UNDEF:
+          case PSR_UND_MODE:
             modeSpsr = context->SPSR_UND;
             break;
-          case CPSR_MODE_USER:
-          case CPSR_MODE_SYSTEM:
           default:
             DIE_NOW(0, "LDM: exception return form sys/usr mode!");
         }
-        if ((modeSpsr & CPSR_MODE_FIELD) == CPSR_MODE_USER)
+        if ((modeSpsr & PSR_MODE) == PSR_USR_MODE)
         {
           DIE_NOW(context, "LDM: exception return to user mode!");
         }

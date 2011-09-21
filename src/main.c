@@ -7,7 +7,7 @@
 #include "common/stdarg.h"
 #include "common/string.h"
 
-#include "cpuArch/cpu.h"
+#include "cpuArch/armv7.h"
 
 #include "drivers/beagle/beIntc.h"
 #include "drivers/beagle/beGPTimer.h"
