@@ -104,7 +104,7 @@ void main(s32int argc, char *argv[])
   initialiseFrameTable();
 
   /* initialize guest context */
-  GCONTXT *context = allocateGuest();
+  GCONTXT *context = createGuestContext();
   setGuestContext(context);
 
   /* Setup MMU for Hypervisor */
