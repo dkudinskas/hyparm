@@ -306,8 +306,11 @@ u32int cpsInstruction(GCONTXT * context)
         if (!(oldCpsr & PSR_I_BIT)) // were enabled, now disabled
         {
           // chech interrupt controller if there is an interrupt pending
-          if(context->guestIrqPending == TRUE)
+          if (context->guestIrqPending)
           {
+            /*
+             * FIXME: Niels: wtf? why do we need the if?
+             */
             context->guestIrqPending = FALSE;
           }
         }
