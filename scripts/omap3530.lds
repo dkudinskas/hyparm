@@ -14,7 +14,7 @@ SECTIONS
 	. = ALIGN(4);
 	.text :
 	{
-		src/startup.s.o (.text)
+		src/startup.S.o (.text)
 		*(.text)
 	}
 	.data :

@@ -33,6 +33,7 @@ CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
                 -Wno-empty-body -Wno-unused-label -Wno-unused-parameter \
                 -Werror=implicit-function-declaration
 CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc
+LDDEPS       :=
 LDFLAGS      := --error-unresolved-symbols
 OBJDUMPFLAGS := -M reg-names-std
 
@@ -121,6 +122,7 @@ $(KCONFIG_CONFIG):
   AFLAGS-y :=
   CFLAGS-y :=
   CPPFLAGS-y := -imacros $(KCONFIG_AUTOHEADER)
+  LDDEPS-y :=
   LDFLAGS-y :=
 
 
@@ -139,6 +141,7 @@ $(KCONFIG_CONFIG):
   AFLAGS-$(CONFIG_CPU_CORTEX_A9) += -mcpu=cortex-a9
   CFLAGS-$(CONFIG_CPU_CORTEX_A9) += -mcpu=cortex-a9
 
+  LDDEPS-$(CONFIG_SOC_TI_OMAP_3530) += $(SCRIPT_PATH)/omap3530.lds
   LDFLAGS-$(CONFIG_SOC_TI_OMAP_3530) += -T $(SCRIPT_PATH)/omap3530.lds
 
 
@@ -151,6 +154,7 @@ $(KCONFIG_CONFIG):
   AFLAGS       += $(AFLAGS-y)
   CFLAGS       += $(CFLAGS-y)
   CPPFLAGS     += $(CPPFLAGS-y)
+  LDDEPS       += $(LDDEPS-y)
   LDFLAGS      += $(LDFLAGS-y)
   OBJDUMPFLAGS += $(OBJDUMPFLAGS-y)
 
@@ -231,7 +235,7 @@ $(OUTPUT_PATH)/$(APP_NAME).bin: $(OUTPUT_PATH)/$(APP_NAME).elf
 #  * When not using LTO, we can just invoke cross-ld.
 #  * With LTO, cross-cc has to be invoked once again to perform the optimizations, and when done it
 #    will automatically invoke the linker. Hence, linker flags must be passed to the compiler.
-$(OUTPUT_PATH)/$(APP_NAME).elf: $(HYPARM_OBJS) $(KCONFIG_CONFIG)
+$(OUTPUT_PATH)/$(APP_NAME).elf: $(HYPARM_OBJS) $(KCONFIG_CONFIG) $(LDDEPS)
 ifneq ($(CONFIG_BUILD_LTO),y)
 	@echo 'LD       $@'
 	@$(LD) -o $@ $(LDFLAGS) $(HYPARM_OBJS)
