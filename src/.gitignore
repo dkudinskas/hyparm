@@ -1,10 +1,11 @@
 # Ignore files generated with 'gcc -save-temps=obj'
 *.c.i
 *.c.s
+*.S.s
 
 # Ignore dependency files generated with 'gcc -M ...'
 *.c.d
-*.c.d.*
+*.S.d
 
 # Ignore object files
 *.c.o

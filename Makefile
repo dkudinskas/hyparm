@@ -127,7 +127,7 @@ $(KCONFIG_CONFIG):
   CFLAGS-$(CONFIG_BUILD_LTO) += -flto=jobserver -fuse-linker-plugin
 
   ifeq ($(CONFIG_BUILD_SAVE_TEMPS),y)
-    CFLAGS-y += -save-temps=obj
+    CPPFLAGS-y += -save-temps=obj
   else
     CFLAGS-y += -pipe
   endif
@@ -185,19 +185,22 @@ HYPARM_DIRS-$(CONFIG_MMC) += io io/fs
 # Hacks
 HYPARM_DIRS-$(CONFIG_CLI) += cli
 
-HYPARM_SRCS_C-y := main.c
-HYPARM_SRCS_S-y := startup.S
+HYPARM_SRCS_C-y  := main.c
+HYPARM_SRCS_S-y  :=
+HYPARM_SRCS_SX-y := startup.S
 
 
 # Include all makefile.mk files from HYPARM_DIRS-y
 include $(foreach DIR,$(HYPARM_DIRS-y),$(SOURCE_PATH)/$(DIR)/makefile.mk)
 
 
-HYPARM_DEPS   := $(foreach SRC,$(HYPARM_SRCS_C-y),$(SOURCE_PATH)/$(SRC).d)
+HYPARM_DEPS    := $(foreach SRC,$(HYPARM_SRCS_C-y),$(SOURCE_PATH)/$(SRC).d)
+HYPARM_DEPS    += $(foreach SRC,$(HYPARM_SRCS_SX-y), $(SOURCE_PATH)/$(SRC).d)
 
-HYPARM_OBJS_C := $(foreach SRC,$(HYPARM_SRCS_C-y),$(SOURCE_PATH)/$(SRC).o)
-HYPARM_OBJS_S := $(foreach SRC,$(HYPARM_SRCS_S-y),$(SOURCE_PATH)/$(SRC).o)
-HYPARM_OBJS   := $(HYPARM_OBJS_C) $(HYPARM_OBJS_S)
+HYPARM_OBJS_C  := $(foreach SRC,$(HYPARM_SRCS_C-y),$(SOURCE_PATH)/$(SRC).o)
+HYPARM_OBJS_S  := $(foreach SRC,$(HYPARM_SRCS_S-y),$(SOURCE_PATH)/$(SRC).o)
+HYPARM_OBJS_SX := $(foreach SRC,$(HYPARM_SRCS_SX-y),$(SOURCE_PATH)/$(SRC).o)
+HYPARM_OBJS    := $(HYPARM_OBJS_C) $(HYPARM_OBJS_S) $(HYPARM_OBJS_SX)
 
 
 # Check if we are building
@@ -238,13 +241,43 @@ else
 endif
 
 
+# Generate dependency files for all C source files. The C compiler scans a source file to identify
+# all the files it includes and generates a dependency file that can be included from this Makefile.
+#
+# For any filename.c, the compiler by default outputs a rule
+#   filename.o : includedFile1.h ... includedFileN.h
+#
+# Since headers might be deleted (or renamed) in between builds, it is a good idea to prevent make
+# from trying to build them (make will always try to build files it cannot find). Using the -MP
+# switch, the compiler will generate empty rules for all included headers:
+#  includedFile1.h:
+#  includedFile2.h:
+#
+# Object files compiled from C source files are named filename.c.o rather than filename.o to prevent
+# collisions with object files compiled from assembly source files, and to be able to easily
+# distinguish between the two. Hence, the rule for filename.o must be changed to filename.c.o. This
+# can be achieved with the -MT switch. However, the dependency file for filename.c should also be
+# regenerated whenever any of the headers changes (it may include a different set of other headers).
+# The easiest way to achieve this is to add the dependency file to the rule for filename.c.o.
+#
+# Solution:
+# 1) We pass -MT __out__ to the compiler so the first rule will always read
+#      __out__ : includedFile1.h ... includedFileN.h
+# 2) We use sed to replace '__out__' with 'filename.c.o filename.c.d'
 $(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_OK)
 ifneq ($(VERBOSE),)
 	@echo 'DEP      $<'
 endif
-	@$(CC) -M $(CPPFLAGS) -MP -MT $(patsubst %.c,%.c.o,$<) $< > $@.$$$$ && \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@ && \
-	rm $@.$$$$
+	@$(CC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
+
+# Generate dependency files for all assembly source files that require preprocessing. This rule is
+# exactly the same as the rule above, except that it generates *.S.d files from *.S files.
+$(SOURCE_PATH)/%.S.d: $(SOURCE_PATH)/%.S $(KCONFIG_OK)
+ifneq ($(VERBOSE),)
+	@echo 'DEP      $<'
+endif
+	@$(CC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
+
 
 $(SOURCE_PATH)/%.c.o: $(SOURCE_PATH)/%.c
 	@echo 'CC       $<'
@@ -267,6 +300,7 @@ clean:
 	@find $(SOURCE_PATH) -name '*.c.[dis]' -exec rm {} +
 	@find $(SOURCE_PATH) -name '*.c.d.*' -exec rm {} +
 	@find $(SOURCE_PATH) -name '*.o' -exec rm {} +
+	@find $(SOURCE_PATH) -name '*.S.[ds]' -exec rm {} +
 	@rm $(KCONFIG_AUTOCONFIG) $(KCONFIG_AUTOHEADER) $(KCONFIG_OK) \
 	  $(OUTPUT_PATH)/$(APP_NAME).{elf,map,bin,dump} 2> /dev/null || :
 
