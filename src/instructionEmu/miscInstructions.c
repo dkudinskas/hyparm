@@ -48,8 +48,7 @@ u32int bxInstruction(GCONTXT * context)
 #endif
   {
     u32int instrCC = (instr >> 28) & 0xF;
-    u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-    if (!evalCC(instrCC, cpsrCC))
+    if (!evaluateConditionCode(context, instrCC))
     {
       nextPC = context->R15 + 4;
       return nextPC;
@@ -243,7 +242,7 @@ u32int cpsInstruction(GCONTXT * context)
     DIE_NOW(context, "CPS unpredictable case\n");
   }
 
-  if (guestInPrivMode(context))
+  if ((context->CPSR & PSR_MODE) != PSR_USR_MODE)
   {
     u32int oldCpsr = context->CPSR;
     if (imod == 0x2) // enable
@@ -608,18 +607,15 @@ u32int sxthInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
   u32int instrCC = (instr >> 28) & 0xF;
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
   u32int regSrc = (instr & 0xF);
   u32int regDest = (instr & 0x0000F000) >> 12;
   u32int rotate = (instr & 0x00000C00) >> 10;
   u32int value = 0;
-  bool conditionMet;
   if (regDest == 15 || regSrc == 15)
   {
     DIE_NOW(0,"Rd/Rm is R15. Unpredictable behaviour\n");
   }
-  conditionMet = evalCC(instrCC, cpsrCC);
-  if (conditionMet)
+  if (evaluateConditionCode(context, instrCC))
   {
     /* load the least 16bits from the source register */
     value=(loadGuestGPR(regSrc,context) & 0x0000FFFF);
@@ -846,7 +842,6 @@ u32int blxInstruction(GCONTXT * context)
   u32int nextPC = 0;
   u32int sign = 0;
   u32int instrCC = 0;
-  u32int cpsrCC = 0;
   u32int regDest = 0;
   u32int value = 0;
   u32int target = 0;
@@ -886,7 +881,6 @@ u32int blxInstruction(GCONTXT * context)
     instr = context->endOfBlockInstr;
     sign = 0x00800000 & instr;
     instrCC = (instr >> 28) & 0xF;
-    cpsrCC = (context->CPSR >> 28) & 0xF;
     regDest = (instr & 0x0000000F); // holds dest addr and mode bit
     value = loadGuestGPR(regDest, context);
     target = instr & 0x00FFFFFF;
@@ -906,7 +900,7 @@ u32int blxInstruction(GCONTXT * context)
       nextPC = context->R15 + 8 + target;
       return nextPC;
     }
-    if (!evalCC(instrCC, cpsrCC))
+    if (!evaluateConditionCode(context, instrCC))
     {
       nextPC = context->R15 + 4;
       return nextPC;
@@ -926,8 +920,7 @@ u32int blxInstruction(GCONTXT * context)
   u32int nextPC = 0;
 
   u32int instrCC = (instr >> 28) & 0xF;
-  u32int cpsrCC  = (context->CPSR >> 28) & 0xF;
-  if (!evalCC(instrCC, cpsrCC))
+  if (!evaluateConditionCode(context, instrCC))
   {
     nextPC = context->R15 + 4;
     return nextPC;
@@ -1102,8 +1095,7 @@ u32int msrInstruction(GCONTXT * context)
   u32int nextPC = 0;
 
 
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-  if (!evalCC(instrCC, cpsrCC))
+  if (!evaluateConditionCode(context, instrCC))
   {
     nextPC = context->R15 + 4;
     return nextPC;
@@ -1152,8 +1144,6 @@ u32int msrInstruction(GCONTXT * context)
       case PSR_UND_MODE:
         oldValue = context->SPSR_UND;
         break;
-      case PSR_USR_MODE:
-      case PSR_SYS_MODE:
       default:
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
     }
@@ -1166,7 +1156,7 @@ u32int msrInstruction(GCONTXT * context)
   // - bit 3: set condition flags of cpsr
 
   // control field [7-0] set.
-  if (((fieldMsk & 0x1) == 0x1) && guestInPrivMode(context))
+  if (((fieldMsk & 0x1) == 0x1) && (context->CPSR & PSR_MODE) != PSR_USR_MODE)
   {
 #ifndef CONFIG_THUMB2
     // check for thumb toggle!
@@ -1182,7 +1172,7 @@ u32int msrInstruction(GCONTXT * context)
     // update old value...
     oldValue |= appliedValue;
   }
-  if ( ((fieldMsk & 0x2) == 0x2) && (guestInPrivMode(context)) )
+  if ( ((fieldMsk & 0x2) == 0x2) && (context->CPSR & PSR_MODE) != PSR_USR_MODE)
   {
     // extension field: async abt, endianness, IT[7:2]
     // check for endiannes toggle!
@@ -1197,7 +1187,7 @@ u32int msrInstruction(GCONTXT * context)
     // update old value...
     oldValue |= appliedValue;
   }
-  if ( ((fieldMsk & 0x4) == 0x4) && (guestInPrivMode(context)) )
+  if ( ((fieldMsk & 0x4) == 0x4) && (context->CPSR & PSR_MODE) != PSR_USR_MODE)
   {
     // status field: reserved and GE[3:0]
     // separate the field we're gonna update from new value
@@ -1247,8 +1237,6 @@ u32int msrInstruction(GCONTXT * context)
       case PSR_UND_MODE:
         context->SPSR_UND = oldValue;
         break;
-      case PSR_USR_MODE:
-      case PSR_SYS_MODE:
       default:
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
     }
@@ -1277,9 +1265,7 @@ u32int mrsInstruction(GCONTXT * context)
   }
 
   instrCC = (instr >> 28) & 0xF;
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-  bool conditionMet = evalCC(instrCC, cpsrCC);
-  if (conditionMet)
+  if (evaluateConditionCode(context, instrCC))
   {
     if (regSrc == 0)
     {
@@ -1480,9 +1466,7 @@ u32int bInstruction(GCONTXT * context)
       || !(context->CPSR & PSR_T_BIT)
       || (context->CPSR & PSR_T_BIT && ( (instr & 0xF000) == 0xD000 ) && !thumb32 ) )
   {
-    u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-    bool conditionMet = evalCC(instrCC, cpsrCC);
-    if (conditionMet)
+    if (evaluateConditionCode(context, instrCC))
     {
       // condition met
       u32int currPC = context->R15;
@@ -1584,9 +1568,7 @@ u32int bInstruction(GCONTXT * context)
 
   /* eval condition flags */
   instrCC = instrCC >> 28;
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-  bool conditionMet = evalCC(instrCC, cpsrCC);
-  if (conditionMet)
+  if (evaluateConditionCode(context, instrCC))
   {
     // condition met
     u32int currPC = context->R15;

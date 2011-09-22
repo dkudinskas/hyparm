@@ -9,11 +9,8 @@
 /* a function to serve as a dead-loop if we decode something invalid */
 void invalidInstruction(u32int instr, const char *msg) __attribute__((noreturn));
 
-/* a function to evaluate if guest is in priviledge mode or user mode */
-bool guestInPrivMode(GCONTXT * context);
-
 /* a function to evaluate if a condition value is satisfied */
-bool evalCC(u32int instrCC, u32int cpsrCC);
+bool evaluateConditionCode(GCONTXT *context, u32int conditionCode);
 
 /* function to store a register value, evaluates modes. */
 void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context);
