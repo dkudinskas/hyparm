@@ -404,7 +404,7 @@ setGuestContext:
    * Thumb bit
    */
   TST     R0, #PSR_T_BIT
-  AND     R0, R0, #PSR_NZCV
+  AND     R0, R0, #PSR_CC_FLAGS_NZCV
   ORREQ   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
   ORRNE   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT | PSR_T_BIT)
   /*
@@ -418,7 +418,7 @@ setGuestContext:
    * Construct SPSR in R0: restore condition flags from the value of the CPSR saved in the guest
    * context, set user mode, disable asynchronous aborts and FIQs, but enable IRQs, then save SPSR
    */
-  AND     R0, R0, #PSR_NZCV
+  AND     R0, R0, #PSR_CC_FLAGS_NZCV
   ORR     R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
   MSR     SPSR, R0
   POP     {R0}
@@ -458,7 +458,7 @@ setGuestContext:
   ADD     R1, LR, #GC_CPSR_OFFS
   LDR     R1, [R1]
   /* Extract condition flags into R0 */
-  AND     R0, R1, #PSR_NZCV
+  AND     R0, R1, #PSR_CC_FLAGS_NZCV
 #ifdef CONFIG_THUMB2
   /* Extract exception flags & Thumb state*/
   AND     R1, R1, #(PSR_A_BIT | PSR_I_BIT | PSR_F_BIT | PSR_T_BIT)

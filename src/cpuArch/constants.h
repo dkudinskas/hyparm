@@ -8,37 +8,39 @@
  */
 
 
-#define PSR_A_BIT            0x100
-#define PSR_I_BIT             0x80
-#define PSR_F_BIT             0x40
-#define PSR_T_BIT             0x20
+#define PSR_CC_FLAGS_NZCV     0xf0000000
 
-#define PSR_MODE              0x1f
-#define PSR_NZCV        0xf0000000
+#define PSR_CC_FLAG_N_BIT     0x80000000
+#define PSR_CC_FLAG_Z_BIT     0x40000000
+#define PSR_CC_FLAG_C_BIT     0x20000000
+#define PSR_CC_FLAG_V_BIT     0x10000000
+#define PSR_Q_BIT             0x08000000
 
-#define PSR_USR_MODE          0x10
-#define PSR_FIQ_MODE          0x11
-#define PSR_IRQ_MODE          0x12
-#define PSR_SVC_MODE          0x13
-#define PSR_ABT_MODE          0x17
-#define PSR_UND_MODE          0x1b
-#define PSR_SYS_MODE          0x1f
+#define PSR_ITSTATE_1_0       0x06000000
+
+#define PSR_J_BIT             0x01000000
+
+#define PSR_SIMD_FLAGS_GE     0x000f0000
+
+#define PSR_ITSTATE_7_2       0x0000fc00
+
+#define PSR_E_BIT                  0x200
+#define PSR_A_BIT                  0x100
+#define PSR_I_BIT                   0x80
+#define PSR_F_BIT                   0x40
+#define PSR_T_BIT                   0x20
+
+#define PSR_MODE                    0x1f
+
+#define PSR_USR_MODE                0x10
+#define PSR_FIQ_MODE                0x11
+#define PSR_IRQ_MODE                0x12
+#define PSR_SVC_MODE                0x13
+#define PSR_ABT_MODE                0x17
+#define PSR_UND_MODE                0x1b
+#define PSR_SYS_MODE                0x1f
 
 
-
-
-
-/****************** all defines for CPSR (spsr's) ************/
-/* random flags.. */
-#define CPSR_CUM_SAT_FLAG     0x08000000
-#define CPSR_IF_THEN_0_1      0x06000000
-#define CPSR_JAZELLE_MODE     0x01000000
-#define CPSR_RESERVED         0x00f00000
-#define CPSR_GTE_FLAGS_SIMD   0x000f0000
-#define CPSR_IF_THEN_2_7      0x0000fc00
-#define CPSR_ENDIANNESS       0x00000200
-/* ARM instruction condition field / values */
-#define CPSR_CC_FIELD      0xF0000000
 #define CC_EQ   0x0  // equals
 #define CC_NE   0x1  // not equals
 #define CC_HS   0x2  // carry set / unsigned higher or same

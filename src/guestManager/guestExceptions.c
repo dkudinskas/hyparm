@@ -1,6 +1,7 @@
 #include "common/debug.h"
 
 #include "cpuArch/armv7.h"
+#include "cpuArch/constants.h"
 
 #include "guestManager/guestExceptions.h"
 
@@ -28,7 +29,7 @@ void deliverServiceCall(GCONTXT *context)
   // 2. copy guest CPSR into SPSR_SVC
   context->SPSR_SVC = context->CPSR;
   // 3. put guest CPSR in SVC mode
-  context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_SVC;
+  context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_SVC_MODE;
   // 4. set LR to PC+4
 #ifdef CONFIG_THUMB2
   if(context->CPSR & 0x20)// Were we on Thumb?
@@ -45,7 +46,7 @@ void deliverServiceCall(GCONTXT *context)
    * FIXME Niels: I think this depends on a CP15 value
    */
   // 5. Clear Thumb bit
-  context->CPSR &= ~0x20;
+  context->CPSR &= ~PSR_T_BIT;
 #endif
   // 6. set PC to guest svc handler address
   if (context->virtAddrEnabled)
@@ -68,7 +69,7 @@ void deliverServiceCall(GCONTXT *context)
 #endif
   }
   // update AFI bits for SVC:
-  context->CPSR |= CPSR_IRQ_DIS;
+  context->CPSR |= PSR_I_BIT;
 }
 
 void throwInterrupt(u32int irqNumber)
@@ -82,7 +83,7 @@ void throwInterrupt(u32int irqNumber)
       // set it pending in emulated interrupt controller
       setInterrupt(GPT1_IRQ);
       // are we forwarding the interrupt event?
-      if (isIrqPending() && ((context->CPSR & CPSR_IRQ_DIS) == 0))
+      if (isIrqPending() && ((context->CPSR & PSR_I_BIT) == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -101,7 +102,7 @@ void throwInterrupt(u32int irqNumber)
     case UART1_IRQ:
       setInterrupt(UART1_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending() && ((context->CPSR & CPSR_IRQ_DIS) == 0) )
+      if ( isIrqPending() && ((context->CPSR & PSR_I_BIT) == 0) )
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -111,7 +112,7 @@ void throwInterrupt(u32int irqNumber)
     case UART2_IRQ:
       setInterrupt(UART2_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending() && ((context->CPSR & CPSR_IRQ_DIS) == 0) )
+      if ( isIrqPending() && ((context->CPSR & PSR_I_BIT) == 0) )
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -121,7 +122,7 @@ void throwInterrupt(u32int irqNumber)
     case UART3_IRQ:
       setInterrupt(UART3_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending() && ((context->CPSR & CPSR_IRQ_DIS) == 0) )
+      if ( isIrqPending() && ((context->CPSR & PSR_I_BIT) == 0) )
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -140,13 +141,13 @@ void deliverInterrupt(GCONTXT *context)
   // 2. copy guest CPSR into SPSR_IRQ
   context->SPSR_IRQ = context->CPSR;
   // 3. put guest CPSR in IRQ mode
-  context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_IRQ;
+  context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_IRQ_MODE;
 #ifdef CONFIG_THUMB2
   /*
    * FIXME Niels: I think this depends on a CP15 value
    */
   // 4. clear Thumb bit
-  context->CPSR &= ~0x20; // FIX ME. This needs to be hardcoded somewhere
+  context->CPSR &= ~PSR_T_BIT; // FIX ME. This needs to be hardcoded somewhere
 #endif
   // 5. set LR to PC+4
   context->R14_IRQ = context->R15 + 4;
@@ -170,9 +171,12 @@ void deliverInterrupt(GCONTXT *context)
     DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
 #endif
   }
+  /*
+   * FIXME
+   * Niels: I think something is duplicate here (check startup.s)
+   */
   // update AFI bits for IRQ:
-  context->CPSR |= CPSR_IRQ_DIS;
-  context->CPSR |= CPSR_ASYNC_ABT_DIS;
+  context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
 
 void deliverDataAbort(GCONTXT *context)
@@ -182,7 +186,7 @@ void deliverDataAbort(GCONTXT *context)
   // 2. copy CPSR into SPSR_ABT
   context->SPSR_ABT = context->CPSR;
   // 3. put guest CPSR in ABT mode
-  context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_ABT;
+  context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
   // 4. set LR to PC+8
   context->R14_ABT = context->R15 + 8;
   // 5. set PC to guest irq handler address
@@ -206,8 +210,7 @@ void deliverDataAbort(GCONTXT *context)
 #endif
   }
   // update AFI bits for IRQ:
-  context->CPSR |= CPSR_IRQ_DIS;
-  context->CPSR |= CPSR_ASYNC_ABT_DIS;
+  context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
 
 void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
@@ -239,7 +242,7 @@ void deliverPrefetchAbort(GCONTXT *context)
   // 2. copy CPSR into SPSR_ABT
   context->SPSR_ABT = context->CPSR;
   // 3. put guest CPSR in ABT mode
-  context->CPSR = (context->CPSR & ~CPSR_MODE) | CPSR_MODE_ABT;
+  context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
   // 4. set LR to PC+8
   context->R14_ABT = context->R15 + 8;
   // 5. set PC to guest irq handler address
@@ -259,8 +262,7 @@ void deliverPrefetchAbort(GCONTXT *context)
     DIE_NOW(0, "deliverInterrupt: Prefetch abort to be delivered with guest vmem off.");
   }
   // update AFI bits for IRQ:
-  context->CPSR |= CPSR_IRQ_DIS;
-  context->CPSR |= CPSR_ASYNC_ABT_DIS;
+  context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
 
 void throwPrefetchAbort(u32int address, u32int faultType)
