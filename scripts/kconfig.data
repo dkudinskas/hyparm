@@ -121,6 +121,7 @@ config DEBUG_STARTUP
 
 config DEBUG_GUEST_CONTEXT
   bool "Debug guest context routines"
+  default y
   depends on DEBUG
 
 config DEBUG_DECODER
