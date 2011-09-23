@@ -10,8 +10,6 @@
 
 #define BLOCK_CACHE_SIZE    96
 
-// uncomment me for block cache debug: #define BLOCK_CACHE_DBG
-
 // uncomment me for collision debug: #define DUMP_COLLISION_COUNTER
 
 struct blockCacheEntry

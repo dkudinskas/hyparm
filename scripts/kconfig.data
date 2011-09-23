@@ -127,12 +127,12 @@ config DEBUG_GUEST_CONTEXT
   bool "Debug guest context routines"
   depends on DEBUG
 
-config DEBUG_DECODER
-  bool "Debug instruction decoding"
-  depends on DEBUG
-
 config DEBUG_EXCEPTION_HANDLERS
   bool "Debug exception handlers"
+  depends on DEBUG
+
+config DEBUG_DECODER
+  bool "Debug instruction decoding"
   depends on DEBUG
 
 menuconfig DEBUG_SCANNER
@@ -151,6 +151,10 @@ config DEBUG_SCANNER_COUNT_BLOCKS
 config DEBUG_SCANNER_BLOCK_TRACE
   bool "Print block trace"
   depends on DEBUG_SCANNER
+
+config DEBUG_BLOCK_CACHE
+  bool "Debug block cache"
+  depends on DEBUG
 
 config MMC
   bool "Use MMC/SD device to store debug output"
