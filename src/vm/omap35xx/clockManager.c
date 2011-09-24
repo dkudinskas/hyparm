@@ -446,7 +446,7 @@ u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr)
       printf("loadClockControlCm reg %x" EOL, reg);
       DIE_NOW(0, "loadClockControlCm loading non existing register!");
   } // switch ends
-  printf("loadClockControlCm reg %#x value %#.8x" EOL, reg, val);
+  DEBUG(VP_OMAP_35XX_CM, "loadClockControlCm reg %#x value %#.8x" EOL, reg, val);
   return val;
 }
 
