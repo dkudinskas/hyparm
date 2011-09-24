@@ -1,12 +1,9 @@
-#ifndef __HARDWARE__CLOCK_MAANGER_H__
-#define __HARDWARE__CLOCK_MAANGER_H__
+#ifndef __VM_OMAP_35XX__CLOCK_MANAGER_H__
+#define __VM_OMAP_35XX__CLOCK_MANAGER_H__
 
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
-
-
-// uncomment me to enable debug : #define CLK_MAN_DBG
 
 
 /* CM module instances live at these physical addresses */

@@ -21,9 +21,7 @@ void initSdma()
   else
   {
     memset((void*)sdma, 0x0, sizeof(struct Sdma));
-#ifdef SDMA_DBG
-    printf("Initializing Sdma at %.8x size %x" EOL, (u32int)sdma, sizeof(struct Sdma));
-#endif
+    DEBUG(VP_OMAP_35XX_SDMA, "Initializing Sdma at %p size %#x" EOL, sdma, sizeof(struct Sdma));
   }
   resetSdma();
 }
@@ -101,17 +99,15 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int address)
     case SDMA_CAPS_3:
     case SDMA_CAPS_4:
     case SDMA_GCR:
-      printf("loadSdma reg %x" EOL, regOffs);
+      printf("loadSdma reg %#x" EOL, regOffs);
       DIE_NOW(gc, "SDMA: load from unimplemented register.");
       break;
   } // switch ends
 
   if (found)
   {
-#ifdef SDMA_DBG
-    printf("%s: load from address %.8x reg %x value %.8x" EOL, dev->deviceName, address, regOffs,
-        value);
-#endif
+    DEBUG(VP_OMAP_35XX_SDMA, "%s: load from address %#.8x reg %#x value %#.8x" EOL, dev->deviceName,
+        address, regOffs, value);
     return value;
   }
 
@@ -137,12 +133,12 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int address)
     case SDMA_CCENi:
     case SDMA_CCFNi:
     case SDMA_COLORi:
-      printf("loadSdma indexed reg %x reg %x" EOL, indexedRegOffs+0x80, regOffs);
-      DIE_NOW(gc, "SDMA: load from unimplemented register.");
+      printf("loadSdma indexed reg %#x reg %#x" EOL, indexedRegOffs + 0x80, regOffs);
+      DIE_NOW(gc, "SDMA: load from unimplemented register");
       break;
     default:
-      printf("loadSdma indexed reg %x reg %x" EOL, indexedRegOffs+0x80, regOffs);
-      DIE_NOW(gc, "SDMA: load from undefined register.");
+      printf("loadSdma indexed reg %#x reg %#x" EOL, indexedRegOffs + 0x80, regOffs);
+      DIE_NOW(gc, "SDMA: load from undefined register");
   }
 }
 
@@ -156,10 +152,8 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int regOffs = phyAddr - SDMA;
   bool found = FALSE;
 
-#ifdef SDMA_DBG
-  printf("%s: store to address %.8x reg %.8x value %.8x" EOL, dev->deviceName, address, regOffs,
-      value);
-#endif
+  DEBUG(VP_OMAP_35XX_SDMA, "%s: store to address %.8x reg %.8x value %.8x" EOL, dev->deviceName,
+      address, regOffs, value);
   switch (regOffs)
   {
     case SDMA_REVISION:
@@ -246,22 +240,16 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       sdma->chIndexedRegs[channelIndex].cdfi = value;
       break;
     case SDMA_CSACi:
-#ifdef SDMA_DBG
-      printf("SDMA: WARNING: store to R/O register SDMA_CSACi" EOL);
-#endif
+      DEBUG(VP_OMAP_35XX_SDMA, "SDMA: WARNING: store to R/O register SDMA_CSACi" EOL);
       break; 
     case SDMA_CDACi:
       sdma->chIndexedRegs[channelIndex].cdac = value;
       break;
     case SDMA_CCENi:
-#ifdef SDMA_DBG
-      printf("SDMA: WARNING: store to R/O register SDMA_CCENi" EOL);
-#endif
+      DEBUG(VP_OMAP_35XX_SDMA, "SDMA: WARNING: store to R/O register SDMA_CCENi" EOL);
       break; 
     case SDMA_CCFNi:
-#ifdef SDMA_DBG
-      printf("SDMA: WARNING: store to R/O register SDMA_CCFNi" EOL);
-#endif
+      DEBUG(VP_OMAP_35XX_SDMA, "SDMA: WARNING: store to R/O register SDMA_CCFNi" EOL);
       break; 
     case SDMA_COLORi:
       sdma->chIndexedRegs[channelIndex].color = value;

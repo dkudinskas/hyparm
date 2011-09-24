@@ -15,18 +15,13 @@ struct ClockManager * clockMan;
 void initClockManager()
 {
   // init function: setup device, reset register values to defaults!
-  clockMan = (struct ClockManager*)mallocBytes(sizeof(struct ClockManager));
+  clockMan = (struct ClockManager *)mallocBytes(sizeof(struct ClockManager));
   if (clockMan == 0)
   {
     DIE_NOW(0, "Failed to allocate clock manager.");
   }
-  else
-  {
-    memset((void*)clockMan, 0x0, sizeof(struct ClockManager));
-#ifdef CLK_MAN_DBG
-    printf("Initializing Clock manager at %.8x" EOL, (u32int)clockMan);
-#endif
-  }
+  memset(clockMan, 0x0, sizeof(struct ClockManager));
+  DEBUG(VP_OMAP_35XX_CM, "Initializing Clock manager at %p" EOL, clockMan);
   // IVA2_CM registers
   clockMan->cmFClkEnIva2Reg      = 0x00000001; // IVA2_CLK is enabled
   clockMan->cmClkEnPllIva2Reg    = 0x00000037; // enable DPLL in lock mode, 0.75 MHz--1.0 MHz freq
@@ -133,10 +128,10 @@ u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int address)
   GCONTXT* gc = getGuestContext();
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
-#ifdef CLK_MAN_DBG
-  printf("%s load from pAddr: %.8x, vAddr %.8x, aSize %x" EOL, dev->deviceName, phyAddr, address,
-      (u32int)size);
-#endif
+
+  DEBUG(VP_OMAP_35XX_CM, "%s load from pAddr: %.8x, vAddr %.8x, aSize %x" EOL, dev->deviceName,
+      phyAddr, address, (u32int)size);
+
   if (size != WORD)
   {
     // only word access allowed in these modules
@@ -230,9 +225,7 @@ u32int loadIva2Cm(device * dev, u32int address, u32int phyAddr)
     default:
       DIE_NOW(0, "loadIva2Cm loading non existing register!");
   } // switch ends
-#ifdef CLK_MAN_DBG
-  printf("loadIva2Cm reg %x value %.8x" EOL, reg, val);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "loadIva2Cm reg %#x value %#.8x" EOL, reg, val);
   return val;
 }
 
@@ -276,9 +269,7 @@ u32int loadMpuCm(device * dev, u32int address, u32int phyAddr)
     default:
       DIE_NOW(0, "loadMpuCm loading non existing register!");
   } // switch ends
-#ifdef CLK_MAN_DBG
-  printf("loadMpuCm reg %x value %.8x" EOL, reg, val);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "loadMpuCm reg %x value %.8x" EOL, reg, val);
   return val;
 }
 
@@ -333,9 +324,7 @@ u32int loadCoreCm(device * dev, u32int address, u32int phyAddr)
     default:
       DIE_NOW(0, "loadCoreCm loading non existing register!");
   } // switch ends
-#ifdef CLK_MAN_DBG
-  printf("loadCoreCm reg %x value %.8x" EOL, reg, val);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "loadCoreCm reg %x value %.8x" EOL, reg, val);
   return val;
 }
 
@@ -369,9 +358,7 @@ u32int loadSgxCm(device * dev, u32int address, u32int phyAddr)
     default:
       DIE_NOW(0, "loadSgxCm loading non existing register!" EOL);
   } // switch ends
-#ifdef CLK_MAN_DBG
-  printf("loadSgxCm reg %x value %.8x" EOL, reg, val);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "loadSgxCm reg %x value %.8x" EOL, reg, val);
   return val;
 }
 
@@ -397,18 +384,14 @@ u32int loadWkupCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkSelWkup;
       break;
     case CM_CLKSTCTRL_WKUP:
-#ifdef CLK_MAN_DBG
-      printf("CLKMAN: warn: wkupCm load from undocumented reg (offs 0x48)" EOL);
-#endif
+      DEBUG(VP_OMAP_35XX_CM, "CLKMAN: warn: wkupCm load from undocumented reg (offs 0x48)" EOL);
       val = 0;
       break;
     default:
       printf("loadWkupCm reg %x" EOL, reg);
       DIE_NOW(0, "loadWkupCm loading non existing register!");
   } // switch ends
-#ifdef CLK_MAN_DBG
-  printf("loadWkupCm reg %x value %.8x" EOL, reg, val);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "loadWkupCm reg %x value %.8x" EOL, reg, val);
   return val;
 }
 
@@ -426,9 +409,8 @@ u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr)
       break;
     case CM_UNDOCUMENTED:
       val = 0;
-#ifdef CLK_MAN_DBG
-      printf("loadClockControlCm warning: loading from undocumented reg %x returning zero" EOL, reg);
-#endif
+      DEBUG(VP_OMAP_35XX_CM, "loadClockControlCm warning: loading from undocumented reg %#x "
+          "returning zero" EOL, reg);
       break;
     case CM_IDLEST_CKGEN:
       val = clockMan->cmIdleStCkGen;
@@ -464,9 +446,7 @@ u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr)
       printf("loadClockControlCm reg %x" EOL, reg);
       DIE_NOW(0, "loadClockControlCm loading non existing register!");
   } // switch ends
-#ifdef CLK_MAN_DBG
-  printf("loadClockControlCm reg %x value %.8x" EOL, reg, val);
-#endif
+  printf("loadClockControlCm reg %#x value %#.8x" EOL, reg, val);
   return val;
 }
 
@@ -503,9 +483,7 @@ u32int loadDssCm(device * dev, u32int address, u32int phyAddr)
     default:
       DIE_NOW(0, "loadDssCm loading non existing register!");
   } // switch ends
-#ifdef CLK_MAN_DBG
-  printf("loadDssCm reg %x value %.8x" EOL, reg, val);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "loadDssCm reg %#x value %#.8x" EOL, reg, val);
   return val;
 }
 
@@ -542,9 +520,7 @@ u32int loadCamCm(device * dev, u32int address, u32int phyAddr)
     default:
       DIE_NOW(0, "loadCamCm loading non existing register!");
   } // switch ends
-#ifdef CLK_MAN_DBG
-  printf("loadCamCm reg %x value %.8x" EOL, reg, val);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "loadCamCm reg %#x value %#.8x" EOL, reg, val);
   return val;
 }
 
@@ -581,9 +557,7 @@ u32int loadPerCm(device * dev, u32int address, u32int phyAddr)
     default:
       DIE_NOW(0, "loadPerCm loading non existing register!");
   } // switch ends
-#ifdef CLK_MAN_DBG
-  printf("loadPerCm reg %x value %.8x" EOL, reg, val);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "loadPerCm reg %#x value %#.8x" EOL, reg, val);
   return val;
 }
 
@@ -611,9 +585,7 @@ u32int loadEmuCm(device * dev, u32int address, u32int phyAddr)
     default:
       DIE_NOW(0, "loadEmuCm loading non existing register!");
   } // switch ends
-#ifdef CLK_MAN_DBG
-  printf("loadEmuCm reg %x value %.8x" EOL, reg, val);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "loadEmuCm reg %#x value %#.8x" EOL, reg, val);
   return val;
 }
 
@@ -647,10 +619,8 @@ void storeClockManager(device * dev, ACCESS_SIZE size, u32int address, u32int va
   GCONTXT* gc = getGuestContext();
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
-#ifdef CLK_MAN_DBG
-  printf("%s store to pAddr: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL, dev->deviceName, phyAddr,
-      address, (u32int)size, value);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
+      dev->deviceName, phyAddr, address, (u32int)size, value);
   u32int base = phyAddr & 0xFFFFFF00;
   switch (base)
   {
@@ -724,9 +694,8 @@ void storeMpuCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-#ifdef CLK_MAN_DBG
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address,
+      value);
   u32int reg = phyAddr - CORE_CM;
   switch (reg)
   {
@@ -764,16 +733,15 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeSgxCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
+  printf("%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address, value);
   DIE_NOW(0, "storeSgxCm unimplemented.");
   return;
 }
 
 void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-#ifdef CLK_MAN_DBG
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address,
+      value);
   u32int reg = phyAddr - WKUP_CM;
   switch (reg)
   {
@@ -889,9 +857,8 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
       clockMan->cmClkSelWkup = value;
       break;
     case CM_CLKSTCTRL_WKUP:
-#ifdef CLK_MAN_DBG
-      printf("%s WARN: store to undocumented register CM_CLKSTCTRL_WKUP" EOL, dev->deviceName);
-#endif
+      DEBUG(VP_OMAP_35XX_CM, "%s WARN: store to undocumented register CM_CLKSTCTRL_WKUP" EOL,
+          dev->deviceName);
       break;
     default:
       DIE_NOW(0, "storeWkupCm storing non existing register!");
@@ -901,9 +868,7 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-#ifdef CLK_MAN_DBG
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
   u32int reg = phyAddr - Clock_Control_Reg_CM;
   switch (reg)
   {
@@ -943,16 +908,15 @@ void storeDssCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeCamCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
+  printf("%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address, value);
   DIE_NOW(0, "storeCamCm unimplemented.");
   return;
 }
 
 void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-#ifdef CLK_MAN_DBG
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-#endif
+  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address,
+      value);
   u32int reg = phyAddr - PER_CM;
   switch (reg)
   {

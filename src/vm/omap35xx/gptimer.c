@@ -29,13 +29,8 @@ void initGPTimer()
   {
     DIE_NOW(0, "Failed to allocate general purpose timer.");
   }
-  else
-  {
-    memset((void*)gptimer, 0x0, sizeof(struct GeneralPurposeTimer));
-#ifdef GPTIMER_DBG
-    printf("Initializing General Purpose timer at %.8x" EOL, (u32int)gptimer);
-#endif
-  }
+  memset((void*)gptimer, 0x0, sizeof(struct GeneralPurposeTimer));
+  DEBUG(VP_OMAP_35XX_GPTIMER, "Initializing General Purpose timer at %p" EOL, gptimer);
 
   resetGPTimer();
 }
@@ -86,117 +81,93 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
   {
     case GPT_REG_TIOCP_CFG:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load config register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load config register value %#.8x" EOL, dev->deviceName, val);
       break;
     case GPT_REG_TISTAT:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load status register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load status register value %#.8x" EOL, dev->deviceName, val);
       break;
     case GPT_REG_TISR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load irq status register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load irq status register value %#.8x" EOL, dev->deviceName,
+          val);
       break;
     case GPT_REG_TIER:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load irq enable register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load irq enable register value %#.8x" EOL,
+          dev->deviceName, val);
       break;
     case GPT_REG_TWER:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load wakeup enable register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load wakeup enable register value %#.8x" EOL,
+          dev->deviceName, val);
       break;
     case GPT_REG_TCLR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load conrol register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load conrol register value %#.8x" EOL, dev->deviceName, val);
       break;
     case GPT_REG_TCRR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load internal clock register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load internal clock register value %#.8x" EOL,
+          dev->deviceName, val);
       break;
     case GPT_REG_TLDR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load counter reload value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load counter reload value %#.8x" EOL, dev->deviceName, val);
       break;
     case GPT_REG_TTGR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load trigger register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load trigger register value %#.8x" EOL, dev->deviceName,
+          val);
       break;
     case GPT_REG_TWPS:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load write-posted pending status register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load write-posted pending status register value %#.8x" EOL,
+          dev->deviceName, val);
       break;
     case GPT_REG_TMAR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load match register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load match register value %#.8x" EOL, dev->deviceName, val);
       break;
     case GPT_REG_TCAR1:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load first captured counter value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load first captured counter value %#.8x" EOL,
+          dev->deviceName, val);
       break;
     case GPT_REG_TSICR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load interface control register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load interface control register value %#.8x" EOL,
+          dev->deviceName, val);
       break;
     case GPT_REG_TCAR2:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load second captured counter value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load second captured counter value %#.8x" EOL,
+          dev->deviceName, val);
       break;
     case GPT_REG_TPIR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load positive increment value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load positive increment value %#.8x" EOL, dev->deviceName,
+          val);
       break;
     case GPT_REG_TNIR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load negative increment value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load negative increment value %#.8x" EOL, dev->deviceName,
+          val);
       break;
     case GPT_REG_TCVR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load counter pir/nir selection register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load counter pir/nir selection register value %#.8x" EOL,
+          dev->deviceName, val);
       break;
     case GPT_REG_TOCR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load overflow masking register value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load overflow masking register value %#.8x" EOL,
+          dev->deviceName, val);
       break;
     case GPT_REG_TOWR:
       val = loadFromGPTimer(2, regOffs);
-#ifdef GPTIMER_DBG
-      printf("%s: load number of masked overflows value %.8x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load number of masked overflows value %#.8x" EOL,
+          dev->deviceName, val);
       break;
     default:
       DIE_NOW(0, "GPT: load from undefined register.");
@@ -223,48 +194,41 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   {
     case GPT_REG_TIOCP_CFG:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to config register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to config register value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TISTAT:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to status register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to status register value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TISR:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to irq status register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to irq status register value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TIER:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to irq enable register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to irq enable register value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TWER:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to wakeup enable register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to wakeup enable register value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TCLR:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to conrol register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to conrol register value %#.8x" EOL, dev->deviceName,
+          value);
       break;
     case GPT_REG_TCRR:
     {
       // make sure we dont throw irq's too often...
       u32int adjustedValue = value << 14;
       storeToGPTimer(2, regOffs, adjustedValue);
-#ifdef GPTIMER_DBG
-      printf("%s: store to internal clock register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to internal clock register value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     }
     case GPT_REG_TLDR:
@@ -272,22 +236,19 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       // make sure we dont throw irq's too often...
       u32int adjustedValue = value << 14;
       storeToGPTimer(2, regOffs, adjustedValue);
-#ifdef GPTIMER_DBG
-      printf("%s: store to counter reload value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to counter reload value %#.8x" EOL, dev->deviceName,
+          value);
       break;
     }
     case GPT_REG_TTGR:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to trigger register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to trigger register value %#.8x" EOL, dev->deviceName,
+          value);
       break;
     case GPT_REG_TWPS:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to write-posted pending status register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to write-posted pending status register value %#.8x"
+          EOL, dev->deviceName, value);
       break;
     case GPT_REG_TMAR:
 #ifdef CONFIG_GUEST_FREERTOS
@@ -302,57 +263,48 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       }
 #endif
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to match register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to match register value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TCAR1:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to first captured counter value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to first captured counter value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TSICR:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to interface control register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to interface control register value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TCAR2:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to second captured counter value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to second captured counter value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TPIR:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to positive increment value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to positive increment value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TNIR:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to negative increment value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to negative increment value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TCVR:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to counter pir/nir selection register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to counter pir/nir selection register value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TOCR:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to overflow masking register value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to overflow masking register value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     case GPT_REG_TOWR:
       storeToGPTimer(2, regOffs, value);
-#ifdef GPTIMER_DBG
-      printf("%s: store to number of masked overflows value %.8x" EOL, dev->deviceName, value);
-#endif
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to number of masked overflows value %#.8x" EOL,
+          dev->deviceName, value);
       break;
     default:
       DIE_NOW(0, "GPT: store to undefined register.");

@@ -17,10 +17,8 @@ u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int address)
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
-#ifdef SRAM_INTERNAL_DBG
-  printf("%s load from physical address: %.8x, virtual address: %.8x aSize %x" EOL, dev->deviceName,
-      phyAddr, address, (u32int)size);
-#endif
+  DEBUG(VP_OMAP_35XX_SRAM, "%s load from physical address: %#.8x, virtual address: %#.8x aSize %#x"
+      EOL, dev->deviceName, phyAddr, address, (u32int)size);
 
   switch (size)
   {
@@ -44,7 +42,7 @@ u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int address)
     }
     default:
     {
-      printf("%s load from pAddr: %.8x, vAddr: %.8x" EOL, dev->deviceName, phyAddr, address);
+      printf("%s load from pAddr: %#.8x, vAddr: %#.8x" EOL, dev->deviceName, phyAddr, address);
       DIE_NOW(gc, "Invalid access size.");
     }
   }
@@ -58,10 +56,8 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int address, u32int va
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
-#ifdef SRAM_INTERNAL_DBG
-  printf("%s store to pAddr: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL, dev->deviceName, phyAddr,
-      address, (u32int)size, value);
-#endif
+  DEBUG(VP_OMAP_35XX_SRAM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
+      dev->deviceName, phyAddr, address, (u32int)size, value);
 
   switch (size)
   {
@@ -81,7 +77,8 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int address, u32int va
     {
       if ( (phyAddr >= 0x4020FFC8) && (phyAddr <= 0x4020FFFE) )
       {
-        printf("%s: register guest exception handler address, halfword access" EOL, dev->deviceName);
+        printf("%s: register guest exception handler address, halfword access" EOL,
+            dev->deviceName);
         DIE_NOW(gc, "UNIMPLEMENTED");
       }
       // store the value...
@@ -102,66 +99,47 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int address, u32int va
       break;
     }
     default:
-      printf("%s store to pAddr %.8x, vAddr %.8x, aSize %x, val %.8x" EOL, dev->deviceName, phyAddr, address, (u32int)size, value);
+      printf("%s store to pAddr %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL, dev->deviceName,
+          phyAddr, address, (u32int)size, value);
       DIE_NOW(gc, "Invalid access size.");
   }
 }
 
-void registerGuestHandler(GCONTXT* gc, u32int address, u32int value)
+void registerGuestHandler(GCONTXT *gc, u32int address, u32int value)
 {
-#ifdef SRAM_INTERNAL_DBG
-  printf("INTERNAL SRAM: guest registering ");
-#endif
-  switch(address)
+  DEBUG(VP_OMAP_35XX_SRAM, "INTERNAL SRAM: guest registering ");
+  switch (address)
   {
     case UNDEFINED_EXCEPTION_ADDR:
-#ifdef SRAM_INTERNAL_DBG
-      printf(" UNDEF handler at address %.8x" EOL, value);
-#endif
+      DEBUG(VP_OMAP_35XX_SRAM, " UNDEF handler at address %#.8x" EOL, value);
       gc->guestUndefinedHandler = value;
       break;
     case SWI_EXCEPTION_ADDR:
-#ifdef SRAM_INTERNAL_DBG
-      printf(" SWI handler at address %.8x" EOL, value);
-#endif
+      DEBUG(VP_OMAP_35XX_SRAM, " SWI handler at address %#.8x" EOL, value);
       gc->guestSwiHandler = value;
       break;
     case PREFETCH_ABT_EXCEPTION_ADDR:
-#ifdef SRAM_INTERNAL_DBG
-      printf(" P_ABT handler at address %.8x" EOL, value);
-#endif
+      DEBUG(VP_OMAP_35XX_SRAM, " P_ABT handler at address %#.8x" EOL, value);
       gc->guestPrefAbortHandler = value;
       break;
     case DATA_ABT_EXCEPTION_ADDR:
-#ifdef SRAM_INTERNAL_DBG
-      printf(" D_ABT handler at address %.8x" EOL, value);
-#endif
+      DEBUG(VP_OMAP_35XX_SRAM, " D_ABT handler at address %#.8x" EOL, value);
       gc->guestDataAbortHandler = value;
       break;
     case UNUSED_EXCEPTION_ADDR:
-#ifdef SRAM_INTERNAL_DBG
-      printf(" UNUSED handler at address %.8x" EOL, value);
-#endif
+      DEBUG(VP_OMAP_35XX_SRAM, " UNUSED handler at address %#.8x" EOL, value);
       gc->guestUnusedHandler = value;
       break;
     case IRQ_EXCEPTION_ADDR:
-#ifdef SRAM_INTERNAL_DBG
-      printf(" IRQ handler at address %.8x" EOL, value);
-#endif
+      DEBUG(VP_OMAP_35XX_SRAM, " IRQ handler at address %#.8x" EOL, value);
       gc->guestIrqHandler = value;
       break;
     case FIQ_EXCEPTION_ADDR:
-#ifdef SRAM_INTERNAL_DBG
-      printf(" FIQ handler at address %.8x" EOL, value);
-#endif
+      DEBUG(VP_OMAP_35XX_SRAM, " FIQ handler at address %#.8x" EOL, value);
       gc->guestFiqHandler = value;
       break;
     default:
-    {
-#ifdef SRAM_INTERNAL_DBG
-      printf(" a new handler instruction %x at %.8x" EOL, value, address);
-#endif
-    }
-  } // switch ends
+      DEBUG(VP_OMAP_35XX_SRAM, " a new handler instruction %#x at %#.8x" EOL, value, address);
+  } /* switch (address) */
 }
 

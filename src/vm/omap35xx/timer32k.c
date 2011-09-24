@@ -11,7 +11,7 @@
 static u32int timer32SysconfReg = 0;
 static u32int counterVal = 0;
 
-u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
+u32int loadTimer32k(device *dev, ACCESS_SIZE size, u32int address)
 {
   u32int val = 0;
 
@@ -20,10 +20,8 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
-#ifdef TIMER32K_DBG
-  printf("%s load from physical address: %.8x, vAddr %.8x, aSize %x" EOL, dev->deviceName, phyAddr,
-      address, (u32int)size);
-#endif
+  DEBUG(VP_OMAP_35XX_TIMER32K, "%s load from physical address: %#.8x, vAddr %#.8x, aSize %#x" EOL,
+      dev->deviceName, phyAddr, address, (u32int)size);
 
   if (size == WORD)
   {
@@ -31,9 +29,7 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
     if (regAddr == REG_TIMER_32K_SYSCONFIG)
     {
       val = timer32SysconfReg;
-#ifdef TIMER32K_DBG
-      printf("%s load sys cfg value %x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_TIMER32K, "%s load sys cfg value %#x" EOL, dev->deviceName, val);
     }
     else if (regAddr == REG_TIMER_32K_COUNTER)
     {
@@ -41,19 +37,19 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int address)
       volatile u32int * memPtr = (u32int*)address;
       val = *memPtr;
       val = val >> 5;
-#ifdef TIMER32K_DBG
-      printf("%s load counter value %x" EOL, dev->deviceName, val);
-#endif
+      DEBUG(VP_OMAP_35XX_TIMER32K, "%s load counter value %#x" EOL, dev->deviceName, val);
     }
     else
     {
-      printf("%s load from physical address: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr, address);
+      printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr,
+          address);
       DIE_NOW(gc, "Invalid register!");
     }
   }
   else
   {
-    printf("%s load from physical address: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr, address);
+    printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr,
+        address);
     DIE_NOW(gc, "Invalid register access size (non32bit)");
   }
   return val;
@@ -68,6 +64,6 @@ void initTimer32k()
 {
   // sysconf value is emulated. Reset to zero
   timer32SysconfReg = 0;
-  volatile u32int * memPtr = (u32int*)(TIMER32K_BASE+REG_TIMER_32K_COUNTER);
+  volatile u32int * memPtr = (u32int *)(TIMER32K_BASE + REG_TIMER_32K_COUNTER);
   counterVal = *memPtr;
 }

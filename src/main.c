@@ -42,7 +42,7 @@
 #include "memoryManager/frameAllocator.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
-#include "vm/omap35xx/LED.h"
+#include "vm/omap35xx/led.h"
 
 
 #define HIDDEN_RAM_START   0x8f000000

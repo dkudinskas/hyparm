@@ -1,12 +1,9 @@
-#ifndef __HARDWARE__GPIO_H__
-#define __HARDWARE__GPIO_H__
+#ifndef __VM__OMAP_35XX__GPIO_H__
+#define __VM__OMAP_35XX__GPIO_H__
 
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
-
-
-// uncomment me to enable debug : #define GPIO_DBG
 
 
 /************************
