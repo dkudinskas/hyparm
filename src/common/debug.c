@@ -49,6 +49,9 @@ void banner(char* msg)
 
 void DIE_NOW(GCONTXT* context, char* msg)
 {
+#ifdef CONFIG_MMC
+  fclose(&mainFilesystem, debugStream);
+#endif
   banner("ERROR");
   printf(msg);
   printf("\r\n");
