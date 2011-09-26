@@ -1,5 +1,5 @@
-#ifndef __HARDWARE__SDRAM_H__
-#define __HARDWARE__SDRAM_H__
+#ifndef __VM__OMAP_35XX__SDRAM_H__
+#define __VM__OMAP_35XX__SDRAM_H__
 
 #include "common/types.h"
 
@@ -10,8 +10,6 @@
 
 // uncomment me to enable store counters:
 #define SDRAM_STORE_COUNTER
-
-// uncomment me to enable sdram debug : #define SDRAM_DBG
 
 
 void initSdram(void);
@@ -25,7 +23,7 @@ struct SdramController
 {
   u32int enabled;
 #ifdef SDRAM_STORE_COUNTER
-  u32int * storeCounters;
+  u32int *storeCounters;
 #endif
 };
 

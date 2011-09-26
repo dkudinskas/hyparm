@@ -19,9 +19,7 @@ void initialiseBlockCache(BCENTRY * bcache)
 #ifdef DUMP_COLLISION_COUNTER
   collisionCounter = 0;
 #endif
-#ifdef BLOCK_CACHE_DBG
-  printf("Initialising basic block cache @ 0x%x\n", (u32int)bcache);
-#endif
+  DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, bcache);
 
   for (i = 0; i < BLOCK_CACHE_SIZE; i++)
   {
@@ -41,29 +39,10 @@ void initialiseBlockCache(BCENTRY * bcache)
   }
 }
 
-bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr)
+bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY *bcAddr)
 {
-#ifdef BLOCK_CACHE_DBG
-  printf("blockCache: checkBlockCache index %x\n", bcIndex);
-#endif
-
-  if (bcAddr[bcIndex].valid == FALSE)
-  {
-    // cache entry invalid
-    return FALSE;
-  }
-  else
-  {
-    // cache entry valid, but is this a collision?
-    if (bcAddr[bcIndex].startAddress != blkStartAddr)
-    {
-      return FALSE;
-    }
-    else
-    {
-      return TRUE;
-    }
-  }
+  DEBUG(BLOCK_CACHE, "checkBlockCache: index = %#x" EOL, bcIndex);
+  return bcAddr[bcIndex].valid && bcAddr[bcIndex].startAddress == blkStartAddr;
 }
 
 #ifdef CONFIG_THUMB2
@@ -73,30 +52,32 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAd
 #endif
                      u32int index, u32int hdlFunct, BCENTRY * bcAddr)
 {
-#ifdef BLOCK_CACHE_DBG
-  printf("blockCache: ADD[%02x] start @ %x end @ %x hdlPtr %x eobInstr %08x\n",
-         index, blkStartAddr, blkEndAddr, hdlFunct, hypInstruction);
-#endif
-  if ((bcAddr[index].valid == TRUE) && (bcAddr[index].endAddress != blkEndAddr) )
+  DEBUG(BLOCK_CACHE, "addToBlockCache: index = %#x,@ %#.8x--%#.8x, handler = %#.8x, eobInstr = "
+      "%#.8x" EOL, index, blkStartAddr, blkEndAddr, hdlFunct, hypInstruction);
+
+  if (bcAddr[index].valid)
   {
-    // somebody has been sleeping in our cache location!
-    resolveCacheConflict(index, bcAddr);
-    // now that we resolved the conflict, we can store the new entry data...
-    bcAddr[index].startAddress = blkStartAddr;
-    bcAddr[index].endAddress = blkEndAddr;
+    if (bcAddr[index].endAddress != blkEndAddr)
+    {
+      // somebody has been sleeping in our cache location!
+      resolveCacheConflict(index, bcAddr);
+      // now that we resolved the conflict, we can store the new entry data...
+      bcAddr[index].startAddress = blkStartAddr;
+      bcAddr[index].endAddress = blkEndAddr;
 #ifdef CONFIG_THUMB2
-    bcAddr[index].halfhyperedInstruction = halfhypInstruction;
+      bcAddr[index].halfhyperedInstruction = halfhypInstruction;
 #endif
-    bcAddr[index].hyperedInstruction = hypInstruction;
-    bcAddr[index].hdlFunct = hdlFunct;
-    bcAddr[index].valid = TRUE;
-  }
-  else if ((bcAddr[index].valid == TRUE) && (bcAddr[index].endAddress == blkEndAddr) )
-  {
-    /* NOTE: if entry valid, but blkEndAddress is the same as new block to add      *
-     * then the block starts at another address but ends on the same instruction    *
-     * and by chance - has the same index. just modify existing entry, don't remove */
-    bcAddr[index].startAddress = blkStartAddr;
+      bcAddr[index].hyperedInstruction = hypInstruction;
+      bcAddr[index].hdlFunct = hdlFunct;
+      bcAddr[index].valid = TRUE;
+    }
+    else
+    {
+      /* NOTE: if entry valid, but blkEndAddress is the same as new block to add      *
+       * then the block starts at another address but ends on the same instruction    *
+       * and by chance - has the same index. just modify existing entry, don't remove */
+      bcAddr[index].startAddress = blkStartAddr;
+    }
   }
   else
   {
@@ -114,11 +95,9 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAd
   setExecBitMap(blkEndAddr);
 }
 
-BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr)
+BCENTRY *getBlockCacheEntry(u32int index, BCENTRY *bcAddr)
 {
-#ifdef BLOCK_CACHE_DBG
-  printf("getBlockCacheEntry index %x\n", index);
-#endif
+  DEBUG(BLOCK_CACHE, "getBlockCacheEntry: index = %#x" EOL, index);
   return &bcAddr[index];
 }
 
@@ -126,22 +105,19 @@ BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr)
 /* input: any address, might be start, end of block or somewhere in the middle... */
 /* output: first cache entry index for the block where this address falls into */
 /* output: if no such block, return -1 (0xFFFFFFFF) */
-u32int findEntryForAddress(BCENTRY * bcAddr, u32int addr)
+u32int findEntryForAddress(BCENTRY *bcAddr, u32int addr)
 {
-  int i = 0;
+  u32int i = 0;
   for (i = 0; i < BLOCK_CACHE_SIZE; i++)
   {
-    if (bcAddr[i].valid == TRUE)
+    if (bcAddr[i].valid)
     {
-      // entry valid
-      if ( (bcAddr[i].startAddress <= addr) && (bcAddr[i].endAddress >= addr) )
+      if (bcAddr[i].startAddress <= addr && bcAddr[i].endAddress >= addr)
       {
         // addr falls in-between start-end inclusive. found a matching entry.
-#ifdef BLOCK_CACHE_DBG
-        printf("findEntryForAddress: found bCache entry for address %x\n", addr);
-        printf("findEntryForAddress: block start %x end %x index %x",
-               bcAddr[i].startAddress, bcAddr[i].endAddress, i);
-#endif
+        DEBUG(BLOCK_CACHE, "findEntryForAddress: found bCache entry for address %#.8x "
+            "@ %#.8x--%#.8x, index = %#x" EOL,
+            addr, bcAddr[i].startAddress, bcAddr[i].endAddress, i);
         return i;
       }
     }
@@ -180,9 +156,7 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 #ifdef CONFIG_THUMB2
   struct thumbEntry tb;
 #endif
-#ifdef BLOCK_CACHE_DBG
-  printf("resolveCacheConflict: collision at index %x\n", index);
-#endif
+  DEBUG(BLOCK_CACHE, "resolveCacheConflict: collision at index %#x" EOL, index);
 #ifdef DUMP_COLLISION_COUNTER
   collisionCounter++;
   if ((collisionCounter % 10) == 9)
@@ -217,79 +191,61 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
       u32int hypercallSWI = *((u32int*)(bcAddr[index].endAddress));
       // SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
       hypercallSWI = (hypercallSWI & 0xFF000000) | ((i + 1) << 8);
-#ifdef BLOCK_CACHE_DBG
-      printf("resolveCacheConflict: found another BB to end at same address.\n");
-      printf("resolveCacheConflict: replace hypercall with %x\n", hypercallSWI);
-#endif
+      DEBUG(BLOCK_CACHE, "resolveCacheConflict: found another BB to end at same address" EOL);
+      DEBUG(BLOCK_CACHE, "resolveCacheConflict: replace hypercall with %#x" EOL, hypercallSWI);
       *((u32int*)(bcAddr[index].endAddress)) = hypercallSWI;
 #endif
       return;
     }
   }
 
-#ifdef BLOCK_CACHE_DBG
-  printf("resolveCacheConflict: no other BB ends at same address.\n");
+  DEBUG(BLOCK_CACHE, "resolveCacheConflict: no other BB ends at same address" EOL);
   // restore hypered instruction back!
-# ifndef CONFIG_THUMB2
+#ifndef CONFIG_THUMB2
   /*
-   * FIXME Markos: this is broken for thumb. I have to fix it
+   * FIXME Markos: this (=DEBUG) is broken for thumb. I have to fix it
    */
-  printf("resolveCacheConflict: restoring hypercall %x back to %08x\n",
-        *((u32int*)(bcAddr[index].endAddress)), bcAddr[index].hyperedInstruction);
-# endif /* CONFIG_THUMB2 */
-#endif /* BLOCK_CACHE_DBG */
-
-#ifdef CONFIG_THUMB2
+  DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring hypercall %#x back to %#.8x" EOL,
+      *((u32int *)(bcAddr[index].endAddress)), bcAddr[index].hyperedInstruction);
+  *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
+#else
   tb = BreakDownThumb(bcAddr,index);
   if (tb.isthumb==0)
   {
-#ifdef BLOCK_CACHE_DBG
-    printf("Restoring %08x@%08x\n",bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
-#endif
-    *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
+    DEBUG(BLOCK_CACHE, "Restoring %#.8x @ %#.8x" EOL, bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
+    *((u32int *)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
   }
   else
   {
     //Assuming endAddress points to the end address of the block then...
     if(tb.second==0)// this is a thumb 16
     {
-#ifdef BLOCK_CACHE_DBG
-      printf("Restoring %08x@%08x\n",tb.first,(bcAddr[index].endAddress));
-#endif
-      *((u16int*)(bcAddr[index].endAddress)) = tb.first;
+      DEBUG(BLOCK_CACHE, "Restoring %#.8x @ %#.8x" EOL,tb.first,(bcAddr[index].endAddress));
+      *((u16int *)(bcAddr[index].endAddress)) = tb.first;
     }
     else
     {
       u16int *bpointer = 0;
-#ifdef BLOCK_CACHE_DBG
-      printf("Restoring %08x@%08x  ",tb.second,(bcAddr[index].endAddress));
-#endif
-      bpointer = (u16int*)(bcAddr[index].endAddress);
+      DEBUG(BLOCK_CACHE, "Restoring %#.8x @ %#.8x",tb.second,(bcAddr[index].endAddress));
+      bpointer = (u16int *)(bcAddr[index].endAddress);
       *bpointer = tb.second;
-      bpointer --;
-#ifdef BLOCK_CACHE_DBG
-      printf("and %08x@%08x\n",tb.first,bpointer);
-#endif
+      bpointer--;
+      DEBUG(BLOCK_CACHE, " and %#.8x @ %p" EOL, tb.first, bpointer);
       *bpointer = tb.first;
     }
   }
-#else
-  *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
 #endif
 }
 
 
-void explodeCache(BCENTRY * bcache)
+void explodeCache(BCENTRY *bcache)
 {
-#ifdef BLOCK_CACHE_DBG
-  printf("========BLOCK CACHE EXPLODE!!!=========\n");
-#endif
+  DEBUG(BLOCK_CACHE, "========BLOCK CACHE EXPLODE!!!=========\n");
 
-  int i = 0;
-
+  int i;
   for (i = 0; i < BLOCK_CACHE_SIZE; i++)
   {
-    if (bcache[i].valid == TRUE)
+    if (bcache[i].valid)
     {
       removeCacheEntry(bcache, i);
     }
@@ -301,12 +257,12 @@ void explodeCache(BCENTRY * bcache)
 }
 
 // finds block cache entries that include a given address, clears them
-void validateCachePreChange(BCENTRY * bcache, u32int address)
+void validateCachePreChange(BCENTRY *bcache, u32int address)
 {
   if (isBitmapSetForAddress(address))
   {
     u32int cacheIndex = 0;
-    while( (cacheIndex = findEntryForAddress(bcache, address)) != (u32int)-1 )
+    while((cacheIndex = findEntryForAddress(bcache, address)) != (u32int)-1)
     {
       removeCacheEntry(bcache, cacheIndex);
     }
@@ -314,28 +270,22 @@ void validateCachePreChange(BCENTRY * bcache, u32int address)
 }
 
 // finds and clears block cache entries within the given address range
-void validateCacheMultiPreChange(BCENTRY * bcache, u32int startAddress, u32int endAddress)
+void validateCacheMultiPreChange(BCENTRY *bcache, u32int startAddress, u32int endAddress)
 {
-#ifdef BLOCK_CACHE_DBG
-  printf("validateCacheMultiPreChange start %x end %x\n", startAddress, endAddress);
-#endif
+  DEBUG(BLOCK_CACHE, "validateCacheMultiPreChange: %#.8x--%#.8x" EOL, startAddress, endAddress);
   u32int i;
   for (i = 0; i < BLOCK_CACHE_SIZE; i++)
   {
-    if (bcache[i].valid == TRUE)
+    if (bcache[i].valid && bcache[i].endAddress >= startAddress && bcache[i].endAddress <= endAddress)
     {
       //We only care if the end address of the block falls inside the address validation range
-      if ( (bcache[i].endAddress >= startAddress) && (bcache[i].endAddress <= endAddress) )
-      {
-        // cached entry falls within given address range
-        removeCacheEntry(bcache, i);
-      }
+      removeCacheEntry(bcache, i);
     }
   }
 }
 
 
-void dumpBlockCacheEntry(u32int index, BCENTRY * bcache)
+void dumpBlockCacheEntry(u32int index, BCENTRY *bcache)
 {
   printf("dumpBlockCacheEntry: entry #%02x: ", index);
   printf("dumpBlockCacheEntry: startAddress = %x, endAddress = %x, valid = %x\n",
@@ -374,11 +324,12 @@ bool isBitmapSetForAddress(u32int addr)
 struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int index)
 {
   struct thumbEntry tb;
+  /*
+   * FIXME: Won't this struct be initialized to zero by default as per ANSI C spec?
+   */
   tb.first = 0;
   tb.second = 0;
-#ifdef BLOCK_CACHE_DBG
-  printf("I will restore %08x[%08x]\n",bcAddr[index].hyperedInstruction,index);
-#endif
+  DEBUG(BLOCK_CACHE, "BreakDownThumb: i will restore %#.8x[%#.8x]" EOL, bcAddr[index].hyperedInstruction, index);
   switch(bcAddr[index].halfhyperedInstruction)
   {
     case 0: // this is an ARM entry
@@ -442,12 +393,8 @@ void resolveSWI( u32int index, u32int * endAddress)
       *endAddress = hypercall;
     }
   }
-#ifdef BLOCK_CACHE_DBG
-  printf(
-      "resolveCacheConflict: found another BB to end at same address.\n"
-      "resolveCacheConflict: replace hypercall with %x\n", hypercall
-    );
-#endif
+  DEBUG(BLOCK_CACHE, "resolveCacheConflict: found another BB to end at same address; "
+      "replace hypercall with %#x" EOL, hypercall);
 }
 
 #endif

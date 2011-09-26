@@ -4,9 +4,6 @@
 #include "common/types.h"
 
 
-// uncomment me to enable debug: #define MALLOC_DEBUG
-
-
 struct allocatedChunk
 {
   u32int startAddress;

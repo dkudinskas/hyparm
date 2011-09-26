@@ -3,10 +3,10 @@
 
 #include "guestManager/guestContext.h"
 
-#include "vm/omap35xx/sdram.h"
-
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
+
+#include "vm/omap35xx/sdram.h"
 
 
 struct SdramController * sdram;
@@ -21,9 +21,7 @@ void initSdram(void)
   else
   {
     memset((void*)sdram, 0x0, sizeof(struct SdramController));
-#ifdef SDRAM_DBG
-    printf("Sdram instance at %.8x" EOL, (u32int)sdram);
-#endif
+    DEBUG(VP_OMAP_35XX_SDRAM, "Sdram instance at %p" EOL, sdram);
   }
 
   sdram->enabled = 1;
@@ -75,10 +73,8 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address)
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
-#ifdef SDRAM_DBG
-  printf("%s load from physical address: %.8x, vAddr %.8x, access size %x" EOL, dev->deviceName,
-      phyAddr, address, (u32int)size);
-#endif
+  DEBUG(VP_OMAP_35XX_SDRAM, "%s load from physical address: %#.8x, vAddr %#.8x, access size %#x"
+      EOL, dev->deviceName, phyAddr, address, (u32int)size);
 
   switch (size)
   {
@@ -101,7 +97,7 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address)
       break;
     }
     default:
-      printf("%s load from physical address: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr,
+      printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr,
           address);
       DIE_NOW(gc, "Invalid access size.");
   }
@@ -115,10 +111,8 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
-#ifdef SDRAM_DBG
-  printf("%s store to physical address: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL, dev->deviceName,
-      phyAddr, address, (u32int)size, value);
-#endif
+  DEBUG(VP_OMAP_35XX_SDRAM, "%s store to physical address: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x"
+      EOL, dev->deviceName, phyAddr, address, (u32int)size, value);
 
 #ifdef SDRAM_STORE_COUNTER
   u32int index = (address >> 20) & 0xFFF;

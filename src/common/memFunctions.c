@@ -16,9 +16,7 @@ memchunkListElem * chunkListRoot;
 
 void mallocInit(u32int startAddr, u32int size)
 {
-#ifdef MALLOC_DEBUG
-  printf("mallocInit(%08x, %x);\n", startAddr, size);
-#endif
+  DEBUG(MALLOC, "mallocInit(%08x, %x);\n", startAddr, size);
 
   heapStart = startAddr;
   heapSize = size;
@@ -37,9 +35,8 @@ void mallocInit(u32int startAddr, u32int size)
   chunkList->chunk.startAddress = freePtr;
   chunkList->chunk.size = sizeof(memchunkListElem) * 1024;
   freePtr = freePtr + sizeof(memchunkListElem) * 1024;
-  
 
-  int i = 0;
+  int i;
   for (i = 1; i < 1024; i++)
   {
     chunkList->nextChunk = (memchunkListElem*)(((u32int)chunkList) + sizeof(memchunkListElem));
@@ -121,9 +118,7 @@ void * memset(void * dest, u32int c, u32int count)
 
 u32int mallocBytes(u32int size)
 {
-#ifdef MALLOC_DEBUG
-  printf("mallocBytes: size %x\n", size);
-#endif
+  DEBUG(MALLOC, "mallocBytes: size %x\n", size);
 
   if ((size & 0x3) != 0)
   {
@@ -145,7 +140,7 @@ u32int mallocBytes(u32int size)
   chunkList->chunk.startAddress = freePtr;
   chunkList->chunk.size = size;
   nrOfChunksAllocd++;
- 
+
   freePtr = freePtr + size;
   return chunkList->chunk.startAddress;
 }

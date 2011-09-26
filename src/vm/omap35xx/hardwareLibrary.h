@@ -1,10 +1,8 @@
-#ifndef __HARDWARE__HARDWARE_LIBRARY_H__
-#define __HARDWARE__HARDWARE_LIBRARY_H__
+#ifndef __VM__OMAP_35XX__HARDWARE_LIBRARY_H__
+#define __VM__OMAP_35XX__HARDWARE_LIBRARY_H__
 
 #include "common/types.h"
 
-
-// uncomment me to enable hardwareLibrary debug : #define HARDWARE_LIB_DBG
 
 #define QUARTER_SIZE               0x40000000
 
@@ -150,8 +148,5 @@ bool attachDevice(device * parent, device * child);
 
 u32int loadGeneric(device * dev, ACCESS_SIZE size, u32int address);
 void storeGeneric(device * dev, ACCESS_SIZE size, u32int address, u32int value);
-
-
-
 
 #endif

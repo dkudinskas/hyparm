@@ -8,6 +8,10 @@
  */
 
 
+#define ARM_INSTRUCTION_SIZE           4
+#define THUMB_INSTRUCTION_SIZE         2
+
+
 #define PSR_CC_FLAGS_NZCV     0xf0000000
 
 #define PSR_CC_FLAG_N_BIT     0x80000000

@@ -17,18 +17,14 @@ struct Gpio * gpio[6];
 
 void initGpio(u32int gpioNumber)
 {
-  gpio[gpioNumber-1] = (struct Gpio*)mallocBytes(sizeof(struct Gpio));
-  if (gpio[gpioNumber-1] == 0)
+  gpio[gpioNumber - 1] = (struct Gpio *)mallocBytes(sizeof(struct Gpio));
+  if (!gpio[gpioNumber - 1])
   {
     DIE_NOW(0, "Failed to allocate Gpio.");
   }
-  else
-  {
-    memset((void*)gpio[gpioNumber-1], 0x0, sizeof(struct Gpio));
-#ifdef GPIO_DBG
-    printf("Initializing GPIO%x at %.8x" EOL, gpioNumber, (u32int)gpio[gpioNumber-1]);
-#endif
-  }
+
+  memset(gpio[gpioNumber - 1], 0, sizeof(struct Gpio));
+  DEBUG(VP_OMAP_35XX_GPIO, "initGpio: GPIO%x @ %p" EOL, gpioNumber, gpio[gpioNumber - 1]);
 
   resetGpio(gpioNumber);
 }
@@ -183,10 +179,8 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
     default:
       DIE_NOW(0, "Gpio: load on invalid register.");
   }
-#ifdef GPIO_DBG
-  printf("%s load from pAddr: %.8x, vAddr: %.8x access size %x val = %.8x" EOL, dev->deviceName,
-      phyAddr, address, (u32int)size, val);
-#endif
+  DEBUG(VP_OMAP_35XX_GPIO, "%s load from pAddr: %.8x, vAddr: %.8x access size %x val = %.8x" EOL,
+      dev->deviceName, phyAddr, address, (u32int)size, val);
   return val;
 }
 
@@ -199,10 +193,8 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
-#ifdef GPIO_DBG
-  printf("%s store to pAddr: %.8x, vAddr: %.8x, access size: %x, val %.8x" EOL, dev->deviceName,
-      phyAddr, address, (u32int)size, value);
-#endif
+  DEBUG(VP_OMAP_35XX_GPIO, "%s store to pAddr: %.8x, vAddr: %.8x, access size: %x, val %.8x" EOL,
+      dev->deviceName, phyAddr, address, (u32int)size, value);
 
   u32int regOffset = 0;
   u32int gpioNum = 0;
@@ -244,9 +236,7 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPIO_SYSCONFIG:
       if ((value & GPIO_SYSCONFIG_SOFTRESET) == GPIO_SYSCONFIG_SOFTRESET)
       {
-#ifdef GPIO_DBG
-        printf("GPIO: soft reset" EOL);
-#endif
+        DEBUG(VP_OMAP_35XX_GPIO, "GPIO: soft reset" EOL);
         resetGpio(gpioNum);
       }
       else

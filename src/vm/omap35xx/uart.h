@@ -6,8 +6,6 @@
 #include "vm/omap35xx/hardwareLibrary.h"
 
 
-// uncomment me to enable debug : #define UART_DBG
-
 // all register accesses are in words, 
 // all registers are 16 bits wide
 // all registers have top byte reserved (only bottom 8 bits are used)
@@ -159,9 +157,9 @@ void initUart(u32int uartID);
 
 void resetUart(u32int uartID);
 
-u32int loadUart(device * dev, ACCESS_SIZE size, u32int address);
+u32int loadUart(device *dev, ACCESS_SIZE size, u32int address);
 
-void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+void storeUart(device *dev, ACCESS_SIZE size, u32int address, u32int value);
 
 void setUartMode(u32int uartID);
 
