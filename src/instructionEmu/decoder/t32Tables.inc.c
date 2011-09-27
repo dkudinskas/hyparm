@@ -71,30 +71,36 @@ static struct instruction32bit t32DataProcInstructions[] =
 
 static struct instruction32bit t32SingleStoreInstructions[] =
 {
-  { FALSE, &strbInstruction,      0xF8800000, 0xFFF00000, "STRB Rt, [Rn, #<imm12>]" },
-  { FALSE, &strbInstruction,      0xF8000800, 0xFFF00800, "STRB Rt, [Rn, +-#<imm8>]" },
-  { FALSE, &strhInstruction,      0xF8A00000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm12>}]" },
-  { FALSE, &strhInstruction,      0xF8200000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm8>}]!" },
+  { FALSE, &t32StrbInstruction,   0xF8800000, 0xFFF00000, "STRB Rt, [Rn, #<imm12>]" },
+  { FALSE, &t32StrbInstruction,   0xF8000800, 0xFFF00800, "STRB Rt, [Rn, +-#<imm8>]" },
+  { FALSE, &t32StrhImmediateInstruction, 0xF8A00000, 0xFFF00000, "STRH.W <Rt>, [<Rn>, {#<imm12>}]" },
+  { FALSE, &t32StrhRegisterInstruction, 0xF8200000, 0xFFF00FC0, "STRH.W <Rt>, [<Rn>, <Rm> {, LSL #<imm2>}]" },
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32SingleStoreInstructions" }
 };
 
 static struct instruction32bit t32LoadByteInstructions[] =
 {
-  { TRUE,  &ldrbInstruction,      0xF81FF000, 0xFEFFFFC0, "LDRB<c> PC ,#<label>" },
-  { FALSE, &ldrbInstruction,      0xF8900000, 0xFFF00000, "LDRB<c> Rt, [Rn{,#<imm12>}]" },
-  { FALSE, &ldrbInstruction,      0xF8100900, 0xFFF00900, "LDRB<c> Rt, [Rn,{#<imm12>}]" },
-  { FALSE, &ldrbInstruction,      0xF8100C00, 0xFFF00E00, "LDRB<c> Rt, [Rn,{#<imm12>}]" },
+  { TRUE,  &t32LdrbInstruction,   0xF81FF000, 0xFEFFFFC0, "LDRB<c> PC ,#<label>" },
+  { FALSE, &t32LdrbInstruction,   0xF8900000, 0xFFF00000, "LDRB<c> Rt, [Rn{,#<imm12>}]" },
+  { FALSE, &t32LdrbInstruction,   0xF8100900, 0xFFF00900, "LDRB<c> Rt, [Rn,{#<imm12>}]" },
+  { FALSE, &t32LdrbInstruction,   0xF8100C00, 0xFFF00E00, "LDRB<c> Rt, [Rn,{#<imm12>}]" },
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32LoadByteInstructions" }
 };
 
+/*
+ * Verified and correct. LDR{S}HT instructions missing.
+ * LDRSHT 0x FFF0 0F00 / 0x F930 0E00
+ * LDRHT  0x FFF0 0F00 / 0x F830 0E00
+ */
 static struct instruction32bit t32LoadHalfWordInstructions[] =
 {
-  { FALSE, &ldrhInstruction,      0xF8B00000, 0xFFF00000, "LDRH.W <Rt>, [<Rn>{. #<imm32>}]" },
-  { FALSE, &ldrhInstruction,      0xF83F0000, 0xFEFF0000, "LDRH <Rt>, <label>" },
-  { FALSE, &ldrhInstruction,      0xF8300000, 0xFFF00FE0, "LDRH, <Rt>, [<Rn>{,LSL #<imm2>}]" },
-  { FALSE, &ldrhInstruction,      0xF9B00000, 0xFFF00000, "LDRSH<c> <Rt>, [<Rn>, #<imm12>]" },
-  { FALSE, &ldrhInstruction,      0xF9300800, 0xFFFF0800, "LDRSH<c> <Rt>, [<Rn>, #<Rn>, +/-#imm8]" }, // Page 454, A8-168
-  { FALSE, &ldrhInstruction,      0xF9300FC0, 0xFFF00FC0, "LDRSH<c> <Rt>, [<Rn>, <Rm>]" },
+  { FALSE, &t32LdrhImmediateInstruction,    0xF8B00000, 0xFFF00000, "LDRH.W <Rt>, [<Rn>{. #<imm32>}]" },
+  { FALSE, &t32LdrhLiteralInstruction,      0xF83F0000, 0xFF7F0000, "LDRH <Rt>, <label>" },
+  { FALSE, &t32LdrhRegisterInstruction,     0xF8300000, 0xFFF00FC0, "LDRH, <Rt>, [<Rn>{,LSL #<imm2>}]" },
+  { FALSE, &t32LdrshImmediate12Instruction, 0xF9B00000, 0xFFF00000, "LDRSH<c> <Rt>, [<Rn>, #<imm12>]" },
+  { FALSE, &t32LdrshLiteralInstruction,     0xF93F0000, 0xFF7F0000, "LDRSH<c> <Rt>, <label>" },
+  { FALSE, &t32LdrshImmediate8Instruction,  0xF9300800, 0xFFF00800, "LDRSH<c> <Rt>, [<Rn>, #<Rn>, +/-#imm8]" }, // Page 454, A8-168
+  { FALSE, &t32LdrshRegisterInstruction,    0xF9300000, 0xFFF00FC0, "LDRSH<c> <Rt>, [<Rn>, <Rm>]" },
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32LoadHalfWordInstructions" }
 };
 
@@ -116,9 +122,9 @@ static struct instruction32bit t32BranchMiscInstructions[] =
 
 static struct instruction32bit t32LoadStoreDoubleExclusiveInstructions[] =
 {
-  { FALSE, &ldrdInstruction,      0xE8500000, 0xFE500000, "LDRD <Rt>, <Rt2>, [<Rn>,{,#+/-<imm>}]" },
-  { FALSE, &ldrdInstruction,      0xE85F0000, 0xFE7F0000, "LDRD <Rt>, <Rt2>, <label>" },
-  { FALSE, &strdInstruction,      0xE8400000, 0xFE500000, "STRD <Rt>, <Rt2>, [<Rn>,{,#+/-<imm>}]" },
+  { FALSE, &t32LdrdInstruction,   0xE8500000, 0xFE500000, "LDRD <Rt>, <Rt2>, [<Rn>,{,#+/-<imm>}]" },
+  { FALSE, &t32LdrdInstruction,   0xE85F0000, 0xFE7F0000, "LDRD <Rt>, <Rt2>, <label>" },
+  { FALSE, &t32StrdImmediateInstruction, 0xE8400000, 0xFE500000, "STRD <Rt>, <Rt2>, [<Rn>,{,#+/-<imm>}]" },
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32LoadStoreDoubleExclusiveInstructions" }
 };
 

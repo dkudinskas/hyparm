@@ -8,7 +8,8 @@
 # include "instructionEmu/commonInstrFunctions.h"
 #endif
 
-#include "instructionEmu/dataMoveInstr.h"
+#include "instructionEmu/interpreter/loadInstructions.h"
+#include "instructionEmu/interpreter/storeInstructions.h"
 
 #include "memoryManager/globalMemoryMapper.h"
 
@@ -47,7 +48,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       {
         validateCachePreChange(context->blockCache, address);
         context->endOfBlockInstr = instr;
-        strbInstruction(context);
+        t32StrbInstruction(context, instr);
       }
       else if ((instr & THUMB32_STRB_REG_MASK) == THUMB32_STRB_REG)
       {
@@ -56,30 +57,46 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       /*
        * STRH
        */
-      else if
-        (
-          ((instr & THUMB32_STRH_REG_IMM5_MASK) == THUMB32_STRH_REG_IMM5) ||
-          ((instr & THUMB32_STRH_REG_IMM8_MASK) == THUMB32_STRH_REG_IMM8) ||
-          ((instr & THUMB32_STRH_REG_MASK) == THUMB32_STRH_REG)
-        )
+      else if ((instr & THUMB32_STRH_REG_IMM5_MASK) == THUMB32_STRH_REG_IMM5)
+       {
+         validateCachePreChange(context->blockCache, address);
+         context->endOfBlockInstr = instr;
+         t32StrhImmediateInstruction(context, instr);
+       }
+      else if ((instr & THUMB32_STRH_REG_IMM8_MASK) == THUMB32_STRH_REG_IMM8)
       {
         validateCachePreChange(context->blockCache, address);
         context->endOfBlockInstr = instr;
-        strhInstruction(context);
+        t32StrhtInstruction(context, instr);
+      }
+      else if ((instr & THUMB32_STRH_REG_MASK) == THUMB32_STRH_REG)
+      {
+        validateCachePreChange(context->blockCache, address);
+        context->endOfBlockInstr = instr;
+        t32StrhRegisterInstruction(context, instr);
       }
       /*
        * LDRSH
        */
-      else if
-        (
-          ((instr & THUMB32_LDRSH_REG_IMM8_MASK) == THUMB32_LDRSH_REG_IMM8) ||
-          ((instr & THUMB32_LDRSH_REG_IMM12_MASK) == THUMB32_LDRSH_REG_IMM12) ||
-          ((instr & THUMB32_LDRSH_IMM12_MASK) == THUMB32_LDRSH_IMM12) ||
-          ((instr & THUMB32_LDRSH_REG_MASK) == THUMB32_LDRSH_REG)
-        )
+      else if ((instr & THUMB32_LDRSH_REG_IMM8_MASK) == THUMB32_LDRSH_REG_IMM8)
       {
         context->endOfBlockInstr = instr;
-        ldrhInstruction(context);
+        t32LdrshImmediate12Instruction(context, instr);
+      }
+      else if ((instr & THUMB32_LDRSH_REG_IMM12_MASK) == THUMB32_LDRSH_REG_IMM12)
+      {
+        context->endOfBlockInstr = instr;
+        t32LdrshImmediate8Instruction(context, instr);
+      }
+      else if ((instr & THUMB32_LDRSH_REG_MASK) == THUMB32_LDRSH_REG)
+      {
+        context->endOfBlockInstr = instr;
+        t32LdrshRegisterInstruction(context, instr);
+      }
+      else if ((instr & THUMB32_LDRSH_IMM12_MASK) == THUMB32_LDRSH_IMM12)
+      {
+        context->endOfBlockInstr = instr;
+        t32LdrshLiteralInstruction(context, instr);
       }
       /*
        * STRD
@@ -88,7 +105,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       {
         validateCachePreChange(context->blockCache, address);
         context->endOfBlockInstr = instr;
-        strdInstruction(context);
+        t32StrdImmediateInstruction(context, instr);
       }
       /*
        * TODO: are there any other cases we must handle?
@@ -106,15 +123,17 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
        *
        * STR
        */
-      if
-        (
-          ((instr & THUMB16_STR_IMM5_MASK) == THUMB16_STR_IMM5) ||
-          ((instr & THUMB16_STR_IMM8_MASK) == THUMB16_STR_IMM8)
-        )
+      if ((instr & THUMB16_STR_IMM5_MASK) == THUMB16_STR_IMM5)
       {
         context->endOfBlockInstr = instr;
         validateCachePreChange(context->blockCache, address);
-        strInstruction(context);
+        t16StrInstruction(context, instr);
+      }
+      else if ((instr & THUMB16_STR_IMM8_MASK) == THUMB16_STR_IMM8)
+      {
+        context->endOfBlockInstr = instr;
+        validateCachePreChange(context->blockCache, address);
+        t16StrSpInstruction(context, instr);
       }
       /*
        * LDR
@@ -128,7 +147,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
         )
       {
         context->endOfBlockInstr = instr;
-        ldrInstruction(context);
+        t16LdrInstruction(context, instr);
       }
       /*
        * PUSH
@@ -137,7 +156,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       {
         context->endOfBlockInstr = instr;
         validateCachePreChange(context->blockCache,address);
-        stmInstruction(context);
+        t16PushInstruction(context, instr);
       }
       /*
        * LDRB
@@ -149,7 +168,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
         )
       {
         context->endOfBlockInstr = instr;
-        ldrbInstruction(context);
+        t16LdrbInstruction(context, instr);
       }
       /*
        * STRB
@@ -162,7 +181,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       {
         context->endOfBlockInstr = instr;
         validateCachePreChange(context->blockCache,address);
-        strbInstruction(context);
+        t16StrbInstruction(context, instr);
       }
       /*
        * STRH
@@ -175,7 +194,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       {
         context->endOfBlockInstr = instr;
         validateCachePreChange(context->blockCache, address);
-        strhInstruction(context);
+        t16StrhInstruction(context, instr);
       }
       /*
        * FIXME: are there any others we need to consider?
@@ -210,7 +229,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       // storing to a protected area.. adjust block cache if needed
       validateCachePreChange(context->blockCache, address);
       // STR Rd, [Rn, Rm/#imm12]
-      strInstruction(context);
+      armStrInstruction(context, instr);
     }
     else if
       (
@@ -221,7 +240,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       // storing to a protected area.. adjust block cache if needed
       validateCachePreChange(context->blockCache, address);
       // STRB Rd, [Rn, Rm/#imm12]
-      strbInstruction(context);
+      armStrbInstruction(context, instr);
     }
     else if
       (
@@ -232,7 +251,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       // storing to a protected area.. adjust block cache if needed
       validateCachePreChange(context->blockCache, address);
       // STRH Rd, [Rn, Rm/#imm12]
-      strhInstruction(context);
+      armStrhInstruction(context, instr);
     }
     else if
       (
@@ -243,25 +262,25 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       // storing to a protected area.. adjust block cache if needed
       validateCachePreChange(context->blockCache, address);
       // STRD Rd, [Rn, Rm/#imm12]
-      strdInstruction(context);
+      armStrdInstruction(context, instr);
     }
     else if ((instr & STM_MASK) == STM_MASKED)
     {
       // more tricky with cache validation! since we do this in the stmInstruction
       // per address (word in memory) depending on the length of {reg list}
       // STM Rn, {reg list}
-      stmInstruction(context);
+      armStmInstruction(context, instr);
     }
     else if ((instr & LDR_MASK) == LDR_MASKED)
     {
       // loads don't change memory. no need to validate cache
       // LDR Rd, Rn/#imm12
-      ldrInstruction(context);
+      armLdrInstruction(context, instr);
     }
     else if ((instr & LDRB_MASK) == LDRB_MASKED)
     {
       // LDRB Rd, [Rn, Rm/#imm12]
-      ldrbInstruction(context);
+      armLdrbInstruction(context, instr);
     }
     else if
       (
@@ -270,7 +289,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       )
     {
       // LDRH Rd, [Rn, Rm/#imm12]
-      ldrhInstruction(context);
+      armLdrhInstruction(context, instr);
     }
     else if
       (
@@ -279,17 +298,17 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       )
     {
       // LDRD Rd, [Rn, Rm/#imm12]
-      ldrdInstruction(context);
+      armLdrdInstruction(context, instr);
     }
     else if ((instr & LDM_MASK) == LDM_MASKED)
     {
       // LDM, Rn, {reg list}
-      ldmInstruction(context);
+      armLdmInstruction(context, instr);
     }
     else if ((instr & LDREX_MASK) == LDREX_MASKED)
     {
       // LDREX Rd, [Rn]
-      ldrexInstruction(context);
+      armLdrexInstruction(context, instr);
     }
     else
     {

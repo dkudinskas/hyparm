@@ -21,7 +21,7 @@ struct blockCacheEntry
   u32int halfhyperedInstruction;
 #endif
   bool valid;
-  u32int hdlFunct;
+  void *hdlFunct;
 };
 
 
@@ -48,7 +48,7 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int HalfhypI
 #else
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
 #endif
-  u32int index, u32int hdlFunct, BCENTRY * bcAddr);
+  u32int index, void *hdlFunct, BCENTRY * bcAddr);
 
 BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr);
 

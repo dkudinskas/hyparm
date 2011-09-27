@@ -58,6 +58,12 @@
 
 #ifdef CONFIG_THUMB2
 
+/*
+ * FIXME -- all bit patterns with C++ style comments need checking
+ *
+ * BEWARE - major bit and naming errors
+ */
+
 // ------------------Thumb 16 bit----------------- //
 
 //STR Instructions
@@ -134,25 +140,52 @@
 #define THUMB32_STRD_IMM8              0xE8400000
 
 
-//LDRH Instructions
+/* LDRH immediate (8) T2 */
 #define THUMB32_LDRH_REG_IMM12_MASK    0xFFF00000
 #define THUMB32_LDRH_REG_IMM12         0xF8B00000
-#define THUMB32_LDRH_REG_IMM8_MASK     0xFFF00800
-#define THUMB32_LDRH_REG_IMM8          0xF8300800
+
+/* LDRH literal T1 */
 #define THUMB32_LDRH_IMM12_MASK        0xFF7F0000
 #define THUMB32_LDRH_IMM12             0xF83F0000
+
+/* LDRH register T2 */
 #define THUMB32_LDRH_REG_MASK          0xFFF00FC0
 #define THUMB32_LDRH_REG               0xF8300000
 
-//LDRSH Instructions
-#define THUMB32_LDRSH_REG_IMM8_MASK    0xFFF00800
-#define THUMB32_LDRSH_REG_IMM8         0xF9B00800
+/* LDRHT (unused?) */
+#define THUMB32_LDRHT_REG_IMM8_MASK    0xFFF00F00
+#define THUMB32_LDRHT_REG_IMM8         0xF8300E00
+
+/*
+ * LDRSH immediate (12) T1
+ */
+#define THUMB32_LDRSH_REG_IMM8_MASK    0xFFF00000
+#define THUMB32_LDRSH_REG_IMM8         0xF9B00000
+
+/*
+ * LDRSH immediate (8) T2
+ */
 #define THUMB32_LDRSH_REG_IMM12_MASK   0xFFF00800
 #define THUMB32_LDRSH_REG_IMM12        0xF9300800
-#define THUMB32_LDRSH_IMM12_MASK       0xFFFF0000
+
+/*
+ * LDRSH literal T1
+ */
+#define THUMB32_LDRSH_IMM12_MASK       0xFF7F0000
 #define THUMB32_LDRSH_IMM12            0xF93F0000
+
+/*
+ * LDRSH register T2
+ */
 #define THUMB32_LDRSH_REG_MASK         0xFFF00FC0
 #define THUMB32_LDRSH_REG              0xF9300000
+
+
+/*
+ * LDRSHT T1 --unused--
+ */
+#define THUMB32_LDRSHT_MASK            0xFFF00F00
+#define THUMB32_LDRSHT                 0xF9300E00
 
 #endif /* CONFIG_THUMB2 */
 

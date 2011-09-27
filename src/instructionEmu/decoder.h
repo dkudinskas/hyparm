@@ -6,9 +6,6 @@
 #include "guestManager/guestContext.h"
 
 
-typedef u32int (*instructionHandler)(GCONTXT *context);
-
-
 instructionHandler decodeArmInstruction(u32int instruction);
 
 

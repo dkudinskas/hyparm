@@ -1426,7 +1426,7 @@ u32int bInstruction(GCONTXT * context)
   if (sign != 0)
   {
     // target negative!
-    if(context->CPSR & PSR_T_BIT)
+    if (context->CPSR & PSR_T_BIT)
     {
       //printf("instr:%08x, negative\n",instr);
       if(thumb32)

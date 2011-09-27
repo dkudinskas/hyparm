@@ -40,7 +40,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 #ifdef CONFIG_THUMB2
   bool gSVC = FALSE;
 #endif
-  u32int (*instrHandler)(GCONTXT * context);
+  instructionHandler instrHandler;
 
 #ifdef CONFIG_THUMB2
   /* Make sure that any SVC that is not part of the scanner
@@ -78,7 +78,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   {
     // get interpreter function pointer and call it
     instrHandler = context->hdlFunct;
-    nextPC = instrHandler(context);
+    nextPC = instrHandler(context, context->endOfBlockInstr);
   }
 
   if (nextPC == 0)

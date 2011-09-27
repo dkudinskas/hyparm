@@ -125,7 +125,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
   if (cached)
   {
     BCENTRY *bcEntry = getBlockCacheEntry(cacheIndex, context->blockCache);
-    context->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
+    context->hdlFunct = bcEntry->hdlFunct;
     context->endOfBlockInstr = bcEntry->hyperedInstruction;
 #ifdef CONFIG_THUMB2
     context->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
@@ -187,7 +187,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 #ifdef CONFIG_THUMB2
       context->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
 #endif
-      context->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
+      context->hdlFunct = bcEntry->hdlFunct;
     }
     else //Handle guest SVC
     {
@@ -302,7 +302,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
       context->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
-      context->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
+      context->hdlFunct = bcEntry->hdlFunct;
     }
     else
     {
