@@ -10,11 +10,10 @@
 
 //HACK implement a better fs system, this is clearly not going to work
 //for anything more sophisticated than a single fs
-
-
 char * buffer;
 
-//extern fatfs mainFilesystem;
+u32int nextFreeIndex;
+extern fatfs mainFilesystem;
 extern partitionTable primaryPartitionTable;
 
 /* Function to abstract away partition lba offsets.
@@ -50,7 +49,7 @@ int fatMount(fatfs *fs, blockDevice *dev, int partNum)
   }
   else
   {
-    memset((void*)buffer, 0x0, fs->sectorsPerCluster * fs->bytesPerSector);
+    memset((void*)buffer, 0x0, 0x1000);
   }
 
   //assume partitions have already been read
@@ -107,6 +106,7 @@ int fatMount(fatfs *fs, blockDevice *dev, int partNum)
   printf("fatMount: fatBegin %x\n", fs->fatBegin);
   printf("fatMount: clusterBegin %x\n", fs->clusterBegin);
 #endif
+  nextFreeIndex = 0;
   fs->mounted = TRUE;
   return 0;
 }
@@ -233,7 +233,7 @@ void tree(fatfs *fs, u32int currentCluster, u32int level)
 
 
 /* Sees if the user filename matches the format in the FAT */
-bool filenameMatch(const char *user, char *fatname)
+bool filenameMatch(const char *user, const char *fatname)
 {
   int i;
   for (i = 0; i < 11; i++)
@@ -292,7 +292,7 @@ dentry *getPathDirEntry(fatfs *fs, const char *fname, int createNew)
   printf("getPathDirEntry: %s\n", fname);
 #endif
   //root dir searching only, assume its a single file we're searching for
-  dentry * dirEntry = (dentry*)mallocBytes(sizeof(dentry));
+  dentry *dirEntry = (dentry*)mallocBytes(sizeof(dentry));
   if (dirEntry == 0)
   {
     DIE_NOW(0, "getPathDirEntry: failed to allocate dir entry struct.\n");
@@ -392,12 +392,13 @@ void setFatDirEntry(fatfs *fs, dentry *dirEntry, u32int position)
 /* Scan the FAT for the first free cluster, returns the cluster number */
 u32int fatGetFreeClus(fatfs *fs)
 {
-  u32int index;
   u32int val = 0;
 
-  for (index = 0; index < fs->sectorsPerFat; index++)
+  // we make a crude assumption that no sectors that we looked at previously
+  // suddenly became free! so start at FAT index that we finished last time
+  for (; nextFreeIndex < fs->sectorsPerFat; nextFreeIndex++)
   {
-    fatBlockRead(fs, fs->fatBegin + index, 1, buffer);
+    fatBlockRead(fs, fs->fatBegin + nextFreeIndex, 1, buffer);
     int i = 0;
     for (i = 0; i < 128; i++)
     {
@@ -405,7 +406,7 @@ u32int fatGetFreeClus(fatfs *fs)
       if (val == 0x0)
       {
         //free cluster!
-        return index * 128 + i;
+        return nextFreeIndex * 128 + i;
       }
     } // loop through all entries in current sector of FAT
   } // loop through all sectors of FAT
@@ -424,36 +425,38 @@ int fwrite(fatfs *fs, file *handle, void *src, u32int length)
   printf("fwrite: file '%s' data length %x\n", handle->dirEntry->filename, length);
 #endif
 
-  // we expect a free dentry
-  if (handle->dirEntry->free)
+  // we expect the file to exist already
+  if (!handle->dirEntry->valid)
   {
-    printf("fwrite: file entry marked free.\n");
+    printf("fwrite: file '%s' dir entry is invalid!" EOL, handle->dirEntry->filename);
     return 0;
   }
 
+  // we expect a file to be used, not free
+  if (handle->dirEntry->free)
+  {
+    printf("fwrite: file entry marked free" EOL);
+    return 0;
+  }
+
+  // there should be data to write!
   if (length == 0)
   {
     printf("fwrite: length to write - zero.\n");
     return 0;
   }
 
-  u8int* outputData = (u8int*)src; 
-
-  // we expect the file to exist already
-  if (!handle->dirEntry->valid)
-  {
-    printf("fwrite: file '%s' dir entry is invalid!\n", handle->dirEntry->filename);
-    return 0;
-  }
-
+  // and file handle should point to a file not a directory
   if (handle->dirEntry->isDirectory)
   {
     printf("fwrite: %s is a directory, not a file\n", handle->dirEntry->filename);
     return 0;
   }
 
+  u8int *outputData = (u8int *)src;
+
   // 1. get last cluster number and how much it's filled in
-  u32int currentCluster = handle->lastCluster;
+  u32int currentCluster = handle->lastClusterNr;
 
   u32int nextByteIndex = handle->bytesInLastCluster;
   u32int byteNumber = 0;
@@ -461,9 +464,8 @@ int fwrite(fatfs *fs, file *handle, void *src, u32int length)
                               handle->bytesInLastCluster;
   while (byteNumber < length)
   {
-    // get current cluster into buffer
-    fatBlockRead(fs, CLUSTER_REL_LBA(fs, currentCluster),
-                 fs->sectorsPerCluster, buffer);
+    // last cluster is buffered in file handle
+    buffer = (char *)handle->lastCluster;
     
     // loop through output data, writing it byte-by-byte into buffer
     while (byteNumber < length && bytesLeftInCluster != 0)
@@ -476,33 +478,35 @@ int fwrite(fatfs *fs, file *handle, void *src, u32int length)
       handle->bytesInLastCluster++;
     }
 
-    fatBlockWrite(fs, CLUSTER_REL_LBA(fs, currentCluster),
-                  fs->sectorsPerCluster, buffer);
     if (bytesLeftInCluster == 0)
     {
       // we filled the cluster with data. write cluster back to device
-      if (byteNumber < length)
+      fatBlockWrite(fs, CLUSTER_REL_LBA(fs, currentCluster), fs->sectorsPerCluster, buffer);
+
+      // adjust file size in directory entry in the FAT directory listing
+      setFatDirEntry(fs, handle->dirEntry, handle->dirEntry->position);
+
+      // if there are more bytes to write:
+      // 1. find new empty cluster
+      u32int allocatedCluster = fatGetFreeClus(fs);
+      if (allocatedCluster == 0)
       {
-        // if there are more bytes to write:
-        // 1. find new empty cluster
-        u32int allocatedCluster = fatGetFreeClus(fs);
-        // 2. set FAT entry for current cluster to point to allocatedCluster
-        fatSetClusterValue(fs, currentCluster, allocatedCluster);
-        currentCluster = allocatedCluster;
-        // 3. set allocated cluster entry in FAT as end of file
-        fatSetClusterValue(fs, currentCluster, FAT_EOC_VAL);
-        // 4. reset counters
-        bytesLeftInCluster = fs->sectorsPerCluster * fs->bytesPerSector;
-        nextByteIndex = 0;
-        // 5. update file handle
-        handle->lastCluster = currentCluster;
-        handle->bytesInLastCluster = 0;
+        DIE_NOW(0, "fwrite: cannot find a new free cluster. out of space??");
       }
+      // 2. set FAT entry for current cluster to point to allocatedCluster
+      fatSetClusterValue(fs, currentCluster, allocatedCluster);
+      currentCluster = allocatedCluster;
+      // 3. set allocated cluster entry in FAT as end of file
+      fatSetClusterValue(fs, currentCluster, FAT_EOC_VAL);
+      // 4. reset counters, no need to zero the write buffer
+      bytesLeftInCluster = fs->sectorsPerCluster * fs->bytesPerSector;
+      nextByteIndex = 0;
+      // 5. update file handle
+      handle->lastClusterNr = currentCluster;
+      handle->bytesInLastCluster = 0;
     } // if no more free bytes left in cluster
   } // while more bytes left to write
-  
-  // adjust file size in directory entry in the FAT directory listing
-  setFatDirEntry(fs, handle->dirEntry, handle->dirEntry->position);
+
   return length;
 }
 
@@ -616,8 +620,40 @@ int fdelete(fatfs *fs, file *handle)
   return 0;
 } // end fuction
 
+/* file close function: empties write buffer */
+void fclose(fatfs *fs, file *handle)
+{
+#ifdef FAT_DEBUG
+  printf("fclose: file '%s'" EOL, fname);
+#endif
 
-file* fopen(fatfs* fs, const char* fname)
+  if (!fs->mounted)
+  {
+    printf("fclose: file system not mounted" EOL);
+    return;
+  }
+
+  if (handle->bytesInLastCluster != 0)
+  {
+    // there is data in last cluster!
+    fatBlockWrite(fs, CLUSTER_REL_LBA(fs, handle->lastClusterNr), fs->sectorsPerCluster, buffer);
+
+    // adjust file size in directory entry in the FAT directory listing
+    setFatDirEntry(fs, handle->dirEntry, handle->dirEntry->position);
+
+    // update file handle
+    handle->lastClusterNr = 0;
+    handle->bytesInLastCluster = 0;
+
+    /*
+     * FIXME: Once we have free for malloc, we should free this memory, not just invalidate pointer
+     */
+    handle->dirEntry = 0;
+  }
+}
+
+
+file* fopen(fatfs *fs, const char *fname)
 {
 #ifdef FAT_DEBUG
   printf("fopen: file '%s'\n", fname);
@@ -628,15 +664,13 @@ file* fopen(fatfs* fs, const char* fname)
     return 0;
   }
 
-  file* f = (file*)mallocBytes(sizeof(file));
+  // allocate space for file handle
+  file *f = (file *)mallocBytes(sizeof(file));
   if (f == 0)
   {
     DIE_NOW(0, "fopen: failed to allocate file struct.\n");
   }
-  else
-  {
-    memset((void*)f, 0x0, sizeof(file));
-  }
+  memset(f, 0, sizeof(file));
 
   f->dirEntry = getPathDirEntry(fs, fname, FALSE);
   
@@ -646,11 +680,20 @@ file* fopen(fatfs* fs, const char* fname)
     return 0;
   }
 
+  // file is free. Make it not free.
   if (f->dirEntry->free)
   {
     printf("fopen: file %s not found. Create new.\n", fname);
     return fnew(fs, fname);
   }
+
+  // everything seems fine, allocate buffer space
+  f->lastCluster = (u8int *)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
+  if (f->lastCluster == 0)
+  {
+    DIE_NOW(0, "fopen: failed to allocate buffer for last cluster");
+  }
+  memset(f->lastCluster, 0, fs->sectorsPerCluster * fs->bytesPerSector);
 
   // follow FAT chain to last cluster
   u32int currentCluster = f->dirEntry->firstCluster;
@@ -686,18 +729,22 @@ file* fopen(fatfs* fs, const char* fname)
   printf("fopen: f->dirEntry.filename %s\n", f->dirEntry->filename);
 #endif
 
-  f->lastCluster = tempCluster;
+  f->lastClusterNr = tempCluster;
   f->bytesInLastCluster = fileSizeLeft;
 
 #ifdef FAT_DEBUG
-  printf("fopen: f->lastCluster %x\n", f->lastCluster);
+  printf("fopen: f->lastClusterNr %x\n", f->lastClusterNr);
   printf("fopen: f->bytesInLastCluster %x\n", f->bytesInLastCluster);
 #endif
+
+  // now we have the last cluster number, and how much data is in it
+  // we need just to read this bit of data into the buffer
+  fatBlockRead(fs, CLUSTER_REL_LBA(fs, f->lastClusterNr), fs->sectorsPerCluster, f->lastCluster);
 
   return f;
 }
 
-file* fnew(fatfs *fs, const char *fname)
+file *fnew(fatfs *fs, const char *fname)
 {
 #ifdef FAT_DEBUG
   printf("fnew: file '%s'\n", fname);
@@ -708,14 +755,14 @@ file* fnew(fatfs *fs, const char *fname)
     return 0;
   }
 
-  file* f = (file*)mallocBytes(sizeof(file));
+  file *f = (file *)mallocBytes(sizeof(file));
   if (f == 0)
   {
     DIE_NOW(0, "fnew: failed to allocate file struct.\n");
   }
   else
   {
-    memset((void*)f, 0x0, sizeof(file));
+    memset(f, 0, sizeof(file));
   }
 
   dentry *dirEntry = getPathDirEntry(fs, fname, FALSE);
@@ -727,6 +774,7 @@ file* fnew(fatfs *fs, const char *fname)
     return 0;
   }
 
+  // we expect a unique filename -- no directories with the same name
   if (dirEntry->isDirectory)
   {
     printf("fnew: Directory exists with same name\n");
@@ -777,16 +825,24 @@ file* fnew(fatfs *fs, const char *fname)
   setFatDirEntry(fs, dirEntry, dirEntry->position);
 
   f->dirEntry = dirEntry;
-  f->lastCluster = clusterNr;
+  f->lastClusterNr = clusterNr;
   f->bytesInLastCluster = 0;
 
 #ifdef FAT_DEBUG
   printf("fnew: f->dirEntry->position = %x\n", f->dirEntry->position);
   printf("fnew: f->dirEntry->parentCluster %x\n", f->dirEntry->parentCluster);  
   printf("fnew: f->dirEntry->firstCluster %x\n", f->dirEntry->firstCluster);
-  printf("fnew: f->lastCluster = %x\n", f->lastCluster);
+  printf("fnew: f->lastClusterNr = %x\n", f->lastClusterNr);
   printf("fnew: f->bytesInLastCluster %x\n", f->bytesInLastCluster);  
 #endif
+
+  // everything seems fine, allocate buffer space
+  f->lastCluster = (u8int *)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
+  if (f->lastCluster == 0)
+  {
+    DIE_NOW(0, "fnew: failed to allocate buffer for last cluster");
+  }
+  memset(f->lastCluster, 0, fs->sectorsPerCluster * fs->bytesPerSector);
 
   return f;
 }

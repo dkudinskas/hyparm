@@ -90,8 +90,8 @@ u32int mmcBlockRead(int devid, u32int start, u64int blockCount, void *dst)
   {
     printf("mmcBlockRead: exceeded max block address\n");
     printf("start = %x\n", start);
-    printf("blockCount = %x\n", blockCount);
-    printf("lba = %x\n", mmc->blockDev.lba);
+    printf("blockCount = %Lx\n", blockCount);
+    printf("lba = %Lx\n", mmc->blockDev.lba);
     return 0;
   }
 
