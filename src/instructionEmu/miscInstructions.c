@@ -1171,7 +1171,7 @@ u32int undefinedInstruction(GCONTXT * context)
   invalidInstruction(context->endOfBlockInstr, "undefined instruction");
 }
 
-u32int itInstruction(GCONTXT * context)
+u32int t16ItInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(0,"Unimplemented If-Then-Else Instruction");
+  DIE_NOW(context, "t16ItInstruction: none of the emulation functions support IT/ITSTATE");
 }
