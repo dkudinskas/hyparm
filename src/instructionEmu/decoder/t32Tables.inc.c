@@ -113,10 +113,10 @@ static struct instruction32bit t32MultiplyInstructions[] =
 
 static struct instruction32bit t32BranchMiscInstructions[] =
 {
-  { TRUE,  &bInstruction,         0xF0008000, 0xF800D000, "B <imm17>" },
-  { TRUE,  &bInstruction,         0xF0009000, 0xF800D000, "B <imm21>" },
-  { TRUE,  &bInstruction,         0xF000D000, 0xF800D000, "BL, #<imm21>" },
-  { TRUE,  &blxInstruction,       0xF000C000, 0xF800D000, "BLX, #<imm21>" },
+  { TRUE,  t32BImmediate17Instruction, 0xF0008000, 0xF800D000, "B <imm17>" },
+  { TRUE,  t32BImmediate21Instruction, 0xF0009000, 0xF800D000, "B <imm21>" },
+  { TRUE,  t32BlInstruction,      0xF000D000, 0xF800D000, "BL, #<imm21>" },
+  { TRUE,  &t32BlxImmediateInstruction, 0xF000C000, 0xF800D000, "BLX, #<imm21>" },
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32BranchMiscInstructions" }
 };
 

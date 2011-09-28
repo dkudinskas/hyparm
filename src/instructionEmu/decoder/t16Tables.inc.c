@@ -21,10 +21,11 @@ static struct instruction32bit t16ArithmeticInstructions[] =
   { TRUE,  &undefinedInstruction, 0x0000, 0x0000, "t16ArithmeticInstructions" }
 };
 
+/* verified */
 static struct instruction32bit t16ConditionalBranchSvcInstructions[] =
 {
   { TRUE,  &svcInstruction,       0xDF00, 0xFF00, "SVC call" },
-  { TRUE,  &bInstruction,         0xD000, 0xF000, "B<c> <label>" },
+  { TRUE,  &t16BImmediate8Instruction, 0xD000, 0xF000, "B<c> [PC,#<imm8>]" },
   { TRUE,  &undefinedInstruction, 0x0000, 0x0000, "t16ConditionalBranchSvcInstructions" }
 };
 
@@ -92,8 +93,8 @@ static struct instruction32bit t16PCRelInstructions[] =
 
 static struct instruction32bit t16SpecialBranchInstructions[] =
 {
-  { TRUE,  &bxInstruction,        0x4700, 0xFF80, "BX<c> <Rm>" },
-  { TRUE,  &blxInstruction,       0x4780, 0xFF80, "BLX<c> <Rm>" },
+  { TRUE,  &t16BxInstruction,     0x4700, 0xFF80, "BX<c> <Rm>" },
+  { TRUE,  &t16BlxRegisterInstruction, 0x4780, 0xFF80, "BLX<c> <Rm>" },
   { TRUE,  &movInstruction,       0x4607, 0xFF07, "MOV PC, Rm" },
   { FALSE, &movInstruction,       0x4600, 0xFF00,  "MOV Rd, Rm" },
   { FALSE, &addInstruction,       0x1800, 0xFE00, "ADD <Rd>, <Rn>, <Rm>" },
@@ -113,9 +114,10 @@ static struct instruction32bit t16StoreMultipleRegistersInstructions[] =
   { TRUE,  &undefinedInstruction, 0x0000, 0x0000, "t16StoreMultipleRegistersInstructions" }
 };
 
+/* verified */
 static struct instruction32bit t16UnconditionalInstructions[] =
 {
-  { TRUE,  &bInstruction,         0xE000, 0xE000, "B<c> #<imm8>" },
+  { TRUE,  &t16BImmediate11Instruction, 0xE000, 0xF800, "B<c> [PC,#<imm11>]" },
   { TRUE,  &undefinedInstruction, 0x0000, 0x0000, "t16UnconditionalInstructions" }
 };
 

@@ -6,6 +6,7 @@
 #include "instructionEmu/dataProcessInstr.h"
 #include "instructionEmu/miscInstructions.h"
 
+#include "instructionEmu/interpreter/branchInstructions.h"
 #include "instructionEmu/interpreter/loadInstructions.h"
 #include "instructionEmu/interpreter/storeInstructions.h"
 

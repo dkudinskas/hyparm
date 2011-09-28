@@ -18,7 +18,7 @@ static struct instruction32bit armBranchBlockTransferInstructions[] =
   { FALSE, &armLdmInstruction,    0x08900000, 0x0f900000, "LDMIA Rn, {regList}" },
   { FALSE, &armLdmInstruction,    0x08100000, 0x0e100000, "LDM Rn, {regList}" },
   // B/BL: always hypercall! obviously.
-  { TRUE,  &bInstruction,         0x0a000000, 0x0e000000, "BRANCH" },
+  { TRUE,  &armBInstruction,      0x0a000000, 0x0e000000, "BRANCH" },
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "branchBlockTransferInstructions" }
 };
 
@@ -52,15 +52,15 @@ static struct instruction32bit armDataProcMiscInstructions_op0[] =
   // MLS: Rd = Rm * Rn - Ra; Rd != PC, pass through
   { FALSE, &mlsInstruction,       0x00600090, 0x0ff000f0, "MLS Rd, Rm, Rn, Ra" },
   // Branch and try to exchange to ARM mode.
-  { TRUE,  &bxInstruction,        0x012FFF10, 0x0ffffff0, "bx%c\t%0-3r" },
+  { TRUE,  &armBxInstruction,     0x012FFF10, 0x0ffffff0, "bx%c\t%0-3r" },
   // Branch and link and try to exchange to Jazelle mode.
-  { TRUE,  &bxjInstruction,       0x012fff20, 0x0ffffff0, "BXJ Rm" },
+  { TRUE,  &armBxjInstruction,    0x012fff20, 0x0ffffff0, "BXJ Rm" },
   // Software breakpoint instruction... not sure yet.
   { TRUE,  &bkptInstruction,      0xe1200070, 0xfff000f0, "BKPT #imm8" },
   // UNIMPLEMENTED: SMC, previously SMI: secure monitor call
   { TRUE,  &smcInstruction,       0x01600070, 0x0ff000f0, "smc%c\t%e" },
   // Branch and link and try to exchange with Thumb mode.
-  { TRUE,  &blxInstruction,       0x012fff30, 0x0ffffff0, "BLX Rm" },
+  { TRUE,  &armBlxRegisterInstruction,       0x012fff30, 0x0ffffff0, "BLX Rm" },
   // CLZ: Count leading zeroes - Rd, Rm != PC, pass through
   { FALSE, &clzInstruction,       0x016f0f10, 0x0fff0ff0, "CLZ Rd, Rm" },
   // UNIMPLEMENTED: saturated add/subtract/doubleAdd/doubleSubtract
@@ -492,7 +492,7 @@ static struct instruction32bit armUnconditionalInstructions[] =
   // UNIMPLEMENTED: SRS store return state
   { TRUE,  &srsInstruction,       0xf84d0500, 0xfe5fffe0, "srs%23?id%24?ba\t%16-19r%21'!, #%0-4d" },
   // BLX: branch and link to Thumb subroutine
-  { TRUE,  &blxInstruction,       0xfa000000, 0xfe000000, "BLX #imm24" },
+  { TRUE,  &armBlxImmediateInstruction,    0xfa000000, 0xfe000000, "BLX #imm24" },
   // PLD: preload data
   { TRUE,  &pldInstruction,       0xf450f000, 0xfc70f000, "PLD" },
   // PLI: preload instruction
