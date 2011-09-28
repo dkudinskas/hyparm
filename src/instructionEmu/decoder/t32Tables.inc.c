@@ -2,32 +2,6 @@
  * Thumb 32-bit decoding tables for the table search decoder
  */
 
-
-static struct instruction32bit t32CoprocInstructions[] =
-{
-  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32CoprocInstructions" }
-};
-
-static struct instruction32bit t32LoadStoreMultipleInstructions[] =
-{
-  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32LoadStoreMultipleInstructions" }
-};
-
-static struct instruction32bit t32LoadWordInstructions[] =
-{
-  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32LoadWordInstructions" }
-};
-
-static struct instruction32bit t32LongMultiplyInstructions[] =
-{
-  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32LongMultiplyInstructions" }
-};
-
-static struct instruction32bit t32SimdStructLoadStoreInstructions[] =
-{
-  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32SimdStructLoadStoreInstructions" }
-};
-
 static struct instruction32bit t32DataProcInstructions[] =
 {
   // this is for T2 encoding, page 480
@@ -47,8 +21,11 @@ static struct instruction32bit t32DataProcInstructions[] =
   { FALSE, &addInstruction,       0xEB000000, 0xFFE08000, "ADD{S}.W <Rd>, <Rn>, <Rm>{, <shift>}" },
   //ADD -> RD=PC -> CMN page 306
   { TRUE,  addInstruction,        0xF1000F00, 0xFBE08F00, "ADD{S}.W PC, <Rn>, #<imm8>" },
-  // RN=SP -> unimplemented. Should be OK
-  { FALSE, &addInstruction,       0xF10D8000, 0xFBEF8000, "ADD{S}.W <Rd>, SP, #<imm8>" },
+  /*
+   * FIXME: impossible
+   * RN=SP -> unimplemented. Should be OK
+   * { FALSE, &addInstruction,       0xF10D8000, 0xFBEF8000, "ADD{S}.W <Rd>, SP, #<imm8>" },
+   */
   // Encoding T4
   { FALSE, &addInstruction,       0xF2000000, 0xF2008000, "ADDW <Rd>, <Rn>, #<imm12>" },
   // RC=PC
@@ -65,7 +42,10 @@ static struct instruction32bit t32DataProcInstructions[] =
   { FALSE, &subInstruction,       0xF2AB0000, 0xFBEF8000, "SUBW <Rd>, SP, #<imm12>" },
   { FALSE, &subInstruction,       0xEBAB0000, 0xFFEF8000, "SUB{S} <Rd>, SP, <Rm>{,<shift>}" },
   { FALSE, &mvnInstruction,       0xEA6F0000, 0xFFEF8000, "MVN<c> <Rd>, <Rm>{,<shift>}" },
-  { FALSE, &mvnInstruction,       0xE0AF0000, 0xFBEF8000, "MVN<c> <Rd>, #<imm12>" },
+  /*
+   * FIXME: impossible
+   * { FALSE, &mvnInstruction,       0xE0AF0000, 0xFBEF8000, "MVN<c> <Rd>, #<imm12>" },
+   */
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32DataProcInstructions" }
 };
 
@@ -131,22 +111,32 @@ static struct instruction32bit t32LoadStoreDoubleExclusiveInstructions[] =
 
 static struct TopLevelCategory t32Categories[] =
 {
-  { 0xFE400000, 0xE8000000, t32LoadStoreMultipleInstructions },
+  /*
+   * TODO: not implemented
+   * { 0xFE400000, 0xE8000000, t32LoadStoreMultipleInstructions },
+   */
   { 0xFE400000, 0xE8400000, t32LoadStoreDoubleExclusiveInstructions },
   { 0xF8008000, 0xF0008000, t32BranchMiscInstructions },
   { 0xFE000000, 0xEA000000, t32DataProcInstructions },
-  { 0xFC000000, 0xEC000000, t32CoprocInstructions },
-  { 0xFA008000, 0xF0000000, t32DataProcInstructions },
-  { 0xFA008000, 0xF2000000, t32DataProcInstructions },
+  { 0xF8008000, 0xF0000000, t32DataProcInstructions },
   { 0xFF100000, 0xF8000000, t32SingleStoreInstructions },
-  { 0xFF100000, 0xF9000000, t32SimdStructLoadStoreInstructions },
+  /*
+   * TODO: not implemented
+   * { 0xFF100000, 0xF9000000, t32SimdStructLoadStoreInstructions },
+   */
   { 0xFE700000, 0xF8100000, t32LoadByteInstructions },
   { 0xFE700000, 0xF8300000, t32LoadHalfWordInstructions },
-  { 0xF8500000, 0xF8500000, t32LoadWordInstructions },
+  /*
+   * TODO: not implemented
+   * { 0xF8500000, 0xF8500000, t32LoadWordInstructions },
+   */
   { 0xF8700000, 0xF8700000, NULL },
   { 0xFF000000, 0xFA000000, t32DataProcInstructions },
   { 0xFF000000, 0xFB000000, t32MultiplyInstructions },
-  { 0xFF800000, 0xFB800000, t32LongMultiplyInstructions },
-  { 0xFC000000, 0xFC000000, t32CoprocInstructions },
+  /*
+   * TODO: not implemented
+   * { 0xFF800000, 0xFB800000, t32LongMultiplyInstructions },
+   * { 0xEC000000, 0xEC000000, t32CoprocInstructions },
+   */
   { 0x00000000, 0x00000000, NULL }
 };
