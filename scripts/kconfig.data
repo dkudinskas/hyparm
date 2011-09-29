@@ -21,6 +21,9 @@ config DECODER_TABLE_SEARCH
 
 endchoice
 
+config PATH_AUTODECODER
+  string "Path to autodecoder"
+
 endmenu
 
 menu "Physical hardware platform"
@@ -99,7 +102,7 @@ menu "Virtual hardware platform"
 
 config THUMB2
   bool "Thumb-2 instruction set"
-  depends on ARCH_V7_A && DECODER_TABLE_SEARCH
+  depends on ARCH_V7_A
 
 endmenu
 

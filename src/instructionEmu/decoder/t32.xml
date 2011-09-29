@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<autodecoder name="t32">
+
+<category name="t32LoadStoreDoubleExclusiveInstructions" mask="0xfe400000" value="0xe8400000">
+  <instruction name="LDRD Rt, Rt2, [Rn,{,#+/-imm}]" mask="0xfe500000" value="0xe8500000" />
+  <instruction name="LDRD Rt, Rt2, label" mask="0xfe7f0000" value="0xe85f0000" />
+  <instruction name="STRD Rt, Rt2, [Rn,{,#+/-imm}]" mask="0xfe500000" value="0xe8400000" />
+</category>
+
+<category name="t32BranchMiscInstructions" mask="0xf8008000" value="0xf0008000">
+  <instruction name="B imm17" mask="0xf800d000" value="0xf0008000" effect="t32BImmediate17Instruction" />
+  <instruction name="B imm21" mask="0xf800d000" value="0xf0009000" effect="t32BImmediate21Instruction" />
+  <instruction name="BL, #imm21" mask="0xf800d000" value="0xf000d000" effect="t32BlInstruction" />
+  <instruction name="BLX, #imm21" mask="0xf800d000" value="0xf000c000" effect="t32BlxImmediateInstruction" />
+</category>
+
+<category name="t32DataProcInstructions1" mask="0xfe000000" value="0xea000000">
+  <instruction name="ORR{S} Rd, Rn{,shift}" mask="0xffe08000" value="0xea400000" />
+  <instruction name="AND{S}.W Rd. Rn. Rm" mask="0xfff00000" value="0xea000000" />
+  <instruction name="ADD{S}.W Rd, Rn, Rm{, shift}" mask="0xffe08000" value="0xeb000000" />
+  <instruction name="RSB Rd, Rn, Rm{,shift}" mask="0xffe08000" value="0xebc00000" />
+  <instruction name="SUB{S}.W Rd, Rn, Rm{,shitft}" mask="0xffe08000" value="0xeba00000" />
+  <instruction name="SUB{S} Rd, SP, Rm{,shift}" mask="0xffef8000" value="0xebab0000" />
+  <instruction name="MVNc Rd, Rm{,shift}" mask="0xffef8000" value="0xea6f0000" />
+</category>
+
+<category name="t32DataProcInstructions2" mask="0xf8008000" value="0xf0000000">
+  <instruction name="MOVWc Rd, #imm12" mask="0xfbef1000" value="0xf04f0000" />
+  <instruction name="MOVWc Rd, #imm16" mask="0xfbf00000" value="0xf2400000" />
+  <instruction name="MOV{S}/W Rd, #immt12" mask="0xfbef8000" value="0xf04f0000" />
+  <instruction name="MOVW Rd, #imm16" mask="0xfbf08000" value="0xf2400000" />
+  <instruction name="MOVTc Rd, #imm16" mask="0xfbf08000" value="0xf2c00000" />
+  <instruction name="ORR{S} Rd, Rn,#imm12" mask="0xfbe08000" value="0xf0400000" />
+  <instruction name="AND{S}c PC, Rm, #imm12" mask="0xfbe08f00" value="0xf0000f00" effect="andInstruction" />
+  <instruction name="AND{S}c Rd, Rm, #imm12" mask="0xfbe08000" value="0xf0000000" />
+  <instruction name="ADD{S}.W Rd, Rn, #imm8" mask="0xfbe08000" value="0xf1000000" />
+  <instruction name="ADD{S}.W PC, Rn, #imm8" mask="0xfbe08f00" value="0xf1000f00" effect="addInstruction" />
+  <instruction name="ADDW Rd, Rn, #imm12" mask="0xf2008000" value="0xf2000000" />
+  <instruction name="DDW PC, Rn, #imm12" mask="0xf20f8000" value="0xf20f0000" effect="addInstruction" />
+  <instruction name="ADDW Rd, SP, #imm8" mask="0xf20f8000" value="0xf20d0000" />
+  <instruction name="BIC{S} Rd, Rn, #imm12" mask="0xfbe08000" value="0xf0200000" />
+  <instruction name="RSB Rd, Rn, #imm12" mask="0xfbe08000" value="0xf1c00000" />
+  <instruction name="SUB{S}.W Rd, Rn, #imm12" mask="0xfbe08000" value="0xf1a00000" />
+  <instruction name="SUB{S}W Rd, Rn, #imm12" mask="0xfbe08000" value="0xf2a00000" />
+  <instruction name="SUBW Rd, SP, #imm12" mask="0xfbef8000" value="0xf2ab0000" />
+</category>
+
+<category name="t32SingleStoreInstructions" mask="0xff100000" value="0xf8000000">
+  <instruction name="STRB Rt, [Rn, #imm12]" mask="0xfff00000" value="0xf8800000" />
+  <instruction name="STRB Rt, [Rn, +-#imm8]" mask="0xfff00800" value="0xf8000800" />
+  <instruction name="STRH.W Rt, [Rn, {#imm12}]" mask="0xfff00000" value="0xf8a00000" />
+  <instruction name="STRH.W Rt, [Rn, Rm {, LSL #imm2}]" mask="0xfff00fc0" value="0xf8200000" />
+</category>
+
+<category name="t32LoadByteInstructions" mask="0xfe700000" value="0xf8100000">
+  <instruction name="LDRBc PC ,#label" mask="0xfeffffc0" value="0xf81ff000" effect="t32LdrbInstruction" />
+  <instruction name="LDRBc Rt, [Rn{,#imm12}]" mask="0xfff00000" value="0xf8900000" />
+  <instruction name="LDRBc Rt, [Rn,{#imm12}]" mask="0xfff00900" value="0xf8100900" />
+  <instruction name="LDRBc Rt, [Rn,{#imm12}]" mask="0xfff00e00" value="0xf8100c00" />
+</category>
+
+<category name="t32LoadHalfWordInstructions" mask="0xfe700000" value="0xf8300000">
+  <instruction name="LDRH.W Rt, [Rn{. #imm32}]" mask="0xfff00000" value="0xf8b00000" />
+  <instruction name="LDRH Rt, label" mask="0xff7f0000" value="0xf83f0000" />
+  <instruction name="LDRH, Rt, [Rn{,LSL #imm2}]" mask="0xfff00fc0" value="0xf8300000" />
+  <instruction name="LDRSHc Rt, [Rn, #imm12]" mask="0xfff00000" value="0xf9b00000" />
+  <instruction name="LDRSHc Rt, label" mask="0xff7f0000" value="0xf93f0000" />
+  <instruction name="LDRSHc Rt, [Rn, #Rn, +/-#imm8]" mask="0xfff00800" value="0xf9300800" />
+  <instruction name="LDRSHc Rt, [Rn, Rm]" mask="0xfff00fc0" value="0xf9300000" />
+</category>
+
+<category name="UNDEFINED" mask="0xf8700000" value="0xf8700000">
+  <instruction name="UNDEFINED" mask="0xf8700000" value="0xf8700000" effect="undefinedInstruction" />
+</category>
+
+<category name="t32DataProcInstructions3" mask="0xff000000" value="0xfa000000">
+  <instruction name="ADDW Rd, Rn, #imm12" mask="0xf2008000" value="0xf2000000" />
+<instruction name="DDW PC, Rn, #imm12" mask="0xf20f8000" value="0xf20f0000" effect="addInstruction" />
+  <instruction name="ADDW Rd, SP, #imm8" mask="0xf20f8000" value="0xf20d0000" />
+</category>
+
+<category name="t32MultiplyInstructions" mask="0xff000000" value="0xfb000000">
+  <instruction name="MULW Rd, Rn, Rm" mask="0xfff0f0f0" value="0xfb00f000" />
+  <instruction name="SMULL RdLo, RdHi, Rn, Rm" mask="0xffe000f0" value="0xfb800000" />
+</category>
+
+</autodecoder>
