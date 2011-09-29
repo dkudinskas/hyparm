@@ -23,7 +23,7 @@ static inline u32int getHash(u32int key);
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex);
 static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex);
 
-static void protectScannedBlock(u32int startAddress, u32int endAddress);
+static void protectScannedBlock(void *start, void *end);
 
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
@@ -56,7 +56,7 @@ void resetScanBlockCounter()
 #endif /* CONFIG_SCANNER_COUNT_BLOCKS */
 
 
-#if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
+#ifdef CONFIG_SCANNER_EXTRA_CHECKS
 
 static u8int scanBlockCallSource;
 
@@ -76,7 +76,7 @@ void setScanBlockCallSource(u8int source)
 
 #define getScanBlockCallSource()  ((u8int)(-1))
 
-#endif /* CONFIG_DEBUG_SCANNER_CALL_SOURCE */
+#endif /* CONFIG_SCANNER_EXTRA_CHECKS */
 
 
 // http://www.concentric.net/~Ttwang/tech/inthash.htm
@@ -99,20 +99,23 @@ void scanBlock(GCONTXT *context, u32int startAddress)
    */
   incrementScanBlockCounter();
 
-#if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
+#ifdef CONFIG_SCANNER_EXTRA_CHECKS
   if (getScanBlockCallSource() == SCANNER_CALL_SOURCE_NOT_SET)
   {
-    printf("scanBlock: gc = %p, blkStartAddr = %#.8x" EOL, context, startAddress);
+    DEBUG(SCANNER, "scanBlock: gc = %p, blkStartAddr = %#.8x" EOL, context, startAddress);
     DIE_NOW(context, "scanBlock() called from unknown source");
   }
   if (startAddress == 0)
   {
-    printf("scanBlock: gc = %p, blkStartAddr = %.8x" EOL, context, startAddress);
-    printf("scanBlock: called from source %u" EOL, (u32int)scanBlockCallSource);
-    DEBUG(SCANNER_COUNT_BLOCKS, "scanBlock: scanned block count is %#Lx" EOL, scanBlockCounter);
+    DEBUG(SCANNER, "scanBlock: gc = %p, blkStartAddr = %.8x" EOL, context, startAddress);
+    DEBUG(SCANNER, "scanBlock: called from source %u" EOL, (u32int)scanBlockCallSource);
+    if (getScanBlockCounter())
+    {
+      DEBUG(SCANNER_COUNT_BLOCKS, "scanBlock: scanned block count is %#Lx" EOL, getScanBlockCounter());
+    }
     DIE_NOW(context, "scanBlock() called with NULL pointer");
   }
-#endif /* CONFIG_DEBUG_SCANNER_CALL_SOURCE */
+#endif /* CONFIG_SCANNER_EXTRA_CHECKS */
 
   u32int cacheIndex = (getHash(startAddress) & (BLOCK_CACHE_SIZE-1));// 0x1FF mask for 512 entry cache
   bool cached = checkBlockCache(startAddress, cacheIndex, context->blockCache);
@@ -224,10 +227,10 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 
 #ifdef CONFIG_THUMB2
   addToBlockCache(start, context->endOfBlockInstr, context->endOfBlockHalfInstr, (u32int)end,
-      cacheIndex, (u32int)context->hdlFunct, context->blockCache);
+      cacheIndex, context->hdlFunct, context->blockCache);
 #else
   addToBlockCache(start, context->endOfBlockInstr, (u32int)end,
-        cacheIndex, (u32int)context->hdlFunct, context->blockCache);
+        cacheIndex, context->hdlFunct, context->blockCache);
 #endif
   /* To ensure that subsequent fetches from eobAddress get a hypercall
    * rather than the old cached copy...
@@ -373,7 +376,7 @@ printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
  */
 
   addToBlockCache(start, context->endOfBlockInstr, context->endOfBlockHalfInstr, (u32int)end,
-        cacheIndex, (u32int)context->hdlFunct, context->blockCache);
+        cacheIndex, context->hdlFunct, context->blockCache);
   /* To ensure that subsequent fetches from eobAddress get a hypercall
        * rather than the old cached copy...
        * 1. clean data cache entry by address
@@ -425,8 +428,10 @@ printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
 #endif
 
 
-static void protectScannedBlock(u32int startAddress, u32int endAddress)
+static void protectScannedBlock(void *start, void *end)
 {
+  u32int startAddress = (u32int)start;
+  u32int endAddress = (u32int)end;
   // 1. get page table entry for this address
   descriptor* ptBase = mmuGetPt0();
   descriptor* ptEntryAddr = get1stLevelPtDescriptorAddr(ptBase, startAddress);

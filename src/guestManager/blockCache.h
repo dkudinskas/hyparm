@@ -44,9 +44,9 @@ void initialiseBlockCache(BCENTRY * bcache);
 bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr);
 
 #ifdef CONFIG_THUMB2
-void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int HalfhypInstruction, u32int blkEndAddr,
+void addToBlockCache(void *start, u32int hypInstruction, u16int HalfhypInstruction, u32int blkEndAddr,
 #else
-void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
+void addToBlockCache(void *start, u32int hypInstruction, u32int blkEndAddr,
 #endif
   u32int index, void *hdlFunct, BCENTRY * bcAddr);
 

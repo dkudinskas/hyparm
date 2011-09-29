@@ -46,13 +46,14 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY *bcAddr)
 }
 
 #ifdef CONFIG_THUMB2
-void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int halfhypInstruction, u32int blkEndAddr,
+void addToBlockCache(void *start, u32int hypInstruction, u16int halfhypInstruction, u32int blkEndAddr,
 #else
-void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
+void addToBlockCache(void *start, u32int hypInstruction, u32int blkEndAddr,
 #endif
                      u32int index, void *hdlFunct, BCENTRY * bcAddr)
 {
-  DEBUG(BLOCK_CACHE, "addToBlockCache: index = %#x,@ %#.8x--%#.8x, handler = %#.8x, eobInstr = "
+  u32int blkStartAddr = (u32int)start;
+  DEBUG(BLOCK_CACHE, "addToBlockCache: index = %#x,@ %#.8x--%#.8x, handler = %p, eobInstr = "
       "%#.8x" EOL, index, blkStartAddr, blkEndAddr, hdlFunct, hypInstruction);
 
   if (bcAddr[index].valid)
