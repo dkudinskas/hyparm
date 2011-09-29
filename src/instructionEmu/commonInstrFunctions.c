@@ -309,12 +309,8 @@ u32int decodeShift(u32int instrShiftType)
     case 3:
       return SHIFT_TYPE_ROR;
     default:
-      DIE_NOW(0,"voodoo dolls everywhere!");
+      DIE_NOW(0, "voodoo dolls everywhere!");
   } // switch ends
-
-  // FIXME : is there a return path ?
-  // compiler happy!
-  return 0;
 }
 
 #ifdef CONFIG_THUMB2
@@ -338,11 +334,6 @@ u32int fetchThumbInstr(u16int *currhwAddress)
        */
       return narrowInstr;
   }
-}
-
-bool isThumb32(u32int instr)
-{
-  return (instr & 0xFFFF0000) ? TRUE : FALSE;
 }
 
 #endif

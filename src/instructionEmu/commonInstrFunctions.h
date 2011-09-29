@@ -8,6 +8,11 @@
 
 #define ARM_EXTRACT_CONDITION_CODE(instructionWord)  (instructionWord >> 28)
 
+/*
+ * Checks whether an instruction word of a Thumb instruction is a Thumb-32 instruction.
+ */
+#define TXX_IS_T32(instructionWord)                  (instructionWord & 0xFFFF0000)
+
 
 /* a function to serve as a dead-loop if we decode something invalid */
 void invalidInstruction(u32int instr, const char *msg) __attribute__((noreturn));
@@ -43,8 +48,6 @@ u32int decodeShift(u32int instrShiftType);
 // decode thumb instruction into 32-bit format
 u32int fetchThumbInstr(u16int * address);
 
-// check whether the instruction is thumb 16 or 32bit
-bool isThumb32(u32int instr);
 
 #endif /* CONFIG_THUMB2 */
 

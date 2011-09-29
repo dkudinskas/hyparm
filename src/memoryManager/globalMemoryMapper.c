@@ -21,9 +21,10 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
 {
   u32int instr;
   u32int eobInstrBackup;
-  u32int eobHalfInstrBackup;
 
 #ifdef CONFIG_THUMB2
+  u32int eobHalfInstrBackup;
+
   if (context->CPSR & PSR_T_BIT)
   {
     /*
@@ -33,7 +34,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
     eobInstrBackup = context->endOfBlockInstr;
     eobHalfInstrBackup = context->endOfBlockHalfInstr;
 
-    if (isThumb32(instr))
+    if (TXX_IS_T32(instr))
     {
       /*
        * 32-bit Thumb instruction
