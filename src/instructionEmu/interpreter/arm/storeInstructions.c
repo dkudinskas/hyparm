@@ -15,6 +15,8 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
+  DEBUG(INTERPRETER_ARM_STORE, "armStrInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+
   u32int regOrImm = instruction & 0x02000000; // 1 = reg, 0 = imm
   u32int preOrPost = instruction & 0x01000000; // 1 = pre, 0 = post
   u32int incOrDec = instruction & 0x00800000; // 1 = inc, 0 = dec
@@ -22,10 +24,8 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
   u32int regDst = (instruction & 0x000F0000) >> 16; // Base Destination address
   u32int regSrc = (instruction & 0x0000F000) >> 12; // Source value from this register...
 
-#ifdef DATA_MOVE_TRACE
-  printf("strInstr: regOrImm=%x preOrPost=%x incOrDec=%x writeBack=%x regdest=%x regsrc=%x" EOL,
-      regOrImm, preOrPost, incOrDec, writeBack, regDst, regSrc);
-#endif
+  DEBUG(INTERPRETER_ARM_STORE, "armStrInstruction: regOrImm=%x preOrPost=%x incOrDec=%x writeBack="
+      "%x regdest=%x regsrc=%x" EOL, regOrImm, preOrPost, incOrDec, writeBack, regDst, regSrc);
 
   u32int baseAddress = loadGuestGPR(regDst, context);
   u32int valueToStore = loadGuestGPR(regSrc, context);
@@ -33,46 +33,31 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
 
   if (regOrImm == 0)
   {
-#ifdef DATA_MOVE_TRACE
-    printf("strInstr: imm case: ");
-#endif
     // immediate case
     u32int imm32 = instruction & 0x00000FFF;
 
-#ifdef DATA_MOVE_TRACE
-    printf("imm32=%x baseAddress=%#.8x valueToStore=%x offsetAddress=%#.8x",
-        imm32, baseAddress, valueToStore, offsetAddress);
-#endif
+    DEBUG(INTERPRETER_ARM_STORE, "armStrInstruction: imm32=%x baseAddress=%#.8x valueToStore=%x "
+        "offsetAddress=%#.8x" EOL, imm32, baseAddress, valueToStore, offsetAddress);
 
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
     {
       offsetAddress = baseAddress + imm32;
-#ifdef DATA_MOVE_TRACE
-      printf(" inc" EOL);
-#endif
     }
     else
     {
       offsetAddress = baseAddress - imm32;
-#ifdef DATA_MOVE_TRACE
-      printf(" dec" EOL);
-#endif
     }
   } // Immediate case ends
   else
   {
-#ifdef DATA_MOVE_TRACE
-    printf("strInstr: reg case: ");
-#endif
     // register case
     u32int regDst2 = instruction & 0x0000000F;
-
     u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
-#ifdef DATA_MOVE_TRACE
-    printf("regDst2=%x, baseAddress=%#.8x, offsetRegisterValue=%x, valueToStore=%x" EOL,
-        regDst2, baseAddress, offsetRegisterValue, valueToStore);
-#endif
+
+    DEBUG(INTERPRETER_ARM_STORE, "armStrInstruction: regDst2=%x, baseAddress=%#.8x, "
+        "offsetRegisterValue=%x, valueToStore=%x" EOL, regDst2, baseAddress, offsetRegisterValue,
+        valueToStore);
 
     if (regDst2 == GPR_PC)
     {
@@ -148,6 +133,8 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
   {
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
+
+  DEBUG(INTERPRETER_ARM_STORE, "armStrbInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
   u32int regOrImm = instruction & 0x02000000; // 1 = reg, 0 = imm
   u32int preOrPost = instruction & 0x01000000; // 1 = pre, 0 = post
@@ -255,6 +242,8 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
   {
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
+
+  DEBUG(INTERPRETER_ARM_STORE, "armStrhInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
   u32int preOrPost = instruction & 0x01000000; // 1 = pre, 0 = post
   u32int incOrDec = instruction & 0x00800000; // 1 = inc, 0 = dec
@@ -372,6 +361,8 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
+  DEBUG(INTERPRETER_ARM_STORE, "armStrdInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+
   u32int prePost = instruction & 0x01000000;
   u32int upDown = instruction & 0x00800000;
   u32int regOrImm = instruction & 0x00400000;
@@ -379,10 +370,6 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
   u32int regDst = (instruction & 0x000F0000) >> 16;
   u32int regSrc = (instruction & 0x0000F000) >> 12;
   u32int regSrc2 = regSrc + 1;
-
-#ifdef DATA_MOVE_TRACE
-    printf("STRD instruction: %#.8x @ PC = %#.8x" EOL, instruction, context->R15);
-#endif
 
   if ((regSrc % 2) == 1)
   {
@@ -427,10 +414,8 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
     {
       offsetAddress = baseAddress - imm32;
     }
-#ifdef DATA_MOVE_TRACE
-    printf("imm32=%x baseAddress=%#.8x valueToStore=%x offsetAddress=%#.8x" EOL,
-        imm32, baseAddress, valueToStore, offsetAddress);
-#endif
+    DEBUG(INTERPRETER_ARM_STORE, "armStrdInstruction: imm32=%x baseAddress=%#.8x valueToStore=%x "
+        "offsetAddress=%#.8x" EOL, imm32, baseAddress, valueToStore, offsetAddress);
   } // Immediate case ends
   else
   {
@@ -454,10 +439,8 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
       // decrement
       offsetAddress = baseAddress - offsetRegisterValue;
     }
-#ifdef DATA_MOVE_TRACE
-    printf("Rm=%x baseAddress=%x valueToStore=%x offsetRegisterValue=%x" EOL,
-        regDst2, baseAddress, valueToStore, offsetRegisterValue);
-#endif
+    DEBUG(INTERPRETER_ARM_STORE, "armStrdInstruction: Rm=%x baseAddress=%x valueToStore=%x "
+        "offsetRegisterValue=%x" EOL, regDst2, baseAddress, valueToStore, offsetRegisterValue);
   } // Register case ends
 
   u32int address;
@@ -470,17 +453,15 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
   {
     address = baseAddress;
   }
-#ifdef DATA_MOVE_TRACE
-  printf("store address = %#.8x", address);
-#endif
+
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
   if (regSrc == GPR_PC)
   {
     valueToStore += 8;
   }
-#ifdef DATA_MOVE_TRACE
-  printf("store val1 = %x store val2 = %x" EOL, valueToStore, valueToStore2);
-#endif
+
+  DEBUG(INTERPRETER_ARM_STORE, "armStrdInstruction: store address = %#.8x, values %#.8x %#.8x" EOL,
+      address, valueToStore, valueToStore2);
 
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address + 4, valueToStore2);
@@ -500,6 +481,8 @@ u32int armStrhtInstruction(GCONTXT *context, u32int instruction)
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
+  DEBUG(INTERPRETER_ARM_STORE, "armStrhtInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+
   DIE_NOW(context, "armStrhtInstruction not implemented");
 }
 
@@ -510,9 +493,7 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
-#ifdef DATA_MOVE_TRACE
-  printf("STREX instruction: %#.8x @ PC = %#.8x" EOL, instruction, context->R15);
-#endif
+  DEBUG(INTERPRETER_ARM_STORE, "armStrexInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
   u32int regN = (instruction & 0x000F0000) >> 16;
   u32int regD = (instruction & 0x0000F000) >> 12;
@@ -529,10 +510,9 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
 
   u32int address = loadGuestGPR(regN, context);
   u32int valToStore = loadGuestGPR(regT, context);
-#ifdef DATA_MOVE_TRACE
-  printf("STREX instruction: address = %#.8x, valToStore = %x, valueFromReg %x" EOL,
-      address, valToStore, regT);
-#endif
+
+  DEBUG(INTERPRETER_ARM_STORE, "armStrexInstruction: address = %#.8x, valToStore = %#.8x, "
+      "valueFromReg %#.8x" EOL, address, valToStore, regT);
 
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore);
   // operation succeeded updating memory, flag regD (0 - updated, 1 - fail)
@@ -548,9 +528,8 @@ u32int armStrexbInstruction(GCONTXT *context, u32int instruction)
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
-#ifdef DATA_MOVE_TRACE
-  printf("STREXB instruction: %#.8x @ PC = %#.8x" EOL, instruction, context->R15);
-#endif
+  DEBUG(INTERPRETER_ARM_STORE, "armStrexbInstruction: %#.8x @ %#.8x" EOL, instruction,
+      context->R15);
 
   u32int regN = (instruction & 0x000F0000) >> 16;
   u32int regD = (instruction & 0x0000F000) >> 12;
@@ -582,9 +561,8 @@ u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
-#ifdef DATA_MOVE_TRACE
-  printf("STREXH instruction: %#.8x @ PC = %#.8x" EOL, instruction, context->R15);
-#endif
+  DEBUG(INTERPRETER_ARM_STORE, "armStrexhInstruction: %#.8x @ %#.8x" EOL, instruction,
+      context->R15);
 
   u32int condcode = (instruction & 0xF0000000) >> 28;
   u32int regN = (instruction & 0x000F0000) >> 16;
@@ -623,9 +601,8 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
-#ifdef DATA_MOVE_TRACE
-  printf("STREXD instruction: %#.8x @ PC = %#.8x" EOL, instruction, context->R15);
-#endif
+  DEBUG(INTERPRETER_ARM_STORE, "armStrexdInstruction: %#.8x @ %#.8x" EOL, instruction,
+      context->R15);
 
   u32int condcode = (instruction & 0xF0000000) >> 28;
   u32int regN = (instruction & 0x000F0000) >> 16;
@@ -678,10 +655,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
-#ifdef DATA_MOVE_TRACE
-    printf("STM instruction: %#.8x @ PC = %#.8x" EOL, instruction, context->R15);
-#endif
-
+  DEBUG(INTERPRETER_ARM_STORE, "armStmInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
   u32int prePost = instruction & 0x01000000;
   u32int upDown = instruction & 0x00800000;
@@ -728,10 +702,9 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
     // if current register set
     if (((regList >> i) & 0x1) == 0x1)
     {
-#ifdef DATA_MOVE_TRACE
-      printf("*(%#.8x) = R[%x] = %#.8x" EOL, address, i, loadGuestGPR(i, context));
-#endif
       u32int valueLoaded = loadGuestGPR(i, context);
+      DEBUG(INTERPRETER_ARM_STORE, "armStmInstruction: *(%#.8x) = R[%x] = %#.8x" EOL, address, i,
+          valueLoaded);
       // emulating store. Validate cache if needed
       validateCachePreChange(context->blockCache, address);
       // *(address)= R[i];
@@ -765,7 +738,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
   }
 
   // if we stored to user mode registers, lets restore the CPSR
-  if (forceUser != 0)
+  if (forceUser)
   {
     context->CPSR = savedCPSR;
   }

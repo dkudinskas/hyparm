@@ -11,6 +11,8 @@
 
 u32int t16LdrInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T16_LOAD, "t16LdrInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+
   u32int regSrc;
   u32int regDst;
   u32int offsetAddress;
@@ -62,6 +64,8 @@ u32int t16LdrInstruction(GCONTXT *context, u32int instruction)
 
 u32int t16LdrbInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T16_LOAD, "t16LdrbInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+
   u32int regSrc = (instruction & 0x0078)>>3;
   u32int regDst  = (instruction & 0x0007);
   u32int offset = 0;
@@ -89,11 +93,16 @@ u32int t16LdrbInstruction(GCONTXT *context, u32int instruction)
 
 u32int t16LdrhImmediateInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T16_LOAD, "t16LdrhImmediateInstruction: %#.4x @ %#.8x" EOL, instruction,
+      context->R15);
+
   DIE_NOW(context, "t16LdrhImmediateInstruction not implemented");
 }
 
 u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T16_LOAD, "t16LdmInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+
   u32int baseReg = 0;
   u32int regList = 0;
   u32int baseAddress = 0;

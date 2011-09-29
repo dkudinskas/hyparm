@@ -11,6 +11,8 @@
 
 u32int t32StrbInstruction(GCONTXT * context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T32_STORE, "t32StrbInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+
   u32int regSrc = (instruction & 0x0000F000) >> 12;
   u32int regDst = (instruction & 0x000F0000) >> 16;
   u32int imm32 = (instruction & 0x000000FF);
@@ -58,15 +60,18 @@ u32int t32StrbInstruction(GCONTXT * context, u32int instruction)
   }
   else
   {
-    DIE_NOW(0, "Thumb32 STRB reg unimplemeted");
+    DIE_NOW(context, "t32StrbInstruction: register case not implemented");
   }
-  //printf("strbInstr: regsrc=%x, regdst=%x, address=%x, value=%x, P=%x, U=%x, W=%x" EOL,regSrc,regDst,address,valueToStore, preOrPost, incOrDec, writeBack);
+
+  DEBUG(INTERPRETER_T32_STORE, "t32StrbInstruction: regsrc=%x, regdst=%x, address=%#.8x, value="
+      "%#.8x, P=%x, U=%x, W=%x" EOL, regSrc, regDst, address, valueToStore, preOrPost, incOrDec,
+      writeBack);
 
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valueToStore & 0xFF));
 
   if (writeBack)
   {
-    //printf("STRB: storing %x to %x" EOL, address, regDst);
+    DEBUG(INTERPRETER_T32_STORE, "t32StrbInstruction: storing %#.8x to %#.8x" EOL, address, regDst);
     storeGuestGPR(regDst, valueToStore, context);
   }
 
@@ -75,20 +80,26 @@ u32int t32StrbInstruction(GCONTXT * context, u32int instruction)
 
 u32int t32StrhImmediateInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T32_STORE, "t32StrhImmediateInstruction: %#.8x @ %#.8x" EOL, instruction,
+      context->R15);
+
   u32int regSrc = (instruction & 0x0000F000) >> 12;
   u32int regDst = (instruction & 0x000F0000) >> 16;
 
-    u32int imm12 = (instruction & 0x00000FFF);
-    u32int baseAddress = loadGuestGPR(regDst, context);
-    u32int offsetAddress = baseAddress + imm12;
-    u32int valueToStore = loadGuestGPR(regSrc, context);
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, offsetAddress, valueToStore);
+  u32int imm12 = (instruction & 0x00000FFF);
+  u32int baseAddress = loadGuestGPR(regDst, context);
+  u32int offsetAddress = baseAddress + imm12;
+  u32int valueToStore = loadGuestGPR(regSrc, context);
+  context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, offsetAddress, valueToStore);
 
   return context->R15 + T32_INSTRUCTION_SIZE;
 }
 
 u32int t32StrhRegisterInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T32_STORE, "t32StrhRegisterInstruction: %#.8x @ %#.8x" EOL, instruction,
+      context->R15);
+
   u32int regSrc = (instruction & 0x0000F000) >> 12;
   u32int regDst = (instruction & 0x000F0000) >> 16;
 
@@ -105,6 +116,9 @@ u32int t32StrhRegisterInstruction(GCONTXT *context, u32int instruction)
 
 u32int t32StrdImmediateInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T32_STORE, "t32StrdImmediateInstruction: %#.8x @ %#.8x" EOL, instruction,
+      context->R15);
+
   u32int prePost = (instruction & 0x01000000)>>24;
   u32int upDown = (instruction & 0x00800000)>>23;
   u32int writeback = (instruction & 0x00200000)>>21;
@@ -133,9 +147,8 @@ u32int t32StrdImmediateInstruction(GCONTXT *context, u32int instruction)
 
   u32int address = prePost ? offsetAddress : baseAddress;
 
-#ifdef DATA_MOVE_TRACE
-  printf("store val1 = %x@%#.8x store val2 = %x@%#.8x" EOL, regDst, imm8, valueToStore, address, valueToStore2, address+4);
-#endif
+  DEBUG(INTERPRETER_T32_STORE, "t32StrdImmediateInstruction: store val1 = %x@%#.8x store val2 = "
+      "%x@%#.8x" EOL, valueToStore, address, valueToStore2, address + 4);
 
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address + 4, valueToStore2);
@@ -150,5 +163,7 @@ u32int t32StrdImmediateInstruction(GCONTXT *context, u32int instruction)
 
 u32int t32StrhtInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T32_STORE, "t32StrhtInstruction: %#.8x @ %#.8x" EOL, instruction,
+      context->R15);
   DIE_NOW(context, "t32StrhtInstruction not implemented");
 }

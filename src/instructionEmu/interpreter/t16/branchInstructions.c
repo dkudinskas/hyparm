@@ -12,6 +12,9 @@ u32int t16BImmediate8Instruction(GCONTXT *context, u32int instruction)
   /*
    * NOTE: this Thumb instruction contains a condition code field!
    */
+  DEBUG(INTERPRETER_T16_BRANCH, "t16BImmediate8Instruction: %#.4x @ %#.8x" EOL, instruction,
+      context->R15);
+
   u32int conditionCode = (instruction >> 8) & 0xF;
   if (conditionCode == 0xE)
   {
@@ -32,6 +35,9 @@ u32int t16BImmediate8Instruction(GCONTXT *context, u32int instruction)
 
 u32int t16BImmediate11Instruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T16_BRANCH, "t16BImmediate11Instruction: %#.4x @ %#.8x" EOL, instruction,
+      context->R15);
+
   u32int offset = (instruction & 0x07FF) << 1;
   u32int sign = offset >> 11;
   if (sign)
@@ -43,11 +49,16 @@ u32int t16BImmediate11Instruction(GCONTXT *context, u32int instruction)
 
 u32int t16BlxRegisterInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T16_BRANCH, "t16BlxRegisterInstruction: %#.4x @ %#.8x" EOL, instruction,
+      context->R15);
+
   DIE_NOW(context, "t16BlxRegisterInstruction not implemented");
 }
 
 u32int t16BxInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T16_BRANCH, "t16BxInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+
   u32int regDest = (instruction & 0x0078) >> 3;
   u32int destinationAddress = loadGuestGPR(regDest, context);
 
