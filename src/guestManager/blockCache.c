@@ -287,10 +287,10 @@ void validateCacheMultiPreChange(BCENTRY *bcache, u32int startAddress, u32int en
 
 void dumpBlockCacheEntry(u32int index, BCENTRY *bcache)
 {
-  printf("dumpBlockCacheEntry: entry #%02x: ", index);
-  printf("dumpBlockCacheEntry: startAddress = %x, endAddress = %x, valid = %x\n",
+  printf("dumpBlockCacheEntry: entry #%#.2x: ", index);
+  printf("dumpBlockCacheEntry: startAddress = %#.8x, endAddress = %#.8x, valid = %x" EOL,
          bcache[index].startAddress, bcache[index].endAddress, bcache[index].valid);
-  printf("dumpBlockCacheEntry: EOBinstr = %08x, handlerFunction = %x",
+  printf("dumpBlockCacheEntry: EOBinstr = %#.8x, handlerFunction = %p",
          bcache[index].hyperedInstruction, bcache[index].hdlFunct);
 }
 

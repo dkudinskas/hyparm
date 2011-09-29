@@ -1,4 +1,5 @@
 #include "common/debug.h"
+#include "common/stddef.h"
 
 #include "cpuArch/armv7.h"
 #include "cpuArch/constants.h"
@@ -33,7 +34,7 @@ extern bool rtos;
 
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 {
-  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)\n", code);
+  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
 
   // parse the instruction to find the start address of next block
   u32int nextPC = 0;
@@ -106,7 +107,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     }
   }
 
-  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = 0x%x" EOL, nextPC);
+  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = %#.8x" EOL, nextPC);
 
   if ((context->CPSR & PSR_MODE) != PSR_USR_MODE)
   {
@@ -215,9 +216,9 @@ GCONTXT *dataAbort(GCONTXT *context)
     case dfsTranslationTableWalkLvl1SyncParityErr:
     case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
-      printf("Unimplemented user data abort.\n");
+      printf("dataAbort: unimplemented user data abort %#.8x" EOL, faultStatus);
       printDataAbort();
-      DIE_NOW(0, "Entering infinite loop\n");
+      DIE_NOW(NULL, "dataAbort: unimplemented user data abort");
   }
   enableInterrupts();
   return context;
@@ -226,7 +227,7 @@ GCONTXT *dataAbort(GCONTXT *context)
 void dataAbortPrivileged(u32int pc)
 {
   /* Here if we abort in a priviledged mode, i.e its the Hypervisors fault */
-  printf("dataAbortPrivileged: Hypervisor dabt in priv mode @ pc %08x\n", pc);
+  printf("dataAbortPrivileged: Hypervisor dabt in priv mode @ pc %#.8x" EOL, pc);
 
   printDataAbort();
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
@@ -239,11 +240,11 @@ void dataAbortPrivileged(u32int pc)
       u32int memAddr = getDFAR();
       if( (memAddr >= BEAGLE_RAM_START) && (memAddr <= BEAGLE_RAM_END) )
       {
-        DIE_NOW(0, "Translation fault inside physical RAM range\n");
+        DIE_NOW(0, "Translation fault inside physical RAM range");
       }
       else
       {
-        DIE_NOW(0, "Translation fault for area not in RAM!\n");
+        DIE_NOW(0, "Translation fault for area not in RAM!");
       }
       break;
     }
@@ -267,23 +268,23 @@ void dataAbortPrivileged(u32int pc)
     case dfsTranslationTableWalkLvl1SyncParityErr:
     case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
-      printf("dataAbortPrivileged: UNIMPLEMENTED data abort type.\n");
+      printf("dataAbortPrivileged: UNIMPLEMENTED data abort type.");
       printDataAbort();
-      DIE_NOW(0, "Entering infinite loop\n");
+      DIE_NOW(0, "Entering infinite loop");
       break;
   }
 
-  DIE_NOW(0, "At end of hypervisor data abort handler. Stopping\n");
+  DIE_NOW(0, "At end of hypervisor data abort handler. Stopping");
 }
 
 GCONTXT *undefined(GCONTXT *context)
 {
-  DIE_NOW(0, "undefined: undefined handler, Implement me!\n");
+  DIE_NOW(0, "undefined: undefined handler, Implement me!");
 }
 
 void undefinedPrivileged(void)
 {
-  DIE_NOW(0, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!\n");
+  DIE_NOW(0, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!");
 }
 
 GCONTXT *prefetchAbort(GCONTXT *context)
@@ -435,8 +436,8 @@ GCONTXT *irq(GCONTXT *context)
       break;
     }
     default:
-      printf("Received IRQ = %x\n", activeIrqNumber);
-      DIE_NOW(0, "irq: unimplemented IRQ number.\n");
+      printf("Received IRQ = %x" EOL, activeIrqNumber);
+      DIE_NOW(0, "irq: unimplemented IRQ number");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -489,7 +490,7 @@ void irqPrivileged()
       break;
     }
     default:
-      printf("Received IRQ = %x\n", activeIrqNumber);
+      printf("Received IRQ = %#x" EOL, activeIrqNumber);
       DIE_NOW(0, "irqPrivileged: unimplemented IRQ number.");
   }
 

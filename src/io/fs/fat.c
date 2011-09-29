@@ -39,7 +39,7 @@ int fatMount(fatfs *fs, blockDevice *dev, int partNum)
   buffer = (char*)mallocBytes(0x1000);
   if (buffer == 0)
   {
-    DIE_NOW(0, "fatMount: failed to allocate block buffer." EOL);
+    DIE_NOW(0, "fatMount: failed to allocate block buffer");
   }
   else
   {
@@ -282,7 +282,7 @@ dentry *getPathDirEntry(fatfs *fs, const char *fname, int createNew)
   dentry *dirEntry = (dentry*)mallocBytes(sizeof(dentry));
   if (dirEntry == 0)
   {
-    DIE_NOW(0, "getPathDirEntry: failed to allocate dir entry struct." EOL);
+    DIE_NOW(0, "getPathDirEntry: failed to allocate dir entry struct");
   }
   else
   {
@@ -640,7 +640,7 @@ file* fopen(fatfs *fs, const char *fname)
   file *f = (file *)mallocBytes(sizeof(file));
   if (f == 0)
   {
-    DIE_NOW(0, "fopen: failed to allocate file struct." EOL);
+    DIE_NOW(0, "fopen: failed to allocate file struct.");
   }
   memset(f, 0, sizeof(file));
 
@@ -724,7 +724,7 @@ file *fnew(fatfs *fs, const char *fname)
   file *f = (file *)mallocBytes(sizeof(file));
   if (f == 0)
   {
-    DIE_NOW(0, "fnew: failed to allocate file struct." EOL);
+    DIE_NOW(0, "fnew: failed to allocate file struct");
   }
   else
   {

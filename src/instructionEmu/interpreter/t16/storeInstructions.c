@@ -18,7 +18,7 @@ u32int t16StrInstruction(GCONTXT *context, u32int instruction)
   u32int valueToStore = loadGuestGPR(regSrc, context);
   u32int offsetAddress = baseAddress + imm32;
 
-  //printf("strInstr@%08x: regsrc=%x, regdst=%x, address=%x, value=%x\n",context->R15,regSrc,regDst,offsetAddress,valueToStore);
+  //printf("strInstr@%#.8x: regsrc=%x, regdst=%x, address=%x, value=%x" EOL,context->R15,regSrc,regDst,offsetAddress,valueToStore);
 
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, offsetAddress, valueToStore);
 
@@ -33,7 +33,7 @@ u32int t16StrSpInstruction(GCONTXT *context, u32int instruction)
   u32int valueToStore = loadGuestGPR(regSrc, context);
   u32int offsetAddress = baseAddress + imm32;
 
-  //printf("strInstr@%08x: regsrc=%x, regdst=%x, address=%x, value=%x\n",context->R15,regSrc,regDst,offsetAddress,valueToStore);
+  //printf("strInstr@%#.8x: regsrc=%x, regdst=%x, address=%x, value=%x" EOL,context->R15,regSrc,regDst,offsetAddress,valueToStore);
 
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, offsetAddress, valueToStore);
 
@@ -134,6 +134,6 @@ u32int t16PushInstruction(GCONTXT *context, u32int instruction)
   //thumb always update the SP to point to the start address
   address += 4; // FIX ME -> Not very smart, is it?
   storeGuestGPR(baseReg, address, context);
-  //printf("Restore PC : %08x\n", context->R15+2);
+  //printf("Restore PC : %#.8x" EOL, context->R15+2);
   return context->R15 + T16_INSTRUCTION_SIZE;
 }

@@ -102,13 +102,13 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 #if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
   if (getScanBlockCallSource() == SCANNER_CALL_SOURCE_NOT_SET)
   {
-    printf("scanBlock: gc = %p, blkStartAddr = %08x\n", context, startAddress);
+    printf("scanBlock: gc = %p, blkStartAddr = %#.8x" EOL, context, startAddress);
     DIE_NOW(context, "scanBlock() called from unknown source");
   }
   if (startAddress == 0)
   {
-    printf("scanBlock: gc = %p, blkStartAddr = %.8x\n", context, startAddress);
-    printf("scanBlock: called from source %u\n", (u32int)scanBlockCallSource);
+    printf("scanBlock: gc = %p, blkStartAddr = %.8x" EOL, context, startAddress);
+    printf("scanBlock: called from source %u" EOL, (u32int)scanBlockCallSource);
     DEBUG(SCANNER_COUNT_BLOCKS, "scanBlock: scanned block count is %#Lx" EOL, scanBlockCounter);
     DIE_NOW(context, "scanBlock() called with NULL pointer");
   }
@@ -179,7 +179,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
         DIE_NOW(context, "scanner: block cache index in SWI out of range.");
       }
 #ifdef SCANNER_DEBUG
-      printf("scanner: EOB instruction is SWI @ %p code %x\n", end, svcCacheIndex);
+      printf("scanner: EOB instruction is SWI @ %p code %x" EOL, end, svcCacheIndex);
 #endif
       BCENTRY * bcEntry = getBlockCacheEntry(svcCacheIndex, context->blockCache);
       // retrieve end of block instruction and handler function pointer
@@ -218,7 +218,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
   }
 
   #ifdef SCANNER_DEBUG
-    printf("scanner: EOB @ %08x insr %08x SVC code %x hdlrFuncPtr %x\n",
+    printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
         currAddress, context->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)context->hdlFunct);
   #endif
 
@@ -296,7 +296,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         DIE_NOW(context, "scanThumbBlock: block cache index in SWI out of range");
       }
 #ifdef SCANNER_DEBUG
-      printf("scanner: EOB instruction is SWI @ %08x code %x\n", (u32int)start, cacheIndex);
+      printf("scanner: EOB instruction is SWI @ %#.8x code %x" EOL, (u32int)start, cacheIndex);
 #endif
       BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, context->blockCache);
       // retrieve end of block instruction and handler function pointer
@@ -356,14 +356,14 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       }
     }
 #ifdef SCANNER_DBG
-    printf("Thumb svc on %08x\n",(u32int)end);
+    printf("Thumb svc on %#.8x" EOL,(u32int)end);
 #endif
 
     context->hdlFunct = handler;
   }
 
 #ifdef SCANNER_DEBUG
-printf("scanner: EOB @ %08x insr %08x SVC code %x hdlrFuncPtr %x\n",
+printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
     start, context->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)context->hdlFunct);
 #endif
 
@@ -441,7 +441,7 @@ static void protectScannedBlock(u32int startAddress, u32int endAddress)
         u32int mbEnd   = endAddress & 0xFFF00000;
         if (mbStart != (mbEnd - 0x00100000))
         {
-          printf("startAddress %08x, endAddress %08x\n", startAddress, endAddress);
+          printf("startAddress %#.8x, endAddress %#.8x" EOL, startAddress, endAddress);
           DIE_NOW(0, "protectScannedBlock: Basic block crosses non-sequential section boundary!");
         }
       }
@@ -454,7 +454,7 @@ static void protectScannedBlock(u32int startAddress, u32int endAddress)
       switch(ptEntryLvl2 & 0x3)
       {
         case LARGE_PAGE:
-          printf("Page size: 64KB (large), %08x\n", ptEntryLvl2);
+          printf("Page size: 64KB (large), %#.8x" EOL, ptEntryLvl2);
           DIE_NOW(0, "Unimplemented.");
           break;
         case SMALL_PAGE:
@@ -464,7 +464,7 @@ static void protectScannedBlock(u32int startAddress, u32int endAddress)
           }
           break;
         case FAULT:
-          printf("Page invalid, %08x\n", ptEntryLvl2);
+          printf("Page invalid, %#.8x" EOL, ptEntryLvl2);
           DIE_NOW(0, "Unimplemented.");
           break;
         default:
@@ -474,7 +474,7 @@ static void protectScannedBlock(u32int startAddress, u32int endAddress)
       break;
     }
     case FAULT:
-      printf("Entry for basic block: invalid, %p\n", ptEntryAddr);
+      printf("Entry for basic block: invalid, %p" EOL, ptEntryAddr);
       DIE_NOW(0, "Unimplemented.");
       break;
     case RESERVED:

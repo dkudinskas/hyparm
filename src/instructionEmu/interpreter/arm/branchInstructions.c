@@ -15,7 +15,7 @@ u32int armBInstruction(GCONTXT *context, u32int instruction)
   }
 
 #ifdef ARM_INSTR_TRACE
-  printf("Branch instr %08x @ %08x\n", instruction, context->R15);
+  printf("Branch instr %#.8x @ %#.8x" EOL, instruction, context->R15);
 #endif
 
   u32int sign = instruction & 0x00800000;

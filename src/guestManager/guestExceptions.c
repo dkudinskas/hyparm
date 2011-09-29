@@ -24,7 +24,7 @@ extern bool rtos;
 void deliverServiceCall(GCONTXT *context)
 {
 #ifdef GUEST_EXCEPTIONS_DBG
-  printf("deliverServiceCall: @pc %08x\n", context->R15);
+  printf("deliverServiceCall: @pc %08x" EOL, context->R15);
 #endif
   // 2. copy guest CPSR into SPSR_SVC
   context->SPSR_SVC = context->CPSR;
@@ -88,14 +88,14 @@ void throwInterrupt(u32int irqNumber)
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
 #ifdef GUEST_EXCEPTIONS_DBG
-        printf("Enable guest Interrupts\n");
+        printf("Enable guest Interrupts" EOL);
 #endif
         context->guestIrqPending = TRUE;
       }
 #ifdef GUEST_EXCEPTIONS_DBG
       else
       {
-        printf("Guest is not ready to handle IRQ: %x\n", context->R15);
+        printf("Guest is not ready to handle IRQ: %x" EOL, context->R15);
       }
 #endif
       break;
@@ -215,7 +215,7 @@ void deliverDataAbort(GCONTXT *context)
 
 void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
 {
-  GCONTXT* context = getGuestContext();
+  GCONTXT *context = getGuestContext();
 
   // set CP15 Data Fault Status Register
   u32int dfsr = (faultType & 0xF) | ((faultType & 0x10) << 6);
@@ -225,7 +225,7 @@ void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domai
     dfsr |= 0x800; // write-not-read bit
   }
 #ifdef GUEST_EXCEPTIONS_DBG
-  printf("throwDataAbort(%08x): faultType %x, isWrite %x, dom %x, @pc %08x, dfsr %08x\n",
+  printf("throwDataAbort(%08x): faultType %x, isWrite %x, dom %x, @pc %08x, dfsr %08x" EOL,
          address, faultType, isWrite, domain, context->R15, dfsr);
 #endif
   setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
@@ -259,7 +259,7 @@ void deliverPrefetchAbort(GCONTXT *context)
   }
   else
   {
-    DIE_NOW(0, "deliverInterrupt: Prefetch abort to be delivered with guest vmem off.");
+    DIE_NOW(context, "deliverInterrupt: Prefetch abort to be delivered with guest vmem off.");
   }
   // update AFI bits for IRQ:
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;
@@ -272,7 +272,7 @@ void throwPrefetchAbort(u32int address, u32int faultType)
   u32int ifsr = (faultType & 0xF) | ((faultType & 0x10) << 10);
 
 #ifdef GUEST_EXCEPTIONS_DBG
-  printf("throwPrefetchAbort(%08x): faultType %x, @pc %08x, ifsr %08x\n",
+  printf("throwPrefetchAbort(%08x): faultType %x, @pc %08x, ifsr %08x" EOL,
           address, faultType, context->R15, ifsr);
 #endif
   setCregVal(5, 0, 0, 1, context->coprocRegBank, ifsr);
