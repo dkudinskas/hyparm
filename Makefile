@@ -359,21 +359,27 @@ distclean: clean clean_kconfig
 
 help:
 	@echo 'Cleaning targets:'
-	@echo '  clean          Remove files generated during hypervisor build'
-	@echo '  clean_kconfig  Remove files generated during KConfig build'
-	@echo '  distclean      Remove all generated files including $(KCONFIG_CONFIG)'
+	@echo '  clean             Remove files generated during hypervisor build'
+	@echo '  clean_kconfig     Remove files generated during KConfig build'
+	@echo '  distclean         Remove all generated files including $(KCONFIG_CONFIG)'
 	@echo
 	@echo 'Configuration targets:'
-	@echo '  config         Create or update $(KCONFIG_CONFIG)'
-	@echo '  defconfig      Create $(KCONFIG_CONFIG) with defaults from $(SCRIPT_PATH)/defconfig'
+	@echo '  config            Create or update $(KCONFIG_CONFIG)'
+	@echo '  defconfig         Create $(KCONFIG_CONFIG) with defaults from $(SCRIPT_PATH)/defconfig'
 	@echo
 	@echo 'Build targets:'
-	@echo '  all            Build all targets marked with [*]'
-	@echo '* binary         Build $(APP_NAME).bin'
-	@echo '* dump           Build $(APP_NAME).dump'
+	@echo '  all               Build all targets marked with [*]'
+	@echo '* binary            Build $(APP_NAME).bin'
+	@echo '* dump              Build $(APP_NAME).dump'
+	@echo
+	@echo 'Autodecoder targets:'
+	@echo '  autodecoder_arm   Create C source for ARM decoder'
+	@echo '  autodecoder_t16   Create C source for Thumb 16-bit decoder'
+	@echo '  autodecoder_t32   Create C source for Thumb 32-bit decoder'
 	@echo
 	@echo 'Some influential environment variables:'
-	@echo '  CROSS_COMPILE  Cross-compiler toolchain prefix'
+	@echo '  CROSS_COMPILE     Cross-compiler toolchain prefix'
+	@echo '  PATH_AUTODECODER  Path to autodecoder'
 	@echo
 	@echo 'Values for these variables specified in $(KCONFIG_CONFIG) override environment values.'
 
