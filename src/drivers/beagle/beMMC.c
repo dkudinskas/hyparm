@@ -319,14 +319,14 @@ int mmcSendCommand(struct mmc *dev, struct mmcCommand *cmd, struct mmcData *data
 
   if (data && (data->flags & MMC_DATA_READ))
   {
-    DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: data read command, dest = %#x size %#x" EOL,
+    DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: data read command, dest = %p size %#x" EOL,
             data->dest, data->blocksize * data->blocks);
     // doing a read op, start the read process
     mmcRead(dev, data->dest, data->blocksize * data->blocks);
   }
   else if (data && (data->flags & MMC_DATA_WRITE))
   {
-    DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: data write command, src = %#x size %#x" EOL,
+    DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: data write command, src = %p size %#x" EOL,
             data->src, data->blocksize * data->blocks);
     mmcWrite(dev, data->src, data->blocksize * data->blocks);
   }

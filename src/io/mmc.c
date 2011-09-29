@@ -17,9 +17,8 @@ u32int mmcRegisteredNumber = 0;
 
 int mmcRegister(struct mmc *mmc)
 {
-#ifdef MMC_DEBUG
-  printf("Registering mmc device\n");
-#endif
+  DEBUG(MMC, "Registering mmc device" EOL);
+
   // HACK here, need to redesign this so that getMMCDevice isn't useless
   mmcDevice = mmc; 
   mmc->blockDev.devID = mmcRegisteredNumber;
@@ -88,10 +87,10 @@ u32int mmcBlockRead(int devid, u32int start, u64int blockCount, void *dst)
 
   if ((start + blockCount) > mmc->blockDev.lba)
   {
-    printf("mmcBlockRead: exceeded max block address\n");
-    printf("start = %x\n", start);
-    printf("blockCount = %Lx\n", blockCount);
-    printf("lba = %Lx\n", mmc->blockDev.lba);
+    printf("mmcBlockRead: exceeded max block address" EOL);
+    printf("start = %#x" EOL, start);
+    printf("blockCount = %#Lx" EOL, blockCount);
+    printf("lba = %#Lx" EOL, mmc->blockDev.lba);
     return 0;
   }
 
@@ -139,7 +138,7 @@ u32int mmcBlockRead(int devid, u32int start, u64int blockCount, void *dst)
 
     if (mmc->sendCommand(mmc, &cmd, 0))
     {
-      printf("mmcBlockRead: stop cmd failed\n");
+      printf("mmcBlockRead: stop cmd failed" EOL);
       return 0;
     }
   }
@@ -161,7 +160,7 @@ u32int mmcBlockWrite(int devid, u32int start, u64int blockCount, const void *src
 
   if ((start + blockCount) > mmc->blockDev.lba)
   {
-    printf("mmcBlockWrite: exceeded max block address\n");
+    printf("mmcBlockWrite: exceeded max block address" EOL);
     return 0;
   }
 
@@ -193,7 +192,7 @@ u32int mmcBlockWrite(int devid, u32int start, u64int blockCount, const void *src
 
   if (mmc->sendCommand(mmc, &cmd, &data))
   {
-    printf("mmcBlockWrite: sendCommand failed\n");
+    printf("mmcBlockWrite: sendCommand failed" EOL);
     return 0;
   }
 
@@ -206,7 +205,7 @@ u32int mmcBlockWrite(int devid, u32int start, u64int blockCount, const void *src
 
     if (mmc->sendCommand(mmc, &cmd, 0))
     {
-      printf("mmcBlockWrite: stop cmd failed\n");
+      printf("mmcBlockWrite: stop cmd failed" EOL);
       return 0;
     }
   }
@@ -222,28 +221,20 @@ int mmcGoIdle(struct mmc *mmc)
 
   mdelay32k(1);
 
-#ifdef MMC_DEBUG
-  printf("mmcGoIdle(): cmd.idx = MMC_CMD_GO_IDLE_STATE\n");
-#endif
+  DEBUG(MMC, "mmcGoIdle(): cmd.idx = MMC_CMD_GO_IDLE_STATE" EOL);
 
   cmd.idx = MMC_CMD_GO_IDLE_STATE;
   cmd.arg = 0;
   cmd.responseType = MMC_RSP_NONE;
   cmd.flags = 0;
 
-#ifdef MMC_DEBUG
-  printf("mmcGoIdle(): sendCommand\n");
-#endif
+  DEBUG(MMC, "mmcGoIdle(): sendCommand" EOL);
   if ((error = mmc->sendCommand(mmc, &cmd, 0)))
   {
-#ifdef MMC_DEBUG
-    printf("mmcGoIdle(): ... failed (errno %x).\n", error);
-#endif
+    DEBUG(MMC, "mmcGoIdle(): ... failed (errno %#x)." EOL, error);
     return error;
   }
-#ifdef MMC_DEBUG
-  printf("mmcGoIdle(): ...done\n");
-#endif
+  DEBUG(MMC, "mmcGoIdle(): ...done" EOL);
 
   mdelay32k(2);
 
@@ -425,9 +416,7 @@ int mmcStartup(struct mmc *mmc)
 
   if ((err = mmc->sendCommand(mmc, &cmd, 0)))
   {
-#ifdef MMC_DEBUG
-    printf("mmcStartup(): card put in identify mode failed (errno %x)\n", err);
-#endif
+    DEBUG(MMC, "mmcStartup(): card put in identify mode failed (errno %#x)" EOL, err);
     return err;
   }
 
@@ -439,9 +428,7 @@ int mmcStartup(struct mmc *mmc)
   cmd.flags = 0;
   if ((err = mmc->sendCommand(mmc, &cmd, 0)))
   {
-#ifdef MMC_DEBUG
-    printf("mmcStartup(): send relative address failed (errno %x)\n", err);
-#endif
+    DEBUG(MMC, "mmcStartup(): send relative address failed (errno %#x)" EOL, err);
     return err;
   }
 
@@ -457,9 +444,7 @@ int mmcStartup(struct mmc *mmc)
   cmd.flags = 0;
   if ((err = mmc->sendCommand(mmc, &cmd, 0)))
   {
-#ifdef MMC_DEBUG
-    printf("mmcStartup(): failed to get card data (errno %x)\n", err);
-#endif
+    DEBUG(MMC, "mmcStartup(): failed to get card data (errno %#x)" EOL, err);
     return err;
   }
 
@@ -471,7 +456,7 @@ int mmcStartup(struct mmc *mmc)
   if (mmc->version == MMC_VERSION_UNKNOWN)
   {
     //keep it simple, ignore mmc stuff and focus on SD
-    printf("MMC card detected, not supported\n");
+    printf("MMC card detected, not supported" EOL);
     return -1;
   }
 
@@ -497,9 +482,7 @@ int mmcStartup(struct mmc *mmc)
     u32int csize = ((mmc->csd[1] & 0x3f) << 16) | ((mmc->csd[2] & 0xffff0000) >> 16);
     // memory capacity = (C_SIZE+1) * 512K byte
     mmc->capacity = (csize+1) * 512 * 1024;  
-#ifdef MMC_DEBUG
-    printf("mmcStartup(): high capacity, csize = %x\n", csize);
-#endif
+    DEBUG(MMC, "mmcStartup(): high capacity, csize = %#x" EOL, csize);
   }
   else
   {
@@ -512,14 +495,10 @@ int mmcStartup(struct mmc *mmc)
     u32int blockLength = 1 << ((mmc->csd[1] & 0x000f0000) >> 16);
     mmc->capacity = blockNumber * blockLength;
 
-#ifdef MMC_DEBUG
-    printf("mmcStartup(): low capacity, csize = %x, cmult = %x\n", csize, cmult);
-#endif
+    DEBUG(MMC, "mmcStartup(): low capacity, csize = %#x, cmult = %#x" EOL, csize, cmult);
   }
 
-#ifdef MMC_DEBUG
-  printf("mmcStartup(): mmc capacity = %x\n", mmc->capacity);
-#endif
+  DEBUG(MMC, "mmcStartup(): mmc capacity = %#x" EOL, mmc->capacity);
 
   if (mmc->readBlockLength > 512)
   {
@@ -537,18 +516,14 @@ int mmcStartup(struct mmc *mmc)
   cmd.flags = 0;
   if ((err = mmc->sendCommand(mmc, &cmd, 0)))
   {
-#ifdef MMC_DEBUG
-    printf("mmcStartup(): card put in xfer mode failed (errno %x)\n", err);
-#endif
+    DEBUG(MMC, "mmcStartup(): card put in xfer mode failed (errno %#x)" EOL, err);
     return err;
   }
 
   //ignore mmc cards
   if ((err = sdChangeFreq(mmc)))
   {
-#ifdef MMC_DEBUG
-    printf("mmcStartup(): sdChangeFreg failed (errno %x)\n", err);
-#endif
+    DEBUG(MMC, "mmcStartup(): sdChangeFreg failed (errno %#x)" EOL, err);
     return err;
   }
 
@@ -594,12 +569,10 @@ int mmcStartup(struct mmc *mmc)
   mmc->blockDev.blockSize = mmc->readBlockLength;
   mmc->blockDev.lba = mmc->capacity / mmc->readBlockLength;
 
-#ifdef MMC_DEBUG
-  printf("mmcStartup(): blockDev blocksize = %x\n", mmc->blockDev.blockSize);
-  printf("mmcStartup(): blockDev capacity = %x\n", mmc->capacity);
-  printf("mmcStartup(): blockDev readBlockLength = %x\n", mmc->readBlockLength);
-  printf("mmcStartup(): blockDev blockDev.lba = %x\n", mmc->blockDev.lba);
-#endif
+  DEBUG(MMC, "mmcStartup(): blockDev blocksize = %#x" EOL, mmc->blockDev.blockSize);
+  DEBUG(MMC, "mmcStartup(): blockDev capacity = %#x" EOL, mmc->capacity);
+  DEBUG(MMC, "mmcStartup(): blockDev readBlockLength = %#x" EOL, mmc->readBlockLength);
+  DEBUG(MMC, "mmcStartup(): blockDev blockDev.lba = %#Lx" EOL, mmc->blockDev.lba);
   return 0;
 }
 
@@ -701,9 +674,7 @@ int sdSendOpCond(struct mmc *mmc)
 /* Initialize the entire MMC subsystem. Will fail if a card is not detected. */
 int mmcMainInit()
 {
-#ifdef MMC_DEBUG
-  printf("mmcMainInit(): Initializing mmc subsystem...\n");
-#endif
+  DEBUG(MMC, "mmcMainInit(): Initializing mmc subsystem..." EOL);
 
   //if we don't initialize this then bad things happen on re-runs due to
   //the old value still being in memory, incremented
@@ -719,9 +690,7 @@ int mmcMainInit()
   int err = 0;
   if ((err = mmc->init(mmc)))
   {
-#ifdef MMC_DEBUG
-    printf("mmcMainInit(): mmc init failed\n");
-#endif
+    DEBUG(MMC, "mmcMainInit(): mmc init failed" EOL);
     return err;
   }
 
@@ -730,35 +699,27 @@ int mmcMainInit()
 
   if ((err = mmcGoIdle(mmc)))
   {
-#ifdef MMC_DEBUG
-    printf("mmcMainInit(): mmcGoIdle failed\n");
-#endif
+    DEBUG(MMC, "mmcMainInit(): mmcGoIdle failed" EOL);
     return err;
   }
 
   //test for SD version 2
   if ((err = mmcSendIfCond(mmc)))
   {
-#ifdef MMC_DEBUG
-    printf("mmcMainInit(): mmcSendIfCond failed\n");
-#endif
+    DEBUG(MMC, "mmcMainInit(): mmcSendIfCond failed" EOL);
     return err;
   }
 
   //try to get SD card's operating condition; ignore mmc cards
   if ((err = sdSendOpCond(mmc)))
   {
-#ifdef MMC_DEBUG
-    printf("mmcMainInit(): sdSendOpCond failed\n");
-#endif
+    DEBUG(MMC, "mmcMainInit(): sdSendOpCond failed" EOL);
     return err;
   }
 
   if ((err = mmcStartup(mmc)))
   {
-#ifdef MMC_DEBUG
-    printf("mmcMainInit(): mmcStartup failed\n");
-#endif
+    DEBUG(MMC, "mmcMainInit(): mmcStartup failed" EOL);
     return err;
   }
   return 0; 

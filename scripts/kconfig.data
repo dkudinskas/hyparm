@@ -248,6 +248,18 @@ config MMC
   bool "Use MMC/SD device to store debug output"
   depends on DEBUG
 
+config DEBUG_MMC
+  bool "Debug MMC block device"
+  depends on MMC
+
+config DEBUG_PARTITIONS
+  bool "Debug partition detection"
+  depends on MMC
+
+config DEBUG_FS_FAT
+  bool "Debug FAT file system"
+  depends on MMC
+
 menu "Hacks"
 
 config CLI
