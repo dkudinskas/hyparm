@@ -216,7 +216,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 #ifdef MEM_PROT_DBG
           printf("shouldDataAbort(): dacr 1, ptEntry type fault!\n");
 #endif
-          throwDataAbort(address, dfsTranslationSection, isWrite, dom);
+          throwDataAbort(context, address, dfsTranslationSection, isWrite, dom);
           return TRUE;
         }
         case SECTION:
@@ -227,7 +227,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
           {
             case PRIV_NO_USR_NO:      //priv no access, usr no access
             {
-              throwDataAbort(address, dfsPermissionSection, isWrite, dom);
+              throwDataAbort(context, address, dfsPermissionSection, isWrite, dom);
               return TRUE;
             }
             case PRIV_RW_USR_NO:      //priv read/write, usr no access
@@ -238,7 +238,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
               }
               else
               {
-                throwDataAbort(address, dfsPermissionSection, isWrite, dom);
+                throwDataAbort(context, address, dfsPermissionSection, isWrite, dom);
                 return TRUE;
               }
             }
@@ -246,7 +246,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
             {
               if ((!privAccess) && (isWrite))
               {
-                throwDataAbort(address, dfsPermissionSection, isWrite, dom);
+                throwDataAbort(context, address, dfsPermissionSection, isWrite, dom);
                 return TRUE;
               }
               else
@@ -266,12 +266,12 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
             {
               if (!privAccess)
               {
-                throwDataAbort(address, dfsPermissionSection, isWrite, dom);
+                throwDataAbort(context, address, dfsPermissionSection, isWrite, dom);
                 return TRUE;
               }
               else if (isWrite)
               {
-                throwDataAbort(address, dfsPermissionSection, isWrite, dom);
+                throwDataAbort(context, address, dfsPermissionSection, isWrite, dom);
                 return TRUE;
               }
               else
@@ -284,7 +284,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
             {
               if (isWrite)
               {
-                throwDataAbort(address, dfsPermissionSection, isWrite, dom);
+                throwDataAbort(context, address, dfsPermissionSection, isWrite, dom);
                 return TRUE;
               }
               else
@@ -310,7 +310,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
               {
                 case PRIV_NO_USR_NO:      //priv no access, usr no access
                 {
-                  throwDataAbort(address, dfsPermissionPage, isWrite, dom);
+                  throwDataAbort(context, address, dfsPermissionPage, isWrite, dom);
                   return TRUE;
                 }
                 case PRIV_RW_USR_NO:      //priv read/write, usr no access
@@ -321,7 +321,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
                   }
                   else
                   {
-                    throwDataAbort(address, dfsPermissionPage, isWrite, dom);
+                    throwDataAbort(context, address, dfsPermissionPage, isWrite, dom);
                     return TRUE;
                   }
                 }
@@ -329,7 +329,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
                 {
                   if ((!privAccess) && (isWrite))
                   {
-                    throwDataAbort(address, dfsPermissionPage, isWrite, dom);
+                    throwDataAbort(context, address, dfsPermissionPage, isWrite, dom);
                     return TRUE;
                   }
                   else
@@ -349,12 +349,12 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
                 {
                   if (!privAccess)
                   {
-                    throwDataAbort(address, dfsPermissionPage, isWrite, dom);
+                    throwDataAbort(context, address, dfsPermissionPage, isWrite, dom);
                     return TRUE;
                   }
                   else if (isWrite)
                   {
-                    throwDataAbort(address, dfsPermissionPage, isWrite, dom);
+                    throwDataAbort(context, address, dfsPermissionPage, isWrite, dom);
                     return TRUE;
                   }
                   else
@@ -367,7 +367,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
                 {
                   if (isWrite)
                   {
-                    throwDataAbort(address, dfsPermissionPage, isWrite, dom);
+                    throwDataAbort(context, address, dfsPermissionPage, isWrite, dom);
                     return TRUE;
                   }
                   else
@@ -384,7 +384,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
             }
             case FAULT:
             {
-              throwDataAbort(address, dfsTranslationPage, isWrite, dom);
+              throwDataAbort(context, address, dfsTranslationPage, isWrite, dom);
               return TRUE;
             }
           }
@@ -406,7 +406,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
       // however, pt entry must be valid.
       if (pt1Entry->type == FAULT)
       {
-        throwDataAbort(address, dfsTranslationSection, isWrite, dom);
+        throwDataAbort(context, address, dfsTranslationSection, isWrite, dom);
         return TRUE;
       }
       else

@@ -32,14 +32,14 @@ void deliverServiceCall(GCONTXT *context)
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_SVC_MODE;
   // 4. set LR to PC+4
 #ifdef CONFIG_THUMB2
-  if(context->CPSR & 0x20)// Were we on Thumb?
+  if (context->CPSR & 0x20)// Were we on Thumb?
   {
-    context->R14_SVC = context->R15 + 2;
+    context->R14_SVC = context->R15 + T16_INSTRUCTION_SIZE;
   }
   else
   {
 #endif
-    context->R14_SVC = context->R15 + 4;
+    context->R14_SVC = context->R15 + ARM_INSTRUCTION_SIZE;
 #ifdef CONFIG_THUMB2
   }
   /*
@@ -213,10 +213,8 @@ void deliverDataAbort(GCONTXT *context)
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
 
-void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain)
+void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isWrite, u32int domain)
 {
-  GCONTXT *context = getGuestContext();
-
   // set CP15 Data Fault Status Register
   u32int dfsr = (faultType & 0xF) | ((faultType & 0x10) << 6);
   dfsr |= domain << 4;
