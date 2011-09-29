@@ -5,8 +5,6 @@
 
 #include "io/mmc.h"
 
-// uncomment me for debug: #define MMC_HS_DEBUG
-
 #define MMCHS_BASE 0x4809C000
 
 
@@ -282,6 +280,7 @@
 #define ACMD61 (61 << 24)
 #define ACMD62 (62 << 24)
 #define ACMD63 (63 << 24)
+
 
 int mmcInit(struct mmc *mmc);
 

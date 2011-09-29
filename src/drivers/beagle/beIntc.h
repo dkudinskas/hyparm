@@ -8,8 +8,6 @@
 #define INTCPS_INTERRUPTS_PER_BANK 32
 #define INTCPS_NR_OF_INTERRUPTS    96
 
-// uncomment me to enable debug : #define BE_INTC_DBG
-
 // interrupt number mappings
 /*
 M_IRQ_0 EMUINT  MPU emulation
@@ -205,12 +203,5 @@ void acknowledgeIrqBE(void);
 
 void intcDumpRegistersBE(void);
 
-struct InterruptControllerBE
-{
-  bool enabled;
-  u32int baseAddress;
-  u32int size;
-  /* add more if needed */
-};
 
 #endif

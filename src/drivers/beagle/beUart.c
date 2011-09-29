@@ -1,19 +1,32 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #include "drivers/beagle/beUart.h"
 
 
-static inline u32int beGetUartNumber(u32int phyAddr);
+struct UartBackEnd
+{
+  u32int baseAddress;
+  u32int size;
+  u32int rxFifoSize;
+  u32int txFifoSize;
+  bool loopback;
+};
+
+static struct UartBackEnd *beUart[3];
+
+
+static inline u32int beGetUartNumber(u32int phyAddr) __attribute__((always_inline));
 static inline u32int beGetUartBaseAddr(u32int id) __attribute__((always_inline));
+static inline u8int beLoadUart(u32int regOffs, u32int uartid) __attribute__((always_inline));
+static inline void beStoreUart(u32int regOffs, u8int value, u32int uartid) __attribute__((always_inline));
 
-struct UartBackEnd * beUart[3];
 
-void serialPuts(char * c)
+void serialPuts(const char *c)
 {
   int index = 0;
-
-  while (c[index] != '\0')
+  while (c[index])
   {
     serialPutc(c[index]);
     index++;
@@ -26,7 +39,7 @@ void serialPutc(char c)
   {
     // do nothing
   }
-  beStoreUart(UART_THR_REG, (u32int)c, 3);
+  beStoreUart(UART_THR_REG, (u8int)c, 3);
 }
 
 char serialGetc()
@@ -35,7 +48,7 @@ char serialGetc()
   {
     // do nothing
   }
-  return (char)beLoadUart(UART_RHR_REG, 3);
+  return serialGetcAsync();
 }
 
 char serialGetcAsync()
@@ -49,19 +62,15 @@ char serialGetcAsync()
  */
 void beUartInit(u32int uartid)
 {
-  u32int uID = uartid-1;
-  beUart[uID] = (struct UartBackEnd*)mallocBytes(sizeof(struct UartBackEnd));
-  if (beUart[uID] == 0)
+  u32int arrayIndex = uartid - 1;
+  beUart[arrayIndex] = (struct UartBackEnd *)mallocBytes(sizeof(struct UartBackEnd));
+  if (beUart[arrayIndex] == 0)
   {
-    DIE_NOW(0, "Failed to allocate UART backend.");
+    DIE_NOW(NULL, "Failed to allocate UART backend");
   }
-  else
-  {
-    memset((void*)beUart[uID], 0x0, sizeof(struct UartBackEnd));
-#ifdef BE_UART_DBG
-    printf("Initializing UART%x backend at 0x%x\n", uartid, (u32int)beUart[uID]);
-#endif
-  }
+
+  DEBUG(PP_OMAP_35XX_UART, "Initializing UART%x backend at %p" EOL, uartid, beUart[arrayIndex]);
+  memset(beUart[arrayIndex], 0, sizeof(struct UartBackEnd));
 
   beUartReset(uartid);
 
@@ -82,8 +91,8 @@ void beUartInit(u32int uartid)
                             UART_FCR_RX_FIFO_CLR |
                             UART_FCR_TX_FIFO_CLR, uartid);
   beStoreUart(UART_FCR_REG, 0, uartid);
-  beUart[uID]->rxFifoSize = 0;
-  beUart[uID]->txFifoSize = 0;
+  beUart[arrayIndex]->rxFifoSize = 0;
+  beUart[arrayIndex]->txFifoSize = 0;
 
   // clear any pending events:
   // event bits auto clear?..
@@ -92,10 +101,10 @@ void beUartInit(u32int uartid)
   beLoadUart(UART_MSR_REG, uartid);
   beLoadUart(UART_IIR_REG, uartid);
 
-  beUart[uID]->loopback = FALSE;
+  beUart[arrayIndex]->loopback = FALSE;
 
-  beUart[uID]->baseAddress = beGetUartBaseAddr(uartid);
-  beUart[uID]->size = UART_SIZE;
+  beUart[arrayIndex]->baseAddress = beGetUartBaseAddr(uartid);
+  beUart[arrayIndex]->size = UART_SIZE;
 }
 
 /* just perform a software reset of the device */
@@ -105,11 +114,12 @@ void beUartReset(u32int uartid)
   sysCtrl |= UART_SYSC_REG_RESET;
   beStoreUart(UART_SYSC_REG, sysCtrl, uartid);
 
-  while ( (beLoadUart(UART_SYSS_REG, uartid) & UART_SYSS_REG_RSTDONE) != UART_SYSS_REG_RSTDONE)
+  while ((beLoadUart(UART_SYSS_REG, uartid) & UART_SYSS_REG_RSTDONE) != UART_SYSS_REG_RSTDONE)
   {
-    // do nothing
+    /*
+     * Wait for reset done bit
+     */
   }
-  // reset complete
 }
 
 
@@ -177,16 +187,14 @@ void beUartStartup(u32int uartid, u32int baudRate)
 }
 
 
-u8int beLoadUart(u32int regOffs, u32int uartid)
+static inline u8int beLoadUart(u32int regOffs, u32int uartid)
 {
-  volatile u8int * regPtr = (u8int*)(beGetUartBaseAddr(uartid) | regOffs);
-  return *regPtr;
+  return *(volatile u8int *)(beGetUartBaseAddr(uartid) | regOffs);
 }
 
-void beStoreUart(u32int regOffs, u8int value, u32int uartid)
+static inline void beStoreUart(u32int regOffs, u8int value, u32int uartid)
 {
-  volatile u8int * regPtr = (u8int*)(beGetUartBaseAddr(uartid) | regOffs);
-  *regPtr = value;
+  *(volatile u8int *)(beGetUartBaseAddr(uartid) | regOffs) = value;
 }
 
 
@@ -206,22 +214,21 @@ static inline u32int beGetUartBaseAddr(u32int id)
     case 3:
       return UART3;
     default:
-      DIE_NOW(0, "beGetUartBaseAddr: invalid base id.");
+      DIE_NOW(NULL, "beGetUartBaseAddr: invalid base id.");
   }
-  return -1;
 }
 
 static inline u32int beGetUartNumber(u32int phyAddr)
 {
-  if ((phyAddr >= UART1) && (phyAddr < (UART1+UART_SIZE)))
+  if ((phyAddr >= UART1) && (phyAddr < (UART1 + UART_SIZE)))
   {
     return 1;
   }
-  else if ((phyAddr >= UART2) && (phyAddr < (UART2+UART_SIZE)))
+  else if ((phyAddr >= UART2) && (phyAddr < (UART2 + UART_SIZE)))
   {
     return 2;
   }
-  else if ((phyAddr >= UART3) && (phyAddr < (UART3+UART_SIZE)))
+  else if ((phyAddr >= UART3) && (phyAddr < (UART3 + UART_SIZE)))
   {
     return 3;
   }

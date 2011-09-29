@@ -1,61 +1,54 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #include "drivers/beagle/beClockMan.h"
 
 
-struct ClockManagerBE * clkManBE;
+struct ClockManagerBE
+{
+  /* add stuff if needed */
+  bool initialized;
+};
+
+static struct ClockManagerBE *clkManBE;
+
 
 void clkManBEInit()
 {
   clkManBE = (struct ClockManagerBE*)mallocBytes(sizeof(struct ClockManagerBE));
-  if (clkManBE == 0)
+  if (clkManBE == NULL)
   {
-    DIE_NOW(0, "Failed to allocate CLK_MAN_BE.");
+    DIE_NOW(NULL, "Failed to allocate CLK_MAN_BE.");
   }
   else
   {
-    memset((void*)clkManBE, 0x0, sizeof(struct ClockManagerBE));
-#ifdef BE_CLK_MAN_DBG
-    printf("Initializing CLK_MAN_BE at %x\n", (u32int)clkManBE);
-#endif
+    memset(clkManBE, 0, sizeof(struct ClockManagerBE));
+    DEBUG(PP_OMAP_35XX_CM, "Initializing CLK_MAN_BE at %p" EOL, clkManBE);
   }
 
   clkManBE->initialized = TRUE;
-
 }
 
-u32int clkManRegReadBE(u32int module, u32int regOffs)
+inline u32int clkManRegReadBE(u32int module, u32int regOffs)
 {
-  u32int * regPtr = (u32int*)(module | regOffs);
-  volatile u32int value = *regPtr;
-  return value;
+  return *(volatile u32int *)(module | regOffs);
 }
 
-void clkManRegWriteBE(u32int module, u32int regOffs, u32int value)
+inline void clkManRegWriteBE(u32int module, u32int regOffs, u32int value)
 {
-  volatile u32int * regPtr = (u32int*)(module | regOffs);
-  *regPtr = value;
+  *(volatile u32int *)(module | regOffs) = value;
 }
 
 void toggleTimerFclk(u32int clockID, bool enable)
 {
-#ifdef BE_CLK_MAN_DBG
-    printf("CLK_MAN_BE: toggleTimerFclk(): timer %x", clockID);
-    printf((enable) ? " enable\n" : " disable\n");
-#endif
+  DEBUG(PP_OMAP_35XX_CM, "(CLK_MAN_BE: toggleTimerFclk(): timer %#x %s" EOL, clockID,
+      enable ? "enable" : "disable");
 
   if (clockID == 1)
   {
     u32int regVal = clkManRegReadBE(WKUP_CM, CM_FCLKEN_WKUP);
-    if (enable)
-    {
-      regVal |= CM_FCLKEN_WKUP_ENGPT1;
-    }
-    else
-    {
-      regVal &= ~CM_FCLKEN_WKUP_ENGPT1;
-    }
+    regVal = enable ? (regVal | CM_FCLKEN_WKUP_ENGPT1) : (regVal & ~CM_FCLKEN_WKUP_ENGPT1);
     clkManRegWriteBE(WKUP_CM, CM_FCLKEN_WKUP, regVal);
   }
   else
@@ -65,7 +58,7 @@ void toggleTimerFclk(u32int clockID, bool enable)
     switch (clockID)
     {
       case 2:
-        regVal = (enable) ? (regVal | CM_FCLKEN_PER_GPT2) : (regVal & ~CM_FCLKEN_PER_GPT2);
+        regVal = enable ? (regVal | CM_FCLKEN_PER_GPT2) : (regVal & ~CM_FCLKEN_PER_GPT2);
         break;
       case 3:
       case 4:
@@ -74,9 +67,9 @@ void toggleTimerFclk(u32int clockID, bool enable)
       case 7:
       case 8:
       case 9:
-        DIE_NOW(0, "CLK_MAN_BE: toggleTimerFclk() unimplemented for clock ID");
+        DIE_NOW(NULL, "CLK_MAN_BE: toggleTimerFclk() unimplemented for clock ID");
       default:
-        DIE_NOW(0, "CLK_MAN_BE: setclockSource() invalid clock ID");
+        DIE_NOW(NULL, "CLK_MAN_BE: setclockSource() invalid clock ID");
     }
     clkManRegWriteBE(PER_CM, CM_FCLKEN_PER, regVal);
   } // else ends
@@ -84,22 +77,13 @@ void toggleTimerFclk(u32int clockID, bool enable)
 
 void setClockSource(u32int clockID, bool sysClock)
 {
-#ifdef BE_CLK_MAN_DBG
-    printf("CLK_MAN_BE: setClockSource for timer %x to ", clockID);
-    printf((sysClock) ? "sysClock\n" : "32kH clock\n");
-#endif
+  DEBUG(PP_OMAP_35XX_CM, "CLK_MAN_BE: setClockSource for timer %#x to %s" EOL, clockID,
+      sysClock ? "sysClock" : "32 kHz clock");
 
   if (clockID == 1)
   {
     u32int regVal = clkManRegReadBE(WKUP_CM, CM_CLKSEL_WKUP);
-    if (sysClock)
-    {
-      regVal |= CM_CLKSEL_WKUP_GPT1;
-    }
-    else
-    {
-      regVal &= ~CM_CLKSEL_WKUP_GPT1;
-    }
+    regVal = sysClock ? (regVal | CM_CLKSEL_WKUP_GPT1) : (regVal & ~CM_CLKSEL_WKUP_GPT1);
     clkManRegWriteBE(WKUP_CM, CM_CLKSEL_WKUP, regVal);
   }
   else
@@ -109,7 +93,7 @@ void setClockSource(u32int clockID, bool sysClock)
     switch (clockID)
     {
       case 2:
-        regVal = (sysClock) ? (regVal | CM_CLKSEL_PER_GPT2) : (regVal & ~CM_CLKSEL_PER_GPT2);
+        regVal = sysClock ? (regVal | CM_CLKSEL_PER_GPT2) : (regVal & ~CM_CLKSEL_PER_GPT2);
         break;
       case 3:
       case 4:
@@ -118,9 +102,9 @@ void setClockSource(u32int clockID, bool sysClock)
       case 7:
       case 8:
       case 9:
-        DIE_NOW(0, "CLK_MAN_BE: setclockSource() unimplemented for clock ID");
+        DIE_NOW(NULL, "CLK_MAN_BE: setclockSource() unimplemented for clock ID");
       default:
-        DIE_NOW(0, "CLK_MAN_BE: setclockSource() invalid clock ID");
+        DIE_NOW(NULL, "CLK_MAN_BE: setclockSource() invalid clock ID");
     }
     clkManRegWriteBE(PER_CM, CM_CLKSEL_PER, regVal);
   } // else ends

@@ -1,18 +1,7 @@
-#ifndef __DRIVERS__BEAGLE__BE_CLK_MAN_H__
-#define __DRIVERS__BEAGLE__BE_CLK_MAN_H__
+#ifndef __DRIVERS__BEAGLE__BE_CLOCK_MAN_H__
+#define __DRIVERS__BEAGLE__BE_CLOCK_MAN_H__
 
 #include "common/types.h"
-
-
-// uncomment me to enable debug : #define BE_CLK_MAN_DBG
-
-/*
- * This driver is for the CM Module of the TI OMAP 35xx only.
- * Sanity check!
- */
-#ifndef CONFIG_SOC_TI_OMAP_35XX
-#error Incompatible driver
-#endif
 
 
 /************************
@@ -250,19 +239,13 @@
 
 void clkManBEInit(void);
 
+u32int clkManRegReadBE(u32int module, u32int regOffs);
+void clkManRegWriteBE(u32int module, u32int regOffs, u32int value);
+
 void setClockSource(u32int clockID, bool sysClock);
 void toggleTimerFclk(u32int clockID, bool enable);
 
 void cmDisableDssClocks(void);
 
-u32int clkManRegReadBE(u32int module, u32int regOffs);
-void clkManRegWriteBE(u32int module, u32int regOffs, u32int value);
-
-
-struct ClockManagerBE
-{
-  // add stuff if needed
-  u32int initialized;
-};
 
 #endif
