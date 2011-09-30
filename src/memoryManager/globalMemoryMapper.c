@@ -20,7 +20,6 @@
 void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
 {
   u32int instr;
-  u32int eobInstrBackup;
 
 #ifdef CONFIG_THUMB2
   u32int eobHalfInstrBackup;
@@ -31,7 +30,6 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
      * Guest was executing in Thumb mode
      */
     instr = fetchThumbInstr((u16int *)(context->R15));
-    eobInstrBackup = context->endOfBlockInstr;
     eobHalfInstrBackup = context->endOfBlockHalfInstr;
 
     if (TXX_IS_T32(instr))
@@ -48,7 +46,6 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
         )
       {
         validateCachePreChange(context->blockCache, address);
-        context->endOfBlockInstr = instr;
         t32StrbInstruction(context, instr);
       }
       else if ((instr & THUMB32_STRB_REG_MASK) == THUMB32_STRB_REG)
@@ -61,19 +58,16 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       else if ((instr & THUMB32_STRH_REG_IMM5_MASK) == THUMB32_STRH_REG_IMM5)
        {
          validateCachePreChange(context->blockCache, address);
-         context->endOfBlockInstr = instr;
          t32StrhImmediateInstruction(context, instr);
        }
       else if ((instr & THUMB32_STRH_REG_IMM8_MASK) == THUMB32_STRH_REG_IMM8)
       {
         validateCachePreChange(context->blockCache, address);
-        context->endOfBlockInstr = instr;
         t32StrhtInstruction(context, instr);
       }
       else if ((instr & THUMB32_STRH_REG_MASK) == THUMB32_STRH_REG)
       {
         validateCachePreChange(context->blockCache, address);
-        context->endOfBlockInstr = instr;
         t32StrhRegisterInstruction(context, instr);
       }
       /*
@@ -81,22 +75,18 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
        */
       else if ((instr & THUMB32_LDRSH_REG_IMM8_MASK) == THUMB32_LDRSH_REG_IMM8)
       {
-        context->endOfBlockInstr = instr;
         t32LdrshImmediate12Instruction(context, instr);
       }
       else if ((instr & THUMB32_LDRSH_REG_IMM12_MASK) == THUMB32_LDRSH_REG_IMM12)
       {
-        context->endOfBlockInstr = instr;
         t32LdrshImmediate8Instruction(context, instr);
       }
       else if ((instr & THUMB32_LDRSH_REG_MASK) == THUMB32_LDRSH_REG)
       {
-        context->endOfBlockInstr = instr;
         t32LdrshRegisterInstruction(context, instr);
       }
       else if ((instr & THUMB32_LDRSH_IMM12_MASK) == THUMB32_LDRSH_IMM12)
       {
-        context->endOfBlockInstr = instr;
         t32LdrshLiteralInstruction(context, instr);
       }
       /*
@@ -105,7 +95,6 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       else if (((instr & THUMB32_STRD_IMM8_MASK) == THUMB32_STRD_IMM8))
       {
         validateCachePreChange(context->blockCache, address);
-        context->endOfBlockInstr = instr;
         t32StrdImmediateInstruction(context, instr);
       }
       /*
@@ -126,13 +115,11 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
        */
       if ((instr & THUMB16_STR_IMM5_MASK) == THUMB16_STR_IMM5)
       {
-        context->endOfBlockInstr = instr;
         validateCachePreChange(context->blockCache, address);
         t16StrInstruction(context, instr);
       }
       else if ((instr & THUMB16_STR_IMM8_MASK) == THUMB16_STR_IMM8)
       {
-        context->endOfBlockInstr = instr;
         validateCachePreChange(context->blockCache, address);
         t16StrSpInstruction(context, instr);
       }
@@ -147,7 +134,6 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
           ((instr & THUMB16_LDR_REG_MASK) == THUMB16_LDR_REG)
         )
       {
-        context->endOfBlockInstr = instr;
         t16LdrInstruction(context, instr);
       }
       /*
@@ -155,7 +141,6 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
        */
       else if ((instr & THUMB16_PUSH_MASK) == THUMB16_PUSH)
       {
-        context->endOfBlockInstr = instr;
         validateCachePreChange(context->blockCache,address);
         t16PushInstruction(context, instr);
       }
@@ -168,7 +153,6 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
           ((instr & THUMB16_LDRB_REG_MASK) == THUMB16_LDRB_REG)
         )
       {
-        context->endOfBlockInstr = instr;
         t16LdrbInstruction(context, instr);
       }
       /*
@@ -180,7 +164,6 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
           ((instr & THUMB16_STRB_REG_MASK) == THUMB16_STRB_REG)
         )
       {
-        context->endOfBlockInstr = instr;
         validateCachePreChange(context->blockCache,address);
         t16StrbInstruction(context, instr);
       }
@@ -193,7 +176,6 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
           ((instr & THUMB16_STRH_REG_MASK) == THUMB16_STRH_REG)
         )
       {
-        context->endOfBlockInstr = instr;
         validateCachePreChange(context->blockCache, address);
         t16StrhInstruction(context, instr);
       }
@@ -216,11 +198,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
      */
     // get the store instruction
     instr = *(volatile u32int *)(context->R15);
-    // save the end of block instruction, as we faulted /not/ on EOB
-    eobInstrBackup = context->endOfBlockInstr;
     // emulate methods will take instr from context, put it there
-    context->endOfBlockInstr = instr;
-
     if
       (
         ((instr & STR_IMM_MASK) == STR_IMM_MASKED) ||
@@ -317,6 +295,4 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       DIE_NOW(context, "Load/Store generic unimplemented");
     }
   }
-  // restore end of block instruction
-  context->endOfBlockInstr = eobInstrBackup;
 }

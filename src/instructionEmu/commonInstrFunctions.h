@@ -14,9 +14,6 @@
 #define TXX_IS_T32(instructionWord)                  (instructionWord & 0xFFFF0000)
 
 
-/* a function to serve as a dead-loop if we decode something invalid */
-void invalidInstruction(u32int instr, const char *msg) __attribute__((noreturn));
-
 /* a function to evaluate if a condition value is satisfied */
 bool evaluateConditionCode(GCONTXT *context, u32int conditionCode);
 

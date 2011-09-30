@@ -6,10 +6,13 @@
 #include "instructionEmu/dataProcessInstr.h"
 
 
-void invalidDataProcTrap(const char * msg, GCONTXT * gc)
+static void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
+  __attribute__((noinline,noreturn));
+
+static void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
 {
-  printf("%.8x @ %.8x should not have trapped!" EOL, gc->endOfBlockInstr, gc->R15);
-  DIE_NOW(gc, msg);
+  printf("%#.8x @ %#.8x should not have trapped!" EOL, instruction, context->R15);
+  DIE_NOW(context, message);
 }
 
 u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char * instrString)
@@ -19,7 +22,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char * 
 
   if (regDest != 0xF)
   {
-    invalidDataProcTrap(instrString, context);
+    invalidDataProcTrap(context, instr, instrString);
   }
 
 #ifdef DATA_PROC_TRACE
@@ -181,7 +184,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char * 
 /*********************************/
 u32int andInstruction(GCONTXT *context, u32int instruction)
 {
-  printf("%.8x" EOL, context->endOfBlockInstr);
+  printf("%.8x" EOL, instruction);
   DIE_NOW(context, "Unimplemented AND trap");
 }
 
@@ -347,8 +350,7 @@ u32int tstInstruction(GCONTXT *context, u32int instruction)
 /*********************************/
 u32int teqInstruction(GCONTXT *context, u32int instruction)
 {
-  invalidDataProcTrap("TEQ instr", context);
-  return 0;
+  invalidDataProcTrap(context, instruction, "TEQ instr");
 }
 
 
@@ -357,8 +359,7 @@ u32int teqInstruction(GCONTXT *context, u32int instruction)
 /*********************************/
 u32int cmpInstruction(GCONTXT *context, u32int instruction)
 {
-  invalidDataProcTrap("CMP instr", context);
-  return 0;
+  invalidDataProcTrap(context, instruction, "CMP instr");
 }
 
 
@@ -367,6 +368,5 @@ u32int cmpInstruction(GCONTXT *context, u32int instruction)
 /*********************************/
 u32int cmnInstruction(GCONTXT *context, u32int instruction)
 {
-  invalidDataProcTrap("CMN instr", context);
-  return 0;
+  invalidDataProcTrap(context, instruction, "CMN instr");
 }
