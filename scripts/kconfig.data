@@ -352,4 +352,7 @@ config SCANNER_COUNT_BLOCKS
 config SCANNER_EXTRA_CHECKS
   bool "Track call source and check for null pointers in scanner"
 
+config BLOCK_CACHE_COLLISION_COUNTER
+  bool "Count number of collisions in block cache"
+
 endmenu
