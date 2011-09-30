@@ -184,12 +184,6 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
       BCENTRY * bcEntry = getBlockCacheEntry(svcCacheIndex, context->blockCache);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
-
-      if (bcEntry->halfhyperedInstruction)
-      {
-        DIE_NOW(context, "ARM code scan found non-ARM cache entry");
-      }
-
       context->hdlFunct = bcEntry->hdlFunct;
     }
     else //Handle guest SVC
