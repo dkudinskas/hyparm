@@ -140,9 +140,6 @@ void dumpGuestContext(GCONTXT *context)
   }
 
   printf("endOfBlockInstr: %#.8x" EOL, context->endOfBlockInstr);
-#ifdef CONFIG_THUMB2
-  printf("endOfBlockHalfInstr: %#.8x" EOL, context->endOfBlockHalfInstr);
-#endif
   printf("handler function addr: %#.8x" EOL, (u32int)context->hdlFunct);
 
   /* Virtual Memory */
