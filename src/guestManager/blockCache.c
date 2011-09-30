@@ -1,4 +1,5 @@
 #include "common/debug.h"
+#include "common/memFunctions.h"
 
 #include "guestManager/blockCache.h"
 
@@ -51,22 +52,8 @@ void initialiseBlockCache(BCENTRY *bcache)
 
   DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, bcache);
 
-  for (i = 0; i < BLOCK_CACHE_SIZE; i++)
-  {
-    bcache[i].startAddress = 0;
-    bcache[i].endAddress = 0;
-    bcache[i].hyperedInstruction = 0;
-#ifdef CONFIG_THUMB2
-    bcache[i].halfhyperedInstruction = 0;
-#endif
-    bcache[i].valid = FALSE;
-    bcache[i].hdlFunct = 0;
-  }
-
-  for (i = 0; i < NUMBER_OF_BITMAPS; i++)
-  {
-    execBitMap[i] = 0;
-  }
+  memset(bcache, 0, sizeof(BCENTRY) * BLOCK_CACHE_SIZE);
+  memset(execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
 }
 
 bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY *bcAddr)
@@ -82,9 +69,8 @@ void addToBlockCache(void *start, u32int hypInstruction, u32int blkEndAddr,
 #endif
                      u32int index, void *hdlFunct, BCENTRY * bcAddr)
 {
-  u32int blkStartAddr = (u32int)start;
-  DEBUG(BLOCK_CACHE, "addToBlockCache: index = %#x,@ %#.8x--%#.8x, handler = %p, eobInstr = "
-      "%#.8x" EOL, index, blkStartAddr, blkEndAddr, hdlFunct, hypInstruction);
+  DEBUG(BLOCK_CACHE, "addToBlockCache: index = %#x,@ %p--%#.8x, handler = %p, eobInstr = "
+      "%#.8x" EOL, index, start, blkEndAddr, hdlFunct, hypInstruction);
 
   if (bcAddr[index].valid)
   {
@@ -93,7 +79,7 @@ void addToBlockCache(void *start, u32int hypInstruction, u32int blkEndAddr,
       // somebody has been sleeping in our cache location!
       resolveCacheConflict(index, bcAddr);
       // now that we resolved the conflict, we can store the new entry data...
-      bcAddr[index].startAddress = blkStartAddr;
+      bcAddr[index].startAddress = (u32int)start;
       bcAddr[index].endAddress = blkEndAddr;
 #ifdef CONFIG_THUMB2
       bcAddr[index].halfhyperedInstruction = halfhypInstruction;
@@ -107,12 +93,12 @@ void addToBlockCache(void *start, u32int hypInstruction, u32int blkEndAddr,
       /* NOTE: if entry valid, but blkEndAddress is the same as new block to add      *
        * then the block starts at another address but ends on the same instruction    *
        * and by chance - has the same index. just modify existing entry, don't remove */
-      bcAddr[index].startAddress = blkStartAddr;
+      bcAddr[index].startAddress = (u32int)start;
     }
   }
   else
   {
-    bcAddr[index].startAddress = blkStartAddr;
+    bcAddr[index].startAddress = (u32int)start;
     bcAddr[index].endAddress = blkEndAddr;
     bcAddr[index].hyperedInstruction = hypInstruction;
 #ifdef CONFIG_THUMB2
