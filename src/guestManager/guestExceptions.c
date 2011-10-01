@@ -32,7 +32,7 @@ void deliverServiceCall(GCONTXT *context)
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_SVC_MODE;
   // 4. set LR to PC+4
 #ifdef CONFIG_THUMB2
-  if (context->CPSR & 0x20)// Were we on Thumb?
+  if (context->CPSR & PSR_T_BIT)// Were we on Thumb?
   {
     context->R14_SVC = context->R15 + T16_INSTRUCTION_SIZE;
   }
