@@ -16,16 +16,9 @@
  */
 
 
-#ifdef CONFIG_GUEST_FREERTOS
-extern bool rtos;
-#endif
-
-
 void deliverServiceCall(GCONTXT *context)
 {
-#ifdef GUEST_EXCEPTIONS_DBG
-  printf("deliverServiceCall: @pc %08x" EOL, context->R15);
-#endif
+  DEBUG(GUEST_EXCEPTIONS, "deliverServiceCall: @ PC = %#.8x" EOL, context->R15);
   // 2. copy guest CPSR into SPSR_SVC
   context->SPSR_SVC = context->CPSR;
   // 3. put guest CPSR in SVC mode
@@ -65,7 +58,7 @@ void deliverServiceCall(GCONTXT *context)
 #ifdef CONFIG_GUEST_FREERTOS
     context->R15 = context->guestSwiHandler;
 #else
-    DIE_NOW(0, "deliverInterrupt: SVC to be delivered with guest vmem off.");
+    DIE_NOW(context, "deliverInterrupt: SVC to be delivered with guest vmem off.");
 #endif
   }
   // update AFI bits for SVC:
@@ -87,17 +80,14 @@ void throwInterrupt(u32int irqNumber)
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
-#ifdef GUEST_EXCEPTIONS_DBG
-        printf("Enable guest Interrupts" EOL);
-#endif
+        DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: enable guest interrupts" EOL);
         context->guestIrqPending = TRUE;
       }
-#ifdef GUEST_EXCEPTIONS_DBG
       else
       {
-        printf("Guest is not ready to handle IRQ: %x" EOL, context->R15);
+        DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: guest is not ready to handle IRQ: %#.8x" EOL,
+            irqNumber);
       }
-#endif
       break;
     case UART1_IRQ:
       setInterrupt(UART1_IRQ);
@@ -130,7 +120,7 @@ void throwInterrupt(u32int irqNumber)
       }
       break;
     default:
-      DIE_NOW(0, "throwInterrupt: from unknown source.");
+      DIE_NOW(context, "throwInterrupt: from unknown source.");
   }
 }
 
@@ -168,7 +158,7 @@ void deliverInterrupt(GCONTXT *context)
 #ifdef CONFIG_GUEST_FREERTOS
     context->R15 = context->guestIrqHandler;
 #else
-    DIE_NOW(0, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
+    DIE_NOW(context, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
 #endif
   }
   /*
@@ -206,7 +196,7 @@ void deliverDataAbort(GCONTXT *context)
 #ifdef CONFIG_GUEST_FREERTOS
     context->R15 = context->guestDataAbortHandler;
 #else
-    DIE_NOW(0, "deliverInterrupt: Data abort to be delivered with guest vmem off.");
+    DIE_NOW(context, "deliverInterrupt: Data abort to be delivered with guest vmem off.");
 #endif
   }
   // update AFI bits for IRQ:
@@ -222,10 +212,8 @@ void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isW
   {
     dfsr |= 0x800; // write-not-read bit
   }
-#ifdef GUEST_EXCEPTIONS_DBG
-  printf("throwDataAbort(%08x): faultType %x, isWrite %x, dom %x, @pc %08x, dfsr %08x" EOL,
-         address, faultType, isWrite, domain, context->R15, dfsr);
-#endif
+  DEBUG(GUEST_EXCEPTIONS, "throwDataAbort: address %#.8x: faultType %#x, isWrite %x, dom %#x, @ PC"
+      "%#.8x, dfsr %#.8x" EOL, address, faultType, isWrite, domain, context->R15, dfsr);
   setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
   // set CP15 Data Fault Address Register to 'address'
   setCregVal(6, 0, 0, 0, context->coprocRegBank, address);
@@ -269,10 +257,9 @@ void throwPrefetchAbort(u32int address, u32int faultType)
   // set CP15 Data Fault Status Register
   u32int ifsr = (faultType & 0xF) | ((faultType & 0x10) << 10);
 
-#ifdef GUEST_EXCEPTIONS_DBG
-  printf("throwPrefetchAbort(%08x): faultType %x, @pc %08x, ifsr %08x" EOL,
-          address, faultType, context->R15, ifsr);
-#endif
+  DEBUG(GUEST_EXCEPTIONS, "throwPrefetchAbort: address %#.8x, faultType %#x, @ PC %#.8x, IFSR "
+      "%#.8x" EOL, address, faultType, context->R15, ifsr);
+
   setCregVal(5, 0, 0, 1, context->coprocRegBank, ifsr);
   // set CP15 Data Fault Address Register to 'address'
   setCregVal(6, 0, 0, 2, context->coprocRegBank, address);

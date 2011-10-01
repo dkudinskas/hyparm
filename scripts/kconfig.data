@@ -135,6 +135,10 @@ config DEBUG_EXCEPTION_HANDLERS
   bool "Debug exception handlers"
   depends on DEBUG
 
+config DEBUG_GUEST_EXCEPTIONS
+  bool "Debug guest exceptions"
+  depends on DEBUG
+
 config DEBUG_DECODER
   bool "Debug instruction decoding"
   depends on DEBUG
