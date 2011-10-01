@@ -9,6 +9,7 @@
 #include "guestManager/guestExceptions.h"
 #endif
 
+#include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/scanner.h"
 
@@ -118,7 +119,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 #endif /* CONFIG_SCANNER_EXTRA_CHECKS */
 
   u32int cacheIndex = (getHash(startAddress) & (BLOCK_CACHE_SIZE-1));// 0x1FF mask for 512 entry cache
-  bool cached = checkBlockCache(startAddress, cacheIndex, context->blockCache);
+  bool cached = checkBlockCache(context->blockCache, cacheIndex, startAddress);
 
   DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: @%.8x, source = %#x, count = %#Lx; %s" EOL, startAddress,
       getScanBlockCallSource(), getScanBlockCounter(), (cached ? "HIT" : "MISS"));
@@ -127,7 +128,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 
   if (cached)
   {
-    BCENTRY *bcEntry = getBlockCacheEntry(cacheIndex, context->blockCache);
+    BCENTRY *bcEntry = getBlockCacheEntry(context->blockCache, cacheIndex);
     context->hdlFunct = bcEntry->hdlFunct;
     context->endOfBlockInstr = bcEntry->hyperedInstruction;
     return;
@@ -181,7 +182,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 #ifdef SCANNER_DEBUG
       printf("scanner: EOB instruction is SWI @ %p code %x" EOL, end, svcCacheIndex);
 #endif
-      BCENTRY * bcEntry = getBlockCacheEntry(svcCacheIndex, context->blockCache);
+      BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, svcCacheIndex);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
       context->hdlFunct = bcEntry->hdlFunct;
@@ -213,13 +214,9 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
         currAddress, context->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)context->hdlFunct);
   #endif
 
-#ifdef CONFIG_THUMB2
-  addToBlockCache(start, context->endOfBlockInstr, 0, (u32int)end,
-      cacheIndex, context->hdlFunct, context->blockCache);
-#else
-  addToBlockCache(start, context->endOfBlockInstr, (u32int)end,
-        cacheIndex, context->hdlFunct, context->blockCache);
-#endif
+  addToBlockCache(context->blockCache, cacheIndex, (u32int) start, (u32int)end,
+      context->endOfBlockInstr, BCENTRY_TYPE_ARM, context->hdlFunct);
+
   /* To ensure that subsequent fetches from eobAddress get a hypercall
    * rather than the old cached copy...
    * 1. clean data cache entry by address
@@ -248,7 +245,8 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
   u16int *end;
   instructionHandler handler;
   u32int instruction;
-  u32int halfEndOfBlock;
+  u32int blockType = BCENTRY_TYPE_THUMB;
+  u32int endIs16Bit;
 
   u16int *currtmpAddress = start;   //backup pointer  ?? seems to be start address of last instruction
 
@@ -290,16 +288,17 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 #ifdef SCANNER_DEBUG
       printf("scanner: EOB instruction is SWI @ %#.8x code %x" EOL, (u32int)start, cacheIndex);
 #endif
-      BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, context->blockCache);
+      BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, cacheIndex);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
-      halfEndOfBlock = bcEntry->halfhyperedInstruction;
+      blockType = bcEntry->type;
+      endIs16Bit = blockType == BCENTRY_TYPE_THUMB && !TXX_IS_T32(bcEntry->hyperedInstruction);
       context->hdlFunct = bcEntry->hdlFunct;
     }
     else
     {
       context->endOfBlockInstr = instruction;
-      halfEndOfBlock = THUMB16;
+      endIs16Bit = TRUE;
       context->hdlFunct = handler;
     }
 
@@ -331,7 +330,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         end ++;
         instruction = (instruction<<16)|*end;
         context->endOfBlockInstr = instruction;
-        halfEndOfBlock = THUMB32;
+        endIs16Bit = FALSE;
         end --;
         *end = INSTR_NOP_THUMB;
         end ++;
@@ -342,7 +341,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       {
         instruction = *end;
         context->endOfBlockInstr = instruction;
-        halfEndOfBlock = THUMB16;
+        endIs16Bit = TRUE;
         *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
         break;
       }
@@ -359,8 +358,9 @@ printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
     start, context->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)context->hdlFunct);
 #endif
 
-  addToBlockCache(start, context->endOfBlockInstr, halfEndOfBlock, (u32int)end,
-        cacheIndex, context->hdlFunct, context->blockCache);
+  addToBlockCache(context->blockCache, cacheIndex, (u32int)start, (u32int)end,
+      context->endOfBlockInstr, blockType, context->hdlFunct);
+
   /* To ensure that subsequent fetches from eobAddress get a hypercall
    * rather than the old cached copy...
    * 1. clean data cache entry by address
@@ -368,7 +368,7 @@ printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
    * 2. invalidate instruction cache entry by address.
    * ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1
    */
-  if(halfEndOfBlock == THUMB16)
+  if (endIs16Bit)
   {
     asm("mcr p15, 0, %0, c7, c11, 1"
         :
@@ -383,7 +383,6 @@ printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
   }
   else
   {
-    //currhwAddress points to the second halfword
     asm("mcr p15, 0, %0, c7, c11, 1"
         :
         :"r"(end)
@@ -406,6 +405,10 @@ printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
         :"memory"
     );
   }
+
+  /*
+   * FIXME: is end still correct for the case endIs16Bit == FALSE?
+   */
   protectScannedBlock(start, end);
 }
 

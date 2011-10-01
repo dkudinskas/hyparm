@@ -10,62 +10,40 @@
 
 #define BLOCK_CACHE_SIZE    96
 
-// uncomment me for collision debug: #define DUMP_COLLISION_COUNTER
+
+#define BCENTRY_TYPE_INVALID  0
+#define BCENTRY_TYPE_ARM      1
+#define BCENTRY_TYPE_THUMB    2
+
 
 struct blockCacheEntry
 {
   u32int startAddress;
   u32int endAddress;
   u32int hyperedInstruction;
-#ifdef CONFIG_THUMB2
-  u32int halfhyperedInstruction;
-#endif
-  bool valid;
+  u32int type;
   void *hdlFunct;
 };
 
 typedef struct blockCacheEntry BCENTRY;
 
 
-void initialiseBlockCache(BCENTRY * bcache);
+void addToBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress, u32int endAddress,
+    u32int hypInstruction, u32int type, void *hdlFunct);
 
-bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr);
+bool checkBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress);
 
-#ifdef CONFIG_THUMB2
-void addToBlockCache(void *start, u32int hypInstruction, u16int HalfhypInstruction, u32int blkEndAddr,
-#else
-void addToBlockCache(void *start, u32int hypInstruction, u32int blkEndAddr,
-#endif
-  u32int index, void *hdlFunct, BCENTRY * bcAddr);
+void clearBlockCache(BCENTRY *blockCache);
 
-BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr);
+void dumpBlockCacheEntry(BCENTRY *blockCache, u32int index);
 
-u32int findEntryForAddress(BCENTRY * bcAddr, u32int addr);
+BCENTRY *getBlockCacheEntry(BCENTRY *blockCache, u32int index);
 
-void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex);
-
-void resolveCacheConflict(u32int index, BCENTRY * bcAddr);
-
-void explodeCache(BCENTRY * bcache);
-
-void validateCachePreChange(BCENTRY * bcache, u32int address);
+void initialiseBlockCache(BCENTRY *blockCache);
 
 void validateCacheMultiPreChange(BCENTRY * bcache, u32int startAddress, u32int endAddress);
 
-void dumpBlockCacheEntry(u32int index, BCENTRY * bcache);
-
-void setExecBitMap(u32int addr);
-
-void clearExecBitMap(u32int addr);
-
-bool isBitmapSetForAddress(u32int addr);
-
-
-#ifdef CONFIG_THUMB2
-
-void resolveSWI(u32int index, u32int* endAddress);
-
-#endif
+void validateCachePreChange(BCENTRY * bcache, u32int address);
 
 
 #endif

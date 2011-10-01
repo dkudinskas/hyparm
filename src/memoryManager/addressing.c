@@ -74,7 +74,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   if(context->virtAddrEnabled)
   {
     // explode block cache
-    explodeCache(context->blockCache);
+    clearBlockCache(context->blockCache);
 
     // create a new shadow page table. Mapping in hypervisor address space
     descriptor* newShadowPt = createGuestOSPageTable();
@@ -187,7 +187,7 @@ void guestEnableVirtMem()
 
 
   /* Quick prototyping code for now. needs doing properly at some point */
-  explodeCache(gc->blockCache);
+  clearBlockCache(gc->blockCache);
 
   dataBarrier();  //anything in caches needs to be written back now
   setTTBCR((u32int)sPT); //swap shadow PT
