@@ -24,20 +24,8 @@ struct blockCacheEntry
   void *hdlFunct;
 };
 
-
-#ifdef CONFIG_THUMB2
-
-struct thumbEntry
-{
-  u16int first;
-  u16int second;
-  bool isthumb;
-};
-
-#endif
-
-
 typedef struct blockCacheEntry BCENTRY;
+
 
 void initialiseBlockCache(BCENTRY * bcache);
 
@@ -74,8 +62,6 @@ bool isBitmapSetForAddress(u32int addr);
 
 
 #ifdef CONFIG_THUMB2
-
-struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int bcIndex);
 
 void resolveSWI(u32int index, u32int* endAddress);
 

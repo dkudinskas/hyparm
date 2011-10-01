@@ -3,6 +3,8 @@
 
 #include "guestManager/blockCache.h"
 
+#include "instructionEmu/commonInstrFunctions.h"
+
 
 #ifdef CONFIG_BLOCK_CACHE_COLLISION_COUNTER
 
@@ -46,8 +48,6 @@ static u32int execBitMap[NUMBER_OF_BITMAPS];
 
 void initialiseBlockCache(BCENTRY *bcache)
 {
-  int i = 0;
-
   resetCollisionCounter();
 
   DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, bcache);
@@ -169,14 +169,11 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
     2.1. if found, get hypercall, and update SWIcode to point to found entry
     2.2. if not found, restore hypered instruction back!
    */
-  u32int i = 0;
-#ifdef CONFIG_THUMB2
-  struct thumbEntry tb;
-#endif
   DEBUG(BLOCK_CACHE, "resolveCacheConflict: collision at index %#x" EOL, index);
 
   incrementCollisionCounter();
 
+  u32int i;
   for (i = 0; i < BLOCK_CACHE_SIZE; i++)
   {
     if ((bcAddr[i].valid == TRUE) &&
@@ -198,47 +195,45 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
       u32int hypercallSWI = *((u32int*)(bcAddr[index].endAddress));
       // SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
       hypercallSWI = (hypercallSWI & 0xFF000000) | ((i + 1) << 8);
-      DEBUG(BLOCK_CACHE, "resolveCacheConflict: found another BB to end at same address" EOL);
-      DEBUG(BLOCK_CACHE, "resolveCacheConflict: replace hypercall with %#x" EOL, hypercallSWI);
+      DEBUG(BLOCK_CACHE, "resolveCacheConflict: found another block ending at the same address" EOL);
+      DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing hypercall with %#.8x" EOL, hypercallSWI);
       *((u32int*)(bcAddr[index].endAddress)) = hypercallSWI;
 #endif
       return;
     }
   }
+  DEBUG(BLOCK_CACHE, "resolveCacheConflict: no other block ends at the same address" EOL);
 
-  DEBUG(BLOCK_CACHE, "resolveCacheConflict: no other BB ends at same address" EOL);
   // restore hypered instruction back!
 #ifndef CONFIG_THUMB2
-  /*
-   * FIXME Markos: this (=DEBUG) is broken for thumb. I have to fix it
-   */
-  DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring hypercall %#x back to %#.8x" EOL,
-      *((u32int *)(bcAddr[index].endAddress)), bcAddr[index].hyperedInstruction);
+  DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring ARM %#.8x @ %#.8x" EOL,
+      bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
   *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
 #else
-  tb = BreakDownThumb(bcAddr,index);
-  if (tb.isthumb==0)
+  if (bcAddr[index].halfhyperedInstruction == 0)
   {
-    DEBUG(BLOCK_CACHE, "Restoring %#.8x @ %#.8x" EOL, bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
+    DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring ARM %#.8x @ %#.8x" EOL,
+        bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
     *((u32int *)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
   }
   else
   {
     //Assuming endAddress points to the end address of the block then...
-    if(tb.second==0)// this is a thumb 16
+    if(TXX_IS_T32(bcAddr[index].hyperedInstruction))// this is a thumb 32
     {
-      DEBUG(BLOCK_CACHE, "Restoring %#.8x @ %#.8x" EOL,tb.first,(bcAddr[index].endAddress));
-      *((u16int *)(bcAddr[index].endAddress)) = tb.first;
+      u16int *bpointer = 0;
+      DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring T32 %#.8x @ %#.8x",
+          bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
+      bpointer = (u16int *)(bcAddr[index].endAddress);
+      *bpointer = (u16int)(bcAddr[index].hyperedInstruction & 0xFFFF);
+      bpointer--;
+      *bpointer = (u16int)(bcAddr[index].hyperedInstruction >> 16);
     }
     else
     {
-      u16int *bpointer = 0;
-      DEBUG(BLOCK_CACHE, "Restoring %#.8x @ %#.8x",tb.second,(bcAddr[index].endAddress));
-      bpointer = (u16int *)(bcAddr[index].endAddress);
-      *bpointer = tb.second;
-      bpointer--;
-      DEBUG(BLOCK_CACHE, " and %#.8x @ %p" EOL, tb.first, bpointer);
-      *bpointer = tb.first;
+      DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring T16 %#.4x @ %#.8x" EOL,
+          bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
+      *((u16int *)(bcAddr[index].endAddress)) = (u16int)bcAddr[index].hyperedInstruction;
     }
   }
 #endif
@@ -328,36 +323,6 @@ bool isBitmapSetForAddress(u32int addr)
 
 #ifdef CONFIG_THUMB2
 
-struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int index)
-{
-  struct thumbEntry tb;
-  /*
-   * FIXME: Won't this struct be initialized to zero by default as per ANSI C spec?
-   */
-  tb.first = 0;
-  tb.second = 0;
-  DEBUG(BLOCK_CACHE, "BreakDownThumb: i will restore %#.8x[%#.8x]" EOL, bcAddr[index].hyperedInstruction, index);
-  switch(bcAddr[index].halfhyperedInstruction)
-  {
-    case 0: // this is an ARM entry
-      tb.isthumb=FALSE;
-      break;
-    case THUMB16:
-      tb.isthumb=TRUE;
-      tb.first=bcAddr[index].hyperedInstruction;
-      tb.second = 0;
-      break;
-    case THUMB32:
-      tb.isthumb=TRUE;
-      tb.first = ( (bcAddr[index].hyperedInstruction) & 0xFFFF0000) >> 16;
-      tb.second =(bcAddr[index].hyperedInstruction) & 0x0000FFFF;
-      break;
-    default:
-      DIE_NOW(0,"BreakDownThumb is b0rked. Fix me");
-  }
-  return tb;
-}
-
 void resolveSWI( u32int index, u32int * endAddress)
 {
   u32int hypercall = 0;
@@ -405,4 +370,3 @@ void resolveSWI( u32int index, u32int * endAddress)
 }
 
 #endif
-
