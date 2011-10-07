@@ -6,9 +6,6 @@
 #include "guestManager/guestContext.h"
 
 
-#define SWI_END_OF_BLOCK      0x1
-
-
 #ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT
 
 u64int getDataAbortCounter(void);
