@@ -32,8 +32,94 @@ extern bool rtos;
 #endif
 
 
+#ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT
+
+u64int dataAbortCounter;
+
+static inline void incrementDataAbortCounter(void);
+
+u64int getDataAbortCounter()
+{
+  return dataAbortCounter;
+}
+
+static inline void incrementDataAbortCounter()
+{
+  dataAbortCounter++;
+}
+
+void resetDataAbortCounter()
+{
+  dataAbortCounter = 0;
+}
+
+#else
+
+#define incrementDataAbortCounter()
+
+#endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT */
+
+
+#ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_IRQ
+
+u64int irqCounter;
+
+static inline void incrementIrqCounter(void);
+
+u64int getIrqCounter()
+{
+  return irqCounter;
+}
+
+static inline void incrementIrqCounter()
+{
+  irqCounter++;
+}
+
+void resetIrqCounter()
+{
+  irqCounter = 0;
+}
+
+#else
+
+#define incrementIrqCounter()
+
+#endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_IRQ */
+
+
+#ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_SVC
+
+u64int svcCounter;
+
+static inline void incrementSvcCounter(void);
+
+u64int getSvcCounter()
+{
+  return svcCounter;
+}
+
+static inline void incrementSvcCounter()
+{
+  svcCounter++;
+}
+
+void resetSvcCounter()
+{
+  svcCounter = 0;
+}
+
+#else
+
+#define incrementSvcCounter()
+
+#endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_SVC */
+
+
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 {
+  incrementSvcCounter();
+
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
 
   // parse the instruction to find the start address of next block
@@ -121,6 +207,8 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
 GCONTXT *dataAbort(GCONTXT *context)
 {
+  incrementDataAbortCounter();
+
   /*
    * FIXME: what is the following comment about???
    * Markos: Stop the timer so we can resume from where we stopped
@@ -226,6 +314,8 @@ GCONTXT *dataAbort(GCONTXT *context)
 
 void dataAbortPrivileged(u32int pc)
 {
+  incrementDataAbortCounter();
+
   /* Here if we abort in a priviledged mode, i.e its the Hypervisors fault */
   printf("dataAbortPrivileged: Hypervisor dabt in priv mode @ pc %#.8x" EOL, pc);
 
@@ -398,6 +488,8 @@ void monitorModePrivileged(void)
 
 GCONTXT *irq(GCONTXT *context)
 {
+  incrementIrqCounter();
+
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
   switch(activeIrqNumber)
@@ -453,6 +545,8 @@ GCONTXT *irq(GCONTXT *context)
 
 void irqPrivileged()
 {
+  incrementIrqCounter();
+
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
   switch(activeIrqNumber)
