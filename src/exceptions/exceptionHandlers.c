@@ -210,9 +210,6 @@ GCONTXT *dataAbort(GCONTXT *context)
   incrementDataAbortCounter();
 
   /*
-   * FIXME: what is the following comment about???
-   * Markos: Stop the timer so we can resume from where we stopped
-   *
    * Make sure interrupts are disabled while we deal with data abort.
    */
   disableInterrupts();
@@ -380,9 +377,6 @@ void undefinedPrivileged(void)
 GCONTXT *prefetchAbort(GCONTXT *context)
 {
   /*
-   * FIXME: what is the following comment about???
-   * Markos: Stop the time so we can resume from where we stopped
-   *
    * Make sure interrupts are disabled while we deal with prefetch abort.
    */
   disableInterrupts();
