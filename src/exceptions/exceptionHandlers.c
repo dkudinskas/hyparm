@@ -401,19 +401,7 @@ GCONTXT *prefetchAbort(GCONTXT *context)
         scanBlock(context, context->R15);
       }
       break;
-    case ifsDebugEvent:
-    case ifsAccessFlagFaultSection:
-    case ifsTranslationFaultSection:
-    case ifsAccessFlagFaultPage:
-    case ifsSynchronousExternalAbort:
-    case ifsDomainFaultSection:
-    case ifsDomainFaultPage:
-    case ifsTranslationTableTalk1stLvlSynchExtAbt:
-    case ifsPermissionFaultSection:
     case ifsTranslationTableWalk2ndLvllSynchExtAbt:
-      /*
-       * FIXME: with CONFIG_GUEST_FREERTOS, all above cases still fall through and will end up in the new code. Is this correct?
-       */
 #ifdef CONFIG_GUEST_FREERTOS
       if (shouldPrefetchAbort(ifar))
       {
@@ -423,6 +411,15 @@ GCONTXT *prefetchAbort(GCONTXT *context)
       }
       break;
 #endif
+    case ifsDebugEvent:
+    case ifsAccessFlagFaultSection:
+    case ifsTranslationFaultSection:
+    case ifsAccessFlagFaultPage:
+    case ifsSynchronousExternalAbort:
+    case ifsDomainFaultSection:
+    case ifsDomainFaultPage:
+    case ifsTranslationTableTalk1stLvlSynchExtAbt:
+    case ifsPermissionFaultSection:
     case ifsPermissionFaultPage:
     case ifsImpDepLockdown:
     case ifsMemoryAccessSynchParityError:
