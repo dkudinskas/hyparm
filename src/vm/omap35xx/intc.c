@@ -1,5 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #include "drivers/beagle/beIntc.h"
 
@@ -18,7 +19,7 @@ void initIntc()
   irqController = (struct InterruptController *)mallocBytes(sizeof(struct InterruptController));
   if (irqController == 0)
   {
-    DIE_NOW(0, "Failed to allocate INTC.");
+    DIE_NOW(NULL, "Failed to allocate INTC.");
   }
   memset((void *)irqController, 0x0, sizeof(struct InterruptController));
   DEBUG(VP_OMAP_35XX_INTC, "Initializing Interrupt controller at %p" EOL, irqController);
@@ -36,7 +37,7 @@ u32int loadIntc(device *dev, ACCESS_SIZE size, u32int address)
   if (size != WORD)
   {
     // only word access allowed in these modules
-    DIE_NOW(0, "Intc: invalid access size.");
+    DIE_NOW(NULL, "Intc: invalid access size.");
   }
 
   u32int regOffset = phyAddr - INTERRUPT_CONTROLLER;
@@ -58,31 +59,31 @@ u32int loadIntc(device *dev, ACCESS_SIZE size, u32int address)
       }
       break;
     case REG_INTCPS_MIR_CLEAR0:
-      DIE_NOW(0, "INTC: load from W/O register (MIR0_CLEAR)");
+      DIE_NOW(NULL, "INTC: load from W/O register (MIR0_CLEAR)");
       break;
     case REG_INTCPS_MIR_CLEAR1:
-      DIE_NOW(0, "INTC: load from W/O register (MIR1_CLEAR)");
+      DIE_NOW(NULL, "INTC: load from W/O register (MIR1_CLEAR)");
       break;
     case REG_INTCPS_MIR_CLEAR2:
-      DIE_NOW(0, "INTC: load from W/O register (MIR2_CLEAR)");
+      DIE_NOW(NULL, "INTC: load from W/O register (MIR2_CLEAR)");
       break;
     case REG_INTCPS_MIR_SET0:
-      DIE_NOW(0, "INTC: load from W/O register (MIR0_SET)");
+      DIE_NOW(NULL, "INTC: load from W/O register (MIR0_SET)");
       break;
     case REG_INTCPS_MIR_SET1:
-      DIE_NOW(0, "INTC: load from W/O register (MIR1_SET)");
+      DIE_NOW(NULL, "INTC: load from W/O register (MIR1_SET)");
       break;
     case REG_INTCPS_MIR_SET2:
-      DIE_NOW(0, "INTC: load from W/O register (MIR2_SET)");
+      DIE_NOW(NULL, "INTC: load from W/O register (MIR2_SET)");
       break;
     case REG_INTCPS_ISR_CLEAR0:
-      DIE_NOW(0, "INTC: load from W/O register (ISR0_CLEAR)");
+      DIE_NOW(NULL, "INTC: load from W/O register (ISR0_CLEAR)");
       break;
     case REG_INTCPS_ISR_CLEAR1:
-      DIE_NOW(0, "INTC: load from W/O register (ISR1_CLEAR)");
+      DIE_NOW(NULL, "INTC: load from W/O register (ISR1_CLEAR)");
       break;
     case REG_INTCPS_ISR_CLEAR2:
-      DIE_NOW(0, "INTC: load from W/O register (ISR2_CLEAR)");
+      DIE_NOW(NULL, "INTC: load from W/O register (ISR2_CLEAR)");
       break;
     case REG_INTCPS_PENDING_IRQ0:
       val = irqController->intcPendingIrq0;
@@ -247,7 +248,7 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   if (size != WORD)
   {
     // only word access allowed in these modules
-    DIE_NOW(0, "Intc: invalid access size.");
+    DIE_NOW(NULL, "Intc: invalid access size.");
   }
 
   u32int regOffset = phyAddr - INTERRUPT_CONTROLLER;
@@ -255,7 +256,7 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   {
     case REG_INTCPS_REVISION:
     {
-      DIE_NOW(0, "Intc storing to read only register: version");
+      DIE_NOW(NULL, "Intc storing to read only register: version");
       break;
     }
     case REG_INTCPS_SYSCONFIG:
@@ -272,17 +273,17 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     }
     case REG_INTCPS_SYSSTATUS:
     {
-      DIE_NOW(0, "Intc storing to read only register: system status");
+      DIE_NOW(NULL, "Intc storing to read only register: system status");
       break;
     }
     case REG_INTCPS_SIR_IRQ:
     {
-      DIE_NOW(0, "Intc storing to read only register: active irq");
+      DIE_NOW(NULL, "Intc storing to read only register: active irq");
       break;
     }
     case REG_INTCPS_SIR_FIQ:
     {
-      DIE_NOW(0, "Intc storing to read only register: active fiq");
+      DIE_NOW(NULL, "Intc storing to read only register: active fiq");
       break;
     }
     case REG_INTCPS_MIR_CLEAR0:
@@ -565,7 +566,7 @@ void maskInterrupt(u32int interruptNumber)
 
   if (interruptNumber >= INTCPS_NR_OF_INTERRUPTS)
   {
-    DIE_NOW(0, "INTC: mask interrupt number out of range.");
+    DIE_NOW(NULL, "INTC: mask interrupt number out of range.");
   }
 
   bankNumber = interruptNumber / INTCPS_INTERRUPTS_PER_BANK;
@@ -583,7 +584,7 @@ void maskInterrupt(u32int interruptNumber)
       irqController->intcMir2 |= bitMask;
       break;  
     default:
-      DIE_NOW(0, "INTC: mask interrupt from invalid interrupt bank");
+      DIE_NOW(NULL, "INTC: mask interrupt from invalid interrupt bank");
   }
 
 }
@@ -595,7 +596,7 @@ void unmaskInterrupt(u32int interruptNumber)
 
   if (interruptNumber >= INTCPS_NR_OF_INTERRUPTS)
   {
-    DIE_NOW(0, "INTC: unmask interrupt number out of range.");
+    DIE_NOW(NULL, "INTC: unmask interrupt number out of range.");
   }
   bankNumber = interruptNumber / INTCPS_INTERRUPTS_PER_BANK;
   bitMask = 1 << (interruptNumber % INTCPS_INTERRUPTS_PER_BANK);
@@ -611,7 +612,7 @@ void unmaskInterrupt(u32int interruptNumber)
       irqController->intcMir2 &= ~bitMask;
       break;  
     default:
-      DIE_NOW(0, "INTC: unmask interrupt from invalid interrupt bank");
+      DIE_NOW(NULL, "INTC: unmask interrupt from invalid interrupt bank");
   }
 }
 
@@ -622,7 +623,7 @@ bool isGuestIrqMasked(u32int interruptNumber)
 
   if (interruptNumber >= INTCPS_NR_OF_INTERRUPTS)
   {
-    DIE_NOW(0, "INTC: isMasked interrupt number out of range.");
+    DIE_NOW(NULL, "INTC: isMasked interrupt number out of range.");
   }
   bankNumber = interruptNumber / INTCPS_INTERRUPTS_PER_BANK;
   bitMask = 1 << (interruptNumber % INTCPS_INTERRUPTS_PER_BANK);
@@ -638,7 +639,7 @@ bool isGuestIrqMasked(u32int interruptNumber)
       return ((irqController->intcMir2 & bitMask) == 1);
       break;  
     default:
-      DIE_NOW(0, "INTC: unmask interrupt from invalid interrupt bank");
+      DIE_NOW(NULL, "INTC: unmask interrupt from invalid interrupt bank");
   }
   // keep compiler quiet
   return TRUE;
@@ -646,7 +647,7 @@ bool isGuestIrqMasked(u32int interruptNumber)
 
 u32int getIrqNumber(void)
 {
-  DIE_NOW(0, "INTC: getIrqNumber - implement priority sorting of queued IRQS");
+  DIE_NOW(NULL, "INTC: getIrqNumber - implement priority sorting of queued IRQS");
   return (irqController->intcSirIrq & INTCPS_SIR_IRQ_ACTIVEIRQ);
 }
 
@@ -658,7 +659,7 @@ void setInterrupt(u32int irqNum)
 
   if (irqNum >= INTCPS_NR_OF_INTERRUPTS)
   {
-    DIE_NOW(0, "INTC: setInterrupt interrupt number out of range.");
+    DIE_NOW(NULL, "INTC: setInterrupt interrupt number out of range.");
   }
   bankNumber = irqNum / INTCPS_INTERRUPTS_PER_BANK;
   bitMask = 1 << (irqNum % INTCPS_INTERRUPTS_PER_BANK);
@@ -674,7 +675,7 @@ void setInterrupt(u32int irqNum)
       irqController->intcMir2 |= bitMask;
       break;
     default:
-      DIE_NOW(0, "INTC: setInterrupt in invalid interrupt bank");
+      DIE_NOW(NULL, "INTC: setInterrupt in invalid interrupt bank");
   }
 
   // 2. check mask, set signal after masking if needed.
@@ -693,7 +694,7 @@ void setInterrupt(u32int irqNum)
         irqController->intcPendingIrq2 |= bitMask;
         break;
       default:
-        DIE_NOW(0, "INTC: setInterrupt in invalid interrupt bank");
+        DIE_NOW(NULL, "INTC: setInterrupt in invalid interrupt bank");
     }
   }
   // 3. leave priority sorting for now. it will be done when IRQ number gets read.
@@ -708,7 +709,7 @@ void clearInterrupt(u32int irqNum)
 
   if (irqNum >= INTCPS_NR_OF_INTERRUPTS)
   {
-    DIE_NOW(0, "INTC: setInterrupt interrupt number out of range.");
+    DIE_NOW(NULL, "INTC: setInterrupt interrupt number out of range.");
   }
   bankNumber = irqNum / INTCPS_INTERRUPTS_PER_BANK;
   bitMask = 1 << (irqNum % INTCPS_INTERRUPTS_PER_BANK);
@@ -725,7 +726,7 @@ void clearInterrupt(u32int irqNum)
       irqController->intcMir2 &= bitMask;
       break;
     default:
-      DIE_NOW(0, "INTC: setInterrupt in invalid interrupt bank");
+      DIE_NOW(NULL, "INTC: setInterrupt in invalid interrupt bank");
   }
 
   // 2. clear irq-after-masking reg just in case as well
@@ -741,7 +742,7 @@ void clearInterrupt(u32int irqNum)
       irqController->intcPendingIrq2 &= bitMask;
       break;
     default:
-      DIE_NOW(0, "INTC: setInterrupt in invalid interrupt bank");
+      DIE_NOW(NULL, "INTC: setInterrupt in invalid interrupt bank");
   }
 }
 

@@ -1,5 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #include "drivers/beagle/beGPTimer.h"
 #include "drivers/beagle/beIntc.h"
@@ -27,7 +28,7 @@ void initGPTimer()
   gptimer = (struct GeneralPurposeTimer*)mallocBytes(sizeof(struct GeneralPurposeTimer));
   if (gptimer == 0)
   {
-    DIE_NOW(0, "Failed to allocate general purpose timer.");
+    DIE_NOW(NULL, "Failed to allocate general purpose timer.");
   }
   memset((void*)gptimer, 0x0, sizeof(struct GeneralPurposeTimer));
   DEBUG(VP_OMAP_35XX_GPTIMER, "Initializing General Purpose timer at %p" EOL, gptimer);
@@ -65,7 +66,7 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
 {
   if (size == BYTE)
   {
-    DIE_NOW(0, "GPT: loadGPTimer invalid access size - byte");
+    DIE_NOW(NULL, "GPT: loadGPTimer invalid access size - byte");
   }
 
   //We care about the real pAddr of the entry, not its vAddr
@@ -170,7 +171,7 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
           dev->deviceName, val);
       break;
     default:
-      DIE_NOW(0, "GPT: load from undefined register.");
+      DIE_NOW(NULL, "GPT: load from undefined register.");
   } // switch ends
 
  return val;
@@ -180,7 +181,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 {
   if (size == BYTE)
   {
-    DIE_NOW(0, "GPT: storeGPTimer invalid access size - byte");
+    DIE_NOW(NULL, "GPT: storeGPTimer invalid access size - byte");
   }
 
   //We care about the real pAddr of the entry, not its vAddr
@@ -307,7 +308,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
           dev->deviceName, value);
       break;
     default:
-      DIE_NOW(0, "GPT: store to undefined register.");
+      DIE_NOW(gc, "GPT: store to undefined register.");
   } // switch ends
 
 }

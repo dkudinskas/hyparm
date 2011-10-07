@@ -18,7 +18,7 @@ u32int t16BImmediate8Instruction(GCONTXT *context, u32int instruction)
   u32int conditionCode = (instruction >> 8) & 0xF;
   if (conditionCode == 0xE)
   {
-    DIE_NOW(0, "t16BImmediate8Instruction: UNDEFINED");
+    DIE_NOW(context, "t16BImmediate8Instruction: UNDEFINED");
   }
   if (!evaluateConditionCode(context, conditionCode))
   {

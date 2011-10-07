@@ -1,5 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #include "guestManager/guestContext.h"
 
@@ -16,7 +17,7 @@ void initSdram(void)
   sdram = (struct SdramController *)mallocBytes(sizeof(struct SdramController));
   if (sdram == 0)
   {
-    DIE_NOW(0, "Failed to allocate SDRAM instance");
+    DIE_NOW(NULL, "Failed to allocate SDRAM instance");
   }
   else
   {
@@ -30,7 +31,7 @@ void initSdram(void)
   u32int * storeTrace = (u32int*)mallocBytes(MEGABYTE_COUNT * sizeof(u32int));
   if (storeTrace == 0)
   {
-    DIE_NOW(0, "Failed to allocate store trace.");
+    DIE_NOW(NULL, "Failed to allocate store trace.");
   }
   else
   {

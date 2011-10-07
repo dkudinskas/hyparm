@@ -1,6 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
-
+#include "common/stddef.h"
 
 
 u32int heapStart;
@@ -122,12 +122,12 @@ u32int mallocBytes(u32int size)
 
   if ((size & 0x3) != 0)
   {
-    DIE_NOW(0, "mallocBytes not word aligned.");
+    DIE_NOW(NULL, "mallocBytes not word aligned.");
   }
 
   if ((freePtr + size) >= heapEnd)
   {
-    DIE_NOW(0, "malloc out of heap space.");
+    DIE_NOW(NULL, "malloc out of heap space.");
   }
 
   chunkList->nextChunk = (memchunkListElem*)(((u32int)chunkList) + sizeof(memchunkListElem));

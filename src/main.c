@@ -5,6 +5,7 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
 #include "common/stdarg.h"
+#include "common/stddef.h"
 #include "common/string.h"
 
 #include "cpuArch/armv7.h"
@@ -96,7 +97,7 @@ void main(s32int argc, char *argv[])
   if ((ret = parseCommandline(argc, argv, &kernAddr, &initrdAddr)) < 0)
   {
     printUsage();
-    DIE_NOW(0, "Hypervisor startup aborted.");
+    DIE_NOW(NULL, "Hypervisor startup aborted.");
   }
 #endif /* CONFIG_CLI */
 

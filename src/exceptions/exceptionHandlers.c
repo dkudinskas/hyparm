@@ -282,7 +282,7 @@ GCONTXT *dataAbort(GCONTXT *context)
     case dfsSyncExternalAbt:
     {
       printDataAbort();
-      DIE_NOW(0, "dataAbort: synchronous external abort hit!");
+      DIE_NOW(context, "dataAbort: synchronous external abort hit!");
     }
     case dfsAlignmentFault:
     case dfsDebugEvent:
@@ -327,11 +327,11 @@ void dataAbortPrivileged(u32int pc)
       u32int memAddr = getDFAR();
       if( (memAddr >= BEAGLE_RAM_START) && (memAddr <= BEAGLE_RAM_END) )
       {
-        DIE_NOW(0, "Translation fault inside physical RAM range");
+        DIE_NOW(NULL, "Translation fault inside physical RAM range");
       }
       else
       {
-        DIE_NOW(0, "Translation fault for area not in RAM!");
+        DIE_NOW(NULL, "Translation fault for area not in RAM!");
       }
       break;
     }
@@ -357,21 +357,21 @@ void dataAbortPrivileged(u32int pc)
     default:
       printf("dataAbortPrivileged: UNIMPLEMENTED data abort type.");
       printDataAbort();
-      DIE_NOW(0, "Entering infinite loop");
+      DIE_NOW(NULL, "Entering infinite loop");
       break;
   }
 
-  DIE_NOW(0, "At end of hypervisor data abort handler. Stopping");
+  DIE_NOW(NULL, "At end of hypervisor data abort handler. Stopping");
 }
 
 GCONTXT *undefined(GCONTXT *context)
 {
-  DIE_NOW(0, "undefined: undefined handler, Implement me!");
+  DIE_NOW(context, "undefined: undefined handler, Implement me!");
 }
 
 void undefinedPrivileged(void)
 {
-  DIE_NOW(0, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!");
+  DIE_NOW(NULL, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!");
 }
 
 GCONTXT *prefetchAbort(GCONTXT *context)
@@ -453,7 +453,7 @@ void prefetchAbortPrivileged(void)
     case ifsTranslationTableWalk2ndLvlSynchParityError:
     default:
       printPrefetchAbort();
-      DIE_NOW(0, "Unimplemented privileged prefetch abort.");
+      DIE_NOW(NULL, "Unimplemented privileged prefetch abort.");
    }
 }
 
@@ -464,7 +464,7 @@ GCONTXT *monitorMode(GCONTXT *context)
    * Does the omap 3 implement monitor/secure mode?
    * Niels: yes it does!
    */
-  DIE_NOW(0, "monitorMode: monitor/secure mode handler, Implement me!");
+  DIE_NOW(context, "monitorMode: monitor/secure mode handler, Implement me!");
 }
 
 void monitorModePrivileged(void)
@@ -474,7 +474,7 @@ void monitorModePrivileged(void)
    * Does the omap 3 implement monitor/secure mode?
    * Niels: yes it does!
    */
-  DIE_NOW(0, "monitorMode: monitor/secure mode handler, privileged mode. Implement me!");
+  DIE_NOW(NULL, "monitorMode: monitor/secure mode handler, privileged mode. Implement me!");
 }
 
 GCONTXT *irq(GCONTXT *context)
@@ -519,7 +519,7 @@ GCONTXT *irq(GCONTXT *context)
     }
     default:
       printf("Received IRQ = %x" EOL, activeIrqNumber);
-      DIE_NOW(0, "irq: unimplemented IRQ number");
+      DIE_NOW(context, "irq: unimplemented IRQ number");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -574,7 +574,7 @@ void irqPrivileged()
     }
     default:
       printf("Received IRQ = %#x" EOL, activeIrqNumber);
-      DIE_NOW(0, "irqPrivileged: unimplemented IRQ number.");
+      DIE_NOW(NULL, "irqPrivileged: unimplemented IRQ number.");
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -589,5 +589,5 @@ void irqPrivileged()
 
 void fiq(void)
 {
-  DIE_NOW(0, "fiq: FIQ handler unimplemented!");
+  DIE_NOW(NULL, "fiq: FIQ handler unimplemented!");
 }

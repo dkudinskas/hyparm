@@ -1,5 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #ifdef CONFIG_GUEST_FREERTOS
 # include "drivers/beagle/beGPIO.h"
@@ -20,7 +21,7 @@ void initGpio(u32int gpioNumber)
   gpio[gpioNumber - 1] = (struct Gpio *)mallocBytes(sizeof(struct Gpio));
   if (!gpio[gpioNumber - 1])
   {
-    DIE_NOW(0, "Failed to allocate Gpio.");
+    DIE_NOW(NULL, "Failed to allocate Gpio.");
   }
 
   memset(gpio[gpioNumber - 1], 0, sizeof(struct Gpio));
@@ -101,7 +102,7 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
       regOffset = phyAddr - GPIO6;
       break;
     default:
-      DIE_NOW(0, "GPIO: loadGpio - invalid gpio number for base address");
+      DIE_NOW(gc, "GPIO: loadGpio - invalid gpio number for base address");
   }
 
   u32int val = 0;
@@ -175,9 +176,9 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
       printf("GPIO: load from unimplemented register %x" EOL, regOffset);
-      DIE_NOW(0, "panic.");
+      DIE_NOW(gc, "panic.");
     default:
-      DIE_NOW(0, "Gpio: load on invalid register.");
+      DIE_NOW(gc, "Gpio: load on invalid register.");
   }
   DEBUG(VP_OMAP_35XX_GPIO, "%s load from pAddr: %.8x, vAddr: %.8x access size %x val = %.8x" EOL,
       dev->deviceName, phyAddr, address, (u32int)size, val);
@@ -225,13 +226,13 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       regOffset = phyAddr - GPIO6;
       break;
     default:
-      DIE_NOW(0, "GPIO: storeGpio - invalid gpio number for base address");
+      DIE_NOW(gc, "GPIO: storeGpio - invalid gpio number for base address");
   }
 
   switch (regOffset)
   {
     case GPIO_REVISION:
-      DIE_NOW(0, "GPIO: storing to a R/O reg (revision)");
+      DIE_NOW(gc, "GPIO: storing to a R/O reg (revision)");
       break;
     case GPIO_SYSCONFIG:
       if ((value & GPIO_SYSCONFIG_SOFTRESET) == GPIO_SYSCONFIG_SOFTRESET)
@@ -245,40 +246,40 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       }
       break;
     case GPIO_SYSSTATUS:
-      DIE_NOW(0, "GPIO: storing to a R/O reg (sysStatus)");
+      DIE_NOW(gc, "GPIO: storing to a R/O reg (sysStatus)");
       break;
     case GPIO_IRQSTATUS1:
       if (value != 0xffffffff)
       {
-        DIE_NOW(0, "GPIO: clearing random interrupts. have a look!...");
+        DIE_NOW(gc, "GPIO: clearing random interrupts. have a look!...");
       }
       gpio[gpioNum]->gpioIrqStatus1 = gpio[gpioNum]->gpioIrqStatus1 & ~value;
       break;
     case GPIO_IRQENABLE1:
       if (value != 0)
       {
-        DIE_NOW(0, "GPIO: enabling interrupt! have a look at this...");
+        DIE_NOW(gc, "GPIO: enabling interrupt! have a look at this...");
       }
       gpio[gpioNum]->gpioIrqEnable1 = value;
       break;
     case GPIO_IRQSTATUS2:
       if (value != 0xffffffff)
       {
-        DIE_NOW(0, "GPIO: clearing random interrupts. have a look!...");
+        DIE_NOW(gc, "GPIO: clearing random interrupts. have a look!...");
       }
       gpio[gpioNum]->gpioIrqStatus2 = gpio[gpioNum]->gpioIrqStatus2 & ~value;
       break;
     case GPIO_IRQENABLE2:
       if (value != 0)
       {
-        DIE_NOW(0, "GPIO: enabling interrupt! have a look at this...");
+        DIE_NOW(gc, "GPIO: enabling interrupt! have a look at this...");
       }
       gpio[gpioNum]->gpioIrqEnable2 = value;
       break;
     case GPIO_CTRL:
       if ((value & GPIO_CTRL_DISABLEMOD) == GPIO_CTRL_DISABLEMOD)
       {
-        DIE_NOW(0, "GPIO: disabling module! investigate.");
+        DIE_NOW(gc, "GPIO: disabling module! investigate.");
       }
       gpio[gpioNum]->gpioCtrl = value & ~GPIO_CTRL_RESERVED;
       break;

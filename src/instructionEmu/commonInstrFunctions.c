@@ -1,5 +1,6 @@
 #include "common/bit.h"
 #include "common/debug.h"
+#include "common/stddef.h"
 
 #include "cpuArch/constants.h"
 
@@ -193,7 +194,7 @@ u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int * carryFlag)
   // RRX can only shift right by 1
   if ((shiftType == SHIFT_TYPE_RRX) && (shamt != 1))
   {
-    DIE_NOW(0, "shiftVal() type rrx, but shamt not 1!");
+    DIE_NOW(NULL, "shiftVal: type rrx, but shamt not 1!");
   }
 
   u32int retVal = 0;
@@ -218,7 +219,7 @@ u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int * carryFlag)
        case SHIFT_TYPE_ASR:
        case SHIFT_TYPE_RRX:
        default:
-        DIE_NOW(0,"shiftVal(): unimplemented shiftType.");
+        DIE_NOW(NULL, "shiftVal: unimplemented shiftType");
      } // switch
   } // else
   return retVal;
@@ -280,7 +281,7 @@ u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int * shamt)
       }
 
     default:
-      DIE_NOW(0,"decodeShiftImmediate: voodoo dolls everywhere!");
+      DIE_NOW(NULL, "decodeShiftImmediate: voodoo dolls everywhere!");
   } // switch ends
 
   // compiler happy!
@@ -302,7 +303,7 @@ u32int decodeShift(u32int instrShiftType)
     case 3:
       return SHIFT_TYPE_ROR;
     default:
-      DIE_NOW(0, "voodoo dolls everywhere!");
+      DIE_NOW(NULL, "voodoo dolls everywhere!");
   } // switch ends
 }
 

@@ -1,4 +1,5 @@
 #include "common/debug.h"
+#include "common/stddef.h"
 
 #include "instructionEmu/coprocInstructions.h"
 #include "instructionEmu/dataProcessInstr.h"
@@ -13,7 +14,7 @@
 instructionHandler decodeArmInstruction(u32int instruction)
 {
 #include "instructionEmu/decoder/armGraph.inc.c"
-  DIE_NOW(0, "decodeArmInstruction: control fell through");
+  DIE_NOW(NULL, "decodeArmInstruction: control fell through");
 }
 
 #ifdef CONFIG_THUMB2
@@ -22,14 +23,14 @@ static inline __attribute__((always_inline))
   instructionHandler decodeT16Instruction(u32int instruction)
 {
 #include "instructionEmu/decoder/t16Graph.inc.c"
-  DIE_NOW(0, "decodeT16Instruction: control fell through");
+  DIE_NOW(NULL, "decodeT16Instruction: control fell through");
 }
 
 static inline __attribute__((always_inline))
   instructionHandler decodeT32Instruction(u32int instruction)
 {
 #include "instructionEmu/decoder/t32Graph.inc.c"
-  DIE_NOW(0, "decodeT32Instruction: control fell through");
+  DIE_NOW(NULL, "decodeT32Instruction: control fell through");
 }
 
 instructionHandler __attribute__((flatten)) decodeThumbInstruction(u32int instruction)

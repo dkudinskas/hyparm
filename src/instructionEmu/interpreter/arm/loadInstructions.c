@@ -58,7 +58,7 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
     // regSrc2 == PC then UNPREDICTABLE
     if (regSrc2 == GPR_PC)
     {
-      DIE_NOW(0, "LDR reg Rm == PC UNPREDICTABLE case!");
+      DIE_NOW(context, "LDR reg Rm == PC UNPREDICTABLE case!");
     }
     u32int offsetRegisterValue = loadGuestGPR(regSrc2, context);
 
@@ -129,7 +129,7 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
     // if Rn == Rt then UNPREDICTABLE
     if (regDst == regSrc)
     {
-      DIE_NOW(0, "LDR writeback UNPREDICTABLE case!");
+      DIE_NOW(context, "LDR writeback UNPREDICTABLE case!");
     }
     // Rn = offsetAddr;
     storeGuestGPR(regSrc, offsetAddress, context);
@@ -167,14 +167,14 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
 
   if (regDst == GPR_PC)
   {
-    DIE_NOW(0, "LDRB: cannot load a single byte into PC!");
+    DIE_NOW(context, "LDRB: cannot load a single byte into PC!");
   }
 
   if (!regOrImm)
   {
     if (regSrc == GPR_PC)
     {
-      DIE_NOW(0, "check LDRB literal");
+      DIE_NOW(context, "check LDRB literal");
     }
     // immediate case
     offset = instruction & 0x00000FFF;
@@ -186,7 +186,7 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
     u32int regSrc2 = instruction & 0x0000000F;
     if (regSrc2 == 15)
     {
-      DIE_NOW(0, "LDRB reg Rm == PC UNPREDICTABLE case!");
+      DIE_NOW(context, "LDRB reg Rm == PC UNPREDICTABLE case!");
     }
     u32int offsetRegisterValue = loadGuestGPR(regSrc2, context);
 
@@ -243,7 +243,7 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
     // if Rn == Rt then UNPREDICTABLE
     if (regDst == regSrc)
     {
-      DIE_NOW(0, "LDRB writeback UNPREDICTABLE case!");
+      DIE_NOW(context, "LDRB writeback UNPREDICTABLE case!");
     }
     // Rn = offsetAddr;
     storeGuestGPR(regSrc, offsetAddress, context);
@@ -270,12 +270,12 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
   // P = 0 and W == 1 then LDRHT (as if user mode)
   if (!preOrPost && writeBack)
   {
-    DIE_NOW(0, "LDRH as user mode unimplemented.");
+    DIE_NOW(context, "LDRH as user mode unimplemented.");
   }
   if (regDst == GPR_PC)
   {
     // cannot load halfword into PC!!
-    DIE_NOW(0, "LDRH Rd=PC UNPREDICTABLE case.");
+    DIE_NOW(context, "LDRH Rd=PC UNPREDICTABLE case.");
   }
 
   u32int baseAddress = loadGuestGPR(regSrc, context);
@@ -311,7 +311,7 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
     }
     if ((address & 0x1) == 0x1)
     {
-      DIE_NOW(0, "LDRH: load address unaligned.");
+      DIE_NOW(context, "LDRH: load address unaligned.");
     }
   } // immediate case done
   else
@@ -320,7 +320,7 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
     u32int regSrc2 = instruction & 0x0000000F;
     if (regSrc2 == 15)
     {
-      DIE_NOW(0, "LDRH reg Rm == PC UNPREDICTABLE case!");
+      DIE_NOW(context, "LDRH reg Rm == PC UNPREDICTABLE case!");
     }
     u32int offsetRegisterValue = loadGuestGPR(regSrc2, context);
 
@@ -355,7 +355,7 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
     }
     if ((address & 0x1) == 0x1)
     {
-      DIE_NOW(0, "LDRH: load address unaligned.");
+      DIE_NOW(context, "LDRH: load address unaligned.");
     }
   } // reg case done
 
@@ -373,7 +373,7 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
     //if Rn == PC || Rn == Rt || Rn == Rm) then UNPREDICTABLE;
     if (regDst == regSrc)
     {
-      DIE_NOW(0, "LDRH writeback UNPREDICTABLE case!");
+      DIE_NOW(context, "LDRH writeback UNPREDICTABLE case!");
     }
     // Rn = offsetAddr;
     storeGuestGPR(regSrc, offsetAddress, context);
@@ -402,7 +402,7 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
 
   if ((regDst % 2) == 1)
   {
-    DIE_NOW(0, "LDRD undefined case: regDst must be even number!");
+    DIE_NOW(context, "LDRD undefined case: regDst must be even number!");
   }
 
   u32int offsetAddress = 0;
@@ -452,7 +452,7 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
     // regDest2 == PC then UNPREDICTABLE
     if (regSrc2 == 15)
     {
-      DIE_NOW(0, "STR reg Rm == PC UNPREDICTABLE case!");
+      DIE_NOW(context, "STR reg Rm == PC UNPREDICTABLE case!");
     }
 
     // if increment then base + offset else base - offset
@@ -579,7 +579,7 @@ u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
 
   if (baseReg == GPR_PC || regDest == GPR_PC)
   {
-    DIE_NOW(0, "LDREXH unpredictable case (PC used).");
+    DIE_NOW(context, "LDREXH unpredictable case (PC used).");
   }
   u32int baseVal = loadGuestGPR(baseReg, context);
   // halfword zero extended to word...
@@ -604,7 +604,7 @@ u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
   // must not be PC, destination must be even and not link register
   if ((baseReg == GPR_PC) || ((regDest % 2) != 0) || (regDest == GPR_LR))
   {
-    DIE_NOW(0, "LDREXH unpredictable case (invalid registers).");
+    DIE_NOW(context, "LDREXH unpredictable case (invalid registers).");
   }
   u32int baseVal = loadGuestGPR(baseReg, context);
 
@@ -635,7 +635,7 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
 
   if ((baseReg == GPR_PC) || !regList)
   {
-    DIE_NOW(0, "LDM UNPREDICTABLE: base=PC or no registers in list");
+    DIE_NOW(context, "LDM UNPREDICTABLE: base=PC or no registers in list");
   }
 
   u32int savedCPSR = 0;
@@ -740,7 +740,7 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
           modeSpsr = context->SPSR_UND;
           break;
         default:
-          DIE_NOW(0, "LDM: exception return form sys/usr mode!");
+          DIE_NOW(context, "LDM: exception return form sys/usr mode!");
       }
       if ((modeSpsr & PSR_MODE) == PSR_USR_MODE)
       {

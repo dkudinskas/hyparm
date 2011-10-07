@@ -118,7 +118,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char * 
              ((context->CPSR & PSR_MODE) == PSR_SYS_MODE) )
         {
           // there are no SPSR's in usr or sys modes!
-          DIE_NOW(0, "arithLogicOp: exception return in guest usr/sys mode! bug.");
+          DIE_NOW(context, "arithLogicOp: exception return in guest usr/sys mode! bug.");
         }
         else
         {
@@ -141,7 +141,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char * 
               context->CPSR = context->SPSR_UND;
               break;
             default: 
-              DIE_NOW(0, "arithLogicOp: invalid SPSR read for current guest mode.");
+              DIE_NOW(context, "arithLogicOp: invalid SPSR read for current guest mode.");
           } 
         }
       }

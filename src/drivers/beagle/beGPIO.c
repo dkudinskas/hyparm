@@ -1,4 +1,5 @@
 #include "common/debug.h"
+#include "common/stddef.h"
 
 #include "drivers/beagle/beGPIO.h"
 
@@ -33,7 +34,7 @@ u32int beGetGPIOBaseAddr(u32int id)
     case 5:
       return GPIO6_BASE;
     default:
-      DIE_NOW(0, "beGetGPIOBaseAddr: invalid base id");
+      DIE_NOW(NULL, "beGetGPIOBaseAddr: invalid base id");
   }
 }
 

@@ -434,7 +434,7 @@ static void protectScannedBlock(void *start, void *end)
         if (mbStart != (mbEnd - 0x00100000))
         {
           printf("startAddress %#.8x, endAddress %#.8x" EOL, startAddress, endAddress);
-          DIE_NOW(0, "protectScannedBlock: Basic block crosses non-sequential section boundary!");
+          DIE_NOW(NULL, "protectScannedBlock: Basic block crosses non-sequential section boundary!");
         }
       }
       addProtection(startAddress, endAddress, 0, PRIV_RW_USR_RO);
@@ -447,7 +447,7 @@ static void protectScannedBlock(void *start, void *end)
       {
         case LARGE_PAGE:
           printf("Page size: 64KB (large), %#.8x" EOL, ptEntryLvl2);
-          DIE_NOW(0, "Unimplemented.");
+          DIE_NOW(NULL, "Unimplemented.");
           break;
         case SMALL_PAGE:
           if ((ptEntryLvl2 & 0x30) != 0x20)
@@ -457,22 +457,22 @@ static void protectScannedBlock(void *start, void *end)
           break;
         case FAULT:
           printf("Page invalid, %#.8x" EOL, ptEntryLvl2);
-          DIE_NOW(0, "Unimplemented.");
+          DIE_NOW(NULL, "Unimplemented.");
           break;
         default:
-          DIE_NOW(0, "Unrecognized second level entry");
+          DIE_NOW(NULL, "Unrecognized second level entry");
           break;
       }
       break;
     }
     case FAULT:
       printf("Entry for basic block: invalid, %p" EOL, ptEntryAddr);
-      DIE_NOW(0, "Unimplemented.");
+      DIE_NOW(NULL, "Unimplemented.");
       break;
     case RESERVED:
-      DIE_NOW(0, "Entry for basic block: reserved. Error.");
+      DIE_NOW(NULL, "Entry for basic block: reserved. Error.");
       break;
     default:
-      DIE_NOW(0, "Unrecognized second level entry. Error.");
+      DIE_NOW(NULL, "Unrecognized second level entry. Error.");
   }
 }

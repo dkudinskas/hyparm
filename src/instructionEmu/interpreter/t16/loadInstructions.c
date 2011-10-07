@@ -53,7 +53,7 @@ u32int t16LdrInstruction(GCONTXT *context, u32int instruction)
   }
   else
   {
-    DIE_NOW(0, "Unimplemented thumb16 LDR instr");
+    DIE_NOW(context, "Unimplemented thumb16 LDR instr");
   }
 
   u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD,
@@ -111,9 +111,9 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
 
   int i;
   // we trapped from Thumb mode. I assume the PC reg is in the list
-  if((instruction & 0x100) == 0)
+  if ((instruction & 0x100) == 0)
   {
-    DIE_NOW(0,"Thumb POP instruction trapped but PC is not on the list...");
+    DIE_NOW(context, "t16LdmInstruction: trapped but PC is not on the list...");
   }
   regList = ( ((instruction & 0x0100)>>8) << 15 ) | (instruction & 0x00FF);
   baseReg = 0xD; // hardcode SP register
