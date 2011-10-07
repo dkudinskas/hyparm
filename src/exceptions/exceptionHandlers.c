@@ -492,15 +492,14 @@ GCONTXT *irq(GCONTXT *context)
       break;
     case GPT2_IRQ:
       throwInterrupt(activeIrqNumber);
+      /*
+       * FIXME: figure out which interrupt to clear and then clear the right one?
+       */
       gptBEClearOverflowInterrupt(2);
 #ifdef CONFIG_GUEST_FREERTOS
-      /*
-       * FIXME: Niels: I think this is a dirty hack.
-       * Shouldn't we figure out which interrupt to clear and then clear the right one?
-       */
       if (rtos)
       {
-        storeToGPTimer(2,GPT_REG_TCRR,0x0);
+        gptBEResetCounter(2);
         gptBEClearMatchInterrupt(2);
       }
 #endif
@@ -548,15 +547,14 @@ void irqPrivileged()
       break;
     case GPT2_IRQ:
       throwInterrupt(activeIrqNumber);
+      /*
+       * FIXME: figure out which interrupt to clear and then clear the right one?
+       */
       gptBEClearOverflowInterrupt(2);
 #ifdef CONFIG_GUEST_FREERTOS
-      /*
-       * FIXME: Niels: I think this is a dirty hack.
-       * Shouldn't we figure out which interrupt to clear and then clear the right one?
-       */
       if (rtos)
       {
-        storeToGPTimer(2,GPT_REG_TCRR,0x0);
+        gptBEResetCounter(2);
         gptBEClearMatchInterrupt(2);
       }
 #endif

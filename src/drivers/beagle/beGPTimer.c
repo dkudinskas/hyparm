@@ -233,9 +233,14 @@ static inline u32int gptBEgetBaseAddr(u32int id)
   return base;
 }
 
-u32int getInternalCounterVal(u32int clkId)
+u32int gptBEGetCounter(u32int clkId)
 {
   return gptBEregRead(clkId, GPT_REG_TCRR);
+}
+
+void gptBEResetCounter(u32int id)
+{
+  gptBEregWrite(id, GPT_REG_TCRR, 0);
 }
 
 void gptBEDumpRegisters(u32int id)
