@@ -160,9 +160,6 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
     end++;
   }
   instruction = *end;
-  /*
-   *
-   */
 
   if ((instruction & INSTR_SWI) == INSTR_SWI)
   {
