@@ -75,8 +75,6 @@ u32int getPhysicalAddress(descriptor* ptd, u32int virtualAddress);
 
 bool isAddrInGuestPT(u32int vaddr);
 
-void dumpPageTable(descriptor* ptd);
-
 u32int findVAforPA(u32int physAddr);
 u32int findGuestVAforPA(u32int physAddr);
 

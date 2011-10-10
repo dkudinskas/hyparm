@@ -63,10 +63,6 @@ static const char* prefetchAbtFaultString[] =
   "INVALID ENTRY",                            // 1f = 0b11111,
 };
 
-void clearTLB(void);
-void clearCache(void);
-void setTTBCR(u32int value);
-
 void mmu_compile_time_check(void)
 {
   COMPILE_TIME_ASSERT((sizeof(IFSR) == sizeof(u32int)) , _IFSR_struct_not_32bit);
