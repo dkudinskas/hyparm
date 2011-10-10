@@ -29,7 +29,10 @@
 static inline u32int getHash(u32int key);
 
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex);
+
+#ifdef CONFIG_THUMB2
 static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex);
+#endif
 
 static void protectScannedBlock(void *start, void *end);
 
