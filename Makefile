@@ -284,7 +284,7 @@ $(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_OK)
 ifneq ($(VERBOSE),)
 	@echo 'DEP      $<'
 endif
-	@$(CC) -M $(CPPFLAGS) -MG -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
+	@$(CC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
 
 # Generate dependency files for all assembly source files that require preprocessing. This rule is
 # exactly the same as the rule above, except that it generates *.S.d files from *.S files.
@@ -292,7 +292,7 @@ $(SOURCE_PATH)/%.S.d: $(SOURCE_PATH)/%.S $(KCONFIG_OK)
 ifneq ($(VERBOSE),)
 	@echo 'DEP      $<'
 endif
-	@$(CC) -M $(CPPFLAGS) -MG -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
+	@$(CC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
 
 
 $(SOURCE_PATH)/%.c.o: $(SOURCE_PATH)/%.c
