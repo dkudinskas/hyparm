@@ -17,9 +17,6 @@
 #include "memoryManager/pageTable.h"
 
 
-// uncomment to enable remaining debug code not triggered from config: #define SCANNER_DEBUG
-
-
 #define INSTR_SWI            0xEF000000U
 #define INSTR_SWI_THUMB      0x0000DF00U
 #define INSTR_NOP_THUMB      0x0000BF00U
@@ -183,12 +180,10 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
       u32int svcCacheIndex = (svcCode >> 8) - 1;
       if (svcCacheIndex >= BLOCK_CACHE_SIZE)
       {
-        printf("Instr %.8x@%p", instruction, end);
-        DIE_NOW(context, "scanner: block cache index in SWI out of range.");
+        printf("scanArmBlock: instruction %#.8x @ %p", instruction, end);
+        DIE_NOW(context, "scanArmBlock: block cache index in SWI out of range.");
       }
-#ifdef SCANNER_DEBUG
-      printf("scanner: EOB instruction is SWI @ %p code %x" EOL, end, svcCacheIndex);
-#endif
+      DEBUG(SCANNER, "scanArmBlock: EOB instruction is SWI @ %p code %#x" EOL, end, svcCacheIndex);
       BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, svcCacheIndex);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
@@ -216,10 +211,8 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
     // iCacheFlushByMVA((u32int)currAddress);
   }
 
-  #ifdef SCANNER_DEBUG
-    printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
-        currAddress, context->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)context->hdlFunct);
-  #endif
+  DEBUG(SCANNER, "scanArmBlock: EOB %#.8x @ %p SVC code %#x hdlrFuncPtr %p" EOL,
+      context->endOfBlockInstr, end, ((cacheIndex + 1) << 8), context->hdlFunct);
 
   addToBlockCache(context->blockCache, cacheIndex, (u32int) start, (u32int)end,
       context->endOfBlockInstr, BCENTRY_TYPE_ARM, context->hdlFunct);
@@ -289,12 +282,10 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       u32int cacheIndex = svcCode - 1;
       if (cacheIndex >= BLOCK_CACHE_SIZE)
       {
-        printf("Instr %.8x@%p", instruction, start);
+        printf("scanThumbBlock: instruction %#.8x @ %p", instruction, end);
         DIE_NOW(context, "scanThumbBlock: block cache index in SWI out of range");
       }
-#ifdef SCANNER_DEBUG
-      printf("scanner: EOB instruction is SWI @ %#.8x code %x" EOL, (u32int)start, cacheIndex);
-#endif
+      DEBUG(SCANNER, "scanThumbBlock: EOB instruction is SWI @ %p code %#x" EOL, end, cacheIndex);
       BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, cacheIndex);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
@@ -353,17 +344,13 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         break;
       }
     }
-#ifdef SCANNER_DBG
-    printf("Thumb svc on %#.8x" EOL,(u32int)end);
-#endif
+    DEBUG(SCANNER, "scanThumbBlock: svc on %#.8x" EOL, (u32int)end);
 
     context->hdlFunct = handler;
   }
 
-#ifdef SCANNER_DEBUG
-printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
-    start, context->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)context->hdlFunct);
-#endif
+  DEBUG(SCANNER, "scanThumbBlock: EOB %#.8x @ %p SVC code %#x hdlrFuncPtr %p" EOL,
+      context->endOfBlockInstr, end, ((cacheIndex + 1) << 8), context->hdlFunct);
 
   addToBlockCache(context->blockCache, cacheIndex, (u32int)start, (u32int)end,
       context->endOfBlockInstr, blockType, context->hdlFunct);

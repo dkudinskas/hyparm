@@ -16,9 +16,6 @@
 #define SCANNER_CALL_SOURCE_PABT_TRANSLATION     7
 
 
-// uncomment me to enable scanner debug: #define SCANNER_DEBUG
-
-
 void scanBlock(GCONTXT * gc, u32int blkStartAddr);
 
 
