@@ -1,10 +1,6 @@
 #ifndef __GUEST_MANAGER__BLOCK_CACHE_H__
 #define __GUEST_MANAGER__BLOCK_CACHE_H__
 
-#ifdef CONFIG_THUMB2
-# include "common/thumbdefs.h"
-#endif
-
 #include "common/types.h"
 
 

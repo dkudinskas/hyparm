@@ -13,6 +13,16 @@
 #define T32_INSTRUCTION_SIZE           4
 
 
+/*
+ * A Thumb instruction is a 32-bit instruction if, in the first halfword, the bits in the mask
+ * THUMB32 are set to one of THUMB32_[123].
+ */
+#define THUMB32                   0xF800
+#define THUMB32_1                 0xE800
+#define THUMB32_2                 0xF000
+#define THUMB32_3                 0xF800
+
+
 #define GPR_SP                        13
 #define GPR_LR                        14
 #define GPR_PC                        15
