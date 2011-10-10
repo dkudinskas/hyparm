@@ -333,8 +333,8 @@
 
 <category name="SVC_COPROCESSOR_CATEGORY" mask="0x0c000000" value="0x0c000000">
   <instruction name="SVC" mask="0x0f000000" value="0x0f000000" effect="svcInstruction" />
-  <instruction name="MRC" mask="0x0f100010" value="0x0e100010" effect="mrcInstruction" />
-  <instruction name="MCR" mask="0x0f100010" value="0x0e000010" effect="mcrInstruction" />
+  <instruction name="MRC" mask="0x0f100010" value="0x0e100010" effect="armMrcInstruction" />
+  <instruction name="MCR" mask="0x0f100010" value="0x0e000010" effect="armMcrInstruction" />
 </category>
 
 </autodecoder>
