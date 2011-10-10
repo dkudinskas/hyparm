@@ -19,7 +19,7 @@ void scheduleGuest()
   // check if we have more than one guest
   // if we have only one guest, adjust guest state to deliver tick
   // post-actions
-  printf("scheduler: scheduleGuest() implement me!\n");
+  printf("scheduler: scheduleGuest() implement me!" EOL);
   //   - return to irq handler
   //   - restore guest state
   //   - return to guest...
