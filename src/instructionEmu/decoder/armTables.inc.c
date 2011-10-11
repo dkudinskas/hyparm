@@ -289,173 +289,170 @@ static struct instruction32bit armMediaInstructions[] =
   { FALSE, &bfcInstruction,       0x07c0001f, 0x0fe0007f, "BFC Rd, #LSB, #width" },
   // BFI: bit field insert, dest PC not allowed.
   { FALSE, &bfiInstruction,       0x07c00010, 0x0fe00070, "BFI Rd, #LSB, #width" },
-  // UNIMPLEMENTED: reverse bits
-  { TRUE,  &rbitInstruction,      0x06ff0f30, 0x0fff0ff0, "rbit%c\t%12-15r, %0-3r" },
+  // RBIT: reverse bits, if Rd or Rm = 15 then unpredictable.
+  { FALSE, &rbitInstruction,      0x06ff0f30, 0x0fff0ff0, "RBIT Rd,Rm" },
   // UBFX: extract bit field - destination 15 unpredictable
   { FALSE, &usbfxInstruction,     0x07a00050, 0x0fa00070, "UBFX Rd, Rn, width" },
-  // UNIMPLEMENTED: pack halfword
-  { TRUE,  &pkhbtInstruction,     0x06800010, 0x0ff00ff0, "pkhbt%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &pkhbtInstruction,     0x06800010, 0x0ff00070, "pkhbt%c\t%12-15r, %16-19r, %0-3r, lsl #%7-11d" },
-  { TRUE,  &pkhtbInstruction,     0x06800050, 0x0ff00ff0, "pkhtb%c\t%12-15r, %16-19r, %0-3r, asr #32" },
-  { TRUE,  &pkhtbInstruction,     0x06800050, 0x0ff00070, "pkhtb%c\t%12-15r, %16-19r, %0-3r, asr #%7-11d" },
-  // UNIMPLEMENTED: saturating add 16 bit and 8 bit
-  { TRUE,  &qadd16Instruction,    0x06200f10, 0x0ff00ff0, "qadd16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &qadd8Instruction,     0x06200f90, 0x0ff00ff0, "qadd8%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: saturating add and subtract with exchange
-  { TRUE,  &qaddsubxInstruction,  0x06200f30, 0x0ff00ff0, "qaddsubx%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: saturating subtract 16 and 8 bit
-  { TRUE,  &qsub16Instruction,    0x06200f70, 0x0ff00ff0, "qsub16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &qsub8Instruction,     0x06200ff0, 0x0ff00ff0, "qsub8%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: saturating subtract and add with exchange
-  { TRUE,  &qsubaddxInstruction,  0x06200f50, 0x0ff00ff0, "qsubaddx%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: signed add 16 bit and 8 bit
-  { TRUE,  &sadd16Instruction,    0x06100f10, 0x0ff00ff0, "sadd16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &sadd8Instruction,     0x06100f90, 0x0ff00ff0, "sadd8%c\t%12-15r, %16-19r, %0-3r" },
-  // signed add and subtract with exchange
-  { TRUE,  &saddsubxInstruction,  0x06100f30, 0x0ff00ff0, "saddsubx%c\t%12-15r, %16-19r, %0-3r" },
-  // signed subtract 16 bit and 8 bit
-  { TRUE,  &ssub16Instruction,    0x06100f70, 0x0ff00ff0, "ssub16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &ssub8Instruction,     0x06100ff0, 0x0ff00ff0, "ssub8%c\t%12-15r, %16-19r, %0-3r" },
-  // signed subtract and add with exchange
-  { TRUE,  &ssubaddxInstruction,  0x06100f50, 0x0ff00ff0, "ssubaddx%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: signed halvign add 16 bit and 8 bit
-  { TRUE,  &shadd16Instruction,   0x06300f10, 0x0ff00ff0, "shadd16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &shadd8Instruction,    0x06300f90, 0x0ff00ff0, "shadd8%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: signed halving add and subtract with exchange
-  { TRUE,  &shaddsubxInstruction, 0x06300f30, 0x0ff00ff0, "shaddsubx%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: signed halvign subtract 16 bit and 8 bit
-  { TRUE,  &shsub16Instruction,   0x06300f70, 0x0ff00ff0, "shsub16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &shsub8Instruction,    0x06300ff0, 0x0ff00ff0, "shsub8%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: signed halving subtract and add with exchange
-  { TRUE,  &shsubaddxInstruction, 0x06300f50, 0x0ff00ff0, "shsubaddx%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: unsigned add 16 bit and 8 bit
-  { TRUE,  &uadd16Instruction,    0x06500f10, 0x0ff00ff0, "uadd16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &uadd8Instruction,     0x06500f90, 0x0ff00ff0, "uadd8%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: unsigned add and subtract with exchange
-  { TRUE,  &uaddsubxInstruction,  0x06500f30, 0x0ff00ff0, "uaddsubx%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: unsigned subtract 16 bit and 8 bit
-  { TRUE,  &usub16Instruction,    0x06500f70, 0x0ff00ff0, "usub16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &usub8Instruction,     0x06500ff0, 0x0ff00ff0, "usub8%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: unsigned subtract and add with exchange
-  { TRUE,  &usubaddxInstruction,  0x06500f50, 0x0ff00ff0, "usubaddx%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: unsigned halving add 16 bit and 8 bit
-  { TRUE,  &uhadd16Instruction,   0x06700f10, 0x0ff00ff0, "uhadd16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &uhadd8Instruction,    0x06700f90, 0x0ff00ff0, "uhadd8%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: unsigned halving add and subtract with exchange
-  { TRUE,  &uhaddsubxInstruction, 0x06700f30, 0x0ff00ff0, "uhaddsubxc\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: unsigned halving subtract 16 bit and 8 bit
-  { TRUE,  &uhsub16Instruction,   0x06700f70, 0x0ff00ff0, "uhsub16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &uhsub8Instruction,    0x06700ff0, 0x0ff00ff0, "uhsub8%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: unsigned halving subtract and add with exchange
-  { TRUE,  &uhsubaddxInstruction, 0x06700f50, 0x0ff00ff0, "uhsubaddx%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED:  unsigned saturating add 16 bit and 8 bit
-  { TRUE,  &uqadd16Instruction,   0x06600f10, 0x0ff00ff0, "uqadd16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &uqadd8Instruction,    0x06600f90, 0x0ff00ff0, "uqadd8%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: unsigned saturating add and subtract with exchange
-  { TRUE,  &uqaddsubxInstruction, 0x06600f30, 0x0ff00ff0, "uqaddsubx%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: unsigned saturating subtract 16 bit and 8 bit
-  { TRUE,  &uqsub16Instruction,   0x06600f70, 0x0ff00ff0, "uqsub16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &uqsub8Instruction,    0x06600ff0, 0x0ff00ff0, "uqsub8%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: unsigned saturating subtract and add with exchange
-  { TRUE,  &uqsubaddxInstruction, 0x06600f50, 0x0ff00ff0, "uqsubaddx%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: byte-reverse word
-  { TRUE,  &revInstruction,       0x06bf0f30, 0x0fff0ff0, "rev%c\t%12-15r, %0-3r" },
-  // UNIMPLEMENTED:  byte-reverse packed halfword
-  { TRUE,  &rev16Instruction,     0x06bf0fb0, 0x0fff0ff0, "rev16%c\t%12-15r, %0-3r" },
-  // UNIMPLEMENTED:  byte-reverse signed halfword
-  { TRUE,  &revshInstruction,     0x06ff0fb0, 0x0fff0ff0, "revsh%c\t%12-15r, %0-3r" },
-  // UNIMPLEMENTED: sign-extend halfword
-  { TRUE,  &sxthInstruction,      0x06bf0070, 0x0fff0ff0, "sxth%c\t%12-15r, %0-3r" },
-  { TRUE,  &sxthInstruction,      0x06bf0470, 0x0fff0ff0, "sxth%c\t%12-15r, %0-3r, ror #8" },
-  { TRUE,  &sxthInstruction,      0x06bf0870, 0x0fff0ff0, "sxth%c\t%12-15r, %0-3r, ror #16" },
-  { TRUE,  &sxthInstruction,      0x06bf0c70, 0x0fff0ff0, "sxth%c\t%12-15r, %0-3r, ror #24" },
-  // UNIMPLEMENTED: sign-extend byte 16
-  { TRUE,  &sxtb16Instruction,    0x068f0070, 0x0fff0ff0, "sxtb16%c\t%12-15r, %0-3r" },
-  { TRUE,  &sxtb16Instruction,    0x068f0470, 0x0fff0ff0, "sxtb16%c\t%12-15r, %0-3r, ror #8" },
-  { TRUE,  &sxtb16Instruction,    0x068f0870, 0x0fff0ff0, "sxtb16%c\t%12-15r, %0-3r, ror #16" },
-  { TRUE,  &sxtb16Instruction,    0x068f0c70, 0x0fff0ff0, "sxtb16%c\t%12-15r, %0-3r, ror #24" },
-  // SXTB: destination register PC not allowed,
-  { FALSE, &sxtbInstruction,      0x06af0070, 0x0fff0ff0, "sxtb%c\t%12-15r, %0-3r" },
-  { FALSE, &sxtbInstruction,      0x06af0470, 0x0fff0ff0, "sxtb%c\t%12-15r, %0-3r, ror #8" },
-  { FALSE, &sxtbInstruction,      0x06af0870, 0x0fff0ff0, "sxtb%c\t%12-15r, %0-3r, ror #16" },
-  { FALSE, &sxtbInstruction,      0x06af0c70, 0x0fff0ff0, "sxtb%c\t%12-15r, %0-3r, ror #24" },
+  // PKH (pack halfword), if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &pkhbtInstruction,     0x06800010, 0x0ff00ff0, "PKHBT Rd,Rn,Rm" },
+  { FALSE, &pkhbtInstruction,     0x06800010, 0x0ff00070, "PKHBT Rd,Rn,Rm,LSL #imm" },
+  { FALSE, &pkhtbInstruction,     0x06800050, 0x0ff00ff0, "PKHTB Rd,Rn,Rm,ASR #32" },
+  { FALSE, &pkhtbInstruction,     0x06800050, 0x0ff00070, "PKHTB Rd,Rn,Rm,ASR #imm" },
+  // QADD8,QADD16: saturating add 16 bit and 8 bit, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &qadd16Instruction,    0x06200f10, 0x0ff00ff0, "QADD16 Rd,Rn,Rm" },
+  { FALSE, &qadd8Instruction,     0x06200f90, 0x0ff00ff0, "QADD8 Rd,Rn,Rm" },
+  // QASX: saturating add and subtract with exchange if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &qaddsubxInstruction,  0x06200f30, 0x0ff00ff0, "QASX Rd,Rn,Rm" },
+  // QSUB8,QSUB16: saturating subtract 16 and 8 bit if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &qsub16Instruction,    0x06200f70, 0x0ff00ff0, "QSUB16 Rd,Rn,Rm" },
+  { FALSE, &qsub8Instruction,     0x06200ff0, 0x0ff00ff0, "QSUB8 Rd,Rn,Rm" },
+  // QSAX: saturating subtract and add with exchange if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &qsubaddxInstruction,  0x06200f50, 0x0ff00ff0, "QSAX Rd,Rn,Rm" },
+  // SADD8,SADD16: signed add 16 bit and 8 bit, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &sadd16Instruction,    0x06100f10, 0x0ff00ff0, "SADD16 Rd,Rn,Rm" },
+  { FALSE, &sadd8Instruction,     0x06100f90, 0x0ff00ff0, "SADD8 Rd,Rn,Rm" },
+  // SASX: signed add and subtract with exchange, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &saddsubxInstruction,  0x06100f30, 0x0ff00ff0, "SASX Rd,Rn,Rm" },
+  // SSUB8,SSUB16: signed subtract 16 bit and 8 bit, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &ssub16Instruction,    0x06100f70, 0x0ff00ff0, "SSUB16 Rd,Rn,Rm" },
+  { FALSE, &ssub8Instruction,     0x06100ff0, 0x0ff00ff0, "SSUB8 Rd,Rn,Rm" },
+  // SSAX: signed subtract and add with exchange,if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &ssubaddxInstruction,  0x06100f50, 0x0ff00ff0, "SSAX Rd,Rn,Rm" },
+  // SHADD8,SHADD16: signed halvign add 16 bit and 8 bit, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &shadd16Instruction,   0x06300f10, 0x0ff00ff0, "SHADD16 Rd,Rn,Rm" },
+  { FALSE, &shadd8Instruction,    0x06300f90, 0x0ff00ff0, "SHADD8 Rd,Rn,Rm" },
+  // SHASX: signed halving add and subtract with exchange, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &shaddsubxInstruction, 0x06300f30, 0x0ff00ff0, "SHASX Rd,Rn,Rm" },
+  // SHSUB8,SHSUB16: signed halvign subtract 16 bit and 8 bit, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &shsub16Instruction,   0x06300f70, 0x0ff00ff0, "SHSUB16 Rd,Rn,Rm" },
+  { FALSE, &shsub8Instruction,    0x06300ff0, 0x0ff00ff0, "SHSUB8 Rd,Rn,Rm" },
+  // SHSAX: signed halving subtract and add with exchange, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &shsubaddxInstruction, 0x06300f50, 0x0ff00ff0, "SHSAX Rd,Rn,Rm" },
+  // UADD8,UADD16: unsigned add 16 bit and 8 bit, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &uadd16Instruction,    0x06500f10, 0x0ff00ff0, "UADD16 Rd,Rn,Rm" },
+  { FALSE, &uadd8Instruction,     0x06500f90, 0x0ff00ff0, "UADD8 Rd,Rn,Rm" },
+  // UASX: unsigned add and subtract with exchange, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &uaddsubxInstruction,  0x06500f30, 0x0ff00ff0, "UASX Rd,Rn,Rm" },
+  // USUB8,USUB16: unsigned subtract 16 bit and 8 bit, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &usub16Instruction,    0x06500f70, 0x0ff00ff0, "USUB16 Rd,Rn,Rm" },
+  { FALSE, &usub8Instruction,     0x06500ff0, 0x0ff00ff0, "USUB8 Rd,Rn,Rm" },
+  // USAX: unsigned subtract and add with exchange, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &usubaddxInstruction,  0x06500f50, 0x0ff00ff0, "USAX Rd,Rn,Rm" },
+  // UHADD8,UHADD16: unsigned halving add 16 bit and 8 bit, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &uhadd16Instruction,   0x06700f10, 0x0ff00ff0, "UHADD16 Rd,Rn,Rm" },
+  { FALSE, &uhadd8Instruction,    0x06700f90, 0x0ff00ff0, "UHADD8 Rd,Rn,Rm" },
+  // UHASX: unsigned halving add and subtract with exchange, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &uhaddsubxInstruction, 0x06700f30, 0x0ff00ff0, "UHASX Rd,Rn,Rm" },
+  // UHSUB8,UHSUB16: unsigned halving subtract 16 bit and 8 bit, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &uhsub16Instruction,   0x06700f70, 0x0ff00ff0, "UHSUB16 Rd,Rn,Rm" },
+  { FALSE, &uhsub8Instruction,    0x06700ff0, 0x0ff00ff0, "UHSUB8 Rd,Rn,Rm" },
+  // UHSAX: unsigned halving subtract and add with exchange, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &uhsubaddxInstruction, 0x06700f50, 0x0ff00ff0, "UHSAX Rd,Rn,Rm" },
+  // UQADD8,UQADD16:  unsigned saturating add 16 bit and 8 bit, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &uqadd16Instruction,   0x06600f10, 0x0ff00ff0, "UQADD16 Rd,Rn,Rm" },
+  { FALSE, &uqadd8Instruction,    0x06600f90, 0x0ff00ff0, "UQADD8 Rd,Rn,Rm" },
+  // UQASX: unsigned saturating add and subtract with exchange, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE,  &uqaddsubxInstruction, 0x06600f30, 0x0ff00ff0, "UQASX Rd,Rn,Rm" },
+  // UQSUB8,UQSUB16: unsigned saturating subtract 16 bit and 8 bit, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &uqsub16Instruction,   0x06600f70, 0x0ff00ff0, "UQSUB16 Rd,Rn,Rm" },
+  { FALSE, &uqsub8Instruction,    0x06600ff0, 0x0ff00ff0, "UQSUB8 Rd,Rn,Rm" },
+  // UQSAX: unsigned saturating subtract and add with exchange, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &uqsubaddxInstruction, 0x06600f50, 0x0ff00ff0, "UQSAX Rd,Rn,Rm" },
+  // REV (byte-reverse word), if Rd or Rm = 15 then unpredictable.
+  { FALSE, &revInstruction,       0x06bf0f30, 0x0fff0ff0, "REV Rd,Rm" },
+  // REV16 (byte-reverse packed halfword), if Rd or Rm = 15 then unpredictable.
+  { FALSE, &rev16Instruction,     0x06bf0fb0, 0x0fff0ff0, "REV16 Rd,Rm" },
+  // REVSH (byte-reverse signed halfword), if Rd or Rm = 15 then unpredictable.
+  { FALSE, &revshInstruction,     0x06ff0fb0, 0x0fff0ff0, "REVSH Rd,Rm" },
+  // SXTH (sign-extend halfword), if Rd or Rm = 15 then unpredictable.
+  { FALSE, &sxthInstruction,      0x06bf0070, 0x0fff0ff0, "SXTH Rd,Rm" },
+  { FALSE, &sxthInstruction,      0x06bf0470, 0x0fff0ff0, "SXTH Rd,Rm,ROR #8" },
+  { FALSE, &sxthInstruction,      0x06bf0870, 0x0fff0ff0, "SXTH Rd,Rm,ROR #16" },
+  { FALSE, &sxthInstruction,      0x06bf0c70, 0x0fff0ff0, "SXTH Rd,Rm,ROR #24" },
+  // SXTB16: sign-extend byte 16, if Rd or Rm = 15 then unpredictable.
+  { FALSE, &sxtb16Instruction,    0x068f0070, 0x0fff0ff0, "SXTB16 Rd,Rm" },
+  { FALSE, &sxtb16Instruction,    0x068f0470, 0x0fff0ff0, "SXTB16 Rd,Rm,ROR #8" },
+  { FALSE, &sxtb16Instruction,    0x068f0870, 0x0fff0ff0, "SXTB16 Rd,Rm,ROR #16" },
+  { FALSE, &sxtb16Instruction,    0x068f0c70, 0x0fff0ff0, "SXTB16 Rd,Rm,ROR #24" },
+  // SXTB sign extend byte, if Rd or Rn = 15 then unpredictable.
+  { FALSE, &sxtbInstruction,      0x06af0070, 0x0fff0ff0, "SXTB Rd,Rm" },
+  { FALSE, &sxtbInstruction,      0x06af0470, 0x0fff0ff0, "SXTB Rd,Rm,ROR #8" },
+  { FALSE, &sxtbInstruction,      0x06af0870, 0x0fff0ff0, "SXTB Rd,Rm,ROR #16" },
+  { FALSE, &sxtbInstruction,      0x06af0c70, 0x0fff0ff0, "SXTB Rd,Rm,ROR #24" },
   // UXTH permitted, if Rd or Rn = 15 then unpredictable.
-  { FALSE, &uxthInstruction,      0x06ff0070, 0x0fff0ff0, "UXTH Rd, Rn" },
-  { FALSE, &uxthInstruction,      0x06ff0470, 0x0fff0ff0, "UXTH Rd, Rn, ROR #8" },
-  { FALSE, &uxthInstruction,      0x06ff0870, 0x0fff0ff0, "UXTH Rd, Rn, ROR #16" },
-  { FALSE, &uxthInstruction,      0x06ff0c70, 0x0fff0ff0, "UXTH Rd, Rn, ROR #24" },
+  { FALSE, &uxthInstruction,      0x06ff0070, 0x0fff0ff0, "UXTH Rd,Rm" },
+  { FALSE, &uxthInstruction,      0x06ff0470, 0x0fff0ff0, "UXTH Rd,Rm,ROR #8" },
+  { FALSE, &uxthInstruction,      0x06ff0870, 0x0fff0ff0, "UXTH Rd,Rm,ROR #16" },
+  { FALSE, &uxthInstruction,      0x06ff0c70, 0x0fff0ff0, "UXTH Rd,Rm,ROR #24" },
   // UXTB16 permitted, if Rd or Rn = 15 then unpredictable.
-  { FALSE, &uxtb16Instruction,    0x06cf0070, 0x0fff0ff0, "UXTB16 Rd, Rn" },
-  { FALSE, &uxtb16Instruction,    0x06cf0470, 0x0fff0ff0, "UXTB16 Rd, Rn, ROR #8" },
-  { FALSE, &uxtb16Instruction,    0x06cf0870, 0x0fff0ff0, "UXTB16 Rd, Rn, ROR #16" },
-  { FALSE, &uxtb16Instruction,    0x06cf0c70, 0x0fff0ff0, "UXTB16 Rd, Rn, ROR #24" },
+  { FALSE, &uxtb16Instruction,    0x06cf0070, 0x0fff0ff0, "UXTB16 Rd,Rm" },
+  { FALSE, &uxtb16Instruction,    0x06cf0470, 0x0fff0ff0, "UXTB16 Rd,Rm,ROR #8" },
+  { FALSE, &uxtb16Instruction,    0x06cf0870, 0x0fff0ff0, "UXTB16 Rd,Rm,ROR #16" },
+  { FALSE, &uxtb16Instruction,    0x06cf0c70, 0x0fff0ff0, "UXTB16 Rd,Rm,ROR #24" },
   // UXTB permitted, if Rd or Rn = 15 then unpredictable.
-  { FALSE, &uxtbInstruction,      0x06ef0070, 0x0fff0ff0, "UXTB Rd, Rn" },
-  { FALSE, &uxtbInstruction,      0x06ef0470, 0x0fff0ff0, "UXTB Rd, Rn, ROR #8" },
-  { FALSE, &uxtbInstruction,      0x06ef0870, 0x0fff0ff0, "UXTB Rd, Rn, ROR #16" },
-  { FALSE, &uxtbInstruction,      0x06ef0c70, 0x0fff0ff0, "UXTB Rd, Rn, ROR #24" },
-  // UNIMPLEMENTED: sign-extend and add halfword
-  { TRUE,  &sxtahInstruction,     0x06b00070, 0x0ff00ff0, "sxtah%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &sxtahInstruction,     0x06b00470, 0x0ff00ff0, "sxtah%c\t%12-15r, %16-19r, %0-3r, ror #8" },
-  { TRUE,  &sxtahInstruction,     0x06b00870, 0x0ff00ff0, "sxtah%c\t%12-15r, %16-19r, %0-3r, ror #16" },
-  { TRUE,  &sxtahInstruction,     0x06b00c70, 0x0ff00ff0, "sxtah%c\t%12-15r, %16-19r, %0-3r, ror #24" },
-  // UNIMPLEMENTED: sign-extend and add byte 16
-  { TRUE,  &sxtab16Instruction,   0x06800070, 0x0ff00ff0, "sxtab16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &sxtab16Instruction,   0x06800470, 0x0ff00ff0, "sxtab16%c\t%12-15r, %16-19r, %0-3r, ror #8" },
-  { TRUE,  &sxtab16Instruction,   0x06800870, 0x0ff00ff0, "sxtab16%c\t%12-15r, %16-19r, %0-3r, ror #16" },
-  { TRUE,  &sxtab16Instruction,   0x06800c70, 0x0ff00ff0, "sxtab16%c\t%12-15r, %16-19r, %0-3r, ror #24" },
-  // UNIMPLEMENTED: sign-extend and add byte
-  { TRUE,  &sxtabInstruction,     0x06a00070, 0x0ff00ff0, "sxtab%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &sxtabInstruction,     0x06a00470, 0x0ff00ff0, "sxtab%c\t%12-15r, %16-19r, %0-3r, ror #8" },
-  { TRUE,  &sxtabInstruction,     0x06a00870, 0x0ff00ff0, "sxtab%c\t%12-15r, %16-19r, %0-3r, ror #16" },
-  { TRUE,  &sxtabInstruction,     0x06a00c70, 0x0ff00ff0, "sxtab%c\t%12-15r, %16-19r, %0-3r, ror #24" },
-  // UNIMPLEMENTED: unsigned extend and add halfword
-  { TRUE,  &uxtahInstruction,     0x06f00070, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &uxtahInstruction,     0x06f00470, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #8" },
-  { TRUE,  &uxtahInstruction,     0x06f00870, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #16" },
-  { TRUE,  &uxtahInstruction,     0x06f00c70, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #24" },
-  // UNIMPLEMENTED: unsigned extend and add byte 16
-  { TRUE,  &uxtab16Instruction,   0x06c00070, 0x0ff00ff0, "uxtab16%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &uxtab16Instruction,   0x06c00470, 0x0ff00ff0, "uxtab16%c\t%12-15r, %16-19r, %0-3r, ror #8" },
-  { TRUE,  &uxtab16Instruction,   0x06c00870, 0x0ff00ff0, "uxtab16%c\t%12-15r, %16-19r, %0-3r, ror #16" },
-  { TRUE,  &uxtab16Instruction,   0x06c00c70, 0x0ff00ff0, "uxtab16%c\t%12-15r, %16-19r, %0-3r, ROR #24" },
-  // UNIMPLEMENTED: unsigned extend and add byte
-  { TRUE,  &uxtabInstruction,     0x06e00070, 0x0ff00ff0, "uxtab%c\t%12-15r, %16-19r, %0-3r" },
-  { TRUE,  &uxtabInstruction,     0x06e00470, 0x0ff00ff0, "uxtab%c\t%12-15r, %16-19r, %0-3r, ror #8" },
-  { TRUE,  &uxtabInstruction,     0x06e00870, 0x0ff00ff0, "uxtab%c\t%12-15r, %16-19r, %0-3r, ror #16" },
-  { TRUE,  &uxtabInstruction,     0x06e00c70, 0x0ff00ff0, "uxtab%c\t%12-15r, %16-19r, %0-3r, ror #24" },
-  // UNIMPLEMENTED: select bytes
-  { TRUE,  &selInstruction,       0x06800fb0, 0x0ff00ff0, "sel%c\t%12-15r, %16-19r, %0-3r" },
-  // UNIMPLEMENTED: signed dual multiply add
-  { TRUE,  &smuadInstruction,     0x0700f010, 0x0ff0f0d0, "smuad%5'x%c\t%16-19r, %0-3r, %8-11r" },
-  // UNIMPLEMENTED: signed dual multiply subtract
-  { TRUE,  &smusdInstruction,     0x0700f050, 0x0ff0f0d0, "smusd%5'x%c\t%16-19r, %0-3r, %8-11r" },
-  // UNIMPLEMENTED: signed multiply accumulate dual
-  { TRUE,  &smladInstruction,     0x07000010, 0x0ff000d0, "smlad%5'x%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
-  // UNIMPLEMENTED: signed multiply accumulate long dual
-  { TRUE,  &smlaldInstruction,    0x07400010, 0x0ff000d0, "smlald%5'x%c\t%12-15r, %16-19r, %0-3r, %8-11r" },
-  // UNIMPLEMENTED: signed multiply subtract dual
-  { TRUE,  &smlsdInstruction,     0x07000050, 0x0ff000d0, "smlsd%5'x%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
-  // UNIMPLEMENTED: signed multiply subtract long dual
-  { TRUE,  &smlsldInstruction,    0x07400050, 0x0ff000d0, "smlsld%5'x%c\t%12-15r, %16-19r, %0-3r, %8-11r" },
-  // UNIMPLEMENTED: signed most significant word multiply
-  { TRUE,  &smmulInstruction,     0x0750f010, 0x0ff0f0d0, "smmul%5'r%c\t%16-19r, %0-3r, %8-11r" },
-  // UNIMPLEMENTED: signed most significant word multiply accumulate
-  { TRUE,  &smmlaInstruction,     0x07500010, 0x0ff000d0, "smmla%5'r%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
-  // UNIMPLEMENTED: signed most significant word multiply subtract
-  { TRUE,  &smmlsInstruction,     0x075000d0, 0x0ff000d0, "smmls%5'r%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
-  // UNIMPLEMENTED: signed saturate
-  { TRUE,  &ssatInstruction,      0x06a00010, 0x0fe00ff0, "ssat%c\t%12-15r, #%16-20W, %0-3r" },
-  { TRUE,  &ssatInstruction,      0x06a00010, 0x0fe00070, "ssat%c\t%12-15r, #%16-20W, %0-3r, lsl #%7-11d" },
-  { TRUE,  &ssatInstruction,      0x06a00050, 0x0fe00070, "ssat%c\t%12-15r, #%16-20W, %0-3r, asr #%7-11d" },
-  // UNIMPLEMENTED: signed saturate 16
-  { TRUE,  &ssat16Instruction,    0x06a00f30, 0x0ff00ff0, "ssat16%c\t%12-15r, #%16-19W, %0-3r" },
-  // UNIMPLEMENTED: unsigned saturate
-  { TRUE,  &usatInstruction,      0x06e00010, 0x0fe00ff0, "usat%c\t%12-15r, #%16-20d, %0-3r" },
-  { TRUE,  &usatInstruction,      0x06e00010, 0x0fe00070, "usat%c\t%12-15r, #%16-20d, %0-3r, lsl #%7-11d" },
-  { TRUE,  &usatInstruction,      0x06e00050, 0x0fe00070, "usat%c\t%12-15r, #%16-20d, %0-3r, asr #%7-11d" },
-  // UNIMPLEMENTED: unsigned saturate 16
-  { TRUE,  &usat16Instruction,    0x06e00f30, 0x0ff00ff0, "usat16%c\t%12-15r, #%16-19d, %0-3r" },
+  { FALSE, &uxtbInstruction,      0x06ef0070, 0x0fff0ff0, "UXTB Rd,Rm" },
+  { FALSE, &uxtbInstruction,      0x06ef0470, 0x0fff0ff0, "UXTB Rd,Rm,ROR #8" },
+  { FALSE, &uxtbInstruction,      0x06ef0870, 0x0fff0ff0, "UXTB Rd,Rm,ROR #16" },
+  { FALSE, &uxtbInstruction,      0x06ef0c70, 0x0fff0ff0, "UXTB Rd,Rm,ROR #24" },
+  // SXTAH (sign-extend and add halfword), if Rd or Rm = 15 then unpredictable, if Rn = 15 see SXTH.
+  { FALSE, &sxtahInstruction,     0x06b00070, 0x0ff00ff0, "SXTAH Rd,Rn,Rm" },
+  { FALSE, &sxtahInstruction,     0x06b00470, 0x0ff00ff0, "SXTAH Rd,Rn,Rm,ROR #8" },
+  { FALSE, &sxtahInstruction,     0x06b00870, 0x0ff00ff0, "SXTAH Rd,Rn,Rm,ROR #16" },
+  { FALSE, &sxtahInstruction,     0x06b00c70, 0x0ff00ff0, "SXTAH Rd,Rn,Rm,ROR #24" },
+  // SXTAB16 (sign-extend and add byte 16), if Rd or Rm = 15 then unpredictable, if Rn = 15 see SXTB16.
+  { FALSE, &sxtab16Instruction,   0x06800070, 0x0ff00ff0, "SXTAB16 Rd,Rn,Rm" },
+  { FALSE, &sxtab16Instruction,   0x06800470, 0x0ff00ff0, "SXTAB16 Rd,Rn,Rm,ROR #8" },
+  { FALSE, &sxtab16Instruction,   0x06800870, 0x0ff00ff0, "SXTAB16 Rd,Rn,Rm,ROR #16" },
+  { FALSE, &sxtab16Instruction,   0x06800c70, 0x0ff00ff0, "SXTAB16 Rd,Rn,Rm,ROR #24" },
+  // SXTAB (sign-extend and add byte), if Rd or Rm = 15 then unpredictable, if Rn = 15 see SXTB.
+  { FALSE, &sxtabInstruction,     0x06a00070, 0x0ff00ff0, "SXTAB Rd,Rn,Rm" },
+  { FALSE, &sxtabInstruction,     0x06a00470, 0x0ff00ff0, "SXTAB Rd,Rn,Rm,ROR #8" },
+  { FALSE, &sxtabInstruction,     0x06a00870, 0x0ff00ff0, "SXTAB Rd,Rn,Rm,ROR #16" },
+  { FALSE, &sxtabInstruction,     0x06a00c70, 0x0ff00ff0, "SXTAB Rd,Rn,Rm,ROR #24" },
+  // UXTAH (unsigned extend and add halfword), if Rd or Rm = 15 then unpredictable, if Rn = 15 see UXTH.
+  { FALSE, &uxtahInstruction,     0x06f00070, 0x0ff00ff0, "UXTAH Rd,Rn,Rm" },
+  { FALSE, &uxtahInstruction,     0x06f00470, 0x0ff00ff0, "UXTAH Rd,Rn,Rm,ROR #8" },
+  { FALSE, &uxtahInstruction,     0x06f00870, 0x0ff00ff0, "UXTAH Rd,Rn,Rm,ROR #16" },
+  { FALSE, &uxtahInstruction,     0x06f00c70, 0x0ff00ff0, "UXTAH Rd,Rn,Rm,ROR #24" },
+  // UXTAB16 (unsigned extend and add byte 16), if Rd or Rm = 15 then unpredictable, if Rn = 15 see UXTB16.
+  { FALSE, &uxtab16Instruction,   0x06c00070, 0x0ff00ff0, "UXTAB16 Rd,Rn,Rm" },
+  { FALSE, &uxtab16Instruction,   0x06c00470, 0x0ff00ff0, "UXTAB16 Rd,Rn,Rm,ROR #8" },
+  { FALSE, &uxtab16Instruction,   0x06c00870, 0x0ff00ff0, "UXTAB16 Rd,Rn,Rm,ROR #16" },
+  { FALSE, &uxtab16Instruction,   0x06c00c70, 0x0ff00ff0, "UXTAB16 Rd,Rn,Rm,ROR #24" },
+  // UXTAB (unsigned extend and add byte), if Rd or Rm = 15 then unpredictable, if Rn = 15 see UXTB.
+  { FALSE, &uxtabInstruction,     0x06e00070, 0x0ff00ff0, "UXTAB Rd,Rn,Rm" },
+  { FALSE, &uxtabInstruction,     0x06e00470, 0x0ff00ff0, "UXTAB Rd,Rn,Rm,ROR #8" },
+  { FALSE, &uxtabInstruction,     0x06e00870, 0x0ff00ff0, "UXTAB Rd,Rn,Rm,ROR #16" },
+  { FALSE, &uxtabInstruction,     0x06e00c70, 0x0ff00ff0, "UXTAB Rd,Rn,Rm,ROR #24" },
+  // SEL (select bytes), if Rd or Rm or Rn = 15 then unpredictable.
+  { FALSE, &selInstruction,       0x06800fb0, 0x0ff00ff0, "SEL Rd,Rn,Rm" },
+  // SMUAD (signed dual multiply add), if Rd or Rm or Rn = 15 then unpredictable.
+  { FALSE, &smuadInstruction,     0x0700f010, 0x0ff0f0d0, "SMUAD{X} Rd,Rn,Rm" },
+  // SMUSD: signed dual multiply subtract, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &smusdInstruction,     0x0700f050, 0x0ff0f0d0, "SMUSD{X} Rd,Rn,Rm" },
+  // SMLAD: signed multiply accumulate dual, if Rd or Rn or Rm = 15 then unpredictable, Ra = 15 see SMUAD
+  { FALSE, &smladInstruction,     0x07000010, 0x0ff000d0, "SMLAD{X} Rd,Rn,Rm,Ra" },
+  // SMLALD: signed multiply accumulate long dual, if any R = 15 then unpredictable
+  { FALSE, &smlaldInstruction,    0x07400010, 0x0ff000d0, "SMLALD{X} RdLo,RdHi,Rn,Rm" },
+  // SMLSD: signed multiply subtract dual, if Rd or Rn or Rm = 15 then unpredictable, Ra = 15 see SMUSD
+  { FALSE, &smlsdInstruction,     0x07000050, 0x0ff000d0, "SMLSD{X} Rd,Rn,Rm,Ra" },
+  // SMLSLD: signed multiply subtract long dual, if any R = 15 then unpredictable
+  { FALSE, &smlsldInstruction,    0x07400050, 0x0ff000d0, "SMLSLD{X} RdLo,RdHi,Rn,Rm" },
+  // SMMUL: signed most significant word multiply, if Rd or Rn or Rm = 15 then unpredictable
+  { FALSE, &smmulInstruction,     0x0750f010, 0x0ff0f0d0, "SMMUL{R} Rd,Rn,Rm" },
+  // SMMLA: signed most significant word multiply accumulate, if Rd or Rn or Rm = 15 then unpredictable, Ra = 15 see SMMUL
+  { FALSE, &smmlaInstruction,     0x07500010, 0x0ff000d0, "SMMLA{R} Rd,Rn,Rm,Ra" },
+  // SMMLS: signed most significant word multiply subtract, if any R = 15 then unpredictable
+  { FALSE, &smmlsInstruction,     0x075000d0, 0x0ff000d0, "SMMLS{R} Rd,Rn,Rm,Ra" },
+  // SSAT,SSAT16,USAT,USAT16: (un)signed saturate, if Rd or Rn = 15 then unpredictable
+  { FALSE, &ssatInstruction,      0x06a00010, 0x0fe00ff0, "SSAT Rd,#sat_imm,Rn" },
+  { FALSE, &ssatInstruction,      0x06a00010, 0x0fe00070, "SSAT Rd,#sat_imm,Rn,LSL #imm" },
+  { FALSE, &ssatInstruction,      0x06a00050, 0x0fe00070, "SSAT Rd,#sat_imm,Rn,ASR #imm" },
+  { FALSE, &ssat16Instruction,    0x06a00f30, 0x0ff00ff0, "SSAT16 Rd,#imm,Rn" },
+  { FALSE, &usatInstruction,      0x06e00010, 0x0fe00ff0, "USAT Rd,#sat_imm,Rn" },
+  { FALSE, &usatInstruction,      0x06e00010, 0x0fe00070, "USAT Rd,#sat_imm,Rn,LSL #imm" },
+  { FALSE, &usatInstruction,      0x06e00050, 0x0fe00070, "USAT Rd,#sat_imm,Rn,ASR #imm" },
+  { FALSE, &usat16Instruction,    0x06e00f30, 0x0ff00ff0, "USAT16 Rd,#imm,Rn" },
 
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "mediaInstructions" }
 };
