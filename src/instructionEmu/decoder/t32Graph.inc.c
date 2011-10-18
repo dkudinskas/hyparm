@@ -607,7 +607,7 @@ autodecoder_t32_monolithic_93:
   {
     return 0;
   }
-  return andInstruction;
+  return t32AndInstruction;
 
 
 autodecoder_t32_monolithic_98:

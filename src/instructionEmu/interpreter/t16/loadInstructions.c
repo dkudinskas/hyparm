@@ -1,17 +1,13 @@
-#include "common/debug.h"
+#include "instructionEmu/interpreter/internals.h"
 
-#include "cpuArch/constants.h"
-
-#include "instructionEmu/commonInstrFunctions.h"
-
-#include "instructionEmu/interpreter/loadInstructions.h"
+#include "instructionEmu/interpreter/t16/loadInstructions.h"
 
 #include "memoryManager/globalMemoryMapper.h"
 
 
 u32int t16LdrInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T16_LOAD, "t16LdrInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG_TRACE(INTERPRETER_T16_LOAD, context, instruction);
 
   u32int regSrc;
   u32int regDst;
@@ -64,7 +60,7 @@ u32int t16LdrInstruction(GCONTXT *context, u32int instruction)
 
 u32int t16LdrbInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T16_LOAD, "t16LdrbInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG_TRACE(INTERPRETER_T16_LOAD, context, instruction);
 
   u32int regSrc = (instruction & 0x0078)>>3;
   u32int regDst  = (instruction & 0x0007);
@@ -93,15 +89,13 @@ u32int t16LdrbInstruction(GCONTXT *context, u32int instruction)
 
 u32int t16LdrhImmediateInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T16_LOAD, "t16LdrhImmediateInstruction: %#.4x @ %#.8x" EOL, instruction,
-      context->R15);
-
-  DIE_NOW(context, "t16LdrhImmediateInstruction not implemented");
+  DEBUG_TRACE(INTERPRETER_T16_LOAD, context, instruction);
+  DIE_NOW(context, "not implemented");
 }
 
 u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T16_LOAD, "t16LdmInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG_TRACE(INTERPRETER_T16_LOAD, context, instruction);
 
   u32int baseReg = 0;
   u32int regList = 0;
@@ -113,7 +107,7 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
   // we trapped from Thumb mode. I assume the PC reg is in the list
   if ((instruction & 0x100) == 0)
   {
-    DIE_NOW(context, "t16LdmInstruction: trapped but PC is not on the list...");
+    DIE_NOW(context, "trapped but PC is not on the list...");
   }
   regList = ( ((instruction & 0x0100)>>8) << 15 ) | (instruction & 0x00FF);
   baseReg = 0xD; // hardcode SP register

@@ -32,12 +32,12 @@
   <instruction name="MOVW Rd, #imm16" mask="0xfbf08000" value="0xf2400000" />
   <instruction name="MOVTc Rd, #imm16" mask="0xfbf08000" value="0xf2c00000" />
   <instruction name="ORR{S} Rd, Rn,#imm12" mask="0xfbe08000" value="0xf0400000" />
-  <instruction name="AND{S}c PC, Rm, #imm12" mask="0xfbe08f00" value="0xf0000f00" effect="andInstruction" />
+  <instruction name="AND{S}c PC, Rm, #imm12" mask="0xfbe08f00" value="0xf0000f00" effect="t32AndInstruction" />
   <instruction name="AND{S}c Rd, Rm, #imm12" mask="0xfbe08000" value="0xf0000000" />
   <instruction name="ADD{S}.W Rd, Rn, #imm8" mask="0xfbe08000" value="0xf1000000" />
-  <instruction name="ADD{S}.W PC, Rn, #imm8" mask="0xfbe08f00" value="0xf1000f00" effect="addInstruction" />
+  <instruction name="ADD{S}.W PC, Rn, #imm8" mask="0xfbe08f00" value="0xf1000f00" effect="t32AddInstruction" />
   <instruction name="ADDW Rd, Rn, #imm12" mask="0xf2008000" value="0xf2000000" />
-  <instruction name="DDW PC, Rn, #imm12" mask="0xf20f8000" value="0xf20f0000" effect="addInstruction" />
+  <instruction name="DDW PC, Rn, #imm12" mask="0xf20f8000" value="0xf20f0000" effect="t32AddInstruction" />
   <instruction name="ADDW Rd, SP, #imm8" mask="0xf20f8000" value="0xf20d0000" />
   <instruction name="BIC{S} Rd, Rn, #imm12" mask="0xfbe08000" value="0xf0200000" />
   <instruction name="RSB Rd, Rn, #imm12" mask="0xfbe08000" value="0xf1c00000" />
@@ -76,7 +76,7 @@
 
 <category name="t32DataProcInstructions3" mask="0xff000000" value="0xfa000000">
   <instruction name="ADDW Rd, Rn, #imm12" mask="0xf2008000" value="0xf2000000" />
-<instruction name="DDW PC, Rn, #imm12" mask="0xf20f8000" value="0xf20f0000" effect="addInstruction" />
+<instruction name="DDW PC, Rn, #imm12" mask="0xf20f8000" value="0xf20f0000" effect="t32AddInstruction" />
   <instruction name="ADDW Rd, SP, #imm8" mask="0xf20f8000" value="0xf20d0000" />
 </category>
 

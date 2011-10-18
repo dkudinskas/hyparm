@@ -1,8 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
 
-#include "instructionEmu/commonInstrFunctions.h"
-
 #include "memoryManager/addressing.h"
 #include "memoryManager/cp15coproc.h"
 

@@ -3,7 +3,7 @@
 
 #include "guestManager/blockCache.h"
 
-#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/decoder.h"
 
 
 #ifdef CONFIG_BLOCK_CACHE_COLLISION_COUNTER

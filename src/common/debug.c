@@ -50,7 +50,7 @@ static void banner(const char *msg)
   printf(EOL EOL "%s[%s]%s%s" EOL EOL, padding, msg, ((msgLength & 1) ? "" : "="), padding);
 }
 
-void DIE_NOW(GCONTXT *context, const char *msg)
+void dieNow(GCONTXT *context, const char *caller, const char *msg)
 {
 #ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
   setEmergencyExceptionVector();
@@ -61,7 +61,7 @@ void DIE_NOW(GCONTXT *context, const char *msg)
 #endif
 
   banner("ERROR");
-  printf("%s" EOL, msg);
+  printf("%s: %s" EOL, caller, msg);
   if (context == 0)
   {
     context = getGuestContext();

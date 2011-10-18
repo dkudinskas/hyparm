@@ -15,6 +15,7 @@ choice
 
 config DECODER_AUTO
   bool "Auto-generated decoder"
+  select THUMB_IGNORE_IT if THUMB2
 
 config DECODER_TABLE_SEARCH
   bool "Handcrafted table search decoder"
@@ -111,6 +112,7 @@ menu "Guest software"
 config GUEST_FREERTOS
   bool "FreeRTOS"
   depends on THUMB2
+  select THUMB_IGNORE_IT
 
 endmenu
 
@@ -188,6 +190,7 @@ config DEBUG_INTERPRETER_ALL_LOAD
   bool "Debug load operations"
   depends on DEBUG_INTERPRETER_ALL
   select DEBUG_INTERPRETER_ARM_LOAD
+  select DEBUG_INTERPRETER_ARM_LOAD_SYNC
   select DEBUG_INTERPRETER_T16_LOAD
   select DEBUG_INTERPRETER_T32_LOAD
 
@@ -195,8 +198,16 @@ config DEBUG_INTERPRETER_ALL_STORE
   bool "Debug store operations"
   depends on DEBUG_INTERPRETER_ALL
   select DEBUG_INTERPRETER_ARM_STORE
+  select DEBUG_INTERPRETER_ARM_STORE_SYNC
   select DEBUG_INTERPRETER_T16_STORE
   select DEBUG_INTERPRETER_T32_STORE
+
+config DEBUG_INTERPRETER_ALL_SYNC
+  bool"Debug synchronization operations"
+  depends on DEBUG_INTERPRETER_ALL
+  select DEBUG_INTERPRETER_ARM_LOAD_SYNC
+  select DEBUG_INTERPRETER_ARM_STORE_SYNC
+  select DEBUG_INTERPRETER_ARM_SYNC
 
 menuconfig DEBUG_INTERPRETER_ARM
   bool "Debug ARM interpreter"
@@ -213,10 +224,26 @@ config DEBUG_INTERPRETER_ARM_COPROC
 config DEBUG_INTERPRETER_ARM_LOAD
   bool "Debug load operations"
   depends on DEBUG_INTERPRETER_ARM
+  select DEBUG_INTERPRETER_ARM_LOAD_SYNC
+
+config DEBUG_INTERPRETER_ARM_LOAD_SYNC
+  bool
+  depends on DEBUG_INTERPRETER_ARM
 
 config DEBUG_INTERPRETER_ARM_STORE
   bool "Debug store operations"
   depends on DEBUG_INTERPRETER_ARM
+  select DEBUG_INTERPRETER_ARM_STORE_SYNC
+
+config DEBUG_INTERPRETER_ARM_STORE_SYNC
+  bool
+  depends on DEBUG_INTERPRETER_ARM
+
+config DEBUG_INTERPRETER_ARM_SYNC
+  bool "Debug synchronization operations"
+  depends on DEBUG_INTERPRETER_ARM
+  select DEBUG_INTERPRETER_ARM_LOAD_SYNC
+  select DEBUG_INTERPRETER_ARM_STORE_SYNC
 
 menuconfig DEBUG_INTERPRETER_T16
   bool "Debug Thumb 16-bit interpreter"
@@ -381,5 +408,9 @@ config SCANNER_EXTRA_CHECKS
 
 config BLOCK_CACHE_COLLISION_COUNTER
   bool "Count number of collisions in block cache"
+
+config THUMB_IGNORE_IT
+  bool "Treat Thumb IT instruction as safe"
+  depends on THUMB2
 
 endmenu

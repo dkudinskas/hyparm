@@ -6,9 +6,6 @@
 
 #include "guestManager/guestContext.h"
 
-#include "instructionEmu/commonInstrFunctions.h"
-#include "instructionEmu/miscInstructions.h"
-
 #include "vm/omap35xx/sdram.h"
 
 

@@ -1,10 +1,10 @@
-#include "common/debug.h"
+#include "common/bit.h"
 
 #include "cpuArch/constants.h"
 
-#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/interpreter/internals.h"
 
-#include "instructionEmu/interpreter/branchInstructions.h"
+#include "instructionEmu/interpreter/t32/branchInstructions.h"
 
 
 u32int t32BImmediate17Instruction(GCONTXT *context, u32int instruction)
@@ -12,8 +12,7 @@ u32int t32BImmediate17Instruction(GCONTXT *context, u32int instruction)
   /*
    * NOTE: this Thumb instruction contains a condition code field!
    */
-  DEBUG(INTERPRETER_T32_BRANCH, "t32BImmediate17Instruction: %#.8x @ %#.8x" EOL, instruction,
-      context->R15);
+  DEBUG_TRACE(INTERPRETER_T32_BRANCH, context, instruction);
   if (!evaluateConditionCode(context, (instruction & 0x03c00000) >> 20))
   {
     /*
@@ -27,13 +26,7 @@ u32int t32BImmediate17Instruction(GCONTXT *context, u32int instruction)
   u32int offset = sign | bitJ2 | bitJ1
       | /* imm6 */  ((instruction & 0x003F0000) >> 4)
       | /* imm11 */ ((instruction & 0x000007FF) << 1);
-  /*
-   * Sign extend 20-bit offset to 32-bit
-   */
-  if (sign)
-  {
-    offset |= 0xFFE00000;
-  }
+  offset = signExtend(offset, 20);
   /*
    * FIXME: why T16?
    */
@@ -42,8 +35,7 @@ u32int t32BImmediate17Instruction(GCONTXT *context, u32int instruction)
 
 u32int t32BImmediate21Instruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T32_BRANCH, "t32BImmediate21Instruction: %#.8x @ %#.8x" EOL, instruction,
-      context->R15);
+  DEBUG_TRACE(INTERPRETER_T32_BRANCH, context, instruction);
   u32int sign = (instruction & 0x04000000) >> 2;
   u32int bitI1 = (instruction & 0x00002000) << 11;
   u32int bitI2 = (instruction & 0x00000800) << 13;
@@ -52,13 +44,7 @@ u32int t32BImmediate21Instruction(GCONTXT *context, u32int instruction)
   u32int offset = sign | bitI1 | bitI2
       | /* imm10 */ ((instruction & 0x03FF0000) >> 4)
       | /* imm11 */ ((instruction & 0x000007FF) << 1);
-  /*
-   * Sign extend 24-bit offset to 32-bit
-   */
-  if (sign)
-  {
-    offset |= 0xFF000000;
-  }
+  offset = signExtend(offset, 24);
   /*
    * FIXME: why T16?
    */
@@ -67,7 +53,7 @@ u32int t32BImmediate21Instruction(GCONTXT *context, u32int instruction)
 
 u32int t32BlInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T32_BRANCH, "t32BlInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG_TRACE(INTERPRETER_T32_BRANCH, context, instruction);
   u32int sign = (instruction & 0x04000000) >> 2;
   u32int bitI1 = (instruction & 0x00002000) << 11;
   u32int bitI2 = (instruction & 0x00000800) << 13;
@@ -76,13 +62,7 @@ u32int t32BlInstruction(GCONTXT *context, u32int instruction)
   u32int offset = sign | bitI1 | bitI2
       | /* imm10 */ ((instruction & 0x03FF0000) >> 4)
       | /* imm11 */ ((instruction & 0x000007FF) << 1);
-  /*
-   * Sign extend 24-bit offset to 32-bit
-   */
-  if (sign)
-  {
-    offset |= 0xFF000000;
-  }
+  offset = signExtend(offset, 24);
   /*
    * FIXME: why T16?
    */
@@ -96,7 +76,7 @@ u32int t32BlxImmediateInstruction(GCONTXT *context, u32int instruction)
   /*
    * NOTE: this instruction always switches to ARM mode.
    */
-  DEBUG(INTERPRETER_T32_BRANCH, "t32BlxInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG_TRACE(INTERPRETER_T32_BRANCH, context, instruction);
   u32int sign = (instruction & 0x04000000) >> 2;
   u32int bitI1 = (instruction & 0x00002000) << 11;
   u32int bitI2 = (instruction & 0x00000800) << 13;
@@ -105,13 +85,7 @@ u32int t32BlxImmediateInstruction(GCONTXT *context, u32int instruction)
   u32int offset = sign | bitI1 | bitI2
       /* imm10H */ | (instruction & 0x03FF0000) >> 4
       /* imm10L */ | (instruction & 0x000007FE) << 1;
-  /*
-   * Sign extend 23-bit offset to 32-bit
-   */
-  if (sign)
-  {
-    offset |= 0xFF800000;
-  }
+  offset = signExtend(offset, 23);
   /*
    * Switch to ARM mode
    */

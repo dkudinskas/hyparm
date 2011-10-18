@@ -1,10 +1,8 @@
-#include "common/debug.h"
+#include "common/bit.h"
 
-#include "cpuArch/constants.h"
+#include "instructionEmu/interpreter/internals.h"
 
-#include "instructionEmu/commonInstrFunctions.h"
-
-#include "instructionEmu/interpreter/branchInstructions.h"
+#include "instructionEmu/interpreter/arm/branchInstructions.h"
 
 
 u32int armBInstruction(GCONTXT *context, u32int instruction)
@@ -16,16 +14,8 @@ u32int armBInstruction(GCONTXT *context, u32int instruction)
 
   DEBUG(INTERPRETER_ARM_BRANCH, "armBInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
-  u32int sign = instruction & 0x00800000;
   u32int link = instruction & 0x0F000000;
-  u32int offset = (instruction & 0x00FFFFFF) << 2;
-  /*
-   * Sign extend 26-bit offset to 32-bit
-   */
-  if (sign)
-  {
-    offset |= 0xFC000000;
-  }
+  u32int offset = signExtend((instruction & 0x00FFFFFF) << 2, 26);
   u32int currPC = context->R15 + ARM_INSTRUCTION_SIZE;
   if (link == 0x0B000000)
   {
@@ -44,13 +34,7 @@ u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
   DEBUG(INTERPRETER_ARM_BRANCH, "armBlxImmediateInstruction: %#.8x @ %#.8x" EOL, instruction,
       context->R15);
 
-  u32int offset = ((instruction & 0x00FFFFFF) << 2) | (instruction & 0x01000000) >> 23;
-  u32int sign = offset >> 25;
-
-  if (sign)
-  {
-    offset |= 0xFC000000;
-  }
+  u32int offset = signExtend(((instruction & 0x00FFFFFF) << 2) | (instruction & 0x01000000) >> 23, 26);
 
   context->CPSR |= PSR_T_BIT;
   storeGuestGPR(GPR_LR, context->R15 + ARM_INSTRUCTION_SIZE, context);
@@ -75,7 +59,7 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
 
   if (regDest == GPR_PC)
   {
-    DIE_NOW(context, "armBlxRegisterInstruction: use of PC is unpredictable");
+    DIE_NOW(context, "use of PC is unpredictable");
   }
 
   u32int destinationAddress = loadGuestGPR(regDest, context);
@@ -87,12 +71,12 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
     context->CPSR |= PSR_T_BIT;
     destinationAddress ^= 1;
 #else
-    DIE_NOW(context, "armBlxRegisterInstruction: Thumb is disabled (CONFIG_THUMB2 not set)");
+    DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
 #endif
   }
   else if (destinationAddress & 2)
   {
-    DIE_NOW(context, "armBlxRegisterInstruction: branch to unaligned ARM address");
+    DIE_NOW(context, "branch to unaligned ARM address");
   }
 
   return destinationAddress;
@@ -119,12 +103,12 @@ u32int armBxInstruction(GCONTXT *context, u32int instruction)
     context->CPSR |= PSR_T_BIT;
     destinationAddress ^= 1;
 #else
-    DIE_NOW(context, "armBxInstruction: Thumb is disabled (CONFIG_THUMB2 not set)");
+    DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
 #endif
   }
   else if (destinationAddress & 2)
   {
-    DIE_NOW(context, "armBxInstruction: branch to unaligned ARM address");
+    DIE_NOW(context, "branch to unaligned ARM address");
   }
 
   return destinationAddress;
@@ -134,5 +118,5 @@ u32int armBxjInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG(INTERPRETER_ARM_BRANCH, "armBxjInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
-  DIE_NOW(context, "BXJ not implemented");
+  DIE_NOW(context, "not implemented");
 }

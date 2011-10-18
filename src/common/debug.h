@@ -16,9 +16,19 @@
     }                                                                                              \
   }
 
-void DIE_NOW(GCONTXT *context, const char *msg)
-  __attribute__((noreturn));
+#define DEBUG_MMC(what, ...)                                                                       \
+  {                                                                                                \
+    if (CONFIG_DEBUG_ ## what)                                                                     \
+    {                                                                                              \
+      fprintf(__VA_ARGS__);                                                                        \
+    }                                                                                              \
+  }
 
+#define DIE_NOW(context, msg)  dieNow(context, __func__, msg)
+
+
+void dieNow(GCONTXT *context, const char *caller, const char *msg)
+  __attribute__((noreturn));
 
 /* output to serial */
 u32int printf(const char *fmt, ...)
@@ -30,6 +40,11 @@ u32int printf(const char *fmt, ...)
 /* output to mmc */
 u32int fprintf(const char *fmt, ...)
   __attribute__((format(__printf__, 1, 2)));
+
+#else
+
+/* fall back to serial */
+#define fprintf  printf
 
 #endif /* CONFIG_MMC */
 

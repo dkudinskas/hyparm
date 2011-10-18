@@ -1,17 +1,13 @@
-#include "common/debug.h"
-
-#include "cpuArch/constants.h"
-
 #include "memoryManager/globalMemoryMapper.h"
 
-#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/interpreter/internals.h"
 
-#include "instructionEmu/interpreter/storeInstructions.h"
+#include "instructionEmu/interpreter/t32/storeInstructions.h"
 
 
 u32int t32StrbInstruction(GCONTXT * context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T32_STORE, "t32StrbInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG_TRACE(INTERPRETER_T32_STORE, context, instruction);
 
   u32int regSrc = (instruction & 0x0000F000) >> 12;
   u32int regDst = (instruction & 0x000F0000) >> 16;
@@ -80,8 +76,7 @@ u32int t32StrbInstruction(GCONTXT * context, u32int instruction)
 
 u32int t32StrhImmediateInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T32_STORE, "t32StrhImmediateInstruction: %#.8x @ %#.8x" EOL, instruction,
-      context->R15);
+  DEBUG_TRACE(INTERPRETER_T32_STORE, context, instruction);
 
   u32int regSrc = (instruction & 0x0000F000) >> 12;
   u32int regDst = (instruction & 0x000F0000) >> 16;
@@ -97,8 +92,7 @@ u32int t32StrhImmediateInstruction(GCONTXT *context, u32int instruction)
 
 u32int t32StrhRegisterInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T32_STORE, "t32StrhRegisterInstruction: %#.8x @ %#.8x" EOL, instruction,
-      context->R15);
+  DEBUG_TRACE(INTERPRETER_T32_STORE, context, instruction);
 
   u32int regSrc = (instruction & 0x0000F000) >> 12;
   u32int regDst = (instruction & 0x000F0000) >> 16;
@@ -116,8 +110,7 @@ u32int t32StrhRegisterInstruction(GCONTXT *context, u32int instruction)
 
 u32int t32StrdImmediateInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T32_STORE, "t32StrdImmediateInstruction: %#.8x @ %#.8x" EOL, instruction,
-      context->R15);
+  DEBUG_TRACE(INTERPRETER_T32_STORE, context, instruction);
 
   u32int prePost = (instruction & 0x01000000)>>24;
   u32int upDown = (instruction & 0x00800000)>>23;
@@ -163,7 +156,6 @@ u32int t32StrdImmediateInstruction(GCONTXT *context, u32int instruction)
 
 u32int t32StrhtInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T32_STORE, "t32StrhtInstruction: %#.8x @ %#.8x" EOL, instruction,
-      context->R15);
-  DIE_NOW(context, "t32StrhtInstruction not implemented");
+  DEBUG_TRACE(INTERPRETER_T32_STORE, context, instruction);
+  DIE_NOW(context, "not implemented");
 }

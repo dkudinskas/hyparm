@@ -9,7 +9,6 @@
 #include "guestManager/guestExceptions.h"
 #endif
 
-#include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/scanner.h"
 

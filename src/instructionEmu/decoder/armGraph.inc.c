@@ -140,7 +140,7 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
 autodecoder_arm_monolithic_53:
   if ((instruction & (1u << 21)) == 0)
   {
-    return pldInstruction;
+    return armPldInstruction;
   }
 
 autodecoder_arm_monolithic_52:
@@ -218,7 +218,7 @@ autodecoder_arm_monolithic_31:
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return dmbInstruction;
+  return armDmbInstruction;
 
 
 autodecoder_arm_monolithic_47:
@@ -290,7 +290,7 @@ autodecoder_arm_monolithic_38:
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return clrexInstruction;
+  return armClrexInstruction;
 
 
 autodecoder_arm_monolithic_80:
@@ -324,7 +324,7 @@ autodecoder_arm_monolithic_22:
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return pldInstruction;
+  return armPldInstruction;
 
 autodecoder_arm_monolithic_77:
   if ((instruction & (1u << 20)) == 0)
@@ -336,7 +336,7 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
 autodecoder_arm_monolithic_76:
   if ((instruction & (1u << 21)) == 0)
   {
-    return pldInstruction;
+    return armPldInstruction;
   }
 
 autodecoder_arm_monolithic_75:
@@ -414,7 +414,7 @@ autodecoder_arm_monolithic_59:
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return isbInstruction;
+  return armIsbInstruction;
 
 
 autodecoder_arm_monolithic_69:
@@ -451,7 +451,7 @@ autodecoder_arm_monolithic_65:
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return dsbInstruction;
+  return armDsbInstruction;
 
 
 
@@ -475,7 +475,7 @@ autodecoder_arm_monolithic_25:
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return pliInstruction;
+  return armPliInstruction;
 
 
 autodecoder_arm_monolithic_470:
@@ -733,7 +733,7 @@ autodecoder_arm_monolithic_521:
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return rfeInstruction;
+  return armRfeInstruction;
 
 
 autodecoder_arm_monolithic_517:
@@ -812,7 +812,7 @@ autodecoder_arm_monolithic_507:
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return srsInstruction;
+  return armSrsInstruction;
 
 
 autodecoder_arm_monolithic_583:
@@ -954,7 +954,7 @@ autodecoder_arm_monolithic_542:
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return setendInstruction;
+  return armSetendInstruction;
 
 
 autodecoder_arm_monolithic_553:
@@ -991,7 +991,7 @@ autodecoder_arm_monolithic_549:
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return cpsInstruction;
+  return armCpsInstruction;
 
 
 autodecoder_arm_monolithic_579:
@@ -1057,9 +1057,9 @@ autodecoder_arm_monolithic_321:
 autodecoder_arm_monolithic_313:
   if (instruction & (1u << 22))
   {
-    return smcInstruction;
+    return armSmcInstruction;
   }
-  return bkptInstruction;
+  return armBkptInstruction;
 
 
 autodecoder_arm_monolithic_621:
@@ -1182,69 +1182,69 @@ autodecoder_arm_monolithic_175:
 autodecoder_arm_monolithic_174:
   if (instruction & (1u << 16))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_173:
   if (instruction & (1u << 19))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_172:
   if (instruction & (1u << 18))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_171:
   if (instruction & (1u << 17))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_170:
   if ((instruction & (1u << 6)) == 0)
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_169:
   if ((instruction & (1u << 5)) == 0)
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_168:
   if (instruction & (1u << 8))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_167:
   if (instruction & (1u << 11))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_166:
   if (instruction & (1u << 10))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_165:
   if (instruction & (1u << 9))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_164:
   if (instruction & (1u << 22))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
-  return dbgInstruction;
+  return armDbgInstruction;
 
 
 autodecoder_arm_monolithic_231:
@@ -1274,7 +1274,7 @@ autodecoder_arm_monolithic_179:
 autodecoder_arm_monolithic_178:
   if (instruction & (1u << 21))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
   return 0;
 
@@ -1330,43 +1330,43 @@ autodecoder_arm_monolithic_227:
 autodecoder_arm_monolithic_226:
   if (instruction & (1u << 16))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_225:
   if (instruction & (1u << 19))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_224:
   if (instruction & (1u << 18))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_223:
   if (instruction & (1u << 17))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_222:
   if (instruction & (1u << 6))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_221:
   if (instruction & (1u << 3))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_220:
   if (instruction & (1u << 5))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_219:
@@ -1396,19 +1396,19 @@ autodecoder_arm_monolithic_216:
 autodecoder_arm_monolithic_201:
   if (instruction & (1u << 0))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_200:
   if (instruction & (1u << 2))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_199:
   if (instruction & (1u << 1))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
   goto autodecoder_arm_monolithic_198;
 
@@ -1421,7 +1421,7 @@ autodecoder_arm_monolithic_215:
 autodecoder_arm_monolithic_207:
   if (instruction & (1u << 2))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_206:
@@ -1433,17 +1433,17 @@ autodecoder_arm_monolithic_206:
 autodecoder_arm_monolithic_203:
   if (instruction & (1u << 22))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
-  return wfiInstruction;
+  return armWfiInstruction;
 
 
 autodecoder_arm_monolithic_205:
   if (instruction & (1u << 22))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
-  return yieldInstruction;
+  return armYieldInstruction;
 
 
 autodecoder_arm_monolithic_214:
@@ -1455,15 +1455,15 @@ autodecoder_arm_monolithic_214:
 autodecoder_arm_monolithic_210:
   if (instruction & (1u << 1))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
 
 autodecoder_arm_monolithic_209:
   if (instruction & (1u << 22))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
-  return sevInstruction;
+  return armSevInstruction;
 
 
 autodecoder_arm_monolithic_213:
@@ -1475,15 +1475,15 @@ autodecoder_arm_monolithic_213:
 autodecoder_arm_monolithic_212:
   if (instruction & (1u << 22))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
-  return wfeInstruction;
+  return armWfeInstruction;
 
 
 autodecoder_arm_monolithic_198:
   if (instruction & (1u << 22))
   {
-    return msrInstruction;
+    return armMsrInstruction;
   }
   return 0;
 
@@ -1556,7 +1556,7 @@ autodecoder_arm_monolithic_299:
 autodecoder_arm_monolithic_296:
   if (instruction & (1u << 22))
   {
-    return mvnInstruction;
+    return armMvnInstruction;
   }
   return 0;
 
@@ -1786,7 +1786,7 @@ autodecoder_arm_monolithic_425:
 autodecoder_arm_monolithic_151:
   if (instruction & (1u << 22))
   {
-    return mvnInstruction;
+    return armMvnInstruction;
   }
     printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
@@ -1830,25 +1830,25 @@ autodecoder_arm_monolithic_414:
 autodecoder_arm_monolithic_379:
   if (instruction & (1u << 22))
   {
-    return mvnInstruction;
+    return armMvnInstruction;
   }
-  return rorInstruction;
+  return armRorInstruction;
 
 
 autodecoder_arm_monolithic_413:
   if (instruction & (1u << 22))
   {
-    return mvnInstruction;
+    return armMvnInstruction;
   }
-  return rrxInstruction;
+  return armRrxInstruction;
 
 
 autodecoder_arm_monolithic_298:
   if (instruction & (1u << 22))
   {
-    return mvnInstruction;
+    return armMvnInstruction;
   }
-  return asrInstruction;
+  return armAsrInstruction;
 
 
 autodecoder_arm_monolithic_423:
@@ -1860,9 +1860,9 @@ autodecoder_arm_monolithic_423:
 autodecoder_arm_monolithic_301:
   if (instruction & (1u << 22))
   {
-    return mvnInstruction;
+    return armMvnInstruction;
   }
-  return lsrInstruction;
+  return armLsrInstruction;
 
 
 autodecoder_arm_monolithic_422:
@@ -1892,26 +1892,26 @@ autodecoder_arm_monolithic_419:
 autodecoder_arm_monolithic_303:
   if (instruction & (1u << 22))
   {
-    return mvnInstruction;
+    return armMvnInstruction;
   }
-  return lslInstruction;
+  return armLslInstruction;
 
 
 autodecoder_arm_monolithic_153:
   if ((instruction & (1u << 22)) == 0)
   {
-    return movInstruction;
+    return armMovInstruction;
   }
-  return mvnInstruction;
+  return armMvnInstruction;
 
 
 
 autodecoder_arm_monolithic_160:
   if ((instruction & (1u << 22)) == 0)
   {
-    return orrInstruction;
+    return armOrrInstruction;
   }
-  return bicInstruction;
+  return armBicInstruction;
 
 
 
@@ -2030,7 +2030,7 @@ autodecoder_arm_monolithic_436:
   {
     return 0;
   }
-  return msrInstruction;
+  return armMsrInstruction;
 
 
 autodecoder_arm_monolithic_196:
@@ -2048,18 +2048,18 @@ autodecoder_arm_monolithic_188:
 autodecoder_arm_monolithic_184:
   if ((instruction & (1u << 22)) == 0)
   {
-    return adcInstruction;
+    return armAdcInstruction;
   }
-  return rscInstruction;
+  return armRscInstruction;
 
 
 
 autodecoder_arm_monolithic_187:
   if ((instruction & (1u << 22)) == 0)
   {
-    return addInstruction;
+    return armAddInstruction;
   }
-  return sbcInstruction;
+  return armSbcInstruction;
 
 
 
@@ -2072,18 +2072,18 @@ autodecoder_arm_monolithic_195:
 autodecoder_arm_monolithic_191:
   if ((instruction & (1u << 22)) == 0)
   {
-    return eorInstruction;
+    return armEorInstruction;
   }
-  return rsbInstruction;
+  return armRsbInstruction;
 
 
 
 autodecoder_arm_monolithic_194:
   if ((instruction & (1u << 22)) == 0)
   {
-    return andInstruction;
+    return armAndInstruction;
   }
-  return subInstruction;
+  return armSubInstruction;
 
 
 
@@ -2249,7 +2249,7 @@ autodecoder_arm_monolithic_388:
   {
     return 0;
   }
-  return smlawtInstruction;
+  return armSmlawtInstruction;
 
 autodecoder_arm_monolithic_392:
   if (instruction & (1u << 5))
@@ -3040,7 +3040,7 @@ autodecoder_arm_monolithic_287:
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return swpInstruction;
+  return armSwpInstruction;
 
 
 autodecoder_arm_monolithic_604:
@@ -3078,7 +3078,7 @@ autodecoder_arm_monolithic_586:
   {
     return 0;
   }
-  return smcInstruction;
+  return armSmcInstruction;
 
 
 autodecoder_arm_monolithic_320:
@@ -3108,9 +3108,9 @@ autodecoder_arm_monolithic_317:
 autodecoder_arm_monolithic_316:
   if ((instruction & (1u << 22)) == 0)
   {
-    return qsubInstruction;
+    return armQsubInstruction;
   }
-  return qdsubInstruction;
+  return armQdsubInstruction;
 
 
 
@@ -3153,9 +3153,9 @@ autodecoder_arm_monolithic_344:
 autodecoder_arm_monolithic_343:
   if ((instruction & (1u << 22)) == 0)
   {
-    return qaddInstruction;
+    return armQaddInstruction;
   }
-  return qdaddInstruction;
+  return armQdaddInstruction;
 
 
 
@@ -3371,18 +3371,18 @@ autodecoder_arm_monolithic_566:
 autodecoder_arm_monolithic_563:
   if ((instruction & (1u << 22)) == 0)
   {
-    return smulwtInstruction;
+    return armSmulwtInstruction;
   }
-  return smulttInstruction;
+  return armSmulttInstruction;
 
 
 
 autodecoder_arm_monolithic_565:
   if ((instruction & (1u << 22)) == 0)
   {
-    return smlawtInstruction;
+    return armSmlawtInstruction;
   }
-  return smulbtInstruction;
+  return armSmulbtInstruction;
 
 
 
@@ -3395,9 +3395,9 @@ autodecoder_arm_monolithic_570:
 autodecoder_arm_monolithic_569:
   if ((instruction & (1u << 22)) == 0)
   {
-    return smulwbInstruction;
+    return armSmulwbInstruction;
   }
-  return smultbInstruction;
+  return armSmultbInstruction;
 
 
 
@@ -3406,7 +3406,7 @@ autodecoder_arm_monolithic_391:
   {
     return 0;
   }
-  return smlawbInstruction;
+  return armSmlawbInstruction;
 
 
 autodecoder_arm_monolithic_408:
@@ -3424,18 +3424,18 @@ autodecoder_arm_monolithic_400:
 autodecoder_arm_monolithic_396:
   if ((instruction & (1u << 22)) == 0)
   {
-    return smlattInstruction;
+    return armSmlattInstruction;
   }
-  return smlalttInstruction;
+  return armSmlalttInstruction;
 
 
 
 autodecoder_arm_monolithic_399:
   if ((instruction & (1u << 22)) == 0)
   {
-    return smlabtInstruction;
+    return armSmlabtInstruction;
   }
-  return smlalbtInstruction;
+  return armSmlalbtInstruction;
 
 
 
@@ -3448,18 +3448,18 @@ autodecoder_arm_monolithic_407:
 autodecoder_arm_monolithic_403:
   if ((instruction & (1u << 22)) == 0)
   {
-    return smlatbInstruction;
+    return armSmlatbInstruction;
   }
-  return smlaltbInstruction;
+  return armSmlaltbInstruction;
 
 
 
 autodecoder_arm_monolithic_406:
   if ((instruction & (1u << 22)) == 0)
   {
-    return smlabbInstruction;
+    return armSmlabbInstruction;
   }
-  return smlalbbInstruction;
+  return armSmlalbbInstruction;
 
 
 
@@ -3603,7 +3603,7 @@ autodecoder_arm_monolithic_449:
   {
     return 0;
   }
-  return mrsInstruction;
+  return armMrsInstruction;
 
 
 
