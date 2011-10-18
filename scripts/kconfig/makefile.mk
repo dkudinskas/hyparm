@@ -48,7 +48,7 @@ defconfig: $(OUTPUT_PATH)/conf
 	@$< $(KCONFIG_DATA) --$@
 
 $(KCONFIG_OK): $(KCONFIG_CONFIG)
-	@if [ ! -f $(KCONFIG_AUTOHEADER) -o $(KCONFIG_CONFIG) -nt $(KCONFIG_AUTOHEADER) -o ! -f $(KCONFIG_OK) ]; then \
+	+@if [ ! -f $(KCONFIG_AUTOHEADER) -o $(KCONFIG_CONFIG) -nt $(KCONFIG_AUTOHEADER) -o ! -f $(KCONFIG_OK) ]; then \
 	  echo 'MAKE     silentoldconfig'; \
 	  $(MAKE) silentoldconfig; \
 	fi
