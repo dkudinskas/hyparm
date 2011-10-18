@@ -403,6 +403,16 @@ config SCANNER_COUNT_BLOCKS
 config SCANNER_EXTRA_CHECKS
   bool "Track call source and check for null pointers in scanner"
 
+config GUEST_CONTEXT_BLOCK_TRACE
+  bool "Store block trace in guest context"
+  default y
+
+config GUEST_CONTEXT_BLOCK_TRACE_SIZE
+  int "Number of blocks"
+  default 6
+  range 1 100
+  depends on GUEST_CONTEXT_BLOCK_TRACE
+
 config BLOCK_CACHE_COLLISION_COUNTER
   bool "Count number of collisions in block cache"
 

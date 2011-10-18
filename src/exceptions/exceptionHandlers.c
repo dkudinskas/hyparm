@@ -173,12 +173,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     DIE_NOW(context, "softwareInterrupt: Invalid nextPC. Instr to implement?");
   }
 
-  int i = 0;
-  for (i = BLOCK_HISOTRY_SIZE-1; i > 0; i--)
-  {
-    context->blockHistory[i] = context->blockHistory[i-1];
-  }
-  context->blockHistory[0] = nextPC;
+  traceBlock(context, nextPC);
   context->R15 = nextPC;
 
   // deliver interrupts

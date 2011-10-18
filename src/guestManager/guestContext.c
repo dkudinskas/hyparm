@@ -19,15 +19,11 @@ GCONTXT *createGuestContext(void)
   {
     DIE_NOW(NULL, "allocateGuest: Failed to allocate guest context.");
   }
-  DEBUG(GUEST_CONTEXT, "allocateGuestContext: @ %p; block trace @ %p; initializing..." EOL,
-      context, &(context->blockHistory));
-  /*
-   * Fill entire guest context with zero bytes
-   */
-  memset(context, 0, sizeof(GCONTXT));
+  DEBUG(GUEST_CONTEXT, "allocateGuestContext: @ %p; initialising..." EOL, context);
   /*
    * Set initial values
    */
+  memset(context, 0, sizeof(GCONTXT));
   context->CPSR = (PSR_F_BIT | PSR_I_BIT | PSR_SVC_MODE);
   /*
    * Initialise coprocessor register bank
@@ -63,6 +59,12 @@ GCONTXT *createGuestContext(void)
    * Setup guest memory protection
    */
   context->memProt = initialiseMemoryProtection();
+  /*
+   * Print the address of the block trace, it may come in handy when debugging...
+   */
+#ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
+  DEBUG(GUEST_CONTEXT, "allocateGuestContext: block trace @ %p" EOL, &(context->blockTrace));
+#endif
   return context;
 }
 
@@ -161,13 +163,26 @@ void dumpGuestContext(GCONTXT *context)
   printf("Guest idle: %x" EOL, context->guestIdle);
   printf("Block cache at: %#.8x" EOL, (u32int)context->blockCache);
 
-  int i = 0;
-  printf("Block Trace:" EOL);
-  for (i = BLOCK_HISOTRY_SIZE-1; i >= 0; i--)
+#ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
+  printf("Block trace:" EOL);
+  s32int traceIndex;
+  u32int printIndex = 0;
+  for (traceIndex = context->blockTraceIndex; traceIndex >= 0 && context->blockTrace[traceIndex];
+      traceIndex--, printIndex++)
   {
-    printf("%x: %#.8x" EOL, i, context->blockHistory[i]);
-
+    printf("%3u: %#.8x" EOL, printIndex, context->blockTrace[traceIndex]);
   }
-  dumpSdramStats();
+  if (traceIndex < 0)
+  {
+    for (traceIndex = CONFIG_GUEST_CONTEXT_BLOCK_TRACE_SIZE - 1;
+        traceIndex > (s32int)context->blockTraceIndex && context->blockTrace[traceIndex];
+        traceIndex--, printIndex++)
+    {
+      printf("%3u: %#.8x" EOL, printIndex, context->blockTrace[traceIndex]);
+    }
+  }
 
+#endif
+
+  dumpSdramStats();
 }
