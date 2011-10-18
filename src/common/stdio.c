@@ -6,6 +6,7 @@
 #include "common/string.h"
 #endif
 
+#include "common/bit.h"
 #include "common/ctype.h"
 #include "common/stdio.h"
 #include "common/stdlib.h"
@@ -790,10 +791,10 @@ int
           switch (modifier)
           {
             case 'L':
-              VSPRINTF_HEXADECIMAL(u64int, __builtin_clzll);
+              VSPRINTF_HEXADECIMAL(u64int, countLeadingZeros64);
               break;
             default:
-              VSPRINTF_HEXADECIMAL(u32int, __builtin_clz);
+              VSPRINTF_HEXADECIMAL(u32int, countLeadingZeros);
               break;
           }
           break;
