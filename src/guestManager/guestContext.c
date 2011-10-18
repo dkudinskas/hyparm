@@ -74,35 +74,35 @@ void dumpGuestContext(GCONTXT *context)
   u32int *r8 = &(context->R8);
   u32int *r13 = NULL;
   u32int *spsr = NULL;
-  switch (context->CPSR & 0x1F)
+  switch (context->CPSR & PSR_MODE)
   {
-    case 0x10: // user
-    case 0x1F: // system
+    case PSR_USR_MODE:
+    case PSR_SYS_MODE:
       modeString = "USR";
       r13 = &(context->R13_USR);
       break;
-    case 0x11: // fiq
+    case PSR_FIQ_MODE:
       modeString = "FIQ";
       r8 = &(context->R8_FIQ);
       r13 = &(context->R13_FIQ);
       spsr = &(context->SPSR_FIQ);
       break;
-    case 0x12: // irq
+    case PSR_IRQ_MODE:
       modeString = "IRQ";
       r13 = &(context->R13_IRQ);
       spsr = &(context->SPSR_IRQ);
       break;
-    case 0x13: // svc
+    case PSR_SVC_MODE:
       modeString = "SVC";
       r13 = &(context->R13_SVC);
       spsr = &(context->SPSR_SVC);
       break;
-    case 0x17: // abort
+    case PSR_ABT_MODE:
       modeString = "ABT";
       r13 = &(context->R13_ABT);
       spsr = &(context->SPSR_ABT);
       break;
-    case 0x1B: // undef
+    case PSR_UND_MODE:
       modeString = "UND";
       r13 = &(context->R13_UND);
       spsr = &(context->SPSR_UND);
