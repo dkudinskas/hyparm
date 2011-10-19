@@ -46,30 +46,30 @@
   <instruction name="smc%c\t%e" mask="0x0ff000f0" value="0x01600070" effect="armSmcInstruction" />
   <instruction name="BLX Rm" mask="0x0ffffff0" value="0x012fff30" effect="armBlxRegisterInstruction" />
   <instruction name="CLZ Rd, Rm" mask="0x0fff0ff0" value="0x016f0f10" />
-  <instruction name="qadd%c\t%12-15r, %0-3r, %16-19r" mask="0x0ff00ff0" value="0x01000050" effect="armQaddInstruction" />
-  <instruction name="qdadd%c\t%12-15r, %0-3r, %16-19r" mask="0x0ff00ff0" value="0x01400050" effect="armQdaddInstruction" />
-  <instruction name="qsub%c\t%12-15r, %0-3r, %16-19r" mask="0x0ff00ff0" value="0x01200050" effect="armQsubInstruction" />
-  <instruction name="qdsub%c\t%12-15r, %0-3r, %16-19r" mask="0x0ff00ff0" value="0x01600050" effect="armQdsubInstruction" />
+  <instruction name="qadd%c\t%12-15r, %0-3r, %16-19r" mask="0x0ff00ff0" value="0x01000050" />
+  <instruction name="qdadd%c\t%12-15r, %0-3r, %16-19r" mask="0x0ff00ff0" value="0x01400050" />
+  <instruction name="qsub%c\t%12-15r, %0-3r, %16-19r" mask="0x0ff00ff0" value="0x01200050" />
+  <instruction name="qdsub%c\t%12-15r, %0-3r, %16-19r" mask="0x0ff00ff0" value="0x01600050" />
   <instruction name="LDRD Rt, [Rn, #imm]" mask="0x0e5000f0" value="0x004000d0" />
   <instruction name="LDRD Rt, [Rn, Rm]" mask="0x0e500ff0" value="0x000000d0" />
   <instruction name="STRD Rt, [Rn, #imm]" mask="0x0e5000f0" value="0x004000f0" />
   <instruction name="STRD Rt, [Rn, Rm]" mask="0x0e500ff0" value="0x000000f0" />
-  <instruction name="smlabb%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x01000080" effect="armSmlabbInstruction" />
-  <instruction name="smlatb%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x010000a0" effect="armSmlatbInstruction" />
-  <instruction name="smlabt%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x010000c0" effect="armSmlabtInstruction" />
-  <instruction name="smlatt%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x010000e0" effect="armSmlattInstruction" />
-  <instruction name="smlawb%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x01200080" effect="armSmlawbInstruction" />
-  <instruction name="smlawt%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x012000c0" effect="armSmlawtInstruction" />
-  <instruction name="smlalbb%c\t%12-15r, %16-19r, %0-3r, %8-11r" mask="0x0ff000f0" value="0x01400080" effect="armSmlalbbInstruction" />
-  <instruction name="smlaltb%c\t%12-15r, %16-19r, %0-3r, %8-11r" mask="0x0ff000f0" value="0x014000a0" effect="armSmlaltbInstruction" />
-  <instruction name="smlalbt%c\t%12-15r, %16-19r, %0-3r, %8-11r" mask="0x0ff000f0" value="0x014000c0" effect="armSmlalbtInstruction" />
-  <instruction name="smlaltt%c\t%12-15r, %16-19r, %0-3r, %8-11r" mask="0x0ff000f0" value="0x014000e0" effect="armSmlalttInstruction" />
+  <instruction name="smlabb%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x01000080" />
+  <instruction name="smlatb%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x010000a0" />
+  <instruction name="smlabt%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x010000c0" />
+  <instruction name="smlatt%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x010000e0" />
+  <instruction name="smlawb%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x01200080" />
+  <instruction name="smlawt%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000f0" value="0x012000c0" />
+  <instruction name="smlalbb%c\t%12-15r, %16-19r, %0-3r, %8-11r" mask="0x0ff000f0" value="0x01400080" />
+  <instruction name="smlaltb%c\t%12-15r, %16-19r, %0-3r, %8-11r" mask="0x0ff000f0" value="0x014000a0" />
+  <instruction name="smlalbt%c\t%12-15r, %16-19r, %0-3r, %8-11r" mask="0x0ff000f0" value="0x014000c0" />
+  <instruction name="smlaltt%c\t%12-15r, %16-19r, %0-3r, %8-11r" mask="0x0ff000f0" value="0x014000e0" />
   <instruction name="SMULBB Rd, Rn, RM" mask="0x0ff0f0f0" value="0x01600080" />
-  <instruction name="smultb%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0f0" value="0x016000a0" effect="armSmultbInstruction" />
-  <instruction name="smulbt%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0f0" value="0x016000c0" effect="armSmulbtInstruction" />
-  <instruction name="smultt%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0f0" value="0x016000e0" effect="armSmulttInstruction" />
-  <instruction name="smulwb%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0f0" value="0x012000a0" effect="armSmulwbInstruction" />
-  <instruction name="smulwt%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0f0" value="0x012000e0" effect="armSmulwtInstruction" />
+  <instruction name="smultb%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0f0" value="0x016000a0" />
+  <instruction name="smulbt%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0f0" value="0x016000c0" />
+  <instruction name="smultt%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0f0" value="0x016000e0" />
+  <instruction name="smulwb%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0f0" value="0x012000a0" />
+  <instruction name="smulwt%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0f0" value="0x012000e0" />
   <instruction name="STRH Rt, [Rn, +-imm8]" mask="0x0e5000f0" value="0x004000b0" />
   <instruction name="STRH Rt, [Rn], +-Rm" mask="0x0e500ff0" value="0x000000b0" />
   <instruction name="LDRH Rt, [Rn, +-imm8]" mask="0x0e500090" value="0x00500090" />

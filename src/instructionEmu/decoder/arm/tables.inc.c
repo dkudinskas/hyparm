@@ -63,40 +63,38 @@ static struct instruction32bit armDataProcMiscInstructions_op0[] =
   { TRUE,  &armBlxRegisterInstruction,       0x012fff30, 0x0ffffff0, "BLX Rm" },
   // CLZ: Count leading zeroes - Rd, Rm != PC, pass through
   { FALSE, &armClzInstruction,       0x016f0f10, 0x0fff0ff0, "CLZ Rd, Rm" },
-  // UNIMPLEMENTED: saturated add/subtract/doubleAdd/doubleSubtract
-  { TRUE,  &armQaddInstruction,      0x01000050, 0x0ff00ff0, "qadd%c\t%12-15r, %0-3r, %16-19r" },
-  { TRUE,  &armQdaddInstruction,     0x01400050, 0x0ff00ff0, "qdadd%c\t%12-15r, %0-3r, %16-19r" },
-  { TRUE,  &armQsubInstruction,      0x01200050, 0x0ff00ff0, "qsub%c\t%12-15r, %0-3r, %16-19r" },
-  { TRUE,  &armQdsubInstruction,     0x01600050, 0x0ff00ff0, "qdsub%c\t%12-15r, %0-3r, %16-19r" },
+  // Q(D){ADD,SUB}: saturated add/subtract/doubleAdd/doubleSubtract, unpredictable when any R=PC
+  { FALSE, &armQaddInstruction,      0x01000050, 0x0ff00ff0, "qadd%c\t%12-15r, %0-3r, %16-19r" },
+  { FALSE, &armQdaddInstruction,     0x01400050, 0x0ff00ff0, "qdadd%c\t%12-15r, %0-3r, %16-19r" },
+  { FALSE, &armQsubInstruction,      0x01200050, 0x0ff00ff0, "qsub%c\t%12-15r, %0-3r, %16-19r" },
+  { FALSE, &armQdsubInstruction,     0x01600050, 0x0ff00ff0, "qdsub%c\t%12-15r, %0-3r, %16-19r" },
   // LDRD: Rt1 must be even numbered and NOT 14, thus Rt2 cannot be PC. pass.
   { FALSE, &armLdrdInstruction,   0x004000d0, 0x0e5000f0, "LDRD Rt, [Rn, #imm]" },
   { FALSE, &armLdrdInstruction,   0x000000d0, 0x0e500ff0, "LDRD Rt, [Rn, Rm]" },
   // STRD: pass through, let them fail!
   { FALSE, &armStrdInstruction,   0x004000f0, 0x0e5000f0, "STRD Rt, [Rn, #imm]" },
   { FALSE, &armStrdInstruction,   0x000000f0, 0x0e500ff0, "STRD Rt, [Rn, Rm]" },
-  /* ALL UNIMPLEMENTED: smlabs, smulbs etc */
-  // signed 16 bit multiply, 32 bit accumulate
-  { TRUE,  &armSmlabbInstruction,    0x01000080, 0x0ff000f0, "smlabb%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
-  { TRUE,  &armSmlatbInstruction,    0x010000a0, 0x0ff000f0, "smlatb%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
-  { TRUE,  &armSmlabtInstruction,    0x010000c0, 0x0ff000f0, "smlabt%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
-  { TRUE,  &armSmlattInstruction,    0x010000e0, 0x0ff000f0, "smlatt%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
-  // signed 16 bit x 32 bit multiply, 32 bit accumulate
-  { TRUE,  &armSmlawbInstruction,    0x01200080, 0x0ff000f0, "smlawb%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
-  { TRUE,  &armSmlawtInstruction,    0x012000c0, 0x0ff000f0, "smlawt%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
-  // signed 16 bit multiply, 64 bit accumulate
-  { TRUE,  &armSmlalbbInstruction,   0x01400080, 0x0ff000f0, "smlalbb%c\t%12-15r, %16-19r, %0-3r, %8-11r" },
-  { TRUE,  &armSmlaltbInstruction,   0x014000a0, 0x0ff000f0, "smlaltb%c\t%12-15r, %16-19r, %0-3r, %8-11r" },
-  { TRUE,  &armSmlalbtInstruction,   0x014000c0, 0x0ff000f0, "smlalbt%c\t%12-15r, %16-19r, %0-3r, %8-11r" },
-  { TRUE,  &armSmlalttInstruction,   0x014000e0, 0x0ff000f0, "smlaltt%c\t%12-15r, %16-19r, %0-3r, %8-11r" },
-  // SMULBB: multiply signed bottom halfwords of ops. Rd can't be PC.
+  // signed 16 bit multiply, 32 bit accumulate, unpredictable if any R=PC
+  { FALSE, &armSmlabbInstruction,    0x01000080, 0x0ff000f0, "smlabb%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
+  { FALSE, &armSmlatbInstruction,    0x010000a0, 0x0ff000f0, "smlatb%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
+  { FALSE, &armSmlabtInstruction,    0x010000c0, 0x0ff000f0, "smlabt%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
+  { FALSE, &armSmlattInstruction,    0x010000e0, 0x0ff000f0, "smlatt%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
+  // signed 16 bit x 32 bit multiply, 32 bit accumulate, unpredictable if any R=PC
+  { FALSE, &armSmlawbInstruction,    0x01200080, 0x0ff000f0, "smlawb%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
+  { FALSE, &armSmlawtInstruction,    0x012000c0, 0x0ff000f0, "smlawt%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
+  // signed 16 bit multiply, 64 bit accumulate, unpredictable if any R=PC
+  { FALSE, &armSmlalbbInstruction,   0x01400080, 0x0ff000f0, "smlalbb%c\t%12-15r, %16-19r, %0-3r, %8-11r" },
+  { FALSE, &armSmlaltbInstruction,   0x014000a0, 0x0ff000f0, "smlaltb%c\t%12-15r, %16-19r, %0-3r, %8-11r" },
+  { FALSE, &armSmlalbtInstruction,   0x014000c0, 0x0ff000f0, "smlalbt%c\t%12-15r, %16-19r, %0-3r, %8-11r" },
+  { FALSE, &armSmlalttInstruction,   0x014000e0, 0x0ff000f0, "smlaltt%c\t%12-15r, %16-19r, %0-3r, %8-11r" },
+  // signed 16 bit multiply, 32 bit result, any R=PC is unpredictable
   { FALSE, &armSmulbbInstruction,    0x01600080, 0x0ff0f0f0, "SMULBB Rd, Rn, RM" },
-  // signed 16 bit multiply, 32 bit result
-  { TRUE,  &armSmultbInstruction,    0x016000a0, 0x0ff0f0f0, "smultb%c\t%16-19r, %0-3r, %8-11r" },
-  { TRUE,  &armSmulbtInstruction,    0x016000c0, 0x0ff0f0f0, "smulbt%c\t%16-19r, %0-3r, %8-11r" },
-  { TRUE,  &armSmulttInstruction,    0x016000e0, 0x0ff0f0f0, "smultt%c\t%16-19r, %0-3r, %8-11r" },
-  // signed 16 bit x 32 bit multiply, 32 bit result
-  { TRUE,  &armSmulwbInstruction,    0x012000a0, 0x0ff0f0f0, "smulwb%c\t%16-19r, %0-3r, %8-11r" },
-  { TRUE,  &armSmulwtInstruction,    0x012000e0, 0x0ff0f0f0, "smulwt%c\t%16-19r, %0-3r, %8-11r" },
+  { FALSE, &armSmultbInstruction,    0x016000a0, 0x0ff0f0f0, "smultb%c\t%16-19r, %0-3r, %8-11r" },
+  { FALSE, &armSmulbtInstruction,    0x016000c0, 0x0ff0f0f0, "smulbt%c\t%16-19r, %0-3r, %8-11r" },
+  { FALSE, &armSmulttInstruction,    0x016000e0, 0x0ff0f0f0, "smultt%c\t%16-19r, %0-3r, %8-11r" },
+  // signed 16 bit x 32 bit multiply, 32 bit result, any R=PC is unpredictable
+  { FALSE, &armSmulwbInstruction,    0x012000a0, 0x0ff0f0f0, "smulwb%c\t%16-19r, %0-3r, %8-11r" },
+  { FALSE, &armSmulwtInstruction,    0x012000e0, 0x0ff0f0f0, "smulwt%c\t%16-19r, %0-3r, %8-11r" },
   // STRH: passthrough, will data abort if something wrong
   { FALSE, &armStrhInstruction,   0x004000b0, 0x0e5000f0, "STRH Rt, [Rn, +-imm8]" },
   { FALSE, &armStrhInstruction,   0x000000b0, 0x0e500ff0, "STRH Rt, [Rn], +-Rm" },
