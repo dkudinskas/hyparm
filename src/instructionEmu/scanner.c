@@ -289,7 +289,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
       blockType = bcEntry->type;
-      endIs16Bit = blockType == BCENTRY_TYPE_THUMB && !TXX_IS_T32(bcEntry->hyperedInstruction);
+      endIs16Bit = blockType == BCENTRY_TYPE_THUMB && !txxIsThumb32(bcEntry->hyperedInstruction);
       context->hdlFunct = bcEntry->hdlFunct;
     }
     else

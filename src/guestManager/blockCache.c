@@ -3,7 +3,7 @@
 
 #include "guestManager/blockCache.h"
 
-#include "instructionEmu/decoder.h"
+#include "instructionEmu/scanner.h"
 
 
 #ifdef CONFIG_BLOCK_CACHE_COLLISION_COUNTER
@@ -261,7 +261,7 @@ static void restoreReplacedInstruction(BCENTRY *blockCache, u32int index)
       break;
 #ifdef CONFIG_THUMB2
     case BCENTRY_TYPE_THUMB:
-      if (TXX_IS_T32(blockCache[index].hyperedInstruction))
+      if (txxIsThumb32(blockCache[index].hyperedInstruction))
       {
         /*
          * Restore Thumb 32-bit instruction. Word-alignment is not guaranteed, so we must perform

@@ -24,11 +24,11 @@ struct instruction32bit
 };
 
 
-#include "instructionEmu/decoder/armTables.inc.c"
+#include "instructionEmu/decoder/arm/tables.inc.c"
 
 #ifdef CONFIG_THUMB2
-#include "instructionEmu/decoder/t16Tables.inc.c"
-#include "instructionEmu/decoder/t32Tables.inc.c"
+#include "instructionEmu/decoder/t16/tables.inc.c"
+#include "instructionEmu/decoder/t32/tables.inc.c"
 #endif
 
 

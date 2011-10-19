@@ -1,15 +1,7 @@
 #include "common/debug.h"
 
-#include "cpuArch/constants.h"
-
-#include "guestManager/guestContext.h"
-
-#ifdef CONFIG_THUMB2
-# include "instructionEmu/commonInstrFunctions.h"
-# include "instructionEmu/decoder.h"
-#endif
-
 #include "instructionEmu/interpreter.h"
+#include "instructionEmu/scanner.h"
 
 #include "memoryManager/globalMemoryMapper.h"
 
@@ -29,7 +21,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
      */
     instr = fetchThumbInstr((u16int *)(context->R15));
 
-    if (TXX_IS_T32(instr))
+    if (txxIsThumb32(instr))
     {
       /*
        * 32-bit Thumb instruction

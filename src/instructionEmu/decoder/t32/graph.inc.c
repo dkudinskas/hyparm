@@ -11,7 +11,7 @@
  * Please edit the decoder specification instead, and generate a new decoder.
  *
  * Options used:
- * Specification:     t32.xml
+ * Specification:     decoder.xml
  * Number of stages:  1 (monolithic)
  * Type:              g (graph)
  * Exhaustive test:   yes
