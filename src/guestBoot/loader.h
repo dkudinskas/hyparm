@@ -10,7 +10,7 @@ struct MemoryBank;
 struct tag;
 
 
-void bootGuest(GCONTXT *context, u32int entryPoint) __attribute__((noreturn));
+void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint) __attribute__((noreturn));
 
 struct tag *getTagListBaseAddress(void);
 

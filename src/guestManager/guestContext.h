@@ -18,6 +18,13 @@ typedef struct guestContext GCONTXT;
 typedef u32int (*instructionHandler)(GCONTXT *context, u32int instruction);
 
 
+enum guestOSType
+{
+  GUEST_OS_NOT_SET = 0,
+  GUEST_OS_LINUX,
+  GUEST_OS_FREERTOS
+};
+
 struct guestContext
 {
   u32int R0;
@@ -89,6 +96,8 @@ struct guestContext
   bool guestDataAbtPending;
   bool guestPrefetchAbtPending;
   bool guestIdle;
+  /* for OS-specific quirks */
+  enum guestOSType os;
 };
 
 

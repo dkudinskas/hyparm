@@ -53,13 +53,10 @@
 #define CL_VALUE_GUEST_OS_FREERTOS   "freertos"
 #define CL_VALUE_GUEST_OS_LINUX      "linux"
 
-#define RT_CONFIG_GUEST_OS_LINUX     1
-#define RT_CONFIG_GUEST_OS_FREERTOS  2
-
 
 struct runtimeConfiguration
 {
-  u32int guestOS; // ENUM ?
+  enum guestOSType guestOS;
   u32int guestKernelAddress;
   u32int guestInitialRAMDiskAddress;
 };
@@ -79,10 +76,6 @@ struct mmc *mmcDevice;
 file * debugStream;
 #endif
 
-#ifdef CONFIG_GUEST_FREERTOS
-bool rtos;
-#endif
-
 
 static void dumpRuntimeConfiguration(struct runtimeConfiguration *config)
 {
@@ -95,7 +88,7 @@ void main(s32int argc, char *argv[])
 {
   struct runtimeConfiguration config;
   memset(&config, 0, sizeof(struct runtimeConfiguration));
-  config.guestOS = RT_CONFIG_GUEST_OS_LINUX;
+  config.guestOS = GUEST_OS_LINUX;
 
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
@@ -121,10 +114,6 @@ void main(s32int argc, char *argv[])
    */
   processCommandLine(&config, argc - 1, argv + 1);
   dumpRuntimeConfiguration(&config);
-
-#ifdef CONFIG_GUEST_FREERTOS
-  rtos = config.guestOS == RT_CONFIG_GUEST_OS_FREERTOS;
-#endif
 
   /* create the frametable from which we can alloc memory */
   initialiseFrameTable();
@@ -183,11 +172,11 @@ void main(s32int argc, char *argv[])
   switch (config.guestOS)
   {
 #ifdef CONFIG_GUEST_FREERTOS
-    case RT_CONFIG_GUEST_OS_FREERTOS:
+    case GUEST_OS_FREERTOS:
       bootFreeRtos(context, config.guestKernelAddress);
       break;
 #endif
-    case RT_CONFIG_GUEST_OS_LINUX:
+    case GUEST_OS_LINUX:
       bootLinux(context, config.guestKernelAddress, config.guestInitialRAMDiskAddress);
       break;
     default:
@@ -220,11 +209,11 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
         }
         else if (strcmp(p->value, CL_VALUE_GUEST_OS_FREERTOS))
         {
-          config->guestOS = RT_CONFIG_GUEST_OS_FREERTOS;
+          config->guestOS = GUEST_OS_FREERTOS;
         }
         else if (strcmp(p->value, CL_VALUE_GUEST_OS_LINUX))
         {
-          config->guestOS = RT_CONFIG_GUEST_OS_LINUX;
+          config->guestOS = GUEST_OS_LINUX;
         }
         else
         {
