@@ -854,7 +854,7 @@ static int _vsscanf(const char *s, const char *format, va_list args)
 {
   const char *const sOrigin = s;
   s32int convertedItemCount = 0;
-  while (*format && *s)
+  while (*format)
   {
     /*
      * Check for whitespace, percentage sign or other non-whitespace character in format string
