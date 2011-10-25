@@ -150,13 +150,23 @@ config DEBUG_SCANNER
   bool "Debug scanner"
   depends on DEBUG
 
-config DEBUG_SCANNER_COUNT_BLOCKS
-  bool "Print number of scanned blocks"
+config DEBUG_SCANNER_BLOCK_TRACE
+  bool "Print block trace"
+  depends on DEBUG_SCANNER
+
+config DEBUG_SCANNER_MARK
+  bool "Regularly print a mark message"
   depends on DEBUG_SCANNER
   select SCANNER_COUNT_BLOCKS
 
-config DEBUG_SCANNER_BLOCK_TRACE
-  bool "Print block trace"
+config DEBUG_SCANNER_MARK_INTERVAL
+  int "Mark every 2^n blocks"
+  range 18 31
+  default 19
+  depends on DEBUG_SCANNER_MARK
+
+config DEBUG_SCANNER_EXTRA
+  bool "Extra debug messages"
   depends on DEBUG_SCANNER
 
 config DEBUG_BLOCK_CACHE

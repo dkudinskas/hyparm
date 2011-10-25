@@ -3,6 +3,8 @@
 
 #include "cpuArch/constants.h"
 
+#include "exceptions/exceptionHandlers.h"
+
 #include "guestManager/blockCache.h"
 
 #ifdef CONFIG_THUMB2
@@ -86,6 +88,17 @@ void setScanBlockCallSource(u8int source)
 #endif /* CONFIG_SCANNER_EXTRA_CHECKS */
 
 
+#ifdef CONFIG_DEBUG_SCANNER_MARK_INTERVAL
+
+#define MARK_MASK  ((1 << CONFIG_DEBUG_SCANNER_MARK_INTERVAL) - 1)
+
+#else
+
+#define MARK_MASK  (0U)
+
+#endif /* CONFIG_DEBUG_SCANNER_MARK_INTERVAL */
+
+
 // http://www.concentric.net/~Ttwang/tech/inthash.htm
 // 32bit mix function
 static inline u32int getHash(u32int key)
@@ -118,11 +131,17 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     DEBUG(SCANNER, "scanBlock: called from source %u" EOL, (u32int)scanBlockCallSource);
     if (getScanBlockCounter())
     {
-      DEBUG(SCANNER_COUNT_BLOCKS, "scanBlock: scanned block count is %#Lx" EOL, getScanBlockCounter());
+      DEBUG(SCANNER, "scanBlock: scanned block count is %#Lx" EOL, getScanBlockCounter());
     }
     DIE_NOW(context, "scanBlock() called with NULL pointer");
   }
 #endif /* CONFIG_SCANNER_EXTRA_CHECKS */
+
+  if ((getScanBlockCounter() & MARK_MASK) == 1)
+  {
+    DEBUG(SCANNER_MARK, "scanBlock: #B = %#.16Lx; #DABT = %#.16Lx; #IRQ = %#.16Lx; startAddress = "
+        "%#.8x" EOL, getScanBlockCounter(), getDataAbortCounter(), getIrqCounter(), startAddress);
+  }
 
   u32int cacheIndex = (getHash(startAddress) & (BLOCK_CACHE_SIZE-1));// 0x1FF mask for 512 entry cache
   bool cached = checkBlockCache(context->blockCache, cacheIndex, startAddress);
@@ -182,7 +201,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
         printf("scanArmBlock: instruction %#.8x @ %p", instruction, end);
         DIE_NOW(context, "scanArmBlock: block cache index in SWI out of range.");
       }
-      DEBUG(SCANNER, "scanArmBlock: EOB instruction is SWI @ %p code %#x" EOL, end, svcCacheIndex);
+      DEBUG(SCANNER_EXTRA, "scanArmBlock: EOB instruction is SWI @ %p code %#x" EOL, end, svcCacheIndex);
       BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, svcCacheIndex);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
@@ -210,7 +229,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
     // iCacheFlushByMVA((u32int)currAddress);
   }
 
-  DEBUG(SCANNER, "scanArmBlock: EOB %#.8x @ %p SVC code %#x hdlrFuncPtr %p" EOL,
+  DEBUG(SCANNER_EXTRA, "scanArmBlock: EOB %#.8x @ %p SVC code %#x hdlrFuncPtr %p" EOL,
       context->endOfBlockInstr, end, ((cacheIndex + 1) << 8), context->hdlFunct);
 
   addToBlockCache(context->blockCache, cacheIndex, (u32int) start, (u32int)end,
@@ -284,7 +303,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         printf("scanThumbBlock: instruction %#.8x @ %p", instruction, end);
         DIE_NOW(context, "scanThumbBlock: block cache index in SWI out of range");
       }
-      DEBUG(SCANNER, "scanThumbBlock: EOB instruction is SWI @ %p code %#x" EOL, end, cacheIndex);
+      DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB instruction is SWI @ %p code %#x" EOL, end, cacheIndex);
       BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, cacheIndex);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
@@ -343,12 +362,12 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         break;
       }
     }
-    DEBUG(SCANNER, "scanThumbBlock: svc on %#.8x" EOL, (u32int)end);
+    DEBUG(SCANNER_EXTRA, "scanThumbBlock: svc on %#.8x" EOL, (u32int)end);
 
     context->hdlFunct = handler;
   }
 
-  DEBUG(SCANNER, "scanThumbBlock: EOB %#.8x @ %p SVC code %#x hdlrFuncPtr %p" EOL,
+  DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB %#.8x @ %p SVC code %#x hdlrFuncPtr %p" EOL,
       context->endOfBlockInstr, end, ((cacheIndex + 1) << 8), context->hdlFunct);
 
   addToBlockCache(context->blockCache, cacheIndex, (u32int)start, (u32int)end,
