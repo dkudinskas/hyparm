@@ -16,7 +16,7 @@ static inline s32int wrapBlockTraceIndex(s32int index);
 void runLoopDetector(GCONTXT *context)
 {
   u32int currentBlock = context->blockTrace[context->blockTraceIndex];
-  u32int lastBlock = context->blockTrace[wrapBlockTraceIndex(context->blockTraceIndex - 1)];
+  u32int lastBlock = context->blockTrace[wrapBlockTraceIndex((s32int)context->blockTraceIndex - 1)];
 
   if (currentBlock == lastBlock)
   {
