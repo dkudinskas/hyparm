@@ -137,7 +137,7 @@ static inline void resetLoopDetectorIfNeeded(GCONTXT *context)
 #else
 
 #define delayResetLoopDetector()
-#define resetLoopDetectorIfNeeded()
+#define resetLoopDetectorIfNeeded(context)
 
 #endif /* CONFIG_LOOP_DETECTOR */
 
