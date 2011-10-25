@@ -967,7 +967,7 @@ int conf_write_autoconf(void)
 
 	for_all_symbols(i, sym) {
 		sym_calc_value(sym);
-		if (!sym->name)
+		if ((sym->type != S_BOOLEAN && !(sym->flags & SYMBOL_WRITE)) || !sym->name)
 			continue;
 
 		/* write symbol to auto.conf, tristate and header files */
