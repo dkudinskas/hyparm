@@ -197,22 +197,25 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
   options = addCommandLineOption(options, "kernel", "Address of the kernel in memory", TRUE, TRUE, CL_OPTION_GUEST_KERNEL);
   options = addCommandLineOption(options, "initrd", "Address of an initial RAM disk in memory", TRUE, FALSE, CL_OPTION_GUEST_INITRD);
   commandLine = parseCommandLine(options, argc, argv);
+  bool hadGuestOption = FALSE;
   for (p = commandLine; p; p = p->next)
   {
     switch (p->argumentId)
     {
       case CL_OPTION_GUEST_OS:
-        if (config->guestOS)
+        if (hadGuestOption)
         {
           printf("Error: duplicate option: guest OS '%s'" EOL, p->value);
           success = FALSE;
         }
-        else if (strcmp(p->value, CL_VALUE_GUEST_OS_FREERTOS))
+        else if (strcmp(p->value, CL_VALUE_GUEST_OS_FREERTOS) == 0)
         {
+          printf("set guest=freertos" EOL);
           config->guestOS = GUEST_OS_FREERTOS;
         }
-        else if (strcmp(p->value, CL_VALUE_GUEST_OS_LINUX))
+        else if (strcmp(p->value, CL_VALUE_GUEST_OS_LINUX) == 0)
         {
+          printf("set guest=linux" EOL);
           config->guestOS = GUEST_OS_LINUX;
         }
         else
@@ -220,6 +223,7 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
           printf("Error: invalid guest OS '%s'" EOL, p->value);
           success = FALSE;
         }
+        hadGuestOption = TRUE;
         break;
       case CL_OPTION_GUEST_KERNEL:
         if (config->guestKernelAddress)
