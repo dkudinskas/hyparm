@@ -19,6 +19,7 @@
 #include "vm/omap35xx/intc.h"
 #include "vm/omap35xx/uart.h"
 
+#include "instructionEmu/loopDetector.h"
 #include "instructionEmu/scanner.h"
 
 #include "memoryManager/addressing.h"
@@ -111,6 +112,36 @@ void resetSvcCounter()
 #endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_SVC */
 
 
+#ifdef CONFIG_LOOP_DETECTOR
+
+/*
+ * We do not care about initializing this variable, because the loop detector is reset during boot.
+ * If the initial value would evaluate to TRUE, an extra reset happens at start.
+ */
+bool mustResetLoopDetector;
+
+static inline void delayResetLoopDetector(void)
+{
+  mustResetLoopDetector = TRUE;
+}
+
+static inline void resetLoopDetectorIfNeeded(GCONTXT *context)
+{
+  if (mustResetLoopDetector)
+  {
+    resetLoopDetector(context);
+    mustResetLoopDetector = FALSE;
+  }
+}
+
+#else
+
+#define delayResetLoopDetector()
+#define resetLoopDetectorIfNeeded()
+
+#endif /* CONFIG_LOOP_DETECTOR */
+
+
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 {
   incrementSvcCounter();
@@ -187,9 +218,19 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
   if ((context->CPSR & PSR_MODE) != PSR_USR_MODE)
   {
-    // guest in privileged mode! scan...
+    /*
+     * guest in privileged mode! scan...
+     * We need to reset the loop detector here because the block trace contains 'return' blocks of
+     * guest SVCs!
+     */
+    resetLoopDetectorIfNeeded(context);
+    runLoopDetector(context);
     setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
     scanBlock(context, context->R15);
+  }
+  else
+  {
+    delayResetLoopDetector();
   }
 
   return context;

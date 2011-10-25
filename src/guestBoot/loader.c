@@ -7,6 +7,7 @@
 
 #include "guestBoot/loader.h"
 
+#include "instructionEmu/loopDetector.h"
 #include "instructionEmu/scanner.h"
 
 #include "memoryManager/addressing.h"
@@ -92,14 +93,16 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
    */
   createVirtualMachineGPAtoRPA(context);
   /*
-   * Reset exception counters
+   * Reset exception counters and loop detector
    */
   resetDataAbortCounter();
   resetIrqCounter();
   resetSvcCounter();
+  resetLoopDetector(context);
   /*
    * Scan initial block
    */
+  traceBlock(context, entryPoint);
   setScanBlockCallSource(SCANNER_CALL_SOURCE_BOOT);
   resetScanBlockCounter();
   scanBlock(context, entryPoint);

@@ -424,8 +424,25 @@ config GUEST_CONTEXT_BLOCK_TRACE
 config GUEST_CONTEXT_BLOCK_TRACE_SIZE
   int "Number of blocks"
   default 6
-  range 1 100
+  range 1 100 if !LOOP_DETECTOR
+  range 4 100 if LOOP_DETECTOR
   depends on GUEST_CONTEXT_BLOCK_TRACE
+
+config LOOP_DETECTOR
+  bool "Detect single block loops in privileged guest code"
+  depends on GUEST_CONTEXT_BLOCK_TRACE
+
+config LOOP_DETECTOR_WARN_TRESHOLD
+  int "Minimum number of iterations that causes a warning"
+  default 262144
+  range 2 134217728
+  depends on LOOP_DETECTOR
+
+config LOOP_DETECTOR_DIE_TRESHOLD
+  int "Number of iterations that causes the hypervisor to die"
+  default 524288
+  range 2 134217728
+  depends on LOOP_DETECTOR
 
 config BLOCK_CACHE_COLLISION_COUNTER
   bool "Count number of collisions in block cache"

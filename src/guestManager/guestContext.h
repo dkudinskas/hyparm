@@ -72,6 +72,10 @@ struct guestContext
   u32int blockTrace[CONFIG_GUEST_CONTEXT_BLOCK_TRACE_SIZE];
   u32int blockTraceIndex;
 #endif
+#ifdef CONFIG_LOOP_DETECTOR
+  s32int loopDetectorLoopCount;
+  s32int loopDetectorNextTreshold;
+#endif
   /* Virtual Addressing */
   descriptor* PT_physical; // guest physical to real physical PT
   descriptor* PT_os;       // guest OS to guest Physical PT
