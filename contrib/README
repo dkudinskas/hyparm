@@ -6,6 +6,10 @@ eclipse-code-formatter-profile.xml
   files, as not all of our rules can be expressed in terms of an Eclipse
   code formatter profile.
 
+boot/mkcard
+
+  Shell script to format an SD card for use with the BeagleBoard.
+
 hooks/pre-commit
 
   A pre-commit git hook to check for all kinds of things we usually want
