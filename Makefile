@@ -127,6 +127,8 @@ $(KCONFIG_CONFIG):
   LDFLAGS-y :=
 
 
+  CFLAGS-$(CONFIG_BUILD_SSP) += -fstack-protector-all -Wstack-protector
+
   CFLAGS-$(CONFIG_BUILD_LTO) += -flto=jobserver -fuse-linker-plugin
 
   ifeq ($(CONFIG_BUILD_SAVE_TEMPS),y)
