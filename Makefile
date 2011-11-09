@@ -29,9 +29,9 @@ OBJDUMP       = $(CROSS_COMPILE)objdump
 AFLAGS       := --fatal-warnings
 CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
                 -O3 -ffreestanding -fno-common -fno-stack-protector \
-                -Wall -Wextra -Wformat=2 -Winline -Wredundant-decls -Wstrict-prototypes \
+                -Wall -Wextra -Wformat=2 -Winline -Wredundant-decls -Wshadow -Wstrict-prototypes \
                 -Wwrite-strings -Wno-empty-body -Wno-unused-label -Wno-unused-parameter \
-                -Werror=implicit-function-declaration -Wshadow
+                -Werror=implicit-function-declaration -Werror=init-self
 CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc
 LDDEPS       :=
 LDFLAGS      := --error-unresolved-symbols
