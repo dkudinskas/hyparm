@@ -737,7 +737,7 @@ guestContextSpace:
  * Allocate stack space. Note that stacks grown down, i.e., every PUSH lowers the value of SP, and
  * every POP increases the value of SP. Hence, labels have to be put after the reserved space.
  *
- * WARNING: EABI requires 8-byte aligned stacks!!!
+ * WARNING: EABI requires 8-byte aligned stacks (on public interfaces)!
  */
   .balign 8
 stackSpaceEnd:
