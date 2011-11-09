@@ -29,9 +29,10 @@ OBJDUMP       = $(CROSS_COMPILE)objdump
 AFLAGS       := --fatal-warnings
 CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
                 -O3 -ffreestanding -fno-common -fno-stack-protector \
-                -Wall -Wextra -Wformat=2 -Winline -Wredundant-decls -Wshadow -Wstrict-prototypes \
-                -Wwrite-strings -Wno-empty-body -Wno-unused-label -Wno-unused-parameter \
-                -Werror=implicit-function-declaration -Werror=init-self
+                -Wall -Wextra -Wcast-qual -Wformat=2 -Winline -Wlogical-op -Wredundant-decls \
+                -Wshadow -Wstrict-prototypes -Wwrite-strings -Wno-empty-body -Wno-unused-label \
+                -Wno-unused-parameter -Werror=implicit-function-declaration -Werror=init-self \
+                -Werror=uninitialized
 CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc
 LDDEPS       :=
 LDFLAGS      := --error-unresolved-symbols
