@@ -50,7 +50,27 @@ void throwInterrupt(u32int irqNumber)
       // set it pending in emulated interrupt controller
       setInterrupt(GPT1_IRQ);
       // are we forwarding the interrupt event?
-      if ((context->CPSR & CPSR_IRQ_DIS) == 0)
+      if ( isIrqPending() && ((context->CPSR & CPSR_IRQ_DIS) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    case UART1_IRQ:
+      setInterrupt(UART1_IRQ);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending() && ((context->CPSR & CPSR_IRQ_DIS) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    case UART2_IRQ:
+      setInterrupt(UART2_IRQ);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending() && ((context->CPSR & CPSR_IRQ_DIS) == 0) )
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -60,7 +80,7 @@ void throwInterrupt(u32int irqNumber)
     case UART3_IRQ:
       setInterrupt(UART3_IRQ);
       // are we forwarding the interrupt event?
-      if ((context->CPSR & CPSR_IRQ_DIS) == 0)
+      if ( isIrqPending() && ((context->CPSR & CPSR_IRQ_DIS) == 0) )
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!

@@ -12,11 +12,6 @@
 #error unknown target
 #endif
 
-#define TRANSMIT_HOLDING_REG_OFFSET 0x00000000
-#define LINE_STATUS_REG_OFFSET 0x00000014
-
-#define LINE_STATUS_REG_TX_HOLD     0x20
-
 #define LINE_FEED              0xA
 #define CARRIAGE_RETURN        0xD
 #define PRINTABLE_START        0x20
