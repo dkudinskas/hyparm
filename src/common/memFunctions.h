@@ -34,6 +34,7 @@ u32int mallocBytes(u32int size);
 
 void * memmove(void * dest,const void *src, u32int count);
 void * memset(void * dest, u32int c, u32int count);
+void * memcpy(void *dst, const void *src, u32int count);
 
 void dumpMallocs(void);
 
