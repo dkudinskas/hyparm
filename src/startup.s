@@ -397,6 +397,7 @@ dabtHandler:
     
 .global dabtHandlerPriv
 dabtHandlerPriv:
+  POP    {LR}
   /* SEGFAULT in the hypervisor */
   PUSH   {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
   /* PC of the aborting instruction in @param1 of C handler */

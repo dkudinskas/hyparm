@@ -102,6 +102,14 @@ descriptor* createHypervisorPageTable()
   smallMapMemory(hypervisorPtd, GPTIMER2, (GPTIMER2+GPTIMER2_SIZE-1),
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
+  // 32kHz synchronized timer
+  smallMapMemory(hypervisorPtd, TIMER_32K, (TIMER_32K+TIMER_32K_SIZE-1),
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
+  // MMC1 interface
+  smallMapMemory(hypervisorPtd, SD_MMC1, (SD_MMC1+SD_MMC1_SIZE-1),
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
   //add section mapping for 0x14000 (base exception vectors)
   const u32int exceptionHandlerAddr = 0x14000;
   smallMapMemory(hypervisorPtd, exceptionHandlerAddr, 

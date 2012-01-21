@@ -17,4 +17,6 @@ void beInitTimer32k(void);
 
 u32int getCounterVal(void);
 
+void mdelay32k(u32int);
+
 #endif

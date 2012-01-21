@@ -8,6 +8,7 @@
 #include "drivers/beagle/beGPTimer.h"
 #include "drivers/beagle/beClockMan.h"
 #include "drivers/beagle/beUart.h"
+#include "drivers/beagle/beMMC.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/LED.h"
@@ -23,6 +24,10 @@
 #include "memoryManager/addressing.h" /* For virtual addressing initialisation */
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/frameAllocator.h"
+
+#include "io/mmc.h"
+#include "io/partitions.h"
+#include "io/fs/fat.h"
 
 
 // uncomment me to enable startup debug: #define STARTUP_DEBUG
@@ -46,6 +51,10 @@ u32int initrdAddr;
 
 // guest context
 GCONTXT * gContext;
+
+extern struct mmc *mmcDevice;
+extern fatfs mainFilesystem;
+extern partitionTable primaryPartitionTable;
 
 int main(int argc, char *argv[])
 {
@@ -113,7 +122,7 @@ int main(int argc, char *argv[])
   BCENTRY * blockCache = (BCENTRY*)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   if (blockCache == 0)
   {
-    DIE_NOW(0, "Failed to allocate basic block cache.");
+    DIE_NOW(0, "Failed to allocate basic block cache.\n");
   }
   else
   {
@@ -246,6 +255,22 @@ int main(int argc, char *argv[])
 
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
+
+  u32int err = mmcMainInit();
+  printf("mmcMainInit ret %x\n", err);
+  
+  err = partTableRead(&mmcDevice->blockDev, &primaryPartitionTable);
+  printf("partTableRead ret %x\n", err);
+
+  err = fatMount(&mainFilesystem, &mmcDevice->blockDev, 1);
+  printf("fatMount ret %x\n", err);
+
+/*  char * filename = "testfile";
+  char * writeText = "The quick brown fox jumps over the lazy dog.\n";
+  u32int len = fatWriteFile(&mainFilesystem, filename, writeText, stringlen(writeText));
+  printf("writen %x bytes to '%s'\n", len, filename);*/
+
+  fatRootLs(&mainFilesystem);
 
   // does not return
 #ifdef CONFIG_BLOCK_COPY_NO_IRQ
