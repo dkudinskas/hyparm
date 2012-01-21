@@ -3,8 +3,6 @@
 
 #include "cpuArch/cpu.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/scanner.h"
 
 #include "linuxBoot/bootLinux.h"
@@ -39,15 +37,9 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
   paramTag = (struct tag *)BOARD_PARAMS;
 
 #ifdef STARTUP_DEBUG
-  serial_putstring("Current address = ");
-  serial_putint(currentAddress);
-  serial_newline();
-  serial_putstring("Load address    = ");
-  serial_putint(targetAddress);
-  serial_newline();
-  serial_putstring("Entry point     = ");
-  serial_putint(entryPoint);
-  serial_newline();
+  printf("Current address = %08x\n", currentAddress);
+  printf("Load address = %08x\n", targetAddress);
+  printf("Entry point = %08x\n", entryPoint);
 #endif
 
   /* TODO: add virtual addressing startup for the new VM here
@@ -76,9 +68,6 @@ void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)
   }
   setup_end_tag();
 
-#ifdef DUMP_SCANNER_COUNTER
-  resetScannerCounter();
-#endif
   scanBlock(getGuestContext(), entryPoint);
 
   cleanupBeforeLinux();

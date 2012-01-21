@@ -1,7 +1,5 @@
 #include "common/debug.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/asm-dis.h"
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/coprocInstructions.h"
@@ -554,8 +552,7 @@ struct instruction32bit * decodeInstr(u32int instr)
       break;
     case UNDEFINED_CATEGORY:
     default:
-      dumpGuestContext(getGuestContext());
-      DIE_NOW(0, "decoder: UNDEFINED category");
+      DIE_NOW(getGuestContext(), "decoder: UNDEFINED category");
   }
 
   return 0;
@@ -622,8 +619,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
       }
     }
   }
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeDataProcMisc unimplemented");
+  DIE_NOW(getGuestContext(), "decoder: decodeDataProcMisc unimplemented");
   return 0;
 }
 
@@ -649,8 +645,7 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
       index = index + 1;
     }
   }
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
+  DIE_NOW(getGuestContext(), "decoder: decodeBranchBlockTransfer unimplemented");
   return 0;
 }
 
@@ -676,8 +671,7 @@ struct instruction32bit * decodeMedia(u32int instr)
       index = index + 1;
     }
   }
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeMedia unimplemented");
+  DIE_NOW(getGuestContext(), "decoder: decodeMedia unimplemented");
   return 0;
 }
 
@@ -703,8 +697,7 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
       index = index + 1;
     }
   }
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
+  DIE_NOW(getGuestContext(), "decoder: decodeBranchBlockTransfer unimplemented");
   return 0;
 }
 
@@ -730,8 +723,7 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
       index = index + 1;
     }
   }
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeSvcCoproc unimplemented");
+  DIE_NOW(getGuestContext(), "decoder: decodeSvcCoproc unimplemented");
   return 0;
 }
 
@@ -757,16 +749,14 @@ struct instruction32bit * decodeUnconditional(u32int instr)
     }
   }
   
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeUnconditional unimplemented");
+  DIE_NOW(getGuestContext(), "decoder: decodeUnconditional unimplemented");
   return 0;
 }
 
 void dumpInstruction(char * msg, u32int instr)
 {
-  serial_putstring(msg);
-  serial_putstring(": Instruction: ");
-  serial_putint(instr);
-  serial_putstring(" ");
+  printf(msg);
+  printf(": Instruction: %08x ", instr);
   dumpInstrString(instr);
+  printf("\n");
 }

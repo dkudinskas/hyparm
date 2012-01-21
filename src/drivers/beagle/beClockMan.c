@@ -3,8 +3,6 @@
 
 #include "drivers/beagle/beClockMan.h"
 
-#include "vm/omap35xx/serial.h"
-
 
 struct ClockManagerBE * clkManBE;
 
@@ -22,9 +20,7 @@ void clkManBEInit()
   {
     memset((void*)clkManBE, 0x0, sizeof(struct ClockManagerBE));
 #ifdef BE_CLK_MAN_DBG
-    serial_putstring("Initializing CLK_MAN_BE at 0x");
-    serial_putint((u32int)clkManBE);
-    serial_newline();
+    printf("Initializing CLK_MAN_BE at %x\n", (u32int)clkManBE);
 #endif
   }
 
@@ -48,10 +44,8 @@ static inline void clkManRegWriteBE(u32int module, u32int regOffs, u32int value)
 void toggleTimerFclk(u32int clockID, bool enable)
 {
 #ifdef BE_CLK_MAN_DBG
-    serial_putstring("CLK_MAN_BE: toggleTimerFclk(): timer ");
-    serial_putint_nozeros(clockID);
-    serial_putstring((enable) ? " enable" : " disable");
-    serial_newline();
+    printf("CLK_MAN_BE: toggleTimerFclk(): timer %x", clockID);
+    printf((enable) ? " enable\n" : " disable\n");
 #endif
 
   if (clockID == 1)
@@ -94,11 +88,8 @@ void toggleTimerFclk(u32int clockID, bool enable)
 void setClockSource(u32int clockID, bool sysClock)
 {
 #ifdef BE_CLK_MAN_DBG
-    serial_putstring("CLK_MAN_BE: setClockSource for timer ");
-    serial_putint_nozeros(clockID);
-    serial_putstring(" to ");
-    serial_putstring((sysClock) ? "sysClock" : "32kH clock");
-    serial_newline();
+    printf("CLK_MAN_BE: setClockSource for timer %x to ", clockID);
+    printf((sysClock) ? "sysClock\n" : "32kH clock\n");
 #endif
 
   if (clockID == 1)

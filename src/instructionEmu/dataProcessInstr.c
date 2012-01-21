@@ -1,18 +1,12 @@
 #include "common/debug.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/dataProcessInstr.h"
 
 
 void invalidDataProcTrap(char * msg, GCONTXT * gc)
 {
-  serial_putint(gc->endOfBlockInstr);
-  serial_putstring(" @ ");
-  serial_putint(gc->R15);
-  serial_putstring(" should not have trapped!");
-  serial_newline();
+  printf("%08x @ %08x should not have trapped!\n", gc->endOfBlockInstr, gc->R15);
   DIE_NOW(gc, msg);
 }
 u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
@@ -20,22 +14,23 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
  //Than a store to the PC should store a valid value
   u32int instr = context->endOfBlockInstr;
   u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-  #ifdef CONFIG_BLOCK_COPY
+#ifdef CONFIG_BLOCK_COPY
   u32int nextPC = context->PCOfLastInstruction;
-  #else
+#else
   u32int nextPC = context->R15;
-  #endif
+#endif
   u32int regDest = (instr & 0x0000F000) >> 12;
   if (regDest != 0xF)//Destination register is not PC -> instruction should have been handled by PCFunct
   {
     invalidDataProcTrap(instrString, context);
   }
 #ifdef DATA_PROC_TRACE
-  serial_putstring(instrString);
-  serial_putint(instr);
-  serial_putstring(" @ ");
-  serial_putint(context->PCOfLastInstruction);
-  serial_newline();
+  printf(instrString);
+#ifdef CONFIG_BLOCK_COPY
+  printf(" %08x @ %08x\n", instr, context->PCOfLastInstruction);
+#else
+  printf(" %08x @ %08x\n", instr, context->R15);
+#endif
 #endif
   
   int instrCC = (instr >> 28) & 0xF;
@@ -137,8 +132,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString)
       }
       else
       {
-        dumpGuestContext(context);
-        DIE_NOW(0, "unimplemented arithLogicOp set flags case");
+        DIE_NOW(context, "unimplemented arithLogicOp set flags case");
       }
     }
     context->R15 = nextPC;

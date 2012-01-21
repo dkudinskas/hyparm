@@ -3,8 +3,6 @@
 
 #include "drivers/beagle/beIntc.h"
 
-#include "vm/omap35xx/serial.h"
-
 
 static inline u32int intcRegReadBE(u32int regOffs);
 static inline void intcRegWriteBE(u32int regOffs, u32int value);
@@ -22,9 +20,7 @@ void intcBEInit()
   {
     memset((void*)intcBE, 0x0, sizeof(struct InterruptControllerBE));
 #ifdef BE_INTC_DBG
-    serial_putstring("Initializing INTC_BE at 0x");
-    serial_putint((u32int)intcBE);
-    serial_newline();
+    printf("Initializing INTC_BE at %x\n", (u32int)intcBE);
 #endif
   }
 
@@ -35,7 +31,7 @@ void intcBEInit()
   u32int i = 0, m = 0;
   // soft reset
 #ifdef BE_INTC_DBG
-  serial_putstring("INTC_BE: soft reset ...");
+  printf("INTC_BE: soft reset ...");
 #endif
   u32int conf = intcRegReadBE(REG_INTCPS_SYSCONFIG);
   conf |= INTCPS_SYSCONFIG_SOFTRESET;
@@ -44,12 +40,11 @@ void intcBEInit()
   while (!(intcRegReadBE(REG_INTCPS_SYSSTATUS) & INTCPS_SYSSTATUS_SOFTRESET))
   {
 #ifdef BE_INTC_DBG
-    serial_putstring(".");
+    printf(".");
 #endif
   }
 #ifdef BE_INTC_DBG
-  serial_putstring(" done");
-  serial_newline();
+  printf(" done\n");
 #endif
    
   // intc autoidle
@@ -129,102 +124,64 @@ void intcDumpRegistersBE()
 {
   u32int indexN = 0, indexM = 0;
   
-  serial_putstring("INTC_BE: Revision ");
-  serial_putint(intcRegReadBE(REG_INTCPS_REVISION));
-  serial_newline();
-
-  serial_putstring("INTC_BE: sysconfig reg ");
-  serial_putint(intcRegReadBE(REG_INTCPS_SYSCONFIG));
-  serial_newline();
-
-  serial_putstring("INTC_BE: sysStatus reg ");
-  serial_putint(intcRegReadBE(REG_INTCPS_SYSSTATUS));
-  serial_newline();
-
-  serial_putstring("INTC_BE: current active irq reg ");
-  serial_putint(intcRegReadBE(REG_INTCPS_SIR_IRQ));
-  serial_newline();
-
-  serial_putstring("INTC_BE: current active fiq reg ");
-  serial_putint(intcRegReadBE(REG_INTCPS_SIR_FIQ));
-  serial_newline();
-
-  serial_putstring("INTC_BE: control reg ");
-  serial_putint(intcRegReadBE(REG_INTCPS_CONTROL));
-  serial_newline();
-
-  serial_putstring("INTC_BE: protection reg ");
-  serial_putint(intcRegReadBE(REG_INTCPS_PROTECTION));
-  serial_newline();
-
-  serial_putstring("INTC_BE: idle reg ");
-  serial_putint(intcRegReadBE(REG_INTCPS_IDLE));
-  serial_newline();
-
-  serial_putstring("INTC_BE: current active irq priority ");
-  serial_putint(intcRegReadBE(REG_INTCPS_IRQ_PRIORITY));
-  serial_newline();
-
-  serial_putstring("INTC_BE: current active fiq priority ");
-  serial_putint(intcRegReadBE(REG_INTCPS_FIQ_PRIORITY));
-  serial_newline();
-
-  serial_putstring("INTC_BE: priority threshold ");
-  serial_putint(intcRegReadBE(REG_INTCPS_THRESHOLD));
-  serial_newline();
-
-  serial_putstring("INTC_BE: interrupt status before masking:");
-  serial_newline();
+  printf("INTC_BE: Revision %08x\n", intcRegReadBE(REG_INTCPS_REVISION));
+  printf("INTC_BE: sysconfig reg %08x\n", intcRegReadBE(REG_INTCPS_SYSCONFIG));
+  printf("INTC_BE: sysStatus reg %08x\n", intcRegReadBE(REG_INTCPS_SYSSTATUS));
+  printf("INTC_BE: current active irq reg %08x\n", intcRegReadBE(REG_INTCPS_SIR_IRQ));
+  printf("INTC_BE: current active fiq reg %08x\n", intcRegReadBE(REG_INTCPS_SIR_FIQ));
+  printf("INTC_BE: control reg %08x\n", intcRegReadBE(REG_INTCPS_CONTROL));
+  printf("INTC_BE: protection reg %08x\n", intcRegReadBE(REG_INTCPS_PROTECTION));
+  printf("INTC_BE: idle reg %08x\n", intcRegReadBE(REG_INTCPS_IDLE));
+  printf("INTC_BE: current active irq priority %08x\n", intcRegReadBE(REG_INTCPS_IRQ_PRIORITY));
+  printf("INTC_BE: current active fiq priority %08x\n", intcRegReadBE(REG_INTCPS_FIQ_PRIORITY));
+  printf("INTC_BE: priority threshold %08x\n", intcRegReadBE(REG_INTCPS_THRESHOLD));
+  printf("INTC_BE: interrupt status before masking:\n");
   for (indexN = 0; indexN < INTCPS_NR_OF_BANKS; indexN++)
   {
-    serial_putint(intcRegReadBE(REG_INTCPS_ITRn + 0x20*indexN));
+    printf("%08x", intcRegReadBE(REG_INTCPS_ITRn + 0x20*indexN));
   }
-  serial_newline();
+  printf("\n");
 
-  serial_putstring("INTC_BE: interrupt mask:");
-  serial_newline();
+  printf("INTC_BE: interrupt mask:\n");
   for (indexN = 0; indexN < INTCPS_NR_OF_BANKS; indexN++)
   {
-    serial_putint(intcRegReadBE(REG_INTCPS_MIRn + 0x20*indexN));
+    printf("%08x", intcRegReadBE(REG_INTCPS_MIRn + 0x20*indexN));
   }
-  serial_newline();
+  printf("\n");
 
-  serial_putstring("INTC_BE: pending IRQ:");
-  serial_newline();
+  printf("INTC_BE: pending IRQ:\n");
   for (indexN = 0; indexN < INTCPS_NR_OF_BANKS; indexN++)
   {
-    serial_putint(intcRegReadBE(REG_INTCPS_PENDING_IRQn + 0x20*indexN));
+    printf("%08x", intcRegReadBE(REG_INTCPS_PENDING_IRQn + 0x20*indexN));
   }
-  serial_newline();
+  printf("\n");
 
-  serial_putstring("INTC_BE: pending FIQ:");
-  serial_newline();
+  printf("INTC_BE: pending FIQ:\n");
   for (indexN = 0; indexN < INTCPS_NR_OF_BANKS; indexN++)
   {
-    serial_putint(intcRegReadBE(REG_INTCPS_PENDING_FIQn + 0x20*indexN));
+    printf("%08x", intcRegReadBE(REG_INTCPS_PENDING_FIQn + 0x20*indexN));
   }
-  serial_newline();
+  printf("\n");
 
-  serial_putstring("INTC_BE: interrupt steering/priority dump:");
-  serial_newline();
+  printf("INTC_BE: interrupt steering/priority dump:\n");
   for (indexM = 0; indexM < INTCPS_NR_OF_INTERRUPTS/8; indexM++)
   {
-    serial_putint(intcRegReadBE(REG_INTCPS_ILRm + 0x20*indexM));
-    serial_putstring(" ");
-    serial_putint(intcRegReadBE(REG_INTCPS_ILRm + 0x4 + 0x20*indexM));
-    serial_putstring(" ");
-    serial_putint(intcRegReadBE(REG_INTCPS_ILRm + 0x8 + 0x20*indexM));
-    serial_putstring(" ");
-    serial_putint(intcRegReadBE(REG_INTCPS_ILRm + 0xc + 0x20*indexM));
-    serial_putstring(" ");
-    serial_putint(intcRegReadBE(REG_INTCPS_ILRm + 0x10 + 0x20*indexM));
-    serial_putstring(" ");
-    serial_putint(intcRegReadBE(REG_INTCPS_ILRm + 0x14 + 0x20*indexM));
-    serial_putstring(" ");
-    serial_putint(intcRegReadBE(REG_INTCPS_ILRm + 0x18 + 0x20*indexM));
-    serial_putstring(" ");
-    serial_putint(intcRegReadBE(REG_INTCPS_ILRm + 0x1c + 0x20*indexM));
-    serial_newline();
+    printf("%08x", intcRegReadBE(REG_INTCPS_ILRm + 0x20*indexM));
+    printf(" ");
+    printf("%08x", intcRegReadBE(REG_INTCPS_ILRm + 0x4 + 0x20*indexM));
+    printf(" ");
+    printf("%08x", intcRegReadBE(REG_INTCPS_ILRm + 0x8 + 0x20*indexM));
+    printf(" ");
+    printf("%08x", intcRegReadBE(REG_INTCPS_ILRm + 0xc + 0x20*indexM));
+    printf(" ");
+    printf("%08x", intcRegReadBE(REG_INTCPS_ILRm + 0x10 + 0x20*indexM));
+    printf(" ");
+    printf("%08x", intcRegReadBE(REG_INTCPS_ILRm + 0x14 + 0x20*indexM));
+    printf(" ");
+    printf("%08x", intcRegReadBE(REG_INTCPS_ILRm + 0x18 + 0x20*indexM));
+    printf(" ");
+    printf("%08x", intcRegReadBE(REG_INTCPS_ILRm + 0x1c + 0x20*indexM));
+    printf("\n");
   }
 }
 

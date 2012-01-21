@@ -17,7 +17,6 @@
 #include "vm/omap35xx/gptimer.h"
 #include "vm/omap35xx/intc.h"
 #include "vm/omap35xx/uart.h"
-#include "vm/omap35xx/serial.h"
 
 #include "instructionEmu/scanner.h"
 
@@ -32,10 +31,7 @@ extern GCONTXT * getGuestContext(void);
 void softwareInterrupt(u32int code)
 {
 #ifdef EXC_HDLR_DBG
-  serial_putstring("softwareInterrupt(");
-  serial_putint(code);
-  serial_putstring(")");
-  serial_newline();
+  printf("softwareInterrupt(%x)\n", code);
 #endif
   // parse the instruction to find the start address of next block
   GCONTXT * gContext = getGuestContext();
@@ -45,12 +41,7 @@ void softwareInterrupt(u32int code)
   if (code <= 0xFF)
   {
 #ifdef EXC_HDLR_DBG
-    serial_putstring("softwareInterrupt: SVC<");
-    serial_putint(code);
-    serial_putstring("> @ ");
-    serial_putint(gContext->R15);
-    serial_putstring(" is a guest system call.");
-    serial_newline();
+    printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, gContext->R15);
 #endif
     deliverServiceCall();
     nextPC = gContext->R15;
@@ -86,9 +77,7 @@ void softwareInterrupt(u32int code)
   }
 
 #ifdef EXC_HDLR_DBG
-  serial_putstring("softwareInterrupt: Next PC = 0x");
-  serial_putint(nextPC);
-  serial_newline();
+  printf("softwareInterrupt: Next PC = 0x%x\n", nextPC);
 #endif
 
   if ((gContext->CPSR & CPSR_MODE) != CPSR_MODE_USR)
@@ -162,10 +151,9 @@ void dataAbort()
     case dfsTranslationTableWalkLvl1SyncParityErr:
     case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
-      serial_putstring("Unimplemented user data abort.");
-      serial_newline();
+      printf("Unimplemented user data abort.\n");
       printDataAbort();
-      DIE_NOW(0, "Entering infinite loop");
+      DIE_NOW(0, "Entering infinite loop\n");
   }
   enableInterrupts();
 }
@@ -173,9 +161,8 @@ void dataAbort()
 void dataAbortPrivileged()
 {
   /* Here if we abort in a priviledged mode, i.e its the Hypervisors fault */
-  serial_putstring("dataAbortPrivileged: Hypervisor data abort in priviledged mode.");
-  serial_newline();
-
+  printf("dataAbortPrivileged: Hypervisor data abort in priviledged mode.\n");
+  
   printDataAbort();
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
   switch(faultStatus)
@@ -187,17 +174,11 @@ void dataAbortPrivileged()
       u32int memAddr = getDFAR();
       if( (memAddr >= BEAGLE_RAM_START) && (memAddr <= BEAGLE_RAM_END) )
       {
-        serial_putstring("Fault inside physical RAM range.  hypervisor_page_fault (exceptionHandlers.c)");
-        serial_newline();
-        DIE_NOW(0, "Entering infinite loop");
+        DIE_NOW(0, "Translation fault inside physical RAM range\n");
       }
       else
       {
-        DIE_NOW(0, "Translation fault for area not in RAM! Entering Infinite Loop...");
-        /*
-        I imagine there will be a few areas that we will need to map for the hypervisor only
-        But not right now.
-        */
+        DIE_NOW(0, "Translation fault for area not in RAM!\n");
       }
       break;
     }
@@ -221,30 +202,23 @@ void dataAbortPrivileged()
     case dfsTranslationTableWalkLvl1SyncParityErr:
     case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
-      serial_putstring("dataAbortPrivileged: UNIMPLEMENTED data abort type.");
-      serial_newline();
+      printf("dataAbortPrivileged: UNIMPLEMENTED data abort type.\n");
       printDataAbort();
-      DIE_NOW(0, "Entering infinite loop");
+      DIE_NOW(0, "Entering infinite loop\n");
       break;
   }
 
-
-  DIE_NOW(0, "At end of hypervisor data abort handler. Stopping");
-
-  serial_putstring("Exiting data abort handler");
-  serial_newline();
-
-  //Should be fixed and ready to re-execute the offending isntruction
+  DIE_NOW(0, "At end of hypervisor data abort handler. Stopping\n");
 }
 
 void undefined(void)
 {
-  DIE_NOW(0, "undefined: undefined handler, Implement me!");
+  DIE_NOW(0, "undefined: undefined handler, Implement me!\n");
 }
 
 void undefinedPrivileged(void)
 {
-  DIE_NOW(0, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!");
+  DIE_NOW(0, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!\n");
 }
 
 void prefetchAbort(void)
@@ -341,9 +315,8 @@ void irq()
     }
     default:
     {
-      serial_putstring("Received IRQ=");
-      serial_putint(activeIrqNumber);
-      DIE_NOW(0, "irq: unimplemented IRQ number.");
+      printf("Received IRQ = %x\n", activeIrqNumber);
+      DIE_NOW(0, "irq: unimplemented IRQ number.\n");
     }
   }
 
@@ -389,8 +362,7 @@ void irqPrivileged()
     }
     default:
     {
-      serial_putstring("Received IRQ=");
-      serial_putint(activeIrqNumber);
+      printf("Received IRQ = %x\n", activeIrqNumber);
       DIE_NOW(0, "irqPrivileged: unimplemented IRQ number.");
     }
   }

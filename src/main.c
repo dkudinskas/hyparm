@@ -11,7 +11,6 @@
 
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/LED.h"
-#include "vm/omap35xx/serial.h"
 
 #include "instructionEmu/scanner.h"
 
@@ -41,8 +40,8 @@ void registerGuestContext(u32int gcAddr);
 GCONTXT * getGuestContext(void);
 u32int scannerReqCounter;
 
-unsigned long kernAddr;
-unsigned long initrdAddr;
+u32int kernAddr;
+u32int initrdAddr;
 
 // guest context
 GCONTXT * gContext;
@@ -95,9 +94,7 @@ int main(int argc, char *argv[])
   {
     memset((void*)coprocRegBank, 0x0, MAX_CRB_SIZE * sizeof(CREG));
 #ifdef STARTUP_DEBUG
-    serial_putstring("Coprocessor register bank at 0x");
-    serial_putint((u32int)coprocRegBank);
-    serial_newline();
+    printf("Coprocessor register bank at %x\n", (u32int)coprocRegBank);
 #endif
   }
   registerCrb(gContext, coprocRegBank);
@@ -112,9 +109,7 @@ int main(int argc, char *argv[])
   {
     memset((void*)blockCache, 0x0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
 #ifdef STARTUP_DEBUG
-    serial_putstring("Basic block cache at 0x");
-    serial_putint((u32int)blockCache);
-    serial_newline();
+    printf("Basic block cache at %x\n", (u32int)blockCache);
 #endif
   }
   registerBlockCache(gContext, blockCache);
@@ -222,12 +217,7 @@ int main(int argc, char *argv[])
   }
 
 #ifdef STARTUP_DEBUG
-  serial_putstring("Kernel address: ");
-  serial_putlong(kernAddr);
-  serial_newline();
-  serial_putstring("Initrd address: ");
-  serial_putlong(initrdAddr);
-  serial_newline();
+  printf("Kernel address: %x, Initrd address: %x\n", kernAddr, initrdAddr);
 #endif
 
   image_header_t imageHeader = getImageHeader(kernAddr);
@@ -267,14 +257,10 @@ GCONTXT * getGuestContext()
 
 void printUsage(void)
 {
-  serial_putstring("Loader usage:");
-  serial_newline();
-  serial_putstring ("go <loaderAddr> -kernel <kernAddress> -initrd <initrdAddr>");
-  serial_newline();
-  serial_putstring("kernel: address of kernel in hex format (0xXXXXXXXX)");
-  serial_newline();
-  serial_putstring("initrd: address of external initrd in hex format (0xXXXXXXXX)");
-  serial_newline();
+  printf("Loader usage:\n");
+  printf("go <loaderAddr> -kernel <kernAddress> -initrd <initrdAddr>\n");
+  printf("kernel: address of kernel in hex format (0xXXXXXXXX)\n");
+  printf("initrd: address of external initrd in hex format (0xXXXXXXXX)\n");
   return;
 }
 
@@ -290,16 +276,10 @@ int parseCommandline(int argc, char *argv[])
   /***************** Check given arguments ************************/
 #ifdef STARTUP_DEBUG
   int i = 0;
-  serial_putstring("Number of args: ");
-  serial_putchar(argc + 0x30);
-  serial_newline();
+  printf("Number of args: %c\n", argc+0x30);
   for (i = 0; i < argc; i++)
   {
-    serial_putstring("Arg ");
-    serial_putchar(i + 0x30);
-    serial_putstring(": ");
-    serial_putstring(argv[i]);
-    serial_newline();
+    printf("Arg %c: %x\n", i+0x30, argv[i]);
   }
 #endif
 
@@ -312,15 +292,13 @@ int parseCommandline(int argc, char *argv[])
   cmpFlag = stringncmp("-kernel", argv[1], 7);
   if (cmpFlag < 0)
   {
-    serial_putstring("Parameter -kernel not found.");
-    serial_newline();
+    printf("Parameter -kernel not found.");
     return -1;
   }
-  kernAddr = stringToLong(argv[2]);
+  kernAddr = strtoi(argv[2]);
   if (kernAddr < 0)
   {
-    serial_putstring("Invalid kernel address.");
-    serial_newline();
+    printf("Invalid kernel address.");
     return -1;
   }
 
@@ -328,15 +306,13 @@ int parseCommandline(int argc, char *argv[])
   cmpFlag = stringncmp("-initrd", argv[3], 7);
   if (cmpFlag < 0)
   {
-    serial_putstring("Parameter -initrd not found.");
-    serial_newline();
+    printf("Parameter -initrd not found.");
     return -1;
   }
-  initrdAddr = stringToLong(argv[4]);
+  initrdAddr = strtoi(argv[4]);
   if (initrdAddr < 0)
   {
-    serial_putstring("Invalid initrd address.");
-    serial_newline();
+    printf("Invalid initrd address.");
     return -1;
   }
   return 1;

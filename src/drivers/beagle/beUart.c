@@ -1,8 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "drivers/beagle/beUart.h"
 
 static inline u32int beGetUartNumber(u32int phyAddr);
@@ -25,11 +23,7 @@ void beUartInit(u32int uartid)
   {
     memset((void*)beUart[uID], 0x0, sizeof(struct UartBackEnd));
 #ifdef BE_UART_DBG
-    serial_putstring("Initializing UART");
-    serial_putint_nozeros(uartid);
-    serial_putstring(" backend at 0x");
-    serial_putint((u32int)beUart[uID]);
-    serial_newline();
+    printf("Initializing UART%x backend at 0x%x\n", uartid, (u32int)beUart[uID]);
 #endif
   }
 

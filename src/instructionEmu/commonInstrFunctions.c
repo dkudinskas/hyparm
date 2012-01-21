@@ -1,20 +1,16 @@
 #include "common/debug.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/commonInstrFunctions.h"
 
 
 extern GCONTXT * getGuestContext(void); //from main.c
 
 /* a function to serve as a dead-loop if we decode something invalid */
-void invalid_instruction(u32int instr, char * msg)
+void invalidInstruction(u32int instr, char * msg)
 {
-  serial_putstring("Invalid instruction detected! 0x");
-  serial_putint(instr);
-  serial_newline();
-  serial_putstring(msg);
-  serial_newline();
+  printf("Invalid instruction detected! %08x\n", instr);
+  printf(msg);
+  printf("\n");
 }
 
 #ifdef CONFIG_BLOCK_COPY
@@ -126,21 +122,11 @@ u32int* standardImmRegRSR(GCONTXT * context, u32int *  instructionAddr, u32int *
         if(srcReg1 == destReg || ( (!immediate) && srcReg2 == destReg ) )
         {
           /* Some information before crashing that can be useful to determine if this is indeed the way to go.*/
-          serial_putstring("instruction = ");
-          serial_putint(instruction);
-          serial_newline();
-          serial_putstring("immediate = ");
-          serial_putint(immediate);
-          serial_newline();
-          serial_putstring("srcReg1 = ");
-          serial_putint(srcReg1);
-          serial_newline();
-          serial_putstring("srcReg2 = ");
-          serial_putint(srcReg2);
-          serial_newline();
-          serial_putstring("destReg = ");
-          serial_putint(destReg);
-          serial_newline();
+          printf("instruction = %08x\n", instruction);
+          printf("immediate = %08x\n", immediate);
+          printf("srcReg1 = %08x\n", srcReg1);
+          printf("srcReg2 = %08x\n", srcReg2);
+          printf("destReg = %08x\n", destReg);
           DIE_NOW(0, "standardImmRegRSR special care should be taken it is not possible to use destReg");
           /*
            *  Not sure if this can occur.  If it occurs our usual trick won't work.
@@ -217,9 +203,7 @@ u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int *  instructionAddr, u3
 
   if(rnIsPC || rmIsPC)
   { /*Instruction has to be changed to a PC safe instructionstream. */
-    serial_putstring("instruction = ");
-    serial_putint(instruction);
-    serial_newline();
+    printf("instruction = %08x\n", instruction);
     DIE_NOW(0,"standardImmRegRSRNoDest: this part is not tested.");
     /* No destination register so only source registers have to be checked*/
     scratchReg = findUnusedRegister(regSrc1, regSrc2, -1);
@@ -413,7 +397,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
           strPtr = (regDest == 13) ? (&(context->R13_UND)) : (&(context->R14_UND));
           break;
         default:
-          invalid_instruction(context->endOfBlockInstr, "storeGuestGPR: invalid CPSR mode!");
+          invalidInstruction(context->endOfBlockInstr, "storeGuestGPR: invalid CPSR mode!");
       } // switch ends
       *strPtr = value;
     } // R13/R14 ends
@@ -574,7 +558,7 @@ u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
           ldPtr = (regSrc == 13) ? (&(context->R13_UND)) : (&(context->R14_UND));
           break;
         default:
-          invalid_instruction(context->endOfBlockInstr, "loadGuestGPR: invalid CPSR mode!");
+          invalidInstruction(context->endOfBlockInstr, "loadGuestGPR: invalid CPSR mode!");
       } // switch ends
       value = *ldPtr;
     } // R13/R14 ends

@@ -3,8 +3,6 @@
 
 #include "common/types.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "guestManager/guestContext.h"
 
 

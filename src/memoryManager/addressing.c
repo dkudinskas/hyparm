@@ -2,8 +2,6 @@
 
 #include "guestManager/blockCache.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "memoryManager/addressing.h"
 #include "memoryManager/memoryConstants.h"
 #include "memoryManager/memoryProtection.h"
@@ -17,19 +15,19 @@ extern void setGuestPhysicalPt(GCONTXT* gc);
 
 void initialiseVirtualAddressing()
 {
-  serial_putstring("Initializing Virtual Addressing.");
+  DEBUG_STRING("Initializing Virtual Addressing.");
   descriptor* ptAddr = createHypervisorPageTable();
 
-  serial_putstring(" Page Table @ 0x");
-  serial_putint((u32int)ptAddr);
-  serial_putstring("...");
+  DEBUG_STRING(" Page Table @ 0x");
+  DEBUG_INT((u32int)ptAddr);
+  DEBUG_STRING("...");
 
   mmuInit();
   mmuInsertPt0(ptAddr); //Map Hypervisor PT into TTBR0
   mmuEnableVirtAddr();
 
-  serial_putstring("done");
-  serial_newline();
+  DEBUG_STRING("done");
+  DEBUG_NEWLINE();
 }
 
 /* virtual machine startup, need to add a new guestPhysical to ReadPhysical address map */
@@ -37,8 +35,8 @@ void initialiseVirtualAddressing()
 void createVirtualMachineGPAtoRPA(GCONTXT* gc)
 {
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("createVirtualMachineGPAtoRPA: TODO createVirtualMachineGPAtoRPA (addressing.c)");
-  serial_newline();
+  DEBUG_STRING("createVirtualMachineGPAtoRPA: TODO createVirtualMachineGPAtoRPA (addressing.c)");
+  DEBUG_NEWLINE();
 #endif
 
   //The hypervisor ptd is the guest physical ptd for now
@@ -59,9 +57,9 @@ void createVirtualMachineGPAtoRPA(GCONTXT* gc)
 void initialiseGuestShadowPageTable(u32int guestPtAddr)
 {
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("initialiseGuestShadowPageTable: new pt addr ");
-  serial_putint(guestPtAddr);
-  serial_newline();
+  DEBUG_STRING("initialiseGuestShadowPageTable: new pt addr ");
+  DEBUG_INT(guestPtAddr);
+  DEBUG_NEWLINE();
 #endif
 
   GCONTXT* context = getGuestContext();
@@ -71,8 +69,8 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   if(guestPtAddr == 0x80004000)
   {
 #ifdef ADDRESSING_DEBUG
-    serial_putstring("initialiseGuestShadowPageTable: TTBR0 Linux identity mapping bootstrap, ignoring.");
-    serial_newline();
+    DEBUG_STRING("initialiseGuestShadowPageTable: TTBR0 Linux identity mapping bootstrap, ignoring.");
+    DEBUG_NEWLINE();
 #endif
     DIE_NOW(context, "initialiseGuestShadowPageTable");
     return;
@@ -83,16 +81,16 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   guestPtAddr = guestPtAddr &  0xFFFFC000;
 
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("initialiseGuestShadowPageTable: Dumping guest page table @ 0x");
-  serial_putint(guestPtAddr);
-  serial_newline();
+  DEBUG_STRING("initialiseGuestShadowPageTable: Dumping guest page table @ 0x");
+  DEBUG_INT(guestPtAddr);
+  DEBUG_NEWLINE();
 
   descriptor* ptd = (descriptor*)guestPtAddr;
   dumpPageTable(ptd);
 
-  serial_newline();
-  serial_putstring("Guest pt dump finished");
-  serial_newline();
+  DEBUG_NEWLINE();
+  DEBUG_STRING("Guest pt dump finished");
+  DEBUG_NEWLINE();
 #endif
 
   if(context->virtAddrEnabled)
@@ -126,8 +124,8 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
     // copy new gPT1 entries to new sPT1
     copyPageTable((descriptor*)guestPtAddr, context->PT_shadow);
 #ifdef ADDRESSING_DEBUG
-    serial_putstring("initialiseGuestShadowPageTable: Copy PT done.");
-    serial_newline();
+    DEBUG_STRING("initialiseGuestShadowPageTable: Copy PT done.");
+    DEBUG_NEWLINE();
 #endif
 
     // anything in caches needs to be written back now
@@ -153,8 +151,8 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   else
   {
 #ifdef ADDRESSING_DEBUG
-    serial_putstring("initialiseGuestShadowPageTable: set gPT ptr in gContext");
-    serial_newline();
+    DEBUG_STRING("initialiseGuestShadowPageTable: set gPT ptr in gContext");
+    DEBUG_NEWLINE();
 #endif
     //guest virtual addressing is not active, no need to spend time faulting on PT that the OS is going to add entries to before it activates
     context->PT_os = (descriptor*)guestPtAddr;
@@ -169,22 +167,22 @@ void guestEnableVirtMem()
   if(gc->PT_os == 0)
   {
 #ifdef ADDRESSING_DEBUG
-    serial_putstring("guestEnableVirtMem: No entry in gc. Must be identity mapping bootstrap, ignore hypervised. Continuing boot...");
-    serial_newline();
+    DEBUG_STRING("guestEnableVirtMem: No entry in gc. Must be identity mapping bootstrap, ignore hypervised. Continuing boot...");
+    DEBUG_NEWLINE();
 #endif
     return;
   }
 
 #ifdef ADDRESSING_DEBUG
   dumpGuestContext(gc);
-  serial_putstring("guestEnableVirtMem: Dumping guest page table from addr in gc->PT_os @ 0x");
-  serial_putint((u32int)gc->PT_os);
-  serial_newline();
+  DEBUG_STRING("guestEnableVirtMem: Dumping guest page table from addr in gc->PT_os @ 0x");
+  DEBUG_INT((u32int)gc->PT_os);
+  DEBUG_NEWLINE();
 
   dumpPageTable(gc->PT_os);
 
-  serial_putstring("guestEnableVirtMem: PT dump done");
-  serial_newline();
+  DEBUG_STRING("guestEnableVirtMem: PT dump done");
+  DEBUG_NEWLINE();
 #endif
 
   if(gc->virtAddrEnabled)
@@ -195,8 +193,8 @@ void guestEnableVirtMem()
   }
 
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("guestEnableVirtMem: Enabling guest virtual / shadow page tables");
-  serial_newline();
+  DEBUG_STRING("guestEnableVirtMem: Enabling guest virtual / shadow page tables");
+  DEBUG_NEWLINE();
 #endif
 
   //create a new shadow page table. Mapping in hypervisor address space
@@ -210,13 +208,13 @@ void guestEnableVirtMem()
   copyPageTable(gc->PT_os, sPT);
 
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("guestEnableVirtMem: Copy PT done. Dumping shadow PT");
-  serial_newline();
+  DEBUG_STRING("guestEnableVirtMem: Copy PT done. Dumping shadow PT");
+  DEBUG_NEWLINE();
   dumpPageTable(sPT);
-  serial_putstring("guestEnableVirtMem: shadow PT dump done.");
-  serial_newline();
-  serial_putstring("guestEnableVirtMem: About to switch to sPT");
-  serial_newline();
+  DEBUG_STRING("guestEnableVirtMem: shadow PT dump done.");
+  DEBUG_NEWLINE();
+  DEBUG_STRING("guestEnableVirtMem: About to switch to sPT");
+  DEBUG_NEWLINE();
 #endif
 
 
@@ -229,8 +227,8 @@ void guestEnableVirtMem()
   clearCache(); //just to make sure
 
 #ifdef ADDRESSING_DEBUG
-  serial_putstring("guestEnableVirtMem: Using sPT. Continuing");
-  serial_newline();
+  DEBUG_STRING("guestEnableVirtMem: Using sPT. Continuing");
+  DEBUG_NEWLINE();
 #endif
 
   /**  WARNING: HACK
@@ -277,9 +275,9 @@ void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
       if ( ((oldVal >> (i*2)) & 0x3) != ((newVal >> (i*2)) & 0x3) )
       {
 #ifdef ADDRESSING_DEBUG
-        serial_putstring("changeGuestDomainAccessControl: changing config for dom ");
-        serial_putint(i);
-        serial_newline();
+        DEBUG_STRING("changeGuestDomainAccessControl: changing config for dom ");
+        DEBUG_INT(i);
+        DEBUG_NEWLINE();
 #endif
         // for every entry changed, loop through all page table entries
         u32int y = 0;
@@ -295,21 +293,21 @@ void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
           if (ptEntry->domain == i)
           {
 #ifdef ADDRESSING_DEBUG
-            serial_putstring("changeGuestDomainAccessControl: page table entry ");
-            serial_putint(y);
-            serial_putstring(" = ");
-            serial_putint(*(u32int*)ptEntry);
-            serial_putstring(" needs AP bits remapped.");
-            serial_newline();
+            DEBUG_STRING("changeGuestDomainAccessControl: page table entry ");
+            DEBUG_INT(y);
+            DEBUG_STRING(" = ");
+            DEBUG_INT(*(u32int*)ptEntry);
+            DEBUG_STRING(" needs AP bits remapped.");
+            DEBUG_NEWLINE();
 #endif
             if (ptEntry->type == SECTION)
             {
               descriptor* shadowPtEntry = &(context->PT_shadow[y]);
               mapAPBitsSection(y*1024*1024, ptEntry, shadowPtEntry);
 #ifdef ADDRESSING_DEBUG
-              serial_putstring("changeGuestDomainAccessControl: remapped to ");
-              serial_putint(*(u32int*)ptEntry);
-              serial_newline();
+              DEBUG_STRING("changeGuestDomainAccessControl: remapped to ");
+              DEBUG_INT(*(u32int*)ptEntry);
+              DEBUG_NEWLINE();
 #endif
             }
             else if (ptEntry->type == PAGE_TABLE)
@@ -335,8 +333,8 @@ void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
               }*/
               // ignore for now?
 #ifdef ADDRESSING_DEBUG
-              serial_putstring("changeGuestDomainAccessControl: remap AP for page table entry ");
-              serial_newline();
+              DEBUG_STRING("changeGuestDomainAccessControl: remap AP for page table entry ");
+              DEBUG_NEWLINE();
               DIE_NOW(context, "changeGuestDomainAccessControl unimplemented.");
 #endif
             }

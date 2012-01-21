@@ -3,6 +3,8 @@
 
 #include "common/types.h"
 
+#ifdef CONFIG_BLOCK_COPY
+
 #define BLOCK_CACHE_SIZE    128
 #define BLOCK_COPY_CACHE_SIZE_IN_BYTES   (44 * BLOCK_CACHE_SIZE) // Here the assumption is taken that on average 10% of the instructions
                                                                  // will be critical. -> on average there are 10 instructions per block
@@ -11,7 +13,13 @@
 
 //uncomment to enable debugging: #define BLOCK_COPY_CACHE_DEBUG 1
 
-// uncomment me for block cache debug: #define BLOCK_CACHE_DEBUG
+#else
+
+#define BLOCK_CACHE_SIZE    96
+
+#endif
+
+// uncomment me for block cache debug: #define BLOCK_CACHE_DBG
 
 // uncomment me for collision debug: #define DUMP_COLLISION_COUNTER
 
@@ -21,11 +29,13 @@ struct blockCacheEntry
   u32int endAddress;
   u32int hyperedInstruction;
   u32int valid:1; //valid is a flag and needs only 1 bit
+#ifdef CONFIG_BLOCK_COPY
   u32int reservedWord:1; //reservedWord is a flag that indicates that after the backpointer there will be 1 word that is reserved for saving
                          //a temporary value of a PC. This means code execution will start @ startAddress+8 (skip backpointer & reserved word)
   u32int blockCopyCacheSize:22; // blockCopyCacheSize will be rather limited
                             // there are 8 bits left -> can be used for profiling
   u32int blockCopyCacheAddress; // This is the address were the instructions with hypercall will reside
+#endif
   u32int hdlFunct;
 };
 

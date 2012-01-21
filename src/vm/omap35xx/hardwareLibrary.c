@@ -11,7 +11,6 @@
 #include "vm/omap35xx/prm.h"
 #include "vm/omap35xx/sdma.h"
 #include "vm/omap35xx/sdram.h"
-#include "vm/omap35xx/serial.h"
 #include "vm/omap35xx/sramInternal.h"
 #include "vm/omap35xx/sysControlModule.h"
 #include "vm/omap35xx/timer32k.h"
@@ -135,8 +134,8 @@ char * q3busName = "Q3Bus";
 device * initialiseHardwareLibrary()
 {
 #ifdef HARDWARE_LIB_DBG
-  serial_putstring("Initialising device library...");
-  serial_newline();
+  DEBUG_STRING("Initialising device library...");
+  DEBUG_NEWLINE();
 #endif
 
   /********************************************************/
@@ -308,9 +307,9 @@ void initialiseDevice(device * dev, char * devName, bool isBus,
                       device * parent, LOAD_FUNCTION ldFn, STORE_FUNCTION stFn)
 {
 #ifdef HARDWARE_LIB_DBG
-  serial_putstring("Initialising device: ");
-  serial_putstring(devName);
-  serial_newline();
+  DEBUG_STRING("Initialising device: ");
+  DEBUG_STRING(devName);
+  DEBUG_NEWLINE();
 #endif
 
   int index = 0;
@@ -329,10 +328,10 @@ void initialiseDevice(device * dev, char * devName, bool isBus,
     // this is not the 'root' device, must be attached to something
     if (!attachDevice(parent, dev))
     {
-      serial_putstring("Failed to attach device ");
-      serial_putstring(devName);
-      serial_putstring(" to device ");
-      serial_putstring(parent->deviceName);
+      DEBUG_STRING("Failed to attach device ");
+      DEBUG_STRING(devName);
+      DEBUG_STRING(" to device ");
+      DEBUG_STRING(parent->deviceName);
       DIE_NOW(0, "ERROR.");
     }
   }
@@ -359,11 +358,11 @@ bool attachDevice(device * parent, device * child)
     parent->attachedDevices[parent->nrOfAttachedDevs] = child;
     parent->nrOfAttachedDevs++;
 #ifdef HARDWARE_LIB_DBG
-    serial_putstring("Attached ");
-    serial_putstring(child->deviceName);
-    serial_putstring(" to ");
-    serial_putstring(parent->deviceName);
-    serial_newline();
+    DEBUG_STRING("Attached ");
+    DEBUG_STRING(child->deviceName);
+    DEBUG_STRING(" to ");
+    DEBUG_STRING(parent->deviceName);
+    DEBUG_NEWLINE();
 #endif
     return TRUE;
   }
@@ -409,29 +408,29 @@ void storeGeneric(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         return;
       }
     }
-    serial_putstring("Store to: ");
-    serial_putstring(dev->deviceName);
-    serial_putstring(" at address ");
-    serial_putint(address);
-    serial_putstring(" physical ");
-    serial_putint(phyAddr);
-    serial_putstring(" value ");
-    serial_putint(value);
-    serial_newline();
-    DIE_NOW(gc, "No child of current device holds store address in range.");
+    DEBUG_STRING("Store to: ");
+    DEBUG_STRING(dev->deviceName);
+    DEBUG_STRING(" at address ");
+    DEBUG_INT(address);
+    DEBUG_STRING(" physical ");
+    DEBUG_INT(phyAddr);
+    DEBUG_STRING(" value ");
+    DEBUG_INT(value);
+    DEBUG_NEWLINE();
+    DIE_NOW(gc, "No child of current device holds load address in range.");
   }
   else
   {
     // not a bus, end device
-    serial_putstring("Store to: ");
-    serial_putstring(dev->deviceName);
-    serial_putstring(" at address ");
-    serial_putint(address);
-    serial_putstring(" physical ");
-    serial_putint(phyAddr);
-    serial_putstring(" value ");
-    serial_putint(value);
-    serial_newline();
+    DEBUG_STRING("Store to: ");
+    DEBUG_STRING(dev->deviceName);
+    DEBUG_STRING(" at address ");
+    DEBUG_INT(address);
+    DEBUG_STRING(" physical ");
+    DEBUG_INT(phyAddr);
+    DEBUG_STRING(" value ");
+    DEBUG_INT(value);
+    DEBUG_NEWLINE();
     DIE_NOW(gc, "End device didn't implement custom store function!");
   }
 
@@ -462,25 +461,25 @@ u32int loadGeneric(device * dev, ACCESS_SIZE size, u32int address)
         return dev->attachedDevices[index]->loadFunction(dev->attachedDevices[index], size, address);
       }
     }
-    serial_putstring("Load from: ");
-    serial_putstring(dev->deviceName);
-    serial_putstring(" from address ");
-    serial_putint(address);
-    serial_putstring(" physical ");
-    serial_putint(phyAddr);
-    serial_newline();
+    DEBUG_STRING("Load from: ");
+    DEBUG_STRING(dev->deviceName);
+    DEBUG_STRING(" from address ");
+    DEBUG_INT(address);
+    DEBUG_STRING(" physical ");
+    DEBUG_INT(phyAddr);
+    DEBUG_NEWLINE();
     DIE_NOW(gc, "No child of current device holds load address in range.");
   }
   else
   {
     // not a bus, end device
-    serial_putstring("Load from: ");
-    serial_putstring(dev->deviceName);
-    serial_putstring(" from address ");
-    serial_putint(address);
-    serial_putstring(" physical ");
-    serial_putint(phyAddr);
-    serial_newline();
+    DEBUG_STRING("Load from: ");
+    DEBUG_STRING(dev->deviceName);
+    DEBUG_STRING(" from address ");
+    DEBUG_INT(address);
+    DEBUG_STRING(" physical ");
+    DEBUG_INT(phyAddr);
+    DEBUG_NEWLINE();
     DIE_NOW(gc, "End device didn't implement custom load function!");
   }
 

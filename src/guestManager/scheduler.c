@@ -1,6 +1,7 @@
+#include "common/debug.h"
+
 #include "guestManager/scheduler.h"
 
-#include "vm/omap35xx/serial.h"
 #include "vm/omap35xx/intc.h"
 
 #include "cpuArch/cpu.h"
@@ -17,8 +18,7 @@ void scheduleGuest()
   // check if we have more than one guest
   // if we have only one guest, adjust guest state to deliver tick
   // post-actions
-  serial_putstring("scheduler: scheduleGuest() implement me!");
-  serial_newline();
+  printf("scheduler: scheduleGuest() implement me!\n");
   //   - return to irq handler
   //   - restore guest state
   //   - return to guest...

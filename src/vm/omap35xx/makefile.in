@@ -6,7 +6,6 @@ SRCS += src/vm/omap35xx/prm.c
 SRCS += src/vm/omap35xx/clockManager.c
 SRCS += src/vm/omap35xx/sysControlModule.c
 SRCS += src/vm/omap35xx/LED.c
-SRCS += src/vm/omap35xx/serial.c
 SRCS += src/vm/omap35xx/gptimer.c
 SRCS += src/vm/omap35xx/gpmc.c
 SRCS += src/vm/omap35xx/gpio.c

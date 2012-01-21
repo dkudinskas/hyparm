@@ -4,7 +4,6 @@
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/sdram.h"
-#include "vm/omap35xx/serial.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
@@ -25,9 +24,9 @@ void initSdram(void)
   {
     memset((void*)sdram, 0x0, sizeof(struct SdramController));
 #ifdef SDRAM_DBG
-    serial_putstring("Sdram instance at 0x");
-    serial_putint((u32int)sdram);
-    serial_newline();
+    DEBUG_STRING("Sdram instance at 0x");
+    DEBUG_INT((u32int)sdram);
+    DEBUG_NEWLINE();
 #endif
   }
 
@@ -43,9 +42,9 @@ void initSdram(void)
   else
   {
     memset((void*)storeTrace, 0x0, MEGABYTE_COUNT*sizeof(u32int));
-    serial_putstring("Store trace at 0x");
-    serial_putint((u32int)storeTrace);
-    serial_newline();
+    DEBUG_STRING("Store trace at 0x");
+    DEBUG_INT((u32int)storeTrace);
+    DEBUG_NEWLINE();
   }
   sdram->storeCounters = storeTrace;
   
@@ -60,18 +59,18 @@ void initSdram(void)
 void dumpSdramStats()
 {
 #ifdef SDRAM_STORE_COUNTER
-  serial_putstring("Store trace: ");
-  serial_newline();
+  DEBUG_STRING("Store trace: ");
+  DEBUG_NEWLINE();
 
   u32int i = 0;
   for (i = 0; i < MEGABYTE_COUNT; i++)
   {
     if (sdram->storeCounters[i] != 0)
     {
-      serial_putint(i << 20);
-      serial_putstring(": ");
-      serial_putint(sdram->storeCounters[i]);
-      serial_newline();
+      DEBUG_INT(i << 20);
+      DEBUG_STRING(": ");
+      DEBUG_INT(sdram->storeCounters[i]);
+      DEBUG_NEWLINE();
     }
   }
 #endif
@@ -88,14 +87,14 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef SDRAM_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from physical address: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", virtual address: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_newline();
+  DEBUG_STRING(dev->deviceName);
+  DEBUG_STRING(" load from physical address: 0x");
+  DEBUG_INT(phyAddr);
+  DEBUG_STRING(", virtual address: 0x");
+  DEBUG_INT(address);
+  DEBUG_STRING(" access size ");
+  DEBUG_INT((u32int)size);
+  DEBUG_NEWLINE();
 #endif
 
   switch (size)
@@ -119,11 +118,11 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address)
       break;
     }
     default:
-      serial_putstring(dev->deviceName);
-      serial_putstring(" load from physical address: 0x");
-      serial_putint(phyAddr);
-      serial_putstring(", virtual address: 0x");
-      serial_putint(address);
+      DEBUG_STRING(dev->deviceName);
+      DEBUG_STRING(" load from physical address: 0x");
+      DEBUG_INT(phyAddr);
+      DEBUG_STRING(", virtual address: 0x");
+      DEBUG_INT(address);
       DIE_NOW(0, " invalid access size.");
   }
   return val;
@@ -137,16 +136,16 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef SDRAM_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" store to physical address: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", virtual address: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline();
+  DEBUG_STRING(dev->deviceName);
+  DEBUG_STRING(" store to physical address: 0x");
+  DEBUG_INT(phyAddr);
+  DEBUG_STRING(", virtual address: 0x");
+  DEBUG_INT(address);
+  DEBUG_STRING(" access size ");
+  DEBUG_INT((u32int)size);
+  DEBUG_STRING(" value ");
+  DEBUG_INT(value);
+  DEBUG_NEWLINE();
 #endif
 
 #ifdef SDRAM_STORE_COUNTER
@@ -183,16 +182,16 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       break;
     }
     default:
-      serial_putstring(dev->deviceName);
-      serial_putstring(" store to physical address: 0x");
-      serial_putint(phyAddr);
-      serial_putstring(", virtual address: 0x");
-      serial_putint(address);
-      serial_putstring(" access size ");
-      serial_putint((u32int)size);
-      serial_putstring(" value ");
-      serial_putint(value);
-      serial_newline();
+      DEBUG_STRING(dev->deviceName);
+      DEBUG_STRING(" store to physical address: 0x");
+      DEBUG_INT(phyAddr);
+      DEBUG_STRING(", virtual address: 0x");
+      DEBUG_INT(address);
+      DEBUG_STRING(" access size ");
+      DEBUG_INT((u32int)size);
+      DEBUG_STRING(" value ");
+      DEBUG_INT(value);
+      DEBUG_NEWLINE();
       DIE_NOW(0, " invalid access size.");
   }
 }

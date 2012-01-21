@@ -10,6 +10,8 @@
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/memoryProtection.h"
 
+// uncomment me for guestContext debug: 
+#define GUEST_CONTEXT_DBG
 
 #define BLOCK_HISOTRY_SIZE     5
 

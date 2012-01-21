@@ -1,7 +1,5 @@
 #include "common/debug.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/asm-dis.h"
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/coprocInstructions.h"
@@ -763,9 +761,6 @@ struct instruction32bit * decodeUnconditional(u32int instr)
 
 void dumpInstruction(char * msg, u32int instr)
 {
-  serial_putstring(msg);
-  serial_putstring(": Instruction: ");
-  serial_putint(instr);
-  serial_putstring(" ");
+  printf("%s: Instruction: %s ", msg, instr);
   dumpInstrString(instr);
 }

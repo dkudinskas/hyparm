@@ -4,7 +4,6 @@
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/prm.h"
-#include "vm/omap35xx/serial.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
@@ -26,9 +25,9 @@ void initPrm(void)
   {
     memset((void*)prMan, 0x0, sizeof(struct PowerAndResetManager));
 #ifdef PRM_DBG
-    serial_putstring("Initializing Power and reset manager at 0x");
-    serial_putint((u32int)prMan);
-    serial_newline();
+    DEBUG_STRING("Initializing Power and reset manager at 0x");
+    DEBUG_INT((u32int)prMan);
+    DEBUG_NEWLINE();
 #endif
   }
   
@@ -76,14 +75,14 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef PRM_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" load from physical address: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_putstring(" access size ");
-  serial_putint((u32int)size);
-  serial_newline();
+  DEBUG_STRING(dev->deviceName);
+  DEBUG_STRING(" load from physical address: 0x");
+  DEBUG_INT(phyAddr);
+  DEBUG_STRING(", vAddr: 0x");
+  DEBUG_INT(address);
+  DEBUG_STRING(" access size ");
+  DEBUG_INT((u32int)size);
+  DEBUG_NEWLINE();
 #endif
 
   if (size != WORD)
@@ -130,18 +129,18 @@ u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
   if (reg == PRM_CLKSEL)
   {
 #ifdef PRM_DBG
-    serial_putstring("loadClockControlPrm reg PRM_CLKSEL, val ");
-    serial_putint(prMan->prmClkSelReg);
-    serial_newline(); 
+    DEBUG_STRING("loadClockControlPrm reg PRM_CLKSEL, val ");
+    DEBUG_INT(prMan->prmClkSelReg);
+    DEBUG_NEWLINE(); 
 #endif
     return prMan->prmClkSelReg;
   }
   else if (reg == PRM_CLKOUT_CTRL)
   {
 #ifdef PRM_DBG
-    serial_putstring("loadClockControlPrm reg PRM_CLKOUT_CTRL, val ");
-    serial_putint(prMan->prmClkoutCtrlReg);
-    serial_newline(); 
+    DEBUG_STRING("loadClockControlPrm reg PRM_CLKOUT_CTRL, val ");
+    DEBUG_INT(prMan->prmClkoutCtrlReg);
+    DEBUG_NEWLINE(); 
 #endif
     return prMan->prmClkoutCtrlReg;
   }
@@ -221,11 +220,11 @@ u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
       DIE_NOW(0, "loadGlobalRegPrm loading non existing register!");
   } // switch ends
 #ifdef PRM_DBG
-  serial_putstring("loadGlobalRegPrm reg ");
-  serial_putint_nozeros(reg);
-  serial_putstring(" value ");
-  serial_putint(val);
-  serial_newline(); 
+  DEBUG_STRING("loadGlobalRegPrm reg ");
+  DEBUG_INT_NOZEROS(reg);
+  DEBUG_STRING(" value ");
+  DEBUG_INT(val);
+  DEBUG_NEWLINE(); 
 #endif
   return val;
 }
@@ -253,11 +252,11 @@ u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
       DIE_NOW(0, "loadOcpSystemPrm loading non existing register!");
   } // switch ends
 #ifdef PRM_DBG
-  serial_putstring("loadOcpSystemPrm reg ");
-  serial_putint_nozeros(reg);
-  serial_putstring(" value ");
-  serial_putint(val);
-  serial_newline(); 
+  DEBUG_STRING("loadOcpSystemPrm reg ");
+  DEBUG_INT_NOZEROS(reg);
+  DEBUG_STRING(" value ");
+  DEBUG_INT(val);
+  DEBUG_NEWLINE(); 
 #endif
   return val;
 }
@@ -274,16 +273,16 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef PRM_DBG
-  serial_putstring(dev->deviceName);
-  serial_putstring(" store to pAddr: 0x");
-  serial_putint(phyAddr);
-  serial_putstring(", vAddr: 0x");
-  serial_putint(address);
-  serial_putstring(" aSize ");
-  serial_putint((u32int)size);
-  serial_putstring(" val ");
-  serial_putint(value);
-  serial_newline();
+  DEBUG_STRING(dev->deviceName);
+  DEBUG_STRING(" store to pAddr: 0x");
+  DEBUG_INT(phyAddr);
+  DEBUG_STRING(", vAddr: 0x");
+  DEBUG_INT(address);
+  DEBUG_STRING(" aSize ");
+  DEBUG_INT((u32int)size);
+  DEBUG_STRING(" val ");
+  DEBUG_INT(value);
+  DEBUG_NEWLINE();
 #endif
 
   if (size != WORD)
@@ -315,14 +314,14 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case EMU_PRM:
     case NEON_PRM:
     case USBHOST_PRM:
-      serial_putstring("Store to: ");
-      serial_putstring(dev->deviceName);
-      serial_putstring(" at address ");
-      serial_putint(address);
-      serial_putstring(" value ");
-      serial_putint(value);
-      serial_newline();
-      serial_putstring(dev->deviceName);
+      DEBUG_STRING("Store to: ");
+      DEBUG_STRING(dev->deviceName);
+      DEBUG_STRING(" at address ");
+      DEBUG_INT(address);
+      DEBUG_STRING(" value ");
+      DEBUG_INT(value);
+      DEBUG_NEWLINE();
+      DEBUG_STRING(dev->deviceName);
       DIE_NOW(0, " unimplemented.");
       break;
     default:
@@ -332,27 +331,27 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 
 void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  serial_putstring("Store to: ");
-  serial_putstring(dev->deviceName);
-  serial_putstring(" at address ");
-  serial_putint(address);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  DEBUG_STRING("Store to: ");
+  DEBUG_STRING(dev->deviceName);
+  DEBUG_STRING(" at address ");
+  DEBUG_INT(address);
+  DEBUG_STRING(" value ");
+  DEBUG_INT(value);
+  DEBUG_NEWLINE();
+  DEBUG_STRING(dev->deviceName);
   DIE_NOW(0, " storeClockControlPrm unimplemented.");
 }
 
 void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  serial_putstring("Store to: ");
-  serial_putstring(dev->deviceName);
-  serial_putstring(" at address ");
-  serial_putint(address);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline();
-  serial_putstring(dev->deviceName);
+  DEBUG_STRING("Store to: ");
+  DEBUG_STRING(dev->deviceName);
+  DEBUG_STRING(" at address ");
+  DEBUG_INT(address);
+  DEBUG_STRING(" value ");
+  DEBUG_INT(value);
+  DEBUG_NEWLINE();
+  DEBUG_STRING(dev->deviceName);
   DIE_NOW(0, " storeGlobalRegPrm unimplemented.");
 }
 
@@ -360,11 +359,11 @@ void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int valu
 {
   u32int reg = phyAddr - OCP_System_Reg_PRM;
 #ifdef PRM_DBG
-  serial_putstring("storeOcpSystemPrm reg ");
-  serial_putint_nozeros(reg);
-  serial_putstring(" value ");
-  serial_putint(value);
-  serial_newline(); 
+  DEBUG_STRING("storeOcpSystemPrm reg ");
+  DEBUG_INT_NOZEROS(reg);
+  DEBUG_STRING(" value ");
+  DEBUG_INT(value);
+  DEBUG_NEWLINE(); 
 #endif
   switch (reg)
   {

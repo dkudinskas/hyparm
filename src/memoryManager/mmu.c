@@ -1,6 +1,5 @@
 #include "common/assert.h"
-
-#include "vm/omap35xx/serial.h"
+#include "common/debug.h"
 
 #include "memoryManager/mmu.h"
 
@@ -74,8 +73,8 @@ void mmu_compile_time_check(void)
 void mmuInit()
 {
 #ifdef MMU_DEBUG
-  serial_putstring("MMU init");
-  serial_newline();
+  DEBUG_STRING("MMU init");
+  DEBUG_NEWLINE();
 #endif
 
   dataBarrier();
@@ -87,8 +86,8 @@ void mmuInit()
 void dataBarrier()
 {
 #ifdef MMU_DEBUG
-  serial_putstring("Data Barrier");
-  serial_newline();
+  DEBUG_STRING("Data Barrier");
+  DEBUG_NEWLINE();
 #endif
     //It doesn't matter which register it written/nor the value inside it
   asm ("mcr p15, 0, r0, c7, c10, 5"
@@ -101,8 +100,8 @@ void dataBarrier()
 void clearTLB()
 {
 #ifdef MMU_DEBUG
-  serial_putstring("Clearing TLB");
-  serial_newline();
+  DEBUG_STRING("Clearing TLB");
+  DEBUG_NEWLINE();
 #endif
   // mcr coproc opc1 Rt CRn CRm opc2
   //It doesn't matter which register it written/nor the value inside it
@@ -118,9 +117,9 @@ void clearTLBbyMVA(u32int address)
 {
   address &= 0xFFFFF000;
 #ifdef MMU_DEBUG
-  serial_putstring("Clearing TLB of virt addr: 0x");
-  serial_putint(address);
-  serial_newline();
+  DEBUG_STRING("Clearing TLB of virt addr: 0x");
+  DEBUG_INT(address);
+  DEBUG_NEWLINE();
 #endif
   // mcr coproc opc1 Rt CRn CRm opc2
   asm ("mcr p15, 0, %0, c8, c7, 1"
@@ -133,8 +132,8 @@ void clearTLBbyMVA(u32int address)
 void clearCache()
 {
 #ifdef MMU_DEBUG
-  serial_putstring("Clearing caches");
-  serial_newline();
+  DEBUG_STRING("Clearing caches");
+  DEBUG_NEWLINE();
 #endif
   asm ("mcr p15, 0, r0, c7, c5, 0"
   :
@@ -158,11 +157,11 @@ void setDomain(u8int domain, access_type access)
 {
   //access is a two bit field 00 = no access, 01=client, 10=reserved, 11=manager
 #ifdef MMU_DEBUG
-  serial_putstring("Setting domain: ");
-  serial_putint_nozeros(domain);
-  serial_putstring(", with access bits 0x");
-  serial_putint_nozeros((u8int)access);
-  serial_newline();
+  DEBUG_STRING("Setting domain: ");
+  DEBUG_INT_NOZEROS(domain);
+  DEBUG_STRING(", with access bits 0x");
+  DEBUG_INT_NOZEROS((u8int)access);
+  DEBUG_NEWLINE();
 #endif
 
   u32int value;
@@ -172,9 +171,9 @@ void setDomain(u8int domain, access_type access)
   : "memory"
      );
 #ifdef MMU_DEBUG
-  serial_putstring("Domain Register before update: 0x");
-  serial_putint(value);
-  serial_newline();
+  DEBUG_STRING("Domain Register before update: 0x");
+  DEBUG_INT(value);
+  DEBUG_NEWLINE();
 #endif
   //clear the current domain
   u32int mask = ~(0b11 << (domain*2));
@@ -193,9 +192,9 @@ void setDomain(u8int domain, access_type access)
   :
   : "memory"
               );
-  serial_putstring("Domain Register after update: 0x");
-  serial_putint(value);
-  serial_newline();
+  DEBUG_STRING("Domain Register after update: 0x");
+  DEBUG_INT(value);
+  DEBUG_NEWLINE();
 #endif
 
 }
@@ -204,9 +203,9 @@ void setDomain(u8int domain, access_type access)
 void setTexRemap(bool enable)
 {
 #ifdef MMU_DEBUG
-  serial_putstring("setTexRemap: ");
-  serial_putint(enable);
-  serial_newline();
+  DEBUG_STRING("setTexRemap: ");
+  DEBUG_INT(enable);
+  DEBUG_NEWLINE();
 #endif
 
   u32int value;
@@ -216,10 +215,10 @@ void setTexRemap(bool enable)
   : "memory"
      );
 #ifdef MMU_DEBUG
-  serial_putstring("setTexRemap: currently SCTRL.TRE = ");
+  DEBUG_STRING("setTexRemap: currently SCTRL.TRE = ");
   u32int treEnabled = ((value & 0x10000000) == 0x10000000) ? TRUE : FALSE; 
-  serial_putint(treEnabled);
-  serial_newline();
+  DEBUG_INT(treEnabled);
+  DEBUG_NEWLINE();
 #endif
 
   if (enable)
@@ -243,9 +242,9 @@ void setTexRemap(bool enable)
   :
   : "memory"
               );
-  serial_putstring("setTexRemap: SCTRL after update ");
-  serial_putint(value);
-  serial_newline();
+  DEBUG_STRING("setTexRemap: SCTRL after update ");
+  DEBUG_INT(value);
+  DEBUG_NEWLINE();
 #endif
 }
 
@@ -253,8 +252,8 @@ void setTexRemap(bool enable)
 void mmuInsertPt0(descriptor* addr)
 {
 #ifdef MMU_DEBUG
-  serial_putstring("Add entry into TTBR0: 0x");
-  serial_putint((u32int)addr);
+  DEBUG_STRING("Add entry into TTBR0: 0x");
+  DEBUG_INT((u32int)addr);
 #endif
   //TODO: need to improve this to insert the correct bit masks
   asm("mcr p15, 0, %0,c2,c0,0"
@@ -266,8 +265,8 @@ void mmuInsertPt0(descriptor* addr)
 void mmuInsertPt1(descriptor* addr)
 {
 #ifdef MMU_DEBUG
-  serial_putstring("Add entry into TTBR1: 0x");
-  serial_putint((u32int)addr);
+  DEBUG_STRING("Add entry into TTBR1: 0x");
+  DEBUG_INT((u32int)addr);
 #endif
   //TODO: need to improve this to insert the correct bit masks
   asm("mcr p15, 0, %0,c2,c0,1"
@@ -285,8 +284,8 @@ descriptor* mmuGetPt0()
       :
       );
 #ifdef MMU_DEBUG
-  serial_putstring("Get TTBR0: 0x");
-  serial_putint((u32int)regVal);
+  DEBUG_STRING("Get TTBR0: 0x");
+  DEBUG_INT((u32int)regVal);
 #endif
   return (descriptor*)regVal;
 }
@@ -374,29 +373,29 @@ void printDataAbort()
   DFSR dfsr = getDFSR();
   u32int dfar = getDFAR();
 
-  serial_putstring("Data Abort Address: 0x");
-  serial_putint(dfar);
-  serial_newline();
+  DEBUG_STRING("Data Abort Address: 0x");
+  DEBUG_INT(dfar);
+  DEBUG_NEWLINE();
 
-  serial_putstring("Fault type: ");
-  serial_putstring((char*)dataAbtFaultString[dfsr.fs3_0]);
-  serial_putstring(" (0x");
+  DEBUG_STRING("Fault type: ");
+  DEBUG_STRING((char*)dataAbtFaultString[dfsr.fs3_0]);
+  DEBUG_STRING(" (0x");
   u32int faultStatus = dfsr.fs4 << 4 | dfsr.fs3_0;
-  serial_putint_nozeros(faultStatus);
-  serial_putstring(")");
-  serial_newline();
+  DEBUG_INT_NOZEROS(faultStatus);
+  DEBUG_STRING(")");
+  DEBUG_NEWLINE();
 
-  serial_putstring("domain: 0x");
-  serial_putint_nozeros(dfsr.domain);
+  DEBUG_STRING("domain: 0x");
+  DEBUG_INT_NOZEROS(dfsr.domain);
 
   /* Perhaps read out the domain and spit out the permission bits set for that domain at this point? */
 
-  serial_putstring(", Write not Read: 0x");
-  serial_putint_nozeros(dfsr.WnR);
+  DEBUG_STRING(", Write not Read: 0x");
+  DEBUG_INT_NOZEROS(dfsr.WnR);
 
-  serial_putstring(", External: 0x");
-  serial_putint_nozeros(dfsr.ExT);
-  serial_newline();
+  DEBUG_STRING(", External: 0x");
+  DEBUG_INT_NOZEROS(dfsr.ExT);
+  DEBUG_NEWLINE();
 
 }
 
@@ -405,17 +404,17 @@ void printPrefetchAbort()
   IFSR ifsr = getIFSR();
   u32int ifar = getIFAR();
   u32int faultStatus = ifsr.fs3_0 | (ifsr.fs4 << 4);
-  serial_putstring("Prefetch Abort Address: 0x");
-  serial_putint(ifar);
-  serial_newline();
+  DEBUG_STRING("Prefetch Abort Address: 0x");
+  DEBUG_INT(ifar);
+  DEBUG_NEWLINE();
 
-  serial_putstring("Fault type: ");
-  serial_putstring((char*)prefetchAbtFaultString[faultStatus]);
-  serial_putstring(" (0x");
-  serial_putint_nozeros(faultStatus);
-  serial_putstring(")");
+  DEBUG_STRING("Fault type: ");
+  DEBUG_STRING((char*)prefetchAbtFaultString[faultStatus]);
+  DEBUG_STRING(" (0x");
+  DEBUG_INT_NOZEROS(faultStatus);
+  DEBUG_STRING(")");
 
-  serial_putstring("External: 0x");
-  serial_putint_nozeros(ifsr.ExT);
-  serial_newline();
+  DEBUG_STRING("External: 0x");
+  DEBUG_INT_NOZEROS(ifsr.ExT);
+  DEBUG_NEWLINE();
 }

@@ -167,20 +167,8 @@ void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domai
     dfsr |= 0x800; // write-not-read bit
   }
 #ifdef GUEST_EXCEPTIONS_DBG
-  serial_putstring("throwDataAbort(");
-  serial_putint(address);
-  serial_putstring(", faultType ");
-  serial_putint_nozeros(faultType);
-  serial_putstring(", isWrite ");
-  serial_putint(isWrite);
-  serial_putstring(", dom ");
-  serial_putint(isWrite);
-  serial_putstring(" @pc=");
-  serial_putint(context->R15);
-  serial_putstring(" dfsr=");
-  serial_putint(dfsr);
-  serial_putstring(")");
-  serial_newline();
+  printf("throwDataAbort(%08x): faultType %x, isWrite %x, dom %x, @pc %08x, dfsr %08x\n", 
+         address, faultType, isWrite, domain, context->R15, dfsr);
 #endif
   setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
   // set CP15 Data Fault Address Register to 'address'
@@ -228,16 +216,8 @@ void throwPrefetchAbort(u32int address, u32int faultType)
   u32int ifsr = (faultType & 0xF) | ((faultType & 0x10) << 10);
 
 #ifdef GUEST_EXCEPTIONS_DBG
-  serial_putstring("throwPrefetchAbort(");
-  serial_putint(address);
-  serial_putstring(", faultType ");
-  serial_putint(faultType);
-  serial_putstring(" @pc=");
-  serial_putint(context->R15);
-  serial_putstring(" ifsr=");
-  serial_putint(ifsr);
-  serial_putstring(")");
-  serial_newline();
+  printf("throwPrefetchAbort(%08x): faultType %x, @pc %08x, ifsr %08x\n",
+          address, faultType, context->R15, ifsr);
 #endif
   setCregVal(5, 0, 0, 1, context->coprocRegBank, ifsr);
   // set CP15 Data Fault Address Register to 'address'

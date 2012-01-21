@@ -60,7 +60,7 @@
 #define SHIFT_TYPE_ROR    0x4
 
 /* a function to serve as a dead-loop if we decode something invalid */
-void invalid_instruction(u32int instr, char * msg);
+void invalidInstruction(u32int instr, char * msg);
 
 
 /* a function that sets 4 bits to zero starting at startbit (left bit is most significant) */

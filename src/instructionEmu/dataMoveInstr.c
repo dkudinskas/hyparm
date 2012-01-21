@@ -3,8 +3,6 @@
 
 #include "guestManager/blockCache.h"
 
-#include "vm/omap35xx/serial.h"
-
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/dataMoveInstr.h"
 
@@ -14,19 +12,9 @@
 
 void invalidDataMoveTrap(char * msg, GCONTXT * gc)
 {
-  serial_putstring("ERROR: ");
-  serial_putstring(msg);
-  serial_putstring(" ");
-  serial_putint(gc->endOfBlockInstr);
-  serial_putstring(" @ ");
-  serial_putint(gc->R15);
-  serial_putstring(" should not have trapped!");
-  serial_newline();
-  dumpGuestContext(gc);
-  while(TRUE)
-  {
-    // infinite loop
-  }
+  printf("ERROR: %08x @ %08x should not have trapped!\n", 
+         gc->endOfBlockInstr, gc->R15);
+  DIE_NOW(gc, msg);
 }
 /***********************************************************************************
  ***********************************************************************************
@@ -83,20 +71,8 @@ u32int strInstruction(GCONTXT * context)
   u32int regDst = (instr & 0x000F0000) >> 16; // Base Destination address
   u32int regSrc = (instr & 0x0000F000) >> 12; // Source value from this register...
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("strInstr: ");
-  serial_putstring("regOrImm=");
-  serial_putint(regOrImm);
-  serial_putstring(" preOrPost=");
-  serial_putint(preOrPost);
-  serial_putstring(" incOrDec=");
-  serial_putint(incOrDec);
-  serial_putstring(" writeBack=");
-  serial_putint(writeBack);
-  serial_putstring(" regDst=");
-  serial_putint_nozeros(regDst);
-  serial_putstring(" regSrc=");
-  serial_putint_nozeros(regSrc);
-  serial_newline();
+  printf("strInstr: regOrImm=%x preOrPost=%x incOrDec=%x writeBack=%x regdest=%x regsrc=%x\n",
+        regOrImm, preOrPost, incOrDec, writeBack, regDst, regSrc);
 #endif
   u32int offsetAddress = 0;
   u32int baseAddress = loadGuestGPR(regDst, context);
@@ -104,11 +80,9 @@ u32int strInstruction(GCONTXT * context)
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
-// condition not met! allright, we're done here. next instruction...
+    // condition not met! allright, we're done here. next instruction...
 #ifdef DATA_MOVE_TRACE
-    serial_putstring("strInstr: ");
-    serial_putstring("condition not met");
-    serial_newline();
+    printf("strInstr: condition not met\n");
 #endif
 	#ifdef CONFIG_BLOCK_COPY
     return context->PCOfLastInstruction + 4;
@@ -119,63 +93,46 @@ u32int strInstruction(GCONTXT * context)
   if (regOrImm == 0)
   {
 #ifdef DATA_MOVE_TRACE
-    serial_putstring("strInstr: ");
-    serial_putstring("imm case: ");
+    printf("strInstr: imm case: ");
 #endif
     // immediate case
     u32int imm32 = instr & 0x00000FFF;
 #ifdef DATA_MOVE_TRACE
-    serial_putstring("imm32=");
-    serial_putint_nozeros(imm32);
-    serial_putstring(" baseAddress=");
-    serial_putint(baseAddress);
-    serial_putstring(" valueToStore=");
-    serial_putint(valueToStore);
-    serial_putstring(" offsetAddress=");
-    serial_putint(offsetAddress);
+    printf("imm32=%x baseAddress=%08x valueToStore=%x offsetAddress=%08x",
+           imm32, baseAddress, valueToStore, offsetAddress);
 #endif
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
     {
       offsetAddress = baseAddress + imm32;
 #ifdef DATA_MOVE_TRACE
-      serial_putstring(" inc");
-      serial_newline();
+      printf(" inc\n");
 #endif
     }
     else
     {
       offsetAddress = baseAddress - imm32;
 #ifdef DATA_MOVE_TRACE
-      serial_putstring(" dec");
-      serial_newline();
+      printf(" dec\n");
 #endif
     }
   } // Immediate case ends
   else
   {
 #ifdef DATA_MOVE_TRACE
-    serial_putstring("strInstr: ");
-    serial_putstring("reg case: ");
+    printf("strInstr: reg case: ");
 #endif
     // register case
     u32int regDst2 = instr & 0x0000000F;
     u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
 #ifdef DATA_MOVE_TRACE
-    serial_putstring("regDst2=");
-    serial_putint_nozeros(regDst2);
-    serial_putstring(" baseAddress=");
-    serial_putint(baseAddress);
-    serial_putstring(" offsetRegisterValue=");
-    serial_putint(offsetRegisterValue);
-    serial_putstring(" valueToStore=");
-    serial_putint(valueToStore);
-    serial_newline();
+    printf("regDst2=%x, baseAddress=%08x, offsetRegisterValue=%x, valueToStore=%x\n",
+           regDst2, baseAddress, offsetRegisterValue, valueToStore);
 #endif
     // regDest2 == PC then UNPREDICTABLE
     if (regDst2 == 15)
     {
-        DIE_NOW(0, "STR reg Rm == PC UNPREDICTABLE case!");
+      DIE_NOW(0, "STR reg Rm == PC UNPREDICTABLE case!");
     }
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
@@ -208,8 +165,7 @@ u32int strInstruction(GCONTXT * context)
   }
   if ((address & 0x3) != 0x0)
   {
-    dumpGuestContext(context);
-    DIE_NOW(0, "STR Rd [Rn, Rm/#imm] unaligned address!\n");
+    DIE_NOW(context, "STR Rd [Rn, Rm/#imm] unaligned address!\n");
   }
   // P = 0 and W == 1 then STR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
@@ -383,8 +339,7 @@ u32int* strhtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int 
 
 u32int strhtInstruction(GCONTXT * context)
 {
-  dumpGuestContext(context);
-  DIE_NOW(0, "STRHT unfinished\n");
+  DIE_NOW(context, "STRHT unfinished\n");
   return 0;
 }
 
@@ -492,8 +447,7 @@ u32int strhInstruction(GCONTXT * context)
   
   if ((address & 0x1) == 0x1)
   {
-    dumpGuestContext(context);
-    DIE_NOW(0, "STRH Rd [Rn, Rm/#imm] unaligned address!\n");
+    DIE_NOW(context, "STRH Rd [Rn, Rm/#imm] unaligned address!\n");
   }
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, address, valueToStore);
   // wback = (P = 0) or (W = 1)
@@ -541,15 +495,11 @@ u32int stmInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("STM instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
 # ifdef CONFIG_BLOCK_COPY
-  serial_putint(context->PCOfLastInstruction);
+  printf("STM instruction: %08x @ PC = %08x\n", instr, context->PCOfLastInstruction);
 # else
-  serial_putint(context->R15);
+  printf("STM instruction: %08x @ PC = %08x\n", instr, context->R15);
 # endif
-  serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int prePost = instr & 0x01000000;
@@ -608,14 +558,7 @@ u32int stmInstruction(GCONTXT * context)
     if ( ((regList >> i) & 0x1) == 0x1)
     {
 #ifdef DATA_MOVE_TRACE
-      serial_putstring("*(");
-      serial_putint(address);
-      serial_putstring(") = ");
-      serial_putstring("R[");
-      serial_putint_nozeros(i);
-      serial_putstring("] =");
-      serial_putint(loadGuestGPR(i, context));
-      serial_newline();
+      printf("*(%08x) = R[%x] = %08x\n", address, i, loadGuestGPR(i, context));
 #endif
       u32int valueLoaded = loadGuestGPR(i, context);
       // emulating store. Validate cache if needed
@@ -684,15 +627,11 @@ u32int strdInstruction(GCONTXT * context)
   u32int regSrc = (instr & 0x0000F000) >> 12;
   u32int regSrc2 = regSrc+1;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("STRD instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
 # ifdef CONFIG_BLOCK_COPY
-  serial_putint(context->PCOfLastInstruction);
+  printf("STRD instruction: %08x @ PC = %08x\n", instr, context->PCOfLastInstruction);
 # else
-  serial_putint(context->R15);
+  printf("STRD instruction: %08x @ PC = %08x\n", instr, context->R15);
 # endif
-  serial_newline();
 #endif
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -742,15 +681,8 @@ u32int strdInstruction(GCONTXT * context)
       offsetAddress = baseAddress - imm32;
     }
 #ifdef DATA_MOVE_TRACE
-    serial_putstring("imm32=");
-    serial_putint_nozeros(imm32);
-    serial_putstring(" baseAddress=");
-    serial_putint(baseAddress);
-    serial_putstring(" valueToStore=");
-    serial_putint(valueToStore);
-    serial_putstring(" offsetAddress=");
-    serial_putint(offsetAddress);
-    serial_newline();
+    printf("imm32=%x baseAddress=%08x valueToStore=%x offsetAddress=%08x\n",
+           imm32, baseAddress, valueToStore, offsetAddress);
 #endif
   } // Immediate case ends
   else
@@ -775,15 +707,8 @@ u32int strdInstruction(GCONTXT * context)
       offsetAddress = baseAddress - offsetRegisterValue;
     }
 #ifdef DATA_MOVE_TRACE
-    serial_putstring("Rm=");
-    serial_putint_nozeros(regDst2);
-    serial_putstring(" baseAddress=");
-    serial_putint(baseAddress);
-    serial_putstring(" valueToStore=");
-    serial_putint(valueToStore);
-    serial_putstring(" offsetRegisterValue=");
-    serial_putint(offsetRegisterValue);
-    serial_newline();
+    printf("Rm=%x baseAddress=%x valueToStore=%x offsetRegisterValue=%x\n",
+           regDst2, baseAddress, valueToStore, offsetRegisterValue);
 #endif
   } // Register case ends
   u32int address = 0;
@@ -797,18 +722,12 @@ u32int strdInstruction(GCONTXT * context)
     address = baseAddress;
   }
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("store address = ");
-  serial_putint(address);
-  serial_newline();
+  printf("store address = %08x", address);
 #endif
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
   // valueToStore = (regSrc == 15) ? (valueToStore+8) : valueToStore; ->Not necessary loadGuestGPR already added 8
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("store val1 = ");
-  serial_putint(valueToStore);
-  serial_putstring(" store val2 = ");
-  serial_putint(valueToStore2);
-  serial_newline();
+  printf("store val1 = %x store val2 = %x\n", valueToStore, valueToStore2);
 #endif
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address+4, valueToStore2);
@@ -836,15 +755,11 @@ u32int strexInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("STREX instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
 # ifdef CONFIG_BLOCK_COPY
-  serial_putint(context->PCOfLastInstruction);
+  printf("STREX instruction: %08x @ PC = %08x\n", instr, context->PCOfLastInstruction);
 # else
-  serial_putint(context->R15);
+  printf("STREX instruction: %08x @ PC = %08x\n", instr, context->R15);
 # endif
-  serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
@@ -872,14 +787,8 @@ u32int strexInstruction(GCONTXT * context)
   u32int address = loadGuestGPR(regN, context);
   u32int valToStore = loadGuestGPR(regT, context);
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("STREX instruction: address = ");
-  serial_putint(address);
-  serial_putstring(" valToStore ");
-  serial_putint(valToStore);
-  serial_putstring(", valueFrom ");
-  serial_putint(regT);
-  serial_newline();
-  }
+  printf("STREX instruction: address = %08x, valToStore = %x, valueFromReg %x\n",
+         address, valToStore, regT);
 #endif
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore);
   // operation succeeded updating memory, flag regD (0 - updated, 1 - fail)
@@ -904,15 +813,11 @@ u32int strexbInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("STREXB instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
 # ifdef CONFIG_BLOCK_COPY
-  serial_putint(context->R15);
+  printf("STREXB instruction: %08x @ PC = %08x\n", instr, context->PCOfLastInstruction);
 # else
-  serial_putint(context->PCOfLastInstruction);
+  printf("STREXB instruction: %08x @ PC = %08x\n", instr, context->R15);
 # endif
-  serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
@@ -962,11 +867,7 @@ u32int strexdInstruction(GCONTXT * context)
   DIE_NOW(0, "strexdInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("STREXD instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
-  serial_putint(context->R15);
-  serial_newline();
+  printf("STREXD instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
@@ -1029,11 +930,7 @@ u32int strexhInstruction(GCONTXT * context)
   DIE_NOW(0, "strexhInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("STREXH instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
-  serial_putint(context->R15);
-  serial_newline();
+  printf("STREXH instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
@@ -1084,9 +981,11 @@ u32int* ldrhtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int 
 
 u32int ldrhtInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ldrhtInstruction is executed but not yet checked for blockCopyCompatibility");
-  dumpGuestContext(context);
-  DIE_NOW(0, "LDRHT unfinished\n");
+#ifdef CONFIG_BLOCK_COPY
+  DIE_NOW(context, "ldrhtInstruction is executed but not yet checked for blockCopyCompatibility");
+#else
+  DIE_NOW(context, "LDRHT unfinished\n");
+#endif
   return 0;
 }
 
@@ -1208,15 +1107,7 @@ u32int ldrhInstruction(GCONTXT * context)
   // put loaded val to reg
   storeGuestGPR(regDst, valueLoaded, context);
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("ldrhInstr: ");
-  serial_putint(instr);
-  serial_putstring(" @ ");
-  serial_putint(context->R15);
-  serial_putstring(" R[");
-  serial_putint_nozeros(regDst);
-  serial_putstring("]=");
-  serial_putint(valueLoaded);
-  serial_newline();
+  printf("ldrhInstr: %08x @ PC = %08x R[%x]=%x\n", instr, context->R15, regDst, valueLoaded);
 #endif
   
   // wback = (P = 0) or (W = 1)
@@ -1511,8 +1402,7 @@ u32int ldrInstruction(GCONTXT * context)
   }
   if ((address & 0x3) != 0x0)
   {
-    dumpGuestContext(context);
-    DIE_NOW(0, "LDR Rd [Rn, Rm/#imm] unaligned address!\n");
+    DIE_NOW(context, "LDR Rd [Rn, Rm/#imm] unaligned address!\n");
   }
   // P = 0 and W == 1 then LDR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
@@ -1533,13 +1423,8 @@ u32int ldrInstruction(GCONTXT * context)
   // LDR loading to PC should load a word-aligned value
   if ((regDst == 15) && ((valueLoaded & 0x3) != 0))
   {
-    dumpGuestContext(context);
-    serial_putstring("LDR: regDst = ");
-    serial_putint(regDst);
-    serial_putstring(", from addr ");
-    serial_putint(valueLoaded);
-    serial_newline();
-    DIE_NOW(0, "LDR Rd [Rn, Rm/#imm] load unaligned value to PC!\n");
+    printf("LDR: regDst = %x, load from addr %08x\n", regDst, valueLoaded);
+    DIE_NOW(context, "LDR Rd [Rn, Rm/#imm] load unaligned value to PC!\n");
   }
   // put loaded val to reg
   storeGuestGPR(regDst, valueLoaded, context);
@@ -1618,15 +1503,11 @@ u32int ldmInstruction(GCONTXT * context)
 {//Checked for blockCopy functionality
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("LDM instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
 # ifdef CONFIG_BLOCK_COPY
-  serial_putint(context->PCOfLastInstruction);
+  printf("LDM instruction: %08x @ PC = %08x\n", instr, context->PCOfLastInstruction);
 # else
-  serial_putint(context->R15);
+  printf("LDM instruction: %08x @ PC = %08x\n", instr, context->R15);
 # endif
-  serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int prePost = instr & 0x01000000;
@@ -1706,13 +1587,7 @@ u32int ldmInstruction(GCONTXT * context)
         context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
       storeGuestGPR(i, valueLoaded, context);
 #ifdef DATA_MOVE_TRACE
-      serial_putstring("R[");
-      serial_putint_nozeros(i);
-      serial_putstring("] = *(");
-      serial_putint(address);
-      serial_putstring(") = ");
-      serial_putint(valueLoaded);
-      serial_newline();
+      printf("R[%x] = *(%08x) = %08x\n", i, address, valueLoaded);
 #endif
       address = address + 4;
     }
@@ -1809,11 +1684,7 @@ u32int ldrdInstruction(GCONTXT * context)
   u32int regDst = (instr & 0x0000F000) >> 12;
   u32int regDst2 = regDst+1;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("LDRD instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
-  serial_putint(context->R15);
-  serial_newline();
+  printf("LDRD instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
@@ -1861,13 +1732,7 @@ u32int ldrdInstruction(GCONTXT * context)
       offsetAddress = baseAddress - imm32;
     }
 #ifdef DATA_MOVE_TRACE
-    serial_putstring("imm32=");
-    serial_putint_nozeros(imm32);
-    serial_putstring(" baseAddress=");
-    serial_putint(baseAddress);
-    serial_putstring(" offsetAddress=");
-    serial_putint(offsetAddress);
-    serial_newline();
+    printf("imm32=%x baseAddress=%08x offsetAddres=%08x\n", imm32, baseAddress, offsetAddress);
 #endif
   } // Immediate case ends
   else
@@ -1892,13 +1757,7 @@ u32int ldrdInstruction(GCONTXT * context)
       offsetAddress = baseAddress - offsetRegisterValue;
     }
 #ifdef DATA_MOVE_TRACE
-    serial_putstring("Rm=");
-    serial_putint_nozeros(regSrc2);
-    serial_putstring(" baseAddress=");
-    serial_putint(baseAddress);
-    serial_putstring(" offsetRegisterValue=");
-    serial_putint(offsetRegisterValue);
-    serial_newline();
+    printf("Rm=%x baseAddress=%x offsetRegVal=%x\n", regSrc2, baseAddress, offsetRegisterValue);
 #endif
   } // Register case ends
   u32int address = 0;
@@ -1912,9 +1771,7 @@ u32int ldrdInstruction(GCONTXT * context)
     address = baseAddress;
   }
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("LDRD: load address = ");
-  serial_putint(address);
-  serial_newline();
+  printf("LDRD: load address = %x\n", address);
 #endif
   u32int valueLoaded = 
     context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
@@ -1924,11 +1781,7 @@ u32int ldrdInstruction(GCONTXT * context)
   storeGuestGPR(regDst,  valueLoaded,  context);
   storeGuestGPR(regDst2, valueLoaded2, context);
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("LDRD: valueLoaded1 = ");
-  serial_putint(valueLoaded);
-  serial_putstring(" valueLoaded2 = ");
-  serial_putint(valueLoaded2);
-  serial_newline();
+  printf("LDRD: valueLoaded1 = %x valueLoaded2 = %x\n", valueLoaded, valueLoaded2);
 #endif
   if (wback)
   {
@@ -1954,15 +1807,11 @@ u32int ldrexInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("LDREX instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
-# ifdef
-  serial_putint(context->PCOfLastInstruction);
+# ifdef CONFIG_BLOCK_COPY
+  printf("LDREX instruction: %08x @ PC = %08x\n", instr, context->PCOfLastInstruction);
 # else
-  serial_putint(context->R15);
+  printf("LDREX instruction: %08x @ PC = %08x\n", instr, context->R15);
 # endif
-  serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;
@@ -1986,13 +1835,7 @@ u32int ldrexInstruction(GCONTXT * context)
   u32int value =
       context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal);
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("LDREX instruction: baseVal = ");
-  serial_putint(baseVal);
-  serial_putstring(" loaded ");
-  serial_putint(value);
-  serial_putstring(", store to ");
-  serial_putint(regDest);
-  serial_newline();
+  printf("LDREX instruction: baseVal = %08x loaded %x, store to %x\n", baseVal, value, regDest);
 #endif
   storeGuestGPR(regDest, value, context);
   
@@ -2015,15 +1858,11 @@ u32int ldrexbInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("LDREXB instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
 # ifdef CONFIG_BLOCK_COPY
-  serial_putint(context->PCOfLastInstruction);
+  printf("LDREXB instruction: %08 @ PC = %08x\n", instr, context->PCOfLastInstruction);
 #else
-  serial_putint(context->R15);
+  printf("LDREXB instruction: %08 @ PC = %08x\n", instr, context->R15);
 # endif
-  serial_newline();
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;
@@ -2073,11 +1912,7 @@ u32int ldrexdInstruction(GCONTXT * context)
   DIE_NOW(0, "ldrexdInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("LDREXD instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
-  serial_putint(context->R15);
-  serial_newline();
+  printf("LDREXD instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;
@@ -2126,11 +1961,7 @@ u32int ldrexhInstruction(GCONTXT * context)
   DIE_NOW(0, "ldrexhInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
-  serial_putstring("LDREXH instruction: ");
-  serial_putint(instr);
-  serial_putstring(" @ PC=");
-  serial_putint(context->R15);
-  serial_newline();
+  printf("LDREXH instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;

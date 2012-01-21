@@ -11,6 +11,8 @@
 
 // uncomment me to enable scanner debug for blockCopyCache: #define SCANNER_DEBUG_BLOCKCOPY
 
+#ifdef CONFIG_BLOCK_COPY
+
 // uncomment me to enable scanner request counter: #define DUMP_SCANNER_COUNTER
 
 //uncomment to dump scanner counter on DIE_NOW:
@@ -33,6 +35,8 @@
   extern u32int scannerReqCounter;
 #endif
 
+#endif
+
 #define INSTR_SWI                 0xEF000000
 
 void scanBlock(GCONTXT * gc, u32int blkStartAddr);
@@ -41,10 +45,11 @@ void protectScannedBlock(u32int startAddress, u32int endAddress);
 
 #ifdef CONFIG_BLOCK_COPY
 u32int allSrcRegNonPC(u32int instruction);
-#endif
 
 #ifdef SCANNER_COUNTER
 void resetScannerCounter(void);
+#endif
+
 #endif
 
 #endif
