@@ -33,6 +33,7 @@
 #define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
 
 extern void startup_hypervisor(void);
+extern void registerGuestPointer(u32int gContext);
 
 void printUsage(void);
 int parseCommandline(int argc, char *argv[]);
@@ -78,15 +79,20 @@ int main(int argc, char *argv[])
   /* sets up stack addresses and exception handlers */
   startup_hypervisor();
 
-/* Debugging of debug register
-  int il = 0;
-  asm volatile("mrc p14, 0, %0, c0, c1, 0": :"r"(il));
-  serial_putstring("DebugReg: ");
-  serial_putint(il);//It is better to set a breakpoint after mrc register and see what value is placed in the register otherwise 0 is given.
-  serial_newline();
-  doBreakpoint();
-*/
-
+  /* initialize guest context */
+  gContext = (GCONTXT*)mallocBytes(sizeof(GCONTXT));
+  if (gContext == 0)
+  {
+    DIE_NOW(0, "Failed to allocate guest context.");
+  }
+#ifdef STARTUP_DEBUG
+  else
+  {
+    printf("Guest context at%x\n", (u32int)gContext);
+  }
+#endif
+  registerGuestPointer((u32int)gContext);
+  initGuestContext(gContext);
 
   /* initialise coprocessor register bank */
   CREG * coprocRegBank = (CREG*)mallocBytes(MAX_CRB_SIZE * sizeof(CREG));
@@ -246,12 +252,6 @@ int main(int argc, char *argv[])
   disableInterrupts();
 #endif
   doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
-}
-
-void registerGuestContext(u32int gcAddr)
-{
-  gContext = (GCONTXT *)gcAddr;
-  initGuestContext(gContext);
 }
 
 GCONTXT * getGuestContext()
