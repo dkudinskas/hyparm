@@ -92,7 +92,7 @@ void dataAbort()
   // make sure interrupts are disabled while we deal with data abort.
   disableInterrupts();
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
-  switch(faultStatus)
+  switch (faultStatus)
   {
     case dfsPermissionSection:
     case dfsPermissionPage:
@@ -101,8 +101,22 @@ void dataAbort()
       // a memory protection the hypervisor has enabled
       GCONTXT* gc = getGuestContext();
 
-      // ATM dont expect anything else to permission fault except load/stores
+      DFSR dfsr = getDFSR();
+      bool isPrivAccess = (gc->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
+      if (gc->virtAddrEnabled)
+      {
+        if ( shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
+        {
+          deliverDataAbort();
+          scanBlock(gc, gc->R15);
+          break;
+        }
+      }
+
+      // interpret the load/store
       emulateLoadStoreGeneric(gc, getDFAR());
+      
+      // load/store might still have failed if it was LDRT/STRT
       if (!gc->guestDataAbtPending)
       {
         // ONLY move to the next instruction, if the guest hasn't aborted...

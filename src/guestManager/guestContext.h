@@ -86,7 +86,6 @@ struct guestContext
   bool guestDataAbtPending;
   bool guestPrefetchAbtPending;
   bool guestIdle;
-
 #ifdef CONFIG_BLOCK_COPY
   /* This is the blokCache with copied instructions we use u32int because the content of the address cannot be typed*/
   u32int blockCopyCache; 
@@ -96,6 +95,7 @@ struct guestContext
                               /* This will contain an unconditional branch to begin ofblockCopyCache*/
   u32int PCOfLastInstruction;/*This will contain the value the program counter should have when the last instruction is executing*/
 #endif
+  bool debugFlag;
 };
 
 
