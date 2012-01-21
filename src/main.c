@@ -66,7 +66,11 @@ int main(int argc, char *argv[])
   beUartInit(1);
   beUartInit(2);
   beUartInit(3);
-  beUartStartup(3);
+#ifdef CONFIG_UART_FAST
+  beUartStartup(3, 500000);
+#else
+  beUartStartup(3, 115200);
+#endif
 
   /* create the frametable from which we can alloc memory */
   initialiseFrameTable();

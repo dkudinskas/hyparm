@@ -1,0 +1,23 @@
+#
+# BeagleBoard specific configuration
+#
+
+TARGET_BASE_ADDRESS = 0x8C000000
+
+TARGET_ASMFLAGS = \
+  --defsym TARGET_BEAGLE=1 \
+  --defsym CONFIG_CPU_ARCH_ARMV7_A=1 \
+  --defsym CONFIG_CPU_TI_OMAP_35XX=1 \
+  --defsym CONFIG_CPU_HAS_ARM_SEC_EXT=1 \
+  -mcpu=cortex-a8
+
+TARGET_CCFLAGS = \
+  -DTARGET_BEAGLE=1 \
+  -DCONFIG_CPU_ARCH_ARMV7_A=1 \
+  -DCONFIG_CPU_TI_OMAP_35XX=1 \
+  -DCONFIG_CPU_HAS_ARM_SEC_EXT=1 \
+  -DCONFIG_DECODER_AUTO=1 \
+  -DCONFIG_UART_FAST=1 \
+  -mcpu=cortex-a8 \
+  -Wno-unused-label
+

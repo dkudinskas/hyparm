@@ -166,11 +166,11 @@ void beUartInit(u32int uartid);
 
 void beUartReset(u32int uartid);
 
-void beUartStartup(u32int uartid);
+void beUartStartup(u32int uartid, u32int baudRate);
 
-u32int beLoadUart(u32int regOffs, u32int uartid);
+u8int beLoadUart(u32int regOffs, u32int uartid);
 
-void beStoreUart(u32int regOffs, u32int value, u32int uartid);
+void beStoreUart(u32int regOffs, u8int value, u32int uartid);
 
 void beUartDumpRegs(u32int uartid);
 
