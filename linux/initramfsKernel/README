@@ -1,0 +1,35 @@
+This is the world to build the kernel with an uncompressed initramfs built into the kernel itself. The kernel config is provided.
+
+Key settings are:
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_INITRAMFS_SOURCE="initramfs.cpio"
+make not that
+CONFIG_CMDLINE="console=ttyS2,115200n8 root=/dev/ram0 rdinit=/bin/sh"
+... is a lot shorter now - since it is no longer a 'disk' (as in initrd) we do not need to specity the file system type or other parameters. We also give information about the init function: in this case. /bin/sh directly.
+
+These lines will build initramfs.cpio in the working directory into the kernel.
+
+
+To build the kernel:
+
+1. builds kernel uImage in arch/arm/boot/. uImage will be compressed. I made sure that the compressed kernel also boots (and to be honest, it only adds a few seconds to boot for the decompression loop!)
+make ARCH=arm uImage
+
+2. to make an uncomprsessed uImage, objcopy from vmlinux elf directly
+arm-none-eabi-objcopy -O binary -R .note -R .note.gnu.build-id -R .comment -S vmlinux arch/arm/boot/Image
+
+... then mkimage uImage.
+mkimage -A arm -O linux -T kernel -C none -a 0x80008000 -e 0x80008000 -n 'Linux-2.6.28.1' -d arch/arm/boot/Image arch/arm/boot/uImage
+
+
+
+You are also free to edit the initramfs and add things to it if you want. Or completely change it. What you would need to do:
+
+1. The 'file structure' is provided in initramfsFilesystem.tar
+2. Edit it as you wish. Currently it is a statically linked busybox, and not much else.
+3. A small shell script will automatically 'cpio' all that folder structure into initramfs.cpio and compress it to initramfs.igz. You can ignore the comprsesed initramfs if you don't need it. The shell script is logically called 'mkinitramfs'.
+4. Once the new initramfs.cpio is built, point CONFIG_INITRAMFS_SOURCE="" to the new cpio when rebuilding your kernel.
+
+
+
+Pre-built kernel image and initramfs, as well as a kernel config file are given.

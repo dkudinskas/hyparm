@@ -13,7 +13,8 @@ extern GCONTXT * getGuestContext(void); //from main.c
 
 void banner(char* msg)
 {
-  DEBUG_NEWLINE();
+  printf("\r\n");
+  printf("\r\n");
   int messageLength, paddingLength, i;
   char* pos = msg;
   while(*pos != '\0')
@@ -25,32 +26,30 @@ void banner(char* msg)
   
   for(i = 0; i < paddingLength; i++)
   {
-    DEBUG_CHAR('=');
+    printf("=");
   }
-  DEBUG_STRING("[ ");
-  DEBUG_STRING(msg);
-  DEBUG_STRING("] ");
+  printf("[");
+  printf(msg);
+  printf("]");
   for(i = 0; i < paddingLength; i++)
   {
-    DEBUG_CHAR('=');
+    printf("=");
   }
   if(messageLength % 2 == 1)
   {
-    DEBUG_CHAR('=');
+    printf("=");
   }
-  DEBUG_NEWLINE();
-  DEBUG_NEWLINE();
+  printf("\r\n");
+  printf("\r\n");
 }
 
 void DIE_NOW(GCONTXT* context, char* msg)
 {
   banner("ERROR");
-  DEBUG_STRING(msg);
-  DEBUG_NEWLINE();
+  printf(msg);
+  printf("\r\n");
 #ifdef DIE_NOW_SCANNER_COUNTER
-  DEBUG_STRING("Number of scanned blocks: ");
-  DEBUG_INT(scannerReqCounter);
-  DEBUG_NEWLINE();
+  printf("Number of scanned blocks: %08x\r\n", scannerReqCounter);
 #endif
   if (context == 0)
   {
@@ -60,118 +59,10 @@ void DIE_NOW(GCONTXT* context, char* msg)
   {
     dumpGuestContext(context);
   }
-  banner("HALT");
+  banner("HALT\0");
   
   infiniteIdleLoop();
 }
-
-
-void __attribute__((noinline)) DEBUG_CHAR(char c)
-{
-  while ((beLoadUart(UART_LSR_REG, 3) & UART_LSR_TX_FIFO_E) == 0)
-  {
-    // do nothing
-  }
-  beStoreUart(UART_THR_REG, (u32int)c, 3);
-  
-}
-
-void DEBUG_STRING(char * c)
-{
-  int index = 0;
-
-  while (printableChar(c[index]))
-  {
-    DEBUG_CHAR(c[index]);
-    index++;
-  }
-  return;
-}
-
-void DEBUG_NEWLINE()
-{
-  DEBUG_CHAR('\r');
-  DEBUG_CHAR('\n');
-  return;
-}
-
-void DEBUG_INT(u32int nr)
-{
-  int length = 8;
-  int lengthInBits = 32;
-  int byte = 0;
-  int i = 0;
-
-  for (i = 0; i < length; i++)
-  {
-    byte = nr >> ( lengthInBits - ((i+1) * 4) );
-    byte = byte & 0xF;
-    DEBUG_BYTE(byte);
-  }
-}
-
-//Don't output leading zeros
-void DEBUG_INT_NOZEROS(u32int nr)
-{
-  int length = 8;
-  int lengthInBits = 32;
-  int byte = 0;
-  int i = 0;
-  bool keepZeros = FALSE;
-
-  for (i = 0; i < length; i++)
-  {
-    byte = nr >> ( lengthInBits - ((i+1) * 4) );
-    byte = byte & 0xF;
-    if(0 != byte)
-    {
-      keepZeros = TRUE;
-    }
-
-    if(keepZeros || i==7)
-    {
-      DEBUG_BYTE(byte);
-    }
-  }
-}
-
-void DEBUG_BYTE(u8int nr)
-{
-  u8int tmpNr = nr & 0xF;
-  u8int byte = 0;
-  if ( (tmpNr >= 0) && (tmpNr <= 9) )
-  {
-    byte = tmpNr + 0x30;
-  }
-  else
-  {
-    switch(tmpNr)
-    {
-      case 0xa:
-        byte = 0x61;
-        break;
-      case 0xb:
-        byte = 0x62;
-        break;
-      case 0xc:
-        byte = 0x63;
-        break;
-      case 0xd:
-        byte = 0x64;
-        break;
-      case 0xe:
-        byte = 0x65;
-        break;
-      case 0xf:
-        byte = 0x66;
-        break;
-      default:
-        return;
-    } // switch ends
-  } // else ends
-  DEBUG_CHAR(byte);
-}
-
 
 u32int printf(const char *fmt, ...)
 {
@@ -184,7 +75,7 @@ u32int printf(const char *fmt, ...)
   va_end(args);
 
   /* Print the string */
-  DEBUG_STRING(printbuffer);
+  serialPuts(printbuffer);
   return i;
 }
 
@@ -219,7 +110,7 @@ u32int vsprintf(char *buf, const char *fmt, va_list args)
           zeroPadding = *fmt++;
           if ((zeroPadding < 0x31) || (zeroPadding > 0x38))
           {
-            DIE_NOW(0, "invalid padding bits.");
+            DIE_NOW(0, "invalid padding bits.\0");
           }
           zeroPadding -= 0x30;
         }
@@ -278,6 +169,15 @@ u32int vsprintf(char *buf, const char *fmt, va_list args)
           } // for ends - whole number is now done
           break;
         }
+        case 's':
+        {
+          char *arg_string = va_arg(args, char *);
+          while ((*str = *arg_string++))
+          {
+            ++str;
+          }
+          break;
+        }
         case 'c':
         {
           char character = va_arg(args, char);
@@ -286,10 +186,10 @@ u32int vsprintf(char *buf, const char *fmt, va_list args)
         }
         default:
         {
-          DEBUG_STRING("option after %: ");
-          DEBUG_CHAR(*fmt);
-          DEBUG_NEWLINE();
-          DIE_NOW(0, "Unknown option after %");
+          serialPuts("option after %: ");
+          serialPutc(*fmt);
+          serialPuts("\r\n");
+          DIE_NOW(0, "Unknown option after %\0");
         }
       } // switch ends
     } // if % character found

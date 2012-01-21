@@ -405,7 +405,24 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   // add the block we just scanned to block cache
   addToBlockCache(blkStartAddr, gc->endOfBlockInstr, (u32int)currAddress, 
                   bcIndex, (u32int)gc->hdlFunct, gc->blockCache);
-
+  /* To ensure that subsequent fetches from eobAddress get a hypercall
+   * rather than the old cached copy... 
+   * 1. clean data cache entry by address
+   * DCCMVAU, Clean data cache line by MVA to PoU: c7, 0, c11, 1 
+   * 2. invalidate instruction cache entry by address.
+   * ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1
+   */
+  asm("mcr p15, 0, %0, c7, c11, 1"
+  :
+  :"r"(currAddress)
+  :"memory"
+  );
+  asm("mcr p15, 0, %0, c7, c5, 1"
+  :
+  :"r"(currAddress)
+  :"memory"
+  );
+  
   protectScannedBlock(blkStartAddr, (u32int)currAddress);
   // and we're done.
 }

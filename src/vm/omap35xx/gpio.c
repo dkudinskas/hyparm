@@ -24,11 +24,7 @@ void initGpio(u32int gpioNumber)
   {
     memset((void*)gpio[gpioNumber-1], 0x0, sizeof(struct Gpio));
 #ifdef GPIO_DBG
-    DEBUG_STRING("Initializing GPIO");
-    DEBUG_INT_NOZEROS(gpioNumber);
-    DEBUG_STRING(" at 0x");
-    DEBUG_INT((u32int)gpio[gpioNumber-1]);
-    DEBUG_NEWLINE();
+    printf("Initializing GPIO%x at %08x\n", gpioNumber, (u32int)gpio[gpioNumber-1]);
 #endif
   }
   
@@ -155,24 +151,16 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
     case GPIO_SETWKUENA:
     case GPIO_CLEARDATAOUT:
     case GPIO_SETDATAOUT:
-      DEBUG_STRING("GPIO: load from unimplemented register ");
-      DEBUG_INT_NOZEROS(regOffset);
-      DIE_NOW(0, ", panic.");
+      printf("GPIO: load from unimplemented register %x\n", regOffset);
+      DIE_NOW(0, "panic.");
       break;
     default:
       DIE_NOW(0, "Gpio: load on invalid register.");
   }
 #ifdef GPIO_DBG
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" load from pAddr: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", vAddr: 0x");
-  DEBUG_INT(address);
-  DEBUG_STRING(" access size ");
-  DEBUG_INT((u32int)size);
-  DEBUG_STRING(" val = ");
-  DEBUG_INT(val);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(" load from pAddr: %08x, vAddr: %08x access size %x val = %08x\n",
+         phyAddr, address, (u32int)size, val);
 #endif
   return val;
 }
@@ -187,16 +175,9 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
 #ifdef GPIO_DBG
-  DEBUG_STRING(dev->deviceName);
-  DEBUG_STRING(" store to pAddr: 0x");
-  DEBUG_INT(phyAddr);
-  DEBUG_STRING(", vAddr: 0x");
-  DEBUG_INT(address);
-  DEBUG_STRING(" aSize ");
-  DEBUG_INT((u32int)size);
-  DEBUG_STRING(" val ");
-  DEBUG_INT(value);
-  DEBUG_NEWLINE();
+  printf(dev->deviceName);
+  printf(" store to pAddr: %08x, vAddr: %08x, access size: %x, val %08x\n",
+        phyAddr, address, (u32int)size, value);
 #endif
 
   u32int regOffset = 0;
@@ -240,8 +221,7 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       if ((value & GPIO_SYSCONFIG_SOFTRESET) == GPIO_SYSCONFIG_SOFTRESET)
       {
 #ifdef GPIO_DBG
-        DEBUG_STRING("GPIO: soft reset.");
-        DEBUG_NEWLINE();
+        printf("GPIO: soft reset.\n");
 #endif
         resetGpio(gpioNum);
       }
@@ -306,12 +286,11 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPIO_SETWKUENA:
     case GPIO_CLEARDATAOUT:
     case GPIO_SETDATAOUT:
-      DEBUG_STRING("GPIO: store to unimplemented register ");
-      DEBUG_INT_NOZEROS(regOffset);
-      DIE_NOW(0, ", panic.");
+      printf("GPIO: store to unimplemented register %x\n", regOffset);
+      DIE_NOW(gc, "panic.");
       break;
     default:
-      DIE_NOW(0, "Gpio: store to invalid register.");
+      DIE_NOW(gc, "Gpio: store to invalid register.");
   }
 }
 

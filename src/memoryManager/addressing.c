@@ -15,19 +15,13 @@ extern void setGuestPhysicalPt(GCONTXT* gc);
 
 void initialiseVirtualAddressing()
 {
-  DEBUG_STRING("Initializing Virtual Addressing.");
   descriptor* ptAddr = createHypervisorPageTable();
 
-  DEBUG_STRING(" Page Table @ 0x");
-  DEBUG_INT((u32int)ptAddr);
-  DEBUG_STRING("...");
+  printf("Initializing Virtual Addressing. Page Table @ %08x\n", (u32int)ptAddr);
 
   mmuInit();
   mmuInsertPt0(ptAddr); //Map Hypervisor PT into TTBR0
   mmuEnableVirtAddr();
-
-  DEBUG_STRING("done");
-  DEBUG_NEWLINE();
 }
 
 /* virtual machine startup, need to add a new guestPhysical to ReadPhysical address map */
@@ -35,8 +29,7 @@ void initialiseVirtualAddressing()
 void createVirtualMachineGPAtoRPA(GCONTXT* gc)
 {
 #ifdef ADDRESSING_DEBUG
-  DEBUG_STRING("createVirtualMachineGPAtoRPA: TODO createVirtualMachineGPAtoRPA (addressing.c)");
-  DEBUG_NEWLINE();
+  printf("createVirtualMachineGPAtoRPA: TODO createVirtualMachineGPAtoRPA (addressing.c)\n");
 #endif
 
   //The hypervisor ptd is the guest physical ptd for now
@@ -57,9 +50,7 @@ void createVirtualMachineGPAtoRPA(GCONTXT* gc)
 void initialiseGuestShadowPageTable(u32int guestPtAddr)
 {
 #ifdef ADDRESSING_DEBUG
-  DEBUG_STRING("initialiseGuestShadowPageTable: new pt addr ");
-  DEBUG_INT(guestPtAddr);
-  DEBUG_NEWLINE();
+  printf("initialiseGuestShadowPageTable: new pt addr %08x\n", guestPtAddr);
 #endif
 
   GCONTXT* context = getGuestContext();
@@ -69,29 +60,14 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   if(guestPtAddr == 0x80004000)
   {
 #ifdef ADDRESSING_DEBUG
-    DEBUG_STRING("initialiseGuestShadowPageTable: TTBR0 Linux identity mapping bootstrap, ignoring.");
-    DEBUG_NEWLINE();
+    printf("initialiseGuestShadowPageTable: TTBR0 Linux identity mapping bootstrap, ignoring.\n");
 #endif
-    DIE_NOW(context, "initialiseGuestShadowPageTable");
     return;
   }
 
   //This was really annoying to find, linux set the bottom bits for some reason?!
   //Perhaps to check that the table ptr has been updated and is not still the identity map?
   guestPtAddr = guestPtAddr &  0xFFFFC000;
-
-#ifdef ADDRESSING_DEBUG
-  DEBUG_STRING("initialiseGuestShadowPageTable: Dumping guest page table @ 0x");
-  DEBUG_INT(guestPtAddr);
-  DEBUG_NEWLINE();
-
-  descriptor* ptd = (descriptor*)guestPtAddr;
-  dumpPageTable(ptd);
-
-  DEBUG_NEWLINE();
-  DEBUG_STRING("Guest pt dump finished");
-  DEBUG_NEWLINE();
-#endif
 
   if(context->virtAddrEnabled)
   {
@@ -124,8 +100,7 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
     // copy new gPT1 entries to new sPT1
     copyPageTable((descriptor*)guestPtAddr, context->PT_shadow);
 #ifdef ADDRESSING_DEBUG
-    DEBUG_STRING("initialiseGuestShadowPageTable: Copy PT done.");
-    DEBUG_NEWLINE();
+    printf("initialiseGuestShadowPageTable: Copy PT done.\n");
 #endif
 
     // anything in caches needs to be written back now
@@ -151,10 +126,10 @@ void initialiseGuestShadowPageTable(u32int guestPtAddr)
   else
   {
 #ifdef ADDRESSING_DEBUG
-    DEBUG_STRING("initialiseGuestShadowPageTable: set gPT ptr in gContext");
-    DEBUG_NEWLINE();
+    printf("initialiseGuestShadowPageTable: set gPT ptr in gContext\n");
 #endif
-    //guest virtual addressing is not active, no need to spend time faulting on PT that the OS is going to add entries to before it activates
+    // guest virtual addressing is not active, no need to spend time
+    // faulting on PT that the OS is going to add entries to before it activates
     context->PT_os = (descriptor*)guestPtAddr;
   }
 }
@@ -167,34 +142,27 @@ void guestEnableVirtMem()
   if(gc->PT_os == 0)
   {
 #ifdef ADDRESSING_DEBUG
-    DEBUG_STRING("guestEnableVirtMem: No entry in gc. Must be identity mapping bootstrap, ignore hypervised. Continuing boot...");
-    DEBUG_NEWLINE();
+    printf("guestEnableVirtMem: gc->PT_os=0. Must be identity mapping bootstrap, ignore hypervised\n");
 #endif
     return;
   }
 
 #ifdef ADDRESSING_DEBUG
   dumpGuestContext(gc);
-  DEBUG_STRING("guestEnableVirtMem: Dumping guest page table from addr in gc->PT_os @ 0x");
-  DEBUG_INT((u32int)gc->PT_os);
-  DEBUG_NEWLINE();
-
+  printf("guestEnableVirtMem: Dumping guest page table from addr in gc->PT_os @ %08x\n", (u32int)gc->PT_os);
   dumpPageTable(gc->PT_os);
-
-  DEBUG_STRING("guestEnableVirtMem: PT dump done");
-  DEBUG_NEWLINE();
+  printf("guestEnableVirtMem: PT dump done\n");
 #endif
 
   if(gc->virtAddrEnabled)
   {
 #ifdef ADDRESSING_DEBUG
-    DIE_NOW(0, "guest virtual addressing is already enabled");
+    DIE_NOW(gc, "guest virtual addressing is already enabled");
 #endif
   }
 
 #ifdef ADDRESSING_DEBUG
-  DEBUG_STRING("guestEnableVirtMem: Enabling guest virtual / shadow page tables");
-  DEBUG_NEWLINE();
+  printf("guestEnableVirtMem: Enabling guest virtual / shadow page tables\n");
 #endif
 
   //create a new shadow page table. Mapping in hypervisor address space
@@ -208,13 +176,10 @@ void guestEnableVirtMem()
   copyPageTable(gc->PT_os, sPT);
 
 #ifdef ADDRESSING_DEBUG
-  DEBUG_STRING("guestEnableVirtMem: Copy PT done. Dumping shadow PT");
-  DEBUG_NEWLINE();
+  printf("guestEnableVirtMem: Copy PT done. Dumping shadow PT\n");
   dumpPageTable(sPT);
-  DEBUG_STRING("guestEnableVirtMem: shadow PT dump done.");
-  DEBUG_NEWLINE();
-  DEBUG_STRING("guestEnableVirtMem: About to switch to sPT");
-  DEBUG_NEWLINE();
+  printf("guestEnableVirtMem: shadow PT dump done.\n");
+  printf("guestEnableVirtMem: About to switch to sPT\n");
 #endif
 
 
@@ -227,8 +192,7 @@ void guestEnableVirtMem()
   clearCache(); //just to make sure
 
 #ifdef ADDRESSING_DEBUG
-  DEBUG_STRING("guestEnableVirtMem: Using sPT. Continuing");
-  DEBUG_NEWLINE();
+  printf("guestEnableVirtMem: Using sPT. Continuing\n");
 #endif
 
   /**  WARNING: HACK
@@ -275,9 +239,7 @@ void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
       if ( ((oldVal >> (i*2)) & 0x3) != ((newVal >> (i*2)) & 0x3) )
       {
 #ifdef ADDRESSING_DEBUG
-        DEBUG_STRING("changeGuestDomainAccessControl: changing config for dom ");
-        DEBUG_INT(i);
-        DEBUG_NEWLINE();
+        printf("changeGuestDomainAccessControl: changing config for dom %x\n", i);
 #endif
         // for every entry changed, loop through all page table entries
         u32int y = 0;
@@ -293,50 +255,23 @@ void changeGuestDomainAccessControl(u32int oldVal, u32int newVal)
           if (ptEntry->domain == i)
           {
 #ifdef ADDRESSING_DEBUG
-            DEBUG_STRING("changeGuestDomainAccessControl: page table entry ");
-            DEBUG_INT(y);
-            DEBUG_STRING(" = ");
-            DEBUG_INT(*(u32int*)ptEntry);
-            DEBUG_STRING(" needs AP bits remapped.");
-            DEBUG_NEWLINE();
+            printf("changeGuestDomainAccessControl: PTe %x = %08x needs AP bits remapped.\n", y, *(u32int*)ptEntry);
 #endif
             if (ptEntry->type == SECTION)
             {
               descriptor* shadowPtEntry = &(context->PT_shadow[y]);
               mapAPBitsSection(y*1024*1024, ptEntry, shadowPtEntry);
 #ifdef ADDRESSING_DEBUG
-              DEBUG_STRING("changeGuestDomainAccessControl: remapped to ");
-              DEBUG_INT(*(u32int*)ptEntry);
-              DEBUG_NEWLINE();
+              printf("changeGuestDomainAccessControl: remapped to %08x\n", *(u32int*)ptEntry);
 #endif
             }
             else if (ptEntry->type == PAGE_TABLE)
             {
-              /*  Should be implemented correctly
-              u32int z=0;
-              pageTableDescriptor* domainPtEntry = (pageTableDescriptor*)&context->PT_os[y];
-              u32int baseAddr=domainPtEntry->addr;
-              u32int address2ndLvlDescr=0;
-              largeDescriptor* largePageDesc=0;
-              for(z=0;z<SECOND_LEVEL_PAGE_TABLE_ENTRIES;z++)
-              {
-                largePageDesc=(largeDescriptor*)((baseAddr<<8)+z)<<2;
-                if(largePageDesc->type== FAULT)
-                {
-                  //not used
-                  continue;
-                }else if(largePageDesc->type==LARGE_PAGE)
-                {
-                  //small or largePage Descriptor -> AP bits are at same place
-
-                }
-              }*/
-              // ignore for now?
 #ifdef ADDRESSING_DEBUG
-              DEBUG_STRING("changeGuestDomainAccessControl: remap AP for page table entry ");
-              DEBUG_NEWLINE();
-              DIE_NOW(context, "changeGuestDomainAccessControl unimplemented.");
+              printf("changeGuestDomainAccessControl: remap AP for page table entry\n");
 #endif
+              descriptor* shadowPtEntry = &(context->PT_shadow[y]);
+              mapAPBitsPageTable(y*1024*1024, ptEntry, shadowPtEntry);
             }
           }
 

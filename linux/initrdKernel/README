@@ -1,0 +1,41 @@
+This is what's needed to build and run a kernel with initrd.
+
+The initial ramdisk is compressed and provided. The kernel config is as well. Notable switches:
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_INITRAMFS_SOURCE=""
+making sure source does not point to anything, initrd is external from the built linux kernel, and has to be transferred to memory parallel with the linux kernel. 
+
+CONFIG_CMDLINE="console=ttyS2,115200n8 ramdisk_size=8192 root=/dev/ram0 rw rootfstype=ext2 initrd=0x81600000,8M nohz=Off"
+Kernel command line now is pretty informative. As in any DISK, the kernel knows how big the disk is. So initial ramDISK wouldnt be a disk if it didn't have a 'size', in this case, 8 megabytes. Also, disk must have a partition with a fyle system, so we must tell that as well. Since it's external, linux must know where to look for initrd and what area in memory it occupies.
+
+
+If you want to edit the ramdisk:
+1. make a new mountpoint (mkdir initrdmount)
+2. mount the uncompressed! initrd (mount -o loop initrd ./initrdmount)
+3. edit, then unmount, and gzip the initrd again.
+
+Now make sure you don't put more stuff than there is space on disk (8 megabytes)! or things will go horribly wrong.
+
+
+If you think 8 megabytes is too much (and virtualized linux takes tooooo long setting them up), you can build a smaller initrd, but you would have to do it from scratch.
+
+1. dd a new file or required size - take 4MB as example.
+dd if=/dev/zero of=initrd bs=4M count=16
+2. mke2fs will build a file system into the file. 
+mke2fs -F -m 0 -b 4096 ./initrd
+
+now you can mount the file.
+make a new folder structure. 
+mkdir bin dev etc lib proc sbin var
+
+.. and copy at least /dev/null and /dev/console into your new initrd.
+cp -a /dev/null ./initrdmount/dev/
+cp -a /dev/console ./initrdmount/dev/
+
+.. also, make sure there is an init to execute. like busybox's /bin/sh.
+
+once you are done, unmount, and compress.
+
+REMEMBER: if you build an initrd of different size, dont forget to change your CONFIG_CMDLINE parameters when rebuilding your kernel to reflect new size!!!
+
+

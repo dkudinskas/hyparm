@@ -307,7 +307,7 @@ void irq()
     case UART3_IRQ:
     {
       // read character from UART
-      u8int c = serial_in();
+      u8int c = serialGetc();
       acknowledgeIrqBE();
       // forward character to emulated UART
       uartPutRxByte(c, 3);
@@ -354,7 +354,7 @@ void irqPrivileged()
     case UART3_IRQ:
     {
       // read character from UART
-      u8int c = serial_in();
+      u8int c = serialGetc();
       acknowledgeIrqBE();
       // forward character to emulated UART
       uartPutRxByte(c, 3);
