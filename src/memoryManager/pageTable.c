@@ -83,26 +83,24 @@ descriptor* createHypervisorPageTable()
 
   //serial
   smallMapMemory(hypervisorPtd, UART3, (UART3 + UART3_SIZE -1),
-                               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
-
-
+                 GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
   // uart1
   smallMapMemory(hypervisorPtd, UART1, (UART1 + UART1_SIZE -1), 
-                               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
+                 GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
   // clock manager
   smallMapMemory(hypervisorPtd, CLOCK_MANAGER, (CLOCK_MANAGER+CLOCK_MANAGER_SIZE-1),
-                               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
+                 GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 0, 0, 0b000);
   // interrupt controller
   smallMapMemory(hypervisorPtd, INTERRUPT_CONTROLLER, (INTERRUPT_CONTROLLER+INTERRUPT_CONTROLLER_SIZE-1),
-                          HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
-  // gptimer1 - this looks dirty
+  // gptimer1
   smallMapMemory(hypervisorPtd, GPTIMER1, (GPTIMER1+GPTIMER1_SIZE-1),
-                          HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   // gptimer2
   smallMapMemory(hypervisorPtd, GPTIMER2, (GPTIMER2+GPTIMER2_SIZE-1),
-                          HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   //add section mapping for 0x14000 (base exception vectors)
   const u32int exceptionHandlerAddr = 0x14000;
@@ -110,10 +108,11 @@ descriptor* createHypervisorPageTable()
                 (exceptionHandlerAddr+SMALL_PAGE_SIZE-1),
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
-  //add section mapping for 0x40200000 (redirected exception vectors)
   //We will want to use the exception handler remap feature to put the page tables in the 0xffff0000 address space later
-  const u32int exceptionHandlerRedirectAddr = 0x4020ffd0;
-  addSectionPtEntry(hypervisorPtd, exceptionHandlerRedirectAddr,exceptionHandlerRedirectAddr,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+  const u32int excHdlrSramStart = 0x4020ffd0;
+  const u32int excHdlrSramEnd   = 0x4020ffff;
+  smallMapMemory(hypervisorPtd, excHdlrSramStart, excHdlrSramEnd,
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
 #ifdef CONFIG_BLOCK_COPY
   u32int blockCopyCache = gc->blockCopyCache;
@@ -138,36 +137,32 @@ descriptor* createGuestOSPageTable()
 
   mapHypervisorMemory(ptd);
 
-  //Map Serial
-  const u32int serial = UART3;
-  if(addSmallPtEntry(ptd, serial, serial,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0) != 0)
-  {
-    DIE_NOW(0, "Added serial mapping failed. Entering infinite loop");
-  }
+  // Map Serial
+  smallMapMemory(ptd, UART3, (UART3 + UART3_SIZE - 1),
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   //add section mapping for 0x14000 (base exception vectors)
   const u32int exceptionHandlerAddr = 0x14000;
   smallMapMemory(ptd, exceptionHandlerAddr, (exceptionHandlerAddr+SMALL_PAGE_SIZE-1),
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
-  //add section mapping for 0x40200000 (redirected exception vectors)
   //We will want to use the exception handler remap feature to put the page tables in the 0xffff0000 address space later
-  const u32int exceptionHandlerRedirectAddr = 0x4020ffd0;
-  addSectionPtEntry(ptd, exceptionHandlerRedirectAddr, exceptionHandlerRedirectAddr, HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+  const u32int excHdlrSramStart = 0x4020ffd0;
+  const u32int excHdlrSramEnd   = 0x4020ffff;
+  smallMapMemory(ptd, excHdlrSramStart, excHdlrSramEnd,
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   // interrupt controller
-  const u32int interruptController = 0x48200000;
-  addSectionPtEntry(ptd, interruptController,interruptController,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+  smallMapMemory(ptd, INTERRUPT_CONTROLLER, (INTERRUPT_CONTROLLER+INTERRUPT_CONTROLLER_SIZE-1),
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   // gptimer1
-  addSectionPtEntry(ptd, GPTIMER1,GPTIMER1,HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+  smallMapMemory(ptd, GPTIMER1, (GPTIMER1 + GPTIMER1_SIZE - 1),
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
   //Map gptimer2
-  const u32int gptimer2Addr = 0x49032000;
-  if(addSmallPtEntry(ptd, gptimer2Addr, gptimer2Addr,HYPERVISOR_ACCESS_DOMAIN,HYPERVISOR_ACCESS_BITS, 0, 0, 0) != 0)
-  {
-    DIE_NOW(0, "Added gptimer2 mapping failed. Entering infinite loop");
-  }
+  smallMapMemory(ptd, GPTIMER2, (GPTIMER2 + GPTIMER2_SIZE - 1),
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
 #ifdef PT_SHADOW_DBG
   printf("New shadow PT dump @ %08x\n", (u32int)ptd);
@@ -1456,8 +1451,9 @@ void copySmallEntry(smallDescriptor* guest, smallDescriptor* shadow)
   GCONTXT* gc = (GCONTXT*)getGuestContext();
 
 #ifdef PT_SHADOW_DBG
-  printf("copySmallEntry: guestEntry @ %08x = %08x; corresponding shadow entry @ %08x = %08x\n",
-         (u32int)guest, *(u32int*)guest, (u32int)shadow, *(u32int*)shadow);
+  printf("copySmallEntry: guestEntry @ %08x = %08x\n", (u32int)guest, *(u32int*)guest);
+  printf("copySmallEntry: shadow entry @ %08x\n", (u32int)shadow);
+  printf("copySmallEntry: shadow entry = %08x\n", *(u32int*)shadow);
 #endif
 
   // Address mapping: guest entry points to guest physical. Translate to host physical
@@ -2355,7 +2351,11 @@ void pageTableEdit(u32int address, u32int newVal)
       {
         smallDescriptor* newPtd = (smallDescriptor*)newGuestEntry;
         smallDescriptor* oldPtd = (smallDescriptor*)oldGuestEntry;
-        smallDescriptor* shadowPtd = (smallDescriptor*)shadowEntry;
+        // to copySmallEntry and copyLargeEntry:
+        // need to get second level page table address, not first level PTE
+        u32int secondLvlEntryAddr = (*(u32int*)shadowEntry) & 0xFFFFFC00;
+        secondLvlEntryAddr = secondLvlEntryAddr | ((virtualAddr >> 10) & 0x3FC);
+        smallDescriptor* shadowPtd = (smallDescriptor*)secondLvlEntryAddr;
         if(oldPtd->addr != newPtd->addr)
         {
           //Change in address is same as a removeEntry and addNew one

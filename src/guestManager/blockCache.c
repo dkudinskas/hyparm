@@ -463,7 +463,9 @@ void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCach
 
 void explodeCache(BCENTRY * bcache)
 {
+#ifdef BLOCK_CACHE_DBG
   printf("========BLOCK CACHE EXPLODE!!!=========\n");
+#endif
 
   int i = 0;
 
