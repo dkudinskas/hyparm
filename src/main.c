@@ -4,10 +4,11 @@
 
 #include "common/commandLine.h"
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stdarg.h"
 #include "common/stddef.h"
 #include "common/string.h"
+
+#include "common/memoryAllocator/allocator.h"
 
 #include "cpuArch/armv7.h"
 
@@ -97,7 +98,7 @@ void main(s32int argc, char *argv[])
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
 
-  mallocInit(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
+  initialiseAllocator(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
 
   /* initialise uart backend, important to be before any debug output. */
   /* init function initialises UARTs in disabled mode. */

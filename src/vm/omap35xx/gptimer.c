@@ -1,6 +1,7 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "drivers/beagle/beGPTimer.h"
 #include "drivers/beagle/beIntc.h"
@@ -20,7 +21,7 @@ struct GeneralPurposeTimer * gptimer;
 void initGPTimer()
 {
   // init function: setup device, reset register values to defaults!
-  gptimer = (struct GeneralPurposeTimer*)mallocBytes(sizeof(struct GeneralPurposeTimer));
+  gptimer = (struct GeneralPurposeTimer*)malloc(sizeof(struct GeneralPurposeTimer));
   if (gptimer == 0)
   {
     DIE_NOW(NULL, "Failed to allocate general purpose timer.");

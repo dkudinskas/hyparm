@@ -1,6 +1,7 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #ifdef CONFIG_GUEST_FREERTOS
 # include "drivers/beagle/beGPIO.h"
@@ -18,7 +19,7 @@ struct Gpio * gpio[6];
 
 void initGpio(u32int gpioNumber)
 {
-  gpio[gpioNumber - 1] = (struct Gpio *)mallocBytes(sizeof(struct Gpio));
+  gpio[gpioNumber - 1] = (struct Gpio *)malloc(sizeof(struct Gpio));
   if (!gpio[gpioNumber - 1])
   {
     DIE_NOW(NULL, "Failed to allocate Gpio.");

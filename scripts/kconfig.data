@@ -22,6 +22,15 @@ config DECODER_TABLE_SEARCH
 
 endchoice
 
+choice
+  prompt "Memory allocator"
+  default MEMORY_ALLOCATOR_TLSF
+
+config MEMORY_ALLOCATOR_TLSF
+  bool "TLSF"
+
+endchoice
+
 config PATH_AUTODECODER
   string "Path to autodecoder"
 
@@ -109,6 +118,10 @@ endmenu
 
 menu "Guest software"
 
+config GUEST_ANDROID
+  bool "Android"
+  select KERNEL_ANDROID
+
 config GUEST_FREERTOS
   bool "FreeRTOS"
   depends on THUMB2
@@ -127,8 +140,8 @@ config DEBUG_STARTUP
   bool "Debug startup"
   depends on DEBUG
 
-config DEBUG_MALLOC
-  bool "Debug malloc"
+config DEBUG_MEMORY_ALLOCATOR
+  bool "Debug memory allocator"
   depends on DEBUG
 
 config DEBUG_GUEST_CONTEXT

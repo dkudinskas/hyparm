@@ -1,6 +1,7 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "guestManager/guestContext.h"
 
@@ -15,7 +16,7 @@ struct SystemControlModule *sysCtrlModule;
 
 void initSysControlModule()
 {
-  sysCtrlModule = (struct SystemControlModule *)mallocBytes(sizeof(struct SystemControlModule));
+  sysCtrlModule = (struct SystemControlModule *)malloc(sizeof(struct SystemControlModule));
   if (sysCtrlModule == 0)
   {
     DIE_NOW(NULL, "Failed to allocate system control module.");

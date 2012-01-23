@@ -12,7 +12,7 @@ SECTIONS
 {
 	. = 0x8c000000;
 	. = ALIGN(4);
-	_start_marker = .;
+	__START_MARKER__ = .;
 	.text :
 	{
 		src/startup.S.o (.text)
@@ -30,6 +30,6 @@ SECTIONS
 	{
 		*(.bss)
 	}
-	_end_marker = .;
+	__END_MARKER__ = .;
 }
 

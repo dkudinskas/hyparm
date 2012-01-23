@@ -1,6 +1,7 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "guestManager/guestContext.h"
 #include "guestManager/guestExceptions.h"
@@ -21,7 +22,7 @@ void initUart(u32int uartID)
 {
   u32int uID = uartID - 1;
   // init function: setup device, reset register values to defaults!
-  uart[uID] = (struct Uart *)mallocBytes(sizeof(struct Uart));
+  uart[uID] = (struct Uart *)malloc(sizeof(struct Uart));
   if (uart[uID] == 0)
   {
     DIE_NOW(NULL, "Failed to allocate uart.");

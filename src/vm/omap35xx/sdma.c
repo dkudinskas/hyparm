@@ -1,6 +1,7 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "guestManager/guestContext.h"
 
@@ -15,7 +16,7 @@ struct Sdma * sdma;
 void initSdma()
 {
   // init function: setup device, reset register values to defaults!
-  sdma = (struct Sdma*)mallocBytes(sizeof(struct Sdma));
+  sdma = (struct Sdma*)malloc(sizeof(struct Sdma));
   if (sdma == 0)
   {
     DIE_NOW(NULL, "Failed to allocate sdma.");

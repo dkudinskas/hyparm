@@ -1,6 +1,7 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "drivers/beagle/beUart.h"
 
@@ -63,7 +64,7 @@ char serialGetcAsync()
 void beUartInit(u32int uartid)
 {
   u32int arrayIndex = uartid - 1;
-  beUart[arrayIndex] = (struct UartBackEnd *)mallocBytes(sizeof(struct UartBackEnd));
+  beUart[arrayIndex] = (struct UartBackEnd *)malloc(sizeof(struct UartBackEnd));
   if (beUart[arrayIndex] == 0)
   {
     DIE_NOW(NULL, "Failed to allocate UART backend");
