@@ -26,7 +26,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
 
   u32int baseAddress = loadGuestGPR(regDst, context);
   u32int valueToStore = loadGuestGPR(regSrc, context);
-  u32int offsetAddress;
+  u32int offsetAddress = 0x0;
 
   if (regOrImm == 0)
   {
