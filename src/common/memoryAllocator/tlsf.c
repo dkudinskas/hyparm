@@ -26,6 +26,7 @@
  */
 
 
+#include "common/assert.h"
 #include "common/bit.h"
 #include "common/debug.h"
 #include "common/stddef.h"
@@ -52,6 +53,10 @@ static const u32int BLOCK_START_OFFSET = offsetof(struct blockHeader, size) + si
 */
 static const u32int BLOCK_SIZE_MIN = sizeof(struct blockHeader) - sizeof(struct blockHeader *);
 static const u32int BLOCK_SIZE_MAX = 1U << FL_INDEX_MAX;
+
+
+COMPILE_TIME_ASSERT(sizeof(u32int) * CHAR_BIT >= SL_INDEX_COUNT, __tlsf_SL_INDEX_COUNT_cannot_exceed_number_of_bits_in_sl_bitmap);
+COMPILE_TIME_ASSERT(ALIGN_SIZE == SMALL_BLOCK_SIZE / SL_INDEX_COUNT, __tlsf_sizes_not_properly_tuned);
 
 
 static struct blockHeader *absorbBlock(struct blockHeader *previousBlock, struct blockHeader *block);
