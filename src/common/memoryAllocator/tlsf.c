@@ -77,31 +77,33 @@ static void *alignPointer(const void *ptr, u32int align);
 static inline u32int alignUp(u32int x, u32int align);
 static int canSplitBlock(struct blockHeader *block, u32int size);
 static void *createPool(void *start, u32int bytes);
+static inline struct blockHeader *getBlockFromPointer(void *pointer);
 static struct blockHeader *getNextBlock(const struct blockHeader *block);
 static inline u32int getOverhead(void);
-static void insertBlock(struct pool *p, struct blockHeader *block);
-static void insertFreeBlock(struct pool *p, struct blockHeader *block, int firstLevelIndex, int secondLevelIndex);
+static inline void *getPointerFromBlock(const struct blockHeader *block);
+static void insertBlock(struct pool *pool, struct blockHeader *block);
+static void insertFreeBlock(struct pool *pool, struct blockHeader *block, int firstLevelIndex, int secondLevelIndex);
 static void insertMapping(u32int size, int *firstLevelIndex, int *secondLevelIndex);
 static int isLastBlock(const struct blockHeader *block);
 static struct blockHeader *linkBlockWithNext(struct blockHeader *block);
-static struct blockHeader *locateFreeBlock(struct pool *p, u32int size);
+static struct blockHeader *locateFreeBlock(struct pool *pool, u32int size);
 static void markBlockFree(struct blockHeader *block);
 static void markBlockUsed(struct blockHeader *block);
-static struct blockHeader *mergeBlockWithPrevious(struct pool *p, struct blockHeader *block);
-static struct blockHeader *mergeBlockWithNext(struct pool *p, struct blockHeader *block);
-static void *prepareBlockForUse(struct pool *p, struct blockHeader *block, u32int size);
-static void removeBlock(struct pool *p, struct blockHeader *block);
-static void removeFreeBlock(struct pool *p, struct blockHeader *block, int firstLevelIndex, int secondLevelIndex);
+static struct blockHeader *mergeBlockWithPrevious(struct pool *pool, struct blockHeader *block);
+static struct blockHeader *mergeBlockWithNext(struct pool *pool, struct blockHeader *block);
+static void *prepareBlockForUse(struct pool *pool, struct blockHeader *block, u32int size);
+static void removeBlock(struct pool *pool, struct blockHeader *block);
+static void removeFreeBlock(struct pool *pool, struct blockHeader *block, int firstLevelIndex, int secondLevelIndex);
 static void searchMapping(u32int size, int *firstLevelIndex, int *secondLevelIndex);
-static struct blockHeader *searchSuitableBlock(struct pool *p, int *firstLevelIndex, int *secondLevelIndex);
+static struct blockHeader *searchSuitableBlock(struct pool *pool, int *firstLevelIndex, int *secondLevelIndex);
 static struct blockHeader *splitBlock(struct blockHeader *block, u32int size);
-static void *tlsfAlign(struct pool *staticPool, u32int alignment, u32int bytes);
-static void *tlsfAllocate(struct pool *p, u32int size);
-static inline void tlsfFree(struct pool *p, void *ptr);
-static void *tlsfReallocate(struct pool *pool, void *ptr, u32int size);
-static void trimFreeBlock(struct pool *p, struct blockHeader *block, u32int size);
-static struct blockHeader *trimLeadingFreeBlock(struct pool *p, struct blockHeader *block, u32int size);
-static void trimUsedBlock(struct pool *p, struct blockHeader *block, u32int size);
+static void *tlsfAlign(struct pool *pool, u32int alignment, u32int bytes);
+static void *tlsfAllocate(struct pool *pool, u32int size);
+static inline void tlsfFree(struct pool *pool, void *pointer);
+static void *tlsfReallocate(struct pool *pool, void *pointer, u32int size);
+static void trimFreeBlock(struct pool *pool, struct blockHeader *block, u32int size);
+static struct blockHeader *trimLeadingFreeBlock(struct pool *pool, struct blockHeader *block, u32int size);
+static void trimUsedBlock(struct pool *pool, struct blockHeader *block, u32int size);
 
 
 static struct pool *staticPool;
@@ -195,11 +197,16 @@ void free(void *ptr)
   tlsfFree(staticPool, ptr);
 }
 
+static inline struct blockHeader *getBlockFromPointer(void *pointer)
+{
+  return (struct blockHeader *)((u32int)pointer - BLOCK_START_OFFSET);
+}
+
 /* Return location of next existing block. */
 static struct blockHeader *getNextBlock(const struct blockHeader *block)
 {
   ASSERT(!isLastBlock(block), "block cannot be last");
-  return (struct blockHeader *)((u32int)block + BLOCK_START_OFFSET + (block->size & BLOCK_HEADER_SIZE_BITS) - BLOCK_HEADER_OVERHEAD);
+  return (struct blockHeader *)((u32int)getPointerFromBlock(block) + (block->size & BLOCK_HEADER_SIZE_BITS) - BLOCK_HEADER_OVERHEAD);
 }
 
 /*
@@ -212,39 +219,44 @@ static inline u32int getOverhead()
   return sizeof(struct pool) + 2 * BLOCK_HEADER_OVERHEAD;
 }
 
+static inline void *getPointerFromBlock(const struct blockHeader *block)
+{
+  return (void *)((u32int)block + BLOCK_START_OFFSET);
+}
+
 void initialiseAllocator(u32int startAddress, u32int bytes)
 {
   staticPool = createPool((void *)startAddress, bytes);
 }
 
 /* Insert a given block into the free list. */
-static void insertBlock(struct pool *p, struct blockHeader *block)
+static void insertBlock(struct pool *pool, struct blockHeader *block)
 {
   int firstLevelIndex, secondLevelIndex;
   insertMapping(block->size & BLOCK_HEADER_SIZE_BITS, &firstLevelIndex, &secondLevelIndex);
-  insertFreeBlock(p, block, firstLevelIndex, secondLevelIndex);
+  insertFreeBlock(pool, block, firstLevelIndex, secondLevelIndex);
 }
 
 /* Insert a free block into the free block list. */
-static void insertFreeBlock(struct pool *p, struct blockHeader *block, int firstLevelIndex, int secondLevelIndex)
+static void insertFreeBlock(struct pool *pool, struct blockHeader *block, int firstLevelIndex, int secondLevelIndex)
 {
-  struct blockHeader *current = p->blocks[firstLevelIndex][secondLevelIndex];
+  struct blockHeader *current = pool->blocks[firstLevelIndex][secondLevelIndex];
   ASSERT(current, "free list cannot have a null entry");
   ASSERT(block, "cannot insert a null entry into the free list");
   block->nextFree = current;
-  block->previousFree = &p->nullBlock;
+  block->previousFree = &pool->nullBlock;
   current->previousFree = block;
 
-  char *blockPtr = (char *)block + BLOCK_START_OFFSET;
-  ASSERT(blockPtr == alignPointer(blockPtr, ALIGN_SIZE), "block not aligned properly");
+  char *pointer = getPointerFromBlock(block);
+  ASSERT(pointer == alignPointer(pointer, ALIGN_SIZE), "block not aligned properly");
 
   /*
   ** Insert the new block at the head of the list, and mark the first-
   ** and second-level bitmaps appropriately.
   */
-  p->blocks[firstLevelIndex][secondLevelIndex] = block;
-  p->firstLevelBitmap |= (1 << firstLevelIndex);
-  p->secondLevelBitmap[firstLevelIndex] |= (1 << secondLevelIndex);
+  pool->blocks[firstLevelIndex][secondLevelIndex] = block;
+  pool->firstLevelBitmap |= (1 << firstLevelIndex);
+  pool->secondLevelBitmap[firstLevelIndex] |= (1 << secondLevelIndex);
 }
 
 static void insertMapping(u32int size, int *firstLevelIndex, int *secondLevelIndex)
@@ -276,7 +288,7 @@ static struct blockHeader *linkBlockWithNext(struct blockHeader *block)
   return next;
 }
 
-static struct blockHeader *locateFreeBlock(struct pool *p, u32int size)
+static struct blockHeader *locateFreeBlock(struct pool *pool, u32int size)
 {
   int firstLevelIndex = 0, secondLevelIndex = 0;
   struct blockHeader *block = 0;
@@ -284,13 +296,13 @@ static struct blockHeader *locateFreeBlock(struct pool *p, u32int size)
   if (size)
   {
     searchMapping(size, &firstLevelIndex, &secondLevelIndex);
-    block = searchSuitableBlock(p, &firstLevelIndex, &secondLevelIndex);
+    block = searchSuitableBlock(pool, &firstLevelIndex, &secondLevelIndex);
   }
 
   if (block)
   {
     ASSERT((block->size & BLOCK_HEADER_SIZE_BITS) >= size, "block size too small");
-    removeFreeBlock(p, block, firstLevelIndex, secondLevelIndex);
+    removeFreeBlock(pool, block, firstLevelIndex, secondLevelIndex);
   }
 
   return block;
@@ -322,14 +334,14 @@ void *memalign(u32int alignment, u32int size)
 }
 
 /* Merge a just-freed block with an adjacent previous free block. */
-static struct blockHeader *mergeBlockWithPrevious(struct pool *p, struct blockHeader *block)
+static struct blockHeader *mergeBlockWithPrevious(struct pool *pool, struct blockHeader *block)
 {
   if ((block->size & BLOCK_HEADER_PREV_FREE_BIT))
   {
     struct blockHeader *previousBlock = block->previous;
     ASSERT(previousBlock, "prev physical block can't be null");
     ASSERT((previousBlock->size & BLOCK_HEADER_FREE_BIT), "prev block is not free though marked as such");
-    removeBlock(p, previousBlock);
+    removeBlock(pool, previousBlock);
     block = absorbBlock(previousBlock, block);
   }
 
@@ -337,7 +349,7 @@ static struct blockHeader *mergeBlockWithPrevious(struct pool *p, struct blockHe
 }
 
 /* Merge a just-freed block with an adjacent free block. */
-static struct blockHeader *mergeBlockWithNext(struct pool *p, struct blockHeader *block)
+static struct blockHeader *mergeBlockWithNext(struct pool *pool, struct blockHeader *block)
 {
   struct blockHeader *next = getNextBlock(block);
   ASSERT(next, "next physical block can't be null");
@@ -345,23 +357,23 @@ static struct blockHeader *mergeBlockWithNext(struct pool *p, struct blockHeader
   if ((next->size & BLOCK_HEADER_FREE_BIT))
   {
     ASSERT(!isLastBlock(block), "previous block can't be last!");
-    removeBlock(p, next);
+    removeBlock(pool, next);
     block = absorbBlock(block, next);
   }
 
   return block;
 }
 
-static void *prepareBlockForUse(struct pool *p, struct blockHeader *block, u32int size)
+static void *prepareBlockForUse(struct pool *pool, struct blockHeader *block, u32int size)
 {
-  void *ptr = 0;
+  void *pointer = 0;
   if (block)
   {
-    trimFreeBlock(p, block, size);
+    trimFreeBlock(pool, block, size);
     markBlockUsed(block);
-    ptr = (void *)((unsigned char *)(block) + BLOCK_START_OFFSET);
+    pointer = getPointerFromBlock(block);
   }
-  return ptr;
+  return pointer;
 }
 
 void *realloc(void *ptr, u32int size)
@@ -370,33 +382,33 @@ void *realloc(void *ptr, u32int size)
 }
 
 /* Remove a given block from the free list. */
-static void removeBlock(struct pool *p, struct blockHeader *block)
+static void removeBlock(struct pool *pool, struct blockHeader *block)
 {
   int firstLevelIndex, secondLevelIndex;
   insertMapping((block->size & BLOCK_HEADER_SIZE_BITS), &firstLevelIndex, &secondLevelIndex);
-  removeFreeBlock(p, block, firstLevelIndex, secondLevelIndex);
+  removeFreeBlock(pool, block, firstLevelIndex, secondLevelIndex);
 }
 
 /* Remove a free block from the free list.*/
-static void removeFreeBlock(struct pool *p, struct blockHeader *block, int firstLevelIndex, int secondLevelIndex)
+static void removeFreeBlock(struct pool *pool, struct blockHeader *block, int firstLevelIndex, int secondLevelIndex)
 {
   ASSERT(block->previousFree, "previousFree field can not be null");
   ASSERT(block->nextFree, "nextFree field can not be null");
 
   /* If this block is the head of the free list, set new head. */
-  if (p->blocks[firstLevelIndex][secondLevelIndex] == block)
+  if (pool->blocks[firstLevelIndex][secondLevelIndex] == block)
   {
-    p->blocks[firstLevelIndex][secondLevelIndex] = block->nextFree;
+    pool->blocks[firstLevelIndex][secondLevelIndex] = block->nextFree;
 
     /* If the new head is null, clear the bitmap. */
-    if (block->nextFree == &p->nullBlock)
+    if (block->nextFree == &pool->nullBlock)
     {
-      p->secondLevelBitmap[firstLevelIndex] &= ~(1 << secondLevelIndex);
+      pool->secondLevelBitmap[firstLevelIndex] &= ~(1 << secondLevelIndex);
 
       /* If the second bitmap is now empty, clear the first level bitmap. */
-      if (!p->secondLevelBitmap[firstLevelIndex])
+      if (!pool->secondLevelBitmap[firstLevelIndex])
       {
-        p->firstLevelBitmap &= ~(1 << firstLevelIndex);
+        pool->firstLevelBitmap &= ~(1 << firstLevelIndex);
       }
     }
   }
@@ -412,17 +424,17 @@ static void searchMapping(u32int size, int *firstLevelIndex, int *secondLevelInd
   insertMapping(size, firstLevelIndex, secondLevelIndex);
 }
 
-static struct blockHeader *searchSuitableBlock(struct pool *p, int *firstLevelIndex, int *secondLevelIndex)
+static struct blockHeader *searchSuitableBlock(struct pool *pool, int *firstLevelIndex, int *secondLevelIndex)
 {
   /*
   ** First, search for a block in the list associated with the given
   ** fl/sl index.
   */
-  u32int secondLevelBitmap = p->secondLevelBitmap[*firstLevelIndex] & (~0 << *secondLevelIndex);
+  u32int secondLevelBitmap = pool->secondLevelBitmap[*firstLevelIndex] & (~0 << *secondLevelIndex);
   if (!secondLevelBitmap)
   {
     /* No block exists. Search in the next largest first-level list. */
-    const u32int firstLevelBitmap = p->firstLevelBitmap & (~0 << (*firstLevelIndex + 1));
+    const u32int firstLevelBitmap = pool->firstLevelBitmap & (~0 << (*firstLevelIndex + 1));
     if (!firstLevelBitmap)
     {
       /* No free blocks available, memory has been exhausted. */
@@ -430,24 +442,24 @@ static struct blockHeader *searchSuitableBlock(struct pool *p, int *firstLevelIn
     }
 
     *firstLevelIndex = tlsf_ffs(firstLevelBitmap);
-    secondLevelBitmap = p->secondLevelBitmap[*firstLevelIndex];
+    secondLevelBitmap = pool->secondLevelBitmap[*firstLevelIndex];
   }
   ASSERT(secondLevelBitmap, "internal error - second level bitmap is null");
   *secondLevelIndex = tlsf_ffs(secondLevelBitmap);
 
   /* Return the first block in the free list. */
-  return p->blocks[*firstLevelIndex][*secondLevelIndex];
+  return pool->blocks[*firstLevelIndex][*secondLevelIndex];
 }
 
 /* Split a block into two, the second of which is free. */
 static struct blockHeader *splitBlock(struct blockHeader *block, u32int size)
 {
   /* Calculate the amount of space left in the remaining block. */
-  struct blockHeader *remainingBlock = (struct blockHeader *)(((u32int)((void*)((unsigned char*)block + BLOCK_START_OFFSET)) + (size - BLOCK_HEADER_OVERHEAD)));
+  struct blockHeader *remainingBlock = (struct blockHeader *)(((u32int)getPointerFromBlock(block) + (size - BLOCK_HEADER_OVERHEAD)));
 
   const u32int remainingSize = (block->size & BLOCK_HEADER_SIZE_BITS) - (size + BLOCK_HEADER_OVERHEAD);
 
-  void *remainingBlockPtr = (void *)((unsigned char *)remainingBlock + BLOCK_START_OFFSET);
+  void *const remainingBlockPtr = getPointerFromBlock(remainingBlock);
   ASSERT(remainingBlockPtr == alignPointer(remainingBlockPtr, ALIGN_SIZE), "remaining block not aligned properly");
 
   ASSERT((block->size & BLOCK_HEADER_SIZE_BITS) == remainingSize + size + BLOCK_HEADER_OVERHEAD, "invalid split block size");
@@ -489,10 +501,10 @@ static void *tlsfAlign(struct pool *pool, u32int alignment, u32int size)
 
   if (block)
   {
-    void *ptr = (void *)((unsigned char *)block + BLOCK_START_OFFSET);
+    void *pointer = getPointerFromBlock(block);
 
-    void *aligned = alignPointer(ptr, alignment);
-    u32int gap = (u32int)aligned - (u32int)ptr;
+    void *aligned = alignPointer(pointer, alignment);
+    u32int gap = (u32int)aligned - (u32int)pointer;
 
     /* If gap size is too small, offset to next aligned boundary. */
     if (gap && gap < minimumGap)
@@ -502,7 +514,7 @@ static void *tlsfAlign(struct pool *pool, u32int alignment, u32int size)
       const void *nextAligned = (void *)((u32int)aligned + offset);
 
       aligned = alignPointer(nextAligned, alignment);
-      gap = (u32int)aligned - (u32int)ptr;
+      gap = (u32int)aligned - (u32int)pointer;
     }
 
     if (gap)
@@ -515,19 +527,19 @@ static void *tlsfAlign(struct pool *pool, u32int alignment, u32int size)
   return prepareBlockForUse(pool, block, adjustedSize);
 }
 
-static void *tlsfAllocate(struct pool *p, u32int size)
+static void *tlsfAllocate(struct pool *pool, u32int size)
 {
   const u32int adjust = adjustRequestSize(size, ALIGN_SIZE);
-  return prepareBlockForUse(p, locateFreeBlock(p, adjust), adjust);
+  return prepareBlockForUse(pool, locateFreeBlock(pool, adjust), adjust);
 }
 
-static inline void tlsfFree(struct pool *p, void *ptr)
+static inline void tlsfFree(struct pool *pool, void *pointer)
 {
-  struct blockHeader *block = (struct blockHeader *)((char *)ptr - BLOCK_START_OFFSET);
+  struct blockHeader *block = getBlockFromPointer(pointer);
   markBlockFree(block);
-  block = mergeBlockWithPrevious(p, block);
-  block = mergeBlockWithNext(p, block);
-  insertBlock(p, block);
+  block = mergeBlockWithPrevious(pool, block);
+  block = mergeBlockWithNext(pool, block);
+  insertBlock(pool, block);
 }
 
 /*
@@ -543,23 +555,23 @@ static inline void tlsfFree(struct pool *p, void *ptr)
 ** - an extended buffer size will leave the newly-allocated area with
 **   contents undefined
 */
-void *tlsfReallocate(struct pool *pool, void *ptr, u32int size)
+void *tlsfReallocate(struct pool *pool, void *pointer, u32int size)
 {
   void *p = 0;
 
   /* Zero-size requests are treated as free. */
-  if (ptr && size == 0)
+  if (pointer && size == 0)
   {
-    tlsfFree(pool, ptr);
+    tlsfFree(pool, pointer);
   }
   /* Requests with NULL pointers are treated as malloc. */
-  else if (!ptr)
+  else if (!pointer)
   {
     p = tlsfAllocate(pool, size);
   }
   else
   {
-    struct blockHeader *block = (struct blockHeader *)((unsigned char *)ptr - BLOCK_START_OFFSET);
+    struct blockHeader *block = getBlockFromPointer(pointer);
     struct blockHeader *next = getNextBlock(block);
 
     const u32int currentSize = (block->size & BLOCK_HEADER_SIZE_BITS);
@@ -575,8 +587,8 @@ void *tlsfReallocate(struct pool *pool, void *ptr, u32int size)
       p = tlsfAllocate(pool, size);
       if (p)
       {
-        memcpy(p, ptr, currentSize < size ? currentSize : size);
-        tlsfFree(pool, ptr);
+        memcpy(p, pointer, currentSize < size ? currentSize : size);
+        tlsfFree(pool, pointer);
       }
     }
     else
@@ -590,7 +602,7 @@ void *tlsfReallocate(struct pool *pool, void *ptr, u32int size)
 
       /* Trim the resulting block and return the original pointer. */
       trimUsedBlock(pool, block, adjustedSize);
-      p = ptr;
+      p = pointer;
     }
   }
 
@@ -598,7 +610,7 @@ void *tlsfReallocate(struct pool *pool, void *ptr, u32int size)
 }
 
 /* Trim any trailing block space off the end of a block, return to pool. */
-static void trimFreeBlock(struct pool *p, struct blockHeader *block, u32int size)
+static void trimFreeBlock(struct pool *pool, struct blockHeader *block, u32int size)
 {
   ASSERT((block->size & BLOCK_HEADER_FREE_BIT), "block must be free");
   if (canSplitBlock(block, size))
@@ -606,11 +618,11 @@ static void trimFreeBlock(struct pool *p, struct blockHeader *block, u32int size
     struct blockHeader *remainingBlock = splitBlock(block, size);
     linkBlockWithNext(block);
     remainingBlock->size |= BLOCK_HEADER_PREV_FREE_BIT;
-    insertBlock(p, remainingBlock);
+    insertBlock(pool, remainingBlock);
   }
 }
 
-static struct blockHeader *trimLeadingFreeBlock(struct pool *p, struct blockHeader *block, u32int size)
+static struct blockHeader *trimLeadingFreeBlock(struct pool *pool, struct blockHeader *block, u32int size)
 {
   struct blockHeader *remainingBlock = block;
   if (canSplitBlock(block, size))
@@ -620,13 +632,13 @@ static struct blockHeader *trimLeadingFreeBlock(struct pool *p, struct blockHead
     remainingBlock->size |= BLOCK_HEADER_PREV_FREE_BIT;
 
     linkBlockWithNext(block);
-    insertBlock(p, block);
+    insertBlock(pool, block);
   }
   return remainingBlock;
 }
 
 /* Trim any trailing block space off the end of a used block, return to pool. */
-static void trimUsedBlock(struct pool *p, struct blockHeader *block, u32int size)
+static void trimUsedBlock(struct pool *pool, struct blockHeader *block, u32int size)
 {
   ASSERT(!(block->size & BLOCK_HEADER_FREE_BIT), "block must be used");
   if (canSplitBlock(block, size))
@@ -634,7 +646,7 @@ static void trimUsedBlock(struct pool *p, struct blockHeader *block, u32int size
     /* If the next block is free, we must coalesce. */
     struct blockHeader *remainingBlock = splitBlock(block, size);
     remainingBlock->size |= BLOCK_HEADER_PREV_FREE_BIT;
-    remainingBlock = mergeBlockWithNext(p, remainingBlock);
-    insertBlock(p, remainingBlock);
+    remainingBlock = mergeBlockWithNext(pool, remainingBlock);
+    insertBlock(pool, remainingBlock);
   }
 }
