@@ -26,6 +26,7 @@
  */
 
 
+#include "common/bit.h"
 #include "common/debug.h"
 #include "common/stddef.h"
 #include "common/stdlib.h"
@@ -33,23 +34,6 @@
 
 #include "common/memoryAllocator/allocator.h"
 #include "common/memoryAllocator/tlsf.h"
-
-
-// TODO use bit.h
-/*
-** NOTE: TLSF spec relies on ffs/fls returning value 0..31.
-** ffs/fls return 1-32 by default, returning 0 for error.
-*/
-static int tlsf_fls(unsigned int word)
-{
-                                const int bit = word ? 32 - __builtin_clz(word) : 0;
-                                return bit - 1;
-}
-
-static int tlsf_ffs(unsigned int word)
-{
-                                return __builtin_ffs(word) - 1;
-}
 
 
 /*
@@ -99,6 +83,8 @@ static struct blockHeader *searchSuitableBlock(struct pool *pool, int *firstLeve
 static struct blockHeader *splitBlock(struct blockHeader *block, u32int size);
 static void *tlsfAlign(struct pool *pool, u32int alignment, u32int bytes);
 static void *tlsfAllocate(struct pool *pool, u32int size);
+static inline int tlsfFindFirstBitSet(u32int word);
+static inline int tlsfFindLastBitSet(u32int word);
 static inline void tlsfFree(struct pool *pool, void *pointer);
 static void *tlsfReallocate(struct pool *pool, void *pointer, u32int size);
 static void trimFreeBlock(struct pool *pool, struct blockHeader *block, u32int size);
@@ -269,7 +255,7 @@ static void insertMapping(u32int size, int *firstLevelIndex, int *secondLevelInd
   }
   else
   {
-    *firstLevelIndex = tlsf_fls(size);
+    *firstLevelIndex = tlsfFindLastBitSet(size);
     *secondLevelIndex = (int)(size >> (*firstLevelIndex - SL_INDEX_COUNT_LOG2)) ^ (1 << SL_INDEX_COUNT_LOG2);
     *firstLevelIndex -= (FL_INDEX_SHIFT - 1);
   }
@@ -419,7 +405,7 @@ static void searchMapping(u32int size, int *firstLevelIndex, int *secondLevelInd
 {
   if (size >= (1 << SL_INDEX_COUNT_LOG2))
   {
-    size += (1 << (tlsf_fls(size) - SL_INDEX_COUNT_LOG2)) - 1;
+    size += (1 << (tlsfFindLastBitSet(size) - SL_INDEX_COUNT_LOG2)) - 1;
   }
   insertMapping(size, firstLevelIndex, secondLevelIndex);
 }
@@ -441,11 +427,11 @@ static struct blockHeader *searchSuitableBlock(struct pool *pool, int *firstLeve
       return 0;
     }
 
-    *firstLevelIndex = tlsf_ffs(firstLevelBitmap);
+    *firstLevelIndex = tlsfFindFirstBitSet(firstLevelBitmap);
     secondLevelBitmap = pool->secondLevelBitmap[*firstLevelIndex];
   }
   ASSERT(secondLevelBitmap, "internal error - second level bitmap is null");
-  *secondLevelIndex = tlsf_ffs(secondLevelBitmap);
+  *secondLevelIndex = tlsfFindFirstBitSet(secondLevelBitmap);
 
   /* Return the first block in the free list. */
   return pool->blocks[*firstLevelIndex][*secondLevelIndex];
@@ -531,6 +517,21 @@ static void *tlsfAllocate(struct pool *pool, u32int size)
 {
   const u32int adjust = adjustRequestSize(size, ALIGN_SIZE);
   return prepareBlockForUse(pool, locateFreeBlock(pool, adjust), adjust);
+}
+
+/*
+ * The TLSF specification relies on 'ffs' (findFirstBitSet) and 'fls' (findLastBitSet) functions
+ * returning a value in the range 0..31. GCC builtins return a value in the range 1..32, or 0 for
+ * error.
+ */
+static inline int tlsfFindFirstBitSet(u32int word)
+{
+  return findFirstBitSet(word) - 1;
+}
+
+static inline int tlsfFindLastBitSet(u32int word)
+{
+  return findLastBitSet(word) - 1;
 }
 
 static inline void tlsfFree(struct pool *pool, void *pointer)
