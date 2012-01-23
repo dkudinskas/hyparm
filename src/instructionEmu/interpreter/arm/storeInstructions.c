@@ -26,15 +26,12 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
 
   u32int baseAddress = loadGuestGPR(regDst, context);
   u32int valueToStore = loadGuestGPR(regSrc, context);
-  u32int offsetAddress = 0x0;
+  u32int offsetAddress;
 
   if (regOrImm == 0)
   {
     // immediate case
     u32int imm32 = instruction & 0x00000FFF;
-
-    DEBUG(INTERPRETER_ARM_STORE, "armStrInstruction: imm32=%x baseAddress=%#.8x valueToStore=%x "
-        "offsetAddress=%#.8x" EOL, imm32, baseAddress, valueToStore, offsetAddress);
 
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
@@ -45,6 +42,9 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
     {
       offsetAddress = baseAddress - imm32;
     }
+
+    DEBUG(INTERPRETER_ARM_STORE, "armStrInstruction: imm32=%x baseAddress=%#.8x valueToStore=%x "
+        "offsetAddress=%#.8x" EOL, imm32, baseAddress, valueToStore, offsetAddress);
   } // Immediate case ends
   else
   {
