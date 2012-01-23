@@ -1,6 +1,6 @@
 #include "common/assert.h"
 #include "common/debug.h"
-#include "common/memFunctions.h"
+#include "common/string.h"
 
 #include "guestManager/guestContext.h"
 #include "guestManager/guestExceptions.h"

@@ -17,4 +17,14 @@
 #endif /* TEST */
 
 
+void free(void *ptr);
+
+void *malloc(u32int size);
+
+#define mallocBytes(size)  malloc(size)
+
+void *memalign(u32int alignment, u32int size);
+
+void *realloc(void *ptr, u32int size);
+
 #endif /* __COMMON__STDLIB_H__ */
