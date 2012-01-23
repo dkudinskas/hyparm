@@ -57,14 +57,14 @@ enum tlsfPrivateConstants
 struct blockHeader
 {
   /* Points to the previous physical block. */
-  struct blockHeader *prev_phys_block;
+  struct blockHeader *previous;
 
   /* The size of this block, excluding the block header. */
   u32int size;
 
   /* Next and previous free blocks. */
-  struct blockHeader *next_free;
-  struct blockHeader *prev_free;
+  struct blockHeader *nextFree;
+  struct blockHeader *previousFree;
 };
 
 struct pool
