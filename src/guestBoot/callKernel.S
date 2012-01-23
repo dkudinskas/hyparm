@@ -1,3 +1,5 @@
+#include "cpuArch/constants.h"
+
 /*
  * callKernel
  *
@@ -10,10 +12,18 @@ callKernel:
    * Modify the SPSR: set USR mode, disable asynchronous aborts and FIQs
    */
   MRS    r4, SPSR
-  BIC    r4, #0x01F
-  ORR    r4, #0x010
-  ORR    r4, #0x100
-  ORR    r4, #0x040
+  BIC    r4, #PSR_MODE
+  ORR    r4, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
+
+#ifdef CONFIG_GUEST_TEST
+  /*
+   * If the LSB of the entry point is set, set the Thumb flag in the SPSR.
+   */
+  TST    r3, #0x1
+  BICNE  r3, r3, #0x1
+  ORRNE  r4, #PSR_T_BIT
+#endif
+
   MSR    SPSR, r4
 
   /* Load the entry point onto the stack, then use the Load PC + copy SPSR to CPSR to jump into USR mode */

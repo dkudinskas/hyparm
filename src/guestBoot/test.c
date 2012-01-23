@@ -29,13 +29,17 @@ void bootTest(GCONTXT *context, u32int imageAddress)
 
   struct testImageHeader imageHeader = getTestImageHeader(imageAddress);
 
+  /*
+   * LSB of entrypoint indicates if Thumb flag should be set
+   */
   u32int loadAddress = imageHeader.ih_load;
   u32int entryPoint = imageHeader.ih_ep;
+  u32int entryPointAddress = imageHeader.ih_ep & ~1;
   u32int sizeInBytes = imageHeader.ih_size;
 
-  if (entryPoint > loadAddress + sizeInBytes || entryPoint < loadAddress)
+  if (entryPointAddress > loadAddress + sizeInBytes || entryPointAddress < loadAddress)
   {
-    printf("bootTest: entrypoint: %#.8x" EOL, entryPoint);
+    printf("bootTest: entrypoint: %#.8x" EOL, entryPointAddress);
     DIE_NOW(context, "Wrong entrypoint");
   }
   if (currentAddress != loadAddress)
