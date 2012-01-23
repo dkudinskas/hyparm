@@ -32,6 +32,9 @@
 #ifdef CONFIG_GUEST_FREERTOS
 #include "guestBoot/freertos.h"
 #endif
+#ifdef CONFIG_GUEST_TEST
+#include "guestBoot/test.h"
+#endif
 #include "guestBoot/linux.h"
 #include "guestBoot/image.h"
 
@@ -52,6 +55,7 @@
 
 #define CL_VALUE_GUEST_OS_FREERTOS   "freertos"
 #define CL_VALUE_GUEST_OS_LINUX      "linux"
+#define CL_VALUE_GUEST_OS_TEST       "test"
 
 
 struct runtimeConfiguration
@@ -171,6 +175,11 @@ void main(s32int argc, char *argv[])
   // does not return
   switch (config.guestOS)
   {
+#ifdef CONFIG_GUEST_TEST
+    case GUEST_OS_TEST:
+      bootTest(context, config.guestKernelAddress);
+      break;
+#endif
 #ifdef CONFIG_GUEST_FREERTOS
     case GUEST_OS_FREERTOS:
       bootFreeRtos(context, config.guestKernelAddress);
@@ -217,6 +226,10 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
         {
           printf("set guest=linux" EOL);
           config->guestOS = GUEST_OS_LINUX;
+        }
+        else if (strcmp(p->value, CL_VALUE_GUEST_OS_TEST) == 0) {
+          printf("set guest=test" EOL);
+          config->guestOS = GUEST_OS_TEST;
         }
         else
         {

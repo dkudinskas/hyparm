@@ -114,6 +114,9 @@ config GUEST_FREERTOS
   depends on THUMB2
   select THUMB_IGNORE_IT
 
+config GUEST_TEST
+  bool "Unit testing"
+
 endmenu
 
 menuconfig DEBUG

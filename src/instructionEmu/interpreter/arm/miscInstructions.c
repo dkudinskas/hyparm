@@ -9,7 +9,18 @@
 
 u32int armBkptInstruction(GCONTXT *context, u32int instruction)
 {
+#ifdef CONFIG_GUEST_TEST
+  u32int imm4 = instruction & 0x0000000F;
+  u32int imm12 = (instruction & 0x000FFF00) >> 4;
+  u32int val = imm12 | imm4;
+  if (val == 0)
+  {
+    DIE_NOW(context, "test passed");
+  }
+  DIE_NOW(context, "test failed");
+#else
   DIE_NOW(context, "not implemented");
+#endif
 }
 
 u32int armClzInstruction(GCONTXT *context, u32int instruction)
