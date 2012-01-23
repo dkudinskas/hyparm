@@ -118,6 +118,10 @@ endmenu
 
 menu "Guest software"
 
+config GUEST_ANDROID
+  bool "Android"
+  select KERNEL_ANDROID
+
 config GUEST_FREERTOS
   bool "FreeRTOS"
   depends on THUMB2
