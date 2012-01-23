@@ -463,4 +463,9 @@ config THUMB_IGNORE_IT
   bool "Treat Thumb IT instruction as safe"
   depends on THUMB2
 
+config KERNEL_ANDROID
+  bool "Small hacks for linux kernel 2.6.37 (Android)"
+  help
+    Hacks to boot the linux 2.6.37 kernel which is used by Android.
+
 endmenu
