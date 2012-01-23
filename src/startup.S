@@ -256,6 +256,7 @@ setGuestContext:
  * - R3: mode bits from CPSR in guest context
  * - R4: pointer to mode-dependent R13 field in guest-context
  * - R5: condition flags extracted from SPSR
+ * - R6: 0x1DF
  */
 .macro save_cc_r0_to_r14
   /*
@@ -277,11 +278,12 @@ setGuestContext:
    */
   get_emulated_mode
   /*
-   * Save condition flags from SPSR into guest context CPSR field; exclude the other bits (AIF)
+   * Save SPSR into guest context CPSR field; exclude AIF bits and mode
    */
-  AND     R2, #0x0FFFFFFF
+  MOVW    R6, #0x1DF
+  AND     R2, R6
   MRS     R5, SPSR
-  AND     R5, #0xF0000000
+  BIC     R5, R6
   ORR     R2, R2, R5
   STR     R2, [R1]
   /*
@@ -403,42 +405,26 @@ setGuestContext:
    */
   ADD     R0, LR, #GC_CPSR_OFFS
   LDR     R0, [R0]
-#ifdef CONFIG_THUMB2
   /*
    * Get value of PC saved in guest context into LR
    */
   ADD     LR, LR, #GC_R15_OFFS
   LDR     LR, [LR]
   /*
-   * Construct SPSR in R0: restore condition flags from the value of the CPSR saved in the guest
-   * context, set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and restore the
-   * Thumb bit
+   * Construct SPSR in R0: set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and
+   * restore all other fields from the CPSR
    */
-  TST     R0, #PSR_T_BIT
-  AND     R0, R0, #PSR_CC_FLAGS_NZCV
-  ORREQ   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
-  ORRNE   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT | PSR_T_BIT)
+  BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
+  ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
+#ifdef CONFIG_THUMB2
   /*
    * Also update guest PC when guest is in Thumb mode, then save SPSR
    */
+  TST     R0, #PSR_T_BIT
   SUBNE   LR, LR, #2
-  MSR     SPSR, R0
-  POP     {R0}
-#else
-  /*
-   * Construct SPSR in R0: restore condition flags from the value of the CPSR saved in the guest
-   * context, set user mode, disable asynchronous aborts and FIQs, but enable IRQs, then save SPSR
-   */
-  AND     R0, R0, #PSR_CC_FLAGS_NZCV
-  ORR     R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
-  MSR     SPSR, R0
-  POP     {R0}
-  /*
-   * Get value of PC saved in guest context into LR
-   */
-  ADD     LR, LR, #GC_R15_OFFS
-  LDR     LR, [LR]
 #endif
+  MSR     SPSR, R0
+  POP     {R0}
   /*
    * Save guest PC on stack, then perform exception return (pop PC and restore SPSR to CPSR)
    */
@@ -453,36 +439,24 @@ setGuestContext:
  * Restore the guest CPSR and switch to guest.
  *
  * Pseudocode:
- * spsr = (context->cpsr & (0xf0000000 | A_BIT | F_BIT)) | USR_MODE;
+ * spsr = (context->cpsr & ~(0x0000001f)) | USR_MODE;
  * guest_pc = context->pc;
- * if (context->cpsr & PSR_T_BIT)
- * {
- *   spsr |= PSR_T_BIT;
- * }
  */
 .macro restore_cpsr_pc_usr_mode
   /* FIXME: this can be done better */
-  PUSH    {R0, R1}
+  PUSH    {R0}
   /*
    * Get value of CPSR saved in guest context into R1
    */
-  ADD     R1, LR, #GC_CPSR_OFFS
-  LDR     R1, [R1]
-  /* Extract condition flags into R0 */
-  AND     R0, R1, #PSR_CC_FLAGS_NZCV
-#ifdef CONFIG_THUMB2
-  /* Extract exception flags & Thumb state*/
-  AND     R1, R1, #(PSR_A_BIT | PSR_I_BIT | PSR_F_BIT | PSR_T_BIT)
-#else
-  /* Extract exception flags */
-  AND     R1, R1, #(PSR_A_BIT | PSR_I_BIT | PSR_F_BIT)
-#endif
-  /* R0= exc flags|thumb state|cc */
-  ORR     R0, R1, R0
-  /* set user mode */
+  ADD     R0, LR, #GC_CPSR_OFFS
+  LDR     R0, [R0]
+  /*
+   * Patch CPSR value (set user mode) and store to SPSR
+   */
+  BIC     R0, R0, #PSR_MODE
   ORR     R0, R0, #PSR_USR_MODE
   MSR     SPSR, R0
-  POP     {R0, R1}
+  POP     {R0}
   /*
    * Get value of PC saved in guest context into LR
    */
