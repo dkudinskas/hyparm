@@ -17,7 +17,7 @@ struct InterruptController * irqController;
 
 void initIntc()
 {
-  irqController = (struct InterruptController *)mallocBytes(sizeof(struct InterruptController));
+  irqController = (struct InterruptController *)malloc(sizeof(struct InterruptController));
   if (irqController == 0)
   {
     DIE_NOW(NULL, "Failed to allocate INTC.");

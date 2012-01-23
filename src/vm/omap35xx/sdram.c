@@ -15,7 +15,7 @@ struct SdramController * sdram;
 
 void initSdram(void)
 {
-  sdram = (struct SdramController *)mallocBytes(sizeof(struct SdramController));
+  sdram = (struct SdramController *)malloc(sizeof(struct SdramController));
   if (sdram == 0)
   {
     DIE_NOW(NULL, "Failed to allocate SDRAM instance");
@@ -29,7 +29,7 @@ void initSdram(void)
   sdram->enabled = 1;
 
 #ifdef SDRAM_STORE_COUNTER
-  u32int * storeTrace = (u32int*)mallocBytes(MEGABYTE_COUNT * sizeof(u32int));
+  u32int * storeTrace = (u32int*)malloc(MEGABYTE_COUNT * sizeof(u32int));
   if (storeTrace == 0)
   {
     DIE_NOW(NULL, "Failed to allocate store trace.");

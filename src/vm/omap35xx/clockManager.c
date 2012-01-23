@@ -17,7 +17,7 @@ struct ClockManager * clockMan;
 void initClockManager()
 {
   // init function: setup device, reset register values to defaults!
-  clockMan = (struct ClockManager *)mallocBytes(sizeof(struct ClockManager));
+  clockMan = (struct ClockManager *)malloc(sizeof(struct ClockManager));
   if (clockMan == 0)
   {
     DIE_NOW(NULL, "Failed to allocate clock manager.");

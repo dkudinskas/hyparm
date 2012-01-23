@@ -25,7 +25,7 @@ device * initialiseHardwareLibrary()
   DEBUG(VP_OMAP_35XX_LIBRARY, "Initialising device library..." EOL);
 
   // top level device, everything hangs on it
-  device * topLevelBus = (device*)mallocBytes(sizeof(device));
+  device * topLevelBus = (device*)malloc(sizeof(device));
   if (topLevelBus == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate top level bus.");
@@ -39,7 +39,7 @@ device * initialiseHardwareLibrary()
 
 
   // QUARTER 0
-  device * q0bus = (device*)mallocBytes(sizeof(device));
+  device * q0bus = (device*)malloc(sizeof(device));
   if (q0bus == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate Q0 bus.");
@@ -53,7 +53,7 @@ device * initialiseHardwareLibrary()
 
 
   // QUARTER 1
-  device * q1bus = (device*)mallocBytes(sizeof(device));
+  device * q1bus = (device*)malloc(sizeof(device));
   if (q1bus == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate Q1 bus.");
@@ -67,7 +67,7 @@ device * initialiseHardwareLibrary()
 
 
   // Q1: ON CHIP MEMORY (OCM, parent Q1)
-  device * onChipMemory = (device*)mallocBytes(sizeof(device));
+  device * onChipMemory = (device*)malloc(sizeof(device));
   if (onChipMemory == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate on chip memory.");
@@ -82,7 +82,7 @@ device * initialiseHardwareLibrary()
 
 
   // OCM: secure boot rom (parent ocm)
-  device * bootRomSecure = (device*)mallocBytes(sizeof(device));
+  device * bootRomSecure = (device*)malloc(sizeof(device));
   if (bootRomSecure == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate secure boot rom.");
@@ -97,7 +97,7 @@ device * initialiseHardwareLibrary()
 
 
   // OCM: public boot rom
-  device * bootRomPublic = (device*)mallocBytes(sizeof(device));
+  device * bootRomPublic = (device*)malloc(sizeof(device));
   if (bootRomPublic == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate public boot rom.");
@@ -112,7 +112,7 @@ device * initialiseHardwareLibrary()
 
 
   // OCM: internal sram
-  device * sramInternal = (device*)mallocBytes(sizeof(device));
+  device * sramInternal = (device*)malloc(sizeof(device));
   if (sramInternal == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate internal SRAM.");
@@ -127,7 +127,7 @@ device * initialiseHardwareLibrary()
 
 
   // Q1: LEVEL3 INTERCONNECT (L3INT, parent Q1)
-  device * l3Interconnect = (device*)mallocBytes(sizeof(device));
+  device * l3Interconnect = (device*)malloc(sizeof(device));
   if (l3Interconnect == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate L3 interconnect bus.");
@@ -142,7 +142,7 @@ device * initialiseHardwareLibrary()
 
 
   // L3INT: general purpose memory controller
-  device * gpmcModule = (device*)mallocBytes(sizeof(device));
+  device * gpmcModule = (device*)malloc(sizeof(device));
   if (gpmcModule == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate GPMC.");
@@ -158,7 +158,7 @@ device * initialiseHardwareLibrary()
 
 
   // Q1: LEVEL4 INTERCONNECT (L4INT, parent Q1)
-  device * l4Interconnect = (device*)mallocBytes(sizeof(device));
+  device * l4Interconnect = (device*)malloc(sizeof(device));
   if (l4Interconnect == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate L4 Interconnect bus.");
@@ -173,7 +173,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4INT: core
-  device * l4IntCore = (device*)mallocBytes(sizeof(device));
+  device * l4IntCore = (device*)malloc(sizeof(device));
   if (l4IntCore == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate L4 Interconnect core.");
@@ -188,7 +188,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4INT_CORE: system control module
-  device * sysCtrlMod = (device*)mallocBytes(sizeof(device));
+  device * sysCtrlMod = (device*)malloc(sizeof(device));
   if (sysCtrlMod == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate System control module.");
@@ -204,7 +204,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4INT_CORE: clock manager (and DPLL)
-  device * clockManager = (device*)mallocBytes(sizeof(device));
+  device * clockManager = (device*)malloc(sizeof(device));
   if (clockManager == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate Clock Manager module.");
@@ -220,7 +220,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4INT_CORE: SDMA
-  device * sdmaModule = (device*)mallocBytes(sizeof(device));
+  device * sdmaModule = (device*)malloc(sizeof(device));
   if (sdmaModule == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate SDMA.");
@@ -236,7 +236,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4INT_CORE: uart1
-  device * uart1 = (device*)mallocBytes(sizeof(device));
+  device * uart1 = (device*)malloc(sizeof(device));
   if (uart1 == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate UART1.");
@@ -252,7 +252,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4INT_CORE: uart2
-  device * uart2 = (device*)mallocBytes(sizeof(device));
+  device * uart2 = (device*)malloc(sizeof(device));
   if (uart2 == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate UART2.");
@@ -268,7 +268,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4INT_CORE: interrupt controller
-  device * intc = (device*)mallocBytes(sizeof(device));
+  device * intc = (device*)malloc(sizeof(device));
   if (intc == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate interrupt controller.");
@@ -284,7 +284,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4INT_CORE: core wakeup interconnect
-  device * l4CoreWakeupInt = (device*)mallocBytes(sizeof(device));
+  device * l4CoreWakeupInt = (device*)malloc(sizeof(device));
   if (l4CoreWakeupInt == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate L4 Core Wakeup interconnect.");
@@ -299,7 +299,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4_CORE_WAKEUP: power and reset manager
-  device * prm = (device*)mallocBytes(sizeof(device));
+  device * prm = (device*)malloc(sizeof(device));
   if (prm == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate Power/reset manager.");
@@ -315,7 +315,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4_CORE_WAKEUP: general purpose I/O 1
-  device * gpio1 = (device*)mallocBytes(sizeof(device));
+  device * gpio1 = (device*)malloc(sizeof(device));
   if (gpio1 == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate GPIO1");
@@ -331,7 +331,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4_CORE_WAKEUP: watchdog timer 2
-  device * wdtimer2 = (device*)mallocBytes(sizeof(device));
+  device * wdtimer2 = (device*)malloc(sizeof(device));
   if (wdtimer2 == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate WDTIMER2");
@@ -346,7 +346,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4_CORE_WAKEUP: general purpose timer 1
-  device * gptimer1 = (device*)mallocBytes(sizeof(device));
+  device * gptimer1 = (device*)malloc(sizeof(device));
   if (gptimer1 == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate GPTIMER1");
@@ -362,7 +362,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4_CORE_WAKEUP: 32 Kiloherz synchronised timer
-  device * timer32k = (device*)mallocBytes(sizeof(device));
+  device * timer32k = (device*)malloc(sizeof(device));
   if (timer32k == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate timer32k");
@@ -378,7 +378,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4 interconnect: L4 interconnect peripherals
-  device * l4IntPer = (device*)mallocBytes(sizeof(device));
+  device * l4IntPer = (device*)malloc(sizeof(device));
   if (l4IntPer == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate L4 Interconnect peripheral bus");
@@ -393,7 +393,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4INT_PER: uart3
-  device * uart3 = (device*)mallocBytes(sizeof(device));
+  device * uart3 = (device*)malloc(sizeof(device));
   if (uart3 == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate UART3");
@@ -409,7 +409,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4_INT_PER: general purpose I/O 2
-  device * gpio2 = (device*)mallocBytes(sizeof(device));
+  device * gpio2 = (device*)malloc(sizeof(device));
   if (gpio2 == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate GPIO2");
@@ -425,7 +425,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4_INT_PER: general purpose I/O 3
-  device * gpio3 = (device*)mallocBytes(sizeof(device));
+  device * gpio3 = (device*)malloc(sizeof(device));
   if (gpio3 == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate GPIO3");
@@ -441,7 +441,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4_INT_PER: general purpose I/O 4
-  device * gpio4 = (device*)mallocBytes(sizeof(device));
+  device * gpio4 = (device*)malloc(sizeof(device));
   if (gpio4 == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate GPIO4");
@@ -457,7 +457,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4_INT_PER: general purpose I/O 5
-  device * gpio5 = (device*)mallocBytes(sizeof(device));
+  device * gpio5 = (device*)malloc(sizeof(device));
   if (gpio5 == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate GPIO5");
@@ -473,7 +473,7 @@ device * initialiseHardwareLibrary()
 
 
   // L4_INT_PER: general purpose I/O 6
-  device * gpio6 = (device*)mallocBytes(sizeof(device));
+  device * gpio6 = (device*)malloc(sizeof(device));
   if (gpio6 == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate GPIO6");
@@ -488,7 +488,7 @@ device * initialiseHardwareLibrary()
                    l4IntPer, &loadGpio, &storeGpio);
 
   // QUARTER 2
-  device * q2bus = (device*)mallocBytes(sizeof(device));
+  device * q2bus = (device*)malloc(sizeof(device));
   if (q2bus == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate Q2 bus");
@@ -502,7 +502,7 @@ device * initialiseHardwareLibrary()
 
 
   // Q2: sdram
-  device * sdramModule = (device*)mallocBytes(sizeof(device));
+  device * sdramModule = (device*)malloc(sizeof(device));
   if (sdramModule == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate SDRAM module");
@@ -518,7 +518,7 @@ device * initialiseHardwareLibrary()
 
 
   // QUARTER 3
-  device * q3bus = (device*)mallocBytes(sizeof(device));
+  device * q3bus = (device*)malloc(sizeof(device));
   if (q3bus == 0)
   {
     DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate Q3 bus");

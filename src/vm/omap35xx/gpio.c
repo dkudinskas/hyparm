@@ -19,7 +19,7 @@ struct Gpio * gpio[6];
 
 void initGpio(u32int gpioNumber)
 {
-  gpio[gpioNumber - 1] = (struct Gpio *)mallocBytes(sizeof(struct Gpio));
+  gpio[gpioNumber - 1] = (struct Gpio *)malloc(sizeof(struct Gpio));
   if (!gpio[gpioNumber - 1])
   {
     DIE_NOW(NULL, "Failed to allocate Gpio.");

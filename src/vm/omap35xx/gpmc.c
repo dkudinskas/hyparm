@@ -15,7 +15,7 @@ struct Gpmc * gpmc;
 
 void initGpmc()
 {
-  gpmc = (struct Gpmc*)mallocBytes(sizeof(struct Gpmc));
+  gpmc = (struct Gpmc*)malloc(sizeof(struct Gpmc));
   if (gpmc == 0)
   {
     DIE_NOW(NULL, "Failed to allocate GPMC.");

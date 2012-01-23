@@ -17,7 +17,7 @@ static struct ClockManagerBE *clkManBE;
 
 void clkManBEInit()
 {
-  clkManBE = (struct ClockManagerBE*)mallocBytes(sizeof(struct ClockManagerBE));
+  clkManBE = (struct ClockManagerBE*)malloc(sizeof(struct ClockManagerBE));
   if (clkManBE == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate CLK_MAN_BE.");

@@ -38,10 +38,10 @@ struct commandLineOption *addCommandLineOption(struct commandLineOption *options
 
 static struct commandLine *createCommandLine()
 {
-  struct commandLine *p = mallocBytes(sizeof(struct commandLine));
+  struct commandLine *p = malloc(sizeof(struct commandLine));
   if (p == NULL)
   {
-    DIE_NOW(NULL, "mallocBytes failed");
+    DIE_NOW(NULL, "malloc failed");
   }
   memset(p, 0, sizeof(struct commandLine));
   return p;
@@ -49,10 +49,10 @@ static struct commandLine *createCommandLine()
 
 static struct commandLineOption *createCommandLineOption()
 {
-  struct commandLineOption *p = mallocBytes(sizeof(struct commandLineOption));
+  struct commandLineOption *p = malloc(sizeof(struct commandLineOption));
   if (p == NULL)
   {
-    DIE_NOW(NULL, "mallocBytes failed");
+    DIE_NOW(NULL, "malloc failed");
   }
   memset(p, 0, sizeof(struct commandLineOption));
   return p;

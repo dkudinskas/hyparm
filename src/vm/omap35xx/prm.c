@@ -16,7 +16,7 @@ struct PowerAndResetManager * prMan;
 void initPrm(void)
 {
   // init function: setup device, reset register values to defaults!
-  prMan = (struct PowerAndResetManager*)mallocBytes(sizeof(struct PowerAndResetManager));
+  prMan = (struct PowerAndResetManager*)malloc(sizeof(struct PowerAndResetManager));
   if (prMan == 0)
   {
     DIE_NOW(NULL, "Failed to allocate power and reset manager.");

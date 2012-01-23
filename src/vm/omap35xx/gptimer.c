@@ -21,7 +21,7 @@ struct GeneralPurposeTimer * gptimer;
 void initGPTimer()
 {
   // init function: setup device, reset register values to defaults!
-  gptimer = (struct GeneralPurposeTimer*)mallocBytes(sizeof(struct GeneralPurposeTimer));
+  gptimer = (struct GeneralPurposeTimer*)malloc(sizeof(struct GeneralPurposeTimer));
   if (gptimer == 0)
   {
     DIE_NOW(NULL, "Failed to allocate general purpose timer.");
