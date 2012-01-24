@@ -390,11 +390,10 @@ setGuestContext:
  * Restore the guest CPSR and switch to guest.
  *
  * Pseudocode:
- * spsr = ((context->cpsr & 0xf0000000) | A_BIT | F_BIT) | USR_MODE;
+ * spsr = (context->cpsr & ~(I_BIT | MODE)) | A_BIT | F_BIT | USR_MODE;
  * guest_pc = context->pc;
- * if (context->cpsr & PSR_T_BIT)
+ * if (spsr & PSR_T_BIT)
  * {
- *   spsr |= PSR_T_BIT;
  *   guest_pc -= 2;
  * }
  */
@@ -439,7 +438,7 @@ setGuestContext:
  * Restore the guest CPSR and switch to guest.
  *
  * Pseudocode:
- * spsr = (context->cpsr & ~(0x0000001f)) | USR_MODE;
+ * spsr = (context->cpsr & ~MODE) | USR_MODE;
  * guest_pc = context->pc;
  */
 .macro restore_cpsr_pc_usr_mode
