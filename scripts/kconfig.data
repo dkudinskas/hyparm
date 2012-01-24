@@ -133,10 +133,6 @@ config DEBUG_STARTUP
   bool "Debug startup"
   depends on DEBUG
 
-config DEBUG_MEMORY_ALLOCATOR
-  bool "Debug memory allocator"
-  depends on DEBUG
-
 config DEBUG_GUEST_CONTEXT
   bool "Debug guest context routines"
   default y

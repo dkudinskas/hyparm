@@ -26,7 +26,6 @@
  */
 
 
-#include "common/assert.h"
 #include "common/bit.h"
 #include "common/debug.h"
 #include "common/stddef.h"
@@ -55,8 +54,8 @@ static const u32int BLOCK_SIZE_MIN = sizeof(struct blockHeader) - sizeof(struct 
 static const u32int BLOCK_SIZE_MAX = 1U << FL_INDEX_MAX;
 
 
-COMPILE_TIME_ASSERT(sizeof(u32int) * CHAR_BIT >= SL_INDEX_COUNT, __tlsf_SL_INDEX_COUNT_cannot_exceed_number_of_bits_in_sl_bitmap);
-COMPILE_TIME_ASSERT(ALIGN_SIZE == SMALL_BLOCK_SIZE / SL_INDEX_COUNT, __tlsf_sizes_not_properly_tuned);
+COMPILE_TIME_ASSERT(sizeof(u32int) * CHAR_BIT >= SL_INDEX_COUNT, __SL_INDEX_COUNT_cannot_exceed_number_of_bits_in_sl_bitmap);
+COMPILE_TIME_ASSERT(ALIGN_SIZE == SMALL_BLOCK_SIZE / SL_INDEX_COUNT, __sizes_not_properly_tuned);
 
 
 static struct blockHeader *absorbBlock(struct blockHeader *previousBlock, struct blockHeader *block);
@@ -66,6 +65,7 @@ static void *alignPointer(const void *pointer, u32int align);
 static inline u32int alignUp(u32int word, u32int align);
 static bool canSplitBlock(struct blockHeader *block, u32int size);
 static void *createPool(void *start, u32int bytes);
+static void defaultHeapWalker(void *pointer, u32int size, s32int used, void *user);
 static inline struct blockHeader *getBlockFromPointer(void *pointer);
 static struct blockHeader *getNextBlock(const struct blockHeader *block);
 static inline u32int getOverhead(void);
@@ -73,6 +73,7 @@ static inline void *getPointerFromBlock(const struct blockHeader *block);
 static void insertBlock(struct pool *pool, struct blockHeader *block);
 static void insertFreeBlock(struct pool *pool, struct blockHeader *block, u32int firstLevelIndex, u32int secondLevelIndex);
 static void insertMapping(u32int size, u32int *firstLevelIndex, u32int *secondLevelIndex);
+static void integrityHeapWalker(void *pointer, u32int size, s32int used, void *user);
 static bool isLastBlock(const struct blockHeader *block);
 static struct blockHeader *linkBlockWithNext(struct blockHeader *block);
 static struct blockHeader *locateFreeBlock(struct pool *pool, u32int size);
@@ -88,10 +89,12 @@ static struct blockHeader *searchSuitableBlock(struct pool *pool, u32int *firstL
 static struct blockHeader *splitBlock(struct blockHeader *block, u32int size);
 static void *tlsfAlign(struct pool *pool, u32int alignment, u32int bytes);
 static void *tlsfAllocate(struct pool *pool, u32int size);
+static s32int tlsfCheckHeapIntegrity(struct pool *pool);
 static inline u32int tlsfFindFirstBitSet(u32int word);
 static inline u32int tlsfFindLastBitSet(u32int word);
 static inline void tlsfFree(struct pool *pool, void *pointer);
 static void *tlsfReallocate(struct pool *pool, void *pointer, u32int size);
+static void tlsfWalkHeap(struct pool *pool, heapWalker walker, void *user);
 static void trimFreeBlock(struct pool *pool, struct blockHeader *block, u32int size);
 static struct blockHeader *trimLeadingFreeBlock(struct pool *pool, struct blockHeader *block, u32int size);
 static void trimUsedBlock(struct pool *pool, struct blockHeader *block, u32int size);
@@ -183,6 +186,16 @@ static void *createPool(void *start, u32int bytes)
   return p;
 }
 
+static void defaultHeapWalker(void *pointer, u32int size, s32int used, void *user)
+{
+  printf("\t%p %s size: %x (%p)" EOL, pointer, used ? "used" : "free", size, getBlockFromPointer(pointer));
+}
+
+void dumpAllocatorInternals()
+{
+  tlsfWalkHeap(staticPool, defaultHeapWalker, NULL);
+}
+
 void free(void *ptr)
 {
   tlsfFree(staticPool, ptr);
@@ -264,6 +277,19 @@ static void insertMapping(u32int size, u32int *firstLevelIndex, u32int *secondLe
     *secondLevelIndex = (size >> (*firstLevelIndex - SL_INDEX_COUNT_LOG2)) ^ (1 << SL_INDEX_COUNT_LOG2);
     *firstLevelIndex -= (FL_INDEX_SHIFT - 1);
   }
+}
+
+static void integrityHeapWalker(void *pointer, u32int size, s32int used, void *user)
+{
+  struct blockHeader *block = getBlockFromPointer(pointer);
+  struct integrity *integrity = (struct integrity *)user;
+  s32int status = 0;
+
+  TLSF_INSIST(integrity->previousStatus == ((block->size & BLOCK_HEADER_PREV_FREE_BIT) ? 1 : 0), "previous status incorrect");
+  TLSF_INSIST(size == (block->size & BLOCK_HEADER_SIZE_BITS), "block size incorrect");
+
+  integrity->previousStatus = (block->size & BLOCK_HEADER_FREE_BIT) ? 1 : 0;
+  integrity->status += status;
 }
 
 static bool isLastBlock(const struct blockHeader *block)
@@ -524,6 +550,60 @@ static void *tlsfAllocate(struct pool *pool, u32int size)
   return prepareBlockForUse(pool, locateFreeBlock(pool, adjust), adjust);
 }
 
+static s32int tlsfCheckHeapIntegrity(struct pool *pool)
+{
+  u32int i, j;
+  s32int status = 0;
+
+  /* Check that the blocks are physically correct. */
+  struct integrity integrity = { 0, 0 };
+  tlsfWalkHeap(pool, integrityHeapWalker, &integrity);
+  status = integrity.status;
+
+  /* Check that the free lists and bitmaps are accurate. */
+  for (i = 0; i < FL_INDEX_COUNT; ++i)
+  {
+    for (j = 0; j < SL_INDEX_COUNT; ++j)
+    {
+      const u32int firstLevelBitmap = pool->firstLevelBitmap & (1 << i);
+      const u32int secondLevelList = pool->secondLevelBitmap[i];
+      const u32int secondLevelBitmap = secondLevelList & (1 << j);
+      const struct blockHeader *block = pool->blocks[i][j];
+
+      /* Check that first- and second-level lists agree. */
+      if (!firstLevelBitmap)
+      {
+        TLSF_INSIST(!secondLevelBitmap, "second level map must be null");
+      }
+
+      if (!secondLevelBitmap)
+      {
+        TLSF_INSIST(block == &pool->nullBlock, "block list must be null");
+        continue;
+      }
+
+      /* Check that there is at least one free block. */
+      TLSF_INSIST(secondLevelList, "no free blocks in second level map");
+      TLSF_INSIST(block != &pool->nullBlock, "block should not be null");
+
+      while (block != &pool->nullBlock)
+      {
+        u32int firstLevelIndex, secondLevelIndex;
+        TLSF_INSIST((block->size & BLOCK_HEADER_FREE_BIT), "block should be free");
+        TLSF_INSIST(!(block->size & BLOCK_HEADER_PREV_FREE_BIT), "blocks should have coalesced");
+        TLSF_INSIST(!(getNextBlock(block)->size & BLOCK_HEADER_FREE_BIT), "blocks should have coalesced");
+        TLSF_INSIST((getNextBlock(block)->size & BLOCK_HEADER_PREV_FREE_BIT), "block should be free");
+        TLSF_INSIST((block->size & BLOCK_HEADER_SIZE_BITS) >= BLOCK_SIZE_MIN, "block not minimum size");
+        insertMapping((block->size & BLOCK_HEADER_SIZE_BITS), &firstLevelIndex, &secondLevelIndex);
+        TLSF_INSIST(firstLevelIndex == i && secondLevelIndex == j, "block size indexed in wrong list");
+        block = block->nextFree;
+      }
+    }
+  }
+
+  return status;
+}
+
 /*
  * The TLSF specification relies on 'ffs' (findFirstBitSet) and 'fls' (findLastBitSet) functions
  * returning a value in the range 0..31. GCC builtins return a value in the range 1..32, or 0 for
@@ -613,6 +693,17 @@ void *tlsfReallocate(struct pool *pool, void *pointer, u32int size)
   }
 
   return p;
+}
+
+static void tlsfWalkHeap(struct pool *pool, heapWalker walker, void *user)
+{
+  struct blockHeader *block = (struct blockHeader *)((u32int)pool + (sizeof(struct pool) - BLOCK_HEADER_OVERHEAD));
+  walker = walker ? walker : defaultHeapWalker;
+  while (block && !isLastBlock(block))
+  {
+    walker(getPointerFromBlock(block), block->size & BLOCK_HEADER_SIZE_BITS, !(block->size & BLOCK_HEADER_FREE_BIT), user);
+    block = getNextBlock(block);
+  }
 }
 
 /* Trim any trailing block space off the end of a block, return to pool. */
