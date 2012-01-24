@@ -211,12 +211,10 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
         }
         else if (strcmp(p->value, CL_VALUE_GUEST_OS_FREERTOS) == 0)
         {
-          printf("set guest=freertos" EOL);
           config->guestOS = GUEST_OS_FREERTOS;
         }
         else if (strcmp(p->value, CL_VALUE_GUEST_OS_LINUX) == 0)
         {
-          printf("set guest=linux" EOL);
           config->guestOS = GUEST_OS_LINUX;
         }
         else
