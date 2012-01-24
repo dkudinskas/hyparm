@@ -2,6 +2,7 @@
 #define __COMMON__TYPES_H__
 
 #include "common/assert.h"
+#include "common/limits.h"
 
 
 #define TRUE     1
@@ -25,6 +26,8 @@ typedef unsigned short      u16int;
 typedef unsigned int        u32int;
 typedef unsigned long long  u64int;
 
+
+COMPILE_TIME_ASSERT(CHAR_BIT == 8, __char_not_8bit);
 
 COMPILE_TIME_ASSERT(sizeof(void *) == 4, __pointers_not_32bit);
 

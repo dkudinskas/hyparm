@@ -11,5 +11,7 @@
 
 void initialiseAllocator(u32int startAddress, u32int bytes);
 
+void dumpAllocatorInternals(void);
+
 
 #endif
