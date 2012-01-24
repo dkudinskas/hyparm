@@ -4,6 +4,7 @@
 
 #include "common/commandLine.h"
 #include "common/debug.h"
+#include "common/markers.h"
 #include "common/stdarg.h"
 #include "common/stddef.h"
 #include "common/string.h"
@@ -108,6 +109,11 @@ void main(s32int argc, char *argv[])
 #else
   beUartStartup(3, 115200);
 #endif
+
+  /*
+   * Print the bounds of the hypervisor image in RAM.
+   */
+  DEBUG(STARTUP, "Hypervisor @ %#.8x -- %#.8x" EOL, HYPERVISOR_IMAGE_START_ADDRESS, HYPERVISOR_IMAGE_END_ADDRESS);
 
   /*
    * Use command line arguments passed by U-Boot to update the runtime configuration structure. The
