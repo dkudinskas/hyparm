@@ -5,7 +5,15 @@
 
 #include "drivers/beagle/beUart.h"
 
+#include "io/fs/fat.h"
+
+
 extern GCONTXT * getGuestContext(void); //from main.c
+
+#ifdef CONFIG_MMC
+extern fatfs mainFilesystem;
+extern file * debugStream;
+#endif
 
 #ifdef DIE_NOW_SCANNER_COUNTER
   extern u32int scannerReqCounter; //from scanner.c
@@ -76,9 +84,27 @@ u32int printf(const char *fmt, ...)
 
   /* Print the string */
   serialPuts(printbuffer);
+
   return i;
 }
 
+#if CONFIG_MMC
+u32int fprintf(const char *fmt, ...)
+{
+  va_list args;
+  u32int i;
+  char printbuffer[256];
+  va_start(args, fmt);
+
+  i = vsprintf(printbuffer, fmt, args);
+  va_end(args);
+
+  /* Print the string */
+  fwrite(&mainFilesystem, debugStream, printbuffer, stringlen(printbuffer));
+
+  return i;
+}
+#endif
 
 u32int vsprintf(char *buf, const char *fmt, va_list args)
 {

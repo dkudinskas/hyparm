@@ -172,6 +172,10 @@ descriptor* createGuestOSPageTable()
   smallMapMemory(ptd, GPTIMER2, (GPTIMER2 + GPTIMER2_SIZE - 1),
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
+  // MMC1 interface
+  smallMapMemory(ptd, SD_MMC1, (SD_MMC1+SD_MMC1_SIZE-1),
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
 #ifdef PT_SHADOW_DBG
   printf("New shadow PT dump @ %08x\n", (u32int)ptd);
   dumpPageTable(ptd);

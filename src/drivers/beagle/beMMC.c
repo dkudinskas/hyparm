@@ -464,7 +464,7 @@ int mmcWrite(struct mmc *dev, const char *buf, u32int size)
     
     if (stat & STAT_BWR)
     {
-      //HS write buffer has at least one block empty
+      // HS write buffer has at least one block empty
       u32int index;
 
       writeWord(dev->base + MMCHS_STAT, readWord(dev->base + MMCHS_STAT) | STAT_BWR);
@@ -474,14 +474,7 @@ int mmcWrite(struct mmc *dev, const char *buf, u32int size)
         writeWord(dev->base + MMCHS_DATA, *input);
         input++;
       }
-
       size -= count * 4;
-    }
-
-    if (stat & STAT_BRR)
-    {
-      // again, need to find out why this is needed
-      writeWord(dev->base + MMCHS_STAT, readWord(dev->base + MMCHS_STAT) | STAT_BRR);
     }
 
     if (stat & STAT_TC)

@@ -2,6 +2,8 @@
 # BeagleBoard specific configuration
 #
 
+CONFIG_MMC=y
+
 TARGET_BASE_ADDRESS = 0x8C000000
 
 TARGET_ASMFLAGS = \

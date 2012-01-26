@@ -10,12 +10,15 @@
 // uncomment me to enable debug: #define FAT_DEBUG
 
 #define CLUSTER_REL_LBA(fs, x) (fs->clusterBegin + (x - 2) * fs->sectorsPerCluster)
-#define FAT_EOC_MARKER(x) (x >= 0x0FFFFFF8 && x <= 0x0FFFFFFF)
+#define FAT_EOC_MARKER(x) ((x & 0x0FFFFFFF) >= 0x0FFFFFF8 && (x & 0x0FFFFFFF) <= 0x0FFFFFFF)
 
-#define FAT_DE_UNUSED 0xE5
+#define FAT32_DIR_ENTRY_LENGTH  32  // well, obviously
+
+#define FAT_DE_UNUSED   0xE5
 #define FAT_DE_DIR_MASK 0x10
-#define FAT_LF_MASK 0xF
-#define FAT_EOC_VAL 0x0FFFFFFFF
+#define FAT_DE_EOD      0x0
+#define FAT_LF_MASK     0xF
+#define FAT_EOC_VAL     0xFFFFFFFF
 
 /* Representation of a "mounted" fat filesystem. */
 typedef struct FAT
@@ -27,7 +30,7 @@ typedef struct FAT
   u8int numFats;              // always 2
   u32int sectorsPerFat;
   u32int rootDirFirstCluster; // usually 0x2
-  int mounted;
+  bool mounted;
   blockDevice *blockDevice;
   struct Partition *part;     // partition in primary table where this fs is located
   u32int fatBegin;            // partition relative fat location
@@ -39,32 +42,43 @@ typedef struct DirectoryEntry
 {
   char filename[11];
   char attrib;
-  u16int firstClusterHigh;  // TODO may be able to remove these later as we already
-  u16int firstClusterLow;   // calculate the first cluster
+  u16int firstClusterHigh;
+  u16int firstClusterLow;
   u32int firstCluster;
   u32int fileSize;
   u32int parentCluster;
-  int free;
+  bool free;
   int isDirectory;
-  int valid;
+  bool valid;
   u32int position; // position in parent cluster - used during write
 } dentry;
 
 
+typedef struct FatFileHandle
+{
+  dentry *dirEntry;
+  u32int lastCluster;
+  u32int bytesInLastCluster;
+} file;
+
+
 int fatMount(fatfs *fs, blockDevice *dev, int part_num);
 
-void fatRootLs(fatfs *fs);
+void tree(fatfs *fs, u32int currentCluster, u32int level);
 
 void loadFatDirEntry(char *record, dentry *d);
 
-void writeFatDirEntry(fatfs *fs, dentry *d, u32int position);
+void setFatDirEntry(fatfs *fs, dentry *d, u32int position);
 
-int fatReadFile(fatfs *fs, char *fname, void *out, u32int maxlen);
+/*** operations on files ***/
+int fread(fatfs *fs, file *handle, void *out, u32int maxlen);
+int fwrite(fatfs *fs, file *handle, void *src, u32int length);
+int fdelete(fatfs *fs, file *handle);
+file* fopen(fatfs *fs, char *fname);
+file* fnew(fatfs *fs, char *fname);
 
-int fatWriteFile(fatfs *fs, char *fname, void *src, u32int n);
-
+/*** READ / WRITE BLOCKS ***/
 u32int fatBlockRead(fatfs *fs, u32int start, u64int blkCount, void *dst);
-
 u32int fatBlockWrite(fatfs *fs, u32int start, u64int blkCount, const void *src);
 
 u32int fatLoadClusFatSector(fatfs *fs, u32int clus, char *buf);
@@ -75,10 +89,8 @@ u32int fatGetFreeClus(fatfs *fs);
 
 u32int fatGetNextClus(fatfs *fs, u32int clus);
 
-void nameToUpper(char *s);
+bool filenameMatch(char *user, char *fatname);
 
-int filenameMatch(char *user, char *fatname);
-
-dentry getPathDirEntry(fatfs *fs, char *fname, int createNew);
+dentry *getPathDirEntry(fatfs *fs, char *fname, int createNew);
 
 #endif
