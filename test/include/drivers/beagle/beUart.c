@@ -1,7 +1,11 @@
 #ifndef __DRIVERS__BEAGLE__BE_UART_H__
 #define __DRIVERS__BEAGLE__BE_UART_H__
 
+
 #include <stdio.h>
+
+#include "drivers/beagle/beUart.h"
+
 
 char serialGetc()
 {

@@ -2,32 +2,10 @@
 #include "cli/cliLoad.h"
 
 #include "common/ctype.h"
+#include "common/debug.h"
+#include "common/stdio.h"
 #include "common/stringFunctions.h"
 
-#include "drivers/beagle/beUart.h"
-
-
-/*
- * Size of the buffer in which command line input is stored.
- */
-#define CLI_BUFFER_SIZE  64
-
-/*
- * Maximum number of tokens the input is split into.
- * The maximum number of 'arguments' to any 'command' is (CLI_MAX_TOKENS - 1).
- *
- * CAUTION: for each token, a buffer of size CLI_BUFFER_SIZE is allocated on the stack.
- * Only increase this number if you are sure you will not cause a stack overflow!
- */
-#define CLI_MAX_TOKENS    4
-
-/*
- * Command handler function pointer type.
- *
- * Each command handler must be of the following form:
- * void handler(int argc, char **argv);
- */
-typedef void (*cliCommandHandler)(int argc, const char *const *argv);
 
 /*
  * Command
@@ -48,8 +26,8 @@ struct cliCommand
  */
 static struct cliCommand commandTable[CLI_NUM_COMMANDS] =
 {
-    {"loadBinary", cliLoadBinary},
-    {"loadImage", cliLoadImage}
+  { "loadBinary", cliLoadBinary },
+  { "loadImage", cliLoadImage }
 };
 
 /*
@@ -65,56 +43,63 @@ struct parseState
 
 
 static s32int findCommand(const char *command);
-static void run(const char *command);
+
+#ifndef TEST
+static
+#endif
+  void run(const char *command);
 
 
 void enterCliLoop()
 {
   char buffer[CLI_BUFFER_SIZE];
   char *const bufferEnd = buffer + (CLI_BUFFER_SIZE - 1);
-  int ignore_n = 1;
+  bool escape = FALSE;
+  bool ignore_n = TRUE;
   while (1)
   {
-    serialPuts("H> ");
+    printf("H> ");
     char *bufferPtr = buffer;
     while (bufferPtr < bufferEnd)
     {
-      *bufferPtr = serialGetc();
+      *bufferPtr = getchar();
       if (iscntrl(*bufferPtr))
       {
         switch (*bufferPtr)
         {
-        case ASCII_ESC:
-          *bufferPtr = serialGetc();
-          if (*bufferPtr == '[')
-          {
-            *bufferPtr = serialGetc();
+          case '\b':
+            if (bufferPtr > buffer)
+            {
+              --bufferPtr;
+              printf("\b \b");
+            }
             continue;
-          }
-          break;
-        case '\b':
-          if (bufferPtr > buffer)
-          {
-            --bufferPtr;
-            serialPuts("\b \b");
-          }
-          continue;
-        case '\n':
-          if (ignore_n)
-          {
-            ignore_n = 0;
+          case '\n':
+            if (ignore_n)
+            {
+              ignore_n = FALSE;
+              continue;
+            }
+          case '\r':
+            break;
+          case ASCII_ESC:
+            escape = TRUE;
             continue;
-          }
-        case '\r':
-          break;
-        default:
-          continue;
+          default:
+            continue;
         }
       }
-      serialPutc(*bufferPtr);
+      else if (escape)
+      {
+        escape = FALSE;
+        /*
+         * FIXME: deal with escape sequences, possibly in state machine rather than 'if'...
+         */
+      }
+      putchar(*bufferPtr);
       if (*bufferPtr == '\r')
       {
-        serialPutc('\n');
+        putchar('\n');
         ignore_n = 1;
         break;
       }
@@ -126,7 +111,7 @@ void enterCliLoop()
     }
     if (bufferPtr == bufferEnd)
     {
-      serialPuts("\r\nError: line too long\r\n");
+      printf("\r\nError: line too long\r\n");
       continue;
     }
     *bufferPtr = 0;
@@ -156,7 +141,10 @@ static s32int findCommand(const char *command)
   return cmp ? -1 : mid;
 }
 
-static void run(const char *buffer)
+#ifndef TEST
+static
+#endif
+  void run(const char *buffer)
 {
   /*
    * Parse the string in the buffer into an array of tokens.
@@ -173,70 +161,72 @@ static void run(const char *buffer)
       state.escape = 0;
       switch (*readPtr)
       {
-      case '\'':
-      case '\\':
-        *writePtr++ = *readPtr;
-        break;
-      default:
-        serialPuts("Error: invalid escape sequence");
-        if (isprint(*readPtr))
-        {
-          serialPuts(" '\\");
-          serialPutc(*readPtr);
-          serialPutc('\'');
-        }
-        serialPuts("\r\n");
-        return;
+        case '\'':
+        case '\\':
+          *writePtr++ = *readPtr;
+          break;
+        default:
+          printf("Error: invalid escape sequence '\\");
+          if (isprint(*readPtr))
+          {
+            putchar(*readPtr);
+          }
+          else
+          {
+            printf("{%#.2x}", (u32int)*readPtr);
+          }
+          printf("\\'" EOL);
+          return;
       }
     }
     else
     {
       switch (*readPtr)
       {
-      case '\\':
-        state.escape = 1;
-        continue;
-      case '\'':
-        state.quoted = !state.quoted;
-        continue;
-      case '\0':
-      case ASCII_SPACE:
-        if (!state.quoted)
-        {
-          /*
-           * Outside single quotes, space acts as a token separator.
-           * Only split when there is already some content in the token buffer;
-           * this avoids creating multiple tokens for subsequent spaces.
-           */
-          if (writePtr != token)
+        case '\\':
+          state.escape = 1;
+          continue;
+        case '\'':
+          state.quoted = !state.quoted;
+          continue;
+        case '\0':
+        case ASCII_SPACE:
+          if (!state.quoted)
           {
-            *writePtr++ = '\0';
-            stringcpy(tokens[state.tokenCount], token);
-            writePtr = token;
-            ++state.tokenCount;
+            /*
+             * Outside single quotes, space acts as a token separator.
+             * Only split when there is already some content in the token buffer;
+             * this avoids creating multiple tokens for subsequent spaces.
+             */
+            if (writePtr != token)
+            {
+              *writePtr++ = '\0';
+              stringcpy(tokens[state.tokenCount], token);
+              writePtr = token;
+              ++state.tokenCount;
+            }
+            state.loop = *readPtr;
+            break;
           }
-          state.loop = *readPtr;
-          break;
-        }
-      default:
-        if (isprint(*readPtr))
-        {
-          if (state.tokenCount < CLI_MAX_TOKENS)
+        default:
+          if (isprint(*readPtr))
           {
-            *writePtr++ = *readPtr;
+            if (state.tokenCount < CLI_MAX_TOKENS)
+            {
+              *writePtr++ = *readPtr;
+            }
+            else
+            {
+              printf("Error: maximum number of tokens exceeded" EOL);
+              return;
+            }
           }
           else
           {
-            serialPuts("Error: maximum number of tokens exceeded\r\n");
+            printf("Error: invalid character (%#.2x)" EOL, (u32int)*readPtr);
             return;
           }
-        }
-        else
-        {
-          serialPuts("Error: invalid character\r\n");
-          return;
-        }
-        break;
+          break;
       }
     }
     ++readPtr;
@@ -245,22 +235,18 @@ static void run(const char *buffer)
   {
 #ifdef TEST_CLI
     int i;
-    serialPuts("Command: '");
-    serialPuts(tokens[0]);
-    serialPuts("'\r\n");
-    serialPuts("Arguments:\r\n");
+    printf("Command: '%s'" EOL, tokens[0]);
+    printf("Arguments:" EOL);
     for (i = 1; i < state.tokenCount; ++i)
     {
-      serialPutc('\'');
-      serialPuts(tokens[i]);
-      serialPuts("'\r\n");
+      printf("'%s'" EOL, tokens[i]);
     }
-    serialPuts("Done\r\n");
+    printf("Done" EOL);
 #endif
     s32int commandIndex = findCommand(tokens[0]);
     if (commandIndex < 0)
     {
-      printf("Error: command '%s' not found\r\n", tokens[0]);
+      printf("Error: command '%s' not found" EOL, tokens[0]);
       return;
     }
 #ifndef TEST_CLI

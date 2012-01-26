@@ -46,15 +46,11 @@ u32int strtoi(char * str)
 /**
  * strlen - Find the length of a string
  */
-u32int stringlen(char * s)
+u32int strlen(const char *s)
 {
-  char *sc;
-
-  for (sc = s; *sc != '\0'; ++sc)
-  {
-    // do nothing
-  }
-  return sc - s;
+  const char *p = s;
+  while (*p++);
+  return p - s;
 }
 
 /**
