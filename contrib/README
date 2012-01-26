@@ -5,3 +5,8 @@ eclipse-code-formatter-profile.xml
   editing those files with Eclipse. Do not use this to reformat entire C
   files, as not all of our rules can be expressed in terms of an Eclipse
   code formatter profile.
+
+hooks/pre-commit
+
+  A pre-commit git hook to check for all kinds of things we usually want
+  to avoid committing.

@@ -1,0 +1,111 @@
+menu "General setup"
+
+config CROSS_COMPILE
+	string "Cross-compiler toolchain prefix"
+
+choice
+	prompt "Decoder"
+	default DECODER_TABLE_SEARCH
+
+config DECODER_AUTO
+	bool "Auto-generated decoder"
+
+config DECODER_TABLE_SEARCH
+	bool "Handcrafted table search decoder"
+
+endchoice
+
+endmenu
+
+menu "Physical hardware platform"
+
+config ARCH_V7
+	bool
+
+config ARCH_V7_A
+	bool
+	depends on ARCH_V7
+
+config ARCH_EXT_SECURITY
+	bool
+	depends on ARCH_V7_A
+
+config CPU_CORTEX_A8
+	bool
+	depends on ARCH_V7_A
+
+config CPU_CORTEX_A9
+	bool
+	depends on ARCH_V7_A
+
+config SOC_TI_OMAP_3
+	bool
+	depends on CPU_CORTEX_A8
+
+config SOC_TI_OMAP_35XX
+	bool
+	depends on SOC_TI_OMAP_3
+
+config SOC_TI_OMAP_3530
+	bool
+	depends on SOC_TI_OMAP_35XX
+
+config SOC_TI_OMAP_4
+	bool
+	depends on CPU_CORTEX_A9
+
+config SOC_TI_OMAP_4430
+	bool
+	depends on SOC_TI_OMAP_4
+
+choice
+	prompt "Board"
+	default BOARD_TI_BEAGLE_BOARD
+
+config BOARD_TI_BEAGLE_BOARD
+	bool "Texas Instruments BeagleBoard"
+	select ARCH_V7
+	select ARCH_V7_A
+	select ARCH_EXT_SECURITY
+	select CPU_CORTEX_A8
+	select SOC_TI_OMAP_3
+	select SOC_TI_OMAP_35XX
+	select SOC_TI_OMAP_3530
+
+config BOARD_TI_PANDA_BOARD
+	bool "Texas Instruments PandaBoard"
+	select ARCH_V7
+	select ARCH_V7_A
+	select CPU_CORTEX_A9
+	select SOC_TI_OMAP_4
+	select SOC_TI_OMAP_4430
+
+endchoice
+
+config UART_FAST
+	bool "Fast UART (baud rate 500000)"
+	depends on BOARD_TI_BEAGLE_BOARD
+
+endmenu
+
+menu "Virtual hardware platform"
+
+endmenu
+
+menuconfig DEBUG
+	bool "Debugging"
+
+config DEBUG_STARTUP
+	bool "Debug startup"
+	depends on DEBUG
+
+config DEBUG_INSTRUCTION_DECODING
+	bool "Debug instruction decoding"
+	depends on DEBUG
+
+menu "Hacks"
+
+config CLI
+	bool "Command-line interface"
+
+endmenu
