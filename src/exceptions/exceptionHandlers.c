@@ -107,9 +107,11 @@ void dataAbort()
       {
         if ( shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
         {
+#ifndef CONFIG_BLOCK_COPY
           deliverDataAbort();
           scanBlock(gc, gc->R15);
           break;
+#endif
         }
       }
 
