@@ -1,0 +1,40 @@
+@charset "UTF-8";
+
+html, body
+{
+  background-color: #aaa;
+  height: 100%;
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+}
+
+div#tocDiv,
+div#contentDiv
+{
+  bottom: 0;
+  min-height: 100%;
+  position: absolute;
+  top: 0;
+}
+
+div#tocDiv
+{
+  border-right: 1px solid #888;
+  left: 0;
+  width: 17em;
+}
+
+div#contentDiv
+{
+  background-color: #fff;
+  border-left: 1px solid #888;
+  left: 17em;
+  right: 0;
+}
+
+iframe
+{
+  margin-bottom: -1em;
+  height: 100%;
+  width: 100%;
+}
