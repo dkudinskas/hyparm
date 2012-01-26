@@ -1,9 +1,0 @@
-# Use wildcards as well
-*~
-*.swp
-hypervisor.*
-/hypervisor_objdump_07_03_2010.txt
-/hypervisor_objdump_09_03_2010_NODEBUG.txt
-/hypervisor_objdump_04_03_2010.txt
-/hypervisor_objdump_08_03_2010_NODEBUG.txt
-/hypervisor_objdump_03_03_2010.txt

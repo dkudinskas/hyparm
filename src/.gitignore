@@ -1,6 +1,11 @@
-# ignore temporary files and object files
-*.*~
-*.o
+# Ignore dependency files generated with 'gcc -M ...'
+*.c.d
+*.c.d.*
 
-# Ignore stack usage files generated with GCC -fstack-usage
+# Ignore object files
+*.c.o
+*.s.o
+
+# Ignore stack usage files generated with 'gcc -fstack-usage ...'
 *.su
+

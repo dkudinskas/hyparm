@@ -1,7 +1,0 @@
-SRCS += src/memoryManager/addressing.c
-SRCS += src/memoryManager/cp15coproc.c
-SRCS += src/memoryManager/frameAllocator.c
-SRCS += src/memoryManager/pageTable.c
-SRCS += src/memoryManager/mmu.c
-SRCS += src/memoryManager/memoryProtection.c
-SRCS += src/memoryManager/globalMemoryMapper.c

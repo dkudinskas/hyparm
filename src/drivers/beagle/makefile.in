@@ -1,6 +1,0 @@
-SRCS += src/drivers/beagle/beIntc.c
-SRCS += src/drivers/beagle/beGPTimer.c
-SRCS += src/drivers/beagle/beClockMan.c
-SRCS += src/drivers/beagle/be32kTimer.c
-SRCS += src/drivers/beagle/beUart.c
-MMC_SRCS-${CONFIG_MMC} += src/drivers/beagle/beMMC.c

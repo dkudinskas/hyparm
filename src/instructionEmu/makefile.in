@@ -1,8 +1,0 @@
-SRCS += src/instructionEmu/asm-dis.c
-SRCS += src/instructionEmu/commonInstrFunctions.c
-SRCS += src/instructionEmu/coprocInstructions.c
-SRCS += src/instructionEmu/dataProcessInstr.c
-SRCS += src/instructionEmu/dataMoveInstr.c
-SRCS += src/instructionEmu/miscInstructions.c
-SRCS += src/instructionEmu/scanner.c
-SRCS += src/instructionEmu/decoder.c

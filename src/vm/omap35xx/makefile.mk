@@ -1,0 +1,14 @@
+HYPARM_SRCS_C-y += vm/omap35xx/clockManager.c
+HYPARM_SRCS_C-y += vm/omap35xx/gpio.c
+HYPARM_SRCS_C-y += vm/omap35xx/gpmc.c
+HYPARM_SRCS_C-y += vm/omap35xx/gptimer.c
+HYPARM_SRCS_C-y += vm/omap35xx/hardwareLibrary.c
+HYPARM_SRCS_C-y += vm/omap35xx/intc.c
+HYPARM_SRCS_C-y += vm/omap35xx/LED.c
+HYPARM_SRCS_C-y += vm/omap35xx/prm.c
+HYPARM_SRCS_C-y += vm/omap35xx/sdma.c
+HYPARM_SRCS_C-y += vm/omap35xx/sdram.c
+HYPARM_SRCS_C-y += vm/omap35xx/sramInternal.c
+HYPARM_SRCS_C-y += vm/omap35xx/sysControlModule.c
+HYPARM_SRCS_C-y += vm/omap35xx/timer32k.c
+HYPARM_SRCS_C-y += vm/omap35xx/uart.c

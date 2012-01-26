@@ -1,4 +1,13 @@
+# Temporary files
+*~
+*.swp
+
+# Eclipse project
 /.cproject
 /.project
 /.settings
+
+# Kconfig configuration files
+/.config
+/.config.old
 

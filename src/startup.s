@@ -69,7 +69,7 @@ _start:
    * We do not make use of secure modes, so we do not set up a stack pointer for MON mode.
    * Hence, the hypervisor and its guests must never execute the SMC instruction.
    */
-  .ifdef CONFIG_CPU_ARCH_ARMV7_A
+  .ifdef CONFIG_ARCH_V7_A
     CPSID   if, #FIQ_MODE
     LDR     SP, =fiqStack
     CPS     #IRQ_MODE
@@ -98,7 +98,7 @@ _start:
   /*
    * Install exception handlers
    */
-  .ifdef CONFIG_CPU_HAS_ARM_SEC_EXT
+  .ifdef CONFIG_ARCH_EXT_SECURITY
     /*
      * The security extensions introduce a register to set the exception vector base address (VBAR).
      * On the TI OMAP 35xx, this eliminates a few branches through the NAND and the SRAM.
@@ -106,7 +106,7 @@ _start:
     LDR     R2, =exceptionVectorBase
     MCR     P15, 0, R2, C12, C0, 0
   .else
-    .ifdef CONFIG_CPU_TI_OMAP_35XX
+    .ifdef CONFIG_SOC_TI_OMAP_35XX
       /*
        * On the TI OMAP 35xx, U-Boot overwrites the default RAM exception vectors, which can normally be used as they are.
        * Restore them.
@@ -132,7 +132,7 @@ _start:
     /*
      * Batch install exception handler addresses.
      */
-    .ifndef CONFIG_CPU_TI_OMAP_35XX
+    .ifndef CONFIG_SOC_TI_OMAP_35XX
       /*
        * Set R2 to the first exception handler address to be written.
        * On the TI OMAP 35xx R2 is already correct.
@@ -142,7 +142,7 @@ _start:
     .endif
     LDR     R3, =undHandler
     STR     R3, [R2], #4
-    LDR     R3, =swiHandler
+    LDR     R3, =svcHandler
     STR     R3, [R2], #4
     LDR     R3, =pabthandler
     STR     R3, [R2], #4
@@ -167,7 +167,7 @@ infiniteLoopAfterMain:
 /*
  * Exception vector; only used in case security extensions are implemented.
  */
-.ifdef CONFIG_CPU_HAS_ARM_SEC_EXT
+.ifdef CONFIG_ARCH_EXT_SECURITY
   .balign 0x20
   .global exceptionVectorBase
 exceptionVectorBase:
@@ -568,16 +568,13 @@ fiqHandler:
 
  
 .data
+
 exception_vector:
-        .ifdef TARGET_BEAGLE
-          .word 0x4020FFE4
-        .else
-          .ifdef TARGET_TEGRA250
-            .word 0x6000F200
-          .else
-            .err @Unknown target
-          .endif
-        .endif
+.ifdef CONFIG_SOC_TI_OMAP_3530
+  .word 0x4020FFE4
+.else
+  .err @Unknown target
+.endif
 
 
 .bss

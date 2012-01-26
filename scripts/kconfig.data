@@ -15,6 +15,10 @@ config DECODER_TABLE_SEARCH
 
 endchoice
 
+config BLOCK_COPY
+	bool "Block copy"
+	depends on DECODER_TABLE_SEARCH
+
 endmenu
 
 menu "Physical hardware platform"
@@ -104,6 +108,10 @@ config DEBUG_INSTRUCTION_DECODING
 	depends on DEBUG
 
 menu "Hacks"
+
+config BLOCK_COPY_NO_IRQ
+	bool "Disable interrupts"
+	depends on BLOCK_COPY
 
 config CLI
 	bool "Command-line interface"
