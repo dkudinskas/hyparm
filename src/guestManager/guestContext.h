@@ -104,12 +104,14 @@ GCONTXT * allocateGuest(void);
    
 void dumpGuestContext(GCONTXT * gc);
 
-void initGuestContext(GCONTXT * gContext);
-
 #ifdef CONFIG_BLOCK_COPY
 void registerBlockCopyCache(GCONTXT *gc, u32int * blockCopyCache, u32int size);
 #endif
 
+/*
+ * Gets the guest context pointer.
+ * Defined in startup.s!
+ */
 GCONTXT * getGuestContext(void);
 
 #endif

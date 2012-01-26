@@ -182,6 +182,12 @@ exceptionVectorBase:
 .endif
 
 
+.global getGuestContext
+getGuestContext:
+  LDR     R0, =guestContextSpace
+  LDR     R0, [R0]
+  MOV     PC, LR
+
 /* address of guest contest in R0 */
 .global registerGuestPointer
 .func   registerGuestPointer
