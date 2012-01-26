@@ -30,7 +30,7 @@ CFLAGS       := -pipe \
 		-Wall -Wextra -Winline -Wstrict-prototypes -Wwrite-strings \
 		-Wno-empty-body -Wno-unused-label -Wno-unused-parameter
 CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc
-LDFLAGS      := -L $(SOURCE_PATH)
+LDFLAGS      :=
 
 
 CLEAN_GOALS  := clean clean_%
@@ -135,7 +135,9 @@ $(KCONFIG_CONFIG):
 
 
   # TODO AFLAGS IS A HACK
-  AFLAGS-$(CONFIG_SOC_TI_OMAP_3530) += --defsym CONFIG_SOC_TI_OMAP_3530=1
+  AFLAGS-$(CONFIG_SOC_TI_OMAP_35XX) += --defsym CONFIG_SOC_TI_OMAP_35XX=1
+
+
   LDFLAGS-$(CONFIG_SOC_TI_OMAP_3530) += -T $(SCRIPT_PATH)/omap3530.lds
 
 
@@ -199,7 +201,7 @@ $(OUTPUT_PATH)/$(APP_NAME).elf: $(HYPARM_OBJS) $(KCONFIG_CONFIG)
 	@$(LD) -o $@ $(LDFLAGS) $(filter-out $(KCONFIG_CONFIG), $+)
 
 
-$(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_CONFIG)
+$(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_OK)
 	@echo DEP $<
 	@$(CC) -M $(CPPFLAGS) -MP -MT $(patsubst %.c,%.c.o,$<) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \

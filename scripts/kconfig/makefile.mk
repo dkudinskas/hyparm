@@ -7,6 +7,7 @@ KCONFIG_APPS        := $(OUTPUT_PATH)/conf $(OUTPUT_PATH)/nconf
 KCONFIG_AUTOHEADER  := $(OUTPUT_PATH)/config.h
 KCONFIG_AUTOCONFIG  := $(OUTPUT_PATH)/config.mk
 KCONFIG_CONFIG      := .config
+KCONFIG_OK          := $(OUTPUT_PATH)/config.ok
 
 export KCONFIG_AUTOHEADER
 export KCONFIG_AUTOCONFIG
@@ -33,7 +34,7 @@ NCONF_LDFLAGS := -lmenu -lpanel
 CONFIG_GOALS  += $(KCONFIG_APPS) $(KCONFIG_AUTOHEADER) $(KCONFIG_AUTOCONFIG)
 
 
-ifeq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
+ifeq ($(filter $(CLEAN_GOALS) $(HELP_GOALS),$(MAKECMDGOALS)),)
 
   # Include automatically generated dependency files.
   -include $(KCONFIG_DEPS)
@@ -41,12 +42,19 @@ ifeq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
 endif # ifeq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
 
 
-.PHONY: defconfig
+.PHONY: defconfig silentoldconfig
 
 defconfig: $(OUTPUT_PATH)/conf
 	$< $(KCONFIG_DATA) --$@
 
-$(KCONFIG_AUTOHEADER) $(KCONFIG_AUTOCONFIG): $(OUTPUT_PATH)/conf $(KCONFIG_DATA) $(KCONFIG_CONFIG)
+$(KCONFIG_OK): $(KCONFIG_CONFIG)
+	@if [ ! -f $(KCONFIG_AUTOHEADER) -o $(KCONFIG_CONFIG) -nt $(KCONFIG_AUTOHEADER) ]; then \
+	  echo SUBMAKE; \
+	  $(MAKE) silentoldconfig; \
+	  touch $@; \
+	fi
+
+silentoldconfig $(KCONFIG_AUTOHEADER) $(KCONFIG_AUTOCONFIG): $(OUTPUT_PATH)/conf $(KCONFIG_DATA) $(KCONFIG_CONFIG)
 	@echo GEN $(KCONFIG_AUTOHEADER)
 	$< $(KCONFIG_DATA) --silentoldconfig
 
@@ -81,7 +89,7 @@ $(KCONFIG_SOURCE_PATH)/%.o: $(KCONFIG_SOURCE_PATH)/%.c
 
 
 clean_kconfig:
-	@for file in $(sort $(KCONFIG_DEPS) $(KCONFIG_OBJS)) $(KCONFIG_APPS); do \
+	@for file in $(sort $(KCONFIG_DEPS) $(KCONFIG_OBJS)) $(KCONFIG_APPS) $(KCONFIG_AUTOCONFIG) $(KCONFIG_AUTOHEADER) $(KCONFIG_OK); do \
 	  if [ -f $$file ]; then \
 	    echo RM $$file; \
 	    rm $$file || :; \

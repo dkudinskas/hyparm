@@ -372,7 +372,7 @@ registerGuestPointer:
 svcHandler:
     /* We can NOT assume that the data abort is guest code */
     push   {LR}
-  
+
     save_r0_to_r14 /* pops LR */
     save_pc
     save_cc_flags
@@ -394,20 +394,20 @@ dabtHandler:
     MRS    LR, SPSR
     ANDS   LR, LR, #0x0f
     BNE    dabtHandlerPriv
-  
+
     /* We were in USR mode, we must have been running guest code */
     save_r0_to_r14
     /* Get the instr that aborted, after we fix up we probably want to re-try it */
     save_pc_abort
     save_cc_flags
-    
+
     BL dataAbort
-  
+
     /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
     restore_r13_r14
     restore_r0_to_r12
     restore_cpsr_pc_usr_mode
-    
+
 .global dabtHandlerPriv
 dabtHandlerPriv:
   POP    {LR}
@@ -461,7 +461,7 @@ pabthandler:
   MRS    LR, SPSR
   ANDS   LR, LR, #0x0f
   BNE    pabtHandlerPriv
-  
+
   /* We were in USR mode, we must have been running guest code */
   save_r0_to_r14
   /* Get the instr that aborted, after we fix up we probably want to re-try it */
@@ -566,14 +566,12 @@ fiqHandler:
   LDMFD SP!, {R0-R12}
   LDMFD SP!, {PC}^
 
- 
+
 .data
 
+.ifndef CONFIG_SOC_TI_OMAP_35XX
 exception_vector:
-.ifdef CONFIG_SOC_TI_OMAP_3530
-  .word 0x4020FFE4
-.else
-  .err @Unknown target
+  .err @ Unknown target
 .endif
 
 

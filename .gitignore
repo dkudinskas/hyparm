@@ -11,3 +11,6 @@
 /.config
 /.config.old
 
+# Output directory
+/build
+
