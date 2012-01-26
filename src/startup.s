@@ -171,7 +171,7 @@ infiniteLoopAfterMain:
   .balign 0x20
   .global exceptionVectorBase
 exceptionVectorBase:
-  MOV     PC, #0x00014000
+  B       exceptionVectorBase
   B       undHandler
   B       svcHandler
   B       pabthandler
