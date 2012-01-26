@@ -5,6 +5,7 @@
 
 #include "guestManager/guestContext.h"
 
+
 typedef char *va_list;
 
 #define  ALIGNBND           (sizeof (signed int) - 1)
@@ -18,10 +19,6 @@ typedef char *va_list;
 
 __attribute((noreturn)) void DIE_NOW(GCONTXT * context, char* msg);
 
-#define LINE_FEED              0xA
-#define CARRIAGE_RETURN        0xD
-#define PRINTABLE_START        0x20
-#define PRINTABLE_END          0x7E
 
 /* output to serial */
 u32int printf(const char *fmt, ...);
@@ -32,7 +29,5 @@ u32int fprintf(const char *fmt, ...);
 #endif
 
 u32int vsprintf(char *buf, const char *fmt, va_list args);
-
-int printableChar(char c);
 
 #endif

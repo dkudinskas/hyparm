@@ -231,19 +231,3 @@ u32int vsprintf(char *buf, const char *fmt, va_list args)
   *str = '\0';
   return stringlen(str);
 }
-
-int printableChar(char c)
-{
-  if ( (c == LINE_FEED) || (c == CARRIAGE_RETURN) )
-  {
-    return 1;
-  }
-  else if ( (c >= PRINTABLE_START) && (c <= PRINTABLE_END) )
-  {
-    return 1;
-  }
-  else
-  {
-    return 0;
-  }
-}

@@ -1,3 +1,4 @@
+#include "common/ctype.h"
 #include "common/stringFunctions.h"
 
 
@@ -27,15 +28,15 @@ u32int strtoi(char * str)
   while (index < length)
   {
     digitChar = str[index];
-    if ( (digitChar < 0x30) || (digitChar > 0x39) )
-    {
-      return -1;
-    }
-   	else
+    if (isdigit(digitChar))
     {
       digitInt |= digitChar - 0x30;
       digitInt = digitInt << ( bitsInLong - ((index + 1) * 4) );
-      retVal = retVal | digitInt; 
+      retVal = retVal | digitInt;
+    }
+    else
+    {
+      return -1;
     }
     index = index + 1;
   } // while ends
@@ -73,10 +74,14 @@ char * stringcpy(char * dest, char *src)
 /**
  * strcmp - compare strings
  */
-int stringcmp (const char * s1, const char * s2)
+int strcmp(const char *s1, const char *s2)
 {
   for(; *s1 == *s2; ++s1, ++s2)
-    if(*s1 == 0)
+  {
+    if (*s1 == '\0')
+    {
       return 0;
-  return *(unsigned char *)s1 < *(unsigned char *)s2 ? -1 : 1;
+    }
+  }
+  return *(const unsigned char *)s1 - *(const unsigned char *)s2;
 }

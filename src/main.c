@@ -1,3 +1,7 @@
+#ifdef CONFIG_CLI
+#include "cli/cli.h"
+#endif
+
 #include "common/debug.h"
 #include "common/memFunctions.h"
 #include "common/stringFunctions.h"
@@ -38,15 +42,13 @@
 
 //uncomment me to enable block copy cache debug (installation of backpointer): #define BLOCK_COPY_DEBUG
 
-#define CLI_BUFFER_SIZE 64
-
 #define HIDDEN_RAM_START   0x8f000000
 #define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
 
 extern void registerGuestPointer(u32int gContext);
 
-void printUsage(void);
-int parseCommandline(int argc, char *argv[]);
+static void printUsage(void);
+static int parseCommandline(int argc, char *argv[]);
 void registerGuestContext(u32int gcAddr);
 
 u32int scannerReqCounter;
@@ -175,41 +177,7 @@ int main(int argc, char *argv[])
 
 #ifdef CONFIG_CLI
 
-  char buffer[CLI_BUFFER_SIZE];
-  char *const bufferEnd = buffer + (CLI_BUFFER_SIZE - 1);
-  while(1)
-  {
-    serialPuts("H> ");
-    char *bufferPtr = buffer;
-    while (bufferPtr < bufferEnd)
-    {
-      *bufferPtr = serialGetc();
-      switch (*bufferPtr)
-      {
-      case 0:
-        continue;
-      case '\b':
-        serialPuts("backspace");
-        break;
-      }
-      if (*bufferPtr < ' ')
-      {
-        break;
-      }
-      serialPutc(*bufferPtr);
-      ++bufferPtr;
-    }
-    serialPuts("\r\n");
-    if (bufferPtr == bufferEnd)
-    {
-    	serialPuts("Error: line too long\r\n");
-    	continue;
-    }
-    *bufferPtr = 0;
-    serialPuts("\r\nBuffer is [");
-    serialPuts(buffer);
-    serialPuts("]\r\n");
-  }
+  enterCliLoop();
 
 #else
 
@@ -273,7 +241,7 @@ int main(int argc, char *argv[])
 #endif /* CONFIG_CLI */
 }
 
-void printUsage(void)
+static void printUsage(void)
 {
   printf("Loader usage:\n");
   printf("go <loaderAddr> -kernel <kernAddress> -initrd <initrdAddr>\n");
@@ -282,7 +250,7 @@ void printUsage(void)
   return;
 }
 
-int parseCommandline(int argc, char *argv[])
+static int parseCommandline(int argc, char *argv[])
 {
   /* TEMPORARY HACK BECAUSE OF BOOTSCRIPT */
   kernAddr   = 0x80300000;
@@ -335,3 +303,4 @@ int parseCommandline(int argc, char *argv[])
   }
   return 1;
 }
+
