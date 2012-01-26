@@ -9,7 +9,7 @@
 
 
 // uncomment me for LOAD/STORE instruction trace: #define DATA_MOVE_TRACE
-void invalidDataProcTrap(char * msg, GCONTXT * gc);
+void invalidDataMoveTrap(const char * msg, GCONTXT * gc);
 
 #ifdef CONFIG_BLOCK_COPY
 u32int* strPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);

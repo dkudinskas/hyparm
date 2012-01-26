@@ -337,7 +337,7 @@ u32int findEntryForAddress(BCENTRY * bcAddr, u32int addr)
       }
     }
   }
-  return -1;
+  return (u32int)-1;
 }
 
 /* remove a specific cache entry */
@@ -384,7 +384,7 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
     Since a different startAddress means a different block of Code.
     There will be exactly 1 block in the block cache corresponding with this block
    */
-  int i=0;
+  u32int i = 0;
 #ifdef BLOCK_CACHE_DBG
   printf("resolveCacheConflict: collision at index %x\n", index);
 #endif
@@ -490,7 +490,7 @@ void validateCachePreChange(BCENTRY * bcache, u32int address)
   if (isBitmapSetForAddress(address))
   {
     u32int cacheIndex = 0;
-    while( (cacheIndex = findEntryForAddress(bcache, address)) != -1 )
+    while( (cacheIndex = findEntryForAddress(bcache, address)) != (u32int)-1 )
     {
       removeCacheEntry(bcache, cacheIndex);
     }

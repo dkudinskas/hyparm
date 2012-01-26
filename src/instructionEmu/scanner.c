@@ -354,7 +354,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   if ((instruction & INSTR_SWI) == INSTR_SWI)
   {
     u32int svcCode = (instruction & 0x00FFFFFF);
-    if ((svcCode >= 0) && (svcCode <= 0xFF))
+    if (svcCode <= 0xFF)
     {
       printf("scanBlock: SWI code = %x\n", svcCode);
       DIE_NOW(gc, "scanBlock: SVC instruction not placed by hypervisor!");

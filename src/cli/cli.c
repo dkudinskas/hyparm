@@ -4,7 +4,7 @@
 #include "common/ctype.h"
 #include "common/debug.h"
 #include "common/stdio.h"
-#include "common/stringFunctions.h"
+#include "common/string.h"
 
 
 /*
@@ -201,7 +201,7 @@ static
             if (writePtr != token)
             {
               *writePtr++ = '\0';
-              stringcpy(tokens[state.tokenCount], token);
+              strcpy(tokens[state.tokenCount], token);
               writePtr = token;
               ++state.tokenCount;
             }

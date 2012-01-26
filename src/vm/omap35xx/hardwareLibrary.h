@@ -128,7 +128,7 @@ enum loadStoreAccessSize
 
 struct genericDevice
 {
-  char * deviceName;
+  const char * deviceName;
   bool isBus;
   u32int startAddressMapped;
   u32int endAddressMapped;
@@ -141,7 +141,7 @@ struct genericDevice
 
 device * initialiseHardwareLibrary(void);
 
-void initialiseDevice(device * dev, char * devName, bool isBus,
+void initialiseDevice(device * dev, const char * devName, bool isBus,
                       u32int addrStart, u32int addrEnd,
                       device * parent, LOAD_FUNCTION ldFn, STORE_FUNCTION stFn);
 

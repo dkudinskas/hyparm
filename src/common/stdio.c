@@ -3,7 +3,7 @@
 #include <string.h>
 #else
 #include "common/debug.h"
-#include "common/stringFunctions.h"
+#include "common/string.h"
 #endif
 
 #include "common/ctype.h"
@@ -166,7 +166,7 @@
   }
 
 
-static inline int _vsscanf(const char *s, const char *format, va_list args);
+static int _vsscanf(const char *s, const char *format, va_list args);
 
 
 int getchar()
@@ -705,7 +705,7 @@ int
   return result < 1 ? EOF : result;
 }
 
-static inline int _vsscanf(const char *s, const char *format, va_list args)
+static int _vsscanf(const char *s, const char *format, va_list args)
 {
   const char *const sOrigin = s;
   s32int convertedItemCount = 0;

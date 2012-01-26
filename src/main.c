@@ -4,7 +4,7 @@
 
 #include "common/debug.h"
 #include "common/memFunctions.h"
-#include "common/stringFunctions.h"
+#include "common/string.h"
 
 #include "cpuArch/cpu.h"
 
@@ -48,7 +48,7 @@
 extern void registerGuestPointer(u32int gContext);
 
 static void printUsage(void);
-static int parseCommandline(int argc, char *argv[]);
+static int parseCommandline(int argc, char *argv[], u32int *kernAddr, u32int *initrdAddr);
 void registerGuestContext(u32int gcAddr);
 
 u32int scannerReqCounter;
@@ -60,19 +60,16 @@ struct mmc *mmcDevice;
 file * debugStream;
 #endif
 
-u32int kernAddr;
-u32int initrdAddr;
 
 int main(int argc, char *argv[])
 {
-  kernAddr = 0;
-  initrdAddr = 0;
+  u32int kernAddr = 0;
+  u32int initrdAddr = 0;
+  GCONTXT * gContext = 0;
 
 #ifdef SCANNER_COUNTER  
   scannerReqCounter = 0;
 #endif  
-
-  GCONTXT * gContext = 0;
 
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
@@ -173,15 +170,23 @@ int main(int argc, char *argv[])
 #endif //CONFIG_BLOCK_COPY
 
   /* Setup MMU for Hypervisor */
+/*
+ * FIXME: setting up MMU might remap argv !!
+ * Parse arguments before setting up MMU!!!!
+ */
   initialiseVirtualAddressing();
 
 #ifdef CONFIG_CLI
+
+/*
+ * FIXME: deal with guest context and VIRTUAL ADDRESSING!!!
+ */
 
   enterCliLoop();
 
 #else
 
-  if (parseCommandline(argc, argv) < 0)
+  if (parseCommandline(argc, argv, &kernAddr, &initrdAddr) < 0)
   {
     printUsage();
     DIE_NOW(0, "Hypervisor startup aborted.");
@@ -250,18 +255,10 @@ static void printUsage(void)
   return;
 }
 
-static int parseCommandline(int argc, char *argv[])
+static int parseCommandline(s32int argc, char *argv[], u32int *kernAddr, u32int *initrdAddr)
 {
-  /* TEMPORARY HACK BECAUSE OF BOOTSCRIPT */
-  kernAddr   = 0x80300000;
-  initrdAddr = 0x81600000;
-  return 1;
-  /* END OF TEMPORARY HACK*/
-
-  int cmpFlag = 0;
-  /***************** Check given arguments ************************/
 #ifdef STARTUP_DEBUG
-  int i = 0;
+  s32int i;
   printf("Number of args: %c\n", argc+0x30);
   for (i = 0; i < argc; i++)
   {
@@ -269,38 +266,43 @@ static int parseCommandline(int argc, char *argv[])
   }
 #endif
 
-  if ( argc != 5 )
+  if (argc != 5)
   {
     return -1;
   }
 
-  /***************** Check KERNEL address parameter ****************/
-  cmpFlag = stringncmp("-kernel", argv[1], 7);
-  if (cmpFlag < 0)
+  if (strcmp("-kernel", argv[1]) != 0)
   {
+#ifdef STARTUP_DEBUG
     printf("Parameter -kernel not found.");
-    return -1;
-  }
-  kernAddr = strtoi(argv[2]);
-  if (kernAddr < 0)
-  {
-    printf("Invalid kernel address.");
+#endif
     return -1;
   }
 
-  /***************** Check INITRD address parameter ****************/
-  cmpFlag = stringncmp("-initrd", argv[3], 7);
-  if (cmpFlag < 0)
+  if (sscanf(argv[2], "%x", kernAddr) != 1)
   {
+#ifdef STARTUP_DEBUG
+    printf("Parameter -kernel has invalid address '%s'.", arg);
+#endif
+    return -1;
+  }
+
+  if (strcmp("-initrd", argv[3]) != 0)
+  {
+#ifdef STARTUP_DEBUG
     printf("Parameter -initrd not found.");
+#endif
     return -1;
   }
-  initrdAddr = strtoi(argv[4]);
-  if (initrdAddr < 0)
+
+  if (sscanf(argv[4], "%x", initrdAddr) != 1)
   {
-    printf("Invalid initrd address.");
+#ifdef STARTUP_DEBUG
+    printf("Parameter -initrd has invalid address '%s'.", arg);
+#endif
     return -1;
   }
+
   return 1;
 }
 

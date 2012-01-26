@@ -10,7 +10,7 @@
 #include "memoryManager/mmu.h"
 
 
-void invalidDataMoveTrap(char * msg, GCONTXT * gc)
+void invalidDataMoveTrap(const char * msg, GCONTXT * gc)
 {
   printf("ERROR: %08x @ %08x should not have trapped!\n", 
          gc->endOfBlockInstr, gc->R15);

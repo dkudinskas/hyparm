@@ -29,7 +29,7 @@ int
 #else
   sscanf
 #endif
-  (const char *s, const char *format, ...);
+  (const char *s, const char *format, ...) __attribute__((warn_unused_result));
 
 int
 #ifdef TEST
@@ -37,7 +37,7 @@ int
 #else
   vsscanf
 #endif
-  (const char *str, const char *format, va_list args);
+  (const char *str, const char *format, va_list args) __attribute__((warn_unused_result));
 
 int
 #ifdef TEST

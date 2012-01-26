@@ -48,6 +48,6 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr);
 struct instruction32bit * decodeSvcCoproc(u32int instr);
 struct instruction32bit * decodeUnconditional(u32int instr);
 
-void dumpInstruction(char * msg, u32int instr);
+void dumpInstruction(const char * msg, u32int instr);
 
 #endif

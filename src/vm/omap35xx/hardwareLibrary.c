@@ -536,7 +536,7 @@ device * initialiseHardwareLibrary()
   return topLevelBus;
 }
 
-void initialiseDevice(device * dev, char * devName, bool isBus,
+void initialiseDevice(device * dev, const char * devName, bool isBus,
                       u32int addrStart, u32int addrEnd,
                       device * parent, LOAD_FUNCTION ldFn, STORE_FUNCTION stFn)
 {

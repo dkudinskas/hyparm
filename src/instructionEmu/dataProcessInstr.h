@@ -31,8 +31,11 @@ typedef enum
   RRX,
   ROR  
 } OPTYPE;
-void invalidDataProcTrap(char * msg, GCONTXT * gc);
-u32int arithLogicOp(GCONTXT * context, OPTYPE opType, char * instrString);
+
+void invalidDataProcTrap(const char * msg, GCONTXT * gc);
+
+u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString);
+
 // Arithmetic operations
 
 #ifdef CONFIG_BLOCK_COPY

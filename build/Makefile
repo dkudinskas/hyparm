@@ -21,9 +21,11 @@ include $(DEPTH)/build/config.$(TARGET)
 
 ASMFLAGS = $(TARGET_ASMFLAGS) --fatal-warnings
 # -fno-common forces the compiler to put global variables in one data section in the ELF file
-CCFLAGS = -g -O3 -fno-common -ffixed-r8 -msoft-float -D__KERNEL__ -DTEXT_BASE=$(TARGET_BASE_ADDRESS) -fno-builtin -ffreestanding -nostdinc -pipe -DCONFIG_ARM -D__ARM__ -marm -mabi=aapcs-linux -mno-thumb-interwork -Wall -Wstrict-prototypes -Winline -fno-stack-protector -c -fno-toplevel-reorder $(TARGET_CCFLAGS)
+CCFLAGS = -g -O3 -fno-common -ffixed-r8 -fstack-usage -msoft-float -D__KERNEL__ -DTEXT_BASE=$(TARGET_BASE_ADDRESS) -fno-builtin -ffreestanding -nostdinc -pipe -DCONFIG_ARM -D__ARM__ -marm -mabi=aapcs-linux -mno-thumb-interwork -Wall -Wstrict-prototypes -Winline -Wextra -Wframe-larger-than=256 -fno-stack-protector -c -fno-toplevel-reorder  -Wwrite-strings -Wno-empty-body -Wno-unused-parameter $(TARGET_CCFLAGS)
 #LDFLAGS = -T beagle.lds -g -Ttext $(TARGET_BASE_ADDRESS) -e main -o $(APP_NAME).elf -Map $(APP_NAME).map --cref
 LDFLAGS = -T beagle.lds -g -o $(APP_NAME).elf -Map $(APP_NAME).map --cref
+# Wextra for -Wtype-limits
+# http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 
 include $(DEPTH)/src/makefile.in
 include $(DEPTH)/src/cli/makefile.in
