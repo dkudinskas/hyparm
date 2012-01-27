@@ -15,7 +15,6 @@
 u16int * currAddress = 0;
 #endif
 
-extern GCONTXT * getGuestContext(void);
 
 /* Top level instruction categories */
 struct TopLevelCategory categories[] = {
@@ -882,7 +881,7 @@ struct instruction32bit * decodeInstr(u32int instr)
         break;
       case UNDEFINED_CATEGORY:
       default:
-        DIE_NOW(getGuestContext(), "decoder: UNDEFINED category");
+        DIE_NOW(0, "decoder: UNDEFINED category");
     }
 }
 
@@ -1009,7 +1008,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
       }
     }
   }
-  DIE_NOW(getGuestContext(), "decoder: decodeDataProcMisc unimplemented");
+  DIE_NOW(0, "decoder: decodeDataProcMisc unimplemented");
   return 0;
 }
 
@@ -1039,7 +1038,7 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
       index = index + 1;
     }
   }
-  DIE_NOW(getGuestContext(), "decoder: decodeBranchBlockTransfer unimplemented");
+  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
   return 0;
 }
 
@@ -1069,7 +1068,7 @@ struct instruction32bit * decodeMedia(u32int instr)
       index = index + 1;
     }
   }
-  DIE_NOW(getGuestContext(), "decoder: decodeMedia unimplemented");
+  DIE_NOW(0, "decoder: decodeMedia unimplemented");
   return 0;
 }
 
@@ -1099,7 +1098,7 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
       index = index + 1;
     }
   }
-  DIE_NOW(getGuestContext(), "decoder: decodeBranchBlockTransfer unimplemented");
+  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
   return 0;
 }
 
@@ -1129,7 +1128,7 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
       index = index + 1;
     }
   }
-  DIE_NOW(getGuestContext(), "decoder: decodeSvcCoproc unimplemented");
+  DIE_NOW(0, "decoder: decodeSvcCoproc unimplemented");
   return 0;
 }
 
@@ -1159,7 +1158,7 @@ struct instruction32bit * decodeUnconditional(u32int instr)
     }
   }
 
-  DIE_NOW(getGuestContext(), "decoder: decodeUnconditional unimplemented");
+  DIE_NOW(0, "decoder: decodeUnconditional unimplemented");
   return 0;
 }
 
@@ -1207,7 +1206,7 @@ struct instruction32bit * t32decodeLoadStoreDoubleExclusive(u32int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t32LoadStoreDoubleExclusive unimplemented");
+  DIE_NOW(0, "decoder: t32LoadStoreDoubleExclusive unimplemented");
   return 0;
 }
 
@@ -1234,7 +1233,7 @@ struct instruction32bit * t32decodeDataProc(u32int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t32decodeDataProc unimplemented");
+  DIE_NOW(0, "decoder: t32decodeDataProc unimplemented");
   return 0;
 }
 
@@ -1266,7 +1265,7 @@ struct instruction32bit * t32decodeBranchMisc(u32int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t32BranchMiscInstruction unimplemented");
+  DIE_NOW(0, "decoder: t32BranchMiscInstruction unimplemented");
   return 0;
 }
 
@@ -1293,7 +1292,7 @@ struct instruction32bit * t32decodeStoreSingle(u32int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t32decodeSingleStore unimplemented");
+  DIE_NOW(0, "decoder: t32decodeSingleStore unimplemented");
   return 0;
 }
 
@@ -1326,7 +1325,7 @@ struct instruction32bit * t32decodeLoadByte(u32int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t32decodeLoadByte unimplemented");
+  DIE_NOW(0, "decoder: t32decodeLoadByte unimplemented");
   return 0;
 }
 
@@ -1352,7 +1351,7 @@ struct instruction32bit * t32decodeLoadHalfWord(u32int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t32LoadHalfWordInstruction unimplemented");
+  DIE_NOW(0, "decoder: t32LoadHalfWordInstruction unimplemented");
   return 0;
 }
 
@@ -1384,7 +1383,7 @@ struct instruction32bit * t32decodeMultiply(u32int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t32MultiplyInstruction unimplemented");
+  DIE_NOW(0, "decoder: t32MultiplyInstruction unimplemented");
   return 0;
 }
 
@@ -1418,7 +1417,7 @@ struct instruction32bit * t16decodeUnconditionals(u16int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t16UnconditionalInstruction unimplemented");
+  DIE_NOW(0, "decoder: t16UnconditionalInstruction unimplemented");
   return 0;
 }
 
@@ -1444,7 +1443,7 @@ struct instruction32bit * t16decodeConditionalBranchSVC(u16int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t16BranchSvcInstruction unimplemented");
+  DIE_NOW(0, "decoder: t16BranchSvcInstruction unimplemented");
   return 0;
 }
 
@@ -1483,7 +1482,7 @@ struct instruction32bit * t16decodeMisc(u16int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t16MiscInstruction unimplemented");
+  DIE_NOW(0, "decoder: t16MiscInstruction unimplemented");
   return 0;
 }
 
@@ -1509,7 +1508,7 @@ struct instruction32bit * t16decodeSPAddr(u16int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t16SPInstruction unimplemented");
+  DIE_NOW(0, "decoder: t16SPInstruction unimplemented");
   return 0;
 }
 
@@ -1535,7 +1534,7 @@ struct instruction32bit * t16decodePCAddr(u16int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t16PCRel unimplemented");
+  DIE_NOW(0, "decoder: t16PCRel unimplemented");
   return 0;
 }
 
@@ -1561,7 +1560,7 @@ struct instruction32bit * t16decodeLoadStore(u16int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t16LoadStore unimplemented");
+  DIE_NOW(0, "decoder: t16LoadStore unimplemented");
   return 0;
 }
 
@@ -1587,7 +1586,7 @@ struct instruction32bit * t16decodeLDR(u16int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t16LDR unimplemented");
+  DIE_NOW(0, "decoder: t16LDR unimplemented");
   return 0;
 }
 
@@ -1614,7 +1613,7 @@ struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t16SpecialBranch unimplemented");
+  DIE_NOW(0, "decoder: t16SpecialBranch unimplemented");
   return 0;
 }
 
@@ -1640,7 +1639,7 @@ struct instruction32bit * t16decodeDataProc(u16int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t16DataProc unimplemented");
+  DIE_NOW(0, "decoder: t16DataProc unimplemented");
   return 0;
 }
 
@@ -1666,7 +1665,7 @@ struct instruction32bit * t16decodeArithmetic(u16int instr)
     }
   }
   printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
-  DIE_NOW(getGuestContext(), "decoder: t16Arithmetic unimplemented");
+  DIE_NOW(0, "decoder: t16Arithmetic unimplemented");
   return 0;
 }
 

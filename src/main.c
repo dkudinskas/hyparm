@@ -244,7 +244,7 @@ void main(s32int argc, char *argv[])
 #ifdef CONFIG_DEBUG_STARTUP
     printf("RTOS address: %x\n", kernAddr);
 #endif
-    doRtosBoot(kernAddr);
+    doRtosBoot(guestContext, kernAddr);
   }
   else
 #endif
@@ -256,7 +256,7 @@ void main(s32int argc, char *argv[])
 #ifdef CONFIG_DEBUG_STARTUP
     dumpHdrInfo(&imageHeader);
 #endif
-    doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
+    doLinuxBoot(guestContext, &imageHeader, kernAddr, initrdAddr);
   }
 #endif /* CONFIG_CLI */
 }

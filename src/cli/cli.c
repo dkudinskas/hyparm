@@ -111,7 +111,7 @@ void enterCliLoop()
     }
     if (bufferPtr == bufferEnd)
     {
-      printf("\r\nError: line too long\r\n");
+      printf(EOL "Error: line too long" EOL);
       continue;
     }
     *bufferPtr = 0;

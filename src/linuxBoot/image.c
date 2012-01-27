@@ -40,15 +40,13 @@ image_header_t getImageHeader(ulong uImageAddr)
 
 void dumpHdrInfo(image_header_t * imgHdr)
 {
-  printf("magic number: %x\n", imgHdr->ih_magic);
-  printf("size: %x\n", imgHdr->ih_size);
-  printf("data load addr: %x\n", imgHdr->ih_load);
-  printf("entry point: %x\n", imgHdr->ih_ep);
-  printf("OS: %x\n", imgHdr->ih_os);
-  printf("arch: %x\n", imgHdr->ih_arch);
-  printf("type: %x\n", imgHdr->ih_type);
-  printf("compression: %x\n", imgHdr->ih_comp);
-  printf("name: ");
-  printf((char*)(imgHdr->ih_name));
-  printf("\n");
+  printf("magic number: %x" EOL, imgHdr->ih_magic);
+  printf("size: %x" EOL, imgHdr->ih_size);
+  printf("data load addr: %x" EOL, imgHdr->ih_load);
+  printf("entry point: %x" EOL, imgHdr->ih_ep);
+  printf("OS: %x" EOL, imgHdr->ih_os);
+  printf("arch: %x" EOL, imgHdr->ih_arch);
+  printf("type: %x" EOL, imgHdr->ih_type);
+  printf("compression: %x" EOL, imgHdr->ih_comp);
+  printf("name: %s" EOL, imgHdr->ih_name);
 }

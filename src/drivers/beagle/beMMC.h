@@ -7,11 +7,7 @@
 
 // uncomment me for debug: #define MMC_HS_DEBUG
 
-#ifdef TARGET_BEAGLE
 #define MMCHS_BASE 0x4809C000
-#else
-#error "MMC host controller not configured for non-beagle target"
-#endif
 
 
 /* OMAP3 MMC host controller */

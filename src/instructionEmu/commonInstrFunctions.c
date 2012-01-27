@@ -405,7 +405,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
 /* Function will return a register that is different from regSrc1,regSrc2 and regSrc3*/
 u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regDest)
 {
-  int i;
+  u32int i;
   for(i=0;i<15;i++){
     if( (i != regSrc1) && (i != regSrc2) && (i != regDest) )
       return i;

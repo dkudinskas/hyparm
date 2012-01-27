@@ -3,6 +3,8 @@
 
 #include "common/types.h"
 
+#include "guestManager/guestContext.h"
+
 #include "linuxBoot/image.h"
 
 
@@ -46,7 +48,7 @@
  */
 #define ATAG_CMDLINE  0x54410009
 
-void doLinuxBoot(image_header_t *imageHeader, u32int loadAddr, u32int initrdAddr)  __attribute__((noreturn));
+void doLinuxBoot(GCONTXT *context, image_header_t *imageHeader, u32int loadAddr, u32int initrdAddr)  __attribute__((noreturn));
 
 void populateDramBanks(void);
 

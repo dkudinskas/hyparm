@@ -3,7 +3,6 @@
 #include "cpuArch/cpu.h"
 
 #include "guestManager/guestExceptions.h"
-#include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/intc.h"
 
@@ -20,12 +19,9 @@
 extern bool rtos;
 #endif
 
-extern GCONTXT * getGuestContext(void);
 
-
-void deliverServiceCall(void)
+void deliverServiceCall(GCONTXT *context)
 {
-  GCONTXT * context = getGuestContext();
 #ifdef GUEST_EXCEPTIONS_DBG
   printf("deliverServiceCall: @pc %08x\n", context->R15);
 #endif
@@ -137,9 +133,8 @@ void throwInterrupt(u32int irqNumber)
   }
 }
 
-void deliverInterrupt(void)
+void deliverInterrupt(GCONTXT *context)
 {
-  GCONTXT * context = getGuestContext();
   // 1. reset irq pending flag.
   context->guestIrqPending = FALSE;
   // 2. copy guest CPSR into SPSR_IRQ
@@ -180,9 +175,8 @@ void deliverInterrupt(void)
   context->CPSR |= CPSR_ASYNC_ABT_DIS;
 }
 
-void deliverDataAbort()
+void deliverDataAbort(GCONTXT *context)
 {
-  GCONTXT * context = getGuestContext();
   // 1. reset abt pending flag
   context->guestDataAbtPending = FALSE;
   // 2. copy CPSR into SPSR_ABT
@@ -238,9 +232,8 @@ void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domai
   context->guestDataAbtPending = TRUE;
 }
 
-void deliverPrefetchAbort(void)
+void deliverPrefetchAbort(GCONTXT *context)
 {
-  GCONTXT * context = getGuestContext();
   // 1. reset abt pending flag
   context->guestPrefetchAbtPending = FALSE;
   // 2. copy CPSR into SPSR_ABT

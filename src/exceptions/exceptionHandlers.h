@@ -3,18 +3,20 @@
 
 #include "common/types.h"
 
+#include "guestManager/guestContext.h"
+
 
 #define SWI_END_OF_BLOCK      0x1
 
 // uncomment me to enable exception handler debug : #define EXC_HDLR_DBG
 
-void softwareInterrupt(u32int code);
+void softwareInterrupt(GCONTXT *context, u32int code);
 
-void dataAbort(void);
+void dataAbort(GCONTXT *context);
 void dataAbortPrivileged(u32int pc);
 void undefined(void);
 void undefinedPrivileged(void);
-void prefetchAbort(void);
+void prefetchAbort(GCONTXT *context);
 void prefetchAbortPrivileged(void);
 void monitorMode(void);
 void monitorModePrivileged(void);

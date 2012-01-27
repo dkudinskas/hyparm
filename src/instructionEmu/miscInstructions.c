@@ -1768,12 +1768,10 @@ u32int blxInstruction(GCONTXT * context)
   u32int value = 0;
   u32int target = 0;
   u32int currPC = 0;
-  bool thumb32 = 0;
   if(context->CPSR & T_BIT)
   {
     //We are in Thumb mode, so we will probably want to switch back to ARM
     instr = context->endOfBlockInstr;
-    thumb32=isThumb32(instr);
     sign = ( (instr & 0x04000000 ) >> 26 );
     u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;// NOT ( I1 EOR sign )
     u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;// NOT ( I2 EOR sign )

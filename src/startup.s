@@ -446,21 +446,24 @@ svcHandler:
     save_pc
     save_cc_flags
 
-    /* get SVC code into @parameter1 and call C function */
-.ifdef CONFIG_THUMB2
+    /*
+     * void softwareInterrupt(GCONTXT *gContext, u32int code);
+     * Store guest context pointer in R0 and SVC code in R1.
+     */
     LDR     R0, =guestContextSpace
     LDR     R0, [R0]
-    ADD     R0, R0, #GC_CPSR_OFFS
-    LDR     R0, [R0]
-    AND     R1, R0, #0x20 @Check thumb bit
-    CMP     R1, #0x20
-    LDRNE   R0, [LR, #-4] @Thumb bit = 0
-    ANDNE   R0, #0xFFFFFF
-    LDREQB  R0, [LR, #-2]
-    ANDEQ   R0, #0x00FF
+.ifdef CONFIG_THUMB2
+    ADD     R1, R0, #GC_CPSR_OFFS
+    LDR     R1, [R1]
+    AND     R2, R1, #0x20 @Check thumb bit
+    CMP     R2, #0x20
+    LDRNE   R1, [LR, #-4] @Thumb bit = 0
+    ANDNE   R1, #0xFFFFFF
+    LDREQB  R1, [LR, #-2]
+    ANDEQ   R1, #0x00FF
 .else
-    LDR     R0, [LR, #-4]
-    AND     R0, #0xFFFFFF
+    LDR     R1, [LR, #-4]
+    AND     R1, #0xFFFFFF
 .endif
     BL      softwareInterrupt
 
@@ -480,6 +483,7 @@ dabtHandler:
 .else
     ANDS   LR, LR, #0x0f
 .endif
+
     BNE    dabtHandlerPriv
 
     /* We were in USR mode, we must have been running guest code */
@@ -488,7 +492,9 @@ dabtHandler:
     save_pc_abort
     save_cc_flags
 
-    BL dataAbort
+    LDR    R0, =guestContextSpace
+    LDR    R0, [R0]
+    BL     dataAbort
 
     /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
     restore_r13_r14
@@ -565,7 +571,9 @@ pabthandler:
   save_pc_abort
   save_cc_flags
 
-  BL prefetchAbort
+  LDR    R0, =guestContextSpace
+  LDR    R0, [R0]
+  BL     prefetchAbort
 
   /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
   restore_r13_r14

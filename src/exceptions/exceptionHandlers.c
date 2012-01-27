@@ -11,7 +11,6 @@
 
 #include "guestManager/blockCache.h"
 #include "guestManager/scheduler.h"
-#include "guestManager/guestContext.h"
 #include "guestManager/guestExceptions.h"
 
 #include "vm/omap35xx/gptimer.h"
@@ -25,19 +24,18 @@
 #include "memoryManager/mmu.h"
 #include "memoryManager/memoryConstants.h"
 
+
 #ifdef CONFIG_GUEST_FREERTOS
 extern bool rtos;
 #endif
 
-extern GCONTXT * getGuestContext(void);
 
-void softwareInterrupt(u32int code)
+void softwareInterrupt(GCONTXT *context, u32int code)
 {
 #ifdef EXC_HDLR_DBG
   printf("softwareInterrupt(%x)\n", code);
 #endif
   // parse the instruction to find the start address of next block
-  GCONTXT * gContext = getGuestContext();
   u32int nextPC = 0;
 #ifdef CONFIG_THUMB2
   bool gSVC = FALSE;
@@ -48,7 +46,7 @@ void softwareInterrupt(u32int code)
   /* Make sure that any SVC that is not part of the scanner
    * will be delivered to the guest
    */
-  if (gContext->CPSR & T_BIT) // Thumb
+  if (context->CPSR & T_BIT) // Thumb
   {
     if (code == 0) // svc in Thumb is between 0x01 and 0xFF
     {
@@ -60,7 +58,7 @@ void softwareInterrupt(u32int code)
     if (code <= 0xFF)
     {
 #ifdef EXC_HDLR_DBG
-      printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, gContext->R15);
+      printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, context->R15);
 #endif
       gSVC = TRUE;
     }
@@ -69,47 +67,47 @@ void softwareInterrupt(u32int code)
   // Do we need to forward it to the guest?
   if (gSVC)
   {
-    deliverServiceCall();
+    deliverServiceCall(context);
 #else
   if (code <= 0xFF)
   {
 # ifdef EXC_HDLR_DBG
-    printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, gContext->R15);
+    printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, context->R15);
 # endif
-    deliverServiceCall();
+    deliverServiceCall(context);
 #endif
-    nextPC = gContext->R15;
+    nextPC = context->R15;
   }
   else
   {
     // get interpreter function pointer and call it
-    instrHandler = gContext->hdlFunct;
-    nextPC = instrHandler(gContext);
+    instrHandler = context->hdlFunct;
+    nextPC = instrHandler(context);
   }
 
   if (nextPC == 0)
   {
-    DIE_NOW(gContext, "softwareInterrupt: Invalid nextPC. Instr to implement?");
+    DIE_NOW(context, "softwareInterrupt: Invalid nextPC. Instr to implement?");
   }
 
   int i = 0;
   for (i = BLOCK_HISOTRY_SIZE-1; i > 0; i--)
   {
-    gContext->blockHistory[i] = gContext->blockHistory[i-1];
+    context->blockHistory[i] = context->blockHistory[i-1];
   }
-  gContext->blockHistory[0] = nextPC;
+  context->blockHistory[0] = nextPC;
 
-  gContext->R15 = nextPC;
+  context->R15 = nextPC;
 
   // deliver interrupts
   /* Maybe a timer interrupt is pending on real INTC but
    * hasn't been acked yet
    */
-  if (gContext->guestIrqPending)
+  if (context->guestIrqPending)
   {
-    if ((gContext->CPSR & CPSR_IRQ_DIS) == 0)
+    if ((context->CPSR & CPSR_IRQ_DIS) == 0)
     {
-      deliverInterrupt();
+      deliverInterrupt(context);
     }
   }
 
@@ -117,17 +115,17 @@ void softwareInterrupt(u32int code)
   printf("softwareInterrupt: Next PC = 0x%x\n", nextPC);
 #endif
 
-  if ((gContext->CPSR & CPSR_MODE) != CPSR_MODE_USR)
+  if ((context->CPSR & CPSR_MODE) != CPSR_MODE_USR)
   {
     // guest in privileged mode! scan...
 #ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
     setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
 #endif
-    scanBlock(gContext, gContext->R15);
+    scanBlock(context, context->R15);
   }
 }
 
-void dataAbort()
+void dataAbort(GCONTXT *context)
 {
   /*
    * FIXME: what is the following comment about???
@@ -145,41 +143,39 @@ void dataAbort()
     {
       // Check if the addr we have faulted on is caused by
       // a memory protection the hypervisor has enabled
-      GCONTXT* gc = getGuestContext();
-
       DFSR dfsr = getDFSR();
-      bool isPrivAccess = (gc->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
-      if (gc->virtAddrEnabled)
+      bool isPrivAccess = (context->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
+      if (context->virtAddrEnabled)
       {
+#ifndef CONFIG_BLOCK_COPY
         if ( shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
         {
-#ifndef CONFIG_BLOCK_COPY
-          deliverDataAbort();
+          deliverDataAbort(context);
 #ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
           setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION);
 #endif
-          scanBlock(gc, gc->R15);
+          scanBlock(context, context->R15);
           break;
-#endif
         }
+#endif
       }
 
       // interpret the load/store
-      emulateLoadStoreGeneric(gc, getDFAR());
+      emulateLoadStoreGeneric(context, getDFAR());
 
       // load/store might still have failed if it was LDRT/STRT
-      if (!gc->guestDataAbtPending)
+      if (!context->guestDataAbtPending)
       {
         // ONLY move to the next instruction, if the guest hasn't aborted...
 #ifdef CONFIG_THUMB2
-        if(gc->CPSR & T_BIT)
+        if(context->CPSR & T_BIT)
         {
-          gc->R15 = gc->R15 + 2;
+          context->R15 = context->R15 + 2;
         }
         else
         {
 #endif
-          gc->R15 = gc->R15 + 4;
+          context->R15 = context->R15 + 4;
 #ifdef CONFIG_THUMB2
         }
 #endif
@@ -187,31 +183,30 @@ void dataAbort()
       else
       {
         // deliver the abort!
-        deliverDataAbort();
+        deliverDataAbort(context);
 #ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
         setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_PERMISSION);
 #endif
-        scanBlock(gc, gc->R15);
+        scanBlock(context, context->R15);
       }
       break;
     }
     case dfsTranslationSection:
     case dfsTranslationPage:
     {
-      GCONTXT* gc = getGuestContext();
       DFSR dfsr = getDFSR();
       /*
        * Markos: I think this means that the guest was trying to write within its
        * allowed memory area in user mode
        */
-      bool isPrivAccess = (gc->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
+      bool isPrivAccess = (context->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
       if (shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
       {
-        deliverDataAbort();
+        deliverDataAbort(context);
 #ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
         setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_TRANSLATION);
 #endif
-        scanBlock(gc, gc->R15);
+        scanBlock(context, context->R15);
       }
       break;
     }
@@ -307,7 +302,7 @@ void undefinedPrivileged(void)
   DIE_NOW(0, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!\n");
 }
 
-void prefetchAbort(void)
+void prefetchAbort(GCONTXT *context)
 {
   /*
    * FIXME: what is the following comment about???
@@ -320,18 +315,17 @@ void prefetchAbort(void)
   IFSR ifsr = getIFSR();
   u32int ifar = getIFAR();
   u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
-  GCONTXT* gc = getGuestContext();
 
   switch(faultStatus)
   {
     case ifsTranslationFaultPage:
       if (shouldPrefetchAbort(ifar))
       {
-        deliverPrefetchAbort();
+        deliverPrefetchAbort(context);
 #ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
         setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_TRANSLATION);
 #endif
-        scanBlock(gc, gc->R15);
+        scanBlock(context, context->R15);
       }
       break;
     case ifsDebugEvent:
@@ -350,11 +344,11 @@ void prefetchAbort(void)
 #ifdef CONFIG_GUEST_FREERTOS
       if (shouldPrefetchAbort(ifar))
       {
-        deliverPrefetchAbort();
+        deliverPrefetchAbort(context);
 #ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
         setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_FREERTOS);
 #endif
-        scanBlock(gc, gc->R15);
+        scanBlock(context, context->R15);
       }
       break;
 #endif
@@ -366,7 +360,7 @@ void prefetchAbort(void)
     case ifsTranslationTableWalk2ndLvlSynchParityError:
     default:
       printPrefetchAbort();
-      DIE_NOW(gc, "Unimplemented guest prefetch abort.");
+      DIE_NOW(context, "Unimplemented guest prefetch abort.");
   }
   enableInterrupts();
 }
@@ -529,6 +523,6 @@ void irqPrivileged()
 
 void fiq(void)
 {
-  DIE_NOW(getGuestContext(), "fiq: FIQ handler unimplemented!");
+  DIE_NOW(0, "fiq: FIQ handler unimplemented!");
 }
 

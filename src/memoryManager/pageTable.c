@@ -32,7 +32,6 @@
 #define PT_DUMP_DBG
 #endif
 
-extern GCONTXT * getGuestContext(void);
 
 descriptor* hypervisorPtd;
 

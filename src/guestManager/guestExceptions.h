@@ -3,6 +3,8 @@
 
 #include "common/types.h"
 
+#include "guestManager/guestContext.h"
+
 
 // uncomment me to enable debug : #define GUEST_EXCEPTIONS_DBG
 
@@ -44,15 +46,15 @@
 
 // no need to throw a service call to guest context.
 // hypercall handler deals with it.
-void deliverServiceCall(void);
+void deliverServiceCall(GCONTXT *context);
 
 void throwInterrupt(u32int irqNumber);
-void deliverInterrupt(void);
+void deliverInterrupt(GCONTXT *context);
 
 void throwDataAbort(u32int address, u32int faultType, bool isWrite, u32int domain);
-void deliverDataAbort(void);
+void deliverDataAbort(GCONTXT *context);
 
 void throwPrefetchAbort(u32int address, u32int faultType);
-void deliverPrefetchAbort(void);
+void deliverPrefetchAbort(GCONTXT *context);
 
 #endif

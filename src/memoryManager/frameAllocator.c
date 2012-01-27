@@ -491,7 +491,7 @@ u32int getFreeFrames(u32int numFrames, u8int domain)
     do
     {
       u32int value = frameTable[wordIndex];
-      if(value != -1)
+      if(value != (u32int)-1)
       {
         //we have a found at least one free frame, search for it
         u32int bitIndex = 1, tmp = 0;

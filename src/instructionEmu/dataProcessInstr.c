@@ -6,7 +6,7 @@
 
 void invalidDataProcTrap(const char * msg, GCONTXT * gc)
 {
-  printf("%08x @ %08x should not have trapped!\n", gc->endOfBlockInstr, gc->R15);
+  printf("%.8x @ %.8x should not have trapped!" EOL, gc->endOfBlockInstr, gc->R15);
   DIE_NOW(gc, msg);
 }
 
@@ -28,9 +28,9 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
 #ifdef DATA_PROC_TRACE
   printf(instrString);
 #ifdef CONFIG_BLOCK_COPY
-  printf(" %08x @ %08x\n", instr, context->PCOfLastInstruction);
+  printf(" %.8x @ %.8x\n", instr, context->PCOfLastInstruction);
 #else
-  printf(" %08x @ %08x\n", instr, context->R15);
+  printf(" %.8x @ %.8x\n", instr, context->R15);
 #endif
 #endif
   
@@ -198,7 +198,7 @@ u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int andInstruction(GCONTXT * context)
 {
-  printf("%08x\n",context->endOfBlockInstr);
+  printf("%.8x" EOL, context->endOfBlockInstr);
   DIE_NOW(context, "Unimplemented AND trap");
 }
 /*********************************/

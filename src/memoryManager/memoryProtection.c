@@ -11,11 +11,10 @@
 #include "memoryManager/mmu.h"
 
 
-extern GCONTXT * getGuestContext(void);
-
 u32int maxEntries;
 u32int addEntry(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TYPE protection, bool multiPage);
 u32int removeEntry(u32int startAddr, u32int endAddr);
+
 
 MEMPROT* initialiseMemoryProtection(void)
 {

@@ -6,8 +6,6 @@
 #include "memoryManager/cp15coproc.h"
 
 
-extern GCONTXT * getGuestContext(void);
-
 void initCRB(CREG * crb)
 {
   u32int i = 0;
@@ -70,7 +68,7 @@ void initCRB(CREG * crb)
   i = crbIndex(0, 1, 0, 1);
   crb[i].value = 0x0A000023;
   crb[i].valid = TRUE;
-  
+
   /* CSSELR:
    * cache size select register: selects the current CCSIDR
    * initialize to lvl0, data cache (0x00000000) */
@@ -79,7 +77,7 @@ void initCRB(CREG * crb)
   crb[i].valid = TRUE;
 
   /* SCTRL:
-   * system control register, init to C5187A */  
+   * system control register, init to C5187A */
   i = crbIndex(1, 0, 0, 0);
   crb[i].value = 0xC5187A;
   crb[i].valid = TRUE;
@@ -178,7 +176,7 @@ void initCRB(CREG * crb)
   crb[i].value = 0;
   crb[i].valid = TRUE;
 
-  /* DCCMVAU: 
+  /* DCCMVAU:
    * clean data cache line by MVA to PoU, write only */
   i = crbIndex(7, 0, 11, 1);
   crb[i].value = 0;
@@ -244,8 +242,8 @@ void initCRB(CREG * crb)
   i = crbIndex(10, 0, 2, 1);
   crb[i].value = 0x44E048E0;
   crb[i].valid = TRUE;
-  
-  /* FCSEIDR: 
+
+  /* FCSEIDR:
    * fast context switch extension process ID register
    * initialize to 0 */
   i = crbIndex(13, 0, 0, 0);
@@ -253,14 +251,14 @@ void initCRB(CREG * crb)
   crb[i].valid = TRUE;
 
   /* CONTEXTID:
-   * context ID register 
+   * context ID register
    * initialize to 0 */
   i = crbIndex(13, 0, 0, 1);
   crb[i].value = 0x0;
   crb[i].valid = TRUE;
 
   /* TPIDRURW:
-   * software thread ID register, user mode read-write 
+   * software thread ID register, user mode read-write
    * initialize to 0 */
   i = crbIndex(13, 0, 0, 2);
   crb[i].value = 0x0;
@@ -273,7 +271,7 @@ void initCRB(CREG * crb)
   crb[i].value = 0x0;
   crb[i].valid = TRUE;
 
-  /* TPIDRPRW: 
+  /* TPIDRPRW:
    * software thread ID register, privileged read/write only
    * initialize to 0 */
   i = crbIndex(13, 0, 0, 4);
@@ -284,7 +282,7 @@ void initCRB(CREG * crb)
 void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr, u32int val)
 {
   u32int index = crbIndex(CRn, opc1, CRm, opc2);
-  
+
   if (!crbPtr[index].valid)
   {
     // guest writing to a register that is not valid yet! investigate
@@ -329,7 +327,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
         // 0b0001 - lvl1 instruction cache
         newCCSIDR = 0x2007E01A;
         break;
-      } 
+      }
       case 2:
       {
         // 0b0010 - lvl2 unified cache
@@ -340,7 +338,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
       {
         // no such cache exists on the beagleboard!
         printf("setCregVal: CSSELR = %x\n", val);
-        DIE_NOW(0, "setCregVal: CSSELR selects an unimplemented cache."); 
+        DIE_NOW(0, "setCregVal: CSSELR selects an unimplemented cache.");
       }
     } // switch (value) ends
     // update CCSIDR with correct value
@@ -372,7 +370,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
 #ifdef COPROC_DEBUG
       printf("CP15: high interrupt vector set.\n");
 #endif
-      (getGuestContext())->guestHighVectorSet = TRUE; 
+      (getGuestContext())->guestHighVectorSet = TRUE;
     }
   }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==0)
@@ -468,7 +466,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==2)
   {
-    // DCCSW: clean data cache line by set/way to PoC 
+    // DCCSW: clean data cache line by set/way to PoC
     printf("setCregVal: clean Dcache line, set/way to PoC: %x\n", val);
   }
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==4)
@@ -488,7 +486,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==8 && opc1==0 && CRm==5 && opc2==2)
   {
-    // ITLBIASID: invalide instruction TLB by ASID match 
+    // ITLBIASID: invalide instruction TLB by ASID match
     printf("setCregVal: invalidate instruction TLB by ASID match: %x\n", val);
   }
   else if (CRn==8 && opc1==0 && CRm==6 && opc2==0)
@@ -539,7 +537,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==1)
   {
-    // CONTEXTID: context ID register 
+    // CONTEXTID: context ID register
 #ifdef COPROC_DEBUG
     printf("setCregVal: WARN: CONTEXTID value %x\n", val);
 #endif
@@ -551,7 +549,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==2)
   {
-    // TPIDRURW: software thread ID register, user mode read-write 
+    // TPIDRURW: software thread ID register, user mode read-write
     if (val != 0)
     {
       printf("setCregVal: WARN: TPIDRURW value %x\n", val);
@@ -573,7 +571,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==4)
   {
-    // TPIDRPRW: software thread ID register, user mode no access 
+    // TPIDRPRW: software thread ID register, user mode no access
     if (val != 0)
     {
       printf("setCregVal: WARN: TPIDRPRW value %x\n", val);

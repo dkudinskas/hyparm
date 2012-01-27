@@ -1,25 +1,22 @@
 .global callKernel
-.func   callKernel
 callKernel:
-  /* assuming stack has been setup!!
-   *  FIXME: need PUSH/POP ? */
-  PUSH   {R0}
-  /* Set USR mode in the SPSR */
-  MRS    R0, SPSR
-  BIC    R0, #0x1F
-  ORR    R0, #0x10
-  /* disable async and FIQ's */
-  ORR    R0, #0x100
-#ifdef CONFIG_BLOCK_COPY_NO_IRQ
+
+  /*
+   * Modify the SPSR: set USR mode, disable asynchronous aborts and FIQs
+   */
+  MRS    r4, SPSR
+  BIC    r4, #0x01F
+  ORR    r4, #0x010
+  ORR    r4, #0x100
+.ifdef CONFIG_BLOCK_COPY_NO_IRQ
   /*Make sure interupts are disabled*/
-  ORR    R0, #0x80
-#endif
-  ORR    R0, #0x40
-  MSR    SPSR, R0
-  POP    {R0}
+  ORR    r4, #0x80
+.endif
+  ORR    r4, #0x040
+  MSR    SPSR, r4
 
   /* Load the entry point onto the stack, then use the Load PC + copy SPSR to CPSR to jump into USR mode */
-  STM SP, {r3}
+  STM    SP, {r3}
 
   /*
    * Prevent leaking hypervisor data to guest (this also improves determinism)
@@ -34,5 +31,4 @@ callKernel:
   MOV    r11, #0
   MOV    r12, #0
 
-  LDM SP, {PC}^
-.endfunc
+  LDM    SP, {PC}^
