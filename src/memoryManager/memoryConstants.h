@@ -1,7 +1,7 @@
 #ifndef __MEMORY_MANAGER__MEMORY_CONSTANTS_H__
 #define __MEMORY_MANAGER__MEMORY_CONSTANTS_H__
 
-/* These constants should be sourced from somewhere more appropriate
+/* FIXME These constants should be sourced from somewhere more appropriate
    The hypervisor size should be calculated using symbols
 */
 #define MEMORY_START_ADDR 0x80000000

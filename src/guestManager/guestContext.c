@@ -170,11 +170,10 @@ static void initGuestContext(GCONTXT *gContext)
   gContext->debugFlag = FALSE;
 }
 
-
 void dumpGuestContext(GCONTXT * gc)
 {
   u32int mode = gc->CPSR & 0x1F;
-  printf("============== DUMP GUEST CONTEXT ===============\n"); 
+  printf("============== DUMP GUEST CONTEXT ===============\n");
   printf("R0: %08x\n", gc->R0);
   printf("R1: %08x\n", gc->R1);
   printf("R2: %08x\n", gc->R2);
@@ -240,6 +239,9 @@ void dumpGuestContext(GCONTXT * gc)
   printf("R15: %08x\n", gc->R15);
   printf("CPSR: %08x\n", gc->CPSR);
   printf("endOfBlockInstr: %08x\n", gc->endOfBlockInstr);
+#ifdef CONFIG_THUMB2
+  printf("endOfBlockHalfInstr: %08x\n", gc->endOfBlockHalfInstr);
+#endif
   printf("handler function addr: %08x\n", (u32int)gc->hdlFunct);
 
   /* Virtual Memory */
@@ -265,11 +267,11 @@ void dumpGuestContext(GCONTXT * gc)
   printf("Block cache at: %08x\n", (u32int)gc->blockCache);
 
   int i = 0;
-  printf("Block Trace: %x\n");
+  printf("Block Trace:\n");
   for (i = BLOCK_HISOTRY_SIZE-1; i >= 0; i--)
   {
     printf("%x: %08x\n", i, gc->blockHistory[i]);
-  
+
   }
 #ifdef CONFIG_BLOCK_COPY
   /* BlockCache with copied code */

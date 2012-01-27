@@ -90,7 +90,10 @@ void dataBarrier()
 #ifdef MMU_DBG
   printf("Data Barrier\n");
 #endif
-    //It doesn't matter which register it written/nor the value inside it
+  /*
+   * It doesn't matter which register it written/nor the value inside it
+   * Page: 153
+   */
   asm ("mcr p15, 0, r0, c7, c10, 5"
   :
   :
@@ -103,8 +106,10 @@ void clearTLB()
 #ifdef MMU_DBG
   printf("Clearing TLB\n");
 #endif
-  // mcr coproc opc1 Rt CRn CRm opc2
-  //It doesn't matter which register it written/nor the value inside it
+  /*
+   * It doesn't matter which register it written/nor the value inside it
+   * Page 1373
+   */
   asm ("mcr p15, 0, r0, c8, c7, 0"
   :
   :
@@ -132,6 +137,7 @@ void clearInstructionCache()
 #ifdef MMU_DBG
   printf("Clearing caches\n");
 #endif
+  // Page: 1361
   asm ("mcr p15, 0, r0, c7, c5, 0"
   :
   :
@@ -156,6 +162,10 @@ void clearDataCache(void)
 //Need to set range of TTBCR
 void setTTBCR(u32int value)
 {
+  /* Page: 1348
+   * Translation Table Register 0
+   * Inner Non-cacheable
+   */
   asm("mcr p15, 0, %0, c2, c0, 0"
   :
   :"r"(value)
@@ -214,7 +224,7 @@ void setTexRemap(bool enable)
   : "memory"
      );
 #ifdef MMU_DBG
-  u32int treEnabled = ((value & 0x10000000) == 0x10000000) ? TRUE : FALSE; 
+  u32int treEnabled = ((value & 0x10000000) == 0x10000000) ? TRUE : FALSE;
   printf("setTexRemap: currently SCTRL.TRE = %x\n", treEnabled);
 #endif
 
@@ -249,7 +259,9 @@ void mmuInsertPt0(descriptor* addr)
 #ifdef MMU_DBG
   printf("Add entry into TTBR0: %08x\n", (u32int)addr);
 #endif
-  //TODO: need to improve this to insert the correct bit masks
+  /* TODO: need to improve this to insert the correct bit masks
+   * TTBR0(1348): base address of translation table 0
+   */
   asm("mcr p15, 0, %0,c2,c0,0"
   :
   :"r"(addr)
@@ -319,9 +331,8 @@ bool isMmuEnabled()
   :"=r"(tempReg)
   :
   : "memory");
-  
+
   return (tempReg & 0x1) ? TRUE : FALSE;
-         
 }
 
 u32int getDFAR()

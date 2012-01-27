@@ -46,14 +46,14 @@
  */
 #define ATAG_CMDLINE  0x54410009
 
-void doLinuxBoot(image_header_t * imageHeader, ulong loadAddr, ulong initrdAddr)  __attribute__((noreturn));
+void doLinuxBoot(image_header_t *imageHeader, u32int loadAddr, u32int initrdAddr)  __attribute__((noreturn));
 
 void populateDramBanks(void);
 
 struct RamConfig
 {
-  ulong start;
-  ulong size;
+  u32int start;
+  u32int size;
 };
 
 struct tag_header {

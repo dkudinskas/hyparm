@@ -1,12 +1,16 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
 
-#include "guestManager/guestContext.h"
+#ifdef CONFIG_GUEST_FREERTOS
+# include "drivers/beagle/beGPIO.h"
+#endif
 
-#include "vm/omap35xx/gpio.h"
+#include "guestManager/guestContext.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
+
+#include "vm/omap35xx/gpio.h"
 
 
 extern GCONTXT * getGuestContext(void);
@@ -27,7 +31,7 @@ void initGpio(u32int gpioNumber)
     printf("Initializing GPIO%x at %08x\n", gpioNumber, (u32int)gpio[gpioNumber-1]);
 #endif
   }
-  
+
   resetGpio(gpioNumber);
 }
 
@@ -60,7 +64,7 @@ void resetGpio(u32int num)
   gpio[num-1]->gpioSetWkuEnable    = 0x00000000;
   gpio[num-1]->gpioClearDataOut    = 0x00000000;
   gpio[num-1]->gpioSetDataOut      = 0x00000000;
-  
+
   // set reset complete bit
   gpio[num-1]->gpioSysStatus = GPIO_SYSSTATUS_RESETDONE;
 }
@@ -137,6 +141,33 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
     case GPIO_OE:
     case GPIO_DATAIN:
     case GPIO_DATAOUT:
+#ifdef CONFIG_GUEST_FREERTOS
+      /* FreeRTOS GPIO status */
+      val = gpio[gpioNum]->gpioDataOut;
+      if (gpioNum == 4 || gpioNum == 5)
+      {
+        val = beGetGPIO (regOffset, gpioNum);
+      }
+      break;
+#endif
+    case GPIO_CLEARDATAOUT:
+#ifdef CONFIG_GUEST_FREERTOS
+      val = gpio[gpioNum]->gpioClearDataOut;
+      if (gpioNum == 4 || gpioNum == 5)
+      {
+        val = beGetGPIO(regOffset, gpioNum);
+      }
+      break;
+#endif
+    case GPIO_SETDATAOUT:
+#ifdef CONFIG_GUEST_FREERTOS
+      val = gpio[gpioNum]->gpioSetDataOut;
+      if (gpioNum == 4 || gpioNum == 5)
+      {
+        val = beGetGPIO(regOffset, gpioNum);
+      }
+      break;
+#endif
     case GPIO_LEVELDETECT0:
     case GPIO_LEVELDETECT1:
     case GPIO_RISINGDETECT:
@@ -149,11 +180,8 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
     case GPIO_SETIRQENABLE2:
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
-    case GPIO_CLEARDATAOUT:
-    case GPIO_SETDATAOUT:
       printf("GPIO: load from unimplemented register %x\n", regOffset);
       DIE_NOW(0, "panic.");
-      break;
     default:
       DIE_NOW(0, "Gpio: load on invalid register.");
   }
@@ -268,8 +296,42 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       }
       gpio[gpioNum]->gpioCtrl = value & ~GPIO_CTRL_RESERVED;
       break;
-    case GPIO_WAKEUPENABLE:
     case GPIO_OE:
+#ifdef CONFIG_GUEST_FREERTOS
+      /* value can be any 32-bit number */
+      gpio[gpioNum]->gpioOE = value;
+      /* FreeRTOS initialization */
+      if (gpioNum == 4 || gpioNum == 5)
+      {
+        beStoreGPIO(regOffset, value, gpioNum);
+      }
+      break;
+#endif
+    case GPIO_CLEARDATAOUT:
+#ifdef CONFIG_GUEST_FREERTOS
+      /* value can be any 32-bit number */
+      gpio[gpioNum]->gpioClearDataOut = value;
+      gpio[gpioNum]->gpioDataOut = ~(value);
+      /* FreeRTOS initialization */
+      if (gpioNum == 4 || gpioNum == 5)
+      {
+        beStoreGPIO(regOffset, value, gpioNum);
+      }
+      break;
+#endif
+    case GPIO_SETDATAOUT:
+#ifdef CONFIG_GUEST_FREERTOS
+      /* value can be any 32-bit number */
+      gpio[gpioNum]->gpioSetDataOut = value;
+      gpio[gpioNum]->gpioDataOut = value;
+      /* FreeRTOS initialization */
+      if (gpioNum == 4 || gpioNum == 5)
+      {
+        beStoreGPIO(regOffset, value, gpioNum);
+      }
+      break;
+#endif
+    case GPIO_WAKEUPENABLE:
     case GPIO_DATAIN:
     case GPIO_DATAOUT:
     case GPIO_LEVELDETECT0:
@@ -284,11 +346,8 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPIO_SETIRQENABLE2:
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
-    case GPIO_CLEARDATAOUT:
-    case GPIO_SETDATAOUT:
       printf("GPIO: store to unimplemented register %x\n", regOffset);
       DIE_NOW(gc, "panic.");
-      break;
     default:
       DIE_NOW(gc, "Gpio: store to invalid register.");
   }

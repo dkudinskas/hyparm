@@ -60,7 +60,7 @@
 #define SHIFT_TYPE_ROR    0x4
 
 /* a function to serve as a dead-loop if we decode something invalid */
-void invalidInstruction(u32int instr, const char * msg);
+void invalidInstruction(u32int instr, const char * msg) __attribute__((noreturn));
 
 
 /* a function that sets 4 bits to zero starting at startbit (left bit is most significant) */
@@ -135,5 +135,17 @@ u32int decodeShift(u32int instrShiftType);
 
 // count the number of ones in a 32 bit stream
 u32int countBitsSet(u32int bitstream);
+
+
+#ifdef CONFIG_THUMB2
+
+// decode thumb instruction into 32-bit format
+u32int decodeThumbInstr(u16int * address);
+
+// check whether the instruction is thumb 16 or 32bit
+bool isThumb32(u32int instr);
+
+#endif /* CONFIG_THUMB2 */
+
 
 #endif

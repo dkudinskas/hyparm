@@ -4,6 +4,7 @@
 
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stdarg.h"
 #include "common/string.h"
 
 #include "cpuArch/cpu.h"
@@ -13,24 +14,16 @@
 #include "drivers/beagle/beClockMan.h"
 #include "drivers/beagle/beUart.h"
 
+#ifdef CONFIG_GUEST_FREERTOS
+#include "drivers/beagle/beGPIO.h"
+#endif
+
 #ifdef CONFIG_MMC
 #include "drivers/beagle/beMMC.h"
 #endif
 
-#include "vm/omap35xx/hardwareLibrary.h"
-#include "vm/omap35xx/LED.h"
-
-#include "instructionEmu/scanner.h"
-
-#include "linuxBoot/bootLinux.h"
-#include "linuxBoot/image.h"
-
 #include "guestManager/guestContext.h"
 #include "guestManager/blockCache.h"
-
-#include "memoryManager/addressing.h" /* For virtual addressing initialisation */
-#include "memoryManager/cp15coproc.h"
-#include "memoryManager/frameAllocator.h"
 
 #ifdef CONFIG_MMC
 #include "io/mmc.h"
@@ -38,19 +31,32 @@
 #include "io/fs/fat.h"
 #endif
 
-// uncomment me to enable startup debug: #define STARTUP_DEBUG
+#include "instructionEmu/scanner.h"
+
+#include "linuxBoot/bootLinux.h"
+#include "linuxBoot/image.h"
+
+#include "memoryManager/addressing.h" /* For virtual addressing initialisation */
+#include "memoryManager/cp15coproc.h"
+#include "memoryManager/frameAllocator.h"
+
+#ifdef CONFIG_GUEST_FREERTOS
+#include "rtosBoot/bootRtos.h"
+#endif
+
+#include "vm/omap35xx/hardwareLibrary.h"
+#include "vm/omap35xx/LED.h"
+
 
 //uncomment me to enable block copy cache debug (installation of backpointer): #define BLOCK_COPY_DEBUG
 
 #define HIDDEN_RAM_START   0x8f000000
 #define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
 
-extern void registerGuestPointer(GCONTXT *gContext);
+extern void setGuestContext(GCONTXT *gContext);
 
 static void printUsage(void);
 static int parseCommandline(int argc, char *argv[], u32int *kernAddr, u32int *initrdAddr);
-
-u32int scannerReqCounter;
 
 #ifdef CONFIG_MMC
 fatfs mainFilesystem;
@@ -59,19 +65,24 @@ struct mmc *mmcDevice;
 file * debugStream;
 #endif
 
+#ifdef CONFIG_GUEST_FREERTOS
+bool rtos;
+#endif
 
-void main(int argc, char *argv[])
+
+void main(s32int argc, char *argv[])
 {
   u32int kernAddr = 0;
   u32int initrdAddr = 0;
+  int ret = 0;
 
-#ifdef SCANNER_COUNTER  
-  scannerReqCounter = 0;
-#endif  
+#ifdef CONFIG_GUEST_FREERTOS
+  rtos = FALSE;
+#endif
 
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
-  
+
   mallocInit(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
 
   /* initialise uart backend, important to be before any debug output. */
@@ -87,19 +98,19 @@ void main(int argc, char *argv[])
 #endif
 
 #ifndef CONFIG_CLI
-  if (parseCommandline(argc, argv, &kernAddr, &initrdAddr) < 0)
+  if ((ret = parseCommandline(argc, argv, &kernAddr, &initrdAddr)) < 0)
   {
     printUsage();
     DIE_NOW(0, "Hypervisor startup aborted.");
   }
-#endif
+#endif /* CONFIG_CLI */
 
   /* create the frametable from which we can alloc memory */
   initialiseFrameTable();
 
   /* initialize guest context */
   GCONTXT *guestContext = allocateGuest();
-  registerGuestPointer(guestContext);
+  setGuestContext(guestContext);
 
 #ifdef CONFIG_BLOCK_COPY
   //Install jump instruction
@@ -179,28 +190,16 @@ void main(int argc, char *argv[])
   initialiseVirtualAddressing();
 
 #ifdef CONFIG_CLI
-
-/*
- * FIXME: deal with guest context and VIRTUAL ADDRESSING!!!
- */
-
+  /*
+   * FIXME: deal with guest context and VIRTUAL ADDRESSING!!!
+   */
   enterCliLoop();
-
 #else
-
-#ifdef STARTUP_DEBUG
-  printf("Kernel address: %x, Initrd address: %x\n", kernAddr, initrdAddr);
-#endif
-
-  image_header_t imageHeader = getImageHeader(kernAddr);
-#ifdef STARTUP_DEBUG
-  dumpHdrInfo(&imageHeader);
-#endif
 
   /* initialise physical interrupt controller */
   intcBEInit();
 
-  /* now we can umkask first interrupt - UART */
+  /* now we can unmask first interrupt - UART */
   unmaskInterruptBE(UART3_IRQ);
 
   /* initialise physical clock manager */
@@ -220,7 +219,7 @@ void main(int argc, char *argv[])
   {
     DIE_NOW(0, "Failed to read partition table.\n");
   }
-  
+
   if ((err = fatMount(&mainFilesystem, &mmcDevice->blockDev, 1)) != 0)
   {
     DIE_NOW(0, "Failed to mount FAT partition.\n");
@@ -231,34 +230,103 @@ void main(int argc, char *argv[])
   {
     DIE_NOW(0, "Failed to open (create) debug stream file.\n");
   }
-#endif
+#endif /* CONFIG_MMC */
 
-  // does not return
 #ifdef CONFIG_BLOCK_COPY_NO_IRQ
   disableInterrupts();
 #endif
-  doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
 
+  // does not return
+#ifdef CONFIG_GUEST_FREERTOS
+  if (ret == 2)
+  {
+    rtos = TRUE;
+#ifdef CONFIG_DEBUG_STARTUP
+    printf("RTOS address: %x\n", kernAddr);
+#endif
+    doRtosBoot(kernAddr);
+  }
+  else
+#endif
+  {
+#ifdef CONFIG_DEBUG_STARTUP
+    printf("Kernel address: %x, Initrd address: %x\n", kernAddr, initrdAddr);
+#endif
+    image_header_t imageHeader = getImageHeader(kernAddr);
+#ifdef CONFIG_DEBUG_STARTUP
+    dumpHdrInfo(&imageHeader);
+#endif
+    doLinuxBoot(&imageHeader, kernAddr, initrdAddr);
+  }
 #endif /* CONFIG_CLI */
 }
 
 static void printUsage(void)
 {
-  printf("Loader usage:\n");
-  printf("go <loaderAddr> -kernel <kernAddress> -initrd <initrdAddr>\n");
-  printf("kernel: address of kernel in hex format (0xXXXXXXXX)\n");
-  printf("initrd: address of external initrd in hex format (0xXXXXXXXX)\n");
+  printf(
+      "Loader usage:" EOL
+      "go <loaderAddr> -kernel <kernAddress> -initrd <initrdAddr>" EOL
+      "kernel: address of kernel in hexadecimal representation" EOL
+      "initrd: address of external initrd in hexadecimal representation" EOL
+#ifdef CONFIG_GUEST_FREERTOS
+      "rtos: address of rtos in hex format (0xXXXXXXXX)" EOL
+#endif
+    );
   return;
 }
 
 static int parseCommandline(s32int argc, char *argv[], u32int *kernAddr, u32int *initrdAddr)
 {
-#ifdef STARTUP_DEBUG
+#ifdef CONFIG_DEBUG_STARTUP
   s32int i;
-  printf("Number of args: %c\n", argc+0x30);
-  for (i = 0; i < argc; i++)
+#endif
+#ifdef CONFIG_GUEST_FREERTOS
+  bool rtos;
+#endif
+
+#ifdef CONFIG_DEBUG_STARTUP
+  printf("parseCommandline: argc = %d" EOL, argc);
+  for (i = 0; i < argc; ++i)
   {
-    printf("Arg %c: %x\n", i+0x30, argv[i]);
+    printf("parseCommandline: argv[%d] = %p" EOL, i, argv[i]);
+  }
+#endif
+
+  if (argc < 3)
+  {
+    return -1;
+  }
+
+  if (strcmp("-kernel", argv[1]) == 0)
+  {
+#ifdef CONFIG_GUEST_FREERTOS
+    rtos = FALSE;
+  }
+  else if (strcmp("-rtos", argv[1]) == 0)
+  {
+    rtos = TRUE;
+#endif
+  }
+  else
+  {
+#ifdef CONFIG_DEBUG_STARTUP
+    printf("parseCommandline: parameter -kernel or -rtos not found" EOL);
+#endif
+    return -1;
+  }
+
+  if (sscanf(argv[2], "%x", kernAddr) != 1)
+  {
+#ifdef CONFIG_DEBUG_STARTUP
+    printf("parseCommandline: parameter value for %s is not a valid address: '%s'" EOL, argv[1], argv[2]);
+#endif
+    return -1;
+  }
+
+#ifdef CONFIG_GUEST_FREERTOS
+  if (rtos)
+  {
+    return 2;
   }
 #endif
 
@@ -267,34 +335,18 @@ static int parseCommandline(s32int argc, char *argv[], u32int *kernAddr, u32int 
     return -1;
   }
 
-  if (strcmp("-kernel", argv[1]) != 0)
-  {
-#ifdef STARTUP_DEBUG
-    printf("Parameter -kernel not found.");
-#endif
-    return -1;
-  }
-
-  if (sscanf(argv[2], "%x", kernAddr) != 1)
-  {
-#ifdef STARTUP_DEBUG
-    printf("Parameter -kernel has invalid address '%s'.", arg);
-#endif
-    return -1;
-  }
-
   if (strcmp("-initrd", argv[3]) != 0)
   {
-#ifdef STARTUP_DEBUG
-    printf("Parameter -initrd not found.");
+#ifdef CONFIG_DEBUG_STARTUP
+    printf("parseCommandline: parameter -initrd not found" EOL);
 #endif
     return -1;
   }
 
   if (sscanf(argv[4], "%x", initrdAddr) != 1)
   {
-#ifdef STARTUP_DEBUG
-    printf("Parameter -initrd has invalid address '%s'.", arg);
+#ifdef CONFIG_DEBUG_STARTUP
+    printf("parseCommandline: parameter value for -initrd is not a valid address: '%s'" EOL, argv[4]);
 #endif
     return -1;
   }

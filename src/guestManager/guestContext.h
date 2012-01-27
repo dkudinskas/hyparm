@@ -10,7 +10,7 @@
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/memoryProtection.h"
 
-// uncomment me for guestContext debug: 
+// uncomment me for guestContext debug:
 #define GUEST_CONTEXT_DBG
 
 #define BLOCK_HISOTRY_SIZE     5
@@ -60,6 +60,9 @@ struct guestContext
   u32int R14_UND;
   u32int SPSR_UND;
   u32int endOfBlockInstr;
+#ifdef CONFIG_THUMB2
+  u32int endOfBlockHalfInstr;
+#endif
   u32int (*hdlFunct)(GCONTXT * context);
   CREG * coprocRegBank;
   BCENTRY * blockCache;  // This is the log book
@@ -101,7 +104,7 @@ struct guestContext
 };
 
 GCONTXT * allocateGuest(void);
-   
+
 void dumpGuestContext(GCONTXT * gc);
 
 #ifdef CONFIG_BLOCK_COPY

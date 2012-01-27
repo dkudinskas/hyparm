@@ -56,6 +56,107 @@
 #define LDREX_MASKED    0x01900f9f
 
 
+#ifdef CONFIG_THUMB2
+
+// ------------------Thumb 16 bit----------------- //
+
+//STR Instructions
+#define THUMB16_STR_IMM5_MASK      0xF800
+#define THUMB16_STR_IMM5           0x6000
+#define THUMB16_STR_IMM8_MASK      0xF800
+#define THUMB16_STR_IMM8           0x9000
+
+// STRB Instructions
+#define THUMB16_STRB_IMM5_MASK     0xF800
+#define THUMB16_STRB_IMM5          0x7000
+#define THUMB16_STRB_REG_MASK      0xFE00
+#define THUMB16_STRB_REG           0xA400
+
+// STRH Instructions
+#define THUMB16_STRH_IMM5_MASK     0xF800
+#define THUMB16_STRH_IMM5          0x8000
+#define THUMB16_STRH_REG_MASK      0xFE00
+#define THUMB16_STRH_REG           0x5200
+
+// STM, PUSH Instructions
+#define THUMB16_PUSH_MASK          0xFE00
+#define THUMB16_PUSH               0xB400
+#define THUMB16_STM_MASK           0xF800
+#define THUMB16_STM                0xC000
+
+//LDR Instructions
+#define THUMB16_LDR_IMM5_MASK      0xF800
+#define THUMB16_LDR_IMM5           0x6800
+#define THUMB16_LDR_IMM8_MASK      0xF800
+#define THUMB16_LDR_IMM8           0x9800
+#define THUMB16_LDR_IMM8_LIT_MASK  0xF800
+#define THUMB16_LDR_IMM8_LIT       0x4800
+#define THUMB16_LDR_REG_MASK       0xFE00
+#define THUMB16_LDR_REG            0x5800
+
+//LDRB Instructions
+#define THUMB16_LDRB_IMM5_MASK     0xF800
+#define THUMB16_LDRB_IMM5          0x7800
+#define THUMB16_LDRB_REG_MASK      0xFE00
+#define THUMB16_LDRB_REG           0xAC00
+
+//LDRH Instructions
+#define THUMB16_LDRH_IMM5_MASK     0xF800
+#define THUMB16_LDRH_IMM5          0x8800
+#define THUMB16_REG_MASK           0xFE00
+#define THUMB16_REG                0x6A00
+
+//LDRSH Instructions
+#define  THUMB16_LDRSH_REG_MASK    0xFE00
+#define THUMB16_LDRSH_REG          0xAE00
+
+
+// --------------- Thumb 32 bit-------------------- //
+
+//STRB Instructions
+#define THUMB32_STRB_IMM12_MASK        0xFFF00000
+#define THUMB32_STRB_IMM12             0xF8800000
+#define THUMB32_STRB_IMM8_MASK         0xFFF08000
+#define THUMB32_STRB_IMM8              0xF8008000
+#define THUMB32_STRB_REG_MASK          0xFFF00FC0
+#define THUMB32_STRB_REG               0xF8000000
+
+//STRH
+#define THUMB32_STRH_REG_IMM5_MASK     0xFFF00000
+#define THUMB32_STRH_REG_IMM5          0xF8A00000
+#define THUMB32_STRH_REG_IMM8_MASK     0xFFF00800
+#define THUMB32_STRH_REG_IMM8          0xF8200800
+#define THUMB32_STRH_REG_MASK          0xFFF00FC0
+#define THUMB32_STRH_REG               0xF8200000
+
+//STRD
+#define THUMB32_STRD_IMM8_MASK         0xFE500000
+#define THUMB32_STRD_IMM8              0xE8400000
+
+
+//LDRH Instructions
+#define THUMB32_LDRH_REG_IMM12_MASK    0xFFF00000
+#define THUMB32_LDRH_REG_IMM12         0xF8B00000
+#define THUMB32_LDRH_REG_IMM8_MASK     0xFFF00800
+#define THUMB32_LDRH_REG_IMM8          0xF8300800
+#define THUMB32_LDRH_IMM12_MASK        0xFF7F0000
+#define THUMB32_LDRH_IMM12             0xF83F0000
+#define THUMB32_LDRH_REG_MASK          0xFFF00FC0
+#define THUMB32_LDRH_REG               0xF8300000
+
+//LDRSH Instructions
+#define THUMB32_LDRSH_REG_IMM8_MASK    0xFFF00800
+#define THUMB32_LDRSH_REG_IMM8         0xF9B00800
+#define THUMB32_LDRSH_REG_IMM12_MASK   0xFFF00800
+#define THUMB32_LDRSH_REG_IMM12        0xF9300800
+#define THUMB32_LDRSH_IMM12_MASK       0xFFFF0000
+#define THUMB32_LDRSH_IMM12            0xF93F0000
+#define THUMB32_LDRSH_REG_MASK         0xFFF00FC0
+#define THUMB32_LDRSH_REG              0xF9300000
+
+#endif /* CONFIG_THUMB2 */
+
+
 /* generic load store instruction emulation  *
  * called when we permission fault on memory *
  * access to a protected area - must emulate */

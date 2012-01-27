@@ -25,6 +25,9 @@
 #include "memoryManager/mmu.h"
 #include "memoryManager/memoryConstants.h"
 
+#ifdef CONFIG_GUEST_FREERTOS
+extern bool rtos;
+#endif
 
 extern GCONTXT * getGuestContext(void);
 
@@ -36,14 +39,45 @@ void softwareInterrupt(u32int code)
   // parse the instruction to find the start address of next block
   GCONTXT * gContext = getGuestContext();
   u32int nextPC = 0;
+#ifdef CONFIG_THUMB2
+  bool gSVC = FALSE;
+#endif
   u32int (*instrHandler)(GCONTXT * context);
 
+#ifdef CONFIG_THUMB2
+  /* Make sure that any SVC that is not part of the scanner
+   * will be delivered to the guest
+   */
+  if (gContext->CPSR & T_BIT) // Thumb
+  {
+    if (code == 0) // svc in Thumb is between 0x01 and 0xFF
+    {
+      gSVC = TRUE;
+    }
+  }
+  else
+  {
+    if (code <= 0xFF)
+    {
+#ifdef EXC_HDLR_DBG
+      printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, gContext->R15);
+#endif
+      gSVC = TRUE;
+    }
+  }
+
+  // Do we need to forward it to the guest?
+  if (gSVC)
+  {
+    deliverServiceCall();
+#else
   if (code <= 0xFF)
   {
-#ifdef EXC_HDLR_DBG
+# ifdef EXC_HDLR_DBG
     printf("softwareInterrupt @ 0x%x is a guest system call.\n", code, gContext->R15);
-#endif
+# endif
     deliverServiceCall();
+#endif
     nextPC = gContext->R15;
   }
   else
@@ -63,11 +97,14 @@ void softwareInterrupt(u32int code)
   {
     gContext->blockHistory[i] = gContext->blockHistory[i-1];
   }
-  gContext->blockHistory[0] = nextPC; 
+  gContext->blockHistory[0] = nextPC;
 
   gContext->R15 = nextPC;
 
   // deliver interrupts
+  /* Maybe a timer interrupt is pending on real INTC but
+   * hasn't been acked yet
+   */
   if (gContext->guestIrqPending)
   {
     if ((gContext->CPSR & CPSR_IRQ_DIS) == 0)
@@ -83,21 +120,30 @@ void softwareInterrupt(u32int code)
   if ((gContext->CPSR & CPSR_MODE) != CPSR_MODE_USR)
   {
     // guest in privileged mode! scan...
+#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+    setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
+#endif
     scanBlock(gContext, gContext->R15);
   }
 }
 
 void dataAbort()
 {
-  // make sure interrupts are disabled while we deal with data abort.
+  /*
+   * FIXME: what is the following comment about???
+   * Markos: Stop the timer so we can resume from where we stopped
+   *
+   * Make sure interrupts are disabled while we deal with data abort.
+   */
   disableInterrupts();
+  /* Encodings: Page 1289 & 1355 */
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
   switch (faultStatus)
   {
     case dfsPermissionSection:
     case dfsPermissionPage:
     {
-      // Check if the addr we have faulted on is caused by 
+      // Check if the addr we have faulted on is caused by
       // a memory protection the hypervisor has enabled
       GCONTXT* gc = getGuestContext();
 
@@ -109,6 +155,9 @@ void dataAbort()
         {
 #ifndef CONFIG_BLOCK_COPY
           deliverDataAbort();
+#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+          setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION);
+#endif
           scanBlock(gc, gc->R15);
           break;
 #endif
@@ -117,17 +166,31 @@ void dataAbort()
 
       // interpret the load/store
       emulateLoadStoreGeneric(gc, getDFAR());
-      
+
       // load/store might still have failed if it was LDRT/STRT
       if (!gc->guestDataAbtPending)
       {
         // ONLY move to the next instruction, if the guest hasn't aborted...
-        gc->R15 = gc->R15 + 4;
+#ifdef CONFIG_THUMB2
+        if(gc->CPSR & T_BIT)
+        {
+          gc->R15 = gc->R15 + 2;
+        }
+        else
+        {
+#endif
+          gc->R15 = gc->R15 + 4;
+#ifdef CONFIG_THUMB2
+        }
+#endif
       }
       else
       {
         // deliver the abort!
         deliverDataAbort();
+#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+        setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_PERMISSION);
+#endif
         scanBlock(gc, gc->R15);
       }
       break;
@@ -137,10 +200,17 @@ void dataAbort()
     {
       GCONTXT* gc = getGuestContext();
       DFSR dfsr = getDFSR();
+      /*
+       * Markos: I think this means that the guest was trying to write within its
+       * allowed memory area in user mode
+       */
       bool isPrivAccess = (gc->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
-      if ( shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()) )
+      if (shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
       {
         deliverDataAbort();
+#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+        setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_TRANSLATION);
+#endif
         scanBlock(gc, gc->R15);
       }
       break;
@@ -178,7 +248,7 @@ void dataAbortPrivileged(u32int pc)
 {
   /* Here if we abort in a priviledged mode, i.e its the Hypervisors fault */
   printf("dataAbortPrivileged: Hypervisor dabt in priv mode @ pc %08x\n", pc);
-  
+
   printDataAbort();
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
   switch(faultStatus)
@@ -239,7 +309,12 @@ void undefinedPrivileged(void)
 
 void prefetchAbort(void)
 {
-  // make sure interrupts are disabled while we deal with prefetch abort.
+  /*
+   * FIXME: what is the following comment about???
+   * Markos: Stop the time so we can resume from where we stopped
+   *
+   * Make sure interrupts are disabled while we deal with prefetch abort.
+   */
   disableInterrupts();
 
   IFSR ifsr = getIFSR();
@@ -250,14 +325,59 @@ void prefetchAbort(void)
   switch(faultStatus)
   {
     case ifsTranslationFaultPage:
-    {
-      if ( shouldPrefetchAbort(ifar) )
+      if (shouldPrefetchAbort(ifar))
       {
         deliverPrefetchAbort();
+#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+        setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_TRANSLATION);
+#endif
         scanBlock(gc, gc->R15);
       }
       break;
-    }
+    case ifsDebugEvent:
+    case ifsAccessFlagFaultSection:
+    case ifsTranslationFaultSection:
+    case ifsAccessFlagFaultPage:
+    case ifsSynchronousExternalAbort:
+    case ifsDomainFaultSection:
+    case ifsDomainFaultPage:
+    case ifsTranslationTableTalk1stLvlSynchExtAbt:
+    case ifsPermissionFaultSection:
+    case ifsTranslationTableWalk2ndLvllSynchExtAbt:
+      /*
+       * FIXME: with CONFIG_GUEST_FREERTOS, all above cases still fall through and will end up in the new code. Is this correct?
+       */
+#ifdef CONFIG_GUEST_FREERTOS
+      if (shouldPrefetchAbort(ifar))
+      {
+        deliverPrefetchAbort();
+#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
+        setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_FREERTOS);
+#endif
+        scanBlock(gc, gc->R15);
+      }
+      break;
+#endif
+    case ifsPermissionFaultPage:
+    case ifsImpDepLockdown:
+    case ifsMemoryAccessSynchParityError:
+    case ifsImpDepCoprocessorAbort:
+    case ifsTranslationTableWalk1stLvlSynchParityError:
+    case ifsTranslationTableWalk2ndLvlSynchParityError:
+    default:
+      printPrefetchAbort();
+      DIE_NOW(gc, "Unimplemented guest prefetch abort.");
+  }
+  enableInterrupts();
+}
+
+void prefetchAbortPrivileged(void)
+{
+  disableInterrupts();
+  IFSR ifsr = getIFSR();
+  u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
+  switch(faultStatus){
+    case ifsTranslationFaultPage:
     case ifsDebugEvent:
     case ifsAccessFlagFaultSection:
     case ifsTranslationFaultSection:
@@ -276,28 +396,28 @@ void prefetchAbort(void)
     case ifsTranslationTableWalk2ndLvlSynchParityError:
     default:
       printPrefetchAbort();
-      DIE_NOW(gc, "Unimplemented guest prefetch abort.");
-  }
-  enableInterrupts();
-}
-
-void prefetchAbortPrivileged(void)
-{
-  printPrefetchAbort();
-  DIE_NOW(0, "prefetchAbortPrivileged: unimplemented");
-  //Never returns
+      DIE_NOW(0, "Unimplemented privileged prefetch abort.");
+   }
 }
 
 void monitorMode(void)
 {
-  /* Does the omap 3 implement monitor/secure mode? */
+  /*
+   * TODO
+   * Does the omap 3 implement monitor/secure mode?
+   * Niels: yes it does!
+   */
   DIE_NOW(0, "monitorMode: monitor/secure mode handler, Implement me!");
 }
 
 void monitorModePrivileged(void)
 {
-  /* Does the omap 3 implement monitor/secure mode? */
-  DIE_NOW(0, "monitorMode: monitor/secure mode handler, privlieged mode. Implement me!");
+  /*
+   * TODO
+   * Does the omap 3 implement monitor/secure mode?
+   * Niels: yes it does!
+   */
+  DIE_NOW(0, "monitorMode: monitor/secure mode handler, privileged mode. Implement me!");
 }
 
 void irq()
@@ -307,21 +427,31 @@ void irq()
   switch(activeIrqNumber)
   {
     case GPT1_IRQ:
-    {
       scheduleGuest();
       gptBEClearOverflowInterrupt(1);
       acknowledgeIrqBE();
       break;
-    }
     case GPT2_IRQ:
-    {
       throwInterrupt(activeIrqNumber);
       gptBEClearOverflowInterrupt(2);
+#ifdef CONFIG_GUEST_FREERTOS
+      /*
+       * FIXME: Niels: I think this is a dirty hack.
+       * Shouldn't we figure out which interrupt to clear and then clear the right one?
+       */
+      if (rtos)
+      {
+        storeToGPTimer(2,GPT_REG_TCRR,0x0);
+        gptBEClearMatchInterrupt(2);
+      }
+#endif
       acknowledgeIrqBE();
       break;
-    }
     case UART3_IRQ:
     {
+      /*
+       * FIXME: Niels: are we sure we're supposed to read characters unconditionally?
+       */
       // read character from UART
       u8int c = serialGetcAsync();
       acknowledgeIrqBE();
@@ -330,10 +460,8 @@ void irq()
       break;
     }
     default:
-    {
       printf("Received IRQ = %x\n", activeIrqNumber);
       DIE_NOW(0, "irq: unimplemented IRQ number.\n");
-    }
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -343,8 +471,6 @@ void irq()
   asm volatile("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
-
-  return;
 }
 
 
@@ -355,20 +481,30 @@ void irqPrivileged()
   switch(activeIrqNumber)
   {
     case GPT1_IRQ:
-    {
       gptBEClearOverflowInterrupt(1);
       acknowledgeIrqBE();
       break;
-    }
     case GPT2_IRQ:
-    {
       throwInterrupt(activeIrqNumber);
       gptBEClearOverflowInterrupt(2);
+#ifdef CONFIG_GUEST_FREERTOS
+      /*
+       * FIXME: Niels: I think this is a dirty hack.
+       * Shouldn't we figure out which interrupt to clear and then clear the right one?
+       */
+      if (rtos)
+      {
+        storeToGPTimer(2,GPT_REG_TCRR,0x0);
+        gptBEClearMatchInterrupt(2);
+      }
+#endif
       acknowledgeIrqBE();
       break;
-    }
     case UART3_IRQ:
     {
+      /*
+       * FIXME: Niels: are we sure we're supposed to read characters unconditionally?
+       */
       // read character from UART
       u8int c = serialGetcAsync();
       acknowledgeIrqBE();
@@ -377,10 +513,8 @@ void irqPrivileged()
       break;
     }
     default:
-    {
       printf("Received IRQ = %x\n", activeIrqNumber);
       DIE_NOW(0, "irqPrivileged: unimplemented IRQ number.");
-    }
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -390,7 +524,6 @@ void irqPrivileged()
   asm volatile("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
-  return;
 }
 
 
@@ -398,3 +531,4 @@ void fiq(void)
 {
   DIE_NOW(getGuestContext(), "fiq: FIQ handler unimplemented!");
 }
+

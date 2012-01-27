@@ -761,6 +761,6 @@ struct instruction32bit * decodeUnconditional(u32int instr)
 
 void dumpInstruction(const char * msg, u32int instr)
 {
-  printf("%s: Instruction: %s ", msg, instr);
+  printf("%s: Instruction: %#.8x ", msg, instr);
   dumpInstrString(instr);
 }

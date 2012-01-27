@@ -8,6 +8,13 @@
 #include "instructionEmu/miscInstructions.h"
 
 
+#ifdef CONFIG_THUMB2
+/*
+ * FIXME: global variables are evil
+ */
+u16int * currAddress = 0;
+#endif
+
 extern GCONTXT * getGuestContext(void);
 
 /* Top level instruction categories */
@@ -24,6 +31,50 @@ struct TopLevelCategory categories[] = {
 {UNDEFINED_CATEGORY,              0x00000000, 0x00000000}
 };
 
+
+#ifdef CONFIG_THUMB2
+
+//Thumb 16-bit
+struct TopLevelCategory t16categories[] = {
+{T16_UNCONDITIONALS_CATEGORY,      0xF800, 0xE000},
+{T16_CONDITIONAL_BRANCH_AND_SVC_CALL,  0xF000, 0xD000},
+{T16_LOAD_MULTIPLE_REGISTERS,      0xF800, 0xC800},
+{T16_STORE_MULTIPLE_REGISTERS,      0xF800, 0xC000},
+{T16_MISC,                0xF000, 0xB000},
+{T16_SP_ADDR,              0xF800, 0xA800},
+{T16_PC_ADDR,              0xF800, 0xA000},
+{T16_LOAD_STORE,            0xE000, 0x8000},
+{T16_LOAD_STORE,            0xE000, 0x6000},
+{T16_LOAD_STORE,            0xE000, 0x5000},
+{T16_LDR,                0xF800, 0x4800},
+{T16_SPECIAL_AND_BRANCH_EXCHANGE,    0xFC00, 0x4400},
+{T16_DATA_PROC,              0xFC00, 0x4000},
+{T16_ARITHMETIC,            0xC000, 0x0000}
+};
+
+
+//Thumb 32-bit. Instructions are treated as 2 x halfwords
+struct TopLevelCategory t32categories[] = {
+{T32_LOAD_STORE_MULTIPLE,    0xFE400000,0xE8000000},
+{T32_LOAD_STORE_DOUBLE_EXCLUSIVE,  0xFE400000,0xE8400000},
+{T32_BRANCH_AND_MISC,    0xF8008000,0xF0008000},
+{T32_DATA_PROC,        0xFE000000,0xEA000000},
+{T32_COPROC,        0xFC000000,0xEC000000},
+{T32_DATA_PROC,        0xFA008000,0xF0000000},
+{T32_DATA_PROC,        0xFA008000,0xF2000000},
+{T32_STORE_SINGLE,      0xFF100000,0xF8000000},
+{T32_SIMD_STRUCT_LOAD_STORE, 0xFF100000,0xF9000000},
+{T32_LOAD_BYTE,        0xFE700000,0xF8100000},
+{T32_LOAD_HALFWORD,      0xFE700000,0xF8300000},
+{T32_LOAD_WORD,        0xF8500000,0xF8500000},
+{T32_UNDEFINED,        0xF8700000,0xF8700000},
+{T32_DATA_PROC,        0xFF000000,0xFA000000},
+{T32_MULTIPLY,        0xFF000000,0xFB000000},
+{T32_LONG_MULTIPLY,      0xFF800000,0xFB800000},
+{T32_COPROC,        0xFC000000,0xFC000000},
+};
+
+#endif
 
 
 struct instruction32bit unconditionalInstructions[] = {
@@ -75,7 +126,7 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 {1,  &strexInstruction,     0x01800f90, 0x0ff00ff0, "STREX"},
 // SMULL - signed multiply, PC cannot be used as any destination
 {0,  &sumullInstruction,    0x00800090, 0x0fa000f0, "SMULL"},
-// SMLAL - signed multiply and accumulate, PC cannot be used as any destination 
+// SMLAL - signed multiply and accumulate, PC cannot be used as any destination
 {0,  &sumlalInstruction,    0x00a00090, 0x0fa000f0, "SMLAL"},
 // MUL: Rd = Rm * Rn; Rd != PC. pass through
 {0,  &mulInstruction,       0x00000090, 0x0fe000f0, "MUL Rd, Rm, Rn"},
@@ -244,14 +295,12 @@ struct instruction32bit dataProcMiscInstructions_op1[] = {
 {1,  &wfiInstruction,       0x0320f003, 0x0fffffff, "wfi%c"},
 // UNIMPLEMENTED: send event hint
 {1,  &sevInstruction,       0x0320f004, 0x0fffffff, "sev%c"},
-// UNIMPLEMENTED: nop hint
-{1,  &nopInstruction,       0x0320f000, 0x0fffff00, "nop%c\t{%0-7d}"},
+{0,  &nopInstruction,       0x0320f000, 0x0fffff00, "NOP"},
 // UNIMPLEMENTED: debug hint
 {1,  &dbgInstruction,       0x0320f0f0, 0x0ffffff0, "dbg%c\t#%0-3d"},
 // MOVW - indication of 'wide' - to select ARM encoding. Rd cant be PC, pass through.
 {0,  &movwInstruction,      0x03000000, 0x0ff00000, "MOVW Rd, Rn"},
-// UNIMPLEMENTED: MOVT
-{1,  &movtInstruction,      0x03400000, 0x0ff00000, "movt%c\t%12-15r, %V"},
+{0,  &movtInstruction,      0x03400000, 0x0ff00000, "MOVT Rd, Rn"},
 // AND: Rd = PC end block, others are fine
 {1,  &andInstruction,       0x0200f000, 0x0fe0f000, "AND PC, Rn, #imm"},
 {0,  &andInstruction,       0x02000000, 0x0fe00000, "AND Rd, Rn, #imm"},
@@ -312,7 +361,6 @@ struct instruction32bit loadStoreWordByteInstructions[] = {
 // LDR traps if dest = PC, otherwise pass through
 {1,  &ldrInstruction,       0x0410f000, 0x0c10f000, "LDR PC, Rn/#imm12"},
 {0,  &ldrInstruction,       0x04100000, 0x0c100000, "LDR Rd, Rn/#imm12"},
-
 {-1, &undefinedInstruction, 0x00000000, 0x00000000, UNDEFINED_INSTRUCTION}
 };
 
@@ -323,7 +371,7 @@ struct instruction32bit mediaInstructions[] = {
 {0,  &bfiInstruction,       0x07c00010, 0x0fe00070, "BFI Rd, #LSB, #width"},
 // UNIMPLEMENTED: reverse bits
 {1,  &rbitInstruction,      0x06ff0f30, 0x0fff0ff0, "rbit%c\t%12-15r, %0-3r"},
-// UBFX: extract bit field - destination 15 unpredictable 
+// UBFX: extract bit field - destination 15 unpredictable
 {0,  &usbfxInstruction,     0x07a00050, 0x0fa00070, "UBFX Rd, Rn, width"},
 // UNIMPLEMENTED: pack halfword
 {1,  &pkhbtInstruction,     0x06800010, 0x0ff00ff0, "pkhbt%c\t%12-15r, %16-19r, %0-3r"},
@@ -340,7 +388,7 @@ struct instruction32bit mediaInstructions[] = {
 {1,  &qsub8Instruction,     0x06200ff0, 0x0ff00ff0, "qsub8%c\t%12-15r, %16-19r, %0-3r"},
 // UNIMPLEMENTED: saturating subtract and add with exchange
 {1,  &qsubaddxInstruction,  0x06200f50, 0x0ff00ff0, "qsubaddx%c\t%12-15r, %16-19r, %0-3r"},
-// UNIMPLEMENTED: signed add 16 bit and 8 bit 
+// UNIMPLEMENTED: signed add 16 bit and 8 bit
 {1,  &sadd16Instruction,    0x06100f10, 0x0ff00ff0, "sadd16%c\t%12-15r, %16-19r, %0-3r"},
 {1,  &sadd8Instruction,     0x06100f90, 0x0ff00ff0, "sadd8%c\t%12-15r, %16-19r, %0-3r"},
 // signed add and subtract with exchange
@@ -350,15 +398,15 @@ struct instruction32bit mediaInstructions[] = {
 {1,  &ssub8Instruction,     0x06100ff0, 0x0ff00ff0, "ssub8%c\t%12-15r, %16-19r, %0-3r"},
 // signed subtract and add with exchange
 {1,  &ssubaddxInstruction,  0x06100f50, 0x0ff00ff0, "ssubaddx%c\t%12-15r, %16-19r, %0-3r"},
-// UNIMPLEMENTED: signed halvign add 16 bit and 8 bit 
+// UNIMPLEMENTED: signed halvign add 16 bit and 8 bit
 {1,  &shadd16Instruction,   0x06300f10, 0x0ff00ff0, "shadd16%c\t%12-15r, %16-19r, %0-3r"},
 {1,  &shadd8Instruction,    0x06300f90, 0x0ff00ff0, "shadd8%c\t%12-15r, %16-19r, %0-3r"},
-// UNIMPLEMENTED: signed halving add and subtract with exchange 
+// UNIMPLEMENTED: signed halving add and subtract with exchange
 {1,  &shaddsubxInstruction, 0x06300f30, 0x0ff00ff0, "shaddsubx%c\t%12-15r, %16-19r, %0-3r"},
-// UNIMPLEMENTED: signed halvign subtract 16 bit and 8 bit 
+// UNIMPLEMENTED: signed halvign subtract 16 bit and 8 bit
 {1,  &shsub16Instruction,   0x06300f70, 0x0ff00ff0, "shsub16%c\t%12-15r, %16-19r, %0-3r"},
 {1,  &shsub8Instruction,    0x06300ff0, 0x0ff00ff0, "shsub8%c\t%12-15r, %16-19r, %0-3r"},
-// UNIMPLEMENTED: signed halving subtract and add with exchange 
+// UNIMPLEMENTED: signed halving subtract and add with exchange
 {1,  &shsubaddxInstruction, 0x06300f50, 0x0ff00ff0, "shsubaddx%c\t%12-15r, %16-19r, %0-3r"},
 // UNIMPLEMENTED: unsigned add 16 bit and 8 bit
 {1,  &uadd16Instruction,    0x06500f10, 0x0ff00ff0, "uadd16%c\t%12-15r, %16-19r, %0-3r"},
@@ -368,7 +416,7 @@ struct instruction32bit mediaInstructions[] = {
 // UNIMPLEMENTED: unsigned subtract 16 bit and 8 bit
 {1,  &usub16Instruction,    0x06500f70, 0x0ff00ff0, "usub16%c\t%12-15r, %16-19r, %0-3r"},
 {1,  &usub8Instruction,     0x06500ff0, 0x0ff00ff0, "usub8%c\t%12-15r, %16-19r, %0-3r"},
-// UNIMPLEMENTED: unsigned subtract and add with exchange 
+// UNIMPLEMENTED: unsigned subtract and add with exchange
 {1,  &usubaddxInstruction,  0x06500f50, 0x0ff00ff0, "usubaddx%c\t%12-15r, %16-19r, %0-3r"},
 // UNIMPLEMENTED: unsigned halving add 16 bit and 8 bit
 {1,  &uhadd16Instruction,   0x06700f10, 0x0ff00ff0, "uhadd16%c\t%12-15r, %16-19r, %0-3r"},
@@ -462,9 +510,9 @@ struct instruction32bit mediaInstructions[] = {
 {1,  &uxtabInstruction,     0x06e00c70, 0x0ff00ff0, "uxtab%c\t%12-15r, %16-19r, %0-3r, ror #24"},
 // UNIMPLEMENTED: select bytes
 {1,  &selInstruction,       0x06800fb0, 0x0ff00ff0, "sel%c\t%12-15r, %16-19r, %0-3r"},
-// UNIMPLEMENTED: signed dual multiply add 
+// UNIMPLEMENTED: signed dual multiply add
 {1,  &smuadInstruction,     0x0700f010, 0x0ff0f0d0, "smuad%5'x%c\t%16-19r, %0-3r, %8-11r"},
-// UNIMPLEMENTED: signed dual multiply subtract 
+// UNIMPLEMENTED: signed dual multiply subtract
 {1,  &smusdInstruction,     0x0700f050, 0x0ff0f0d0, "smusd%5'x%c\t%16-19r, %0-3r, %8-11r"},
 // UNIMPLEMENTED: signed multiply accumulate dual
 {1,  &smladInstruction,     0x07000010, 0x0ff000d0, "smlad%5'x%c\t%16-19r, %0-3r, %8-11r, %12-15r"},
@@ -474,9 +522,9 @@ struct instruction32bit mediaInstructions[] = {
 {1,  &smlsdInstruction,     0x07000050, 0x0ff000d0, "smlsd%5'x%c\t%16-19r, %0-3r, %8-11r, %12-15r"},
 // UNIMPLEMENTED: signed multiply subtract long dual
 {1,  &smlsldInstruction,    0x07400050, 0x0ff000d0, "smlsld%5'x%c\t%12-15r, %16-19r, %0-3r, %8-11r"},
-// UNIMPLEMENTED: signed most significant word multiply 
+// UNIMPLEMENTED: signed most significant word multiply
 {1,  &smmulInstruction,     0x0750f010, 0x0ff0f0d0, "smmul%5'r%c\t%16-19r, %0-3r, %8-11r"},
-// UNIMPLEMENTED: signed most significant word multiply accumulate 
+// UNIMPLEMENTED: signed most significant word multiply accumulate
 {1,  &smmlaInstruction,     0x07500010, 0x0ff000d0, "smmla%5'r%c\t%16-19r, %0-3r, %8-11r, %12-15r"},
 // UNIMPLEMENTED: signed most significant word multiply subtract
 {1,  &smmlsInstruction,     0x075000d0, 0x0ff000d0, "smmls%5'r%c\t%16-19r, %0-3r, %8-11r, %12-15r"},
@@ -526,66 +574,404 @@ struct instruction32bit svcCoprocInstructions[] = {
 };
 
 
+#ifdef CONFIG_THUMB2
 
+//-----------------------  THUMB INSTRUCTIONS  --------------------------//
+
+struct instruction32bit t16SPInstructions[] = {
+{0,  &addInstruction, 0xA800, 0xF800, "ADD <Rd>, SP, #<imm>"},
+{0, &addInstruction, 0xB000, 0xFF80, "ADD SP, SP, #<imm>"}
+};
+
+struct instruction32bit t16PCRelInstructions[] = {
+// ADR instruction is add or sub but in any case it does not trap
+{0, &addInstruction, 0xA000,0xF800, "ADR <Rd>, <label>"}
+};
+
+struct instruction32bit t16ConditionalBranchSvcInstructions[] = {
+{1, &svcInstruction, 0xDF00, 0xFF00, "SVC call"},
+{1, &bInstruction, 0xD000, 0xF000, "B<c> <label>"}
+};
+
+struct instruction32bit t16ldrInstructions[] = {
+{0, &ldrInstruction, 0x6800, 0xF800, "LDR<c> <Rt>, [<Rn>{,#<imm5>}]"},
+{0, &ldrInstruction, 0x9800, 0xF800, "LDR<c> <Rt>, [SP{,#<imm8>}]"},
+{0, &ldrInstruction, 0x4800, 0xF800, "LDR<c> <Rt>, <label>"},
+{0, &ldrInstruction, 0x5800, 0xFE00, "LDR<c> <Rt>, [<Rn>,<Rm>]"}
+};
+
+struct instruction32bit t16DataProcInstructions[] = {
+{0, &mvnInstruction, 0x43C0, 0xFFC0, "MVN <Rd>, <Rm>"},
+{0, &cmpInstruction, 0x4280, 0xFFC0, "CMP <Rn>, <Rm>"},
+{0, &cmpInstruction, 0x4500, 0xFF00, "CMP <Rn>, <Rm>"}
+};
+
+struct instruction32bit t16SpecialBranchInstructions[] = {
+{1, &bxInstruction, 0x4700, 0xFF80, "BX<c> <Rm>"},
+{1, &blxInstruction, 0x4780, 0xFF80, "BLX<c> <Rm>"},
+{1, &movInstruction, 0x4607, 0xFF07, "MOV PC, Rm"},
+{0, &movInstruction, 0x4600, 0xFF00,  "MOV Rd, Rm"},
+{0, &addInstruction, 0x1800, 0xFE00, "ADD <Rd>, <Rn>, <Rm>"},
+{0, &addInstruction, 0x4400, 0xFF00, "ADD <Rdn>, <Rm>"}
+};
+
+struct instruction32bit t16MiscInstructions[] = {
+{0, &stmInstruction, 0xB400, 0xFE00, "PUSH {reglist}"},
+{0, &subInstruction, 0xB080, 0xFF80, "SUB SP,SP,<imm7"},
+{0, &uxtbInstruction, 0xB2C0, 0xFFC0, "UXTB<c> <Rd>, <Rm>"},
+{0, &uxthInstruction, 0xB280, 0xFFC0, "UXTH<C> <Rd>, <Rm>"},
+{0, &addInstruction, 0xA800, 0xF800, "ADD <Rd>, SP, #<imm8>"},
+{0, &addInstruction, 0xB000, 0xFF80, "ADD SP, SP, #<imm>"},
+// trap if PC is on POP reglist
+{1, &popLdmInstruction, 0xBD00, 0xFF00, "POP <reglist+PC>"},
+{0, &popLdmInstruction, 0xBC00, 0xFE00, "POP <reglist>"},
+{0, &nopInstruction, 0xBF00,0xFFFF, "NOP"},
+// I think that the If-Then-Else Instruction does not need to trap -.-
+{0, &itInstruction, 0xBF00,0xFF00, "IT"}
+};
+
+struct instruction32bit t16LoadStoreInstructions[] = {
+{0, &strInstruction, 0x6000, 0xF800, "STR Rd, [<Rn>, {#<imm5>}]"},
+{0, &strInstruction, 0x9000, 0xF800, "STR Rd, [SP,#<imm8]"},
+{0, &ldrInstruction, 0x6800, 0xF800, "LDR Rd, [<Rn> {,#<imm5>}]"},
+{0, &ldrInstruction, 0x9800, 0xF800, "LDR Rd, [SP {,#<imm8>}]"},
+{0, &ldrInstruction, 0x7800, 0x7800, "LDRB Rd, #<imm5>"},
+{0, &ldrhInstruction, 0x8800, 0xF800, "LDRH <Rt>, [<Rn>{, #<imm5>}]"},
+{0, &strbInstruction, 0x7000, 0xF800, "STRB <Rt>, [<Rn>, #<imm5>]"},
+{0, &strbInstruction, 0xA400, 0xFE00, "STRB <Rt>, [<Rn>, <Rm>]"},
+{0, &strhInstruction, 0x8000, 0xF800, "STRH <Rt>,[<Rn>,{,#<imm>}]"},
+{0, &strhInstruction, 0x5200, 0xFE00, "STRH <Rt>, [<Rn>,{,<Rm>}"}
+};
+
+struct instruction32bit t16UnconditionalInstructions[] = {
+{1, &bInstruction, 0xE000, 0xE000, "B<c> #<imm8>"}
+};
+
+struct instruction32bit t16ArithmeticInstructions[] = {
+// According to Thumb-2 spec, R15 cannot be used in arithmetic
+// instructions. So dont trap
+{0, &addInstruction, 0x1800, 0xFF00, "ADD Rd, Rn, Rm"},
+// page 310. Rd can be R15
+{1, &addInstruction, 0x4487, 0x4487, "ADD<c> R15, Rm"},
+// Otherwise don't trap
+{0, &addInstruction, 0x4400, 0x4400, "ADD<c> Rd, Rm"},
+// CMP is fine
+{0, &cmpInstruction, 0x2800, 0xF800, "CMP<c> Rn, #<imm8>"},
+{0, &subInstruction, 0x1E00, 0xFE00, "SUB{S} <Rd>, <Rn>,#<imm3>"},
+{0, &subInstruction, 0x3800, 0xF800, "SUB{S} <Rdn>, #<imm8>"},
+{0, &subInstruction, 0x1A00, 0xFE00, "SUB{S} <Rd>, <Rn> <Rm>"},
+{0, &movInstruction, 0x2000, 0xF800, "MOV<c> <Rd>, #<imm8>"}
+};
+
+struct instruction32bit t32DataProcInstructions[] = {
+// this is for T2 encoding, page 480
+{0, &movInstruction, 0xF04F0000, 0xFBEF1000, "MOVW<c> <Rd>, #<imm12>"},
+// this is for T3 encoding
+{0, &movInstruction, 0xF2400000, 0xFBF00000, "MOVW<c> <Rd>, #<imm16>"},
+{0, &movInstruction, 0xF04F0000, 0xFBEF8000, "MOV{S}/W <Rd>, #<immt12>"},
+{0, &movInstruction, 0xF2400000, 0xFBF08000, "MOVW <Rd>, #<imm16>"},
+{0, &movtInstruction, 0xF2C00000, 0xFBF08000, "MOVT<c> <Rd>, #<imm16>"},
+{0, &orrInstruction, 0xEA400000, 0xFFE08000, "ORR{S} <Rd>, <Rn>{,<shift>}"},
+{0, &orrInstruction, 0xF0400000, 0xFBE08000, "ORR{S} <Rd>, <Rn>,#<imm12>"},
+{0, &andInstruction, 0xEA000000, 0xFFF00000, "AND{S}.W <Rd>. <Rn>. <Rm>"},
+//trap for RD=15
+{1, &andInstruction, 0xF0000F00, 0xFBE08F00, "AND{S}<c> PC, <Rm>, #<imm12>"},
+{0, &andInstruction, 0xF0000000, 0xFBE08000, "AND{S}<c> <Rd>, <Rm>, #<imm12>"},
+{0, &addInstruction, 0xF1000000, 0xFBE08000, "ADD{S}.W <Rd>, <Rn>, #<imm8>"},
+{0, &addInstruction, 0xEB000000, 0xFFE08000, "ADD{S}.W <Rd>, <Rn>, <Rm>{, <shift>}"},
+//ADD -> RD=PC -> CMN page 306
+{1, addInstruction, 0xF1000F00, 0xFBE08F00, "ADD{S}.W PC, <Rn>, #<imm8>"},
+// RN=SP -> unimplemented. Should be OK
+{0, &addInstruction, 0xF10D8000, 0xFBEF8000, "ADD{S}.W <Rd>, SP, #<imm8>"},
+// Encoding T4
+{0, &addInstruction, 0xF2000000, 0xF2008000, "ADDW <Rd>, <Rn>, #<imm12>"},
+// RC=PC
+{1, &addInstruction, 0xF20F0000, 0xF20F8000, "ADDW PC, <Rn>, #<imm12>"},
+// RN=SP -> should be ok
+{0, &addInstruction, 0xF20D0000, 0xF20F8000, "ADDW <Rd>, SP, #<imm8>"},
+{0, &bicInstruction, 0xF0200000, 0xFBE08000, "BIC{S} <Rd>, <Rn>, #<imm12>"},
+{0, &rsbInstruction, 0xF1C00000, 0xFBE08000, "RSB <Rd>, <Rn>, #<imm12>"},
+{0, &rsbInstruction, 0xEBC00000, 0xFFE08000, "RSB <Rd>, <Rn>, <Rm>{,<shift>}"},
+{0, &subInstruction, 0xF1A00000, 0xFBE08000, "SUB{S}.W <Rd>, <Rn>, #<imm12>"},
+{0, &subInstruction, 0xF2A00000, 0xFBE08000, "SUB{S}W <Rd>, <Rn>, #<imm12>"},
+{0, &subInstruction, 0xEBA00000, 0xFFE08000, "SUB{S}.W <Rd>, <Rn>, <Rm>{,<shitft>}"},
+// RN = SP -> should be ok
+{0, &subInstruction, 0xF2AB0000, 0xFBEF8000, "SUBW <Rd>, SP, #<imm12>"},
+{0, &subInstruction, 0xEBAB0000, 0xFFEF8000, "SUB{S} <Rd>, SP, <Rm>{,<shift>}"},
+{0, &mvnInstruction, 0xEA6F0000, 0xFFEF8000, "MVN<c> <Rd>, <Rm>{,<shift>}"},
+{0, &mvnInstruction, 0xE0AF0000, 0xFBEF8000, "MVN<c> <Rd>, #<imm12>"}
+};
+
+struct instruction32bit t32SingleStoreInstructions[] = {
+{0, &strbInstruction, 0xF8800000, 0xFFF00000, "STRB Rt, [Rn, #<imm12>]"},
+{0, &strbInstruction, 0xF8000800, 0xFFF00800, "STRB Rt, [Rn, +-#<imm8>]"},
+
+{0, &strhInstruction, 0xF8A00000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm12>}]"},
+{0, &strhInstruction, 0xF8200000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm8>}]!"}
+};
+
+struct instruction32bit t32LoadByteInstructions[] = {
+{1, &ldrbInstruction, 0xF81FF000, 0xFEFFFFC0, "LDRB<c> PC ,#<label>"},
+{0, &ldrbInstruction, 0xF8900000, 0xFFF00000, "LDRB<c> Rt, [Rn{,#<imm12>}]"},
+{0, &ldrbInstruction, 0xF8100900, 0xFFF00900, "LDRB<c> Rt, [Rn,{#<imm12>}]"},
+{0, &ldrbInstruction, 0xF8100C00, 0xFFF00E00, "LDRB<c> Rt, [Rn,{#<imm12>}]"}
+};
+
+struct instruction32bit t32LoadHalfWordInstructions[] = {
+{0, &ldrhInstruction, 0xF8B00000, 0xFFF00000, "LDRH.W <Rt>, [<Rn>{. #<imm32>}]"},
+{0, &ldrhInstruction, 0xF83F0000, 0xFEFF0000, "LDRH <Rt>, <label>"},
+{0, &ldrhInstruction, 0xF8300000, 0xFFF00FE0, "LDRH, <Rt>, [<Rn>{,LSL #<imm2>}]"},
+{0, &ldrhInstruction, 0xF9B00000, 0xFFF00000, "LDRSH<c> <Rt>, [<Rn>, #<imm12>]"},
+{0, &ldrhInstruction, 0xF9300800, 0xFFFF0800, "LDRSH<c> <Rt>, [<Rn>, #<Rn>, +/-#imm8]"}, // Page 454, A8-168
+{0, &ldrhInstruction, 0xF9300FC0, 0xFFF00FC0, "LDRSH<c> <Rt>, [<Rn>, <Rm>]"}
+};
+
+struct instruction32bit t32MultiplyInstructions[] = {
+{0, &mulInstruction, 0xFB00F000, 0xFFF0F0F0, "MULW <Rd>, <Rn>, <Rm>"},
+{0, &smullInstruction, 0xFB800000, 0xFFE000F0, "SMULL <RdLo>, <RdHi>, <Rn>, <Rm>"}
+};
+
+struct instruction32bit t32BranchMiscInstructions[] = {
+{1, &bInstruction, 0xF0008000, 0xF800D000, "B <imm17>"},
+{1, &bInstruction, 0xF0009000, 0xF800D000, "B <imm21>"},
+{1, &bInstruction, 0xF000D000, 0xF800D000, "BL, #<imm21>"},
+{1, &blxInstruction, 0xF000C000, 0xF800D000, "BLX, #<imm21>"}
+};
+
+struct instruction32bit t32LoadStoreDoubleExclusiveInstructions[] = {
+{0, &ldrdInstruction, 0xE8500000, 0xFE500000, "LDRD <Rt>, <Rt2>, [<Rn>,{,#+/-<imm>}]"},
+{0, &ldrdInstruction, 0xE85F0000, 0xFE7F0000, "LDRD <Rt>, <Rt2>, <label>"},
+{0, &strdInstruction, 0xE8400000, 0xFE500000, "STRD <Rt>, <Rt2>, [<Rn>,{,#+/-<imm>}]"}
+};
+
+#endif
+
+#ifdef CONFIG_THUMB2
+struct instruction32bit * decodeInstr(u32int instr,u16int *currInstrAddress)
+#else
 struct instruction32bit * decodeInstr(u32int instr)
+#endif
 {
-  u32int catCode = decodeTopLevelCategory(instr);
-  switch(catCode)
+#ifdef CONFIG_THUMB2
+  GCONTXT* gc = getGuestContext();
+  currAddress = currInstrAddress;
+  u32int catCode = decodeTopLevelCategory(instr, currAddress);
+  // Check the status of T bit again
+  if(gc->CPSR & T_BIT)
   {
-    case DATA_PROC_AND_MISC_CATEGORY:
-      return decodeDataProcMisc(instr);
-      break;
-    case LOAD_STORE_WORD_BYTE_CATEGORY:
-      return decodeLoadStoreWordByte(instr);
-      break;
-    case MEDIA_CATEGORY:
-      return decodeMedia(instr);
-      break;
-    case BRANCH_BLOCK_TRANSFER_CATEGORY:
-      return decodeBranchBlockTransfer(instr);
-      break;
-    case SVC_COPROCESSOR_CATEGORY:
-      return decodeSvcCoproc(instr);
-      break;
-    case UNCONDITIONALS_CATEGORY:
-      return decodeUnconditional(instr);
-      break;
-    case UNDEFINED_CATEGORY:
+  switch(instr & THUMB32<<16)
+  {
+    // instr is 32-bit so THUMB32 defs need to be extended to 32-bit
+    case THUMB32_1<<16:
+    case THUMB32_2<<16:
+    case THUMB32_3<<16:
+    {
+      switch(catCode){
+        case T32_LOAD_STORE_MULTIPLE:
+          return t32decodeLoadStoreMultiple(instr);
+          break;
+        case T32_LOAD_STORE_DOUBLE_EXCLUSIVE:
+          return t32decodeLoadStoreDoubleExclusive(instr);
+          break;
+        case T32_DATA_PROC:
+          return t32decodeDataProc(instr);
+          break;
+        case T32_COPROC:
+          return t32decodeCoproc(instr);
+          break;
+        case T32_BRANCH_AND_MISC:
+          return t32decodeBranchMisc(instr);
+          break;
+        case T32_STORE_SINGLE:
+          return t32decodeStoreSingle(instr);
+          break;
+        case T32_SIMD_STRUCT_LOAD_STORE:
+          return t32decodeSimdStructLoadStore(instr);
+          break;
+        case T32_LOAD_BYTE:
+          return t32decodeLoadByte(instr);
+          break;
+        case T32_LOAD_HALFWORD:
+          return t32decodeLoadHalfWord(instr);
+          break;
+        case T32_LOAD_WORD:
+          return t32decodeLoadWord(instr);
+          break;
+        case T32_MULTIPLY:
+          return t32decodeMultiply(instr);
+          break;
+        case T32_LONG_MULTIPLY:
+          return t32decodeLongMultiply(instr);
+          break;
+        case T32_UNDEFINED:
+        default:
+          DIE_NOW(0,"Thumb-2 undefined 32-bit instruction");
+      }
+    }
+    // 16-bit instruction
     default:
-      DIE_NOW(getGuestContext(), "decoder: UNDEFINED category");
+    {
+      switch(catCode)
+      {
+        case T16_UNCONDITIONALS_CATEGORY:
+          return t16decodeUnconditionals(instr);
+          break;
+        case T16_CONDITIONAL_BRANCH_AND_SVC_CALL:
+          return t16decodeConditionalBranchSVC(instr);
+          break;
+        case T16_LOAD_MULTIPLE_REGISTERS:
+          return t16decodeLoadMultipleRegisters(instr);
+          break;
+        case T16_STORE_MULTIPLE_REGISTERS:
+          return t16decodeStoreMultipleRegisters(instr);
+          break;
+        case T16_MISC:
+          return t16decodeMisc(instr);
+          break;
+        case T16_SP_ADDR:
+          return t16decodeSPAddr(instr);
+          break;
+        case T16_PC_ADDR:
+          return  t16decodePCAddr(instr);
+          break;
+        case T16_LOAD_STORE:
+          return t16decodeLoadStore(instr);
+          break;
+        case T16_LDR:
+          return  t16decodeLDR(instr);
+          break;
+        case T16_SPECIAL_AND_BRANCH_EXCHANGE:
+          return t16decodeSpecialBranchExchange(instr);
+          break;
+        case T16_DATA_PROC:
+          return t16decodeDataProc(instr);
+          break;
+        case T16_ARITHMETIC:
+          return t16decodeArithmetic(instr);
+          break;
+        default:
+          DIE_NOW(0,"Thumb-2 undefined 16-bit instruction");
+      }
+    }
   }
+  }
+  else
+#else
+  u32int catCode = decodeTopLevelCategory(instr);
+#endif
+  {
+    switch(catCode)
+    {
+      case DATA_PROC_AND_MISC_CATEGORY:
+           return decodeDataProcMisc(instr);
+           break;
+      case LOAD_STORE_WORD_BYTE_CATEGORY:
+          return decodeLoadStoreWordByte(instr);
+          break;
+      case MEDIA_CATEGORY:
+          return decodeMedia(instr);
+          break;
+      case BRANCH_BLOCK_TRANSFER_CATEGORY:
+          return decodeBranchBlockTransfer(instr);
+        break;
+      case SVC_COPROCESSOR_CATEGORY:
+        return decodeSvcCoproc(instr);
+          break;
+      case UNCONDITIONALS_CATEGORY:
+        return decodeUnconditional(instr);
+        break;
+      case UNDEFINED_CATEGORY:
+      default:
+        DIE_NOW(getGuestContext(), "decoder: UNDEFINED category");
+    }
+}
 
   return 0;
 }
 
+#ifdef CONFIG_THUMB2
+u32int decodeTopLevelCategory(u32int instr,u16int *currAddress)
+#else
 u32int decodeTopLevelCategory(u32int instr)
+#endif
 {
+#ifdef CONFIG_THUMB2
+  GCONTXT* gc = getGuestContext();
+#endif
   int index = 0;
-  /* LOOP through all ARM instruction encoding categories */
+  /* LOOP through all instruction encoding categories */
+#ifdef CONFIG_DEBUG_DECODER
+  printf("Decoding: %08x@%08x\n", instr,(u32int)currAddress);
+#endif
   while (TRUE)
   {
-    if ( (instr & categories[index].mask) == categories[index].value)
+#ifdef CONFIG_THUMB2
+  if(gc->CPSR & T_BIT)
     {
-      return categories[index].categoryCode;
+      // we are in Thumb mode
+    switch(instr & THUMB32<<16){
+      // Extend definitions to 32-bit
+      case THUMB32_1<<16:
+      case THUMB32_2<<16:
+      case THUMB32_3<<16:
+      {
+        if ( (instr & t32categories[index].mask) == t32categories[index].value)
+        {
+          return t32categories[index].categoryCode;
+        }
+        else
+        {
+          index++;
+        }
+        break;
+      }
+      default:
+      {
+        // instr is 32 bit but we need to fetch only the lower half word
+        instr=0x0000FFFF & instr;
+        if ( (instr & t16categories[index].mask) == t16categories[index].value)
+        {
+          return t16categories[index].categoryCode;
+        }
+        else
+        {
+          index++;
+        }
+        break;
+      }
     }
-    else
-    {
-      index = index + 1;
     }
+  // We should be in ARM mode
+  else
+#endif
+  {
+      if ( (instr & categories[index].mask) == categories[index].value)
+      {
+        return categories[index].categoryCode;
+      }
+      else
+      {
+        index = index + 1;
+      }
   }
+   }
   return UNDEFINED_CATEGORY;
 }
 
 struct instruction32bit * decodeDataProcMisc(u32int instr)
 {
-#ifdef DECODER_DEBUG
+#ifdef CONFIG_DEBUG_DECODER
   dumpInstruction("decodeDataProcMisc", instr);
 #endif
   u32int op = instr & 0x02000000;
   u32int index = 0;
   if (op == 0)
   {
+#ifdef CONFIG_HACKS_MARKOS
+    while (index < INDEX_OF(dataProcMiscInstructions_op0))
+#else
     while (TRUE)
+#endif
     {
       if ( (instr & dataProcMiscInstructions_op0[index].mask) == dataProcMiscInstructions_op0[index].value)
       {
@@ -603,7 +989,11 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
   }
   else
   {
+#ifdef CONFIG_HACKS_MARKOS
+    while (index < INDEX_OF(dataProcMiscInstructions_op1))
+#else
     while (TRUE)
+#endif
     {
       if ( (instr & dataProcMiscInstructions_op1[index].mask) == dataProcMiscInstructions_op1[index].value)
       {
@@ -626,11 +1016,15 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
 
 struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
 {
-#ifdef DECODER_DEBUG
+#ifdef CONFIG_DEBUG_DECODER
   dumpInstruction("decodeLoadStoreWordByte", instr);
 #endif
   u32int index = 0;
+#ifdef CONFIG_HACKS_MARKOS
+  while (index < INDEX_OF(loadStoreWordByteInstructions))
+#else
   while (TRUE)
+#endif
   {
     if ( (instr & loadStoreWordByteInstructions[index].mask) == loadStoreWordByteInstructions[index].value)
     {
@@ -652,11 +1046,15 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
 
 struct instruction32bit * decodeMedia(u32int instr)
 {
-#ifdef DECODER_DEBUG
+#ifdef CONFIG_DEBUG_DECODER
   dumpInstruction("decodeMedia", instr);
 #endif
   u32int index = 0;
+#ifdef CONFIG_HACKS_MARKOS
+  while (index < INDEX_OF(mediaInstructions))
+#else
   while (TRUE)
+#endif
   {
     if ( (instr & mediaInstructions[index].mask) == mediaInstructions[index].value)
     {
@@ -678,11 +1076,15 @@ struct instruction32bit * decodeMedia(u32int instr)
 
 struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
 {
-#ifdef DECODER_DEBUG
+#ifdef CONFIG_DEBUG_DECODER
   dumpInstruction("decodeBranchBlockTransfer", instr);
 #endif
   u32int index = 0;
+#ifdef CONFIG_HACKS_MARKOS
+  while (index < INDEX_OF(branchBlockTransferInstructions))
+#else
   while (TRUE)
+#endif
   {
     if ( (instr & branchBlockTransferInstructions[index].mask) == branchBlockTransferInstructions[index].value)
     {
@@ -704,11 +1106,15 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
 
 struct instruction32bit * decodeSvcCoproc(u32int instr)
 {
-#ifdef DECODER_DEBUG
+#ifdef CONFIG_DEBUG_DECODER
   dumpInstruction("decodeSvcCoproc", instr);
 #endif
   u32int index = 0;
+#ifdef CONFIG_HACKS_MARKOS
+  while (index < INDEX_OF(svcCoprocInstructions))
+#else
   while (TRUE)
+#endif
   {
     if ( (instr & svcCoprocInstructions[index].mask) == svcCoprocInstructions[index].value)
     {
@@ -729,11 +1135,15 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
 
 struct instruction32bit * decodeUnconditional(u32int instr)
 {
-#ifdef DECODER_DEBUG
+#ifdef CONFIG_DEBUG_DECODER
   dumpInstruction("decodeUnconditional", instr);
 #endif
   u32int index = 0;
+#ifdef CONFIG_HACKS_MARKOS
+  while (index < INDEX_OF(unconditionalInstructions))
+#else
   while (TRUE)
+#endif
   {
     if ( (instr & unconditionalInstructions[index].mask) == unconditionalInstructions[index].value)
     {
@@ -748,15 +1158,516 @@ struct instruction32bit * decodeUnconditional(u32int instr)
       index = index + 1;
     }
   }
-  
+
   DIE_NOW(getGuestContext(), "decoder: decodeUnconditional unimplemented");
   return 0;
 }
 
 void dumpInstruction(const char * msg, u32int instr)
 {
-  printf(msg);
-  printf(": Instruction: %08x ", instr);
+  printf("%s: Instruction: %08x ", msg, instr);
+#ifdef CONFIG_THUMB2
+  GCONTXT* gc = getGuestContext();
+  dumpInstrString(gc, instr);
+#else
   dumpInstrString(instr);
+#endif
   printf("\n");
 }
+
+
+#ifdef CONFIG_THUMB2
+
+// Thumb-2 32-bit functions
+struct instruction32bit * t32decodeLoadStoreMultiple(u32int instr)
+{
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(0,"Unimplemented 1");
+}
+
+struct instruction32bit * t32decodeLoadStoreDoubleExclusive(u32int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t32decodeLoadStoreDoubleExclusivec %08x\n", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t32LoadStoreDoubleExclusiveInstructions))
+  {
+  if ( (instr & t32LoadStoreDoubleExclusiveInstructions[index].mask) == t32LoadStoreDoubleExclusiveInstructions[index].value)
+    {
+      if (t32LoadStoreDoubleExclusiveInstructions[index].mask == 0)
+      {
+        dumpInstruction("t32LoadStoreDoubleExclusive", instr);
+      }
+      return &t32LoadStoreDoubleExclusiveInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t32LoadStoreDoubleExclusive unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t32decodeDataProc(u32int instr)
+{
+
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t32decodeDataProc", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t32DataProcInstructions))
+  {
+  if ( (instr & t32DataProcInstructions[index].mask) == t32DataProcInstructions[index].value)
+    {
+      if (t32DataProcInstructions[index].mask == 0)
+      {
+        dumpInstruction("t32decodeDataProc", instr);
+      }
+      return &t32DataProcInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t32decodeDataProc unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t32decodeCoproc(u32int instr)
+{
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(0,"Unimplemented 4");
+}
+
+struct instruction32bit * t32decodeBranchMisc(u32int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t32BranchMisc", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t32BranchMiscInstructions))
+  {
+    if ( (instr & t32BranchMiscInstructions[index].mask) == t32BranchMiscInstructions[index].value)
+    {
+      if (t32BranchMiscInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet32BranchMisc", instr);
+      }
+      return &t32BranchMiscInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t32BranchMiscInstruction unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t32decodeStoreSingle(u32int instr)
+{
+
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t32decodeSingleStore", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t32SingleStoreInstructions))
+  {
+  if ( (instr & t32SingleStoreInstructions[index].mask) == t32SingleStoreInstructions[index].value)
+    {
+      if (t32SingleStoreInstructions[index].mask == 0)
+      {
+        dumpInstruction("t32decodeSingleStore", instr);
+      }
+      return &t32SingleStoreInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t32decodeSingleStore unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t32decodeSimdStructLoadStore(u32int instr)
+{
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(0,"Unimplemented 7");
+}
+
+struct instruction32bit * t32decodeLoadByte(u32int instr)
+{
+
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t32decodeLoadByte", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t32LoadByteInstructions))
+  {
+  if ( (instr & t32LoadByteInstructions[index].mask) == t32LoadByteInstructions[index].value)
+    {
+      if (t32LoadByteInstructions[index].mask == 0)
+      {
+        dumpInstruction("t32LoadByte", instr);
+      }
+      return &t32LoadByteInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t32decodeLoadByte unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t32decodeLoadHalfWord(u32int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t32LoadHalfWord", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t32LoadHalfWordInstructions))
+  {
+    if ( (instr & t32LoadHalfWordInstructions[index].mask) == t32LoadHalfWordInstructions[index].value)
+    {
+      if (t32LoadHalfWordInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet32BranchMisc", instr);
+      }
+      return &t32LoadHalfWordInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t32LoadHalfWordInstruction unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t32decodeLoadWord(u32int instr)
+{
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(0,"Unimplemented 10");
+}
+
+struct instruction32bit * t32decodeMultiply(u32int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t32decodeMultiply", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t32MultiplyInstructions))
+  {
+    if ( (instr & t32MultiplyInstructions[index].mask) == t32MultiplyInstructions[index].value)
+    {
+      if (t32MultiplyInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet32Multiply", instr);
+      }
+      return &t32MultiplyInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t32MultiplyInstruction unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t32decodeLongMultiply(u32int instr)
+{
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(0,"Unimplemented 12");
+}
+
+
+// Thumb-2 16-bit functions
+struct instruction32bit * t16decodeUnconditionals(u16int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t16UnConditional", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16UnconditionalInstructions))
+  {
+    if ( (instr & t16UnconditionalInstructions[index].mask) == t16UnconditionalInstructions[index].value)
+    {
+      if (t16UnconditionalInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16UnConditional", instr);
+      }
+      return &t16UnconditionalInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16UnconditionalInstruction unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t16decodeConditionalBranchSVC(u16int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t16ConditionalBranchSvc", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16ConditionalBranchSvcInstructions))
+  {
+    if ( (instr & t16ConditionalBranchSvcInstructions[index].mask) == t16ConditionalBranchSvcInstructions[index].value)
+    {
+      if (t16ConditionalBranchSvcInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16ConditionalBranchSvc", instr);
+      }
+      return &t16ConditionalBranchSvcInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16BranchSvcInstruction unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t16decodeLoadMultipleRegisters(u16int instr)
+{
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(0,"Unimplemented 15");
+}
+
+struct instruction32bit * t16decodeStoreMultipleRegisters(u16int instr)
+{
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(0,"Unimplemented 16");
+}
+
+struct instruction32bit * t16decodeMisc(u16int instr)
+{
+
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t16decodeMisc", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16MiscInstructions))
+  {
+    if ( (instr & t16MiscInstructions[index].mask) == t16MiscInstructions[index].value)
+    {
+      if (t16MiscInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16Misc", instr);
+      }
+      return &t16MiscInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16MiscInstruction unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t16decodeSPAddr(u16int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t16SPInstruction", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16SPInstructions))
+  {
+    if ( (instr & t16SPInstructions[index].mask) == t16SPInstructions[index].value)
+    {
+      if (t16SPInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16SPInstruction", instr);
+      }
+      return &t16SPInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16SPInstruction unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t16decodePCAddr(u16int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t16decodePCAddr", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16PCRelInstructions))
+  {
+    if ( (instr & t16PCRelInstructions[index].mask) == t16PCRelInstructions[index].value)
+    {
+      if (t16PCRelInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16PCRel", instr);
+      }
+      return &t16PCRelInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16PCRel unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t16decodeLoadStore(u16int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t16decodeLoadStore", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16LoadStoreInstructions))
+  {
+    if ( (instr & t16LoadStoreInstructions[index].mask) == t16LoadStoreInstructions[index].value)
+    {
+      if (t16LoadStoreInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16LoadStore", instr);
+      }
+      return &t16LoadStoreInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16LoadStore unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t16decodeLDR(u16int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t16decodeLDR", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16ldrInstructions))
+  {
+    if ( (instr & t16ldrInstructions[index].mask) == t16ldrInstructions[index].value)
+    {
+      if (t16ldrInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16LDR", instr);
+      }
+      return &t16ldrInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16LDR unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr)
+{
+
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t16decodeSpecialBranch", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16SpecialBranchInstructions))
+  {
+  if ( (instr & t16SpecialBranchInstructions[index].mask) == t16SpecialBranchInstructions[index].value)
+    {
+      if (t16SpecialBranchInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16SpecialBranch", instr);
+      }
+      return &t16SpecialBranchInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16SpecialBranch unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t16decodeDataProc(u16int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t16decodeDataProc", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16DataProcInstructions))
+  {
+    if ( (instr & t16DataProcInstructions[index].mask) == t16DataProcInstructions[index].value)
+    {
+      if (t16DataProcInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16DataProc", instr);
+      }
+      return &t16DataProcInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16DataProc unimplemented");
+  return 0;
+}
+
+struct instruction32bit * t16decodeArithmetic(u16int instr)
+{
+#ifdef CONFIG_DEBUG_DECODER
+  dumpInstruction("t16decodeArithmetic", instr);
+#endif
+  u32int index = 0;
+  while (index < INDEX_OF(t16ArithmeticInstructions))
+  {
+    if ( (instr & t16ArithmeticInstructions[index].mask) == t16ArithmeticInstructions[index].value)
+    {
+      if (t16ArithmeticInstructions[index].mask == 0)
+      {
+        dumpInstruction("decodet16Arithmetic", instr);
+      }
+      return &t16ArithmeticInstructions[index];
+    }
+    else
+    {
+      index = index + 1;
+    }
+  }
+  printf("Unimplemented: %08x@%08x\n", instr,(u32int)currAddress);
+  DIE_NOW(getGuestContext(), "decoder: t16Arithmetic unimplemented");
+  return 0;
+}
+
+#endif

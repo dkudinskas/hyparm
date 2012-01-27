@@ -41,9 +41,9 @@
 #define GPT_TIOCP_CFG_ENABLEWAKEUP  0x00000004
 #define GPT_TIOCP_CFG_SOFTRESET     0x00000002
 #define GPT_TIOCP_CFG_AUTOIDLE      0x00000001
- 
+
 #define GPT_REG_TISTAT         0x014 // STATUS register
-#define GPT_TISTAT_RESERVED         0xFFFFFFFE 
+#define GPT_TISTAT_RESERVED         0xFFFFFFFE
 #define GPT_TISTAT_RESETDONE        0x00000001
 
 #define GPT_REG_TISR           0x018 // INTERRUPT status
@@ -64,7 +64,7 @@
 #define GPT_TWER_OVERFLOW           0x00000002
 #define GPT_TWER_MATCH              0x00000001
 
-#define GPT_REG_TCLR           0x024 // CONTROL 
+#define GPT_REG_TCLR           0x024 // CONTROL
 #define GPT_TCLR_RESERVED           0xFFFF8000
 #define GPT_TCLR_GPO_CFG            0x00004000
 #define GPT_TCLR_CAPT_MODE          0x00002000
@@ -78,17 +78,17 @@
 #define GPT_TCLR_AUTORELOAD         0x00000002 // ONE SHOT mode - stopped after OVF
 #define GPT_TCLR_START_STOP         0x00000001
 
-#define GPT_REG_TCRR           0x028 // INTERNAL clock register value 
-#define GPT_TCRR_COUNTER_VALUE      0xFFFFFFFF 
+#define GPT_REG_TCRR           0x028 // INTERNAL clock register value
+#define GPT_TCRR_COUNTER_VALUE      0xFFFFFFFF
 
 #define GPT_REG_TLDR           0x02C // LOAD register value
-#define GPT_TLDR_LOAD_VALUE         0xFFFFFFFF 
+#define GPT_TLDR_LOAD_VALUE         0xFFFFFFFF
 
 #define GPT_REG_TTGR           0x030 // TRIGGER value
-#define GPT_TTGR_TRIGGER_VALUE      0xFFFFFFFF 
+#define GPT_TTGR_TRIGGER_VALUE      0xFFFFFFFF
 
 #define GPT_REG_TWPS           0x034 // WRITE-Posted pending
-#define GPT_TWPS_RESERVED           0xFFFFFC00 
+#define GPT_TWPS_RESERVED           0xFFFFFC00
 #define GPT_TWPS_W_PEND_TOWR        0x00000200
 #define GPT_TWPS_W_PEND_TOCR        0x00000100
 #define GPT_TWPS_W_PEND_TCVR        0x00000080
@@ -100,19 +100,19 @@
 #define GPT_TWPS_W_PEND_TCRR        0x00000002
 #define GPT_TWPS_W_PEND_TCLR        0x00000001
 
-#define GPT_REG_TMAR           0x038 // MATCH register value 
-#define GPT_TMAR_MATCH_VALUE        0xFFFFFFFF 
+#define GPT_REG_TMAR           0x038 // MATCH register value
+#define GPT_TMAR_MATCH_VALUE        0xFFFFFFFF
 
-#define GPT_REG_TCAR1          0x03C // FIRST captured counter 
-#define GPT_TCAR1_CAPTURE_VALUE     0xFFFFFFFF 
+#define GPT_REG_TCAR1          0x03C // FIRST captured counter
+#define GPT_TCAR1_CAPTURE_VALUE     0xFFFFFFFF
 
-#define GPT_REG_TSICR          0x040 // INTERFACE control 
-#define GPT_TSICR_RESERVED          0xFFFFFFF9 
-#define GPT_TSICR_POSTED            0x00000004 
+#define GPT_REG_TSICR          0x040 // INTERFACE control
+#define GPT_TSICR_RESERVED          0xFFFFFFF9
+#define GPT_TSICR_POSTED            0x00000004
 #define GPT_TSICR_SFTRESET          0x00000002
 
-#define GPT_REG_TCAR2          0x044 // SECOND captured counter 
-#define GPT_TCAR2_CAPTURE_VALUE     0xFFFFFFFF 
+#define GPT_REG_TCAR2          0x044 // SECOND captured counter
+#define GPT_TCAR2_CAPTURE_VALUE     0xFFFFFFFF
 
 #define GPT_REG_TPIR           0x048 // POSITIVE Increment value (TCVR+TPIR)
 #define GPT_TPIR_POS_INC            0xFFFFFFFF
@@ -127,7 +127,7 @@
 #define GPT_TOCR_RESERVED           0xFF000000
 #define GPT_TOCR_OVF_COUNTER        0x00FFFFFF
 
-#define GPT_REG_TOWR           0x058 // NUMBER Of masked overflow interrupt events 
+#define GPT_REG_TOWR           0x058 // NUMBER Of masked overflow interrupt events
 #define GPT_TOWR_RESERVED           0xFF000000
 #define GPT_TOWR_OVF_WRAPPING       0x00FFFFFF
 
@@ -150,6 +150,11 @@ void storeToGPTimer(u32int id, u32int reg, u32int value);
 
 void gptBEClearOverflowInterrupt(u32int id);
 
+#ifdef CONFIG_GUEST_FREERTOS
+/* FreeRTOS: Requires timer match interrupt handling */
+void gptBEClearMatchInterrupt(u32int id);
+#endif
+
 void gptBEDisableOverflowInterrupt(u32int id);
 
 void gptBEEnable(u32int id);
@@ -166,11 +171,15 @@ void gptBEWaitForOverflowInterrupt(u32int id);
 
 void gptBEWaitForReset(u32int id);
 
-void gptBEDumpRegisters(u32int id); 
+void gptBEDumpRegisters(u32int id);
 
 u32int getInternalCounterVal(u32int clkId);
 
-struct GeneralPurposeTimerBE 
+#ifdef CONFIG_GUEST_FREERTOS
+void gptBEResetCount(u32int id);
+#endif
+
+struct GeneralPurposeTimerBE
 {
   u32int baseAddress;
   bool enabled;
@@ -178,5 +187,5 @@ struct GeneralPurposeTimerBE
   //bool posted;
 };
 
-
 #endif
+

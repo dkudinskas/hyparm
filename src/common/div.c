@@ -1,167 +1,196 @@
 #include "common/debug.h"
-#include "common/types.h"
 
-/* These division/modulus routines are NOT to be called directly, instead
-   they are here to allow the use of the / and % C operators cleanly in the 
-   rest of the codebase. */
+/*
+ * USAGE NOTES
+ *
+ * The routines in this file are NOT to be called directly; instead they are here to allow the use
+ * of the / and % operators cleanly in the rest of the codebase.
+ */
 
-/* Support functions for division routines */
 
-/* Check if a uint is a power of two.
- * If so, return the power value.
- * If not a power, returns -1 */
-static int isPowerOf2(u32int n)
-{
-  return (n && !(n & (n - 1)));
-}
+/*
+ * To respect the EABI, we need to use vector types in here. But subscripting vectors is only
+ * supported from GCC 4.6.x onwards;
+ */
+#ifdef __GNUC__
+#if ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
+#define HAVE_GCC_VECTOR 1
+#endif
+#endif
 
-/* Assuming n is a power of 2, find the power */
-static int getPowerOf2(u32int n)
-{
-  int i;
-  for (i = 0; i < sizeof(u32int)*8; i++)
-  {
-    if (n & 0x1)
-    {
-      return i;
-    }
-    else
-    {
-      n = n >> 1;
-    }
+
+/*
+ * Vector types. These are by convention returned in r0-r3.
+ * Do not alter the following definitions.
+ */
+
+#ifdef HAVE_GCC_VECTOR
+typedef u32int u32intPair __attribute__((vector_size(8)));
+#else
+typedef u64int u32intPair;
+#endif
+typedef u64int u64intPair __attribute__((vector_size(16)));
+
+
+/*
+ * ARM EABI-defined division routines.
+ * Do not alter the signature of the following functions.
+ */
+
+u32int __aeabi_uidiv(u32int dividend, u32int divisor);
+u32intPair __aeabi_uidivmod(u32int dividend, u32int divisor);
+u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor);
+
+
+/*
+ * Helper functions.
+ */
+
+static inline s32int ctzll(u64int n);
+static u32int uidiv_recursive(u32int dividend, u32int divisor, u32int acc);
+static u64int uldiv_recursive(u64int dividend, u64int divisor, u64int acc);
+
+
+/*
+ * Helper macros.
+ */
+
+#define UDIV(integralType, vectorType, resultDef, log2Func, recursiveFunc, returnExpr)             \
+  {                                                                                                \
+    vectorType resultDef;                                                                          \
+    if (divisor == (integralType)0)                                                                \
+    {                                                                                              \
+      DIE_NOW(0, "Division by zero");                                                              \
+    }                                                                                              \
+    if (dividend < divisor)                                                                        \
+    {                                                                                              \
+      result[0] = 0;                                                                               \
+      result[1] = dividend;                                                                        \
+      return returnExpr;                                                                           \
+    }                                                                                              \
+    /*                                                                                             \
+     * Check if divisor is a power of 2; if so, use bit shift instead of division. This is only    \
+     * useful in cases where the compiler cannot optimize the division away upfront.               \
+     */                                                                                            \
+    if (!(divisor & (divisor - 1)))                                                                \
+    {                                                                                              \
+      s32int powerOf2 = log2Func(divisor);                                                         \
+      result[0] = dividend >> powerOf2;                                                            \
+      result[1] = dividend - (result[0] << powerOf2);                                              \
+      return returnExpr;                                                                           \
+    }                                                                                              \
+    /*                                                                                             \
+     * Divide recursively                                                                          \
+     */                                                                                            \
+    result[0] = recursiveFunc(dividend, divisor, 0);                                               \
+    result[1] = dividend - result[0] * divisor;                                                    \
+    return returnExpr;                                                                             \
   }
 
-  //if we get here, then n was 0. return error
-  return -1;
-}
+#define UDIV_RECURSIVE(integralType, self)                                                         \
+  {                                                                                                \
+    integralType res, tmp;                                                                         \
+    res = (integralType)1;                                                                         \
+    tmp = divisor;                                                                                 \
+    while (dividend > tmp)                                                                         \
+    {                                                                                              \
+      /*                                                                                           \
+       * We need to be careful here that we don't shift past the last bit.                         \
+       */                                                                                          \
+      if (tmp & ((integralType)1 << ((sizeof(integralType) << 3) - 1)))                            \
+      {                                                                                            \
+        break;                                                                                     \
+      }                                                                                            \
+      tmp <<= 1;                                                                                   \
+      if (tmp > dividend)                                                                          \
+      {                                                                                            \
+        /*                                                                                         \
+         * Shift it back for later                                                                 \
+         */                                                                                        \
+        tmp >>= 1;                                                                                 \
+        break;                                                                                     \
+      }                                                                                            \
+      res <<= 1;                                                                                   \
+    }                                                                                              \
+    dividend -= tmp;                                                                               \
+    acc += res;                                                                                    \
+    return dividend < divisor ? acc : self(dividend, divisor, acc);                                \
+  }
 
-/* End support functions */
 
-static u32int __aeabi_uidiv_recursive(u32int dividend, u32int divisor, u32int acc);
-static u64int __aeabi_uldivmod_recursive(u64int dividend, u64int divisor, u64int acc);
-
-/* ARMEABI defined division routines */
-
-/* Simple unsigned int division with minimal optimizations.
- * For best results, use a tail-call optimizing seasoning.*/
+/*
+ * 32-bit unsigned integer division. The quotient is returned in r0.
+ */
 u32int __aeabi_uidiv(u32int dividend, u32int divisor)
 {
-  if (divisor == 0)
-  {
-    DIE_NOW(0, "Divide by 0!");
-  }
-  
-  if (dividend < divisor)
-  {
-    return 0;
-  }
-  
-  /* check if divisor is a power of 2 */
-  if (isPowerOf2(divisor))
-  {
-    return dividend >> getPowerOf2(divisor);
-  }
-  return __aeabi_uidiv_recursive(dividend, divisor, 0);
+#ifdef HAVE_GCC_VECTOR
+  UDIV(u32int, u32intPair, result, __builtin_ctz, uidiv_recursive, result[0]);
+#else
+  UDIV(u32int, u32int, result[2], __builtin_ctz, uidiv_recursive, result[0]);
+#endif
 }
 
-/* Recursive case for uidiv */
-static u32int __aeabi_uidiv_recursive(u32int dividend, u32int divisor, u32int acc)
+/*
+ * 32-bit unsigned integer division with remainder. The quotient is returned in r0; the remainder
+ * is returned in r1.
+ *
+ * In the EABI reference documentation, a structure similar to uidiv_t is used as return type.
+ * However, we cannot make GCC return such structure in r0 and r1 -- generally, structs are
+ * returned on the stack. There is a compiler flag to allow returning structs in registers, but
+ * that is only a hint towards the optimizer. In order to force returning quotient and remainder
+ * in r0 and r1, they are packed in a double word (u64int).
+ *
+ * WARNING: This code depends on the endianness of data in memory.
+ */
+u32intPair __aeabi_uidivmod(u32int dividend, u32int divisor)
 {
-  if (dividend < divisor)
-  {
-    return acc;
-  }
-
-  u32int res = 1, tmp = divisor;
-  
-  while (dividend > tmp)
-  {
-    /* we need to be careful here that we don't shift past the last bit */
-    if (tmp & (1 << (sizeof(u32int)*8-1)))
-    {
-      break;
-    }
-
-    tmp = tmp << 1;
-    if (tmp > dividend)
-    {
-      tmp = tmp >> 1; //shift it back for later
-      break;
-    }
-    res *= 2;
-  }
-
-  return __aeabi_uidiv_recursive(dividend - tmp, divisor, acc + res);
+#ifdef HAVE_GCC_VECTOR
+  UDIV(u32int, u32intPair, result, __builtin_ctz, uidiv_recursive, result);
+#else
+  UDIV(u32int, u32int, result[2], __builtin_ctz, uidiv_recursive, *(u32intPair *)&result);
+#endif
 }
 
-/* The layout of this structure must not be altered. 
-   The return type and member order is defined by
-   the ARM eabi. Quotient is returned in r0-r1 and remainder in r2-r3. */
-typedef struct
+/*
+ * 64-bit unsigned integer division with remainder. The quotient is returned in r0 and r1; the
+ * remainder is returned in r2 and r3.
+ */
+u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor)
 {
-  u64int quot;
-  u64int rem;
-} ulldiv_t;
-
-/* Does 64 bit unsigned int division, returning a struct
-   containing the quotient and remainder */
-ulldiv_t __aeabi_uldivmod(u64int dividend, u64int divisor)
-{
-  ulldiv_t ret;
-
-  if (divisor == 0)
-  {
-    DIE_NOW(0, "Divide by 0!");
-  }
-
-  if (dividend < divisor)
-  {
-    ret.quot = 0;
-    ret.rem = dividend;
-    return ret;
-  }
-
-  /* check if divisor is a power of 2 */
-  if (isPowerOf2(divisor))
-  {
-    // this func call just returns a number of bits, no need for ull
-    ret.quot = dividend >> getPowerOf2(divisor);
-    ret.rem = dividend - ret.quot * divisor;
-    return ret;
-  }
-
-  ret.quot = __aeabi_uldivmod_recursive(dividend, divisor, 0);
-  ret.rem = dividend - ret.quot * divisor;
-  return ret;
+#ifdef HAVE_GCC_VECTOR
+  UDIV(u64int, u64intPair, result, ctzll, uldiv_recursive, result);
+#else
+# pragma message "*** WARNING *** __aeabi_uldivmod has no implementation for this compiler!"
+  DIE_NOW(0, "__aeabi_uldivmod not implemented");
+#endif
 }
 
-/* recursive case returning just the quotient */
-static u64int __aeabi_uldivmod_recursive(u64int dividend, u64int divisor, u64int acc)
+/*
+ * Compute the logarithm in base 2, assuming that n is a power of two.
+ */
+static inline s32int ctzll(u64int n)
 {
-  if (dividend < divisor)
+  u32int loWord = n & 0xFFFFFFFF;
+  if (loWord)
   {
-    return acc;
+    return __builtin_ctz(loWord);
   }
+  return __builtin_ctz((u32int)(n >> 32)) + 32;
+}
 
-  u64int res = 1, tmp = divisor;
+/*
+ * 32-bit recursive unsigned integer division, to be invoked from __aeabi_uidiv{mod} ONLY.
+ */
+static u32int uidiv_recursive(u32int dividend, u32int divisor, u32int acc)
+{
+  UDIV_RECURSIVE(u32int, uidiv_recursive);
+}
 
-  while (dividend > tmp)
-  {
-    /* we need to be careful here that we don't shift past the last bit */
-    if (tmp & (1ULL << (sizeof(u64int)*8-1)))
-    {
-      break;
-    }
-
-    tmp = tmp << 1;
-    if (tmp > dividend)
-    {
-      tmp = tmp >> 1; //shift it back for later
-      break;
-    }
-    res *= 2;
-  }
-
-  return __aeabi_uldivmod_recursive(dividend - tmp, divisor, acc + res);
+/*
+ * 64-bit recursive unsigned integer division, to be invoked from __aeabi_uldivmod ONLY.
+ */
+static u64int uldiv_recursive(u64int dividend, u64int divisor, u64int acc)
+{
+  UDIV_RECURSIVE(u64int, uldiv_recursive);
 }
 

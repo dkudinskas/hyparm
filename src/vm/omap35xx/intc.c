@@ -15,25 +15,22 @@ extern GCONTXT * getGuestContext(void);
 
 struct InterruptController * irqController;
 
-void initIntc(void)
+void initIntc()
 {
-  irqController = (struct InterruptController*)mallocBytes(sizeof(struct InterruptController));
+  irqController = (struct InterruptController *)mallocBytes(sizeof(struct InterruptController));
   if (irqController == 0)
   {
     DIE_NOW(0, "Failed to allocate INTC.");
   }
-  else
-  {
-    memset((void*)irqController, 0x0, sizeof(struct InterruptController));
+  memset((void *)irqController, 0x0, sizeof(struct InterruptController));
 #ifdef INTC_DBG
-    printf("Initializing Interrupt controller at %08x\n", (u32int)irqController);
+  printf("Initializing Interrupt controller at %08x\n", (u32int)irqController);
 #endif
-  }
   intcReset();
 }
 
 /* top load function */
-u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
+u32int loadIntc(device *dev, ACCESS_SIZE size, u32int address)
 {
   //We care about the real pAddr of the entry, not its vAddr
   GCONTXT* gc = getGuestContext();
@@ -115,6 +112,14 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
     case REG_INTCPS_CONTROL:
       val = irqController->intcControl & INTCPS_CONTROL_RESERVED;
       break;
+#ifdef CONFIG_GUEST_FREERTOS
+    case REG_INTCPS_MIR1:
+      val = irqController->intcMir1;
+      break;
+    case REG_INTCPS_MIR2:
+      val = irqController->intcMir2;
+      break;
+#endif
     case REG_INTCPS_SIR_FIQ:
     case REG_INTCPS_PROTECTION:
     case REG_INTCPS_IDLE:
@@ -230,7 +235,7 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address)
     default:
       DIE_NOW(gc, "Intc: load on invalid register.");
   }
-  
+
 #ifdef INTC_DBG
   printf(dev->deviceName);
   printf(" load from pAddr: %08x, vAddr %08x, aSize %x, val %08x\n",
@@ -346,33 +351,68 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         }
       }
       irqController->intcMir2 &= ~value;
+#ifdef CONFIG_GUEST_FREERTOS
+      unmaskInterrupt(GPT1_IRQ);
+#endif
       break;
     }
     case REG_INTCPS_MIR_SET0:
-    {
       irqController->intcMir0 |= value;
       irqController->intcPendingIrq0 = irqController->intcItr0 & ~irqController->intcMir0;
       break;
-    }
     case REG_INTCPS_MIR_SET1:
-    {
       irqController->intcMir1 |= value;
       irqController->intcPendingIrq1 = irqController->intcItr1 & ~irqController->intcMir1;
       break;
-    }
     case REG_INTCPS_MIR_SET2:
-    {
       irqController->intcMir2 |= value;
       irqController->intcPendingIrq2 = irqController->intcItr2 & ~irqController->intcMir2;
       break;
-    }
     case REG_INTCPS_CONTROL:
-    {
       irqController->intcControl = value & INTCPS_CONTROL_RESERVED;
       break;
-    }
-    case REG_INTCPS_PROTECTION:
     case REG_INTCPS_IDLE:
+#ifdef CONFIG_GUEST_FREERTOS
+      irqController->intcIdle = value & ( INTCPS_IDLE_RESERVED|INTCPS_IDLE_FUNCIDLE );
+      break;
+    case REG_INTCPS_MIR1:
+      /* value can be any 32-bit number */
+      irqController->intcMir1 |= value;
+      irqController->intcPendingIrq1 = irqController->intcItr1 & ~irqController->intcMir1;
+      /* If guest wants to enable GPT1, then GPT2 IRQ
+      * which is dedicated to guest must be unmasked
+      */
+      if(!(value & 0x20 )) // bit 37(GPT1_IRQ)=0 -> IRQ Enable
+      {
+        unmaskInterruptBE(GPT2_IRQ);
+      }
+      /* If GPT1 bit is masked, then GPT2_IRQ needs to be
+      * masked
+      */
+      else //bit 37(GPT1_IRQ)=1 -> IRQ Disable
+      {
+        maskInterruptBE(GPT2_IRQ);
+      }
+      break;
+    case REG_INTCPS_ISR_CLEAR1:
+      /* value can be any 32-bit nymber */
+      irqController->intcIsrClear1 = value;
+      /* reset timer interrupt if needed */
+      if(value & 0x20)
+      {
+        unmaskInterruptBE(GPT2_IRQ);
+      }
+      break;
+    case REG_INTCPS_ILR37:
+      // FIXME this is FreeRTOS specific <- GPTIMER 2 delivers interrupt
+      irqController->intcIlr[37] = value & INTCPS_ILR_RESERVED;
+      break;
+#else
+    case REG_INTCPS_MIR1:
+    case REG_INTCPS_ISR_CLEAR1:
+    case REG_INTCPS_ILR37:
+#endif
+    case REG_INTCPS_PROTECTION:
     case REG_INTCPS_IRQ_PRIORITY:
     case REG_INTCPS_FIQ_PRIORITY:
     case REG_INTCPS_THRESHOLD:
@@ -380,13 +420,11 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case REG_INTCPS_ITR1:
     case REG_INTCPS_ITR2:
     case REG_INTCPS_MIR0:
-    case REG_INTCPS_MIR1:
     case REG_INTCPS_MIR2:
     case REG_INTCPS_ISR_SET0:
     case REG_INTCPS_ISR_SET1:
     case REG_INTCPS_ISR_SET2:
     case REG_INTCPS_ISR_CLEAR0:
-    case REG_INTCPS_ISR_CLEAR1:
     case REG_INTCPS_ISR_CLEAR2:
     case REG_INTCPS_PENDING_IRQ0:
     case REG_INTCPS_PENDING_IRQ1:
@@ -431,7 +469,6 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case REG_INTCPS_ILR34:
     case REG_INTCPS_ILR35:
     case REG_INTCPS_ILR36:
-    case REG_INTCPS_ILR37:
     case REG_INTCPS_ILR38:
     case REG_INTCPS_ILR39:
     case REG_INTCPS_ILR40:
@@ -551,7 +588,7 @@ void maskInterrupt(u32int interruptNumber)
   {
     DIE_NOW(0, "INTC: mask interrupt number out of range.");
   }
-  
+
   bankNumber = interruptNumber / INTCPS_INTERRUPTS_PER_BANK;
   bitMask = 1 << (interruptNumber % INTCPS_INTERRUPTS_PER_BANK);
 
@@ -830,7 +867,11 @@ bool isFiqPending()
 
 void intcDumpRegisters(void)
 {
-  printf("INTC: Revision %08x\n");
+  /*
+   * FIXME: missing argument to format
+   *
+   * printf("INTC: Revision %08x\n");
+   */
   printf("INTC: sysconfig reg %08x\n", irqController->intcSysConfig);
   printf("INTC: sysStatus reg %08x\n", irqController->intcSysStatus);
   printf("INTC: current active irq reg %08x\n", irqController->intcSirIrq);

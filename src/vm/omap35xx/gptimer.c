@@ -13,9 +13,14 @@
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 
 
+#ifdef CONFIG_GUEST_FREERTOS
+extern bool rtos;
+#endif
+
 extern GCONTXT * getGuestContext(void);
 
 struct GeneralPurposeTimer * gptimer;
+
 
 void initGPTimer()
 {
@@ -75,7 +80,7 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
   u32int val = 0;
-  
+
   u32int regOffs = phyAddr - GPTIMER1;
 
   switch (regOffs)
@@ -216,7 +221,7 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
     default:
       DIE_NOW(0, "GPT: load from undefined register.");
   } // switch ends
-  
+
  return val;
 }
 
@@ -315,6 +320,17 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 #endif
       break;
     case GPT_REG_TMAR:
+#ifdef CONFIG_GUEST_FREERTOS
+      if(rtos)
+      {
+        /*
+         * FIXME: Use a higher TMAR value to make sure that Guest is ready to accept interrupts.
+         * This needs some fixing but should work for now. FreeRTOS set the TMAR value to
+         * 0x6590. This is way too low for hypervisor to prepare guest CPSR.
+         */
+        value=value<<3;
+      }
+#endif
       storeToGPTimer(2, regOffs, value);
 #ifdef GPTIMER_DBG
       printf(dev->deviceName);

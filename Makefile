@@ -23,14 +23,14 @@ OBJCOPY       = $(CROSS_COMPILE)objcopy
 OBJDUMP       = $(CROSS_COMPILE)objdump
 
 AFLAGS       := --fatal-warnings
-CFLAGS       := -pipe \
-                -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
-		-O3 -ffixed-r8 -ffreestanding \
-		-fno-builtin -fno-common -fno-stack-protector -fno-toplevel-reorder \
-		-Wall -Wextra -Winline -Wstrict-prototypes -Wwrite-strings \
-		-Wno-empty-body -Wno-unused-label -Wno-unused-parameter
+CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
+                -O3 -ffreestanding -fno-common -fno-stack-protector -fno-toplevel-reorder \
+                -Wall -Wextra -Wformat=2 -Winline -Wstrict-prototypes -Wwrite-strings \
+                -Wno-empty-body -Wno-unused-label -Wno-unused-parameter \
+                -Werror=implicit-function-declaration
 CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc
-LDFLAGS      :=
+LDFLAGS      := --error-unresolved-symbols
+OBJDUMPFLAGS := -M reg-names-std
 
 
 CLEAN_GOALS  := clean clean_%
@@ -118,6 +118,11 @@ $(KCONFIG_CONFIG):
   CPPFLAGS-y := -imacros $(KCONFIG_AUTOHEADER)
   LDFLAGS-y :=
 
+  ifeq ($(CONFIG_BUILD-SAVE_TEMPS),y)
+    CFLAGS-y += -save-temps=obj
+  else
+    CFLAGS-y += -pipe
+  endif
 
   # TODO AFLAGS IS A HACK
   AFLAGS-$(CONFIG_ARCH_V7_A) += --defsym CONFIG_ARCH_V7_A=1
@@ -141,23 +146,37 @@ $(KCONFIG_CONFIG):
   LDFLAGS-$(CONFIG_SOC_TI_OMAP_3530) += -T $(SCRIPT_PATH)/omap3530.lds
 
 
-  CFLAGS-$(CONFIG_DEBUG)  += -g -fstack-usage -Wframe-larger-than=256
-  LDFLAGS-$(CONFIG_DEBUG) += -g -Map $(OUTPUT_PATH)/$(APP_NAME).map --cref
+  AFLAGS-$(CONFIG_THUMB2) += --defsym CONFIG_THUMB2=1
 
+
+  CFLAGS-$(CONFIG_DEBUG)  += -ggdb3
+  #-fstack-usage -Wframe-larger-than=256
+  LDFLAGS-$(CONFIG_DEBUG) += -Map $(OUTPUT_PATH)/$(APP_NAME).map --cref
+  OBJDUMPFLAGS-$(CONFIG_DEBUG) += -lS
+
+  # TODO AFLAGS IS A HACK
+  AFLAGS-$(CONFIG_HACKS_MARKOS) += --defsym CONFIG_HACKS_MARKOS=1
+  AFLAGS-$(CONFIG_EMERGENCY_EXCEPTION_VECTOR) += --defsym CONFIG_EMERGENCY_EXCEPTION_VECTOR=1
 
   AFLAGS   += $(AFLAGS-y)
   CFLAGS   += $(CFLAGS-y)
   CPPFLAGS += $(CPPFLAGS-y)
   LDFLAGS  += $(LDFLAGS-y)
+  OBJDUMPFLAGS += $(OBJDUMPFLAGS-y)
 
 endif # ifneq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
 
 
 HYPARM_DIRS-y := common cpuArch drivers/beagle exceptions guestManager instructionEmu linuxBoot memoryManager vm/omap35xx
 
-HYPARM_DIRS-$(CONFIG_CLI) += cli
+# Guest support
+HYPARM_DIRS-$(CONFIG_GUEST_FREERTOS) += rtosBoot
 
+# Debugging
 HYPARM_DIRS-$(CONFIG_MMC) += io io/fs
+
+# Hacks
+HYPARM_DIRS-$(CONFIG_CLI) += cli
 
 HYPARM_SRCS_C-y := main.c
 HYPARM_SRCS_S-y := startup.s
@@ -173,6 +192,7 @@ HYPARM_OBJS_C := $(foreach SRC, $(HYPARM_SRCS_C-y), $(SOURCE_PATH)/$(SRC).o)
 HYPARM_OBJS_S := $(foreach SRC, $(HYPARM_SRCS_S-y), $(SOURCE_PATH)/$(SRC).o)
 HYPARM_OBJS   := $(HYPARM_OBJS_C) $(HYPARM_OBJS_S)
 
+HYPARM_TMPS   := $(foreach SRC, $(HYPARM_SRCS_C-y), $(SOURCE_PATH)/$(SRC).i $(SOURCE_PATH)/$(SRC).s)
 
 # Check if we are building
 ifeq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
@@ -190,7 +210,7 @@ dump: $(OUTPUT_PATH)/$(APP_NAME).dump
 
 $(OUTPUT_PATH)/$(APP_NAME).dump: $(OUTPUT_PATH)/$(APP_NAME).elf
 	@echo OBJDUMP $@
-	@$(OBJDUMP) -d $< > $@
+	@$(OBJDUMP) -d $(OBJDUMPFLAGS) $< > $@
 
 $(OUTPUT_PATH)/$(APP_NAME).bin: $(OUTPUT_PATH)/$(APP_NAME).elf
 	@echo OBJCOPY $@
@@ -221,7 +241,7 @@ endif # ifeq ($(filter $(NO_BUILD_GOALS)),)
 .PHONY: clean
 
 clean: clean_kconfig
-	@for file in $(sort $(HYPARM_DEPS) $(HYPARM_OBJS)) $(OUTPUT_PATH)/$(APP_NAME).{elf,map,bin,dump}; do \
+	@for file in $(sort $(HYPARM_DEPS) $(HYPARM_OBJS) $(HYPARM_TMPS)) $(OUTPUT_PATH)/$(APP_NAME).{elf,map,bin,dump}; do \
 		if [ -f $$file ]; then \
 			echo RM $$file; \
 			rm $$file || :; \

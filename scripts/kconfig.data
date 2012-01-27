@@ -3,6 +3,9 @@ menu "General setup"
 config CROSS_COMPILE
 	string "Cross-compiler toolchain prefix"
 
+config BUILD_SAVE_TEMPS
+	bool "Save intermediate files during build (requires GCC >= 4.5)"
+
 choice
 	prompt "Decoder"
 	default DECODER_TABLE_SEARCH
@@ -94,17 +97,50 @@ endmenu
 
 menu "Virtual hardware platform"
 
+config THUMB2
+	bool "Thumb-2 instruction set"
+	depends on ARCH_V7_A && !BLOCK_COPY && DECODER_TABLE_SEARCH
+
+endmenu
+
+menu "Guest software"
+
+config GUEST_FREERTOS
+	bool "FreeRTOS"
+	depends on THUMB2
+
 endmenu
 
 menuconfig DEBUG
 	bool "Debugging"
+	default y
 
 config DEBUG_STARTUP
 	bool "Debug startup"
 	depends on DEBUG
 
-config DEBUG_INSTRUCTION_DECODING
+config DEBUG_DECODER
 	bool "Debug instruction decoding"
+	depends on DEBUG
+
+menuconfig DEBUG_SCANNER
+  bool "Debug scanner"
+  depends on DEBUG
+
+config DEBUG_SCANNER_CALL_SOURCE
+  bool "Track call source"
+  depends on DEBUG_SCANNER
+
+config DEBUG_SCANNER_COUNT_BLOCKS
+  bool "Count number of scanned blocks"
+  depends on DEBUG_SCANNER
+
+config DEBUG_SCANNER_BLOCK_TRACE
+  bool "Print block trace"
+  depends on DEBUG_SCANNER
+
+config MMC
+	bool "Use MMC/SD device to store debug output"
 	depends on DEBUG
 
 menu "Hacks"
@@ -115,5 +151,13 @@ config BLOCK_COPY_NO_IRQ
 
 config CLI
 	bool "Command-line interface"
+
+config EMERGENCY_EXCEPTION_VECTOR
+  bool "Emergency exception vector"
+  default y
+  depends on ARCH_EXT_SECURITY
+
+config HACKS_MARKOS
+	bool "Markos' hacks (exception handlers in startup.s, MSR instruction)"
 
 endmenu

@@ -36,14 +36,14 @@ struct opcode32 arm_opcodes[] = {
 // NOP is just a nop...
 {0,  &nopInstruction,       0xe1a00000, 0xffffffff, "nop\t\t\t; (mov r0, r0)"},
 // branch and exchange - this changes execution mode!!! panic there.
-{1,  &bxInstruction,        0x012FFF10, 0x0ffffff0, "bx%c\t%0-3r"},
+{1,  &bxInstruction,        0x012FFF10, 0x0ffffff0, "BRANCH & EXCHANGE"},
 // MUL: Rd = Rm * Rn; Rd != PC. pass through
 {0,  &mulInstruction,       0x00000090, 0x0fe000f0, "MUL Rd, Rm, Rn"},
 // MLA: Rd = Rm * Rn + Ra; Rd != PC. pass through
 {0,  &mlaInstruction,       0x00200090, 0x0fe000f0, "MLA Rd, Rm, Rn, Ra"},
 // UNIMPLEMENTED
 {1,  &swpInstruction,       0x01000090, 0x0fb00ff0, "swp%22'b%c\t%12-15r, %0-3r, [%16-19r]"},
-{0,  &sumullInstruction,    0x00800090, 0x0fa000f0, "%22?sumull%20's%c\t%12-15r, %16-19r, %0-3r, %8-11r"},
+{0,  &sumullInstruction,    0x00800090, 0x0fa000f0, "SMULL"},
 {0,  &sumlalInstruction,    0x00a00090, 0x0fa000f0, "%22?sumlal%20's%c\t%12-15r, %16-19r, %0-3r, %8-11r"},
 /* V7 instructions.  */
 {1,  &pliInstruction,       0xf450f000, 0xfd70f000, "pli\t%P"},
@@ -59,8 +59,7 @@ struct opcode32 arm_opcodes[] = {
 {1,  &ldrhtInstruction,     0x00300090, 0x0f300090, "ldr%6's%5?hbt%c\t%12-15r, %s"},
 // MOVW - indication of 'wide' - to select ARM encoding. Rd cant be PC, pass through.
 {0,  &movwInstruction,      0x03000000, 0x0ff00000, "MOVW Rd, Rn"},
-// UNIMPLEMENTED
-{1,  &movtInstruction,      0x03400000, 0x0ff00000, "movt%c\t%12-15r, %V"},
+{0,  &movtInstruction,      0x03400000, 0x0ff00000, "MOVT Rd, Rn"},
 {1,  &rbitInstruction,      0x06ff0f30, 0x0fff0ff0, "rbit%c\t%12-15r, %0-3r"},
 {1,  &usbfxInstruction,     0x07a00050, 0x0fa00070, "%22?usbfx%c\t%12-15r, %0-3r, #%7-11d, #%16-20W"},
 
@@ -81,7 +80,7 @@ struct opcode32 arm_opcodes[] = {
 {1,  &wfeInstruction,       0x0320f002, 0x0fffffff, "wfe%c"},
 {1,  &wfiInstruction,       0x0320f003, 0x0fffffff, "wfi%c"},
 {1,  &sevInstruction,       0x0320f004, 0x0fffffff, "sev%c"},
-{1,  &nopInstruction,       0x0320f000, 0x0fffff00, "nop%c\t{%0-7d}"},
+{1,  &nopInstruction,       0x0320f000, 0x0fffff00, "nop"},
 
 /* ARM V6 instructions.  */
 {1,  &cpsieInstruction,     0xf1080000, 0xfffffe3f, "cpsie\t%8'a%7'i%6'f"},
@@ -146,10 +145,10 @@ struct opcode32 arm_opcodes[] = {
 {1,  &sxtbInstruction,      0x06af0470, 0x0fff0ff0, "sxtb%c\t%12-15r, %0-3r, ror #8"},
 {1,  &sxtbInstruction,      0x06af0870, 0x0fff0ff0, "sxtb%c\t%12-15r, %0-3r, ror #16"},
 {1,  &sxtbInstruction,      0x06af0c70, 0x0fff0ff0, "sxtb%c\t%12-15r, %0-3r, ror #24"},
-{1,  &uxthInstruction,      0x06ff0070, 0x0fff0ff0, "uxth%c\t%12-15r, %0-3r"},
-{1,  &uxthInstruction,      0x06ff0470, 0x0fff0ff0, "uxth%c\t%12-15r, %0-3r, ror #8"},
-{1,  &uxthInstruction,      0x06ff0870, 0x0fff0ff0, "uxth%c\t%12-15r, %0-3r, ror #16"},
-{1,  &uxthInstruction,      0x06ff0c70, 0x0fff0ff0, "uxth%c\t%12-15r, %0-3r, ror #24"},
+{1,  &uxthInstruction,      0x06ff0070, 0x0fff0ff0, "UXTH"},
+{1,  &uxthInstruction,      0x06ff0470, 0x0fff0ff0, "UXTH"},
+{1,  &uxthInstruction,      0x06ff0870, 0x0fff0ff0, "UXTH"},
+{1,  &uxthInstruction,      0x06ff0c70, 0x0fff0ff0, "UXTH"},
 {1,  &uxtb16Instruction,    0x06cf0070, 0x0fff0ff0, "uxtb16%c\t%12-15r, %0-3r"},
 {1,  &uxtb16Instruction,    0x06cf0470, 0x0fff0ff0, "uxtb16%c\t%12-15r, %0-3r, ror #8"},
 {1,  &uxtb16Instruction,    0x06cf0870, 0x0fff0ff0, "uxtb16%c\t%12-15r, %0-3r, ror #16"},
@@ -214,7 +213,7 @@ struct opcode32 arm_opcodes[] = {
 
 /* V5 Instructions.  */
 {1,  &bkptInstruction,      0xe1200070, 0xfff000f0, "bkpt\t0x%16-19X%12-15X%8-11X%0-3X"},
-{1,  &blxInstruction,       0xfa000000, 0xfe000000, "blx\t%B"},
+{1,  &blxInstruction,       0xfa000000, 0xfe000000, "BLX <label>"},
 {1,  &blxInstruction,       0x012fff30, 0x0ffffff0, "blx%c\t%0-3r"},
 // CLZ: Count leading zeroes - Rd, Rm != PC, pass through
 {0,  &clzInstruction,       0x016f0f10, 0x0fff0ff0, "CLZ Rd, Rm"},
@@ -349,7 +348,7 @@ struct opcode32 arm_opcodes[] = {
 // UNDEFINED INSTRUCTION SPACE
 {-1,  &undefinedInstruction, 0x06000010, 0x0e000010, UNDEFINED_INSTRUCTION},
 // UNIMPLEMENTED
-{1,  &popLdrInstruction,       0x049d0004, 0x0fff0fff, "pop%c\t{%12-15r}\t\t; (ldr%c %12-15r, %a)"},
+{1,  &popLdrInstruction,       0x049d0004, 0x0fff0fff, "POP"},
 // LDR traps if dest = PC, otherwise pass through
 {1,  &ldrInstruction,       0x0410f000, 0x0c10f000, "LDR PC, Rn/#imm12"},
 {0,  &ldrInstruction,       0x04100000, 0x0c100000, "LDR Rd, Rn/#imm12"},
@@ -373,13 +372,162 @@ struct opcode32 arm_opcodes[] = {
 {-1, &undefinedInstruction, 0x00000000, 0x00000000, "UNDEFINED_INSTRUCTION"}
 };
 
+
+#ifdef CONFIG_THUMB2
+
+struct opcode32 thumb32_opcodes[] = {
+
+{0, &movInstruction, 0xF04F0000, 0xFBEF1000, "MOVW<c> <Rd>, #<imm12>"},
+// this is for T3 encoding
+{0, &movInstruction, 0xF2400000, 0xFBF00000, "MOVW<c> <Rd>, #<imm16>"},
+{0, &movInstruction, 0xF04F0000, 0xFBEF8000, "MOV{S}/W <Rd>, #<immt12>"},
+{0, &movInstruction, 0xF2400000, 0xFBF08000, "MOVW <Rd>, #<imm16>"},
+{0, &movtInstruction, 0xF2C00000, 0xFBF08000, "MOVT<c> <Rd>, #<imm16>"},
+{0, &orrInstruction, 0xEA400000, 0xFFE08000, "ORR{S} <Rd>, <Rn>{,<shift>}"},
+{0, &orrInstruction, 0xF0400000, 0xFBE08000, "ORR{S} <Rd>, <Rn>,#<imm12>"},
+{0, &andInstruction, 0xEA000000, 0xFFF00000, "AND{S}.W <Rd>. <Rn>. <Rm>"},
+//trap for RD=15
+{1, &andInstruction, 0xF0000F00, 0xFBE08F00, "AND{S}<c> PC, <Rm>, #<imm12>"},
+{0, &andInstruction, 0xF0000000, 0xFBE08000, "AND{S}<c> <Rd>, <Rm>, #<imm12>"},
+{0, &addInstruction, 0xF1000000, 0xFBE08000, "ADD{S}.W <Rd>, <Rn>, #<imm8>"},
+{0, &addInstruction, 0xEB000000, 0xFFE08000, "ADD{S}.W <Rd>, <Rn>, <Rm>{, <shift>}"},
+//ADD -> RD=PC -> CMN page 306
+{1, addInstruction, 0xF1000F00, 0xFBE08F00, "ADD{S}.W PC, <Rn>, #<imm8>"},
+// RN=SP -> unimplemented. Should be OK
+{0, &addInstruction, 0xF10D8000, 0xFBEF8000, "ADD{S}.W <Rd>, SP, #<imm8>"},
+// Encoding T4
+{0, &addInstruction, 0xF2000000, 0xF2008000, "ADDW <Rd>, <Rn>, #<imm12>"},
+// RC=PC
+{1, &addInstruction, 0xF20F0000, 0xF20F8000, "ADDW PC, <Rn>, #<imm12>"},
+// RN=SP -> should be ok
+{0, &addInstruction, 0xF20D0000, 0xF20F8000, "ADDW <Rd>, SP, #<imm8>"},
+{0, &bicInstruction, 0xF0200000, 0xFBE08000, "BIC{S} <Rd>, <Rn>, #<imm12>"},
+{0, &rsbInstruction, 0xF1C00000, 0xFBE08000, "RSB <Rd>, <Rn>, #<imm12>"},
+{0, &rsbInstruction, 0xEBC00000, 0xFFE08000, "RSB <Rd>, <Rn>, <Rm>{,<shift>}"},
+{0, &subInstruction, 0xF1A00000, 0xFBE08000, "SUB{S}.W <Rd>, <Rn>, #<imm12>"},
+{0, &subInstruction, 0xF2A00000, 0xFBE08000, "SUB{S}W <Rd>, <Rn>, #<imm12>"},
+{0, &subInstruction, 0xEBA00000, 0xFFE08000, "SUB{S}.W <Rd>, <Rn>, <Rm>{,<shitft>}"},
+// RN = SP -> should be ok
+{0, &subInstruction, 0xF2AB0000, 0xFBEF8000, "SUBW <Rd>, SP, #<imm12>"},
+{0, &subInstruction, 0xEBAB0000, 0xFFEF8000, "SUB{S} <Rd>, SP, <Rm>{,<shift>}"},
+{0, &mvnInstruction, 0xEA6F0000, 0xFFEF8000, "MVN<c> <Rd>, <Rm>{,<shift>}"},
+{0, &mvnInstruction, 0xE0AF0000, 0xFBEF8000, "MVN<c> <Rd>, #<imm12>"},
+
+{0, &strbInstruction, 0xF8800000, 0xFFF00000, "STRB Rt, [Rn, #<imm12>]"},
+{0, &strbInstruction, 0xF8000800, 0xFFF00800, "STRB Rt, [Rn, +-#<imm8>]"},
+
+{0, &strhInstruction, 0xF8A00000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm12>}]"},
+{0, &strhInstruction, 0xF8200000, 0xFFF00000, "STRH.W <Rt> [<Rn>, #<imm8>}]!"},
+
+{1, &ldrbInstruction, 0xF81FF000, 0xFEFFFFC0, "LDRB<c> PC ,#<label>"},
+{0, &ldrbInstruction, 0xF8900000, 0xFFF00000, "LDRB<c> Rt, [Rn{,#<imm12>}]"},
+{0, &ldrbInstruction, 0xF8100900, 0xFFF00900, "LDRB<c> Rt, [Rn,{#<imm12>}]"},
+{0, &ldrbInstruction, 0xF8100C00, 0xFFF00E00, "LDRB<c> Rt, [Rn,{#<imm12>}]"},
+
+{0, &ldrhInstruction, 0xF8B00000, 0xFFF00000, "LDRH.W <Rt>, [<Rn>{. #<imm32>}]"},
+{0, &ldrhInstruction, 0xF83F0000, 0xFEFF0000, "LDRH <Rt>, <label>"},
+{0, &ldrhInstruction, 0xF8300000, 0xFFF00FE0, "LDRH, <Rt>, [<Rn>{,LSL #<imm2>}]"},
+{0, &ldrhInstruction, 0xF9B00000, 0xFFF00000, "LDRSH<c> <Rt>, [<Rn>, #<imm12>]"},
+{0, &ldrhInstruction, 0xF9300800, 0xFFFF0800, "LDRSH<c> <Rt>, [<Rn>, #<Rn>, +/-#imm8]"}, // Page 454, A8-168
+{0, &ldrhInstruction, 0xF9300FC0, 0xFFF00FC0, "LDRSH<c> <Rt>, [<Rn>, <Rm>]"},
+
+{0, &mulInstruction, 0xFB00F000, 0xFFF0F0F0, "MULW <Rd>, <Rn>, <Rm>"},
+{0, &smullInstruction, 0xFB800000, 0xFFE000F0, "SMULL <RdLo>, <RdHi>, <Rn>, <Rm>"},
+
+{1, &bInstruction, 0xF0008000, 0xF800D000, "B <imm17>"},
+{1, &bInstruction, 0xF0009000, 0xF800D000, "B <imm21>"},
+{1, &bInstruction, 0xF000D000, 0xF800D000, "BL, #<imm21>"},
+{1, &blxInstruction, 0xF000C000, 0xF800D000, "BLX, #<imm21>"},
+
+{0, &ldrdInstruction, 0xE8500000, 0xFE500000, "LDRD <Rt>, <Rt2>, [<Rn>,{,#+/-<imm>}]"},
+{0, &ldrdInstruction, 0xE85F0000, 0xFE7F0000, "LDRD <Rt>, <Rt2>, <label>"},
+{0, &strdInstruction, 0xE8400000, 0xFE500000, "STRD <Rt>, <Rt2>, [<Rn>,{,#+/-<imm>}]"}
+};
+
+struct opcode32 thumb16_opcodes[] = {
+{0, &addInstruction, 0xA800, 0xF800, "ADD <Rd>, SP, #<imm>"},
+{0, &addInstruction, 0xB000, 0xFF80, "ADD SP, SP, #<imm>"},
+
+// ADR instruction is add or sub but in any case it does not trap
+{0, &addInstruction, 0xA000,0xF800, "ADR <Rd>, <label>"},
+
+{1, &svcInstruction, 0xDF00, 0xFF00, "SVC call"},
+{1, &bInstruction, 0xD000, 0xF000, "B<c> <label>"},
+
+{0, &ldrInstruction, 0x6800, 0xF800, "LDR<c> <Rt>, [<Rn>{,#<imm5>}]"},
+{0, &ldrInstruction, 0x9800, 0xF800, "LDR<c> <Rt>, [SP{,#<imm8>}]"},
+{0, &ldrInstruction, 0x4800, 0xF800, "LDR<c> <Rt>, <label>"},
+{0, &ldrInstruction, 0x5800, 0xFE00, "LDR<c> <Rt>, [<Rn>,<Rm>]"},
+
+{0, &mvnInstruction, 0x43C0, 0xFFC0, "MVN <Rd>, <Rm>"},
+{0, &cmpInstruction, 0x4280, 0xFFC0, "CMP <Rn>, <Rm>"},
+{0, &cmpInstruction, 0x4500, 0xFF00, "CMP <Rn>, <Rm>"},
+
+{1, &bxInstruction, 0x4700, 0xFF80, "BX<c> <Rm>"},
+{1, &blxInstruction, 0x4780, 0xFF80, "BLX<c> <Rm>"},
+{1, &movInstruction, 0x4607, 0xFF07, "MOV PC, Rm"},
+{0, &movInstruction, 0x4600, 0xFF00,  "MOV Rd, Rm"},
+{0, &addInstruction, 0x1800, 0xFE00, "ADD <Rd>, <Rn>, <Rm>"},
+{0, &addInstruction, 0x4400, 0xFF00, "ADD <Rdn>, <Rm>"},
+
+{0, &stmInstruction, 0xB400, 0xFE00, "PUSH {reglist}"},
+{0, &subInstruction, 0xB080, 0xFF80, "SUB SP,SP,<imm7"},
+{0, &uxtbInstruction, 0xB2C0, 0xFFC0, "UXTB<c> <Rd>, <Rm>"},
+{0, &uxthInstruction, 0xB280, 0xFFC0, "UXTH<C> <Rd>, <Rm>"},
+{0, &addInstruction, 0xA800, 0xF800, "ADD <Rd>, SP, #<imm8>"},
+{0, &addInstruction, 0xB000, 0xFF80, "ADD SP, SP, #<imm>"},
+// trap if PC is on POP reglist
+{1, &popLdmInstruction, 0xBD00, 0xFF00, "POP <reglist+PC>"},
+{0, &popLdmInstruction, 0xBC00, 0xFE00, "POP <reglist>"},
+{0, &nopInstruction, 0xBF00,0xFFFF, "NOP"},
+// I think that the If-Then-Else Instruction does not need to trap -.-
+{0, &itInstruction, 0xBF00,0xFF00, "IT"},
+
+{0, &strInstruction, 0x6000, 0xF800, "STR Rd, [<Rn>, {#<imm5>}]"},
+{0, &strInstruction, 0x9000, 0xF800, "STR Rd, [SP,#<imm8]"},
+{0, &ldrInstruction, 0x6800, 0xF800, "LDR Rd, [<Rn> {,#<imm5>}]"},
+{0, &ldrInstruction, 0x9800, 0xF800, "LDR Rd, [SP {,#<imm8>}]"},
+{0, &ldrInstruction, 0x7800, 0x7800, "LDRB Rd, #<imm5>"},
+{0, &ldrhInstruction, 0x8800, 0xF800, "LDRH <Rt>, [<Rn>{, #<imm5>}]"},
+{0, &strbInstruction, 0x7000, 0xF800, "STRB <Rt>, [<Rn>, #<imm5>]"},
+{0, &strbInstruction, 0xA400, 0xFE00, "STRB <Rt>, [<Rn>, <Rm>]"},
+{0, &strhInstruction, 0x8000, 0xF800, "STRH <Rt>,[<Rn>,{,#<imm>}]"},
+{0, &strhInstruction, 0x5200, 0xFE00, "STRH <Rt>, [<Rn>,{,<Rm>}"},
+
+{1, &bInstruction, 0xE000, 0xE000, "B<c> #<imm8>"},
+// According to Thumb-2 spec, R15 cannot be used in arithmetic
+// instructions. So dont trap
+{0, &addInstruction, 0x1800, 0xFF00, "ADD Rd, Rn, Rm"},
+// page 310. Rd can be R15
+{1, &addInstruction, 0x4487, 0x4487, "ADD<c> R15, Rm"},
+// Otherwise don't trap
+{0, &addInstruction, 0x4400, 0x4400, "ADD<c> Rd, Rm"},
+// CMP is fine
+{0, &cmpInstruction, 0x2800, 0xF800, "CMP<c> Rn, #<imm8>"},
+{0, &subInstruction, 0x1E00, 0xFE00, "SUB{S} <Rd>, <Rn>,#<imm3>"},
+{0, &subInstruction, 0x3800, 0xF800, "SUB{S} <Rdn>, #<imm8>"},
+{0, &subInstruction, 0x1A00, 0xFE00, "SUB{S} <Rd>, <Rn> <Rm>"},
+{0, &movInstruction, 0x2000, 0xF800, "MOV<c> <Rd>, #<imm8>"}
+
+};
+
+#endif
+
+
 struct opcode32 * decodeInstruction(u32int instr)
 {
   int index = 0;
   struct opcode32 * retInstr = 0;
 
   /* LOOP through all ARM instructions looking for match */
+  /*
+   * FIXME: check what assembly code is generated for both cases below
+   */
+#ifdef CONFIG_THUMB2
+  while (index < INDEX_OF(arm_opcodes))
+#else
   while (TRUE)
+#endif
   {
     if ( (instr & arm_opcodes[index].mask) == arm_opcodes[index].value)
     {
@@ -399,7 +547,14 @@ struct opcode32 * decodeInstruction(u32int instr)
   }
   /* else - no match in ARM instructions, check coproc instructions. */
   index = 0;
+  /*
+   * FIXME: check what assembly code is generated for both cases below
+   */
+#ifdef CONFIG_THUMB2
+  while (index < INDEX_OF(arm_coproc_opcodes))
+#else
   while (TRUE)
+#endif
   {
     if ( (instr & arm_coproc_opcodes[index].mask) == arm_coproc_opcodes[index].value)
     {
@@ -419,9 +574,85 @@ struct opcode32 * decodeInstruction(u32int instr)
     DIE_NOW(0, "DIE");
   }
 
-  // to make compiler happy
+  // FIXME: if the compiler still complains there must be a path that returns to the caller
+  //to make compiler happy
   return retInstr;
 }
+
+
+#ifdef CONFIG_THUMB2
+
+void dumpInstrString(GCONTXT *gc, u32int instr)
+{
+  u32int index = 0;
+  /* LOOP through all ARM instructions looking for match */
+  if(gc->CPSR & T_BIT)
+  {
+    switch (instr & THUMB32 << 16)
+    {
+      // instr is 32-bit so THUMB32 defs need to be extended to 32-bit
+      case THUMB32_1 << 16:
+      case THUMB32_2 << 16:
+      case THUMB32_3 << 16:
+      {
+        while(index < INDEX_OF(thumb32_opcodes))
+        {
+          if ((instr & thumb32_opcodes[index].mask) == thumb32_opcodes[index].value)
+          {
+            printf("%s\n", thumb32_opcodes[index].instructionString);
+            return;
+          }
+          ++index;
+        }
+        printf("decoder: dumpInstr(Thumb32): undefined instruction found: %08x\n", (u32int)instr);
+        DIE_NOW(0, "DIE");
+      }
+      default:
+      {
+        while(index < INDEX_OF(thumb16_opcodes))
+        {
+          if ((instr & thumb16_opcodes[index].mask) == thumb16_opcodes[index].value)
+          {
+            printf("%s\n", thumb16_opcodes[index].instructionString);
+            return;
+          }
+          ++index;
+        }
+        printf("decoder: dumpInstr(Thumb16): undefined instruction found: %08x\n", (u32int)instr);
+        DIE_NOW(0, "DIE");
+      }
+    }
+  }
+  // ARM
+  else
+  {
+    while (index < INDEX_OF(arm_opcodes))
+    {
+      if ( (instr & arm_opcodes[index].mask) == arm_opcodes[index].value)
+      {
+        printf("%s\n", arm_opcodes[index].instructionString);
+        return;
+      }
+      ++index;
+    }
+    /* no match in ARM instructions, check coproc instructions. */
+    index = 0;
+    while (index<INDEX_OF(arm_coproc_opcodes))
+    {
+      if ( (instr & arm_coproc_opcodes[index].mask) == arm_coproc_opcodes[index].value)
+      {
+        printf("%s\n", arm_coproc_opcodes[index].instructionString);
+        return;
+      }
+      ++index;
+    }
+    // could not match the instruction in coproc as well! lunch time...
+    printf("decoder: dumpInstr: undefined instruction found: %08x\n", (u32int)instr);
+    DIE_NOW(0, "DIE");
+  }
+}
+
+#else
 
 void dumpInstrString(u32int instr)
 {
@@ -435,34 +666,28 @@ void dumpInstrString(u32int instr)
       {
         break;
       }
-      printf((char*)arm_opcodes[index].instructionString);
-      printf("\n");
+      printf("%s\n", arm_opcodes[index].instructionString);
       return;
     }
-    else
-    {
-      index = index + 1;
-    }
+    ++index;
   }
-  
-  /* no match in ARM instructions, check coproc instructions. */ 
+
+  /* no match in ARM instructions, check coproc instructions. */
   index = 0;
   while (TRUE)
   {
     if ( (instr & arm_coproc_opcodes[index].mask) == arm_coproc_opcodes[index].value)
     {
-      printf((char*)arm_coproc_opcodes[index].instructionString);
-      printf("\n");
+      printf("%s\n", arm_coproc_opcodes[index].instructionString);
       return;
     }
-    else
-    {
-      index = index + 1;
-    }
+    ++index;
   }
 
   // could not match the instruction in coproc as well! lunch time...
   printf("decoder: dumpInstr: undefined instruction found: %08x\n", (u32int)instr);
   DIE_NOW(0, "DIE");
 }
+
+#endif /* CONFIG_THUMB2 */
 

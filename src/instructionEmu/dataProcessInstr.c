@@ -39,19 +39,26 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
   if (conditionMet)
   {
     // set-flags case is tricky! depends on guest mode.
-    u32int setFlags = (instr & 0x00100000);
+    u32int setFlags = (instr & 0x00100000); // S bit on intruction binary respresentation
     // source operand1
     u32int regSrc = (instr & 0x000F0000) >> 16;
-    // source operand2 - register or immediate?    
-    u32int regOrImm = instr & 0x02000000;
+    // source operand2 - register or immediate?
+    u32int regOrImm = instr & 0x02000000; // 1 = imm, 0 = reg
     if (regOrImm != 0)
     {
-      // source operand2 immediate: pc = regSrc + ror(immediate)
+      // source operand2 immediate: pc = regSrc +/- ror(immediate)
       u32int imm12 = instr & 0x00000FFF;
       switch (opType)
       {
         case ADD:
           nextPC = loadGuestGPR(regSrc, context) + armExpandImm12(imm12);
+          break;
+        case SUB:
+          nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
+          if (regSrc == 0xF)
+          {
+            nextPC += 8;
+          }
           break;
         default:
           DIE_NOW(context, "invalid arithLogicOp opType");
@@ -72,8 +79,18 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
         switch (opType)
         {
           case ADD:
-            nextPC = loadGuestGPR(regSrc, context) +
-               shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+            nextPC = loadGuestGPR(regSrc, context) + shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+            if (regSrc == 0xF)
+            {
+              nextPC += 8;
+            }
+            break;
+          case SUB:
+            nextPC = loadGuestGPR(regSrc, context) - shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+            if (regSrc == 0xF)
+            {
+              nextPC += 8;
+            }
             break;
           case MOV:
             // cant be shifted - mov shifted reg is a pseudo instr
@@ -137,21 +154,41 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
       }
     }
     context->R15 = nextPC;
+#ifdef CONFIG_THUMB2
+    /*
+     * FIXME: Niels: WHY ??
+     * Did you mean interworking bit ?
+     */
+    // clear thumb bit if needed
+    nextPC &= ~0x1;
+#endif
     return nextPC;
   }
   else
   {
-	#ifdef CONFIG_BLOCK_COPY
-    nextPC = context->PCOfLastInstruction + 4;
-    #else
-    nextPC = context->R15 + 4;
-    #endif
+#ifdef CONFIG_BLOCK_COPY
+    nextPC = context->PCOfLastInstruction;
+#else
+    nextPC = context->R15;
+#endif
+#ifdef CONFIG_THUMB2
+    if (context->CPSR & T_BIT)
+    {
+      nextPC += 2;
+    }
+    else
+#endif
+    {
+      nextPC += 4;
+    }
     return nextPC;
   }
 }
+
 /*********************************/
 /* AND Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
+
 #ifdef CONFIG_BLOCK_COPY
 u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
@@ -161,6 +198,7 @@ u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int andInstruction(GCONTXT * context)
 {
+  printf("%08x\n",context->endOfBlockInstr);
   DIE_NOW(context, "Unimplemented AND trap");
 }
 /*********************************/
@@ -195,6 +233,7 @@ u32int rscInstruction(GCONTXT * context)
   DIE_NOW(0, "rscInstruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "Unimplemented RSC trap");
 }
+
 /*********************************/
 /* SUB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
@@ -208,9 +247,14 @@ u32int* subPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int subInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "subInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented SUB trap");
+#ifdef CONFIG_BLOCK_COPY
+  DIE_NOW(context, "subInstruction is executed but not yet checked for blockCopyCompatibility");
+#else
+  OPTYPE opType = SUB;
+  return arithLogicOp(context, opType, "SUB instr ");
+#endif
 }
+
 /*********************************/
 /* SBC Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
@@ -381,10 +425,7 @@ u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
     *(currBlockCopyCacheAddr++)=instruction;
 
     return currBlockCopyCacheAddr;
-
   }
-
-
 }
 #endif
 
@@ -394,6 +435,7 @@ u32int movInstruction(GCONTXT * context)
   OPTYPE opType = MOV;
   return arithLogicOp(context, opType, "MOV instr ");
 }
+
 /*********************************/
 /* MVN Rd, Rs                    */
 /*********************************/

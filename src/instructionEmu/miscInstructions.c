@@ -1,11 +1,20 @@
 #include "common/debug.h"
 
-#include "vm/omap35xx/intc.h"
+#include "guestManager/scheduler.h"
+
+#ifdef CONFIG_THUMB2
+#include "guestManager/guestExceptions.h"
+#endif
 
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/miscInstructions.h"
 
-#include "guestManager/scheduler.h"
+#ifdef CONFIG_THUMB2
+#include "instructionEmu/decoder.h"
+#endif
+
+#include "vm/omap35xx/intc.h"
+
 
 
 #ifdef CONFIG_BLOCK_COPY
@@ -39,27 +48,48 @@ u32int bxInstruction(GCONTXT * context)
 {
   DIE_NOW(0, "bxInstruction is executed but not yet checked for blockCopyCompatibility");
   u32int instr = context->endOfBlockInstr;
-  
   u32int nextPC = 0;
-  u32int instrCC = (instr >> 28) & 0xF;
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-  if (!evalCC(instrCC, cpsrCC))
+  u32int regDest = 0;
+
+#ifdef CONFIG_THUMB2
+  if(context->CPSR & T_BIT)
   {
-      #ifdef CONFIG_BLOCK_COPY
-        nextPC = context->PCOfLastInstruction + 4;
-        #else
-        nextPC = context->R15+4;
-        #endif
+    //this has NO 32-bit Thumb encoding
+    regDest = (instr & 0x0078) >> 3;
+    nextPC = loadGuestGPR(regDest, context);
+    // return to ARM if needed
+    if ((nextPC & 0x1) == 0)
+    {
+      context->CPSR &= ~T_BIT;
+    }
+  }
+  else
+#endif
+  {
+    u32int instrCC = (instr >> 28) & 0xF;
+    u32int cpsrCC = (context->CPSR >> 28) & 0xF;
+    if (!evalCC(instrCC, cpsrCC))
+    {
+#ifdef CONFIG_BLOCK_COPY
+      nextPC = context->PCOfLastInstruction + 4;
+#else
+      nextPC = context->R15+4;
+#endif
       return nextPC;
+    }
+    //check if switching to thumb mode
+    regDest = instr & 0x0000000F;
+    nextPC = loadGuestGPR(regDest, context);
+    if (nextPC & 0x1)
+    {
+#ifdef CONFIG_THUMB2
+      context->CPSR |= T_BIT;
+#else
+      DIE_NOW(context, "BX Rm switching to Thumb. disabled (CONFIG_THUMB2 not set)\n");
+#endif
+    }
   }
-  //check if switching to thumb mode
-  u32int regDest = (instr & 0x0000000F);
-  u32int addr = loadGuestGPR(regDest, context);
-  if (addr & 0x1)
-  {
-    DIE_NOW(context, "BX Rm switching to Thumb. Unimplemented\n");
-  }
-  nextPC = addr & 0xFFFFFFFE;
+  nextPC &= ~0x1;
   return nextPC;
 }
 
@@ -536,7 +566,7 @@ u32int cpsInstruction(GCONTXT * context)
             // context->guestFiqPending = TRUE; : IMPLEMENT!!
             DIE_NOW(context, "cps: FIQ pending!! unimplemented.");
           }
-        } 
+        }
         oldCpsr &= ~CPSR_FIQ_BIT;
       }
     }
@@ -559,7 +589,7 @@ u32int cpsInstruction(GCONTXT * context)
           {
             context->guestIrqPending = FALSE;
           }
-        } 
+        }
         oldCpsr |= CPSR_IRQ_BIT;
       }
       if (affectF)
@@ -567,7 +597,7 @@ u32int cpsInstruction(GCONTXT * context)
         if ( (oldCpsr & CPSR_FIQ_BIT) == 0)
         {
           DIE_NOW(context, "Guest disabling fiqs globally!");
-        } 
+        }
         oldCpsr |= CPSR_FIQ_BIT;
       }
     }
@@ -663,6 +693,12 @@ u32int* qaddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32i
 u32int qaddsubxInstruction(GCONTXT * context)
 {
   DIE_NOW(context, "QADDSUBX unfinished\n");
+  return 0;
+}
+
+u32int ubxInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "UBXT unfinished\n");
   return 0;
 }
 
@@ -1194,8 +1230,45 @@ u32int* sxthPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
 
 u32int sxthInstruction(GCONTXT * context)
 {
-  DIE_NOW(context, "SXTH unfinished\n");
-  return 0;
+  u32int instr = context->endOfBlockInstr;
+  u32int instrCC = (instr >> 28) & 0xF;
+  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
+  u32int regSrc = (instr & 0xF);
+  u32int regDest = (instr & 0x0000F000) >> 12;
+  u32int rotate = (instr & 0x00000C00) >> 10;
+  u32int value = 0;
+  bool conditionMet;
+  if (regDest == 15 || regSrc == 15)
+  {
+    DIE_NOW(0,"Rd/Rm is R15. Unpredictable behaviour\n");
+  }
+  conditionMet = evalCC(instrCC, cpsrCC);
+  if (conditionMet)
+  {
+    /* load the least 16bits from the source register */
+    value=(loadGuestGPR(regSrc,context) & 0x0000FFFF);
+    /* ARM7-A : page 729 */
+    switch (rotate)
+    {
+      case 0:
+        value = rorVal(value, SXTH_R0);
+        break;
+      case 1:
+        value = rorVal(value, SXTH_R8);
+        break;
+      case 2:
+        value = rorVal(value, SXTH_R16);
+        break;
+      case 3:
+        value = rorVal(value, SXTH_R24);
+        break;
+    }
+    /* Extend it to 32bit */
+    value = value<<16;
+    /* Store it */
+    storeGuestGPR(regDest,value,context);
+  }
+  return context->R15 + 4;
 }
 
 #ifdef CONFIG_BLOCK_COPY
@@ -1685,13 +1758,91 @@ u32int* blxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int blxInstruction(GCONTXT * context)
 {
+#ifdef CONFIG_THUMB2
+  u32int instr = 0;
+  u32int nextPC = 0;
+  u32int sign = 0;
+  u32int instrCC = 0;
+  u32int cpsrCC = 0;
+  u32int regDest = 0;
+  u32int value = 0;
+  u32int target = 0;
+  u32int currPC = 0;
+  bool thumb32 = 0;
+  if(context->CPSR & T_BIT)
+  {
+    //We are in Thumb mode, so we will probably want to switch back to ARM
+    instr = context->endOfBlockInstr;
+    thumb32=isThumb32(instr);
+    sign = ( (instr & 0x04000000 ) >> 26 );
+    u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1;// NOT ( I1 EOR sign )
+    u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;// NOT ( I2 EOR sign )
+    target = (sign<<22)|(i1<<21)|(i2<<20)|(((instr & 0x03FF0000)>>16)<<10)| ( (instr & 0x000007FE) >>1);
+    // ensure target is word aligned
+    //target &= ~0x1;
+    target = target << 2;// <-- remember me
+    if(sign !=0)
+    {
+      target |= 0xFF000000;
+    }
+    // set ARM mode (disable Thumb bit)
+    context->CPSR &= ~T_BIT;
+
+    // In Thumb-32, R15 points to the first halfword, so LR must be 4+1(T) bytes ahead
+    currPC = context->R15;
+    storeGuestGPR(14, currPC+3,context);//next instr + 1
+    // currPC has to be word aligned
+    currPC += 2;
+    if( (currPC & 0x3) >= 0x2)
+    {
+      currPC &= ~0x3;
+    }
+    nextPC = currPC + target;
+    //printf("Thumb BLX: %08x, LR: %08x, Target: %08x\n", instr, currPC+3,nextPC);
+  }
+  else
+  {
+    instr = context->endOfBlockInstr;
+    sign = 0x00800000 & instr;
+    instrCC = (instr >> 28) & 0xF;
+    cpsrCC = (context->CPSR >> 28) & 0xF;
+    regDest = (instr & 0x0000000F); // holds dest addr and mode bit
+    value = loadGuestGPR(regDest, context);
+    target = instr & 0x00FFFFFF;
+    if ((instr & 0xfe000000) == 0xfa000000)
+    {
+      if (sign != 0)
+      {
+        // target negative!
+        target |= 0xFF000000;
+      }
+      target = target << 2;
+
+      // blx <imm24>
+      context->CPSR |= T_BIT;
+      storeGuestGPR(14, context->R15+4,context);
+
+      nextPC = context->R15 + 8 + target;
+      return nextPC;
+    }
+    if (!evalCC(instrCC, cpsrCC))
+    {
+      nextPC = context->R15 + 4;
+      return nextPC;
+    }
+
+    // link register
+    storeGuestGPR(14, context->R15+4, context);
+    nextPC = value & 0xFFFFFFFE;
+  }
+#else
   u32int instr = context->endOfBlockInstr;
   if ((instr & 0xfe000000) == 0xfa000000)
   {
       DIE_NOW(context, "BLX #imm24 switching to Thumb. Unimplemented.\n");
   }
   u32int nextPC = 0;
-  
+
   u32int instrCC = (instr >> 28) & 0xF;
   u32int cpsrCC  = (context->CPSR >> 28) & 0xF;
   if (!evalCC(instrCC, cpsrCC))
@@ -1717,6 +1868,7 @@ u32int blxInstruction(GCONTXT * context)
   storeGuestGPR(14, context->R15+4, context);
 #endif
   nextPC = value & 0xFFFFFFFE;
+#endif
   return nextPC;
 }
 
@@ -1903,6 +2055,12 @@ u32int smlalttInstruction(GCONTXT * context)
   return 0;
 }
 
+u32int smullInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "SMULL unfinished\n");
+  return 0;
+}
+
 #ifdef CONFIG_BLOCK_COPY
 u32int* smulbbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
@@ -2059,7 +2217,7 @@ u32int msrInstruction(GCONTXT * context)
   u32int regOrImm =   (instr & 0x02000000); // if 1 then imm12, 0 then Reg
   u32int cpsrOrSpsr = (instr & 0x00400000); // if 0 then cpsr, !0 then spsr
   u32int fieldMsk =   (instr & 0x000F0000) >> 16;
-  
+
   u32int value = 0;
   u32int nextPC = 0;
   u32int cpsrCC = (context->CPSR >> 28) & 0xF;
@@ -2072,7 +2230,7 @@ u32int msrInstruction(GCONTXT * context)
     #endif
     return nextPC;
   }
-  
+
   if (regOrImm == 0)
   {
     // register case
@@ -2089,10 +2247,12 @@ u32int msrInstruction(GCONTXT * context)
     u32int immediate = instr & 0x00000FFF;
     value = armExpandImm12(immediate);
   }
+
 #ifdef CONFIG_BLOCK_COPY_NO_IRQ
   /* Set maskbit for interrupts */
   value = value | 0x80;
 #endif
+
   u32int oldValue = 0;
   if (cpsrOrSpsr == 0)
   {
@@ -2121,9 +2281,9 @@ u32int msrInstruction(GCONTXT * context)
         break;
       case CPSR_MODE_USER:
       case CPSR_MODE_SYSTEM:
-      default: 
+      default:
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
-    } 
+    }
   }
   // [3:0] field mask:
   // - bit 0: set control field (mode bits/interrupt bits)
@@ -2133,11 +2293,13 @@ u32int msrInstruction(GCONTXT * context)
   // control field [7-0] set.
   if ( ((fieldMsk & 0x1) == 0x1) && (guestInPrivMode(context)) )
   {
+#ifndef CONFIG_THUMB2
     // check for thumb toggle!
     if ((oldValue & CPSR_THUMB_BIT) != (value & CPSR_THUMB_BIT))
     {
           DIE_NOW(context, "MSR toggle THUMB bit.");
     }
+#endif
     // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x000000FF);
     // clear old fields!
@@ -2152,8 +2314,8 @@ u32int msrInstruction(GCONTXT * context)
     if ((oldValue & CPSR_ENDIANNESS) != (value & CPSR_ENDIANNESS))
     {
       DIE_NOW(context, "MSR toggle endianess bit.");
-    } 
-    // separate the field we're gonna update from new value 
+    }
+    // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x0000FF00);
     // clear old fields!
     oldValue &= 0xFFFF00FF;
@@ -2163,7 +2325,7 @@ u32int msrInstruction(GCONTXT * context)
   if ( ((fieldMsk & 0x4) == 0x4) && (guestInPrivMode(context)) )
   {
     // status field: reserved and GE[3:0]
-    // separate the field we're gonna update from new value 
+    // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x00FF0000);
     // clear old fields!
     oldValue &= 0xFF00FFFF;
@@ -2173,7 +2335,7 @@ u32int msrInstruction(GCONTXT * context)
   if ((fieldMsk & 0x8) == 0x8)
   {
     // condition flags, q, it, J. Dont need to be priv to change those thus no check
-    // separate the field we're gonna update from new value 
+    // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0xFF000000);
     // clear old fields!
     oldValue &= 0x00FFFFFF;
@@ -2211,9 +2373,9 @@ u32int msrInstruction(GCONTXT * context)
         break;
       case CPSR_MODE_USER:
       case CPSR_MODE_SYSTEM:
-      default: 
+      default:
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
-    } 
+    }
   }
 #ifdef CONFIG_BLOCK_COPY
 nextPC = context->PCOfLastInstruction + 4;
@@ -2327,7 +2489,238 @@ u32int* bPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * cu
 
 u32int bInstruction(GCONTXT * context)
 {
-  //No register arguments Just change nextPC
+#ifdef CONFIG_THUMB2
+  u32int instr = context->endOfBlockInstr;
+  u32int instrCC = 0;
+  u32int sign = 0;
+  u32int link = 0;
+  int target = 0;
+  u32int nextPC = 0;
+  bool thumb32 = FALSE;
+  bool bl32 = FALSE;
+
+  #ifdef ARM_INSTR_TRACE
+  printf("Branch instr %08x @ %08x\n", instr, context->R15);
+  #endif
+  // Are we on Thumb?
+  if (context->CPSR & T_BIT)
+  {
+    thumb32 = isThumb32(instr);
+    //printf("Branch instr %08x @ %08x\n", instr, context->R15);
+
+    // WHAT A MESS! -> ARM-A manual : page 344
+    // B and BL have different encoding. Find which one is it
+    if(thumb32)
+    {
+      if( (instr & 0x00004000))
+      {
+        bl32 = TRUE;
+      }
+      else
+      {
+        bl32 = FALSE;
+      }
+      if(!bl32)
+      {
+        sign = ( (instr & 0x04000000 ) >> 26 );
+        if((instr & 0x00001000) == 0)
+        {
+          instrCC = (0x03C00000 & instr) >> 20;
+          u8int j1 = (instr & 0x00002000) >> 13;
+          u8int j2 = (instr & 0x00000800) >> 11;
+          target = (sign<<19)|(j2<<18)|(j1<<17)|(((instr & 0x003F0000)>>16)<<11)|(instr & 0x000007FF);
+
+        }
+        else //T4 encoding
+        {
+          u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1; // NOT ( I1 EOR sign )
+          u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;// NOT ( I2 EOR sign )
+          target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
+        }
+
+        link = 0x00005000 & instr;
+        if (link == 0x00005000 || link == 0x00004000)
+        {
+          link = 1;
+        }
+        else
+        {
+          link = 0;
+        }
+      }
+      else // BL thumb 32
+      {
+        sign = ( (instr & 0x04000000 ) >> 26 );
+        u8int i1 = ( ~ ( ( (instr & 0x00002000) >> 13 ) ^ sign ) ) & 0x1; // NOT ( I1 EOR sign )
+        u8int i2 = ( ~ ( ( (instr & 0x00000800) >> 11 ) ^ sign ) ) & 0x1;// NOT ( I2 EOR sign )
+        target = (sign<<23)|(i1<<22)|(i2<<21)|(((instr & 0x03FF0000)>>16)<<11)|(instr & 0x000007FF);
+      }
+    }
+    else // thumb 16bit
+    {
+      /* Yet again we have two encodings *sigh*
+       * 1101<cond><8-bit imm> or
+       * 11100<11-bit imm>
+       */
+      if((instr & 0xF000) == 0xD000) // 8-bit imm
+      {
+        //printf("Conditional Branch decoded\n");
+        instrCC = (0x0F00 & instr) >> 8;
+        target = 0x00FF & instr;
+        if(instrCC == 0xE)
+        {
+          DIE_NOW(0,"Thumb-16 bit branch instruction is UNDEFINED. Unimplemented");
+        }
+        else if(instrCC == 0xF)
+        {
+          DIE_NOW(0,"Thumb-16 bit branch instruction is an SVC. Transition Unimplemented");
+        }
+        target = 0x00FF & instr;
+        sign = target >> 7;
+      }
+      else if((instr & 0xF000) == 0xE000) // 11-bit imm
+      {
+        target = instr & 0x07FF;
+        sign = target >> 10;
+      }
+    }
+  }
+  // ARM Mode
+  else
+  {
+    instr = context->endOfBlockInstr;
+    instrCC = (0xF0000000 & instr) >> 28;
+    sign = 0x00800000 & instr;
+    link = 0x0F000000 & instr;
+    target = 0x00FFFFFF & instr;
+    if (link == 0x0B000000)
+    {
+      link = 1;
+    }
+    else
+    {
+      link = 0;
+    }
+  }
+
+  // sign extend 24 bit imm to 32 bit offset
+  if (sign != 0)
+  {
+    // target negative!
+    if(context->CPSR & T_BIT)
+    {
+      //printf("instr:%08x, negative\n",instr);
+      if(thumb32)
+      {
+        target |= 0xFF000000;
+      }
+      else
+      {
+        //which thumb 16 bit is?
+        if((instr & 0x0000D000) == 0x0000D000)// 8-bit imm
+        {
+          target |= 0xFFFFFF00;
+        }
+        else //11-bit
+        {
+          target |= 0xFFFFFE00;
+        }
+      }
+    }
+    else //ARM
+    {
+      target |= 0xFF000000;
+    }
+  }
+
+  if(context->CPSR & T_BIT)
+  {
+    target = target << 1;
+  }
+  else
+  {
+    target = target << 2;
+  }
+
+  /* eval condition flags only for Thumb-2 first encoding or ARM encoding*/
+  if( (context->CPSR & T_BIT && thumb32 && !bl32 && (instr & 0x00001000) == 0)
+      || !(context->CPSR & T_BIT)
+      || (context->CPSR & T_BIT && ( (instr & 0xF000) == 0xD000 ) && !thumb32 ) )
+  {
+    u32int cpsrCC = (context->CPSR >> 28) & 0xF;
+    bool conditionMet = evalCC(instrCC, cpsrCC);
+    if (conditionMet)
+    {
+      // condition met
+      u32int currPC = context->R15;
+      if(context->CPSR & T_BIT)
+      {
+        // FIXME: This seems like a horrible workaround ( or not -.- )
+        if(thumb32)
+        {
+          currPC += 2;
+        }
+        else
+        {
+          currPC += 4;
+        }
+        nextPC = currPC + target;
+        //printf("new PC: %08x\n",nextPC);
+      }
+      else
+      {
+        currPC += 8;
+        nextPC = currPC + target;
+      }
+      if (link)
+      {
+        if(context->CPSR & T_BIT)
+        {
+          storeGuestGPR(14, context->R15+5, context);
+        }
+        else
+        {
+          storeGuestGPR(14, context->R15+4, context);
+        }
+      }
+      //printf("Next PC %08x\n");
+    }
+    else
+    {
+      // condition not met!
+      if(context->CPSR & T_BIT)
+      {
+        // FIXME: What is this? Is this a pipeline fix or a workaround?
+        nextPC = context->R15 + 2;
+      }
+      else
+      {
+        nextPC = context->R15 + 4;
+      }
+      //printf("Next PC %08x\n", nextPC);
+    }
+
+  }
+  // Thumb-2 second encoding were no CC flags exist. Store to R14 anyway
+  // OR thumb-2 16-bit encoding ( no link )
+  else
+  {
+    //printf("Target: %08x\n",target);
+    if(bl32)
+    {
+      //printf("Preserve R14=%08x\n",context->R15+2);
+      storeGuestGPR(14, context->R15+3, context);
+    }
+    u32int currPC = context->R15;
+    currPC += 2;
+    if(!thumb32)
+    {
+      //pipeline fix
+      currPC += 2;
+    }
+    nextPC = currPC + target;
+  }
+#else
   u32int instr = context->endOfBlockInstr;
   u32int instrCC = 0xF0000000 & instr;
   u32int sign = 0x00800000 & instr;
@@ -2359,31 +2752,32 @@ u32int bInstruction(GCONTXT * context)
   if (conditionMet)
   {
     // condition met
-    #ifdef CONFIG_BLOCK_COPY
+#ifdef CONFIG_BLOCK_COPY
     u32int currPC = context->PCOfLastInstruction;
-    #else
+#else
     u32int currPC = context->R15;
-    #endif
+#endif
     currPC += 8;
     nextPC = currPC + target;
     if (link)
     {
-      #ifdef CONFIG_BLOCK_COPY
+#ifdef CONFIG_BLOCK_COPY
       storeGuestGPR(14, context->PCOfLastInstruction+4, context);
-      #else
+#else
       storeGuestGPR(14, context->R15+4, context);
-      #endif
+#endif
     }
   }
   else
   {
     // condition not met!
-    #ifdef CONFIG_BLOCK_COPY
+#ifdef CONFIG_BLOCK_COPY
     nextPC = context->PCOfLastInstruction + 4;
-    #else
+#else
     nextPC = context->R15+4;
-    #endif
+#endif
   }
+#endif
   return nextPC;
 }
 
@@ -2398,11 +2792,7 @@ u32int* svcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 u32int svcInstruction(GCONTXT * context)
 {
   DIE_NOW(0, "svcInstruction is executed but not yet checked for blockCopyCompatibility");
-#ifdef ARM_INSTR_TRACE
-  u32int instr = context->endOfBlockInstr;
-  printf("SVC instr %08x @ %08x\n", instr, context->R15);
-#endif
-  return 0;
+  DIE_NOW(0,"I shouldn't be here");
 }
 
 #ifdef CONFIG_BLOCK_COPY
@@ -2416,5 +2806,9 @@ u32int* undefinedPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32
 u32int undefinedInstruction(GCONTXT * context)
 {
   invalidInstruction(context->endOfBlockInstr, "undefined instruction");
-  return 0;
+}
+
+u32int itInstruction(GCONTXT * context)
+{
+  DIE_NOW(0,"Unimplemented If-Then-Else Instruction");
 }
