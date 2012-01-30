@@ -16,6 +16,13 @@ u16int * currAddress = 0;
 #endif
 
 
+#ifdef CONFIG_THUMB2
+static u32int decodeTopLevelCategory(GCONTXT *context, u32int instr, u16int* currAddress);
+#else
+static u32int decodeTopLevelCategory(GCONTXT *context, u32int instr);
+#endif /* CONFIG_THUMB2 */
+
+
 /* Top level instruction categories */
 struct TopLevelCategory categories[] = {
 // identify unconditionals first!
@@ -746,17 +753,16 @@ struct instruction32bit t32LoadStoreDoubleExclusiveInstructions[] = {
 #endif
 
 #ifdef CONFIG_THUMB2
-struct instruction32bit * decodeInstr(u32int instr,u16int *currInstrAddress)
+struct instruction32bit * decodeInstr(GCONTXT *context, u32int instr,u16int *currInstrAddress)
 #else
-struct instruction32bit * decodeInstr(u32int instr)
+struct instruction32bit * decodeInstr(GCONTXT *context, u32int instr)
 #endif
 {
 #ifdef CONFIG_THUMB2
-  GCONTXT* gc = getGuestContext();
   currAddress = currInstrAddress;
-  u32int catCode = decodeTopLevelCategory(instr, currAddress);
+  u32int catCode = decodeTopLevelCategory(context, instr, currAddress);
   // Check the status of T bit again
-  if(gc->CPSR & T_BIT)
+  if(context->CPSR & T_BIT)
   {
   switch(instr & THUMB32<<16)
   {
@@ -856,7 +862,7 @@ struct instruction32bit * decodeInstr(u32int instr)
   }
   else
 #else
-  u32int catCode = decodeTopLevelCategory(instr);
+  u32int catCode = decodeTopLevelCategory(context, instr);
 #endif
   {
     switch(catCode)
@@ -889,71 +895,56 @@ struct instruction32bit * decodeInstr(u32int instr)
 }
 
 #ifdef CONFIG_THUMB2
-u32int decodeTopLevelCategory(u32int instr, u16int *currAddress)
+static u32int decodeTopLevelCategory(GCONTXT *context, u32int instr, u16int *currAddress)
 #else
-u32int decodeTopLevelCategory(u32int instr)
+static u32int decodeTopLevelCategory(GCONTXT *context, u32int instr)
 #endif
 {
-#ifdef CONFIG_THUMB2
-  GCONTXT* gc = getGuestContext();
-#endif
   int index = 0;
   /* LOOP through all instruction encoding categories */
 #ifdef CONFIG_THUMB2
-  DEBUG(DECODER, "Decoding: %08x@%08x\n", instr, (u32int)currAddress);
+  DEBUG(DECODER, "Decoding: %.8x@%p" EOL, instr, currAddress);
 #endif
   while (TRUE)
   {
 #ifdef CONFIG_THUMB2
-  if(gc->CPSR & T_BIT)
+  if (context->CPSR & T_BIT)
   {
     // we are in Thumb mode
-    switch(instr & THUMB32<<16){
+    switch (instr & THUMB32 << 16)
+    {
       // Extend definitions to 32-bit
       case THUMB32_1<<16:
       case THUMB32_2<<16:
       case THUMB32_3<<16:
-      {
-        if ( (instr & t32categories[index].mask) == t32categories[index].value)
+        if ((instr & t32categories[index].mask) == t32categories[index].value)
         {
           return t32categories[index].categoryCode;
         }
-        else
-        {
-          index++;
-        }
+        index++;
         break;
-      }
       default:
-      {
         // instr is 32 bit but we need to fetch only the lower half word
-        instr=0x0000FFFF & instr;
-        if ( (instr & t16categories[index].mask) == t16categories[index].value)
+        instr = 0x0000FFFF & instr;
+        if ((instr & t16categories[index].mask) == t16categories[index].value)
         {
           return t16categories[index].categoryCode;
         }
-        else
-        {
-          index++;
-        }
+        index++;
         break;
-      }
     }
-    }
+  }
   // We should be in ARM mode
-  else
+    else
 #endif
-  {
-      if ( (instr & categories[index].mask) == categories[index].value)
+    {
+      if ((instr & categories[index].mask) == categories[index].value)
       {
         return categories[index].categoryCode;
       }
-      else
-      {
-        index = index + 1;
-      }
+      index++;
+    }
   }
-   }
   return UNDEFINED_CATEGORY;
 }
 

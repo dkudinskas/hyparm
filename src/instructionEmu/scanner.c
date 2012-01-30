@@ -186,9 +186,9 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     instruction = *currAddress;
   }
 #if defined(CONFIG_DECODER_TABLE_SEARCH)
-  while ((decodedInstruction = decodeInstr(instruction,currhwAddress))->replaceCode == 0)
+  while ((decodedInstruction = decodeInstr(gc, instruction,currhwAddress))->replaceCode == 0)
 #elif defined(CONFIG_DECODER_AUTO)
-  while ((decodedInstruction = decodeInstr(instruction)) == 0)
+  while ((decodedInstruction = decodeInstr(gc, instruction)) == 0)
 #endif
   {
     // Thumb-2 is moving by 2 bytes at a time
@@ -524,7 +524,7 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   while (1)//Just keep on scanning untill function scanBlock returns.
   {
     //binary & checks types -> do a cast of function pointer to u32int
-    if((decodedInstruction = decodeInstr(instruction))->replaceCode == 1)
+    if((decodedInstruction = decodeInstr(gc, instruction))->replaceCode == 1)
     {  
 		//Critical instruction
       /*----------------Install HdlFunct----------------*/
@@ -725,16 +725,16 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
     currAddress++;
     instruction = *currAddress;
   } // decoding while ends
-# else  //not CONFIG_BLOCK_COPY
-# ifdef CONFIG_DECODER_TABLE_SEARCH
-  while ((decodedInstruction = decodeInstr(instruction))->replaceCode == 0)
-# else
-#  ifdef CONFIG_DECODER_AUTO
-  while ((decodedInstruction = decodeInstr(instruction)) == 0)
-#  else
-#   error Decoder must be set!
-#  endif
-# endif
+#else  //not CONFIG_BLOCK_COPY
+#ifdef CONFIG_DECODER_TABLE_SEARCH
+  while ((decodedInstruction = decodeInstr(gc, instruction))->replaceCode == 0)
+#else
+#ifdef CONFIG_DECODER_AUTO
+  while ((decodedInstruction = decodeInstr(gc, instruction)) == 0)
+#else
+#error Decoder must be set!
+#endif
+#endif
   {
     currAddress++;
     instruction = *currAddress;

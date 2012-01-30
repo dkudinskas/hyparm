@@ -10,6 +10,10 @@
 
 extern GCONTXT * getGuestContext(void);
 
+
+static u32int decodeTopLevelCategory(u32int instr);
+
+
 /* Top level instruction categories */
 struct TopLevelCategory categories[] = {
 // identify unconditionals first!
@@ -526,7 +530,7 @@ struct instruction32bit svcCoprocInstructions[] = {
 
 
 
-struct instruction32bit * decodeInstr(u32int instr)
+struct instruction32bit * decodeInstr(GCONTXT *context, u32int instr)
 {
   u32int catCode = decodeTopLevelCategory(instr);
   switch(catCode)
@@ -551,14 +555,14 @@ struct instruction32bit * decodeInstr(u32int instr)
       break;
     case UNDEFINED_CATEGORY:
     default:
-      dumpGuestContext(getGuestContext());
+      dumpGuestContext(context);
       DIE_NOW(0, "decoder: UNDEFINED category");
   }
 
   return 0;
 }
 
-u32int decodeTopLevelCategory(u32int instr)
+static u32int decodeTopLevelCategory(u32int instr)
 {
   int index = 0;
   /* LOOP through all ARM instruction encoding categories */

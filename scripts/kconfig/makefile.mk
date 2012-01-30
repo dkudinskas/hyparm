@@ -49,18 +49,20 @@ defconfig: $(OUTPUT_PATH)/conf
 
 $(KCONFIG_OK): $(KCONFIG_CONFIG)
 	@if [ ! -f $(KCONFIG_AUTOHEADER) -o $(KCONFIG_CONFIG) -nt $(KCONFIG_AUTOHEADER) ]; then \
-	  mkdir -p $(OUTPUT_PATH) \
-	  echo SUBMAKE; \
+	  echo 'MAKE     silentoldconfig'; \
 	  $(MAKE) silentoldconfig; \
 	  touch $@; \
 	fi
 
 silentoldconfig $(KCONFIG_AUTOHEADER) $(KCONFIG_AUTOCONFIG): $(OUTPUT_PATH)/conf $(KCONFIG_DATA) $(KCONFIG_CONFIG)
-	@echo GEN $(KCONFIG_AUTOHEADER)
-	$< $(KCONFIG_DATA) --silentoldconfig
+ifneq ($(VERBOSE),)
+	@echo 'GEN      $(KCONFIG_AUTOHEADER) $(KCONFIG_AUTOCONFIG)'
+endif
+	@$< $(KCONFIG_DATA) --silentoldconfig
 
 $(OUTPUT_PATH)/conf: $(CONF_OBJS)
-	@echo LINK $@: $^
+	@echo 'HOSTLD   $@'
+	@mkdir -p $(OUTPUT_PATH)
 	$(HOSTCC) $(HOSTCFLAGS) $(HOSTCPPFLAGS) -o $@ $^
 
 
@@ -71,29 +73,28 @@ config: nconfig
 menuconfig: nconfig
 
 nconfig: $(OUTPUT_PATH)/nconf
-	$< $(KCONFIG_DATA)
+	@$< $(KCONFIG_DATA)
 
 $(OUTPUT_PATH)/nconf: $(NCONF_OBJS)
-	@echo Link: $@: $^
+	@echo 'HOSTLD   $@'
+	@mkdir -p $(OUTPUT_PATH)
 	@$(HOSTCC) $(HOSTCFLAGS) $(HOSTCPPFLAGS) -o $@ $^ $(NCONF_LDFLAGS)
 
 
 $(KCONFIG_SOURCE_PATH)/%.d: $(KCONFIG_SOURCE_PATH)/%.c
-	@echo HOSTDEP $<
+ifneq ($(VERBOSE),)
+	@echo 'HOSTDEP  $@'
+endif
 	@$(HOSTCC) -M $(HOSTCPPFLAGS) -MP -MT $(patsubst %.c,%.o,$<) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm $@.$$$$
 
 $(KCONFIG_SOURCE_PATH)/%.o: $(KCONFIG_SOURCE_PATH)/%.c
-	@echo HOSTCC  $<
+	@echo 'HOSTCC   $@'
 	@$(HOSTCC) $(HOSTCFLAGS) $(HOSTCPPFLAGS) -c -o $@ $<
 
 
 clean_kconfig:
-	@for file in $(sort $(KCONFIG_DEPS) $(KCONFIG_OBJS)) $(KCONFIG_APPS) $(KCONFIG_AUTOCONFIG) $(KCONFIG_AUTOHEADER) $(KCONFIG_OK); do \
-	  if [ -f $$file ]; then \
-	    echo RM $$file; \
-	    rm $$file || :; \
-	  fi; \
-	done
+	@find $(KCONFIG_SOURCE_PATH) -name '*.[do]' -exec rm {} +
+	@rm $(KCONFIG_APPS) $(KCONFIG_AUTOCONFIG) $(KCONFIG_AUTOHEADER) $(KCONFIG_OK) 2> /dev/null || :
 

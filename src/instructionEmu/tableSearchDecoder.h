@@ -86,17 +86,15 @@ struct instruction16bit
   u16int  mask;
 };
 
-struct instruction32bit * decodeInstr(u32int instr, u16int* currAddress);
-
-u32int decodeTopLevelCategory(u32int instr, u16int* currAddress);
+struct instruction32bit * decodeInstr(GCONTXT *context, u32int instr, u16int* currAddress);
 
 #else
 
-struct instruction32bit * decodeInstr(u32int instr);
-
-u32int decodeTopLevelCategory(u32int instr);
+struct instruction32bit * decodeInstr(GCONTXT *context, u32int instr);
 
 #endif /* CONFIG_THUMB2 */
+
+
 
 
 struct instruction32bit * decodeDataProcMisc(u32int instr);

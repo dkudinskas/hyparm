@@ -8,9 +8,8 @@
 #include "instructionEmu/miscInstructions.h"
 
 
-instructionHandler decodeInstr(u32int instr_word)
+instructionHandler decodeInstr(GCONTXT *context, u32int instr_word)
 {
 #include "autoDecoder.inc"
-	DIE_NOW(0, "autoDecoder: control fell through - BUG !!!");
+  DIE_NOW(context, "autoDecoder: control fell through - BUG !!!");
 }
-
