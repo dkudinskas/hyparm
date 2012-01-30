@@ -958,7 +958,7 @@ int conf_write_autoconf(void)
 
 	for_all_symbols(i, sym) {
 		sym_calc_value(sym);
-		if (!(sym->flags & SYMBOL_WRITE) || !sym->name)
+		if (!sym->name)
 			continue;
 
 		/* write symbol to auto.conf, tristate and header files */
