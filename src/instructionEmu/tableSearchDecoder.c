@@ -906,8 +906,8 @@ u32int decodeTopLevelCategory(u32int instr)
   {
 #ifdef CONFIG_THUMB2
   if(gc->CPSR & T_BIT)
-    {
-      // we are in Thumb mode
+  {
+    // we are in Thumb mode
     switch(instr & THUMB32<<16){
       // Extend definitions to 32-bit
       case THUMB32_1<<16:
@@ -968,7 +968,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
   {
     while (TRUE)
     {
-      if ( (instr & dataProcMiscInstructions_op0[index].mask) == dataProcMiscInstructions_op0[index].value)
+      if ((instr & dataProcMiscInstructions_op0[index].mask) == dataProcMiscInstructions_op0[index].value)
       {
         if (dataProcMiscInstructions_op0[index].mask == 0)
         {
@@ -976,17 +976,14 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
         }
         return &dataProcMiscInstructions_op0[index];
       }
-      else
-      {
-        index++;
-      }
+      index++;
     }
   }
   else
   {
     while (TRUE)
     {
-      if ( (instr & dataProcMiscInstructions_op1[index].mask) == dataProcMiscInstructions_op1[index].value)
+      if ((instr & dataProcMiscInstructions_op1[index].mask) == dataProcMiscInstructions_op1[index].value)
       {
         if (dataProcMiscInstructions_op1[index].mask == 0)
         {
@@ -994,10 +991,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
         }
         return &dataProcMiscInstructions_op1[index];
       }
-      else
-      {
-        index = index + 1;
-      }
+      index++;
     }
   }
 }
@@ -1011,7 +1005,7 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
   u32int index = 0;
   while (TRUE)
   {
-    if ( (instr & loadStoreWordByteInstructions[index].mask) == loadStoreWordByteInstructions[index].value)
+    if ((instr & loadStoreWordByteInstructions[index].mask) == loadStoreWordByteInstructions[index].value)
     {
       if (loadStoreWordByteInstructions[index].mask == 0)
       {
@@ -1019,10 +1013,7 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
       }
       return &loadStoreWordByteInstructions[index];
     }
-    else
-    {
-      index = index + 1;
-    }
+    index++;
   }
 }
 
@@ -1035,7 +1026,7 @@ struct instruction32bit * decodeMedia(u32int instr)
   u32int index = 0;
   while (TRUE)
   {
-    if ( (instr & mediaInstructions[index].mask) == mediaInstructions[index].value)
+    if ((instr & mediaInstructions[index].mask) == mediaInstructions[index].value)
     {
       if (mediaInstructions[index].mask == 0)
       {
@@ -1043,10 +1034,7 @@ struct instruction32bit * decodeMedia(u32int instr)
       }
       return &mediaInstructions[index];
     }
-    else
-    {
-      index = index + 1;
-    }
+    index++;
   }
 }
 
@@ -1059,7 +1047,7 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
   u32int index = 0;
   while (TRUE)
   {
-    if ( (instr & branchBlockTransferInstructions[index].mask) == branchBlockTransferInstructions[index].value)
+    if ((instr & branchBlockTransferInstructions[index].mask) == branchBlockTransferInstructions[index].value)
     {
       if (branchBlockTransferInstructions[index].mask == 0)
       {
@@ -1067,10 +1055,7 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
       }
       return &branchBlockTransferInstructions[index];
     }
-    else
-    {
-      index = index + 1;
-    }
+    index++;
   }
 }
 
@@ -1083,7 +1068,7 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
   u32int index = 0;
   while (TRUE)
   {
-    if ( (instr & svcCoprocInstructions[index].mask) == svcCoprocInstructions[index].value)
+    if ((instr & svcCoprocInstructions[index].mask) == svcCoprocInstructions[index].value)
     {
       if (svcCoprocInstructions[index].mask == 0)
       {
@@ -1091,10 +1076,7 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
       }
       return &svcCoprocInstructions[index];
     }
-    else
-    {
-      index = index + 1;
-    }
+    index++;
   }
 }
 
@@ -1106,7 +1088,7 @@ struct instruction32bit * decodeUnconditional(u32int instr)
   u32int index = 0;
   while (TRUE)
   {
-    if ( (instr & unconditionalInstructions[index].mask) == unconditionalInstructions[index].value)
+    if ((instr & unconditionalInstructions[index].mask) == unconditionalInstructions[index].value)
     {
       if (unconditionalInstructions[index].mask == 0)
       {
@@ -1114,10 +1096,7 @@ struct instruction32bit * decodeUnconditional(u32int instr)
       }
       return &unconditionalInstructions[index];
     }
-    else
-    {
-      index = index + 1;
-    }
+    index++;
   }
 }
 
@@ -1130,7 +1109,7 @@ void dumpInstruction(const char * msg, u32int instr)
 #else
   dumpInstrString(instr);
 #endif
-  printf("\n");
+  printf(EOL);
 }
 
 
