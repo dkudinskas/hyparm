@@ -36,11 +36,14 @@ void doLinuxBoot(GCONTXT *context, image_header_t *imageHeader, u32int loadAddr,
 
   paramTag = (struct tag *)BOARD_PARAMS;
 
-#ifdef CONFIG_DEBUG_STARTUP
-  printf("Current address = %08x\n", currentAddress);
-  printf("Load address = %08x\n", targetAddress);
-  printf("Entry point = %08x\n", entryPoint);
-#endif
+  DEBUG
+    (
+      STARTUP,
+      "Current address = %.8x" EOL
+      "Load address = %.8x" EOL
+      "Entry point = %.8x" EOL,
+      currentAddress, targetAddress, entryPoint
+    );
 
   /* TODO: add virtual addressing startup for the new VM here
   need to create a Global Page table/map for the VM and add mappings for where the kernel is to be copied?
@@ -63,12 +66,8 @@ void doLinuxBoot(GCONTXT *context, image_header_t *imageHeader, u32int loadAddr,
   }
   setup_end_tag();
 
-#ifdef CONFIG_DEBUG_SCANNER_COUNT_BLOCKS
   resetScannerCounter();
-#endif
-#ifdef CONFIG_DEBUG_SCANNER_CALL_SOURCE
   setScanBlockCallSource(SCANNER_CALL_SOURCE_BOOT);
-#endif
   scanBlock(context, entryPoint);
 
   cleanupBeforeLinux();

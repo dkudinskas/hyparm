@@ -889,7 +889,7 @@ struct instruction32bit * decodeInstr(u32int instr)
 }
 
 #ifdef CONFIG_THUMB2
-u32int decodeTopLevelCategory(u32int instr,u16int *currAddress)
+u32int decodeTopLevelCategory(u32int instr, u16int *currAddress)
 #else
 u32int decodeTopLevelCategory(u32int instr)
 #endif
@@ -899,8 +899,8 @@ u32int decodeTopLevelCategory(u32int instr)
 #endif
   int index = 0;
   /* LOOP through all instruction encoding categories */
-#ifdef CONFIG_DEBUG_DECODER
-  printf("Decoding: %08x@%08x\n", instr,(u32int)currAddress);
+#ifdef CONFIG_THUMB2
+  DEBUG(DECODER, "Decoding: %08x@%08x\n", instr, (u32int)currAddress);
 #endif
   while (TRUE)
   {
@@ -959,7 +959,7 @@ u32int decodeTopLevelCategory(u32int instr)
 
 struct instruction32bit * decodeDataProcMisc(u32int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("decodeDataProcMisc", instr);
 #endif
   u32int op = instr & 0x02000000;
@@ -1015,7 +1015,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
 
 struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("decodeLoadStoreWordByte", instr);
 #endif
   u32int index = 0;
@@ -1045,7 +1045,7 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
 
 struct instruction32bit * decodeMedia(u32int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("decodeMedia", instr);
 #endif
   u32int index = 0;
@@ -1075,7 +1075,7 @@ struct instruction32bit * decodeMedia(u32int instr)
 
 struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("decodeBranchBlockTransfer", instr);
 #endif
   u32int index = 0;
@@ -1105,7 +1105,7 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
 
 struct instruction32bit * decodeSvcCoproc(u32int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("decodeSvcCoproc", instr);
 #endif
   u32int index = 0;
@@ -1134,7 +1134,7 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
 
 struct instruction32bit * decodeUnconditional(u32int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("decodeUnconditional", instr);
 #endif
   u32int index = 0;
@@ -1186,7 +1186,7 @@ struct instruction32bit * t32decodeLoadStoreMultiple(u32int instr)
 
 struct instruction32bit * t32decodeLoadStoreDoubleExclusive(u32int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t32decodeLoadStoreDoubleExclusivec %08x\n", instr);
 #endif
   u32int index = 0;
@@ -1212,8 +1212,7 @@ struct instruction32bit * t32decodeLoadStoreDoubleExclusive(u32int instr)
 
 struct instruction32bit * t32decodeDataProc(u32int instr)
 {
-
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t32decodeDataProc", instr);
 #endif
   u32int index = 0;
@@ -1245,7 +1244,7 @@ struct instruction32bit * t32decodeCoproc(u32int instr)
 
 struct instruction32bit * t32decodeBranchMisc(u32int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t32BranchMisc", instr);
 #endif
   u32int index = 0;
@@ -1271,8 +1270,7 @@ struct instruction32bit * t32decodeBranchMisc(u32int instr)
 
 struct instruction32bit * t32decodeStoreSingle(u32int instr)
 {
-
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t32decodeSingleStore", instr);
 #endif
   u32int index = 0;
@@ -1304,8 +1302,7 @@ struct instruction32bit * t32decodeSimdStructLoadStore(u32int instr)
 
 struct instruction32bit * t32decodeLoadByte(u32int instr)
 {
-
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t32decodeLoadByte", instr);
 #endif
   u32int index = 0;
@@ -1331,7 +1328,7 @@ struct instruction32bit * t32decodeLoadByte(u32int instr)
 
 struct instruction32bit * t32decodeLoadHalfWord(u32int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t32LoadHalfWord", instr);
 #endif
   u32int index = 0;
@@ -1363,7 +1360,7 @@ struct instruction32bit * t32decodeLoadWord(u32int instr)
 
 struct instruction32bit * t32decodeMultiply(u32int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t32decodeMultiply", instr);
 #endif
   u32int index = 0;
@@ -1397,7 +1394,7 @@ struct instruction32bit * t32decodeLongMultiply(u32int instr)
 // Thumb-2 16-bit functions
 struct instruction32bit * t16decodeUnconditionals(u16int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t16UnConditional", instr);
 #endif
   u32int index = 0;
@@ -1423,7 +1420,7 @@ struct instruction32bit * t16decodeUnconditionals(u16int instr)
 
 struct instruction32bit * t16decodeConditionalBranchSVC(u16int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t16ConditionalBranchSvc", instr);
 #endif
   u32int index = 0;
@@ -1461,8 +1458,7 @@ struct instruction32bit * t16decodeStoreMultipleRegisters(u16int instr)
 
 struct instruction32bit * t16decodeMisc(u16int instr)
 {
-
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t16decodeMisc", instr);
 #endif
   u32int index = 0;
@@ -1488,7 +1484,7 @@ struct instruction32bit * t16decodeMisc(u16int instr)
 
 struct instruction32bit * t16decodeSPAddr(u16int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t16SPInstruction", instr);
 #endif
   u32int index = 0;
@@ -1514,7 +1510,7 @@ struct instruction32bit * t16decodeSPAddr(u16int instr)
 
 struct instruction32bit * t16decodePCAddr(u16int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t16decodePCAddr", instr);
 #endif
   u32int index = 0;
@@ -1540,7 +1536,7 @@ struct instruction32bit * t16decodePCAddr(u16int instr)
 
 struct instruction32bit * t16decodeLoadStore(u16int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t16decodeLoadStore", instr);
 #endif
   u32int index = 0;
@@ -1566,7 +1562,7 @@ struct instruction32bit * t16decodeLoadStore(u16int instr)
 
 struct instruction32bit * t16decodeLDR(u16int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t16decodeLDR", instr);
 #endif
   u32int index = 0;
@@ -1592,8 +1588,7 @@ struct instruction32bit * t16decodeLDR(u16int instr)
 
 struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr)
 {
-
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t16decodeSpecialBranch", instr);
 #endif
   u32int index = 0;
@@ -1619,7 +1614,7 @@ struct instruction32bit * t16decodeSpecialBranchExchange(u16int instr)
 
 struct instruction32bit * t16decodeDataProc(u16int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t16decodeDataProc", instr);
 #endif
   u32int index = 0;
@@ -1645,7 +1640,7 @@ struct instruction32bit * t16decodeDataProc(u16int instr)
 
 struct instruction32bit * t16decodeArithmetic(u16int instr)
 {
-#ifdef CONFIG_DEBUG_DECODER
+#if (CONFIG_DEBUG_DECODER)
   dumpInstruction("t16decodeArithmetic", instr);
 #endif
   u32int index = 0;
