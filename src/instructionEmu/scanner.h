@@ -56,10 +56,10 @@ void protectScannedBlock(u32int startAddress, u32int endAddress);
 u32int allSrcRegNonPC(u32int instruction);
 #endif
 
-#if (CONFIG_DEBUG_SCANNER_COUNT_BLOCKS)
-void resetScannerCounter(void);
+#ifdef CONFIG_SCANNER_COUNT_BLOCKS
+void resetScanBlockCounter(void);
 #else
-#define resetScannerCounter()
+#define resetScanBlockCounter()
 #endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
 
 #endif

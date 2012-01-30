@@ -83,6 +83,7 @@ config BOARD_TI_PANDA_BOARD
 	bool "Texas Instruments PandaBoard"
 	select ARCH_V7
 	select ARCH_V7_A
+	select ARCH_EXT_SECURITY
 	select CPU_CORTEX_A9
 	select SOC_TI_OMAP_4
 	select SOC_TI_OMAP_4430
@@ -132,8 +133,9 @@ config DEBUG_SCANNER_CALL_SOURCE
   depends on DEBUG_SCANNER
 
 config DEBUG_SCANNER_COUNT_BLOCKS
-  bool "Count number of scanned blocks"
+  bool "Print number of scanned blocks"
   depends on DEBUG_SCANNER
+  select SCANNER_COUNT_BLOCKS
 
 config DEBUG_SCANNER_BLOCK_TRACE
   bool "Print block trace"
@@ -157,7 +159,7 @@ config EMERGENCY_EXCEPTION_VECTOR
   default y
   depends on ARCH_EXT_SECURITY
 
-config HACKS_MARKOS
-	bool "Markos' hacks (exception handlers in startup.s, MSR instruction)"
+config SCANNER_COUNT_BLOCKS
+	bool "Count number of scanned blocks"
 
 endmenu

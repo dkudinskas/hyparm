@@ -66,7 +66,7 @@ void doLinuxBoot(GCONTXT *context, image_header_t *imageHeader, u32int loadAddr,
   }
   setup_end_tag();
 
-  resetScannerCounter();
+  resetScanBlockCounter();
   setScanBlockCallSource(SCANNER_CALL_SOURCE_BOOT);
   scanBlock(context, entryPoint);
 
