@@ -100,7 +100,6 @@ struct guestContext
                               /* This will contain an unconditional branch to begin ofblockCopyCache*/
   u32int PCOfLastInstruction;/*This will contain the value the program counter should have when the last instruction is executing*/
 #endif
-  bool debugFlag;
 };
 
 GCONTXT * allocateGuest(void);

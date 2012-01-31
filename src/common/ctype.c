@@ -1,43 +1,42 @@
 #include "common/ctype.h"
-#include "common/types.h"
 
 
-int isalnum(int c)
+s32int isalnum(s32int c)
 {
   return isalpha(c) || isdigit(c);
 }
 
-int isalpha(int c)
+s32int isalpha(s32int c)
 {
   return islower(c) || isupper(c);
 }
 
-int iscntrl(int c)
+s32int iscntrl(s32int c)
 {
   return (c >= ASCII_CONTROL_BEGIN && c <= ASCII_CONTROL_END) || (c == ASCII_DEL);
 }
 
-int isdigit(int c)
+s32int isdigit(s32int c)
 {
   return c >= ASCII('0') && c <= ASCII('9');
 }
 
-int isgraph(int c)
+s32int isgraph(s32int c)
 {
   return isprint(c) && !isspace(c);
 }
 
-int islower(int c)
+s32int islower(s32int c)
 {
   return c >= ASCII('a') && c <= ASCII('z');
 }
 
-int isprint(int c)
+s32int isprint(s32int c)
 {
   return c >= ASCII_PRINTABLE_BEGIN && c <= ASCII_PRINTABLE_END;
 }
 
-int ispunct(int c)
+s32int ispunct(s32int c)
 {
   switch (c)
   {
@@ -91,7 +90,7 @@ int ispunct(int c)
   }
 }
 
-int isspace(int c)
+s32int isspace(s32int c)
 {
   switch (c)
   {
@@ -107,12 +106,12 @@ int isspace(int c)
   }
 }
 
-int isupper(int c)
+s32int isupper(s32int c)
 {
   return c >= ASCII('A') && c <= ASCII('Z');
 }
 
-int isxdigit(int c)
+s32int isxdigit(s32int c)
 {
   switch (c)
   {
@@ -144,12 +143,12 @@ int isxdigit(int c)
   }
 }
 
-int tolower(int c)
+s32int tolower(s32int c)
 {
   return isupper(c) ? c - ASCII('A') + ASCII('a') : c;
 }
 
-int toupper(int c)
+s32int toupper(s32int c)
 {
   return islower(c) ? c - ASCII('a') + ASCII('A') : c;
 }

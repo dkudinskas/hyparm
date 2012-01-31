@@ -80,7 +80,7 @@ _start:
     CPS     #UND_MODE
     LDR     SP, =undStack
     CPS     #SYS_MODE
-    LDR     SP, =usrStack
+    MOV     SP, #0
     CPS     #SVC_MODE
   .else
     MSR     CPSR_c, #(FIQ_MODE | I_BIT | F_BIT)
@@ -92,7 +92,7 @@ _start:
     MSR     CPSR_c, #(UND_MODE | I_BIT | F_BIT)
     LDR     SP, =undStack
     MSR     CPSR_c, #(SYS_MODE | I_BIT | F_BIT)
-    LDR     SP, =usrStack
+    MOV     SP, #0
     MSR     CPSR_c, #(SVC_MODE | I_BIT | F_BIT)
   .endif
   LDR     SP, =svcStack
@@ -750,26 +750,28 @@ exception_vector:
 guestContextSpace:
   .space 4
 
+
 /*
  * Space allocated in the BSS section is *not* initialized to zero.
  */
 .bss
 
 /*
- * Allocate stack space.
+ * Allocate stack space. Note that stacks grown down, i.e., every PUSH lowers the value of SP, and
+ * every POP increases the value of SP. Hence, labels have to be put after the reserved space.
  *
  * WARNING: EABI requires 8-byte aligned stacks!!!
  */
   .balign 8
-usrStack:
-  .space 1024
+stackSpaceEnd:
+  .space 1024 /* SVC */
 svcStack:
-  .space 1024
+  .space 1024 /* ABT */
 abtStack:
-  .space 1024
+  .space 1024 /* UND */
 undStack:
-  .space 1024
+  .space 1024 /* IRQ */
 irqStack:
-  .space 1024
+  .space 1024 /* FIQ */
 fiqStack:
-  .space 1024
+stackSpaceBegin:

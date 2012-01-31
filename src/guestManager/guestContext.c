@@ -11,9 +11,9 @@
 
 static void initGuestContext(GCONTXT *gContext);
 
-GCONTXT * allocateGuest(void)
+GCONTXT *allocateGuest(void)
 {
-  GCONTXT * context = (GCONTXT*)mallocBytes(sizeof(GCONTXT));
+  GCONTXT *context = (GCONTXT *)mallocBytes(sizeof(GCONTXT));
   if (context == 0)
   {
     DIE_NOW(0, "allocateGuest: Failed to allocate guest context.");
@@ -29,7 +29,7 @@ GCONTXT * allocateGuest(void)
   {
     DIE_NOW(0, "Failed to allocate coprocessor register bank.");
   }
-  memset((void*)coprocRegBank, 0x0, MAX_CRB_SIZE * sizeof(CREG));
+  memset((void*)coprocRegBank, 0, MAX_CRB_SIZE * sizeof(CREG));
   initCRB(coprocRegBank);
 #ifdef GUEST_CONTEXT_DBG
   printf("allocateGuest: Coprocessor register bank at %p" EOL, coprocRegBank);
@@ -75,99 +75,44 @@ static void initGuestContext(GCONTXT *gContext)
 #endif
 
   /* zero context!!! */
-  gContext->R0 = 0;
-  gContext->R1 = 0;
-  gContext->R2 = 0;
-  gContext->R3 = 0;
-  gContext->R4 = 0;
-  gContext->R5 = 0;
-  gContext->R6 = 0;
-  gContext->R7 = 0;
-  gContext->R8 = 0;
-  gContext->R9 = 0;
-  gContext->R10 = 0;
-  gContext->R11 = 0;
-  gContext->R12 = 0;
+
+  memset(gContext, 0, sizeof(GCONTXT));
+
+
   gContext->R13_USR = (u32int)mallocBytes(GUEST_STACK_SIZE);
   if (gContext->R13_USR == 0)
   {
     DIE_NOW(0, "initGuestContext: Failed to allocate guest USR stack.");
   }
-  gContext->R14_USR = 0;
-  gContext->R8_FIQ = 0;
-  gContext->R9_FIQ = 0;
-  gContext->R10_FIQ = 0;
-  gContext->R11_FIQ = 0;
-  gContext->R12_FIQ = 0;
   gContext->R13_FIQ = (u32int)mallocBytes(GUEST_STACK_SIZE);
   if (gContext->R13_FIQ == 0)
   {
     DIE_NOW(0, "initGuestContext: Failed to allocate guest FIQ stack.");
   }
-  gContext->R14_FIQ = 0;
-  gContext->SPSR_FIQ = 0;
   gContext->R13_SVC = (u32int)mallocBytes(GUEST_STACK_SIZE);
   if (gContext->R13_SVC == 0)
   {
     DIE_NOW(0, "initGuestContext: Failed to allocate guest SVC stack.");
   }
-  gContext->R14_SVC = 0;
-  gContext->SPSR_SVC = 0;
   gContext->R13_ABT = (u32int)mallocBytes(GUEST_STACK_SIZE);
   if (gContext->R13_ABT == 0)
   {
     DIE_NOW(0, "initGuestContext: Failed to allocate guest ABT stack.");
   }
-  gContext->R14_ABT = 0;
-  gContext->SPSR_ABT = 0;
   gContext->R13_IRQ = (u32int)mallocBytes(GUEST_STACK_SIZE);
   if (gContext->R13_IRQ == 0)
   {
     DIE_NOW(0, "initGuestContext: Failed to allocate guest IRQ stack.");
   }
-  gContext->R14_IRQ = 0;
-  gContext->SPSR_IRQ = 0;
-  gContext->R13_UND = 0;
   gContext->R13_UND = (u32int)mallocBytes(GUEST_STACK_SIZE);
   if (gContext->R13_UND == 0)
   {
     DIE_NOW(0, "initGuestContext: Failed to allocate guest UND stack.");
   }
-  gContext->R14_UND = 0;
-  gContext->SPSR_UND = 0;
-  gContext->R15 = 0;
   gContext->CPSR = (CPSR_FIQ_BIT | CPSR_IRQ_BIT | CPSR_MODE_SVC);
-  gContext->endOfBlockInstr = 0;
-  gContext->hdlFunct = 0;
-  gContext->coprocRegBank = 0;
-  gContext->blockCache = 0;
-  gContext->virtAddrEnabled = FALSE;
-  gContext->PT_physical = 0;
-  gContext->PT_os = 0;
-  gContext->PT_shadow = 0;
-  gContext->memProt = 0;
-  gContext->guestHighVectorSet = FALSE;
-  gContext->guestUndefinedHandler = 0;
-  gContext->guestSwiHandler = 0;
-  gContext->guestPrefAbortHandler = 0;
-  gContext->guestDataAbortHandler = 0;
-  gContext->guestUnusedHandler = 0;
-  gContext->guestIrqHandler = 0;
-  gContext->guestFiqHandler = 0;
-  gContext->hardwareLibrary = 0;
-  gContext->guestIrqPending = FALSE;
-  gContext->guestDataAbtPending = FALSE;
-  gContext->guestPrefetchAbtPending = FALSE;
-  gContext->guestIdle = FALSE;
 #ifdef GUEST_CONTEXT_DBG
   printf("initGuestContext: Block Trace @ address %08x\n", (u32int)&(gContext->blockHistory));
 #endif
-
-  for (i = 0; i < BLOCK_HISOTRY_SIZE; i++)
-  {
-    gContext->blockHistory[i] = 0;
-  }
-  gContext->debugFlag = FALSE;
 }
 
 void dumpGuestContext(GCONTXT * gc)
@@ -281,7 +226,7 @@ void dumpGuestContext(GCONTXT * gc)
   printf("gc PCOfLastInstruction: %08x\n", (u32int)gc->PCOfLastInstruction);
 #endif
   dumpSdramStats();
-  printf("Debug Flag: %x\n", (u32int)gc->debugFlag);
+
 }
 
 #ifdef CONFIG_BLOCK_COPY

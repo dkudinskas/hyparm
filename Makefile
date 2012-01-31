@@ -123,7 +123,7 @@ $(KCONFIG_CONFIG):
   CPPFLAGS-y := -imacros $(KCONFIG_AUTOHEADER)
   LDFLAGS-y :=
 
-  CFLAGS-$(CONFIG_BUILD_LTO) += -flto -fuse-linker-plugin
+  CFLAGS-$(CONFIG_BUILD_LTO) += -flto=jobserver -fuse-linker-plugin
 
   ifeq ($(CONFIG_BUILD_SAVE_TEMPS),y)
     CFLAGS-y += -save-temps=obj
@@ -241,7 +241,7 @@ ifneq ($(CONFIG_BUILD_LTO),y)
 	@$(LD) -o $@ $(LDFLAGS) $(HYPARM_OBJS)
 else
 	@echo 'CC/GOLD  $@'
-	@$(CC) $(CFLAGS) -nostartfiles -nostdlib -o $@ $(LDFLAGS) $(HYPARM_OBJS)
+	+@$(CC) $(CFLAGS) -nostartfiles -nostdlib -o $@ $(LDFLAGS) $(HYPARM_OBJS)
 endif
 
 

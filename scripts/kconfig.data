@@ -22,8 +22,8 @@ config DECODER_TABLE_SEARCH
 endchoice
 
 config BLOCK_COPY
-	bool "Block copy"
-	depends on DECODER_TABLE_SEARCH
+  bool "Block copy"
+  depends on DECODER_TABLE_SEARCH
 
 endmenu
 
@@ -155,8 +155,8 @@ config MMC
 menu "Hacks"
 
 config BLOCK_COPY_NO_IRQ
-	bool "Disable interrupts"
-	depends on BLOCK_COPY
+  bool "Disable interrupts"
+  depends on BLOCK_COPY
 
 config CLI
   bool "Command-line interface"

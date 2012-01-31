@@ -25,11 +25,11 @@ struct instruction32bit
 };
 
 
-#include "decoder/armTables.inc.c"
+#include "instructionEmu/decoder/armTables.inc.c"
 
 #ifdef CONFIG_THUMB2
-#include "decoder/t16Tables.inc.c"
-#include "decoder/t32Tables.inc.c"
+#include "instructionEmu/decoder/t16Tables.inc.c"
+#include "instructionEmu/decoder/t32Tables.inc.c"
 #endif
 
 
@@ -58,6 +58,7 @@ static instructionHandler decode(struct TopLevelCategory *categories, u32int ins
   {
     table++;
   }
+  DEBUG(DECODER, "decode: instruction = %#.8x, replace = %x, handler = %p" EOL, instruction, table->replace, table->handler);
   /*
    * If the mask is zero at this point, we have hit the end of the decoding table. This means we
    * do not know what to do with this instruction; dump it...

@@ -1,5 +1,5 @@
 #ifndef __COMMON__STDIO_H__
-#define __COMMON__STDIO_H__ 1
+#define __COMMON__STDIO_H__
 
 /*
  * USAGE NOTES
