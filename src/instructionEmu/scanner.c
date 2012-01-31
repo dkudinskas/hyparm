@@ -811,10 +811,13 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   :"r"(currAddress)
   :"memory"
   );
+
+#endif /* CONFIG_BLOCK_COPY */
+#endif /* CONFIG_THUMB2 */
+
   protectScannedBlock(blkStartAddr, (u32int)currAddress);
-#endif
-#endif
 }
+
 
 void protectScannedBlock(u32int startAddress, u32int endAddress)
 {
