@@ -11,6 +11,16 @@ typedef u32int (*instructionHandler)(GCONTXT * context);
 typedef u32int* (*PCHandler)(GCONTXT * context, u32int * instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);
 
 
+instructionHandler decodeArmInstruction(GCONTXT *context, u32int instruction);
+
+
+#ifdef CONFIG_THUMB2
+
+instructionHandler decodeThumbInstruction(GCONTXT *context, u32int instruction);
+
+#endif /* CONFIG_THUMB2 */
+
+
 #ifdef CONFIG_DECODER_TABLE_SEARCH
 # include "instructionEmu/tableSearchDecoder.h"
 #else
