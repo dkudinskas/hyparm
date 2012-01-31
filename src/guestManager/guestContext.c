@@ -12,221 +12,168 @@
 #include "vm/omap35xx/sdram.h"
 
 
-static void initGuestContext(GCONTXT *gContext);
-
-GCONTXT *allocateGuest(void)
+GCONTXT *createGuestContext(void)
 {
+  /*
+   * Allocate guest context
+   */
   GCONTXT *context = (GCONTXT *)mallocBytes(sizeof(GCONTXT));
   if (context == 0)
   {
-    DIE_NOW(0, "allocateGuest: Failed to allocate guest context.");
+    DIE_NOW(NULL, "allocateGuest: Failed to allocate guest context.");
   }
-#ifdef GUEST_CONTEXT_DBG
-  printf("allocateGuest: Guest context at %p" EOL, context);
-#endif
-  initGuestContext(context);
-
-  /* initialise coprocessor register bank */
-  CREG * coprocRegBank = (CREG*)mallocBytes(MAX_CRB_SIZE * sizeof(CREG));
-  if (coprocRegBank == 0)
+  DEBUG(GUEST_CONTEXT, "allocateGuestContext: @ %p; block trace @ %p; initializing..." EOL,
+      context, &(context->blockHistory));
+  /*
+   * Fill entire guest context with zero bytes
+   */
+  memset(context, 0, sizeof(GCONTXT));
+  /*
+   * Set initial values
+   */
+  context->CPSR = (PSR_F_BIT | PSR_I_BIT | PSR_SVC_MODE);
+  /*
+   * Initialise coprocessor register bank
+   */
+  context->coprocRegBank = (CREG *)mallocBytes(MAX_CRB_SIZE * sizeof(CREG));
+  if (context->coprocRegBank == NULL)
   {
     DIE_NOW(0, "Failed to allocate coprocessor register bank.");
   }
-  memset((void*)coprocRegBank, 0, MAX_CRB_SIZE * sizeof(CREG));
-  initCRB(coprocRegBank);
-#ifdef GUEST_CONTEXT_DBG
-  printf("allocateGuest: Coprocessor register bank at %p" EOL, coprocRegBank);
-#endif
-  context->coprocRegBank = coprocRegBank;
-
-
-  /* initialise block cache */
-  BCENTRY * blockCache = (BCENTRY*)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
-  if (blockCache == 0)
+  DEBUG(GUEST_CONTEXT, "allocateGuestContext: coprocessor register bank @ %p" EOL,
+      context->coprocRegBank);
+  initCRB(context->coprocRegBank);
+  /*
+   * Initialise block cache
+   */
+  context->blockCache = (BCENTRY *)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
+  if (context->blockCache == NULL)
   {
     DIE_NOW(0, "Failed to allocate basic block cache");
   }
-  memset((void*)blockCache, 0x0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
-  initialiseBlockCache(blockCache);
-#ifdef GUEST_CONTEXT_DBG
-  printf("allocateGuest: basic block cache at %p" EOL, blockCache);
-#endif
-  context->blockCache = blockCache;
-
-
-  /* initialise virtual hardware devices */
-  device * libraryPtr;
-  if ((libraryPtr = initialiseHardwareLibrary()) == 0)
+  DEBUG(GUEST_CONTEXT, "allocateGuestContext: block cache @ %p" EOL, context->blockCache);
+  memset(context->blockCache, 0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
+  initialiseBlockCache(context->blockCache);
+  /*
+   * Initialise virtual hardware devices
+   */
+  context->hardwareLibrary = initialiseHardwareLibrary();
+  if (context->hardwareLibrary == NULL)
   {
     DIE_NOW(0, "Hardware library initialisation failed.");
   }
-  /* great success. register with guest context */
-  context->hardwareLibrary = libraryPtr;
-
-  /* Setup guest memory protection */
+  /*
+   * Setup guest memory protection
+   */
   context->memProt = initialiseMemoryProtection();
-
   return context;
 }
 
-static void initGuestContext(GCONTXT *gContext)
+void dumpGuestContext(GCONTXT *context)
 {
-  u32int i;
+  printf("============== DUMP GUEST CONTEXT ===============" EOL);
 
-#ifdef GUEST_CONTEXT_DBG
-  printf("initGuestContext: Initializing guest context @ %p\n", gContext);
-#endif
-
-  /* zero context!!! */
-
-  memset(gContext, 0, sizeof(GCONTXT));
-
-
-  gContext->R13_USR = (u32int)mallocBytes(GUEST_STACK_SIZE);
-  if (gContext->R13_USR == 0)
-  {
-    DIE_NOW(0, "initGuestContext: Failed to allocate guest USR stack.");
-  }
-  gContext->R13_FIQ = (u32int)mallocBytes(GUEST_STACK_SIZE);
-  if (gContext->R13_FIQ == 0)
-  {
-    DIE_NOW(0, "initGuestContext: Failed to allocate guest FIQ stack.");
-  }
-  gContext->R13_SVC = (u32int)mallocBytes(GUEST_STACK_SIZE);
-  if (gContext->R13_SVC == 0)
-  {
-    DIE_NOW(0, "initGuestContext: Failed to allocate guest SVC stack.");
-  }
-  gContext->R13_ABT = (u32int)mallocBytes(GUEST_STACK_SIZE);
-  if (gContext->R13_ABT == 0)
-  {
-    DIE_NOW(0, "initGuestContext: Failed to allocate guest ABT stack.");
-  }
-  gContext->R13_IRQ = (u32int)mallocBytes(GUEST_STACK_SIZE);
-  if (gContext->R13_IRQ == 0)
-  {
-    DIE_NOW(0, "initGuestContext: Failed to allocate guest IRQ stack.");
-  }
-  gContext->R13_UND = (u32int)mallocBytes(GUEST_STACK_SIZE);
-  if (gContext->R13_UND == 0)
-  {
-    DIE_NOW(0, "initGuestContext: Failed to allocate guest UND stack.");
-  }
-  gContext->CPSR = (PSR_F_BIT | PSR_I_BIT | PSR_SVC_MODE);
-#ifdef GUEST_CONTEXT_DBG
-  printf("initGuestContext: Block Trace @ address %08x\n", (u32int)&(gContext->blockHistory));
-#endif
-}
-
-void dumpGuestContext(GCONTXT * gc)
-{
-  u32int mode = gc->CPSR & 0x1F;
-  printf("============== DUMP GUEST CONTEXT ===============\n");
-  printf("R0: %08x\n", gc->R0);
-  printf("R1: %08x\n", gc->R1);
-  printf("R2: %08x\n", gc->R2);
-  printf("R3: %08x\n", gc->R3);
-  printf("R4: %08x\n", gc->R4);
-  printf("R5: %08x\n", gc->R5);
-  printf("R6: %08x\n", gc->R6);
-  printf("R7: %08x\n", gc->R7);
-  if ( mode == 0x11 )
-  {
-    printf("R8_FIQ: %08x\n", gc->R8_FIQ);
-    printf("R9_FIQ: %08x\n", gc->R9_FIQ);
-    printf("R10_FIQ: %08x\n", gc->R10_FIQ);
-    printf("R11_FIQ: %08x\n", gc->R11_FIQ);
-    printf("R12_FIQ: %08x\n", gc->R12_FIQ);
-  }
-  else
-  {
-    printf("R8: %08x\n", gc->R8);
-    printf("R9: %08x\n", gc->R9);
-    printf("R10: %08x\n", gc->R10);
-    printf("R11: %08x\n", gc->R11);
-    printf("R12: %08x\n", gc->R12);
-  }
-
-  switch(mode)
+  const char *modeString;
+  u32int *r8 = &(context->R8);
+  u32int *r13 = NULL;
+  u32int *spsr = NULL;
+  switch (context->CPSR & 0x1F)
   {
     case 0x10: // user
     case 0x1F: // system
-      printf("R13_USR: %08x\n", gc->R13_USR);
-      printf("R14_USR: %08x\n", gc->R14_USR);
+      modeString = "USR";
+      r13 = &(context->R13_USR);
       break;
     case 0x11: // fiq
-      printf("R13_FIQ: %08x\n", gc->R13_FIQ);
-      printf("R14_FIQ: %08x\n", gc->R14_FIQ);
-      printf("SPSR_FIQ: %08x\n", gc->SPSR_FIQ);
+      modeString = "FIQ";
+      r8 = &(context->R8_FIQ);
+      r13 = &(context->R13_FIQ);
+      spsr = &(context->SPSR_FIQ);
       break;
     case 0x12: // irq
-      printf("R13_IRQ: %08x\n", gc->R13_IRQ);
-      printf("R14_IRQ: %08x\n", gc->R14_IRQ);
-      printf("SPSR_IRQ: %08x\n", gc->SPSR_IRQ);
+      modeString = "IRQ";
+      r13 = &(context->R13_IRQ);
+      spsr = &(context->SPSR_IRQ);
       break;
     case 0x13: // svc
-      printf("R13_SVC: %08x\n", gc->R13_SVC);
-      printf("R14_SVC: %08x\n", gc->R14_SVC);
-      printf("SPSR_SVC: %08x\n", gc->SPSR_SVC);
+      modeString = "SVC";
+      r13 = &(context->R13_SVC);
+      spsr = &(context->SPSR_SVC);
       break;
     case 0x17: // abort
-      printf("R13_ABT: %08x\n", gc->R13_ABT);
-      printf("R14_ABT: %08x\n", gc->R14_ABT);
-      printf("SPSR_ABT: %08x\n", gc->SPSR_ABT);
+      modeString = "ABT";
+      r13 = &(context->R13_ABT);
+      spsr = &(context->SPSR_ABT);
       break;
     case 0x1B: // undef
-      printf("R13_UND: %08x\n", gc->R13_UND);
-      printf("R14_UND: %08x\n", gc->R14_UND);
-      printf("SPSR_UND: %08x\n", gc->SPSR_UND);
+      modeString = "UND";
+      r13 = &(context->R13_UND);
+      spsr = &(context->SPSR_UND);
       break;
     default:
-      printf("dumpGuestContext: invalid mode in CPSR!\n");
+      modeString = "???";
       return;
   }
 
-  printf("R15: %08x\n", gc->R15);
-  printf("CPSR: %08x\n", gc->CPSR);
-  printf("endOfBlockInstr: %08x\n", gc->endOfBlockInstr);
+  printf(
+      "R0:   0x%.8x     R1:   0x%.8x     R2:   0x%.8x     R3:   0x%.8x" EOL
+      "R4:   0x%.8x     R5:   0x%.8x     R6:   0x%.8x     R7:   0x%.8x" EOL
+      "R8:   0x%.8x     R9:   0x%.8x     R10:  0x%.8x     R11:  0x%.8x" EOL
+      "R12:  0x%.8x     SP:   0x%.8x     LR:   0x%.8x     PC:   0x%.8x" EOL,
+      context->R0, context->R1, context->R2, context->R3,
+      context->R4, context->R5, context->R6, context->R7,
+      *r8, *(r8 + 1), *(r8 + 2), *(r8 + 3),
+      *(r8 + 4), r13 ? *r13 : 0, r13 ? *(r13 + 1) : 0, context->R15
+      );
+
+  printf("Mode: %s     CPSR: 0x%.8x", modeString, context->CPSR);
+  if (spsr)
+  {
+    printf("     SPSR: 0x%.8x", *spsr);
+  }
+  printf(EOL);
+
+  printf("endOfBlockInstr: %08x\n", context->endOfBlockInstr);
 #ifdef CONFIG_THUMB2
-  printf("endOfBlockHalfInstr: %08x\n", gc->endOfBlockHalfInstr);
+  printf("endOfBlockHalfInstr: %08x\n", context->endOfBlockHalfInstr);
 #endif
-  printf("handler function addr: %08x\n", (u32int)gc->hdlFunct);
+  printf("handler function addr: %08x\n", (u32int)context->hdlFunct);
 
   /* Virtual Memory */
-  printf("guest OS virtual addressing enabled: %x\n", gc->virtAddrEnabled);
-  printf("guest OS Page Table: %08x\n", (u32int)gc->PT_os);
-  printf("guest OS Page Table (real): %08x\n", (u32int)gc->PT_os_real);
-  printf("guest OS shadow Page Table: %08x\n", (u32int)gc->PT_shadow);
-  printf("guest physical Page Table: %08x\n", (u32int)gc->PT_physical);
-  printf("high exception vector flag: %x\n", gc->guestHighVectorSet);
+  printf("guest OS virtual addressing enabled: %x\n", context->virtAddrEnabled);
+  printf("guest OS Page Table: %08x\n", (u32int)context->PT_os);
+  printf("guest OS Page Table (real): %08x\n", (u32int)context->PT_os_real);
+  printf("guest OS shadow Page Table: %08x\n", (u32int)context->PT_shadow);
+  printf("guest physical Page Table: %08x\n", (u32int)context->PT_physical);
+  printf("high exception vector flag: %x\n", context->guestHighVectorSet);
   printf("registered exception vector:\n");
-  printf("Und: %08x\n", gc->guestUndefinedHandler);
-  printf("Swi: %08x\n", gc->guestSwiHandler);
-  printf("Pabt: %08x\n", gc->guestPrefAbortHandler);
-  printf("Dabt: %08x\n", gc->guestDataAbortHandler);
-  printf("Unused: %08x\n", gc->guestUnusedHandler);
-  printf("IRQ: %08x\n", gc->guestIrqHandler);
-  printf("FIQ: %08x\n", gc->guestFiqHandler);
+  printf("Und: %08x\n", context->guestUndefinedHandler);
+  printf("Swi: %08x\n", context->guestSwiHandler);
+  printf("Pabt: %08x\n", context->guestPrefAbortHandler);
+  printf("Dabt: %08x\n", context->guestDataAbortHandler);
+  printf("Unused: %08x\n", context->guestUnusedHandler);
+  printf("IRQ: %08x\n", context->guestIrqHandler);
+  printf("FIQ: %08x\n", context->guestFiqHandler);
   printf("Hardware library: not core dumping just yet\n");
-  printf("Interrupt pending: %x\n", gc->guestIrqPending);
-  printf("Data abort pending: %x\n", gc->guestDataAbtPending);
-  printf("Prefetch abort pending: %x\n", gc->guestPrefetchAbtPending);
-  printf("Guest idle: %x\n", gc->guestIdle);
-  printf("Block cache at: %08x\n", (u32int)gc->blockCache);
+  printf("Interrupt pending: %x\n", context->guestIrqPending);
+  printf("Data abort pending: %x\n", context->guestDataAbtPending);
+  printf("Prefetch abort pending: %x\n", context->guestPrefetchAbtPending);
+  printf("Guest idle: %x\n", context->guestIdle);
+  printf("Block cache at: %08x\n", (u32int)context->blockCache);
 
   int i = 0;
   printf("Block Trace:\n");
   for (i = BLOCK_HISOTRY_SIZE-1; i >= 0; i--)
   {
-    printf("%x: %08x\n", i, gc->blockHistory[i]);
+    printf("%x: %08x\n", i, context->blockHistory[i]);
 
   }
 #ifdef CONFIG_BLOCK_COPY
   /* BlockCache with copied code */
-  printf("gc blockCopyCache: %08x\n", (u32int)gc->blockCopyCache);
-  printf("gc blockCopyCacheEnd: %08x\n", (u32int)gc->blockCopyCacheEnd);
-  printf("gc blockCopyCacheLastUsedLine: %08x\n", (u32int)gc->blockCopyCacheLastUsedLine);
-  printf("gc PCOfLastInstruction: %08x\n", (u32int)gc->PCOfLastInstruction);
+  printf("gc blockCopyCache: %08x\n", (u32int)context->blockCopyCache);
+  printf("gc blockCopyCacheEnd: %08x\n", (u32int)context->blockCopyCacheEnd);
+  printf("gc blockCopyCacheLastUsedLine: %08x\n", (u32int)context->blockCopyCacheLastUsedLine);
+  printf("gc PCOfLastInstruction: %08x\n", (u32int)context->PCOfLastInstruction);
 #endif
   dumpSdramStats();
 

@@ -108,7 +108,7 @@ void main(s32int argc, char *argv[])
   initialiseFrameTable();
 
   /* initialize guest context */
-  GCONTXT *context = allocateGuest();
+  GCONTXT *context = createGuestContext();
   setGuestContext(context);
 
 #ifdef CONFIG_BLOCK_COPY

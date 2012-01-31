@@ -10,12 +10,9 @@
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/memoryProtection.h"
 
-// uncomment me for guestContext debug:
-#define GUEST_CONTEXT_DBG
 
 #define BLOCK_HISOTRY_SIZE     5
 
-#define GUEST_STACK_SIZE    1024
 
 struct guestContext;
 typedef struct guestContext GCONTXT;
@@ -102,7 +99,7 @@ struct guestContext
 #endif
 };
 
-GCONTXT * allocateGuest(void);
+GCONTXT *createGuestContext(void);
 
 void dumpGuestContext(GCONTXT * gc);
 
@@ -114,6 +111,6 @@ void registerBlockCopyCache(GCONTXT *gc, u32int * blockCopyCache, u32int size);
  * Gets the guest context pointer.
  * Defined in startup.s!
  */
-GCONTXT * getGuestContext(void);
+extern GCONTXT *getGuestContext(void);
 
 #endif

@@ -1248,7 +1248,7 @@ u32int msrInstruction(GCONTXT * context)
   {
     // extension field: async abt, endianness, IT[7:2]
     // check for endiannes toggle!
-    if ((oldValue & CPSR_ENDIANNESS) != (value & CPSR_ENDIANNESS))
+    if ((oldValue & PSR_E_BIT) != (value & PSR_E_BIT))
     {
       DIE_NOW(context, "MSR toggle endianess bit.");
     }

@@ -1,4 +1,5 @@
 #include "common/debug.h"
+#include "common/memFunctions.h"
 
 #include "instructionEmu/commonInstrFunctions.h"
 
@@ -14,12 +15,7 @@ void initCRB(CREG * crb)
   printf("Initializing coprocessor reg bank @ address %08x\n", (u32int)crb);
 #endif
 
-  // nullify all registers
-  for (i = 0; i < MAX_CRB_SIZE; i++)
-  {
-    crb[i].value = 0;
-    crb[i].valid = FALSE;
-  }
+  memset(crb, 0, MAX_CRB_SIZE * sizeof(CREG));
 
   /* MIDR:
    * main ID register: CPU idenification including implementor code

@@ -92,7 +92,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     context->blockHistory[i] = context->blockHistory[i-1];
   }
   context->blockHistory[0] = nextPC;
-
   context->R15 = nextPC;
 
   // deliver interrupts
@@ -101,15 +100,15 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
    */
   if (context->guestIrqPending)
   {
-    if ((context->CPSR & CPSR_IRQ_DIS) == 0)
+    if ((context->CPSR & PSR_I_BIT) == 0)
     {
       deliverInterrupt(context);
     }
   }
 
-  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = 0x%x\n", nextPC);
+  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = 0x%x" EOL, nextPC);
 
-  if ((context->CPSR & CPSR_MODE) != CPSR_MODE_USR)
+  if ((context->CPSR & PSR_MODE) != PSR_USR_MODE)
   {
     // guest in privileged mode! scan...
     setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
@@ -138,11 +137,11 @@ GCONTXT *dataAbort(GCONTXT *context)
       // Check if the addr we have faulted on is caused by
       // a memory protection the hypervisor has enabled
       DFSR dfsr = getDFSR();
-      bool isPrivAccess = (context->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
+      bool isPrivAccess = (context->CPSR & PSR_MODE) != PSR_USR_MODE;
       if (context->virtAddrEnabled)
       {
 #ifndef CONFIG_BLOCK_COPY
-        if ( shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
+        if (shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
         {
           deliverDataAbort(context);
           setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION);
@@ -160,7 +159,7 @@ GCONTXT *dataAbort(GCONTXT *context)
       {
         // ONLY move to the next instruction, if the guest hasn't aborted...
 #ifdef CONFIG_THUMB2
-        if(context->CPSR & PSR_T_BIT)
+        if (context->CPSR & PSR_T_BIT)
         {
           context->R15 = context->R15 + 2;
         }
@@ -187,7 +186,7 @@ GCONTXT *dataAbort(GCONTXT *context)
        * Markos: I think this means that the guest was trying to write within its
        * allowed memory area in user mode
        */
-      bool isPrivAccess = (context->CPSR & CPSR_MODE) == CPSR_MODE_USR ? FALSE : TRUE;
+      bool isPrivAccess = (context->CPSR & PSR_MODE) != PSR_USR_MODE;
       if (shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
       {
         deliverDataAbort(context);
