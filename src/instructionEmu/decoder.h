@@ -20,15 +20,4 @@ instructionHandler decodeThumbInstruction(GCONTXT *context, u32int instruction);
 
 #endif /* CONFIG_THUMB2 */
 
-
-#ifdef CONFIG_DECODER_TABLE_SEARCH
-# include "instructionEmu/tableSearchDecoder.h"
-#else
-# ifdef CONFIG_DECODER_AUTO
-#  include "instructionEmu/autoDecoder.h"
-# else
-#  error Decoder must be set!
-# endif
-#endif
-
 #endif

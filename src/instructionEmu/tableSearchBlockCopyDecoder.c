@@ -6,9 +6,7 @@
 #include "instructionEmu/dataMoveInstr.h"
 #include "instructionEmu/dataProcessInstr.h"
 #include "instructionEmu/miscInstructions.h"
-
-
-extern GCONTXT * getGuestContext(void);
+#include "instructionEmu/tableSearchBlockCopyDecoder.h"
 
 
 static u32int decodeTopLevelCategory(u32int instr);

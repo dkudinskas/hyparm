@@ -35,7 +35,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
     /*
      * Guest was executing in Thumb mode
      */
-    instr = decodeThumbInstr((u16int *)(context->R15));
+    instr = fetchThumbInstr((u16int *)(context->R15));
     eobInstrBackup = context->endOfBlockInstr;
     eobHalfInstrBackup = context->endOfBlockHalfInstr;
 

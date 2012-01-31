@@ -43,7 +43,7 @@ my %ignoreMap =
 print "Executing pre-commit hook\n";
 
 # Initial commit: diff against an empty tree object
-$diffIndexAgainst='4b825dc642cb6eb9a060e54bf8d69288fbee4904' if system('git rev-parse --verify HEAD >/dev/null 2>&1');
+$diffIndexAgainst = '4b825dc642cb6eb9a060e54bf8d69288fbee4904' if system('git rev-parse --verify HEAD >/dev/null 2>&1');
 
 # Find all objects staged for the next commit
 open $handle, "git diff-index --cached $diffIndexAgainst | tr -d '\r' |";
@@ -64,6 +64,8 @@ close $handle;
 # For all objects, do some basic checks
 for my $id (keys %stagedObjects)
 {
+  # Skip deleted objects (staged ID = all zeros)
+  next if $id =~ /^0{40}$/;
   my $name = $stagedObjects{$id};
   my $ignore = '';
   foreach (keys %ignoreMap)

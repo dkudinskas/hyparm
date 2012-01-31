@@ -10,6 +10,10 @@
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/scanner.h"
 
+#ifdef CONFIG_BLOCK_COPY
+#include "instructionEmu/tableSearchBlockCopyDecoder.h"
+#endif
+
 #include "memoryManager/mmu.h"
 #include "memoryManager/pageTable.h"
 
@@ -139,6 +143,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     //But also the PC of the last instruction of the block should be set
     context->PCOfLastInstruction = (u32int)bcEntry->endAddress;
 #endif
+
     return;
   }
 
@@ -147,6 +152,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
   {
     scanThumbBlock(context, (void *)startAddress, cacheIndex);
   }
+  else
 #endif /* CONFIG_THUMB2 */
   {
 #ifdef CONFIG_BLOCK_COPY
@@ -156,7 +162,6 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 #endif
   }
 }
-
 
 #ifndef CONFIG_BLOCK_COPY
 
@@ -606,7 +611,7 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
       if (blockCopyCacheSize > 0xFFFF)
       {
         printf("blockCache: ADD[%08x] start@%08x end@%08x hdlPtr %08x eobInstr %08x "
-          "blockCopyCacheSize %08x blockCopyCache@%08x\n", cacheIndex, startAddress,
+          "blockCopyCacheSize %08x blockCopyCache@%08x\n", cacheIndex, (u32int)startAddress,
           (u32int)currAddress, (u32int)context->hdlFunct, context->endOfBlockInstr,
           blockCopyCacheSize, (u32int)blockCopyCacheStartAddress);
       }
