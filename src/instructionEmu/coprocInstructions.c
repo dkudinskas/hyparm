@@ -28,14 +28,12 @@ u32int mrcInstruction(GCONTXT * context)
   u32int instr = context->endOfBlockInstr;
 
   int instrCC = (instr >> 28) & 0xF;
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-  bool conditionMet = evalCC(instrCC, cpsrCC);
 
 #ifdef COPROC_INSTR_TRACE
   printf("MRC instr %08x @ %08x\n", instr, context->R15);
 #endif
 
-  if (conditionMet)
+  if (evaluateConditionCode(context, instrCC))
   {
     u32int coprocNum = (instr & 0x00000F00) >> 8;
     if (coprocNum == 0xF)
@@ -75,14 +73,12 @@ u32int mcrInstruction(GCONTXT * context)
   u32int instr = context->endOfBlockInstr;
 
   int instrCC = (instr >> 28) & 0xF;
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
-  bool conditionMet = evalCC(instrCC, cpsrCC);
 
 #ifdef COPROC_INSTR_TRACE
   printf("MCR instr %08x @ %08x\n", instr, context->R15);
 #endif
 
-  if (conditionMet)
+  if (evaluateConditionCode(context, instrCC))
   {
     u32int coprocNum = (instr & 0x00000F00) >> 8;
     if (coprocNum == 0xF)

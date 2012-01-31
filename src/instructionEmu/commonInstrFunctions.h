@@ -26,11 +26,8 @@ u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int *  instructionAddr, u3
 #endif
 
 
-/* a function to evaluate if guest is in priviledge mode or user mode */
-bool guestInPrivMode(GCONTXT * context);
-
 /* a function to evaluate if a condition value is satisfied */
-bool evalCC(u32int instrCC, u32int cpsrCC);
+bool evaluateConditionCode(GCONTXT *context, u32int conditionCode);
 
 /* function to store a register value, evaluates modes. */
 void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context);

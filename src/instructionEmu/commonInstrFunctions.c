@@ -1,3 +1,4 @@
+#include "common/bit.h"
 #include "common/debug.h"
 
 #include "cpuArch/constants.h"
@@ -25,9 +26,7 @@ u32int zeroBits(u32int instruction, u32int startbit){
       DIE_NOW(0, "zeroBits not implemented for this startbitvalue");
   }
 }
-#endif
 
-#ifdef CONFIG_BLOCK_COPY
 /* This will save the PC corresponding to instructionAddress in reg. instructionAddress is the original address of the instruction */
 u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * currBlockCopyCacheAddr, u32int reg  )
 {
@@ -61,8 +60,7 @@ u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * cur
   //Return the current BlockCopyCacheAddr so that the PCfunct that called this function knows where to continue.
   return currBlockCopyCacheAddr;
 }
-#endif
-#ifdef CONFIG_BLOCK_COPY
+
 /*
  * standardImmRegRSR is a function that is used for instructions that have 3 flavors:
  *     -(immediate)       <=> bit 25 == 1
@@ -167,8 +165,7 @@ u32int* standardImmRegRSR(GCONTXT * context, u32int *  instructionAddr, u32int *
   }
 
 }
-#endif
-#ifdef CONFIG_BLOCK_COPY
+
 /*
  * Similar to standardImmRegRSR but there is no destination register which makes it
  * impossible to use the same trick.  A scratch register is needed.
@@ -235,112 +232,48 @@ u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int *  instructionAddr, u3
 
   return currBlockCopyCacheAddr;
 }
+
 #endif
 
-bool guestInPrivMode(GCONTXT * context)
+bool evaluateConditionCode(GCONTXT *context, u32int conditionCode)
 {
-  u32int modeField = context->CPSR & PSR_MODE;
-  return (modeField == PSR_USR_MODE) ? FALSE : TRUE;
-}
-
-
-bool evalCC(u32int instrCC, u32int cpsrCC)
-{
-  switch(instrCC)
+  switch (conditionCode)
   {
-    case CC_EQ: // Z set
-      if ((cpsrCC & CC_Z_FLAG) == CC_Z_FLAG)
-      {
-        return TRUE;
-      }
-      break;
-    case CC_NE: // Z clear
-      if ((cpsrCC & CC_Z_FLAG) == 0)
-      {
-        return TRUE;
-      }
-      break;
-    case CC_HS: // C set
-      if ((cpsrCC & CC_C_FLAG) == CC_C_FLAG)
-      {
-        return TRUE;
-      }
-      break;
-    case CC_LO: // C clear
-      if ((cpsrCC & CC_C_FLAG) == 0)
-      {
-        return TRUE;
-      }
-      break;
-    case CC_MI: // N set
-      if ((cpsrCC & CC_N_FLAG) == CC_N_FLAG)
-      {
-        return TRUE;
-      }
-      break;
-    case CC_PL: // N clear
-      if ((cpsrCC & CC_N_FLAG) == 0)
-      {
-        return TRUE;
-      }
-      break;
-    case CC_VS: // V set
-      if ((cpsrCC & CC_V_FLAG) == CC_V_FLAG)
-      {
-        return TRUE;
-      }
-      break;
-    case CC_VC: // V clear
-      if ((cpsrCC & CC_V_FLAG) == 0)
-      {
-        return TRUE;
-      }
-      break;
-    case CC_HI: // C set and Z clear
-      if ( ((cpsrCC & CC_C_FLAG) == CC_C_FLAG) && ((cpsrCC & CC_Z_FLAG) == 0) )
-      {
-        return TRUE;
-      }
-      break;
-    case CC_LS: // C clear or Z set
-      if ( ((cpsrCC & CC_C_FLAG) == 0) || ((cpsrCC & CC_Z_FLAG) == CC_Z_FLAG) )
-      {
-        return TRUE;
-      }
-      break;
-    case CC_GE: //  N equals V
-      if ( ((cpsrCC >> 3) & CC_V_FLAG) == (cpsrCC & CC_V_FLAG) )
-      {
-        return TRUE;
-      }
-      break;
-    case CC_LT: // N is not equals to V
-      if ( ((cpsrCC >> 3) & CC_V_FLAG) != (cpsrCC & CC_V_FLAG) )
-      {
-        return TRUE;
-      }
-      break;
-    case CC_GT: // Z clear and N equals V
-      if ( ((cpsrCC & CC_Z_FLAG) == 0) &&
-         ( ((cpsrCC >> 3) & CC_V_FLAG) == (cpsrCC & CC_V_FLAG) ) )
-      {
-        return TRUE;
-      }
-      break;
-    case CC_LE: // Z set or N is not equal to V
-      if ( ((cpsrCC & CC_Z_FLAG) == CC_Z_FLAG) ||
-         ( ((cpsrCC >> 3) & CC_V_FLAG) != (cpsrCC & CC_V_FLAG) ) )
-      {
-        return TRUE;
-      }
-      break;
+    case CC_EQ:
+      return context->CPSR & PSR_CC_FLAG_Z_BIT;
+    case CC_NE:
+      return !(context->CPSR & PSR_CC_FLAG_Z_BIT);
+    case CC_HS:
+      return context->CPSR & PSR_CC_FLAG_C_BIT;
+    case CC_LO:
+      return !(context->CPSR & PSR_CC_FLAG_C_BIT);
+    case CC_MI:
+      return context->CPSR & PSR_CC_FLAG_N_BIT;
+    case CC_PL:
+      return !(context->CPSR & PSR_CC_FLAG_N_BIT);
+    case CC_VS:
+      return context->CPSR & PSR_CC_FLAG_V_BIT;
+    case CC_VC:
+      return !(context->CPSR & PSR_CC_FLAG_V_BIT);
+    case CC_HI:
+      return (context->CPSR & PSR_CC_FLAG_C_BIT) && !(context->CPSR & PSR_CC_FLAG_Z_BIT);
+    case CC_LS:
+      return !(context->CPSR & PSR_CC_FLAG_C_BIT) || (context->CPSR & PSR_CC_FLAG_Z_BIT);
+    case CC_GE:
+      return TEST_BITS_EQUAL(context->CPSR, PSR_CC_FLAG_N_BIT, PSR_CC_FLAG_V_BIT);
+    case CC_LT:
+      return TEST_BITS_NOT_EQUAL(context->CPSR, PSR_CC_FLAG_N_BIT, PSR_CC_FLAG_V_BIT);
+    case CC_GT:
+      return !(context->CPSR & PSR_CC_FLAG_Z_BIT)
+          && TEST_BITS_EQUAL(context->CPSR, PSR_CC_FLAG_N_BIT, PSR_CC_FLAG_V_BIT);
+    case CC_LE:
+      return (context->CPSR & PSR_CC_FLAG_Z_BIT)
+          || TEST_BITS_NOT_EQUAL(context->CPSR, PSR_CC_FLAG_N_BIT, PSR_CC_FLAG_V_BIT);
     case CC_AL:
       return TRUE;
-    case CC_NV:
+    default:
       return FALSE;
   }
-  // if we reached this, condition not met or cc was never!
-  return FALSE;
 }
 
 /* function to store a register value, evaluates modes. */

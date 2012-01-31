@@ -15,7 +15,6 @@ void invalidDataProcTrap(const char * msg, GCONTXT * gc)
 u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
 {
   u32int instr = context->endOfBlockInstr;
-  u32int cpsrCC = (context->CPSR >> 28) & 0xF;
 #ifdef CONFIG_BLOCK_COPY
   u32int nextPC = context->PCOfLastInstruction;
 #else
@@ -39,8 +38,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
 #endif
 
   int instrCC = (instr >> 28) & 0xF;
-  bool conditionMet = evalCC(instrCC, cpsrCC);
-  if (conditionMet)
+  if (evaluateConditionCode(context, instrCC))
   {
     // set-flags case is tricky! depends on guest mode.
     u32int setFlags = (instr & 0x00100000); // S bit on intruction binary respresentation

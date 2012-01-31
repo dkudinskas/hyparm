@@ -101,8 +101,7 @@ u32int strInstruction(GCONTXT * context)
     baseAddress = loadGuestGPR(regDst, context);
     valueToStore = loadGuestGPR(regSrc, context);
 
-    u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-    if (!evalCC(condcode, cpsrCC))
+    if (!evaluateConditionCode(context, condcode))
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef DATA_MOVE_TRACE
@@ -365,8 +364,7 @@ u32int strbInstruction(GCONTXT * context)
     offsetAddress = 0;
     baseAddress = 0;
     valueToStore = 0;
-    u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-    if (!evalCC(condcode, cpsrCC))
+    if (!evaluateConditionCode(context, condcode))
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -577,8 +575,7 @@ u32int strhInstruction(GCONTXT * context)
     regDst = (instr & 0x000F0000) >> 16; // Destination address
     regSrc = (instr & 0x0000F000) >> 12; // Source value from this register...
 
-    u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-    if (!evalCC(condcode, cpsrCC))
+    if (!evaluateConditionCode(context, condcode))
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -785,8 +782,7 @@ u32int stmInstruction(GCONTXT * context)
     regList = instr & 0x0000FFFF;
     baseAddress = loadGuestGPR(baseReg, context);
 
-    u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-    if (!evalCC(condcode, cpsrCC))
+    if (!evaluateConditionCode(context, condcode))
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -970,8 +966,7 @@ u32int strdInstruction(GCONTXT * context)
     printf("STRD instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
 
-    u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-    if (!evalCC(condcode, cpsrCC))
+    if (!evaluateConditionCode(context, condcode))
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -1107,8 +1102,7 @@ u32int strexInstruction(GCONTXT * context)
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
 
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
+  if (!evaluateConditionCode(context, condcode))
   {
     // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -1161,8 +1155,7 @@ u32int strexbInstruction(GCONTXT * context)
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
 
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
+  if (!evaluateConditionCode(context, condcode))
   {
     // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -1210,8 +1203,7 @@ u32int strexdInstruction(GCONTXT * context)
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
 
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
+  if (!evaluateConditionCode(context, condcode))
   {
     // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -1271,8 +1263,7 @@ u32int strexhInstruction(GCONTXT * context)
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
 
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
+  if (!evaluateConditionCode(context, condcode))
   {
     // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -1401,8 +1392,7 @@ u32int ldrhInstruction(GCONTXT * context)
       // cannot load halfword into PC!!
       DIE_NOW(0, "LDRH Rd=PC UNPREDICTABLE case.");
     }
-    u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-    if (!evalCC(condcode, cpsrCC))
+    if (!evaluateConditionCode(context, condcode))
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -1601,8 +1591,7 @@ u32int ldrbInstruction(GCONTXT * context)
       DIE_NOW(0, "LDRB: cannot load a single byte into PC!");
     }
 
-    u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-    if (!evalCC(condcode, cpsrCC))
+    if (!evaluateConditionCode(context, condcode))
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -1793,8 +1782,7 @@ u32int ldrInstruction(GCONTXT * context)
     regDst = (instr & 0x0000F000) >> 12; // Destination - load to this
     offsetAddress = 0;
     baseAddress = 0;
-    u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-    if (!evalCC(condcode, cpsrCC))
+    if (!evaluateConditionCode(context, condcode))
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -2033,8 +2021,7 @@ u32int ldmInstruction(GCONTXT * context)
       DIE_NOW(0, "LDM UNPREDICTABLE: base=PC or no registers in list");
     }
 
-    u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-    if (!evalCC(condcode, cpsrCC))
+    if (!evaluateConditionCode(context, condcode))
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -2202,8 +2189,7 @@ u32int ldrdInstruction(GCONTXT * context)
   printf("LDRD instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
 
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
+  if (!evaluateConditionCode(context, condcode))
   {
     // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -2336,8 +2322,7 @@ u32int ldrexInstruction(GCONTXT * context)
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
 
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
+  if (!evaluateConditionCode(context, condcode))
   {
     // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -2381,8 +2366,7 @@ u32int ldrexbInstruction(GCONTXT * context)
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
 
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
+  if (!evaluateConditionCode(context, condcode))
   {
     // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -2428,8 +2412,7 @@ u32int ldrexdInstruction(GCONTXT * context)
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
 
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
+  if (!evaluateConditionCode(context, condcode))
   {
     // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
@@ -2471,8 +2454,7 @@ u32int ldrexhInstruction(GCONTXT * context)
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
 
-  u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
-  if (!evalCC(condcode, cpsrCC))
+  if (!evaluateConditionCode(context, condcode))
   {
     // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
