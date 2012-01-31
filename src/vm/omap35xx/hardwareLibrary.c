@@ -20,9 +20,7 @@
 
 device * initialiseHardwareLibrary()
 {
-#ifdef HARDWARE_LIB_DBG
-  printf("Initialising device library..." EOL);
-#endif
+  DEBUG(VP_OMAP_35XX_LIBRARY, "Initialising device library..." EOL);
 
   // top level device, everything hangs on it
   device * topLevelBus = (device*)mallocBytes(sizeof(device));
@@ -538,9 +536,7 @@ void initialiseDevice(device * dev, const char * devName, bool isBus,
                       u32int addrStart, u32int addrEnd,
                       device * parent, LOAD_FUNCTION ldFn, STORE_FUNCTION stFn)
 {
-#ifdef HARDWARE_LIB_DBG
-  printf("Initialising device: %s" EOL, devName);
-#endif
+  DEBUG(VP_OMAP_35XX_LIBRARY, "Initialising device: %s" EOL, devName);
 
   int index = 0;
   dev->deviceName = devName;
@@ -584,9 +580,7 @@ bool attachDevice(device * parent, device * child)
     child->parentDevice = parent;
     parent->attachedDevices[parent->nrOfAttachedDevs] = child;
     parent->nrOfAttachedDevs++;
-#ifdef HARDWARE_LIB_DBG
-    printf("Attached %s to %s" EOL, child->deviceName, parent->deviceName);
-#endif
+    DEBUG(VP_OMAP_35XX_LIBRARY, "Attached %s to %s" EOL, child->deviceName, parent->deviceName);
     return TRUE;
   }
   return FALSE;

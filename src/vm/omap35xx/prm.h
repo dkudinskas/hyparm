@@ -1,12 +1,10 @@
-#ifndef __HARDWARE__PRM_H__
-#define __HARDWARE__PRM_H__
+#ifndef __VM__OMAP_35XX__PRM_H__
+#define __VM__OMAP_35XX__PRM_H__
 
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
 
-
-// uncomment me to enable debug : #define PRM_DBG
 
 /* PRM module instances live at these physical addresses */
 #define IVA2_PRM                      0x48306000

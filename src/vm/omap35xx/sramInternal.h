@@ -1,5 +1,5 @@
-#ifndef __HARDWARE__SRAM_INTERNAL_H__
-#define __HARDWARE__SRAM_INTERNAL_H__
+#ifndef __VM__OMAP_35XX__SRAM_INTERNAL_H__
+#define __VM__OMAP_35XX__SRAM_INTERNAL_H__
 
 #include "common/types.h"
 
@@ -7,8 +7,6 @@
 
 #include "vm/omap35xx/hardwareLibrary.h"
 
-
-// uncomment me to enable sdram debug: #define SRAM_INTERNAL_DBG
 
 #define UNDEFINED_EXCEPTION_INSTR    0x4020FFC8 // Undefined PC = [0x4020FFE4]
 #define SWI_EXCEPTION_INSTR          0x4020FFCC // SWI PC = [0x4020FFE8]

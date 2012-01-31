@@ -117,21 +117,27 @@ void dumpGuestContext(GCONTXT *context)
 
   printf(
       "R0:   0x%.8x     R1:   0x%.8x     R2:   0x%.8x     R3:   0x%.8x" EOL
-      "R4:   0x%.8x     R5:   0x%.8x     R6:   0x%.8x     R7:   0x%.8x" EOL
+      "R4:   0x%.8x     R5:   0x%.8x     R6:   0x%.8x     R7:   0x%.8x" EOL,
+      context->R0, context->R1, context->R2, context->R3,
+      context->R4, context->R5, context->R6, context->R7
+      );
+  printf(
       "R8:   0x%.8x     R9:   0x%.8x     R10:  0x%.8x     R11:  0x%.8x" EOL
       "R12:  0x%.8x     SP:   0x%.8x     LR:   0x%.8x     PC:   0x%.8x" EOL,
-      context->R0, context->R1, context->R2, context->R3,
-      context->R4, context->R5, context->R6, context->R7,
       *r8, *(r8 + 1), *(r8 + 2), *(r8 + 3),
       *(r8 + 4), r13 ? *r13 : 0, r13 ? *(r13 + 1) : 0, context->R15
       );
 
-  printf("Mode: %s     CPSR: 0x%.8x", modeString, context->CPSR);
+  printf("Mode: %-36s CPSR: 0x%.8x     SPSR: ", modeString, context->CPSR);
+  spsr = 0;
   if (spsr)
   {
-    printf("     SPSR: 0x%.8x", *spsr);
+    printf("0x%.8x" EOL, *spsr);
   }
-  printf(EOL);
+  else
+  {
+    printf("----------" EOL);
+  }
 
   printf("endOfBlockInstr: %08x\n", context->endOfBlockInstr);
 #ifdef CONFIG_THUMB2

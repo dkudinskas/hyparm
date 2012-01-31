@@ -22,9 +22,7 @@ void initPrm(void)
   else
   {
     memset((void*)prMan, 0x0, sizeof(struct PowerAndResetManager));
-#ifdef PRM_DBG
-    printf("Initializing Power and reset manager at %.8x" EOL, (u32int)prMan);
-#endif
+    DEBUG(VP_OMAP_35XX_PRM, "Initializing Power and reset manager at %.8x" EOL, (u32int)prMan);
   }
 
   // Clock Control registers
@@ -70,10 +68,8 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address)
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
-#ifdef PRM_DBG
-  printf("%s load from physical address: %.8x, vAddr %.8x, aSize %x" EOL, dev->deviceName, phyAddr,
-      address, (u32int)size);
-#endif
+  DEBUG(VP_OMAP_35XX_PRM, "%s load from physical address: %.8x, vAddr %.8x, aSize %x" EOL,
+      dev->deviceName, phyAddr, address, (u32int)size);
 
   if (size != WORD)
   {
@@ -118,16 +114,13 @@ u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - Clock_Control_Reg_PRM;
   if (reg == PRM_CLKSEL)
   {
-#ifdef PRM_DBG
-    printf("loadClockControlPrm reg PRM_CLKSEL, val %.8x" EOL, prMan->prmClkSelReg);
-#endif
+    DEBUG(VP_OMAP_35XX_PRM, "loadClockControlPrm reg PRM_CLKSEL, val %.8x" EOL, prMan->prmClkSelReg);
     return prMan->prmClkSelReg;
   }
   else if (reg == PRM_CLKOUT_CTRL)
   {
-#ifdef PRM_DBG
-    printf("loadClockControlPrm reg PRM_CLKOUT_CTRL, val %.8x" EOL, prMan->prmClkoutCtrlReg);
-#endif
+    DEBUG(VP_OMAP_35XX_PRM, "loadClockControlPrm reg PRM_CLKOUT_CTRL, val %.8x" EOL,
+        prMan->prmClkoutCtrlReg);
     return prMan->prmClkoutCtrlReg;
   }
   else
@@ -205,9 +198,7 @@ u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
     default:
       DIE_NOW(0, "loadGlobalRegPrm loading non existing register!");
   } // switch ends
-#ifdef PRM_DBG
-  printf("loadGlobalRegPrm reg %x value %.8x" EOL, reg, val);
-#endif
+  DEBUG(VP_OMAP_35XX_PRM, "loadGlobalRegPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
 
@@ -233,9 +224,7 @@ u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
     default:
       DIE_NOW(0, "loadOcpSystemPrm loading non existing register!");
   } // switch ends
-#ifdef PRM_DBG
-  printf("loadOcpSystemPrm reg %x value %.8x" EOL, reg, val);
-#endif
+  DEBUG(VP_OMAP_35XX_PRM, "loadOcpSystemPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
 
@@ -250,10 +239,8 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
-#ifdef PRM_DBG
-  printf("%s store to pAddr: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL, dev->deviceName phyAddr,
-      address, (u32int)size, value);
-#endif
+  DEBUG(VP_OMAP_35XX_PRM, "%s store to pAddr: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL,
+      dev->deviceName, phyAddr, address, (u32int)size, value);
 
   if (size != WORD)
   {
@@ -307,9 +294,8 @@ void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int valu
 void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   u32int reg = phyAddr - OCP_System_Reg_PRM;
-#ifdef PRM_DBG
-  printf("%s: storeOcpSystemPrm: store reg %x value %.8x" EOL, dev->deviceName, reg, value);
-#endif
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeOcpSystemPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
   switch (reg)
   {
     case PRM_REVISION_OCP:

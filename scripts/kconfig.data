@@ -123,16 +123,20 @@ config DEBUG_STARTUP
   bool "Debug startup"
   depends on DEBUG
 
+config DEBUG_MALLOC
+  bool "Debug malloc"
+  depends on DEBUG
+
 config DEBUG_GUEST_CONTEXT
   bool "Debug guest context routines"
   depends on DEBUG
 
-config DEBUG_DECODER
-  bool "Debug instruction decoding"
-  depends on DEBUG
-
 config DEBUG_EXCEPTION_HANDLERS
   bool "Debug exception handlers"
+  depends on DEBUG
+
+config DEBUG_DECODER
+  bool "Debug instruction decoding"
   depends on DEBUG
 
 menuconfig DEBUG_SCANNER
@@ -151,6 +155,66 @@ config DEBUG_SCANNER_COUNT_BLOCKS
 config DEBUG_SCANNER_BLOCK_TRACE
   bool "Print block trace"
   depends on DEBUG_SCANNER
+
+config DEBUG_BLOCK_CACHE
+  bool "Debug block cache"
+  depends on DEBUG
+
+menuconfig DEBUG_VIRTUAL_PLATFORM
+  bool "Debug virtual platform"
+  depends on DEBUG
+
+config DEBUG_VP_OMAP_35XX_LIBRARY
+  bool "Debug device library"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_TIMER32K
+  bool "Debug 32 kHz timer (TIMER32K)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_CM
+  bool "Debug clock manager (CM)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_GPIO
+  bool "Debug GPIO"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_GPTIMER
+  bool "Debug general purpose timers (GPTIMER)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_INTC
+  bool "Debug interrupt controller (INTC)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_GPMC
+  bool "Debug memory controller (GPMC)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_PRM
+  bool "Debug power and reset manager (PRM)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_SCM
+  bool "Debug system control module (SCM)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_SDMA
+  bool "Debug SDMA"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_SDRAM
+  bool "Debug SDRAM"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_SRAM
+  bool "Debug SRAM"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_UART
+  bool "Debug UART"
+  depends on DEBUG_VIRTUAL_PLATFORM
 
 config MMC
   bool "Use MMC/SD device to store debug output"

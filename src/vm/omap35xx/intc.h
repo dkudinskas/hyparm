@@ -1,5 +1,5 @@
-#ifndef __HARDWARE__INTC_H__
-#define __HARDWARE__INTC_H__
+#ifndef __VM__OMAP_35XX__INTC_H__
+#define __VM__OMAP_35XX__INTC_H__
 
 #include "common/types.h"
 
@@ -9,8 +9,6 @@
 #define INTCPS_NR_OF_BANKS          3
 #define INTCPS_INTERRUPTS_PER_BANK 32
 #define INTCPS_NR_OF_INTERRUPTS    96
-
-// uncomment me to enable debug : #define INTC_DBG
 
 #define INTC_REVISION                                  0x00000040
 

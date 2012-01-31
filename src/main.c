@@ -44,7 +44,7 @@
 #include "memoryManager/frameAllocator.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
-#include "vm/omap35xx/LED.h"
+#include "vm/omap35xx/led.h"
 
 
 //uncomment me to enable block copy cache debug (installation of backpointer): #define BLOCK_COPY_DEBUG

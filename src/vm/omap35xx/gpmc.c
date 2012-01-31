@@ -21,9 +21,7 @@ void initGpmc()
   else
   {
     memset((void*)gpmc, 0x0, sizeof(struct Gpmc));
-#ifdef GPMC_DBG
-    printf("Initializing GPMC at %.8x" EOL, (u32int)gpmc);
-#endif
+    DEBUG(VP_OMAP_35XX_GPMC, "initGpmc: @ %p" EOL, gpmc);
   }
 
   // register default values
@@ -87,7 +85,7 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
       break;
     case GPMC_SYSCONFIG:
       // TODO
-      printf("WARN reading GPMC_SYSCONFIG %.8x" EOL, gpmc->gpmcSysConfig);
+      printf("WARN reading GPMC_SYSCONFIG %#.8x" EOL, gpmc->gpmcSysConfig);
       val = gpmc->gpmcSysConfig;
       break;
     case GPMC_NAND_COMMAND_0:
@@ -157,15 +155,13 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
       val = gpmc->gpmcConfig7_7;
       break;
     default:
-      printf("%s load from pAddr: %.8x, vAddr: %.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+      printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
           address, (u32int)size);
       DIE_NOW(gc, "Gpmc: load on invalid register.");
   }
 
-#ifdef GPMC_DBG
-  printf("%s load from pAddr: %.8x, vAddr: %.8x, accSize %x, val %.8x" EOL, dev->deviceName,
-        phyAddr, address, (u32int)size);
-#endif
+  DEBUG(VP_OMAP_35XX_GPMC, "%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %#x" EOL,
+      dev->deviceName, phyAddr, address, (u32int)size);
 
   return val;
 }
@@ -179,17 +175,14 @@ void storeGpmc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
-#ifdef GPMC_DBG
-  printf("%s store to pAddr: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL, dev->deviceName, phyAddr,
-      address, (u32int)size, value);
-#endif
+  DEBUG(VP_OMAP_35XX_GPMC, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
+      dev->deviceName, phyAddr, address, (u32int)size, value);
 
-  u32int regOffset = phyAddr - Q1_L3_GPMC;
-  switch (regOffset)
+  switch (phyAddr - Q1_L3_GPMC)
   {
     case GPMC_SYSCONFIG:
       // TODO
-      printf("WARN writing to GPMC_SYSCONFIG %.8x" EOL, value);
+      printf("WARN writing to GPMC_SYSCONFIG %#.8x" EOL, value);
       if (value & GPMC_SYSCONFIG_SOFTRESET)
       {
         printf("WARN should do soft reset of GPMC" EOL);
@@ -203,4 +196,3 @@ void storeGpmc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       DIE_NOW(gc, "Gpmc: store to invalid register.");
   }
 }
-

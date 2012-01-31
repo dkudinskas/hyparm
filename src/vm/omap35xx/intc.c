@@ -21,9 +21,7 @@ void initIntc()
     DIE_NOW(0, "Failed to allocate INTC.");
   }
   memset((void *)irqController, 0x0, sizeof(struct InterruptController));
-#ifdef INTC_DBG
-  printf("Initializing Interrupt controller at %.8x" EOL, (u32int)irqController);
-#endif
+  DEBUG(VP_OMAP_35XX_INTC, "Initializing Interrupt controller at %p" EOL, irqController);
   intcReset();
 }
 
@@ -88,21 +86,15 @@ u32int loadIntc(device *dev, ACCESS_SIZE size, u32int address)
       break;
     case REG_INTCPS_PENDING_IRQ0:
       val = irqController->intcPendingIrq0;
-#ifdef INTC_DBG
-      printf("INTC: load pending irq0 value %.8x" EOL, val);
-#endif
+      DEBUG(VP_OMAP_35XX_INTC, "INTC: load pending irq0 value %#.8x" EOL, val);
       break;
     case REG_INTCPS_PENDING_IRQ1:
       val = irqController->intcPendingIrq1;
-#ifdef INTC_DBG
-      printf("INTC: load pending irq1 value %.8x" EOL, val);
-#endif
+      DEBUG(VP_OMAP_35XX_INTC, "INTC: load pending irq1 value %#.8x" EOL, val);
       break;
     case REG_INTCPS_PENDING_IRQ2:
       val = irqController->intcPendingIrq2;
-#ifdef INTC_DBG
-      printf("INTC: load pending irq2 value %.8x" EOL, val);
-#endif
+      DEBUG(VP_OMAP_35XX_INTC, "INTC: load pending irq2 value %#.8x" EOL, val);
       break;
     case REG_INTCPS_SIR_IRQ:
       val = prioritySortIrqs();
@@ -226,7 +218,7 @@ u32int loadIntc(device *dev, ACCESS_SIZE size, u32int address)
     case REG_INTCPS_ILR94:
     case REG_INTCPS_ILR95:
     {
-      printf("Intc: Unimplemted regsiter load reg nr %x" EOL, regOffset);
+      printf("Intc: Unimplemted regsiter load reg nr %#x" EOL, regOffset);
       DIE_NOW(gc, "PANIC");
       break;
     }
@@ -234,10 +226,8 @@ u32int loadIntc(device *dev, ACCESS_SIZE size, u32int address)
       DIE_NOW(gc, "Intc: load on invalid register.");
   }
 
-#ifdef INTC_DBG
-  printf("%s load from pAddr: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL, dev->deviceName, phyAddr,
-      address, (u32int)size, val);
-#endif
+  DEBUG(VP_OMAP_35XX_INTC, "%s load from pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
+      dev->deviceName, phyAddr, address, (u32int)size, val);
 
   return val;
 }
@@ -251,10 +241,8 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
   u32int phyAddr = getPhysicalAddress(ptd, address);
 
-#ifdef INTC_DBG
-  printf("%s store to pAddr: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL, dev->deviceName, phyAddr,
-      address, (u32int)size, value);
-#endif
+  DEBUG(VP_OMAP_35XX_INTC, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
+      dev->deviceName, phyAddr, address, (u32int)size, value);
 
   if (size != WORD)
   {
@@ -274,9 +262,7 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     {
       if (value & INTCPS_SYSCONFIG_SOFTRESET)
       {
-#ifdef INTC_DBG
-        printf("INTC: soft reset." EOL);
-#endif
+        DEBUG(VP_OMAP_35XX_INTC, "INTC: soft reset" EOL);
         intcReset();
         value = value & ~INTCPS_SYSCONFIG_SOFTRESET;
       }
@@ -306,9 +292,7 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       {
         if (value & (1 << i))
         {
-#ifdef INTC_DBG
-          printf("INTC: clearing mask from interrupt number %x" EOL, i);
-#endif
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: clearing mask from interrupt number %#x" EOL, i);
         }
       }
       irqController->intcMir0 &= ~value;
@@ -327,9 +311,8 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
             // linux unmasking gpt1 interrupt. unmask gpt2 in physical.
             unmaskInterruptBE(GPT2_IRQ);
           }
-#ifdef INTC_DBG
-          printf("INTC: clearing mask from interrupt number %x" EOL, i+32);
-#endif
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: clearing mask from interrupt number %#x" EOL,
+              i + 32);
         }
       }
       irqController->intcMir1 &= ~value;
@@ -342,9 +325,8 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       {
         if (value & (1 << i))
         {
-#ifdef INTC_DBG
-          printf("INTC: clearing mask from interrupt number %x" EOL, i+64);
-#endif
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: clearing mask from interrupt number %#x" EOL,
+              i + 64);
         }
       }
       irqController->intcMir2 &= ~value;
@@ -521,7 +503,7 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case REG_INTCPS_ILR94:
     case REG_INTCPS_ILR95:
     {
-      printf("Intc: Unimplemted regsiter store reg nr %x" EOL, regOffset);
+      printf("Intc: Unimplemted regsiter store reg nr %#x" EOL, regOffset);
       DIE_NOW(gc, "PANIC");
       break;
     }
@@ -787,9 +769,8 @@ u32int prioritySortIrqs()
         if ((irqController->intcPendingIrq0 & mask) != 0)
         {
           u32int priority = irqController->intcIlr[i];
-#ifdef INTC_DBG
-          printf("INTC: irq nr %x is pending with priority %x" EOL, i, priority);
-#endif
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: irq nr %#x is pending with priority %#x" EOL, i,
+              priority);
           if (priority >= currentHighestPriority)
           {
             currentHighestPriority = priority;
@@ -808,10 +789,9 @@ u32int prioritySortIrqs()
         mask = 1 << i;
         if ((irqController->intcPendingIrq1 & mask) != 0)
         {
-          u32int priority = irqController->intcIlr[i+32];
-#ifdef INTC_DBG
-          printf("INTC: irq nr %x is pending with priority %x" EOL, i+32, priority);
-#endif
+          u32int priority = irqController->intcIlr[i + 32];
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: irq nr %#x is pending with priority %#x" EOL,
+              i + 32, priority);
           if (priority >= currentHighestPriority)
           {
             currentHighestPriority = priority;
@@ -830,10 +810,9 @@ u32int prioritySortIrqs()
         mask = 1 << i;
         if ((irqController->intcPendingIrq2 & mask) != 0)
         {
-          u32int priority = irqController->intcIlr[i+64];
-#ifdef INTC_DBG
-          printf("INTC: irq nr %x is pending with priority %x" EOL, i+64, priority);
-#endif
+          u32int priority = irqController->intcIlr[i + 64];
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: irq nr %#x is pending with priority %#x" EOL,
+              i + 64, priority);
           if (priority >= currentHighestPriority)
           {
             currentHighestPriority = priority;
@@ -866,19 +845,18 @@ void intcDumpRegisters(void)
 {
   /*
    * FIXME: missing argument to format
-   *
-   * printf("INTC: Revision %.8x" EOL);
    */
-  printf("INTC: sysconfig reg %.8x" EOL, irqController->intcSysConfig);
-  printf("INTC: sysStatus reg %.8x" EOL, irqController->intcSysStatus);
-  printf("INTC: current active irq reg %.8x" EOL, irqController->intcSirIrq);
-  printf("INTC: current active fiq reg %.8x" EOL, irqController->intcSirFiq);
-  printf("INTC: control reg %.8x" EOL, irqController->intcControl);
-  printf("INTC: protection reg %.8x" EOL, irqController->intcProtection);
-  printf("INTC: idle reg %.8x" EOL, irqController->intcIdle);
-  printf("INTC: current active irq priority %.8x" EOL, irqController->intcIrqPriority);
-  printf("INTC: current active fiq priority %.8x" EOL, irqController->intcFiqPriority);
-  printf("INTC: priority threshold %.8x" EOL, irqController->intcThreshold);
+  printf("INTC: Revision %#.8x" EOL, INTC_REVISION);
+  printf("INTC: sysconfig reg %#.8x" EOL, irqController->intcSysConfig);
+  printf("INTC: sysStatus reg %#.8x" EOL, irqController->intcSysStatus);
+  printf("INTC: current active irq reg %#.8x" EOL, irqController->intcSirIrq);
+  printf("INTC: current active fiq reg %#.8x" EOL, irqController->intcSirFiq);
+  printf("INTC: control reg %#.8x" EOL, irqController->intcControl);
+  printf("INTC: protection reg %#.8x" EOL, irqController->intcProtection);
+  printf("INTC: idle reg %#.8x" EOL, irqController->intcIdle);
+  printf("INTC: current active irq priority %#.8x" EOL, irqController->intcIrqPriority);
+  printf("INTC: current active fiq priority %#.8x" EOL, irqController->intcFiqPriority);
+  printf("INTC: priority threshold %#.8x" EOL, irqController->intcThreshold);
 
   printf("INTC: interrupt status before masking:" EOL);
   printf("%x%x%x" EOL, irqController->intcItr0, irqController->intcItr1, irqController->intcItr2);
@@ -887,8 +865,10 @@ void intcDumpRegisters(void)
   printf("%x%x%x" EOL, irqController->intcMir0, irqController->intcMir1, irqController->intcMir2);
 
   printf("INTC: pending IRQ:" EOL);
-  printf("%x%x%x" EOL, irqController->intcPendingIrq0, irqController->intcPendingIrq1, irqController->intcPendingIrq2);
+  printf("%x%x%x" EOL, irqController->intcPendingIrq0, irqController->intcPendingIrq1,
+      irqController->intcPendingIrq2);
 
   printf("INTC: pending FIQ:" EOL);
-  printf("%x%x%x" EOL, irqController->intcPendingFiq0, irqController->intcPendingFiq1, irqController->intcPendingFiq2);
+  printf("%x%x%x" EOL, irqController->intcPendingFiq0, irqController->intcPendingFiq1,
+      irqController->intcPendingFiq2);
 }

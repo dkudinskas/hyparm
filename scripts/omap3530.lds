@@ -12,10 +12,15 @@ SECTIONS
 {
 	. = 0x8c000000;
 	. = ALIGN(4);
+	_start_marker = .;
 	.text :
 	{
 		src/startup.S.o (.text)
 		*(.text)
+	}
+	.rodata :
+	{
+		*(.rodata)
 	}
 	.data :
 	{
@@ -25,5 +30,6 @@ SECTIONS
 	{
 		*(.bss)
 	}
+	_end_marker = .;
 }
 

@@ -1,12 +1,9 @@
-#ifndef __HARDWARE__SYS_CONTROL_MODULE_H__
-#define __HARDWARE__SYS_CONTROL_MODULE_H__
+#ifndef __VM__OMAP_35XX__SYS_CONTROL_MODULE_H__
+#define __VM__OMAP_35XX__SYS_CONTROL_MODULE_H__
 
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
-
-
-// uncomment me to enable debug : #define SYS_CTRL_MOD_DBG
 
 
 /* instances live at these physical addresses */

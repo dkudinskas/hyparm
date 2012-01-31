@@ -8,7 +8,6 @@
 
 #define SDMA_REVISION_NUMBER      0x40
 
-// uncomment me to enable debug : #define SDMA_DBG
 
 // register offsets and definitions
 #define SDMA_REVISION        0x00000000 // revision number, R/O
