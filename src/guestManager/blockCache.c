@@ -372,7 +372,7 @@ void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex)
   serial_putint(blockCopyCacheSizeOfEntry);
   serial_newline();
 #endif
-  removeBlockCopyCacheEntry(blockCopyCacheAddressOfEntry,blockCopyCacheSizeOfEntry);
+  removeBlockCopyCacheEntry(getGuestContext(), blockCopyCacheAddressOfEntry, blockCopyCacheSizeOfEntry);
   bcAddr[cacheIndex].blockCopyCacheSize = 0;
   bcAddr[cacheIndex].blockCopyCacheAddress = 0;
 #else
@@ -512,7 +512,8 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
 }
 
 #ifdef CONFIG_BLOCK_COPY
-void removeBlockCopyCacheEntry(GCONTXT *context, u32int blockCopyCacheAddress,u32int blockCopyCacheSize){
+void removeBlockCopyCacheEntry(void *contextPtr, u32int blockCopyCacheAddress,u32int blockCopyCacheSize){
+  GCONTXT *context = (GCONTXT *)contextPtr;
   //First we must check if we have to remove a coninuous block that it is split up (i.e.: if it was to close to the end)
   u32int endOfBlock = (blockCopyCacheAddress+(blockCopyCacheSize<<2));//End of the block that has to be removed
   u32int lastUsableBlockCopyCacheAddress = context->blockCopyCacheEnd-4; //see comment next rule

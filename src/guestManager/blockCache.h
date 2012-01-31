@@ -78,7 +78,7 @@ u32int *checkAndMergeBlock(u32int* startOfBlock2, u32int* endOfBlock2, BCENTRY *
 u32int* updateCurrBlockCopyCacheAddr(u32int* oldAddr, u32int nrOfAddedInstr,u32int* blockCopyCacheEnd);
 
 //Remove the copied instructions
-void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize);
+void removeBlockCopyCacheEntry(void *context, u32int blockCopyCacheAddress, u32int blockCopyCacheSize);
 
 #elif defined(CONFIG_THUMB2)
 
