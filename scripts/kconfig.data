@@ -1,20 +1,23 @@
 menu "General setup"
 
 config CROSS_COMPILE
-	string "Cross-compiler toolchain prefix"
+  string "Cross-compiler toolchain prefix"
+
+config BUILD_LTO
+  bool "Link-time optimization (requires toolchain support)"
 
 config BUILD_SAVE_TEMPS
-	bool "Save intermediate files during build (requires GCC >= 4.5)"
+  bool "Save intermediate files during build (requires GCC >= 4.5)"
 
 choice
-	prompt "Decoder"
-	default DECODER_TABLE_SEARCH
+  prompt "Decoder"
+  default DECODER_TABLE_SEARCH
 
 config DECODER_AUTO
-	bool "Auto-generated decoder"
+  bool "Auto-generated decoder"
 
 config DECODER_TABLE_SEARCH
-	bool "Handcrafted table search decoder"
+  bool "Handcrafted table search decoder"
 
 endchoice
 
@@ -27,102 +30,106 @@ endmenu
 menu "Physical hardware platform"
 
 config ARCH_V7
-	bool
+  bool
 
 config ARCH_V7_A
-	bool
-	depends on ARCH_V7
+  bool
+  depends on ARCH_V7
 
 config ARCH_EXT_SECURITY
-	bool
-	depends on ARCH_V7_A
+  bool
+  depends on ARCH_V7_A
 
 config CPU_CORTEX_A8
-	bool
-	depends on ARCH_V7_A
+  bool
+  depends on ARCH_V7_A
 
 config CPU_CORTEX_A9
-	bool
-	depends on ARCH_V7_A
+  bool
+  depends on ARCH_V7_A
 
 config SOC_TI_OMAP_3
-	bool
-	depends on CPU_CORTEX_A8
+  bool
+  depends on CPU_CORTEX_A8
 
 config SOC_TI_OMAP_35XX
-	bool
-	depends on SOC_TI_OMAP_3
+  bool
+  depends on SOC_TI_OMAP_3
 
 config SOC_TI_OMAP_3530
-	bool
-	depends on SOC_TI_OMAP_35XX
+  bool
+  depends on SOC_TI_OMAP_35XX
 
 config SOC_TI_OMAP_4
-	bool
-	depends on CPU_CORTEX_A9
+  bool
+  depends on CPU_CORTEX_A9
 
 config SOC_TI_OMAP_4430
-	bool
-	depends on SOC_TI_OMAP_4
+  bool
+  depends on SOC_TI_OMAP_4
 
 choice
-	prompt "Board"
-	default BOARD_TI_BEAGLE_BOARD
+  prompt "Board"
+  default BOARD_TI_BEAGLE_BOARD
 
 config BOARD_TI_BEAGLE_BOARD
-	bool "Texas Instruments BeagleBoard"
-	select ARCH_V7
-	select ARCH_V7_A
-	select ARCH_EXT_SECURITY
-	select CPU_CORTEX_A8
-	select SOC_TI_OMAP_3
-	select SOC_TI_OMAP_35XX
-	select SOC_TI_OMAP_3530
+  bool "Texas Instruments BeagleBoard"
+  select ARCH_V7
+  select ARCH_V7_A
+  select ARCH_EXT_SECURITY
+  select CPU_CORTEX_A8
+  select SOC_TI_OMAP_3
+  select SOC_TI_OMAP_35XX
+  select SOC_TI_OMAP_3530
 
 config BOARD_TI_PANDA_BOARD
-	bool "Texas Instruments PandaBoard"
-	select ARCH_V7
-	select ARCH_V7_A
-	select ARCH_EXT_SECURITY
-	select CPU_CORTEX_A9
-	select SOC_TI_OMAP_4
-	select SOC_TI_OMAP_4430
+  bool "Texas Instruments PandaBoard"
+  select ARCH_V7
+  select ARCH_V7_A
+  select ARCH_EXT_SECURITY
+  select CPU_CORTEX_A9
+  select SOC_TI_OMAP_4
+  select SOC_TI_OMAP_4430
 
 endchoice
 
 config UART_FAST
-	bool "Fast UART (baud rate 500000)"
-	depends on BOARD_TI_BEAGLE_BOARD
+  bool "Fast UART (baud rate 500000)"
+  depends on BOARD_TI_BEAGLE_BOARD
 
 endmenu
 
 menu "Virtual hardware platform"
 
 config THUMB2
-	bool "Thumb-2 instruction set"
-	depends on ARCH_V7_A && !BLOCK_COPY && DECODER_TABLE_SEARCH
+  bool "Thumb-2 instruction set"
+  depends on ARCH_V7_A && !BLOCK_COPY && DECODER_TABLE_SEARCH
 
 endmenu
 
 menu "Guest software"
 
 config GUEST_FREERTOS
-	bool "FreeRTOS"
-	depends on THUMB2
+  bool "FreeRTOS"
+  depends on THUMB2
 
 endmenu
 
 menuconfig DEBUG
-	bool "Debugging"
-	default y
+  bool "Debugging"
+  default y
 
 config DEBUG_STARTUP
-	bool "Debug startup"
-	depends on DEBUG
+  bool "Debug startup"
+  depends on DEBUG
 
 config DEBUG_DECODER
-	bool "Debug instruction decoding"
-	depends on DEBUG
+  bool "Debug instruction decoding"
+  depends on DEBUG
+
+config DEBUG_EXCEPTION_HANDLERS
+  bool "Debug exception handlers"
+  depends on DEBUG
 
 menuconfig DEBUG_SCANNER
   bool "Debug scanner"
@@ -142,8 +149,8 @@ config DEBUG_SCANNER_BLOCK_TRACE
   depends on DEBUG_SCANNER
 
 config MMC
-	bool "Use MMC/SD device to store debug output"
-	depends on DEBUG
+  bool "Use MMC/SD device to store debug output"
+  depends on DEBUG
 
 menu "Hacks"
 
@@ -152,7 +159,7 @@ config BLOCK_COPY_NO_IRQ
 	depends on BLOCK_COPY
 
 config CLI
-	bool "Command-line interface"
+  bool "Command-line interface"
 
 config EMERGENCY_EXCEPTION_VECTOR
   bool "Emergency exception vector"
@@ -160,6 +167,6 @@ config EMERGENCY_EXCEPTION_VECTOR
   depends on ARCH_EXT_SECURITY
 
 config SCANNER_COUNT_BLOCKS
-	bool "Count number of scanned blocks"
+  bool "Count number of scanned blocks"
 
 endmenu

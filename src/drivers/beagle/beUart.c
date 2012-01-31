@@ -5,7 +5,7 @@
 
 
 static inline u32int beGetUartNumber(u32int phyAddr);
-static inline u32int beGetUartBaseAddr(u32int id);
+static inline u32int beGetUartBaseAddr(u32int id) __attribute__((always_inline));
 
 struct UartBackEnd * beUart[3];
 
@@ -91,9 +91,9 @@ void beUartInit(u32int uartid)
   beLoadUart(UART_LSR_REG, uartid);
   beLoadUart(UART_MSR_REG, uartid);
   beLoadUart(UART_IIR_REG, uartid);
-  
+
   beUart[uID]->loopback = FALSE;
-  
+
   beUart[uID]->baseAddress = beGetUartBaseAddr(uartid);
   beUart[uID]->size = UART_SIZE;
 }
@@ -104,7 +104,7 @@ void beUartReset(u32int uartid)
   u32int sysCtrl = beLoadUart(UART_SYSC_REG, uartid);
   sysCtrl |= UART_SYSC_REG_RESET;
   beStoreUart(UART_SYSC_REG, sysCtrl, uartid);
-  
+
   while ( (beLoadUart(UART_SYSS_REG, uartid) & UART_SYSS_REG_RSTDONE) != UART_SYSS_REG_RSTDONE)
   {
     // do nothing
@@ -122,14 +122,14 @@ void beUartStartup(u32int uartid, u32int baudRate)
 
   // set nRTS output to active (low), Force DTR output to active (low)
   beStoreUart(UART_MCR_REG, UART_MCR_RTS | UART_MCR_DTR, uartid);
-  
+
   // enable CTS wakeup event
   beStoreUart(UART_WER_REG, 1, uartid);
 
   // make sure mode is - disabled
   beStoreUart(UART_MDR1_REG, UART_MODE_DISABLED, uartid);
 
-  // enable config mode and set 8bit word length 
+  // enable config mode and set 8bit word length
   beStoreUart(UART_LCR_REG, UART_LCR_DIV_EN | UART_LCR_CHAR_LEN_8, uartid);
 
   // divisor - zero

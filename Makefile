@@ -8,6 +8,10 @@ SOURCE_PATH  := src
 SCRIPT_PATH  := scripts
 OUTPUT_PATH  := build
 
+COMMA        := ,
+EMPTY        :=
+SPACE        := $(EMPTY) $(EMPTY)
+
 VPATH        :=
 
 HOSTCC       := gcc
@@ -24,7 +28,7 @@ OBJDUMP       = $(CROSS_COMPILE)objdump
 
 AFLAGS       := --fatal-warnings
 CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
-                -O3 -ffreestanding -fno-common -fno-stack-protector -fno-toplevel-reorder \
+                -O3 -ffreestanding -fno-common -fno-stack-protector \
                 -Wall -Wextra -Wformat=2 -Winline -Wstrict-prototypes -Wwrite-strings \
                 -Wno-empty-body -Wno-unused-label -Wno-unused-parameter \
                 -Werror=implicit-function-declaration
@@ -44,23 +48,23 @@ NO_BUILD_GOALS = $(CLEAN_GOALS) $(CONFIG_GOALS) $(HELP_GOALS)
 
 # Do not allow cleaning and doing anything else at once; in the current setup this would cause dependency tracking to be disabled.
 # Fixing this issue is far harder than using "make clean && make".
-ifneq ($(filter $(CLEAN_GOALS), $(MAKECMDGOALS)),)
-  ifneq ($(filter-out $(CLEAN_GOALS), $(MAKECMDGOALS)),)
-    $(error The following goals must be specified separately: $(filter $(CLEAN_GOALS), $(MAKECMDGOALS)))
+ifneq ($(filter $(CLEAN_GOALS),$(MAKECMDGOALS)),)
+  ifneq ($(filter-out $(CLEAN_GOALS),$(MAKECMDGOALS)),)
+    $(error The following goals must be specified separately: $(filter $(CLEAN_GOALS),$(MAKECMDGOALS)))
   endif
 endif
 
 # For the same reason, do not allow updates to the configuration file to interfere with the build process.
-ifneq ($(filter $(CONFIG_GOALS), $(MAKECMDGOALS)),)
-  ifneq ($(filter-out $(CONFIG_GOALS), $(MAKECMDGOALS)),)
-    $(error The following goals must be specified separately: $(filter $(CONFIG_GOALS), $(MAKECMDGOALS)))
+ifneq ($(filter $(CONFIG_GOALS),$(MAKECMDGOALS)),)
+  ifneq ($(filter-out $(CONFIG_GOALS),$(MAKECMDGOALS)),)
+    $(error The following goals must be specified separately: $(filter $(CONFIG_GOALS),$(MAKECMDGOALS)))
   endif
 endif
 
 # And also ... let help come on its own. Why on earth would you combine it with something else anyway?
-ifneq ($(filter $(HELP_GOALS), $(MAKECMDGOALS)),)
-  ifneq ($(filter-out $(HELP_GOALS), $(MAKECMDGOALS)),)
-    $(error The following goals must be specified separately: $(filter $(HELP_GOALS), $(MAKECMDGOALS)))
+ifneq ($(filter $(HELP_GOALS),$(MAKECMDGOALS)),)
+  ifneq ($(filter-out $(HELP_GOALS),$(MAKECMDGOALS)),)
+    $(error The following goals must be specified separately: $(filter $(HELP_GOALS),$(MAKECMDGOALS)))
   endif
 endif
 
@@ -119,6 +123,8 @@ $(KCONFIG_CONFIG):
   CPPFLAGS-y := -imacros $(KCONFIG_AUTOHEADER)
   LDFLAGS-y :=
 
+  CFLAGS-$(CONFIG_BUILD_LTO) += -flto -fuse-linker-plugin
+
   ifeq ($(CONFIG_BUILD_SAVE_TEMPS),y)
     CFLAGS-y += -save-temps=obj
   else
@@ -164,10 +170,21 @@ $(KCONFIG_CONFIG):
   LDFLAGS  += $(LDFLAGS-y)
   OBJDUMPFLAGS += $(OBJDUMPFLAGS-y)
 
+  # With LTO, the linker is invoked by the compiler. Hence, linker flags are passed through the
+  # compiler rather than directly to the linker, so we need to adapt LDFLAGS to a format understood
+  # by the compiler.
+  ifeq ($(CONFIG_BUILD_LTO),y)
+    LDFLAGS := $(foreach LDFLAG,$(LDFLAGS),$(LDFLAG))
+    ifneq ($(LDFLAGS),)
+      LDFLAGS := -Wl,$(subst $(SPACE),$(COMMA),$(LDFLAGS))
+    endif
+  endif
+
 endif # ifneq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
 
 
-HYPARM_DIRS-y := common cpuArch drivers/beagle exceptions guestManager instructionEmu linuxBoot memoryManager vm/omap35xx
+HYPARM_DIRS-y := common cpuArch drivers/beagle exceptions guestManager instructionEmu linuxBoot \
+                 memoryManager vm/omap35xx
 
 # Guest support
 HYPARM_DIRS-$(CONFIG_GUEST_FREERTOS) += rtosBoot
@@ -183,13 +200,13 @@ HYPARM_SRCS_S-y := startup.s
 
 
 # Include all makefile.mk files from HYPARM_DIRS-y
-include $(foreach DIR, $(HYPARM_DIRS-y), $(SOURCE_PATH)/$(DIR)/makefile.mk)
+include $(foreach DIR,$(HYPARM_DIRS-y),$(SOURCE_PATH)/$(DIR)/makefile.mk)
 
 
-HYPARM_DEPS   := $(foreach SRC, $(HYPARM_SRCS_C-y), $(SOURCE_PATH)/$(SRC).d)
+HYPARM_DEPS   := $(foreach SRC,$(HYPARM_SRCS_C-y),$(SOURCE_PATH)/$(SRC).d)
 
-HYPARM_OBJS_C := $(foreach SRC, $(HYPARM_SRCS_C-y), $(SOURCE_PATH)/$(SRC).o)
-HYPARM_OBJS_S := $(foreach SRC, $(HYPARM_SRCS_S-y), $(SOURCE_PATH)/$(SRC).o)
+HYPARM_OBJS_C := $(foreach SRC,$(HYPARM_SRCS_C-y),$(SOURCE_PATH)/$(SRC).o)
+HYPARM_OBJS_S := $(foreach SRC,$(HYPARM_SRCS_S-y),$(SOURCE_PATH)/$(SRC).o)
 HYPARM_OBJS   := $(HYPARM_OBJS_C) $(HYPARM_OBJS_S)
 
 
@@ -207,25 +224,36 @@ binary: $(OUTPUT_PATH)/$(APP_NAME).bin
 dump: $(OUTPUT_PATH)/$(APP_NAME).dump
 
 
+# Generate an assembly listing of the final linker output, possible intermixed with source code
 $(OUTPUT_PATH)/$(APP_NAME).dump: $(OUTPUT_PATH)/$(APP_NAME).elf
 	@echo 'OBJDUMP  $@'
 	@$(OBJDUMP) -d $(OBJDUMPFLAGS) $< > $@
 
+# Create a binary image
 $(OUTPUT_PATH)/$(APP_NAME).bin: $(OUTPUT_PATH)/$(APP_NAME).elf
 	@echo 'OBJCOPY  $@'
 	@$(OBJCOPY) -O binary $< $@
 
+# Link and optionally run link-time optimization (LTO).
+#  * When not using LTO, we can just invoke cross-ld.
+#  * With LTO, cross-cc has to be invoked once again to perform the optimizations, and when done it
+#    will automatically invoke the linker. Hence, linker flags must be passed to the compiler.
 $(OUTPUT_PATH)/$(APP_NAME).elf: $(HYPARM_OBJS) $(KCONFIG_CONFIG)
+ifneq ($(CONFIG_BUILD_LTO),y)
 	@echo 'LD       $@'
-	@$(LD) -o $@ $(LDFLAGS) $(filter-out $(KCONFIG_CONFIG), $+)
+	@$(LD) -o $@ $(LDFLAGS) $(HYPARM_OBJS)
+else
+	@echo 'CC/GOLD  $@'
+	@$(CC) $(CFLAGS) -nostartfiles -nostdlib -o $@ $(LDFLAGS) $(HYPARM_OBJS)
+endif
 
 
 $(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_OK)
 ifneq ($(VERBOSE),)
 	@echo 'DEP      $<'
 endif
-	@$(CC) -M $(CPPFLAGS) -MP -MT $(patsubst %.c,%.c.o,$<) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	@$(CC) -M $(CPPFLAGS) -MP -MT $(patsubst %.c,%.c.o,$<) $< > $@.$$$$ && \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@ && \
 	rm $@.$$$$
 
 $(SOURCE_PATH)/%.c.o: $(SOURCE_PATH)/%.c

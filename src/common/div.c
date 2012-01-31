@@ -39,7 +39,7 @@ typedef u64int u64intPair __attribute__((vector_size(16)));
 
 u32int __aeabi_uidiv(u32int dividend, u32int divisor);
 u32intPair __aeabi_uidivmod(u32int dividend, u32int divisor);
-u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor);
+u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor) __attribute__((externally_visible));
 
 
 /*

@@ -8,7 +8,6 @@
 
 #define SWI_END_OF_BLOCK      0x1
 
-// uncomment me to enable exception handler debug : #define EXC_HDLR_DBG
 
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code);
 

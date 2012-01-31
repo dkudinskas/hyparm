@@ -1,7 +1,6 @@
 #include "common/debug.h"
 #include "common/stddef.h"
 
-#include "instructionEmu/asm-dis.h"
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/coprocInstructions.h"
 #include "instructionEmu/dataMoveInstr.h"
@@ -19,10 +18,10 @@ struct TopLevelCategory
 struct instruction32bit
 {
   s16int replace;
-  instructionHandler handlerFunction;
+  instructionHandler handler;
   u32int value;            /* If arch == 0 then value is a sentinel.  */
   u32int mask;             /* Recognise inst if (op & mask) == value.  */
-  const char * instructionString; /* How to disassemble this insn.  */
+  const char *instructionString; /* How to disassemble this insn.  */
 };
 
 
@@ -34,10 +33,10 @@ struct instruction32bit
 #endif
 
 
-static instructionHandler decode(GCONTXT *context, struct TopLevelCategory *categories, u32int instruction);
+static instructionHandler decode(struct TopLevelCategory *categories, u32int instruction);
 
 
-static instructionHandler decode(GCONTXT *context, struct TopLevelCategory *categories, u32int instruction)
+static instructionHandler decode(struct TopLevelCategory *categories, u32int instruction)
 {
   /*
    * Find the top level category for this instruction
@@ -52,7 +51,8 @@ static instructionHandler decode(GCONTXT *context, struct TopLevelCategory *cate
   struct instruction32bit *table = categories->table;
   if (!table)
   {
-    DIE_NOW(0, "decoder: UNDEFINED category");
+    printf("decode: cannot classify instruction %#.8x", instruction);
+    DIE_NOW(NULL, "undefined instruction");
   }
   while ((instruction & table->mask) != table->value)
   {
@@ -64,26 +64,22 @@ static instructionHandler decode(GCONTXT *context, struct TopLevelCategory *cate
    */
   if (table->mask == 0)
   {
-    printf("%s: Instruction: %.8x ", table->instructionString, instruction);
-#ifdef CONFIG_THUMB2
-    dumpInstrString(context, instruction);
-#else
-    dumpInstrString(instruction);
-#endif
-    printf(EOL);
+    printf("decode: cannot decode instruction %#.8x classified as '%s'" EOL, instruction,
+        table->instructionString);
+    DIE_NOW(NULL, "undefined instruction");
   }
-  return table->replace ? table->handlerFunction : NULL;
+  return table->replace ? table->handler : NULL;
 }
 
-instructionHandler decodeArmInstruction(GCONTXT *context, u32int instruction)
+instructionHandler decodeArmInstruction(u32int instruction)
 {
-  return decode(context, armCategories, instruction);
+  return decode(armCategories, instruction);
 }
 
 
 #ifdef CONFIG_THUMB2
 
-instructionHandler decodeThumbInstruction(GCONTXT *context, u32int instruction)
+instructionHandler decodeThumbInstruction(u32int instruction)
 {
   /*
    * For Thumb, we still need to determine which table of top-level categories to use
@@ -101,7 +97,7 @@ instructionHandler decodeThumbInstruction(GCONTXT *context, u32int instruction)
       categories = t16Categories;
       break;
   }
-  return decode(context, categories, instruction);
+  return decode(categories, instruction);
 }
 
 #endif /* CONFIG_THUMB2 */
