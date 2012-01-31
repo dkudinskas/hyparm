@@ -1795,9 +1795,9 @@ u32int ldrbInstruction(GCONTXT * context)
       if (abort)
       {
 #ifdef CONFIG_BLOCK_COPY
-        return context->PCOfLastInstruction+4;
+        return context->PCOfLastInstruction;
 #else
-        return context->R15 + 4;
+        return context->R15;
 #endif
       }
     }
