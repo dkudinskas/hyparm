@@ -1,6 +1,5 @@
 #include "common/debug.h"
 
-#include "instructionEmu/asm-dis.h"
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/coprocInstructions.h"
 #include "instructionEmu/dataMoveInstr.h"
@@ -763,6 +762,5 @@ struct instruction32bit * decodeUnconditional(u32int instr)
 
 void dumpInstruction(const char * msg, u32int instr)
 {
-  printf("%s: Instruction: %#.8x ", msg, instr);
-  dumpInstrString(instr);
+  printf("%s: Instruction: %#.8x \n", msg, instr);
 }

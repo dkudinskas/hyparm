@@ -33,16 +33,15 @@
 #include "io/fs/fat.h"
 #endif
 
-#include "linuxBoot/bootLinux.h"
-#include "linuxBoot/image.h"
+#ifdef CONFIG_GUEST_FREERTOS
+#include "guestBoot/freertos.h"
+#endif
+#include "guestBoot/linux.h"
+#include "guestBoot/image.h"
 
 #include "memoryManager/addressing.h" /* For virtual addressing initialisation */
 #include "memoryManager/cp15coproc.h"
 #include "memoryManager/frameAllocator.h"
-
-#ifdef CONFIG_GUEST_FREERTOS
-#include "rtosBoot/bootRtos.h"
-#endif
 
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/LED.h"
@@ -212,23 +211,23 @@ void main(s32int argc, char *argv[])
   u32int err = 0;
   if ((err = mmcMainInit()) != 0)
   {
-    DIE_NOW(0, "Failed to initialize mmc code.\n");
+    DIE_NOW(context, "Failed to initialize mmc code.\n");
   }
 
   if ((err = partTableRead(&mmcDevice->blockDev, &primaryPartitionTable)) != 0)
   {
-    DIE_NOW(0, "Failed to read partition table.\n");
+    DIE_NOW(context, "Failed to read partition table.\n");
   }
 
   if ((err = fatMount(&mainFilesystem, &mmcDevice->blockDev, 1)) != 0)
   {
-    DIE_NOW(0, "Failed to mount FAT partition.\n");
+    DIE_NOW(context, "Failed to mount FAT partition.\n");
   }
 
   debugStream = fopen(&mainFilesystem, "debug");
   if (debugStream == 0)
   {
-    DIE_NOW(0, "Failed to open (create) debug stream file.\n");
+    DIE_NOW(context, "Failed to open (create) debug stream file.\n");
   }
 #endif /* CONFIG_MMC */
 
@@ -242,18 +241,13 @@ void main(s32int argc, char *argv[])
   {
     DEBUG(STARTUP, "RTOS address: %x\n", kernAddr);
     rtos = TRUE;
-    doRtosBoot(context, kernAddr);
+    bootFreeRtos(context, kernAddr);
   }
   else
 #endif
   {
     DEBUG(STARTUP, "Kernel address: %x, Initrd address: %x" EOL, kernAddr, initrdAddr);
-
-    image_header_t imageHeader = getImageHeader(kernAddr);
-#if (CONFIG_DEBUG_STARTUP)
-    dumpHdrInfo(&imageHeader);
-#endif
-    doLinuxBoot(context, &imageHeader, kernAddr, initrdAddr);
+    bootLinux(context, kernAddr, initrdAddr);
   }
 #endif /* CONFIG_CLI */
 }

@@ -1,6 +1,6 @@
 #include "common/debug.h"
 
-#include "linuxBoot/image.h"
+#include "guestBoot/image.h"
 
 
 static inline u32int bs32(u32int number)
