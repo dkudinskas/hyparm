@@ -9,6 +9,17 @@
 
 #include "guestManager/guestContext.h"
 
+
+#define SCANNER_CALL_SOURCE_NOT_SET              0
+#define SCANNER_CALL_SOURCE_BOOT                 1
+#define SCANNER_CALL_SOURCE_SVC                  2
+#define SCANNER_CALL_SOURCE_DABT_PERMISSION      3
+#define SCANNER_CALL_SOURCE_DABT_TRANSLATION     4
+#define SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION  5
+#define SCANNER_CALL_SOURCE_PABT_FREERTOS        6
+#define SCANNER_CALL_SOURCE_PABT_TRANSLATION     7
+
+
 // uncomment me to enable scanner debug: #define SCANNER_DEBUG
 // uncomment me to enable scanner debug for blockCopyCache: #define SCANNER_DEBUG_BLOCKCOPY
 
@@ -20,16 +31,6 @@
 #endif
 
 #endif
-
-
-#define SCANNER_CALL_SOURCE_NOT_SET              0
-#define SCANNER_CALL_SOURCE_BOOT                 1
-#define SCANNER_CALL_SOURCE_SVC                  2
-#define SCANNER_CALL_SOURCE_DABT_PERMISSION      3
-#define SCANNER_CALL_SOURCE_DABT_TRANSLATION     4
-#define SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION  5
-#define SCANNER_CALL_SOURCE_PABT_FREERTOS        6
-#define SCANNER_CALL_SOURCE_PABT_TRANSLATION     7
 
 
 #ifndef CONFIG_THUMB2

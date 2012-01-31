@@ -209,6 +209,7 @@ void guestEnableVirtMem()
 
   //u32int pt_virt_addr = findVirtualAddr(gc->PT_os, gc->PT_os_real);
   /** End HACK */
+
   //Mark virtual addressing as now enabled
   gc->virtAddrEnabled = TRUE;
 

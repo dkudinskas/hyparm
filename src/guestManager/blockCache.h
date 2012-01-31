@@ -21,7 +21,7 @@
 
 #define BLOCK_CACHE_SIZE    96
 
-#endif
+#endif /* CONFIG_BLOCK_COPY */
 
 // uncomment me for block cache debug: #define BLOCK_CACHE_DBG
 
@@ -77,6 +77,9 @@ u32int *checkAndMergeBlock(u32int* startOfBlock2, u32int* endOfBlock2, BCENTRY *
 
 u32int* updateCurrBlockCopyCacheAddr(u32int* oldAddr, u32int nrOfAddedInstr,u32int* blockCopyCacheEnd);
 
+//Remove the copied instructions
+void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize);
+
 #elif defined(CONFIG_THUMB2)
 
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int HalfhypInstruction, u32int blkEndAddr,
@@ -95,12 +98,8 @@ u32int findEntryForAddress(BCENTRY * bcAddr, u32int addr);
 
 void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex);
 
-//Remove the copied instructions
-void removeBlockCopyCacheEntry(u32int blockCopyCacheAddress,u32int blockCopyCacheSize);
-
 void resolveCacheConflict(u32int index, BCENTRY * bcAddr);
 
-//Remove all cache entries.  All logbook entries and all copied instructions will be removed.
 void explodeCache(BCENTRY * bcache);
 
 void validateCachePreChange(BCENTRY * bcache, u32int address);
@@ -115,6 +114,7 @@ void clearExecBitMap(u32int addr);
 
 bool isBitmapSetForAddress(u32int addr);
 
+
 #ifdef CONFIG_THUMB2
 
 struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int bcIndex);
@@ -122,5 +122,6 @@ struct thumbEntry BreakDownThumb(BCENTRY *bcAddr, u32int bcIndex);
 void resolveSWI(u32int index, u32int* endAddress);
 
 #endif
+
 
 #endif /* __GUEST_MANAGER__BLOCK_CACHE_H__ */

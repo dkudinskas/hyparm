@@ -7,7 +7,9 @@
 
 
 typedef u32int (*instructionHandler)(GCONTXT * context);
+
 typedef u32int* (*PCHandler)(GCONTXT * context, u32int * instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);
+
 
 #ifdef CONFIG_DECODER_TABLE_SEARCH
 # include "instructionEmu/tableSearchDecoder.h"

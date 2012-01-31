@@ -25,13 +25,13 @@
 #include "guestManager/guestContext.h"
 #include "guestManager/blockCache.h"
 
+#include "instructionEmu/scanner.h"
+
 #ifdef CONFIG_MMC
 #include "io/mmc.h"
 #include "io/partitions.h"
 #include "io/fs/fat.h"
 #endif
-
-#include "instructionEmu/scanner.h"
 
 #include "linuxBoot/bootLinux.h"
 #include "linuxBoot/image.h"
@@ -109,8 +109,8 @@ void main(s32int argc, char *argv[])
   initialiseFrameTable();
 
   /* initialize guest context */
-  GCONTXT *guestContext = allocateGuest();
-  setGuestContext(guestContext);
+  GCONTXT *context = allocateGuest();
+  setGuestContext(context);
 
 #ifdef CONFIG_BLOCK_COPY
   //Install jump instruction
@@ -183,7 +183,7 @@ void main(s32int argc, char *argv[])
     serial_newline();
 #endif
   }
-  registerBlockCopyCache(guestContext, blockCopyCache, BLOCK_COPY_CACHE_SIZE);
+  registerBlockCopyCache(context, blockCopyCache, BLOCK_COPY_CACHE_SIZE);
 #endif //CONFIG_BLOCK_COPY
 
   /* Setup MMU for Hypervisor */
@@ -242,7 +242,7 @@ void main(s32int argc, char *argv[])
   {
     DEBUG(STARTUP, "RTOS address: %x\n", kernAddr);
     rtos = TRUE;
-    doRtosBoot(guestContext, kernAddr);
+    doRtosBoot(context, kernAddr);
   }
   else
 #endif
@@ -253,7 +253,7 @@ void main(s32int argc, char *argv[])
 #if (CONFIG_DEBUG_STARTUP)
     dumpHdrInfo(&imageHeader);
 #endif
-    doLinuxBoot(guestContext, &imageHeader, kernAddr, initrdAddr);
+    doLinuxBoot(context, &imageHeader, kernAddr, initrdAddr);
   }
 #endif /* CONFIG_CLI */
 }

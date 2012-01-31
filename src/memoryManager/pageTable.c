@@ -12,9 +12,10 @@
 #include "memoryManager/pageTable.h"
 
 
-//Uncomment to enable all page table debugging: #define PT_DEBUG
-//Uncomment to show entries being mapped: #define PT_SHORT_DEBUG
-//Uncomment to show shadow page table code:#define PT_SHADOW_DEBUG
+//Uncomment to enable all page table debugging: #define PT_DBG
+//Uncomment to show entries being mapped #define PT_SHORT_DBG
+//Uncomment to show shadow page table code:#define PT_SHADOW_DBG
+#define PT_DUMP_DBG
 
 //Useful to have pageTableDumps with shadow debug
 #ifdef PT_SHADOW_DBG
@@ -37,6 +38,10 @@ descriptor* hypervisorPtd;
 
 ptMetaData guestSecondLvlPageTables[256];
 ptMetaData shadowSecondLvlPageTables[256];
+
+
+static void disableCacheBit(descriptor* ptd, u32int virtual);
+
 
 /* Don't want to make the hypervisorPtd global */
 void setGuestPhysicalPt(GCONTXT* gc)

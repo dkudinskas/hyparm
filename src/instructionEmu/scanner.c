@@ -465,13 +465,13 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #else
 
   u32int instruction = *currAddress;
+
   u32int hashVal = getHash(blkStartAddr);
   u32int bcIndex = (hashVal & (BLOCK_CACHE_SIZE-1)); // 0x1FF mask for 512 entry cache
-  bool inBlockCache = checkBlockCache(blkStartAddr, bcIndex, gc->blockCache);
 
+  bool inBlockCache = checkBlockCache(blkStartAddr, bcIndex, gc->blockCache);
   if (inBlockCache)
   {
-    //Check the logbook
     BCENTRY * bcEntry = getBlockCacheEntry(bcIndex, gc->blockCache);
     gc->hdlFunct = (u32int (*)(GCONTXT * context))bcEntry->hdlFunct;
     gc->endOfBlockInstr = bcEntry->hyperedInstruction;
@@ -729,11 +729,11 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
 #ifdef CONFIG_DECODER_TABLE_SEARCH
   while ((decodedInstruction = decodeInstr(gc, instruction))->replaceCode == 0)
 #else
-#ifdef CONFIG_DECODER_AUTO
+# ifdef CONFIG_DECODER_AUTO
   while ((decodedInstruction = decodeInstr(gc, instruction)) == 0)
-#else
-#error Decoder must be set!
-#endif
+# else
+#  error Decoder must be set!
+# endif
 #endif
   {
     currAddress++;
@@ -770,15 +770,15 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr)
   {
     // save end of block instruction and handler function pointer close to us...
     gc->endOfBlockInstr = instruction;
-# ifdef CONFIG_DECODER_TABLE_SEARCH
+#ifdef CONFIG_DECODER_TABLE_SEARCH
     gc->hdlFunct = decodedInstruction->hdlFunct;
-# else
-#  ifdef CONFIG_DECODER_AUTO
+#else
+# ifdef CONFIG_DECODER_AUTO
     gc->hdlFunct = decodedInstruction;
-#  else
-#   error Decoder must be set!
-#  endif
+# else
+#  error Decoder must be set!
 # endif
+#endif
     // replace end of block instruction with hypercall of the appropriate code
     *currAddress = INSTR_SWI | ((bcIndex + 1) << 8);
     // if guest instruction stream is mapped with caching enabled, must maintain

@@ -71,15 +71,16 @@ void doLinuxBoot(GCONTXT *context, image_header_t *imageHeader, u32int loadAddr,
   scanBlock(context, entryPoint);
 
   cleanupBeforeLinux();
+
 #ifdef CONFIG_BLOCK_COPY
   //execution shouldn't be started at hdrEntryPoint any more!
   //The code from the blockCache should be executed  :  getGuestContext()->blockCopyCache
   //But first entry in blockCopyCache is backpointer -> next entry (blockCopyCache is u32int => +4)
-  callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, (getGuestContext()->blockCopyCache+4));
-#else
+  entryPoint = context->blockCopyCache + 4;
+#endif
+
   /* does not return */
   callKernel(0, (u32int)BOARD_MACHINE_ID, (u32int)BOARD_PARAMS, entryPoint);
-#endif
 }
 
 void populateDramBanks()

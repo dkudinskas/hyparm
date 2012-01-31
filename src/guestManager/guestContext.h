@@ -65,7 +65,7 @@ struct guestContext
 #endif
   u32int (*hdlFunct)(GCONTXT * context);
   CREG * coprocRegBank;
-  BCENTRY * blockCache;  // This is the log book
+  BCENTRY * blockCache;
   u32int blockHistory[BLOCK_HISOTRY_SIZE];
   /* Virtual Addressing */
   descriptor* PT_physical; // guest physical to real physical PT

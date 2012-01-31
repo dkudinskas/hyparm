@@ -241,6 +241,7 @@ bool guestInPrivMode(GCONTXT * context)
   return (modeField == CPSR_MODE_USER) ? FALSE : TRUE;
 }
 
+
 bool evalCC(u32int instrCC, u32int cpsrCC)
 {
   switch(instrCC)

@@ -11,8 +11,7 @@ void invalidDataProcTrap(const char * msg, GCONTXT * gc)
 }
 
 u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
-{//It shouldn't matter that the destination register is PC if all PC-reads are intercepted
- //Than a store to the PC should store a valid value
+{
   u32int instr = context->endOfBlockInstr;
   u32int cpsrCC = (context->CPSR >> 28) & 0xF;
 #ifdef CONFIG_BLOCK_COPY
@@ -21,19 +20,22 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
   u32int nextPC = context->R15;
 #endif
   u32int regDest = (instr & 0x0000F000) >> 12;
-  if (regDest != 0xF)//Destination register is not PC -> instruction should have been handled by PCFunct
+
+  if (regDest != 0xF)
   {
+    //Destination register is not PC -> instruction should have been handled by PCFunct
     invalidDataProcTrap(instrString, context);
   }
+
 #ifdef DATA_PROC_TRACE
-  printf(instrString);
+  printf("%s %.8x @ ", instrString, instr);
 #ifdef CONFIG_BLOCK_COPY
-  printf(" %.8x @ %.8x\n", instr, context->PCOfLastInstruction);
+  printf("%.8x\n", context->PCOfLastInstruction);
 #else
-  printf(" %.8x @ %.8x\n", instr, context->R15);
+  printf("%.8x\n", context->R15);
 #endif
 #endif
-  
+
   int instrCC = (instr >> 28) & 0xF;
   bool conditionMet = evalCC(instrCC, cpsrCC);
   if (conditionMet)
@@ -52,6 +54,13 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
       {
         case ADD:
           nextPC = loadGuestGPR(regSrc, context) + armExpandImm12(imm12);
+#ifndef CONFIG_BLOCK_COPY
+          /* Peter deleted this -- but probably this code path is never entered with block copy (??) */
+          if (regSrc == 0xF)
+          {
+            nextPC += 8;
+          }
+#endif
           break;
         case SUB:
           nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
@@ -111,6 +120,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
         DIE_NOW(context, "unpredictable instruction <dataProc> PC, Rn, Rm, Rs");
       }
     }
+
     if (setFlags)
     {
       if (regDest == 0xF)
@@ -153,6 +163,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
         DIE_NOW(context, "unimplemented arithLogicOp set flags case");
       }
     }
+
     context->R15 = nextPC;
 #ifdef CONFIG_THUMB2
     /*
@@ -185,66 +196,38 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
   }
 }
 
+
 /*********************************/
 /* AND Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-}
-#endif
-
 u32int andInstruction(GCONTXT * context)
 {
   printf("%.8x" EOL, context->endOfBlockInstr);
   DIE_NOW(context, "Unimplemented AND trap");
 }
+
+
 /*********************************/
 /* RSB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* rsbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-}
-#endif
-
 u32int rsbInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "rsbInstruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "Unimplemented RSB trap");
 }
+
+
 /*********************************/
 /* RSB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* rscPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-}
-#endif
-
 u32int rscInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "rscInstruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "Unimplemented RSC trap");
 }
+
 
 /*********************************/
 /* SUB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* subPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-}
-#endif
-
 u32int subInstruction(GCONTXT * context)
 {
 #ifdef CONFIG_BLOCK_COPY
@@ -255,107 +238,229 @@ u32int subInstruction(GCONTXT * context)
 #endif
 }
 
+
 /*********************************/
 /* SBC Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* sbcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-}
-#endif
-
 u32int sbcInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "sbcInstruction is executed but not yet checked for blockCopyCompatibility");
   DIE_NOW(context, "Unimplemented SBC trap");
 }
+
+
 /*********************************/
 /* ADD Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-}
-#endif
-
 u32int addInstruction(GCONTXT * context)
 {
   OPTYPE opType = ADD;
   return arithLogicOp(context, opType, "ADD instr ");
 }
+
+
 /*********************************/
 /* ADD Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
+u32int adcInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "Unimplemented ADC trap");
+}
+
+
+/*********************************/
+/* ORR Rd, Rs, Rs2/imm, shiftAmt */
+/*********************************/
+u32int orrInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "Unimplemented ORR trap");
+}
+
+
+/*********************************/
+/* ORR Rd, Rs, Rs2/imm, shiftAmt */
+/*********************************/
+u32int eorInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "Unimplemented EOR trap");
+}
+
+
+/*********************************/
+/* SBC Rd, Rs, Rs2/imm, shiftAmt */
+/*********************************/
+u32int bicInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "Unimplemented BIC trap");
+}
+
+
+/*********************************/
+/* MOV Rd, Rs                    */
+/*********************************/
+u32int movInstruction(GCONTXT * context)
+{
+  OPTYPE opType = MOV;
+  return arithLogicOp(context, opType, "MOV instr ");
+}
+
+
+/*********************************/
+/* MVN Rd, Rs                    */
+/*********************************/
+u32int mvnInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "Unimplemented MVN trap");
+}
+
+
+/*********************************/
+/* LSL Rd, Rs                    */
+/*********************************/
+u32int lslInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "Unimplemented LSL trap");
+}
+
+
+/*********************************/
+/* LSR Rd, Rs                    */
+/*********************************/
+u32int lsrInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "Unimplemented LSR trap");
+}
+
+
+/*********************************/
+/* ASR Rd, Rs                    */
+/*********************************/
+u32int asrInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "Unimplemented ASR trap");
+}
+
+
+/*********************************/
+/* RRX Rd, Rs                    */
+/*********************************/
+u32int rrxInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "Unimplemented RRX trap");
+}
+
+
+/*********************************/
+/* ROR Rd, Rs                    */
+/*********************************/
+u32int rorInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "Unimplemented ROR trap");
+}
+
+
+/*********************************/
+/* TST Rs, Rs2/imm               */
+/*********************************/
+u32int tstInstruction(GCONTXT * context)
+{
+  DIE_NOW(context, "Unimplemented tst interpreter");
+}
+
+
+/*********************************/
+/* TEQ Rs, Rs2/imm               */
+/*********************************/
+u32int teqInstruction(GCONTXT * context)
+{
+#ifdef CONFIG_BLOCK_COPY
+  DIE_NOW(0, "teqInstruction is executed but not yet checked for blockCopyCompatibility");
+#else
+  invalidDataProcTrap("TEQ instr", context);
+  return 0;
+#endif
+}
+
+
+/*********************************/
+/* CMP Rs, Rs2/imm               */
+/*********************************/
+u32int cmpInstruction(GCONTXT * context)
+{
+#ifdef CONFIG_BLOCK_COPY
+  DIE_NOW(0, "cmpInstruction is executed but not yet checked for blockCopyCompatibility");
+#else
+  invalidDataProcTrap("CMP instr", context);
+  return 0;
+#endif
+}
+
+
+/*********************************/
+/* CMN Rs, Rs2/imm               */
+/*********************************/
+u32int cmnInstruction(GCONTXT * context)
+{
+#ifdef CONFIG_BLOCK_COPY
+  DIE_NOW(0, "cmnInstruction is executed but not yet checked for blockCopyCompatibility");
+#else
+  invalidDataProcTrap("CMN instr", context);
+  return 0;
+#endif
+}
+
 
 #ifdef CONFIG_BLOCK_COPY
+
+u32int* andPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+}
+
+u32int* rsbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+}
+
+u32int* rscPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+}
+
+u32int* subPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+}
+
+u32int* sbcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+}
+
+u32int* addPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+}
+
 u32int* adcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
-#endif
 
-u32int adcInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "adcInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented ADC trap");
-}
-/*********************************/
-/* ORR Rd, Rs, Rs2/imm, shiftAmt */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* orrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
-#endif
 
-u32int orrInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "orrInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented ORR trap");
-}
-/*********************************/
-/* ORR Rd, Rs, Rs2/imm, shiftAmt */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* eorPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
-#endif
 
-u32int eorInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "eorInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented EOR trap");
-}
-/*********************************/
-/* SBC Rd, Rs, Rs2/imm, shiftAmt */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* bicPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   return standardImmRegRSR(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
-#endif
 
-u32int bicInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "bicInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented BIC trap");
-}
-/*********************************/
-/* MOV Rd, Rs                    */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 { //Destination is surely not PC
   u32int instruction = *instructionAddr;
@@ -427,20 +532,7 @@ u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
     return currBlockCopyCacheAddr;
   }
 }
-#endif
 
-u32int movInstruction(GCONTXT * context)
-{
-  //arithLogicOp should support movInstructions
-  OPTYPE opType = MOV;
-  return arithLogicOp(context, opType, "MOV instr ");
-}
-
-/*********************************/
-/* MVN Rd, Rs                    */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* mvnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   u32int instruction = *instructionAddr;
@@ -496,34 +588,12 @@ u32int* mvnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   return currBlockCopyCacheAddr;
 }
-#endif
 
-u32int mvnInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "mvnInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented MVN trap");
-}
-/*********************************/
-/* LSL Rd, Rs                    */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* lslPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {  //This is the same as lsrPCInstruction only direction has changed -> only bit 5 differs
   return lsrPCInstruction(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
-#endif
 
-u32int lslInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "lslInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented LSL trap");
-}
-/*********************************/
-/* LSR Rd, Rs                    */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* lsrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
 
@@ -562,18 +632,7 @@ u32int* lsrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   }
 }
-#endif
 
-u32int lsrInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "lsrInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented LSR trap");
-}
-/*********************************/
-/* ASR Rd, Rs                    */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   u32int instruction = *instructionAddr;
@@ -613,110 +672,37 @@ u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
     DIE_NOW(0,"asrPCInstruction conditional");
   }
 }
-#endif
 
-u32int asrInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "asrInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented ASR trap");
-}
-/*********************************/
-/* RRX Rd, Rs                    */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* rrxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "rrx PCFunct unfinished\n");
   return 0;
 }
-#endif
 
-u32int rrxInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "rrxInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented RRX trap");
-}
-/*********************************/
-/* ROR Rd, Rs                    */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* rorPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "ror PCFunct unfinished\n");
   return 0;
 }
-#endif
 
-u32int rorInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "rorInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented ROR trap");
-}
-/*********************************/
-/* TST Rs, Rs2/imm               */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* tstPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   return standardImmRegRSRNoDest(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
-#endif
 
-u32int tstInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "tstInstruction is executed but not yet checked for blockCopyCompatibility");
-  DIE_NOW(context, "Unimplemented tst interpreter");
-}
-/*********************************/
-/* TEQ Rs, Rs2/imm               */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* teqPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   return standardImmRegRSRNoDest(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
-#endif
 
-u32int teqInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "teqInstruction is executed but not yet checked for blockCopyCompatibility");
-  invalidDataProcTrap("TEQ instr", context);
-  return 0;
-}
-/*********************************/
-/* CMP Rs, Rs2/imm               */
-/*********************************/
-
-#ifdef CONFIG_BLOCK_COPY
 u32int* cmpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   return standardImmRegRSRNoDest(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
-#endif
 
-u32int cmpInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "cmpInstruction is executed but not yet checked for blockCopyCompatibility");
-  invalidDataProcTrap("CMP instr", context);
-  return 0;
-}
-/*********************************/
-/* CMN Rs, Rs2/imm               */
-/*********************************/
-#ifdef CONFIG_BLOCK_COPY
 u32int* cmnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   return standardImmRegRSRNoDest(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
 }
-#endif
 
-u32int cmnInstruction(GCONTXT * context)
-{
-  DIE_NOW(0, "cmnInstruction is executed but not yet checked for blockCopyCompatibility");
-  invalidDataProcTrap("CMN instr", context);
-  return 0;
-}
+#endif /* CONFIG_BLOCK_COPY */

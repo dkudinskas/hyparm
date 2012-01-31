@@ -5,7 +5,7 @@
 
 
 // uncomment me to enable debug: #define MALLOC_DEBUG
-// uncomment me to enable debug: #define MEMSET_DEBUG
+
 
 struct allocatedChunk
 {

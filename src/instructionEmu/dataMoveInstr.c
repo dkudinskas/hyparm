@@ -19,49 +19,12 @@ void invalidDataMoveTrap(const char * msg, GCONTXT * gc)
   printf("ERROR: %08x @ %08x should not have trapped!\n", gc->endOfBlockInstr, gc->R15);
   DIE_NOW(gc, msg);
 }
+
 /***********************************************************************************
  ***********************************************************************************
  ************************** STORE FUNCTIONS ****************************************
  ***********************************************************************************
  ***********************************************************************************/
-#ifdef CONFIG_BLOCK_COPY
-u32int* strPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  u32int instruction=*instructionAddr;
-  u32int srcPCRegLoc = 16;//This is where the PC is in the instruction (if immediate always at bit 16 if not can be at bit 0)
-  u32int destReg=(instruction>>12) & 0xF;
-  u32int instr2Copy=instruction;
-  bool conditionAlways = (instruction>>28 & 0xF) == 0xE;
-
-  if(((instruction>>25 & 0b1) == 0b1) & ((instruction & 0xF) == 0xF)){//bit 25 is 1 when there are 2 source registers
-    DIE_NOW(0, "str PCFunct: str (register) cannot have Rm as PC -> UNPREDICTABLE");
-  }
-
-  if(conditionAlways)
-  {
-    if((instruction>>srcPCRegLoc & 0xF) == 0xF)  //There only have to be taken measures if Rn is PC
-      {
-        //step 1 Copy PC (=instructionAddr2) to desReg
-        currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
-
-        //Step 2 modify strInstruction
-        //Clear PC source Register
-        instr2Copy=zeroBits(instruction, srcPCRegLoc);
-        instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
-      }
-
-      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-      *(currBlockCopyCacheAddr++)=instr2Copy;
-
-      return currBlockCopyCacheAddr;
-  }
-  else
-  {
-    /* condition might be false */
-    DIE_NOW(0, "conditional strPCFunct not yet implemented");
-  }
-}
-#endif
 
 u32int strInstruction(GCONTXT * context)
 {
@@ -145,10 +108,10 @@ u32int strInstruction(GCONTXT * context)
 #endif
 
 #ifdef CONFIG_BLOCK_COPY
-    return context->PCOfLastInstruction + 4;
-    #else
-    return context->R15 + 4;
-    #endif
+      return context->PCOfLastInstruction + 4;
+#else
+      return context->R15 + 4;
+#endif
     }
 
     if (regOrImm == 0)
@@ -270,19 +233,11 @@ u32int strInstruction(GCONTXT * context)
     }
 #ifdef CONFIG_BLOCK_COPY
     return context->PCOfLastInstruction + 4;
-    #else
-    return context->R15 + 4;
-    #endif
+#else
+    return (context->R15 + 4);
+#endif
   }
 }
-  
-#ifdef CONFIG_BLOCK_COPY
-u32int* strbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "strb PCFunct unfinished\n");
-  return 0;
-}
-#endif
 
 u32int strbInstruction(GCONTXT * context)
 {
@@ -413,10 +368,10 @@ u32int strbInstruction(GCONTXT * context)
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
-    return context->PCOfLastInstruction + 4;
-    #else
-    return context->R15 + 4;
-    #endif
+      return context->PCOfLastInstruction + 4;
+#else
+      return context->R15 + 4;
+#endif
     }
     if (regSrc == 15)
     {
@@ -516,33 +471,17 @@ u32int strbInstruction(GCONTXT * context)
     }
 #ifdef CONFIG_BLOCK_COPY
     return context->PCOfLastInstruction + 4;
-    #else
-    return context->R15 + 4;
-    #endif
+#else
+    return (context->R15 + 4);
+#endif
   }
 }
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* strhtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "strht PCFunct unfinished\n");
-  return 0;
-}
-#endif
 
 u32int strhtInstruction(GCONTXT * context)
 {
   DIE_NOW(context, "STRHT unfinished\n");
   return 0;
 }
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* strhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "strh PCFunct unfinished\n");
-  return 0;
-}
-#endif
 
 u32int strhInstruction(GCONTXT * context)
 {
@@ -641,10 +580,10 @@ u32int strhInstruction(GCONTXT * context)
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
-    return context->PCOfLastInstruction + 4;
-    #else
-    return context->R15 + 4;
-    #endif
+      return context->PCOfLastInstruction + 4;
+#else
+      return context->R15 + 4;
+#endif
     }
     // P = 0 and W == 1 then STR as if user mode
     if ((preOrPost == 0) && (writeBack != 0))
@@ -745,34 +684,12 @@ u32int strhInstruction(GCONTXT * context)
     }
 #ifdef CONFIG_BLOCK_COPY
     return context->PCOfLastInstruction + 4;
-    #else
-    return context->R15 + 4;
-    #endif
-  }
-}
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* stmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  u32int instruction = *instructionAddr;
-  if((instruction & 0xF0000) == 0xF0000)
-  {
-    // According to ARM ARM: source register = PC ->  UNPREDICTABLE
-    DIE_NOW(0, "stm PC had PC as Rn -> UNPREDICTABLE?!\n");
-  }
-  else
-  {
-    //Stores multiple registers to consecutive memory locations
-    //PC is not used -> instruction is save to execute just copy it to blockCopyCache
-    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-    *(currBlockCopyCacheAddr++)=instruction;
-
-    return currBlockCopyCacheAddr;
-  }
-}
+#else
+    return (context->R15 + 4);
 #endif
+  }
+}
 
-/* This function can also get called when a data abort occurs and a store is emulated (emulateLoadStoreGeneric) */
 u32int stmInstruction(GCONTXT * context)
 {
   u32int instr = 0;
@@ -850,9 +767,9 @@ u32int stmInstruction(GCONTXT * context)
     instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
 # ifdef CONFIG_BLOCK_COPY
-  printf("STM instruction: %08x @ PC = %08x\n", instr, context->PCOfLastInstruction);
+    printf("STM instruction: %08x @ PC = %08x\n", instr, context->PCOfLastInstruction);
 # else
-  printf("STM instruction: %08x @ PC = %08x\n", instr, context->R15);
+    printf("STM instruction: %08x @ PC = %08x\n", instr, context->R15);
 # endif
 #endif
 
@@ -871,10 +788,10 @@ u32int stmInstruction(GCONTXT * context)
     {
       // condition not met! allright, we're done here. next instruction...
 #ifdef CONFIG_BLOCK_COPY
-    return context->PCOfLastInstruction + 4;
-    #else
-    return context->R15 + 4;
-    #endif
+      return context->PCOfLastInstruction + 4;
+#else
+      return context->R15 + 4;
+#endif
     }
 
     u32int savedCPSR = 0;
@@ -958,22 +875,13 @@ u32int stmInstruction(GCONTXT * context)
 
 #ifdef CONFIG_BLOCK_COPY
     return context->PCOfLastInstruction + 4;
-    #else
+#else
     return context->R15 + 4;
-    #endif
+#endif
   }
 }
 
 /* store dual */
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* strdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "strd PCFunct unfinished\n");
-  return 0;
-}
-#endif
-
 u32int strdInstruction(GCONTXT * context)
 {
   u32int instr = context->endOfBlockInstr;
@@ -1164,6 +1072,7 @@ u32int strdInstruction(GCONTXT * context)
 #ifdef DATA_MOVE_TRACE
     printf("store val1 = %x store val2 = %x\n", valueToStore, valueToStore2);
 #endif
+
     context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
     context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address + 4, valueToStore2);
 
@@ -1175,19 +1084,10 @@ u32int strdInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
     return context->PCOfLastInstruction + 4;
 #else
-    return context->R15 + 4;
+    return (context->R15 + 4);
 #endif
   }
 }
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* strexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "strex PCFunct unfinished\n");
-  return 0;
-}
-#endif
-
 
 u32int strexInstruction(GCONTXT * context)
 {
@@ -1199,19 +1099,21 @@ u32int strexInstruction(GCONTXT * context)
   printf("STREX instruction: %08x @ PC = %08x\n", instr, context->R15);
 # endif
 #endif
+
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
+
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
-    #ifdef CONFIG_BLOCK_COPY
+#ifdef CONFIG_BLOCK_COPY
 	return context->PCOfLastInstruction+4;
-	#else
-	return context->R15 + 4;
-	#endif
+#else
+    return context->R15 + 4;
+#endif
   }
 
   if ((regN == 15) || (regD == 15) || (regT == 15))
@@ -1222,30 +1124,24 @@ u32int strexInstruction(GCONTXT * context)
   {
     DIE_NOW(0, "STREX unpredictable case (invalid register use)");
   }
+
   u32int address = loadGuestGPR(regN, context);
   u32int valToStore = loadGuestGPR(regT, context);
 #ifdef DATA_MOVE_TRACE
   printf("STREX instruction: address = %08x, valToStore = %x, valueFromReg %x\n",
       address, valToStore, regT);
 #endif
+
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore);
   // operation succeeded updating memory, flag regD (0 - updated, 1 - fail)
   storeGuestGPR(regD, 0, context);
-  
-  #ifdef CONFIG_BLOCK_COPY
-  return context->PCOfLastInstruction+4;
-  #else
-  return context->R15 + 4;
-  #endif
-}
 
 #ifdef CONFIG_BLOCK_COPY
-u32int* strexbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "strexb PCFunct unfinished\n");
-  return 0;
-}
+  return context->PCOfLastInstruction+4;
+#else
+  return context->R15 + 4;
 #endif
+}
 
 u32int strexbInstruction(GCONTXT * context)
 {
@@ -1257,19 +1153,21 @@ u32int strexbInstruction(GCONTXT * context)
   printf("STREXB instruction: %08x @ PC = %08x\n", instr, context->R15);
 # endif
 #endif
+
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
+
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
-    #ifdef CONFIG_BLOCK_COPY
-      return context->PCOfLastInstruction+4;
-    #else
-      return context->R15 + 4;
-    #endif
+#ifdef CONFIG_BLOCK_COPY
+    return context->PCOfLastInstruction+4;
+#else
+    return context->R15 + 4;
+#endif
   }
 
   if ((regN == 15) || (regD == 15) || (regT == 15))
@@ -1280,46 +1178,45 @@ u32int strexbInstruction(GCONTXT * context)
   {
     DIE_NOW(0, "STREX unpredictable case (invalid register use)");
   }
+
   u32int address = loadGuestGPR(regN, context);
+
   u32int valToStore = loadGuestGPR(regT, context);
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valToStore & 0xFF));
+
   storeGuestGPR(regD, 0, context);
-  
-  #ifdef CONFIG_BLOCK_COPY
-    return context->PCOfLastInstruction+4;
-  #else
-    return context->R15 + 4;
-  #endif
-}
 
 #ifdef CONFIG_BLOCK_COPY
-u32int* strexdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "strexd PCFunct unfinished\n");
-  return 0;
-}
+  return context->PCOfLastInstruction+4;
+#else
+  return context->R15 + 4;
 #endif
+}
 
 u32int strexdInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "strexdInstruction is executed but not yet checked for blockCopyCompatibility");
+#ifdef CONFIG_BLOCK_COPY
+  DIE_NOW(context, "strexdInstruction is executed but not yet checked for blockCopyCompatibility");
+#endif
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   printf("STREXD instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
+
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
+
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
-    #ifdef CONFIG_BLOCK_COPY
-	return context->PCOfLastInstruction+4;
-	#else
-	return context->R15 + 4;
-	#endif
+#ifdef CONFIG_BLOCK_COPY
+    return context->PCOfLastInstruction+4;
+#else
+    return context->R15 + 4;
+#endif
   }
 
   if ((regD == 15) || ((regT % 2) != 0) || (regT == 14) || (regN == 15))
@@ -1330,7 +1227,9 @@ u32int strexdInstruction(GCONTXT * context)
   {
     DIE_NOW(0, "STREXD unpredictable case (PC used)");
   }
+
   u32int address = loadGuestGPR(regN, context);
+
   // Create doubleword to store such that R[t] will be stored at addr and R[t2] at addr+4.
   u32int valToStore1 = loadGuestGPR(regT, context);
   u32int valToStore2 = loadGuestGPR(regT + 1, context);
@@ -1347,7 +1246,7 @@ u32int strexdInstruction(GCONTXT * context)
     context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address + 4, valToStore2);
   }
   storeGuestGPR(regD, 0, context);
-  
+
 #ifdef CONFIG_BLOCK_COPY
   return context->PCOfLastInstruction+4;
 #else
@@ -1355,25 +1254,21 @@ u32int strexdInstruction(GCONTXT * context)
 #endif
 }
 
-#ifdef CONFIG_BLOCK_COPY
-u32int* strexhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "strexh PCFunct unfinished\n");
-  return 0;
-}
-#endif
-
 u32int strexhInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "strexhInstruction is executed but not yet checked for blockCopyCompatibility");
+#ifdef CONFIG_BLOCK_COPY
+  DIE_NOW(context, "strexhInstruction is executed but not yet checked for blockCopyCompatibility");
+#endif
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   printf("STREXH instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
+
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int regN = (instr & 0x000F0000) >> 16;
   u32int regD = (instr & 0x0000F000) >> 12;
   u32int regT = (instr & 0x0000000F);
+
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -1393,11 +1288,14 @@ u32int strexhInstruction(GCONTXT * context)
   {
     DIE_NOW(0, "STREX unpredictable case (invalid register use)");
   }
+
   u32int address = loadGuestGPR(regN, context);
+
   u32int valToStore = loadGuestGPR(regT, context);
+
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, address, (valToStore & 0xFFFF));
   storeGuestGPR(regD, 0, context);
-  
+
 #ifdef CONFIG_BLOCK_COPY
   return context->PCOfLastInstruction+4;
 #else
@@ -1410,36 +1308,17 @@ u32int strexhInstruction(GCONTXT * context)
  ************************** LOAD FUNCTIONS *****************************************
  ***********************************************************************************
  ***********************************************************************************/
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* ldrhtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "ldrht PCFunct unfinished\n");
-  return 0;
-}
-#endif
-
 u32int ldrhtInstruction(GCONTXT * context)
 {
-#ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(context, "ldrhtInstruction is executed but not yet checked for blockCopyCompatibility");
-#else
   DIE_NOW(context, "LDRHT unfinished\n");
-#endif
   return 0;
 }
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* ldrhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "ldrh PCFunct unfinished\n");
-  return 0;
-}
-#endif
 
 u32int ldrhInstruction(GCONTXT * context)
 {
-  DIE_NOW(0, "ldrhInstruction is executed but not yet checked for blockCopyCompatibility");
+#ifdef CONFIG_BLOCK_COPY
+  DIE_NOW(context, "ldrhInstruction is executed but not yet checked for blockCopyCompatibility");
+#endif
   u32int instr = context->endOfBlockInstr;
   u32int condcode = 0;
   u32int preOrPost = 0;
@@ -1532,6 +1411,7 @@ u32int ldrhInstruction(GCONTXT * context)
     }
 
     u32int baseAddress = loadGuestGPR(regSrc, context);
+    ;
     u32int offsetAddress = 0;
     u32int address = 0;
 
@@ -1632,25 +1512,20 @@ u32int ldrhInstruction(GCONTXT * context)
       // Rn = offsetAddr;
       storeGuestGPR(regSrc, offsetAddress, context);
     }
+
 #ifdef CONFIG_BLOCK_COPY
     return context->PCOfLastInstruction+4;
 #else
-    return context->R15 + 4;
+    return (context->R15 + 4);
 #endif
   }
 }
 
-#ifdef CONFIG_BLOCK_COPY
-u32int* ldrbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "ldrb PCFunct unfinished\n");
-  return 0;
-}
-#endif
-
 u32int ldrbInstruction(GCONTXT * context)
 {
+#ifdef CONFIG_BLOCK_COPY
   DIE_NOW(0, "ldrbInstruction is executed but not yet checked for blockCopyCompatibility");
+#endif
   u32int instr = context->endOfBlockInstr;
   u32int condcode = 0;
   u32int regOrImm = 0;
@@ -1827,74 +1702,6 @@ u32int ldrbInstruction(GCONTXT * context)
 #endif
   }
 }
-
-#ifdef CONFIG_BLOCK_COPY
-/*
- * ldrPCInstruction is only called when destReg != PC
- */
-u32int* ldrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  u32int instruction =*instructionAddr;
-  u32int srcPCRegLoc = 16;//This is where the PC is in the instruction (if immediate always at bit 16 if not can be at bit 0)
-  u32int srcReg1 = (instruction>>srcPCRegLoc) & 0xF;
-  bool srcReg1IsPC = (srcReg1)==0xF;
-  u32int destReg = (instruction>>12) & 0xF;
-  u32int instr2Copy = instruction;
-  bool conditionAlways = (instruction>>28 & 0xF) == 0xE;
-  u32int scratchReg;
-  if(((instruction>>25 & 0b1) == 1) && ((instruction & 0xF) == 0xF)){//bit 25 is 1 when there are 2 source registers
-    //see ARM ARM p 436 Rm cannot be PC
-    DIE_NOW(0, "ldr PCFunct (register) with Rm = PC -> UNPREDICTABLE\n");
-  }
-  if(!srcReg1IsPC)
-  {
-    //It is safe to just copy the instruction
-    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-    *(currBlockCopyCacheAddr++)=instr2Copy;
-
-    return currBlockCopyCacheAddr;
-  }
-  if(conditionAlways)
-  {
-      //Here starts the general procedure.  For this srcPCRegLoc must be set correctly
-      //step 1 Copy PC (=instructionAddr2) to desReg
-      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
-
-      //Step 2 modify ldrInstruction
-      //Clear PC source Register
-      instr2Copy=zeroBits(instruction, srcPCRegLoc);
-      instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
-
-
-      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-      *(currBlockCopyCacheAddr++)=instr2Copy;
-      return currBlockCopyCacheAddr;
-  }
-  else
-  {
-    /* conditional instruction thus sometimes not executed */
-    /*Instruction has to be changed to a PC safe instructionstream withouth using destReg. */
-    scratchReg = findUnusedRegister(srcReg1, destReg, -1);
-    /* place 'Backup scratchReg' instruction */
-    currBlockCopyCacheAddr = backupRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-    currBlockCopyCacheAddr= savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  scratchReg);
-
-
-    instr2Copy = zeroBits(instr2Copy, srcPCRegLoc);
-    instr2Copy = instr2Copy | scratchReg<<srcPCRegLoc;
-
-    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-    *(currBlockCopyCacheAddr++)=instr2Copy;
-
-    /* place 'restore scratchReg' instruction */
-    currBlockCopyCacheAddr = restoreRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-    /* Make sure scanner sees that we need a word to store the register*/
-    currBlockCopyCacheAddr = (u32int*)(((u32int)currBlockCopyCacheAddr)|0b1);
-
-    return currBlockCopyCacheAddr;
-  }
-}
-#endif
 
 u32int ldrInstruction(GCONTXT * context)
 {
@@ -2125,31 +1932,11 @@ u32int ldrInstruction(GCONTXT * context)
   }
 }
 
-#ifdef CONFIG_BLOCK_COPY
-u32int* popLdrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "popLdr PCFunct unfinished\n");
-  return 0;
-}
-#endif
-
 u32int popLdrInstruction(GCONTXT * context)
 {
-#ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(0, "popLdrInstruction is executed but not yet checked for blockCopyCompatibility");
-#else
   DIE_NOW(0, "POP unfinished\n");
-#endif
   return 0;
 }
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* popLdmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "popLdm PCFunct unfinished\n");
-  return 0;
-}
-#endif
 
 u32int popLdmInstruction(GCONTXT * context)
 {
@@ -2158,23 +1945,8 @@ u32int popLdmInstruction(GCONTXT * context)
   return ldmInstruction(context);
 }
 
-#ifdef CONFIG_BLOCK_COPY
-u32int* ldmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  u32int instruction = *instructionAddr;
-  if((instruction>>16 & 0xF) == 0xF){
-    DIE_NOW(0, "ldm that is using PC is UNPREDICTABLE");//see ARM ARM P.424-428
-  }
-  //This means that instruction is always save
-  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
-  *(currBlockCopyCacheAddr++)=instruction;
-
-  return currBlockCopyCacheAddr;
-}
-#endif
-
 u32int ldmInstruction(GCONTXT * context)
-{//Checked for blockCopy functionality
+{
   u32int instr = 0;
   u32int condcode = 0;
   u32int prePost = 0;
@@ -2409,17 +2181,11 @@ u32int ldmInstruction(GCONTXT * context)
 }
 
 /* load dual */
-#ifdef CONFIG_BLOCK_COPY
-u32int* ldrdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "ldrd PCFunct unfinished\n");
-  return 0;
-}
-#endif
-
 u32int ldrdInstruction(GCONTXT * context)
 {
+#ifdef CONFIG_BLOCK_COPY
   DIE_NOW(0, "ldrdInstruction is executed but not yet checked for blockCopyCompatibility");
+#endif
   u32int instr = context->endOfBlockInstr;
 
   u32int condcode = (instr & 0xF0000000) >> 28;
@@ -2427,6 +2193,7 @@ u32int ldrdInstruction(GCONTXT * context)
   u32int upDown = instr & 0x00800000;
   u32int regOrImm = instr & 0x00400000; // 0 = reg, 1 = imm
   u32int writeback = instr & 0x00200000;
+
   u32int regSrc = (instr & 0x000F0000) >> 16;
   u32int regDst = (instr & 0x0000F000) >> 12;
   u32int regDst2 = regDst + 1;
@@ -2434,6 +2201,7 @@ u32int ldrdInstruction(GCONTXT * context)
 #ifdef DATA_MOVE_TRACE
   printf("LDRD instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
+
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
@@ -2444,13 +2212,17 @@ u32int ldrdInstruction(GCONTXT * context)
     return context->R15 + 4;
 #endif
   }
+
   if ((regDst % 2) == 1)
   {
     DIE_NOW(0, "LDRD undefined case: regDst must be even number!");
   }
+
   u32int offsetAddress = 0;
   u32int baseAddress = loadGuestGPR(regSrc, context);
+
   u32int wback = (prePost == 0) || (writeback != 0);
+
   // P = 0 and W == 1 then STR as if user mode
   if ((prePost == 0) && (writeback != 0))
   {
@@ -2465,12 +2237,14 @@ u32int ldrdInstruction(GCONTXT * context)
   {
     DIE_NOW(context, "LDRD: unpredictable case, regDst2 = PC!");
   }
+
   if (regOrImm != 0)
   {
     // immediate case
     u32int imm4h = (instr & 0x00000f00) >> 4;
     u32int imm4l = (instr & 0x0000000f);
     u32int imm32 = imm4h | imm4l;
+
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (upDown != 0)
     {
@@ -2494,6 +2268,7 @@ u32int ldrdInstruction(GCONTXT * context)
     {
       DIE_NOW(0, "STR reg Rm == PC UNPREDICTABLE case!");
     }
+
     // if increment then base + offset else base - offset
     if (upDown != 0)
     {
@@ -2509,6 +2284,7 @@ u32int ldrdInstruction(GCONTXT * context)
     printf("Rm=%x baseAddress=%x offsetRegVal=%x\n", regSrc2, baseAddress, offsetRegisterValue);
 #endif
   } // Register case ends
+
   u32int address = 0;
   // if preIndex then use offsetAddress else baseAddress
   if (prePost != 0)
@@ -2528,9 +2304,11 @@ u32int ldrdInstruction(GCONTXT * context)
   // put loaded values to their registers
   storeGuestGPR(regDst, valueLoaded, context);
   storeGuestGPR(regDst2, valueLoaded2, context);
+
 #ifdef DATA_MOVE_TRACE
   printf("LDRD: valueLoaded1 = %x valueLoaded2 = %x\n", valueLoaded, valueLoaded2);
 #endif
+
   if (wback)
   {
     // Rn = offsetAddr;
@@ -2539,17 +2317,9 @@ u32int ldrdInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
   return context->PCOfLastInstruction+4;
 #else
-  return context->R15 + 4;
+  return (context->R15 + 4);
 #endif
 }
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* ldrexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "ldrex PCFunct unfinished\n");
-  return 0;
-}
-#endif
 
 u32int ldrexInstruction(GCONTXT * context)
 {
@@ -2561,45 +2331,40 @@ u32int ldrexInstruction(GCONTXT * context)
   printf("LDREX instruction: %08x @ PC = %08x\n", instr, context->R15);
 # endif
 #endif
+
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
+
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
-    #ifdef CONFIG_BLOCK_COPY
-      return context->PCOfLastInstruction+4;
-    #else
-      return context->R15 + 4;
-    #endif
+#ifdef CONFIG_BLOCK_COPY
+    return context->PCOfLastInstruction+4;
+#else
+    return context->R15 + 4;
+#endif
   }
 
   if ((baseReg == 15) || (regDest == 15))
   {
     DIE_NOW(0, "LDREX unpredictable case (PC used).");
   }
+
   u32int baseVal = loadGuestGPR(baseReg, context);
   u32int value = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal);
 #ifdef DATA_MOVE_TRACE
   printf("LDREX instruction: baseVal = %08x loaded %x, store to %x\n", baseVal, value, regDest);
 #endif
   storeGuestGPR(regDest, value, context);
-  
+
 #ifdef CONFIG_BLOCK_COPY
   return context->PCOfLastInstruction+4;
 #else
   return context->R15 + 4;
 #endif
 }
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* ldrexbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "ldrexb PCFunct unfinished\n");
-  return 0;
-}
-#endif
 
 u32int ldrexbInstruction(GCONTXT * context)
 {
@@ -2611,18 +2376,20 @@ u32int ldrexbInstruction(GCONTXT * context)
   printf("LDREXB instruction: %08 @ PC = %08x\n", instr, context->R15);
 # endif
 #endif
+
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
+
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
-    #ifdef CONFIG_BLOCK_COPY
-      return context->PCOfLastInstruction+4;
-    #else
-      return context->R15 + 4;
-    #endif
+#ifdef CONFIG_BLOCK_COPY
+    return context->PCOfLastInstruction+4;
+#else
+    return context->R15 + 4;
+#endif
   }
 
   if ((baseReg == 15) || (regDest == 15))
@@ -2633,7 +2400,7 @@ u32int ldrexbInstruction(GCONTXT * context)
   // byte zero extended to word...
   u32int value = ((u32int) context->hardwareLibrary->loadFunction(context->hardwareLibrary, BYTE, baseVal) & 0xFF);
   storeGuestGPR(regDest, value, context);
-  
+
 #ifdef CONFIG_BLOCK_COPY
   return context->PCOfLastInstruction+4;
 #else
@@ -2647,22 +2414,16 @@ u32int ldrexbInstruction(GCONTXT * context)
  * doubleword from memory, writes it to two registers and *
  * marks the physical address as exclusive access *
  *****************************************************************/
-
-#ifdef CONFIG_BLOCK_COPY
-u32int* ldrexdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "ldrexd PCFunct unfinished\n");
-  return 0;
-}
-#endif
-
 u32int ldrexdInstruction(GCONTXT * context)
 {
+#ifdef CONFIG_BLOCK_COPY
   DIE_NOW(0, "ldrexdInstruction is executed but not yet checked for blockCopyCompatibility");
+#endif
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   printf("LDREXD instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
+
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
@@ -2671,11 +2432,11 @@ u32int ldrexdInstruction(GCONTXT * context)
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
-    #ifdef CONFIG_BLOCK_COPY
-	return context->PCOfLastInstruction+4;
-	#else
-	return context->R15 + 4;
-	#endif
+#ifdef CONFIG_BLOCK_COPY
+    return context->PCOfLastInstruction+4;
+#else
+    return context->R15 + 4;
+#endif
   }
   // must not be PC, destination must be even and not link register
   if ((baseReg == 15) || ((regDest % 2) != 0) || (regDest == 14))
@@ -2696,33 +2457,29 @@ u32int ldrexdInstruction(GCONTXT * context)
 #endif
 }
 
-#ifdef CONFIG_BLOCK_COPY
-u32int* ldrexhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "ldrexh PCFunct unfinished\n");
-  return 0;
-}
-#endif
-
 u32int ldrexhInstruction(GCONTXT * context)
 {
+#ifdef CONFIG_BLOCK_COPY
   DIE_NOW(0, "ldrexhInstruction is executed but not yet checked for blockCopyCompatibility");
+#endif
   u32int instr = context->endOfBlockInstr;
 #ifdef DATA_MOVE_TRACE
   printf("LDREXH instruction: %08x @ PC = %08x\n", instr, context->R15);
 #endif
+
   u32int condcode = (instr & 0xF0000000) >> 28;
   u32int baseReg = (instr & 0x000F0000) >> 16;
   u32int regDest = (instr & 0x0000F000) >> 12;
+
   u32int cpsrCC = (context->CPSR & 0xF0000000) >> 28;
   if (!evalCC(condcode, cpsrCC))
   {
     // condition not met! allright, we're done here. next instruction...
-    #ifdef CONFIG_BLOCK_COPY
-	return context->PCOfLastInstruction+4;
-	#else
-	return context->R15 + 4;
-	#endif
+#ifdef CONFIG_BLOCK_COPY
+    return context->PCOfLastInstruction+4;
+#else
+    return context->R15 + 4;
+#endif
   }
 
   if ((baseReg == 15) || (regDest == 15))
@@ -2733,10 +2490,257 @@ u32int ldrexhInstruction(GCONTXT * context)
   // halfword zero extended to word...
   u32int value = ((u32int) context->hardwareLibrary->loadFunction(context->hardwareLibrary, HALFWORD, baseVal) & 0xFFFF);
   storeGuestGPR(regDest, value, context);
-  
+
 #ifdef CONFIG_BLOCK_COPY
   return context->PCOfLastInstruction+4;
 #else
   return context->R15 + 4;
 #endif
 }
+
+
+#ifdef CONFIG_BLOCK_COPY
+
+u32int* strPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  u32int instruction=*instructionAddr;
+  u32int srcPCRegLoc = 16;//This is where the PC is in the instruction (if immediate always at bit 16 if not can be at bit 0)
+  u32int destReg=(instruction>>12) & 0xF;
+  u32int instr2Copy=instruction;
+  bool conditionAlways = (instruction>>28 & 0xF) == 0xE;
+
+  if(((instruction>>25 & 0b1) == 0b1) & ((instruction & 0xF) == 0xF)){//bit 25 is 1 when there are 2 source registers
+    DIE_NOW(0, "str PCFunct: str (register) cannot have Rm as PC -> UNPREDICTABLE");
+  }
+
+  if(conditionAlways)
+  {
+    if((instruction>>srcPCRegLoc & 0xF) == 0xF)  //There only have to be taken measures if Rn is PC
+      {
+        //step 1 Copy PC (=instructionAddr2) to desReg
+        currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+
+        //Step 2 modify strInstruction
+        //Clear PC source Register
+        instr2Copy=zeroBits(instruction, srcPCRegLoc);
+        instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
+      }
+
+      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+      *(currBlockCopyCacheAddr++)=instr2Copy;
+
+      return currBlockCopyCacheAddr;
+  }
+  else
+  {
+    /* condition might be false */
+    DIE_NOW(0, "conditional strPCFunct not yet implemented");
+  }
+}
+
+u32int* strbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "strb PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* strhtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "strht PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* strhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "strh PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* stmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  u32int instruction = *instructionAddr;
+  if((instruction & 0xF0000) == 0xF0000)
+  {
+    // According to ARM ARM: source register = PC ->  UNPREDICTABLE
+    DIE_NOW(0, "stm PC had PC as Rn -> UNPREDICTABLE?!\n");
+  }
+  else
+  {
+    //Stores multiple registers to consecutive memory locations
+    //PC is not used -> instruction is save to execute just copy it to blockCopyCache
+    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instruction;
+
+    return currBlockCopyCacheAddr;
+  }
+}
+
+u32int* strdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "strd PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* strexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "strex PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* strexbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "strexb PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* strexdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "strexd PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* strexhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "strexh PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* ldrhtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "ldrht PCFunct unfinished\n");
+  return 0;
+}
+u32int* ldrhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "ldrh PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* ldrbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "ldrb PCFunct unfinished\n");
+  return 0;
+}
+
+/*
+ * ldrPCInstruction is only called when destReg != PC
+ */
+u32int* ldrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  u32int instruction =*instructionAddr;
+  u32int srcPCRegLoc = 16;//This is where the PC is in the instruction (if immediate always at bit 16 if not can be at bit 0)
+  u32int srcReg1 = (instruction>>srcPCRegLoc) & 0xF;
+  bool srcReg1IsPC = (srcReg1)==0xF;
+  u32int destReg = (instruction>>12) & 0xF;
+  u32int instr2Copy = instruction;
+  bool conditionAlways = (instruction>>28 & 0xF) == 0xE;
+  u32int scratchReg;
+  if(((instruction>>25 & 0b1) == 1) && ((instruction & 0xF) == 0xF)){//bit 25 is 1 when there are 2 source registers
+    //see ARM ARM p 436 Rm cannot be PC
+    DIE_NOW(0, "ldr PCFunct (register) with Rm = PC -> UNPREDICTABLE\n");
+  }
+  if(!srcReg1IsPC)
+  {
+    //It is safe to just copy the instruction
+    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    return currBlockCopyCacheAddr;
+  }
+  if(conditionAlways)
+  {
+      //Here starts the general procedure.  For this srcPCRegLoc must be set correctly
+      //step 1 Copy PC (=instructionAddr2) to desReg
+      currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
+
+      //Step 2 modify ldrInstruction
+      //Clear PC source Register
+      instr2Copy=zeroBits(instruction, srcPCRegLoc);
+      instr2Copy=instr2Copy | (destReg<<srcPCRegLoc);
+
+
+      currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+      *(currBlockCopyCacheAddr++)=instr2Copy;
+      return currBlockCopyCacheAddr;
+  }
+  else
+  {
+    /* conditional instruction thus sometimes not executed */
+    /*Instruction has to be changed to a PC safe instructionstream withouth using destReg. */
+    scratchReg = findUnusedRegister(srcReg1, destReg, -1);
+    /* place 'Backup scratchReg' instruction */
+    currBlockCopyCacheAddr = backupRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+    currBlockCopyCacheAddr= savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  scratchReg);
+
+
+    instr2Copy = zeroBits(instr2Copy, srcPCRegLoc);
+    instr2Copy = instr2Copy | scratchReg<<srcPCRegLoc;
+
+    currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+    *(currBlockCopyCacheAddr++)=instr2Copy;
+
+    /* place 'restore scratchReg' instruction */
+    currBlockCopyCacheAddr = restoreRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+    /* Make sure scanner sees that we need a word to store the register*/
+    currBlockCopyCacheAddr = (u32int*)(((u32int)currBlockCopyCacheAddr)|0b1);
+
+    return currBlockCopyCacheAddr;
+  }
+}
+
+u32int* popLdrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "popLdr PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* popLdmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "popLdm PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* ldmPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  u32int instruction = *instructionAddr;
+  if((instruction>>16 & 0xF) == 0xF){
+    DIE_NOW(0, "ldm that is using PC is UNPREDICTABLE");//see ARM ARM P.424-428
+  }
+  //This means that instruction is always save
+  currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
+  *(currBlockCopyCacheAddr++)=instruction;
+
+  return currBlockCopyCacheAddr;
+}
+
+u32int* ldrdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "ldrd PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* ldrexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "ldrex PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* ldrexbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "ldrexb PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* ldrexdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "ldrexd PCFunct unfinished\n");
+  return 0;
+}
+
+u32int* ldrexhPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+{
+  DIE_NOW(0, "ldrexh PCFunct unfinished\n");
+  return 0;
+}
+
+#endif

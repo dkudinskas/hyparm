@@ -66,10 +66,9 @@ struct instruction32bit
 {
   s16int replaceCode;
   instructionHandler hdlFunct;
-  #ifdef CONFIG_BLOCK_COPY
-  //u32int* (*PCFunct)(GCONTXT * context, u32int * instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress);  
+#ifdef CONFIG_BLOCK_COPY
   PCHandler PCFunct;  
-  #endif
+#endif
   u32int value;            /* If arch == 0 then value is a sentinel.  */
   u32int mask;             /* Recognise inst if (op & mask) == value.  */
   const char * instructionString; /* How to disassemble this insn.  */
