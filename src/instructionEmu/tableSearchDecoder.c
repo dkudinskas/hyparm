@@ -496,14 +496,10 @@ struct instruction32bit mediaInstructions[] = {
 {1,  &sxtabInstruction,     0x06a00870, 0x0ff00ff0, "sxtab%c\t%12-15r, %16-19r, %0-3r, ror #16"},
 {1,  &sxtabInstruction,     0x06a00c70, 0x0ff00ff0, "sxtab%c\t%12-15r, %16-19r, %0-3r, ror #24"},
 // UNIMPLEMENTED: unsigned extend and add halfword
-{1,  &uxtahInstruction,     0x06f0f070, 0x0ff0fff0, "uxtah%c\t%12-15r, %16-19r, %0-3r"},
-{0,  &uxtahInstruction,     0x06f00070, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r"},
-{1,  &uxtahInstruction,     0x06f0f470, 0x0ff0fff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #8"},
-{0,  &uxtahInstruction,     0x06f00470, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #8"},
-{1,  &uxtahInstruction,     0x06f0f870, 0x0ff0fff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #16"},
-{0,  &uxtahInstruction,     0x06f00870, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #16"},
-{1,  &uxtahInstruction,     0x06f0fc70, 0x0ff0fff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #24"},
-{0,  &uxtahInstruction,     0x06f00c70, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #24"},
+{1,  &uxtahInstruction,     0x06f00070, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r"},
+{1,  &uxtahInstruction,     0x06f00470, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #8"},
+{1,  &uxtahInstruction,     0x06f00870, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #16"},
+{1,  &uxtahInstruction,     0x06f00c70, 0x0ff00ff0, "uxtah%c\t%12-15r, %16-19r, %0-3r, ror #24"},
 // UNIMPLEMENTED: unsigned extend and add byte 16
 {1,  &uxtab16Instruction,   0x06c00070, 0x0ff00ff0, "uxtab16%c\t%12-15r, %16-19r, %0-3r"},
 {1,  &uxtab16Instruction,   0x06c00470, 0x0ff00ff0, "uxtab16%c\t%12-15r, %16-19r, %0-3r, ror #8"},
