@@ -1,5 +1,7 @@
 #include "common/debug.h"
 
+#include "cpuArch/constants.h"
+
 #include "instructionEmu/commonInstrFunctions.h"
 #include "instructionEmu/dataProcessInstr.h"
 
@@ -125,8 +127,8 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
     {
       if (regDest == 0xF)
       {
-        if ( ((context->CPSR & CPSR_MODE_FIELD) == CPSR_MODE_USER) ||
-             ((context->CPSR & CPSR_MODE_FIELD) == CPSR_MODE_SYSTEM) )
+        if ( ((context->CPSR & PSR_MODE) == PSR_USR_MODE) ||
+             ((context->CPSR & PSR_MODE) == PSR_SYS_MODE) )
         {
           // there are no SPSR's in usr or sys modes!
           DIE_NOW(0, "arithLogicOp: exception return in guest usr/sys mode! bug.");
@@ -134,25 +136,23 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
         else
         {
           // copy SPSR to CPSR
-          switch (context->CPSR & CPSR_MODE_FIELD)
+          switch (context->CPSR & PSR_MODE)
           {
-            case CPSR_MODE_FIQ:
+            case PSR_FIQ_MODE:
               context->CPSR = context->SPSR_FIQ;
               break;
-            case CPSR_MODE_IRQ:
+            case PSR_IRQ_MODE:
               context->CPSR = context->SPSR_IRQ;
               break;
-            case CPSR_MODE_SVC:
+            case PSR_SVC_MODE:
               context->CPSR = context->SPSR_SVC;
               break;
-            case CPSR_MODE_ABORT:
+            case PSR_ABT_MODE:
               context->CPSR = context->SPSR_ABT;
               break;
-            case CPSR_MODE_UNDEF:
+            case PSR_UND_MODE:
               context->CPSR = context->SPSR_UND;
               break;
-            case CPSR_MODE_USER:
-            case CPSR_MODE_SYSTEM:
             default: 
               DIE_NOW(0, "arithLogicOp: invalid SPSR read for current guest mode.");
           } 
@@ -183,7 +183,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
     nextPC = context->R15;
 #endif
 #ifdef CONFIG_THUMB2
-    if (context->CPSR & T_BIT)
+    if (context->CPSR & PSR_T_BIT)
     {
       nextPC += 2;
     }

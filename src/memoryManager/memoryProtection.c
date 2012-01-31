@@ -183,7 +183,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
    * If the Guest OS does not support virtual
    * addressing, The table that maps the guest physical
    * to host virtual must be used */
-  if (context->virtAddrEnabled == 1)
+  if (context->virtAddrEnabled)
   {
     pt1Entry = get1stLevelPtDescriptorAddr(context->PT_os, address);
   }
@@ -429,7 +429,7 @@ bool shouldPrefetchAbort(u32int address)
 #endif
   descriptor* ptEntry;
   // get page table entry for address
-  if(context->virtAddrEnabled==1)
+  if (context->virtAddrEnabled)
   {
     ptEntry = get1stLevelPtDescriptorAddr(context->PT_os, address);
   }

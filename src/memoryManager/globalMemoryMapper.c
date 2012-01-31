@@ -1,5 +1,7 @@
 #include "common/debug.h"
 
+#include "cpuArch/constants.h"
+
 #include "guestManager/guestContext.h"
 
 #ifdef CONFIG_THUMB2
@@ -30,7 +32,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
 #endif
 
 #ifdef CONFIG_THUMB2
-  if (context->CPSR & T_BIT)
+  if (context->CPSR & PSR_T_BIT)
   {
     /*
      * Guest was executing in Thumb mode

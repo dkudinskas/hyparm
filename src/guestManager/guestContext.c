@@ -1,5 +1,8 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
+
+#include "cpuArch/constants.h"
 
 #include "guestManager/guestContext.h"
 
@@ -109,7 +112,7 @@ static void initGuestContext(GCONTXT *gContext)
   {
     DIE_NOW(0, "initGuestContext: Failed to allocate guest UND stack.");
   }
-  gContext->CPSR = (CPSR_FIQ_BIT | CPSR_IRQ_BIT | CPSR_MODE_SVC);
+  gContext->CPSR = (PSR_F_BIT | PSR_I_BIT | PSR_SVC_MODE);
 #ifdef GUEST_CONTEXT_DBG
   printf("initGuestContext: Block Trace @ address %08x\n", (u32int)&(gContext->blockHistory));
 #endif

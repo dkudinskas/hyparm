@@ -1,6 +1,7 @@
 #include "common/debug.h"
 
-#include "cpuArch/cpu.h"
+#include "cpuArch/armv7.h"
+#include "cpuArch/constants.h"
 
 #include "drivers/beagle/be32kTimer.h"
 #include "drivers/beagle/beGPTimer.h"
@@ -45,7 +46,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   /* Make sure that any SVC that is not part of the scanner
    * will be delivered to the guest
    */
-  if (context->CPSR & T_BIT) // Thumb
+  if (context->CPSR & PSR_T_BIT) // Thumb
   {
     if (code == 0) // svc in Thumb is between 0x01 and 0xFF
     {
@@ -159,7 +160,7 @@ GCONTXT *dataAbort(GCONTXT *context)
       {
         // ONLY move to the next instruction, if the guest hasn't aborted...
 #ifdef CONFIG_THUMB2
-        if(context->CPSR & T_BIT)
+        if(context->CPSR & PSR_T_BIT)
         {
           context->R15 = context->R15 + 2;
         }

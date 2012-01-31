@@ -1,5 +1,7 @@
 #include "common/debug.h"
 
+#include "cpuArch/constants.h"
+
 #include "guestManager/scheduler.h"
 
 #ifdef CONFIG_THUMB2
@@ -37,7 +39,7 @@ u32int bxInstruction(GCONTXT * context)
   u32int regDest = 0;
 
 #ifdef CONFIG_THUMB2
-  if(context->CPSR & T_BIT)
+  if(context->CPSR & PSR_T_BIT)
   {
     //this has NO 32-bit Thumb encoding
     regDest = (instr & 0x0078) >> 3;
@@ -45,7 +47,7 @@ u32int bxInstruction(GCONTXT * context)
     // return to ARM if needed
     if ((nextPC & 0x1) == 0)
     {
-      context->CPSR &= ~T_BIT;
+      context->CPSR &= ~PSR_T_BIT;
     }
   }
   else
@@ -68,7 +70,7 @@ u32int bxInstruction(GCONTXT * context)
     if (nextPC & 0x1)
     {
 #ifdef CONFIG_THUMB2
-      context->CPSR |= T_BIT;
+      context->CPSR |= PSR_T_BIT;
 #else
       DIE_NOW(context, "BX Rm switching to Thumb. disabled (CONFIG_THUMB2 not set)\n");
 #endif
@@ -285,15 +287,15 @@ u32int cpsInstruction(GCONTXT * context)
 #endif
       if (affectA != 0)
       {
-        if ((oldCpsr & CPSR_AAB_BIT) != 0)
+        if ((oldCpsr & PSR_A_BIT) != 0)
         {
           DIE_NOW(context, "Guest enabling async aborts globally!");
         }
-        oldCpsr &= ~CPSR_AAB_BIT;
+        oldCpsr &= ~PSR_A_BIT;
       }
       if (affectI)
       {
-        if ( (oldCpsr & CPSR_IRQ_BIT) != 0)
+        if ((oldCpsr & PSR_I_BIT) != 0)
         {
 #ifdef ARM_INSTR_TRACE
           printf("Guest enabling irqs globally!\n");
@@ -306,12 +308,12 @@ u32int cpsInstruction(GCONTXT * context)
         }
 #ifndef CONFIG_BLOCK_COPY_NO_IRQ
         /*If No IRQ's are wanted we shouldn't switch bits*/
-        oldCpsr &= ~CPSR_IRQ_BIT;
+        oldCpsr &= ~PSR_I_BIT;
 #endif
       }
       if (affectF)
       {
-        if ( (oldCpsr & CPSR_FIQ_BIT) != 0)
+        if ((oldCpsr & PSR_F_BIT) != 0)
         {
 #ifdef ARM_INSTR_TRACE
           printf("Guest enabling FIQs globally!\n");
@@ -323,38 +325,41 @@ u32int cpsInstruction(GCONTXT * context)
             DIE_NOW(context, "cps: FIQ pending!! unimplemented.");
           }
         }
-        oldCpsr &= ~CPSR_FIQ_BIT;
+        oldCpsr &= ~PSR_F_BIT;
       }
     }
     else if (imod == 3) // disable
     {
       if (affectA)
       {
-        if ((oldCpsr & CPSR_AAB_BIT) == 0)
+        if (!(oldCpsr & PSR_A_BIT))
         {
           DIE_NOW(context, "Guest disabling async aborts globally!");
         }
-        oldCpsr |= CPSR_AAB_BIT;
+        oldCpsr |= PSR_A_BIT;
       }
       if (affectI)
       {
-        if ( (oldCpsr & CPSR_IRQ_BIT) == 0) // were enabled, now disabled
+        if (!(oldCpsr & PSR_I_BIT)) // were enabled, now disabled
         {
           // chech interrupt controller if there is an interrupt pending
-          if(context->guestIrqPending == TRUE)
+          if (context->guestIrqPending)
           {
+            /*
+             * FIXME: Niels: wtf? why do we need the if?
+             */
             context->guestIrqPending = FALSE;
           }
         }
-        oldCpsr |= CPSR_IRQ_BIT;
+        oldCpsr |= PSR_I_BIT;
       }
       if (affectF)
       {
-        if ( (oldCpsr & CPSR_FIQ_BIT) == 0)
+        if (!(oldCpsr & PSR_F_BIT))
         {
           DIE_NOW(context, "Guest disabling fiqs globally!");
         }
-        oldCpsr |= CPSR_FIQ_BIT;
+        oldCpsr |= PSR_F_BIT;
       }
     }
     else
@@ -364,7 +369,7 @@ u32int cpsInstruction(GCONTXT * context)
     // ARE we switching modes?
     if (changeMode)
     {
-      oldCpsr &= ~CPSR_MODE_FIELD;
+      oldCpsr &= ~PSR_MODE;
       oldCpsr |= newMode;
       DIE_NOW(context, "guest is changing execution modes. What?!");
     }
@@ -379,7 +384,7 @@ u32int cpsInstruction(GCONTXT * context)
 #ifdef CONFIG_BLOCK_COPY
   return context->PCOfLastInstruction + 4;
 #else
-  return context->R15+4;
+  return context->R15 + 4;
 #endif
 }
 
@@ -887,7 +892,7 @@ u32int blxInstruction(GCONTXT * context)
   u32int value = 0;
   u32int target = 0;
   u32int currPC = 0;
-  if(context->CPSR & T_BIT)
+  if(context->CPSR & PSR_T_BIT)
   {
     //We are in Thumb mode, so we will probably want to switch back to ARM
     instr = context->endOfBlockInstr;
@@ -903,7 +908,7 @@ u32int blxInstruction(GCONTXT * context)
       target |= 0xFF000000;
     }
     // set ARM mode (disable Thumb bit)
-    context->CPSR &= ~T_BIT;
+    context->CPSR &= ~PSR_T_BIT;
 
     // In Thumb-32, R15 points to the first halfword, so LR must be 4+1(T) bytes ahead
     currPC = context->R15;
@@ -936,7 +941,7 @@ u32int blxInstruction(GCONTXT * context)
       target = target << 2;
 
       // blx <imm24>
-      context->CPSR |= T_BIT;
+      context->CPSR |= PSR_T_BIT;
       storeGuestGPR(14, context->R15+4,context);
 
       nextPC = context->R15 + 8 + target;
@@ -1192,25 +1197,25 @@ u32int msrInstruction(GCONTXT * context)
   else
   {
     // SPSR! which?... depends what mode we are in...
-    switch (context->CPSR & CPSR_MODE_FIELD)
+    switch (context->CPSR & PSR_MODE)
     {
-      case CPSR_MODE_FIQ:
+      case PSR_FIQ_MODE:
         oldValue = context->SPSR_FIQ;
         break;
-      case CPSR_MODE_IRQ:
+      case PSR_IRQ_MODE:
         oldValue = context->SPSR_IRQ;
         break;
-      case CPSR_MODE_SVC:
+      case PSR_SVC_MODE:
         oldValue = context->SPSR_SVC;
         break;
-      case CPSR_MODE_ABORT:
+      case PSR_ABT_MODE:
         oldValue = context->SPSR_ABT;
         break;
-      case CPSR_MODE_UNDEF:
+      case PSR_UND_MODE:
         oldValue = context->SPSR_UND;
         break;
-      case CPSR_MODE_USER:
-      case CPSR_MODE_SYSTEM:
+      case PSR_USR_MODE:
+      case PSR_SYS_MODE:
       default:
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
     }
@@ -1223,11 +1228,11 @@ u32int msrInstruction(GCONTXT * context)
   // - bit 3: set condition flags of cpsr
 
   // control field [7-0] set.
-  if ( ((fieldMsk & 0x1) == 0x1) && (guestInPrivMode(context)) )
+  if (((fieldMsk & 0x1) == 0x1) && guestInPrivMode(context))
   {
 #ifndef CONFIG_THUMB2
     // check for thumb toggle!
-    if ((oldValue & CPSR_THUMB_BIT) != (value & CPSR_THUMB_BIT))
+    if ((oldValue & PSR_T_BIT) != (value & PSR_T_BIT))
     {
           DIE_NOW(context, "MSR toggle THUMB bit.");
     }
@@ -1287,25 +1292,25 @@ u32int msrInstruction(GCONTXT * context)
   else
   {
     // SPSR! which?... depends what mode we are in...
-    switch (context->CPSR & CPSR_MODE_FIELD)
+    switch (context->CPSR & PSR_MODE)
     {
-      case CPSR_MODE_FIQ:
+      case PSR_FIQ_MODE:
         context->SPSR_FIQ = oldValue;
         break;
-      case CPSR_MODE_IRQ:
+      case PSR_IRQ_MODE:
         context->SPSR_IRQ = oldValue;
         break;
-      case CPSR_MODE_SVC:
+      case PSR_SVC_MODE:
         context->SPSR_SVC = oldValue;
         break;
-      case CPSR_MODE_ABORT:
+      case PSR_ABT_MODE:
         context->SPSR_ABT = oldValue;
         break;
-      case CPSR_MODE_UNDEF:
+      case PSR_UND_MODE:
         context->SPSR_UND = oldValue;
         break;
-      case CPSR_MODE_USER:
-      case CPSR_MODE_SYSTEM:
+      case PSR_USR_MODE:
+      case PSR_SYS_MODE:
       default:
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
     }
@@ -1354,26 +1359,26 @@ u32int mrsInstruction(GCONTXT * context)
     else
     {
       // SPSR case
-      int guestMode = (context->CPSR) & CPSR_MODE_FIELD;
+      int guestMode = (context->CPSR) & PSR_MODE;
       switch(guestMode)
       {
-        case CPSR_MODE_FIQ:
+        case PSR_FIQ_MODE:
           value = context->SPSR_FIQ;
           break;
-        case CPSR_MODE_IRQ:
+        case PSR_IRQ_MODE:
           value = context->SPSR_IRQ;
           break;
-        case CPSR_MODE_SVC:
+        case PSR_SVC_MODE:
           value = context->SPSR_SVC;
           break;
-        case CPSR_MODE_ABORT:
+        case PSR_ABT_MODE:
           value = context->SPSR_ABT;
           break;
-        case CPSR_MODE_UNDEF:
+        case PSR_UND_MODE:
           value = context->SPSR_UND;
           break;
-        case CPSR_MODE_USER:
-        case CPSR_MODE_SYSTEM:
+        case PSR_USR_MODE:
+        case PSR_SYS_MODE:
         default:
           invalidInstruction(instr, "MRS cannot request spsr in user/system mode");
       } // switch ends
@@ -1425,7 +1430,7 @@ u32int bInstruction(GCONTXT * context)
   printf("Branch instr %08x @ %08x\n", instr, context->R15);
   #endif
   // Are we on Thumb?
-  if (context->CPSR & T_BIT)
+  if (context->CPSR & PSR_T_BIT)
   {
     thumb32 = isThumb32(instr);
     //printf("Branch instr %08x @ %08x\n", instr, context->R15);
@@ -1529,7 +1534,7 @@ u32int bInstruction(GCONTXT * context)
   if (sign != 0)
   {
     // target negative!
-    if(context->CPSR & T_BIT)
+    if(context->CPSR & PSR_T_BIT)
     {
       //printf("instr:%08x, negative\n",instr);
       if(thumb32)
@@ -1555,7 +1560,7 @@ u32int bInstruction(GCONTXT * context)
     }
   }
 
-  if(context->CPSR & T_BIT)
+  if(context->CPSR & PSR_T_BIT)
   {
     target = target << 1;
   }
@@ -1565,9 +1570,9 @@ u32int bInstruction(GCONTXT * context)
   }
 
   /* eval condition flags only for Thumb-2 first encoding or ARM encoding*/
-  if( (context->CPSR & T_BIT && thumb32 && !bl32 && (instr & 0x00001000) == 0)
-      || !(context->CPSR & T_BIT)
-      || (context->CPSR & T_BIT && ( (instr & 0xF000) == 0xD000 ) && !thumb32 ) )
+  if( (context->CPSR & PSR_T_BIT && thumb32 && !bl32 && (instr & 0x00001000) == 0)
+      || !(context->CPSR & PSR_T_BIT)
+      || (context->CPSR & PSR_T_BIT && ( (instr & 0xF000) == 0xD000 ) && !thumb32 ) )
   {
     u32int cpsrCC = (context->CPSR >> 28) & 0xF;
     bool conditionMet = evalCC(instrCC, cpsrCC);
@@ -1575,7 +1580,7 @@ u32int bInstruction(GCONTXT * context)
     {
       // condition met
       u32int currPC = context->R15;
-      if(context->CPSR & T_BIT)
+      if(context->CPSR & PSR_T_BIT)
       {
         // FIXME: This seems like a horrible workaround ( or not -.- )
         if(thumb32)
@@ -1596,7 +1601,7 @@ u32int bInstruction(GCONTXT * context)
       }
       if (link)
       {
-        if(context->CPSR & T_BIT)
+        if(context->CPSR & PSR_T_BIT)
         {
           storeGuestGPR(14, context->R15+5, context);
         }
@@ -1610,7 +1615,7 @@ u32int bInstruction(GCONTXT * context)
     else
     {
       // condition not met!
-      if(context->CPSR & T_BIT)
+      if(context->CPSR & PSR_T_BIT)
       {
         // FIXME: What is this? Is this a pipeline fix or a workaround?
         nextPC = context->R15 + 2;

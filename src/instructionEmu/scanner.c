@@ -1,6 +1,8 @@
 #include "common/debug.h"
 #include "common/stddef.h"
 
+#include "cpuArch/constants.h"
+
 #include "guestManager/blockCache.h"
 
 #ifdef CONFIG_THUMB2
@@ -153,7 +155,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
   }
 
 #ifdef CONFIG_THUMB2
-  if (context->CPSR & T_BIT)
+  if (context->CPSR & PSR_T_BIT)
   {
     scanThumbBlock(context, (void *)startAddress, cacheIndex);
   }

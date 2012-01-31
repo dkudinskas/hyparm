@@ -1,6 +1,6 @@
 #include "common/debug.h"
 
-#include "cpuArch/cpu.h"
+#include "cpuArch/armv7.h"
 
 #include "guestManager/guestExceptions.h"
 
