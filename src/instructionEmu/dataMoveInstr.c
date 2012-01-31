@@ -245,10 +245,10 @@ u32int strInstruction(GCONTXT * context)
       if (abort)
       {
 #ifdef CONFIG_BLOCK_COPY
-    return context->PCOfLastInstruction + 4;
-    #else
-    return context->R15 + 4;
-    #endif
+        return context->PCOfLastInstruction;
+#else
+        return context->R15;
+#endif
       }
     }
 
