@@ -464,7 +464,7 @@ kconfig_print_comment(FILE *fp, const char *value, void *arg)
 		fprintf(fp, "#");
 		if (l) {
 			fprintf(fp, " ");
-			fwrite(p, l, 1, fp);
+			int make_gcc_happy __attribute__((unused)) = fwrite(p, l, 1, fp);
 			p += l;
 		}
 		fprintf(fp, "\n");
@@ -552,7 +552,7 @@ header_print_comment(FILE *fp, const char *value, void *arg)
 		fprintf(fp, " *");
 		if (l) {
 			fprintf(fp, " ");
-			fwrite(p, l, 1, fp);
+			int make_gcc_happy __attribute__((unused)) = fwrite(p, l, 1, fp);
 			p += l;
 		}
 		fprintf(fp, "\n");
@@ -568,6 +568,7 @@ static struct conf_printer header_printer_cb =
 	.print_comment = header_print_comment,
 };
 
+#if 0
 /*
  * Tristate printer
  *
@@ -586,6 +587,7 @@ static struct conf_printer tristate_printer_cb =
 	.print_symbol = tristate_print_symbol,
 	.print_comment = kconfig_print_comment,
 };
+#endif
 
 static void conf_write_symbol(FILE *fp, struct symbol *sym,
 			      struct conf_printer *printer, void *printer_arg)
@@ -799,6 +801,7 @@ next:
 	return 0;
 }
 
+#if 0
 static int conf_split_config(void)
 {
 	const char *name;
@@ -910,12 +913,16 @@ out:
 
 	return res;
 }
+#endif
 
 int conf_write_autoconf(void)
 {
 	struct symbol *sym;
 	const char *name;
-	FILE *out, *tristate, *out_h;
+	FILE *out, *out_h;
+#if 0
+	FILE *tristate;
+#endif
 	int i;
 
 	sym_clear_all_valid();
@@ -944,7 +951,9 @@ int conf_write_autoconf(void)
 	out_h = fopen(".tmpconfig.h", "w");
 	if (!out_h) {
 		fclose(out);
+#if 0
 		fclose(tristate);
+#endif
 		return 1;
 	}
 

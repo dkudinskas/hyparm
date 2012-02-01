@@ -161,10 +161,6 @@ void deliverInterrupt(GCONTXT *context)
     DIE_NOW(context, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
 #endif
   }
-  /*
-   * FIXME
-   * Niels: I think something is duplicate here (check startup.s)
-   */
   // update AFI bits for IRQ:
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }

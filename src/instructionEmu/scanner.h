@@ -29,16 +29,6 @@
 #endif
 
 
-#ifndef CONFIG_THUMB2
-
-/*
- * TODO: why did Markos delete this?
- * Does this even belong in scanner.h?
- */
-#define INSTR_SWI                 0xEF000000
-
-#endif /* CONFIG_THUMB2 */
-
 
 void scanBlock(GCONTXT * gc, u32int blkStartAddr);
 

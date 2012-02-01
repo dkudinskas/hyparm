@@ -1,6 +1,8 @@
 #include "common/debug.h"
 #include "common/stddef.h"
 
+#include "cpuArch/constants.h"
+
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/coprocInstructions.h"
 #include "instructionEmu/dataProcessInstr.h"

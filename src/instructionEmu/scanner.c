@@ -23,10 +23,20 @@
 
 // uncomment to enable remaining debug code not triggered from config: #define SCANNER_DEBUG
 
+
+#define INSTR_SWI            0xEF000000U
+#define INSTR_SWI_THUMB      0x0000DF00U
+#define INSTR_NOP_THUMB      0x0000BF00U
+#define INSTR_SWI_THUMB_MIX  ((INSTR_SWI_THUMB << 16) | INSTR_NOP_THUMB)
+
+
 static inline u32int getHash(u32int key);
 
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex);
+
+#ifdef CONFIG_THUMB2
 static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex);
+#endif
 
 static void protectScannedBlock(void *start, void *end);
 
@@ -186,9 +196,6 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
     end++;
   }
   instruction = *end;
-  /*
-   *
-   */
 
   if ((instruction & INSTR_SWI) == INSTR_SWI)
   {

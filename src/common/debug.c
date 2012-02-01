@@ -5,7 +5,9 @@
 
 #include "drivers/beagle/beUart.h"
 
+#ifdef CONFIG_MMC
 #include "io/fs/fat.h"
+#endif
 
 
 #define TERMINAL_WIDTH  80
