@@ -8,10 +8,6 @@
 #define THUMB32_2            0xF000
 #define THUMB32_3            0xF800
 
-// markers to be used by endOfHalfBlock variable
-#define THUMB32_LOW          0x1
-#define THUMB32_HIGH         0x2
-#define THUMB16              0x3
 
 // used by scanner
 #define INSTR_SWI            0xEF000000

@@ -23,13 +23,18 @@
 
 #endif /* CONFIG_BLOCK_COPY */
 
-// uncomment me for collision debug: #define DUMP_COLLISION_COUNTER
+
+#define BCENTRY_TYPE_INVALID  0
+#define BCENTRY_TYPE_ARM      1
+#define BCENTRY_TYPE_THUMB    2
+
 
 struct blockCacheEntry
 {
   u32int startAddress;
   u32int endAddress;
   u32int hyperedInstruction;
+  u32int type;
 #ifdef CONFIG_BLOCK_COPY
   u32int reservedWord:1; //reservedWord is a flag that indicates that after the backpointer there will be 1 word that is reserved for saving
                          //a temporary value of a PC. This means code execution will start @ startAddress+8 (skip backpointer & reserved word)
@@ -37,75 +42,47 @@ struct blockCacheEntry
                             // there are 8 bits left -> can be used for profiling
   u32int blockCopyCacheAddress; // This is the address were the instructions with hypercall will reside
 #endif
-#ifdef CONFIG_THUMB2
-  u32int halfhyperedInstruction;
-#endif
-  bool valid;
   void *hdlFunct;
 };
 
 typedef struct blockCacheEntry BCENTRY;
 
 
-void initialiseBlockCache(BCENTRY * bcache);
+#ifdef CONFIG_BLOCK_COPY
 
-bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr);
-
-#if defined(CONFIG_BLOCK_COPY)
-
-void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr, u32int index, u32int blockCopyCacheSize,
-  u32int blockCopyCacheAddress, u32int hypInstruction, void *hdlFunct, BCENTRY *bcAddr);
+void addToBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress, u32int endAddress,
+    u32int hypInstruction, void *hdlFunct, u32int blockCopyCacheSize, u32int blockCopyCacheAddress);
 
 /* checkAndClearBlockCopyCacheAddress will check an address you provide and return a valid address.  Always use the returned address!! */
 u32int *checkAndClearBlockCopyCacheAddress(u32int *Addr,BCENTRY *bcStartAddr,u32int* blockCopyCache,u32int* blockCopyCacheEnd);
 
 u32int *checkAndMergeBlock(u32int* startOfBlock2, u32int* endOfBlock2, BCENTRY * blockCache,u32int* startOfBlock1,u32int* endOfBlock1);
 
-u32int* updateCurrBlockCopyCacheAddr(u32int* oldAddr, u32int nrOfAddedInstr,u32int* blockCopyCacheEnd);
+u32int *updateCurrBlockCopyCacheAddr(u32int* oldAddr, u32int nrOfAddedInstr,u32int* blockCopyCacheEnd);
 
 //Remove the copied instructions
 void removeBlockCopyCacheEntry(void *context, u32int blockCopyCacheAddress, u32int blockCopyCacheSize);
 
-#elif defined(CONFIG_THUMB2)
-
-void addToBlockCache(void *start, u32int hypInstruction, u16int HalfhypInstruction, u32int blkEndAddr,
-  u32int index, void *hdlFunct, BCENTRY *bcAddr);
-
 #else
 
-void addToBlockCache(void *start, u32int hypInstruction, u32int blkEndAddr,
-  u32int index, void *hdlFunct, BCENTRY *bcAddr);
+void addToBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress, u32int endAddress,
+    u32int hypInstruction, u32int type, void *hdlFunct);
 
-#endif
+#endif /* CONFIG_BLOCK_COPY */
 
-BCENTRY * getBlockCacheEntry(u32int index, BCENTRY * bcAddr);
+bool checkBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress);
 
-u32int findEntryForAddress(BCENTRY * bcAddr, u32int addr);
+void clearBlockCache(BCENTRY *blockCache);
 
-void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex);
+void dumpBlockCacheEntry(BCENTRY *blockCache, u32int index);
 
-void resolveCacheConflict(u32int index, BCENTRY * bcAddr);
+BCENTRY *getBlockCacheEntry(BCENTRY *blockCache, u32int index);
 
-void explodeCache(BCENTRY * bcache);
-
-void validateCachePreChange(BCENTRY * bcache, u32int address);
+void initialiseBlockCache(BCENTRY *blockCache);
 
 void validateCacheMultiPreChange(BCENTRY * bcache, u32int startAddress, u32int endAddress);
 
-void dumpBlockCacheEntry(u32int index, BCENTRY * bcache);
-
-void setExecBitMap(u32int addr);
-
-void clearExecBitMap(u32int addr);
-
-bool isBitmapSetForAddress(u32int addr);
-
-
-#ifdef CONFIG_THUMB2
-
-void resolveSWI(u32int index, u32int* endAddress);
-
-#endif
+void validateCachePreChange(BCENTRY * bcache, u32int address);
 
 
 #endif /* __GUEST_MANAGER__BLOCK_CACHE_H__ */

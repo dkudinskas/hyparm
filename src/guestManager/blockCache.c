@@ -1,10 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
 
-#ifdef CONFIG_BLOCK_COPY
-#include "common/memFunctions.h"
-#endif
-
 #include "guestManager/blockCache.h"
 #include "guestManager/guestContext.h"
 
@@ -45,135 +41,342 @@ static inline void resetCollisionCounter()
 
 #define NUMBER_OF_BITMAPS       16
 #define MEMORY_PER_BITMAP       0x10000000
-#define MEMORY_PER_BITMAP_BIT  (MEMORY_PER_BITMAP / 32) // should be 8 megabytes
+#define MEMORY_PER_BITMAP_BIT   (MEMORY_PER_BITMAP / 32) // should be 8 megabytes
 
 
 static u32int execBitMap[NUMBER_OF_BITMAPS];
 
 
-void initialiseBlockCache(BCENTRY *bcache)
+static void clearExecBitMap(u32int address);
+static u32int findBlockCacheEntry(BCENTRY *blockCache, u32int address);
+static bool isBitmapSetForAddress(u32int address);
+static void resolveSWI(u32int index, u32int *endAddress);
+static void removeCacheEntries(BCENTRY *blockCache);
+static void removeCacheEntry(BCENTRY *blockCache, u32int index);
+static void resolveCacheConflict(BCENTRY *blockCache, u32int index);
+static void restoreReplacedInstruction(BCENTRY *blockCache, u32int index);
+static void setExecBitMap(u32int address);
+
+
+#ifdef CONFIG_BLOCK_COPY
+
+void addToBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress, u32int endAddress,
+    u32int hypInstruction, void *hdlFunct, u32int blockCopyCacheSize, u32int blockCopyCacheAddress)
+{
+  DEBUG(BLOCK_CACHE, "addToBlockCache: index = %#.2x @ %#.8x--%#.8x, handler = %p, eobInstr = "
+      "%#.8x, blockCopyCacheSize = %#.8x, blockCopyCacheAt = %#.8x" EOL, index, startAddress,
+      endAddress, hdlFunct, hypInstruction, blockCopyCacheSize, blockCopyCacheAddress);
+
+  if (blockCache[index].type != BCENTRY_TYPE_INVALID)
+  {
+    // somebody has been sleeping in our cache location!
+    resolveCacheConflict(blockCache, index);
+  }
+  //store the new entry data...
+  //Last bit of blkStartAddr is used to indicate that a reserved word is present in blockCopyCache (see scanner.c)  
+  blockCache[index].endAddress = endAddress;
+  blockCache[index].hyperedInstruction = hypInstruction;
+  blockCache[index].hdlFunct = hdlFunct;
+  blockCache[index].type = BCENTRY_TYPE_ARM;
+  blockCache[index].blockCopyCacheAddress = blockCopyCacheAddress & ~1;
+  blockCache[index].blockCopyCacheSize = blockCopyCacheSize;
+  blockCache[index].reservedWord = blockCopyCacheAddress & 1;
+
+#else
+
+void addToBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress, u32int endAddress,
+    u32int hypInstruction, u32int type, void *hdlFunct)
+{
+  DEBUG(BLOCK_CACHE, "addToBlockCache: index = %#.2x @ %#.8x--%#.8x, handler = %p, eobInstr = "
+      "%#.8x" EOL, index, startAddress, endAddress, hdlFunct, hypInstruction);
+
+  if (blockCache[index].type != BCENTRY_TYPE_INVALID)
+  {
+    if (blockCache[index].endAddress != endAddress)
+    {
+      // somebody has been sleeping in our cache location!
+      resolveCacheConflict(blockCache, index);
+      // now that we resolved the conflict, we can store the new entry data...
+      blockCache[index].endAddress = endAddress;
+      blockCache[index].hyperedInstruction = hypInstruction;
+      blockCache[index].hdlFunct = hdlFunct;
+      blockCache[index].type = type;
+    }
+    /* NOTE: if entry valid, but blkEndAddress is the same as new block to add      *
+     * then the block starts at another address but ends on the same instruction    *
+     * and by chance - has the same index. just modify existing entry, don't remove */
+  }
+  else
+  {
+    blockCache[index].endAddress = endAddress;
+    blockCache[index].hyperedInstruction = hypInstruction;
+    blockCache[index].hdlFunct = hdlFunct;
+    blockCache[index].type = type;
+  }
+
+#endif /* CONFIG_BLOCK_COPY */
+
+  blockCache[index].startAddress = startAddress;
+
+  // set bitmap entry to executed
+  setExecBitMap((u32int)endAddress);
+}
+
+bool checkBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress)
+{
+  DEBUG(BLOCK_CACHE, "checkBlockCache: index = %#x" EOL, index);
+  return blockCache[index].type != BCENTRY_TYPE_INVALID
+      && blockCache[index].startAddress == startAddress;
+}
+
+void clearBlockCache(BCENTRY *blockCache)
+{
+  removeCacheEntries(blockCache);
+  memset(execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
+  /*
+   * Comment by Peter on block copy:
+   * Now it is also possible to set last used line of blockCopyCache back to the word just before
+   * the blockCopyCache (this way the blockCopyCache will start again from the beginning -> Not
+   * absolutely necessary however.
+   */
+}
+
+static void clearExecBitMap(u32int address)
+{
+  u32int index = address / MEMORY_PER_BITMAP;
+  u32int bitNumber = (address & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
+  execBitMap[index] = execBitMap[index] & ~(1 << bitNumber);
+}
+
+void dumpBlockCacheEntry(BCENTRY *blockCache, u32int index)
+{
+  printf(
+      "dumpBlockCacheEntry: entry #%#.2x: " EOL
+      "dumpBlockCacheEntry: startAddress = %#.8x, endAddress = %#.8x, type = %x" EOL
+      "dumpBlockCacheEntry: EOBinstr = %#.8x, handlerFunction = %p" EOL,
+      index,
+      blockCache[index].startAddress, blockCache[index].endAddress, blockCache[index].type,
+      blockCache[index].hyperedInstruction, blockCache[index].hdlFunct
+      );
+#ifdef CONFIG_BLOCK_COPY
+  printf(
+      "dumpBlockCacheEntry: blockCopyCacheAddress = %#.8x, blockCopyCacheSize = %#.8x" EOL,
+      blockCache[index].blockCopyCacheAddress, blockCache[index].blockCopyCacheSize
+      );
+#endif
+}
+
+/* input: any address, might be start, end of block or somewhere in the middle... */
+/* output: first cache entry index for the block where this address falls into */
+/* output: if no such block, return -1 (0xFFFFFFFF) */
+static u32int findBlockCacheEntry(BCENTRY *blockCache, u32int address)
+{
+  u32int i;
+  for (i = 0; i < BLOCK_CACHE_SIZE; i++)
+  {
+    if (blockCache[i].type != BCENTRY_TYPE_INVALID
+        && blockCache[i].startAddress <= address && blockCache[i].endAddress >= address)
+    {
+      // addr falls in-between start-end inclusive. found a matching entry.
+      DEBUG(BLOCK_CACHE, "findEntryForAddress: found entry for address %#.8x @ %#.8x--%#.8x, "
+          "index = %#x" EOL, address, blockCache[i].startAddress, blockCache[i].endAddress, i);
+      return i;
+    }
+  }
+  return (u32int)-1;
+}
+
+BCENTRY *getBlockCacheEntry(BCENTRY *blockCache, u32int index)
+{
+  DEBUG(BLOCK_CACHE, "getBlockCacheEntry: index = %#x" EOL, index);
+  return &blockCache[index];
+}
+
+void initialiseBlockCache(BCENTRY *blockCache)
 {
   resetCollisionCounter();
 
-  DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, bcache);
+  DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, blockCache);
 
-  memset(bcache, 0, sizeof(BCENTRY) * BLOCK_CACHE_SIZE);
+  memset(blockCache, 0, sizeof(BCENTRY) * BLOCK_CACHE_SIZE);
   memset(execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
 }
 
-bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY *bcAddr)
+static bool isBitmapSetForAddress(u32int address)
 {
-  DEBUG(BLOCK_CACHE, "checkBlockCache: index = %#x" EOL, bcIndex);
-  return bcAddr[bcIndex].valid && bcAddr[bcIndex].startAddress == blkStartAddr;
+  u32int index = address / MEMORY_PER_BITMAP;
+  u32int bitNumber = (address & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
+  return execBitMap[index] & (1 << bitNumber);
 }
 
-#ifdef CONFIG_BLOCK_COPY  //function is too different
-void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr,
-                     u32int index, u32int blockCopyCacheSize, u32int blockCopyCacheAddress,u32int hypInstruction,void *hdlFunct,BCENTRY * bcAddr)
+static void removeCacheEntries(BCENTRY *blockCache)
 {
-#ifdef BLOCK_COPY_CACHE_DEBUG
-  serial_putstring("blockCache: ADD[");
-  serial_putint(index);
-  serial_putstring("] start@");
-  serial_putint(blkStartAddr);
-  serial_putstring(" end@");
-  serial_putint(blkEndAddr);
-  serial_putstring(" hdlPtr ");
-  serial_putint(hdlFunct);
-  serial_putstring(" eobInstr ");
-  serial_putint(hypInstruction);
-  serial_putstring(" blockCopyCacheSize ");
-  serial_putint(blockCopyCacheSize);
-  serial_putstring(" blockCopyCache@");
-  serial_putint((blockCopyCacheAddress & 0xFFFFFFFE));
-  serial_newline();
-#endif
-  if (bcAddr[index].valid == TRUE)
+  /*
+   * Restore and invalidate all cache entries
+   */
+  u32int i;
+  for (i = 0; i < BLOCK_CACHE_SIZE; i++)
   {
-    // somebody has been sleeping in our cache location!
-    resolveCacheConflict(index, bcAddr);
-    // now that we resolved the conflict, we arrive at situation where bcAddr[index].valid==false
+    removeCacheEntry(blockCache, i);
   }
-  //store the new entry data...
-  if( (blockCopyCacheAddress & 0b1) == 0b1)//Last bit of blkStartAddr is used to indicate that a reserved word is present in blockCopyCache (see scanner.c)
-  {
-    bcAddr[index].reservedWord = 1;//Set reservedWord to true
-    bcAddr[index].blockCopyCacheAddress = blockCopyCacheAddress & 0xFFFFFFFE;//Set last bit back to zero!!
-    bcAddr[index].blockCopyCacheSize = blockCopyCacheSize;/* Space is also made for blockCopyCache so we don't need to change it */
-  }
-  else
-  {
-    bcAddr[index].reservedWord = 0;//Set reservedWord to true
-    bcAddr[index].blockCopyCacheAddress = blockCopyCacheAddress;
-    bcAddr[index].blockCopyCacheSize = blockCopyCacheSize; /* Size doesn't change*/
-  }
-  bcAddr[index].startAddress = blkStartAddr;
-  bcAddr[index].endAddress = blkEndAddr;
-  bcAddr[index].hyperedInstruction = hypInstruction;
-  bcAddr[index].hdlFunct = hdlFunct;
-  bcAddr[index].valid = TRUE;
-  
-  // set bitmap entry to executed
-  setExecBitMap(blkEndAddr);
 }
-#else  //original function
 
-#ifdef CONFIG_THUMB2
-void addToBlockCache(void *start, u32int hypInstruction, u16int halfhypInstruction, u32int blkEndAddr,
+static void removeCacheEntry(BCENTRY *blockCache, u32int index)
+{
+#ifdef CONFIG_BLOCK_COPY
+  /*
+   * Invalidate a single cache entry
+   */
+  u32int address = blockCache[index].blockCopyCacheAddress;
+  u32int size = blockCache[index].blockCopyCacheSize;
+  DEBUG(BLOCK_CACHE, "removeCacheEntry: entry @ %p, block copy cache entry @ %#.8x size %#.8x" EOL,
+    blockCache + index, address, size);
+  removeBlockCopyCacheEntry(getGuestContext(), address, size);
+  blockCache[index].blockCopyCacheSize = 0;
+  blockCache[index].blockCopyCacheAddress = 0;
 #else
-void addToBlockCache(void *start, u32int hypInstruction, u32int blkEndAddr,
-#endif
-                     u32int index, void *hdlFunct, BCENTRY * bcAddr)
-{
-  DEBUG(BLOCK_CACHE, "addToBlockCache: index = %#x,@ %p--%#.8x, handler = %p, eobInstr = "
-      "%#.8x" EOL, index, start, blkEndAddr, hdlFunct, hypInstruction);
-
-  if (bcAddr[index].valid)
-  {
-    if (bcAddr[index].endAddress != blkEndAddr)
-    {
-      // somebody has been sleeping in our cache location!
-      resolveCacheConflict(index, bcAddr);
-      // now that we resolved the conflict, we can store the new entry data...
-      bcAddr[index].startAddress = (u32int)start;
-      bcAddr[index].endAddress = blkEndAddr;
-#ifdef CONFIG_THUMB2
-      bcAddr[index].halfhyperedInstruction = halfhypInstruction;
-#endif
-      bcAddr[index].hyperedInstruction = hypInstruction;
-      bcAddr[index].hdlFunct = hdlFunct;
-      bcAddr[index].valid = TRUE;
-    }
-    else
-    {
-      /* NOTE: if entry valid, but blkEndAddress is the same as new block to add      *
-       * then the block starts at another address but ends on the same instruction    *
-       * and by chance - has the same index. just modify existing entry, don't remove */
-      bcAddr[index].startAddress = (u32int)start;
-    }
-  }
-  else
-  {
-    bcAddr[index].startAddress = (u32int)start;
-    bcAddr[index].endAddress = blkEndAddr;
-    bcAddr[index].hyperedInstruction = hypInstruction;
-#ifdef CONFIG_THUMB2
-    bcAddr[index].halfhyperedInstruction = halfhypInstruction;
-#endif
-    bcAddr[index].hdlFunct = hdlFunct;
-    bcAddr[index].valid = TRUE;
-  }
-
-  // set bitmap entry to executed
-  setExecBitMap(blkEndAddr);
-}
+  /*
+   * Restore and invalidate a single cache entry
+   */
+  restoreReplacedInstruction(blockCache, index);
 #endif /* CONFIG_BLOCK_COPY */
-
-BCENTRY *getBlockCacheEntry(u32int index, BCENTRY *bcAddr)
-{
-  DEBUG(BLOCK_CACHE, "getBlockCacheEntry: index = %#x" EOL, index);
-  return &bcAddr[index];
+  blockCache[index].type = BCENTRY_TYPE_INVALID;
 }
+
+static void resolveCacheConflict(BCENTRY *blockCache, u32int index)
+{
+  /*
+    Replacement policy: SIMPLE REPLACE
+    Collision: new block is trying to replace old block in cache
+    Steps to Carry out:
+    1. scan the cache for any other blocks that end with the same instruction
+    as the old block in the cache
+    2.1. if found, get hypercall, and update SWIcode to point to found entry
+    2.2. if not found, restore hypered instruction back!
+    Steps to Carry out with block copy:
+    1. Remove entry in blockCache (The copied instructions)
+    2. Remove log book(the original blockCache) entry
+    Since a different startAddress means a different block of Code.
+    There will be exactly 1 block in the block cache corresponding with this block
+   */
+  DEBUG(BLOCK_CACHE, "resolveCacheConflict: collision at index %#x" EOL, index);
+
+  incrementCollisionCounter();
+
+#ifdef CONFIG_BLOCK_COPY
+  removeBlockCopyCacheEntry(getGuestContext(), blockCache[index].blockCopyCacheAddress,blockCache[index].blockCopyCacheSize);
+#endif
+
+  u32int i;
+  for (i = 0; i < BLOCK_CACHE_SIZE; i++)
+  {
+    if (blockCache[i].type != BCENTRY_TYPE_INVALID
+        && blockCache[i].endAddress == blockCache[index].endAddress && i != index)
+    {
+#ifdef CONFIG_THUMB2
+      /* found a valid entry in the cache, that BB ends @ the same address as
+      * the block of the entry that we collided with.
+      * Call the resolve function to ensure that conflicts between Thumb and ARM SWIs
+      * will be resolved as approprate otherwise say 'hello' to segfault ^_^
+      * ARM: SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
+      * Thumb: SWI 0xDF<code> is replaced with SWI<newcode> where newcode points new entry
+      */
+      resolveSWI(i, (u32int*)blockCache[index].endAddress);
+#else
+      // found a valid entry in the cache, that BB ends @ the same address as
+      // the block of the entry that we collided with.
+      u32int hypercallSWI = *((u32int*)(blockCache[index].endAddress));
+      // SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
+      hypercallSWI = (hypercallSWI & 0xFF000000) | ((i + 1) << 8);
+      DEBUG(BLOCK_CACHE, "resolveCacheConflict: found another block ending at the same address" EOL);
+      DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing hypercall with %#.8x" EOL, hypercallSWI);
+      *((u32int*)(blockCache[index].endAddress)) = hypercallSWI;
+#endif
+      return;
+    }
+  }
+  DEBUG(BLOCK_CACHE, "resolveCacheConflict: no other block ends at the same address" EOL);
+
+  /*
+   * Restore replaced instruction (hyperedInstruction) back to its original location in memory.
+   */
+  restoreReplacedInstruction(blockCache, index);
+}
+
+static void restoreReplacedInstruction(BCENTRY *blockCache, u32int index)
+{
+  switch (blockCache[index].type)
+  {
+    case BCENTRY_TYPE_ARM:
+      DEBUG(BLOCK_CACHE, "restoreReplacedInstruction: restoring ARM %#.8x @ %#.8x" EOL,
+          blockCache[index].hyperedInstruction, blockCache[index].endAddress);
+      *((u32int*)(blockCache[index].endAddress)) = blockCache[index].hyperedInstruction;
+      break;
+#ifdef CONFIG_THUMB2
+    case BCENTRY_TYPE_THUMB:
+      if (TXX_IS_T32(blockCache[index].hyperedInstruction))
+      {
+        /*
+         * Restore Thumb 32-bit instruction. Word-alignment is not guaranteed, so we must perform
+         * two halfword-size stores!
+         */
+        DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring T32 %#.8x @ %#.8x",
+            blockCache[index].hyperedInstruction, blockCache[index].endAddress);
+        u16int *bpointer = (u16int *)(blockCache[index].endAddress);
+        *bpointer = (u16int)(blockCache[index].hyperedInstruction & 0xFFFF);
+        bpointer--;
+        *bpointer = (u16int)(blockCache[index].hyperedInstruction >> 16);
+      }
+      else
+      {
+        /*
+         * Restore Thumb 16-bit instruction.
+         */
+        DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring T16 %#.4x @ %#.8x" EOL,
+            blockCache[index].hyperedInstruction, blockCache[index].endAddress);
+        *((u16int *)(blockCache[index].endAddress)) = (u16int)blockCache[index].hyperedInstruction;
+      }
+      break;
+#endif
+  }
+}
+
+static void setExecBitMap(u32int address)
+{
+  u32int index = address / MEMORY_PER_BITMAP;
+  u32int bitNumber = (address & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
+  execBitMap[index] = execBitMap[index] | (1 << bitNumber);
+}
+
+// finds and clears block cache entries within the given address range
+void validateCacheMultiPreChange(BCENTRY *bcache, u32int startAddress, u32int endAddress)
+{
+  DEBUG(BLOCK_CACHE, "validateCacheMultiPreChange: %#.8x--%#.8x" EOL, startAddress, endAddress);
+  u32int i;
+  for (i = 0; i < BLOCK_CACHE_SIZE; i++)
+  {
+    if (bcache[i].type != BCENTRY_TYPE_INVALID && bcache[i].endAddress >= startAddress
+        && bcache[i].endAddress <= endAddress)
+    {
+      //We only care if the end address of the block falls inside the address validation range
+      removeCacheEntry(bcache, i);
+    }
+  }
+}
+
+// finds block cache entries that include a given address, clears them
+void validateCachePreChange(BCENTRY *bcache, u32int address)
+{
+  if (isBitmapSetForAddress(address))
+  {
+    u32int cacheIndex = 0;
+    while((cacheIndex = findBlockCacheEntry(bcache, address)) != (u32int)-1)
+    {
+      removeCacheEntry(bcache, cacheIndex);
+    }
+  }
+}
+
 
 #ifdef CONFIG_BLOCK_COPY
 /*
@@ -305,9 +508,7 @@ u32int* checkAndMergeBlock(u32int* startOfBlock2, u32int* endOfBlock2, BCENTRY *
      * Make sure that block is safed correctly in blockCopyCache
      */
     return blockCopyLast;
-
     /* patching needs to be done: set blockCopyCacheSize -> must be done in scanBlock (caller of this function) */
-
   }
   else
   {
@@ -315,167 +516,15 @@ u32int* checkAndMergeBlock(u32int* startOfBlock2, u32int* endOfBlock2, BCENTRY *
     /* No patching needs to be done just set blockCopyCacheSize -> must be done in scanBlock (caller of this function) */
   }
 }
-#endif
 
-/* input: any address, might be start, end of block or somewhere in the middle... */
-/* output: first cache entry index for the block where this address falls into */
-/* output: if no such block, return -1 (0xFFFFFFFF) */
-u32int findEntryForAddress(BCENTRY *bcAddr, u32int addr)
+void removeBlockCopyCacheEntry(void *contextPtr, u32int blockCopyCacheAddress, u32int blockCopyCacheSize)
 {
-  u32int i = 0;
-  for (i = 0; i < BLOCK_CACHE_SIZE; i++)
-  {
-    if (bcAddr[i].valid)
-    {
-      if (bcAddr[i].startAddress <= addr && bcAddr[i].endAddress >= addr)
-      {
-        // addr falls in-between start-end inclusive. found a matching entry.
-        DEBUG(BLOCK_CACHE, "findEntryForAddress: found bCache entry for address %#.8x "
-            "@ %#.8x--%#.8x, index = %#x" EOL,
-            addr, bcAddr[i].startAddress, bcAddr[i].endAddress, i);
-        return i;
-      }
-    }
-  }
-  return (u32int)-1;
-}
-
-/* remove a specific cache entry */
-void removeCacheEntry(BCENTRY * bcAddr, u32int cacheIndex)
-{
-  //The copied code has to be cleaned up
-#ifdef CONFIG_BLOCK_COPY
-#ifdef BLOCK_COPY_CACHE_DEBUG
-  serial_putstring("removeCache entered.  Address of cache(logbook) entry:");
-  serial_putint((u32int) (bcAddr+cacheIndex));
-  serial_putstring(" gets cleaned");
-  serial_newline();
-#endif
-  u32int blockCopyCacheAddressOfEntry = bcAddr[cacheIndex].blockCopyCacheAddress;
-  u32int blockCopyCacheSizeOfEntry = bcAddr[cacheIndex].blockCopyCacheSize;
-#ifdef BLOCK_COPY_CACHE_DEBUG
-  serial_putstring("removeBlockCopyCache entry: startAddress:");
-  serial_putint((u32int)blockCopyCacheAddressOfEntry);
-  serial_putstring(" size:");
-  serial_putint(blockCopyCacheSizeOfEntry);
-  serial_newline();
-#endif
-  removeBlockCopyCacheEntry(getGuestContext(), blockCopyCacheAddressOfEntry, blockCopyCacheSizeOfEntry);
-  bcAddr[cacheIndex].blockCopyCacheSize = 0;
-  bcAddr[cacheIndex].blockCopyCacheAddress = 0;
-#else
-  // restore replaced end of block instruction
-  *((u32int*)(bcAddr[cacheIndex].endAddress)) = bcAddr[cacheIndex].hyperedInstruction;
-#endif /* CONFIG_BLOCK_COPY */
-  bcAddr[cacheIndex].valid = FALSE;
-  bcAddr[cacheIndex].startAddress = 0;
-  bcAddr[cacheIndex].endAddress = 0;
-  bcAddr[cacheIndex].hdlFunct = 0;
-  bcAddr[cacheIndex].hyperedInstruction = 0;
-#ifdef CONFIG_THUMB2
-  bcAddr[cacheIndex].halfhyperedInstruction = 0;
-#endif
-  return;
-}
-
-void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
-{
-  /*
-    Replacement policy: SIMPLE REPLACE
-    Collision: new block is trying to replace old block in cache
-    Steps to Carry out:
-    1. scan the cache for any other blocks that end with the same instruction
-    as the old block in the cache
-    2.1. if found, get hypercall, and update SWIcode to point to found entry
-    2.2. if not found, restore hypered instruction back!
-    Steps to Carry out with block copy:
-    1. Remove entry in blockCache (The copied instructions)
-    2. Remove log book(the original blockCache) entry
-    Since a different startAddress means a different block of Code.
-    There will be exactly 1 block in the block cache corresponding with this block
-   */
-  DEBUG(BLOCK_CACHE, "resolveCacheConflict: collision at index %#x" EOL, index);
-
-  incrementCollisionCounter();
-
-#ifdef CONFIG_BLOCK_COPY
-  removeBlockCopyCacheEntry(getGuestContext(), bcAddr[index].blockCopyCacheAddress,bcAddr[index].blockCopyCacheSize);
-#endif
-
-  u32int i;
-  for (i = 0; i < BLOCK_CACHE_SIZE; i++)
-  {
-    if ((bcAddr[i].valid == TRUE) &&
-        (bcAddr[i].endAddress == bcAddr[index].endAddress) &&
-        (i != index) )
-    {
-#ifdef CONFIG_THUMB2
-      /* found a valid entry in the cache, that BB ends @ the same address as
-      * the block of the entry that we collided with.
-      * Call the resolve function to ensure that conflicts between Thumb and ARM SWIs
-      * will be resolved as approprate otherwise say 'hello' to segfault ^_^
-      * ARM: SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
-      * Thumb: SWI 0xDF<code> is replaced with SWI<newcode> where newcode points new entry
-      */
-      resolveSWI(i, (u32int*)bcAddr[index].endAddress);
-#else
-      // found a valid entry in the cache, that BB ends @ the same address as
-      // the block of the entry that we collided with.
-      u32int hypercallSWI = *((u32int*)(bcAddr[index].endAddress));
-      // SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
-      hypercallSWI = (hypercallSWI & 0xFF000000) | ((i + 1) << 8);
-      DEBUG(BLOCK_CACHE, "resolveCacheConflict: found another block ending at the same address" EOL);
-      DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing hypercall with %#.8x" EOL, hypercallSWI);
-      *((u32int*)(bcAddr[index].endAddress)) = hypercallSWI;
-#endif
-      return;
-    }
-  }
-  DEBUG(BLOCK_CACHE, "resolveCacheConflict: no other block ends at the same address" EOL);
-
-  // restore hypered instruction back!
-#ifndef CONFIG_THUMB2
-  DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring ARM %#.8x @ %#.8x" EOL,
-      bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
-  *((u32int*)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
-#else
-  if (bcAddr[index].halfhyperedInstruction == 0)
-  {
-    DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring ARM %#.8x @ %#.8x" EOL,
-        bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
-    *((u32int *)(bcAddr[index].endAddress)) = bcAddr[index].hyperedInstruction;
-  }
-  else
-  {
-    //Assuming endAddress points to the end address of the block then...
-    if(TXX_IS_T32(bcAddr[index].hyperedInstruction))// this is a thumb 32
-    {
-      u16int *bpointer = 0;
-      DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring T32 %#.8x @ %#.8x",
-          bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
-      bpointer = (u16int *)(bcAddr[index].endAddress);
-      *bpointer = (u16int)(bcAddr[index].hyperedInstruction & 0xFFFF);
-      bpointer--;
-      *bpointer = (u16int)(bcAddr[index].hyperedInstruction >> 16);
-    }
-    else
-    {
-      DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring T16 %#.4x @ %#.8x" EOL,
-          bcAddr[index].hyperedInstruction, bcAddr[index].endAddress);
-      *((u16int *)(bcAddr[index].endAddress)) = (u16int)bcAddr[index].hyperedInstruction;
-    }
-  }
-#endif
-}
-
-#ifdef CONFIG_BLOCK_COPY
-void removeBlockCopyCacheEntry(void *contextPtr, u32int blockCopyCacheAddress,u32int blockCopyCacheSize){
   GCONTXT *context = (GCONTXT *)contextPtr;
   //First we must check if we have to remove a coninuous block that it is split up (i.e.: if it was to close to the end)
   u32int endOfBlock = (blockCopyCacheAddress+(blockCopyCacheSize<<2));//End of the block that has to be removed
   u32int lastUsableBlockCopyCacheAddress = context->blockCopyCacheEnd-4; //see comment next rule
   //Warning last adress of blockCopyCache is a backpointer and might not be erased therefore
-  if( endOfBlock > lastUsableBlockCopyCacheAddress)
+  if (endOfBlock > lastUsableBlockCopyCacheAddress)
   {
     u32int difference = endOfBlock-lastUsableBlockCopyCacheAddress-4;
 #ifdef  BLOCK_COPY_CACHE_DEBUG
@@ -490,100 +539,10 @@ void removeBlockCopyCacheEntry(void *contextPtr, u32int blockCopyCacheAddress,u3
   }
   else //safe to remove all at once
   {
-    /*serial_putstring("REMOVEBLOCKCOPYCACHEENTRY"); */
     memset((u32int *)blockCopyCacheAddress,0,blockCopyCacheSize<<2);//blockCopyCacheSize is number of u32int entries
   }
 }
-#endif /* CONFIG_BLOCK_COPY */
 
-void explodeCache(BCENTRY *bcache)
-{
-  DEBUG(BLOCK_CACHE, "========BLOCK CACHE EXPLODE!!!=========\n");
-
-  int i;
-  for (i = 0; i < BLOCK_CACHE_SIZE; i++)
-  {
-    if (bcache[i].valid)
-    {
-      removeCacheEntry(bcache, i);
-    }
-  }
-  for (i = 0; i < NUMBER_OF_BITMAPS; i++)
-  {
-    execBitMap[i] = 0;
-  }
-  //Now it is also possible to set last used line of blockCopyCache back to the word just before the blockCopyCache (this way the blockCopyCache
-  //will start again from the beginning -> Not absolutely necessary however.
-}
-
-// finds block cache entries that include a given address, clears them
-void validateCachePreChange(BCENTRY *bcache, u32int address)
-{
-  if (isBitmapSetForAddress(address))
-  {
-    u32int cacheIndex = 0;
-    while((cacheIndex = findEntryForAddress(bcache, address)) != (u32int)-1)
-    {
-      removeCacheEntry(bcache, cacheIndex);
-    }
-  }
-}
-
-// finds and clears block cache entries within the given address range
-void validateCacheMultiPreChange(BCENTRY *bcache, u32int startAddress, u32int endAddress)
-{
-  DEBUG(BLOCK_CACHE, "validateCacheMultiPreChange: %#.8x--%#.8x" EOL, startAddress, endAddress);
-  u32int i;
-  for (i = 0; i < BLOCK_CACHE_SIZE; i++)
-  {
-    if (bcache[i].valid && bcache[i].endAddress >= startAddress && bcache[i].endAddress <= endAddress)
-    {
-      //We only care if the end address of the block falls inside the address validation range
-      removeCacheEntry(bcache, i);
-    }
-  }
-}
-
-
-void dumpBlockCacheEntry(u32int index, BCENTRY *bcache)
-{
-  printf("dumpBlockCacheEntry: entry #%#.2x: ", index);
-  printf("dumpBlockCacheEntry: startAddress = %#.8x, endAddress = %#.8x, valid = %x" EOL,
-         bcache[index].startAddress, bcache[index].endAddress, bcache[index].valid);
-#ifdef CONFIG_BLOCK_COPY
-  printf("BlockCopyCacheAddress = %#.8x, BlockCopyCache size = %#.8x",
-    bcache[index].blockCopyCacheAddress, bcache[index].blockCopyCacheSize);
-#endif
-  printf("dumpBlockCacheEntry: EOBinstr = %#.8x, handlerFunction = %p",
-         bcache[index].hyperedInstruction, bcache[index].hdlFunct);
-}
-
-void setExecBitMap(u32int addr)
-{
-  u32int index = addr / MEMORY_PER_BITMAP;
-  u32int bitNumber = (addr & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
-
-  execBitMap[index] = execBitMap[index] | (1 << bitNumber);
-}
-
-void clearExecBitMap(u32int addr)
-{
-  u32int index = addr / MEMORY_PER_BITMAP;
-  u32int bitNumber = (addr & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
-
-  execBitMap[index] = execBitMap[index] & ~(1 << bitNumber);
-}
-
-bool isBitmapSetForAddress(u32int addr)
-{
-  u32int index = addr / MEMORY_PER_BITMAP;
-  u32int bitNumber = (addr & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
-  u32int bitResult = execBitMap[index] & (1 << bitNumber);
-  return (bitResult != 0);
-}
-
-
-#ifdef CONFIG_BLOCK_COPY
 /* This function will check if the content at Addr == 0x0 if not make it free -> the address that must be used is returned*/
 u32int * checkAndClearBlockCopyCacheAddress(u32int *Addr,BCENTRY *bcStartAddr,u32int* blockCopyCache,u32int* blockCopyCacheEnd){
   if(Addr >= blockCopyCacheEnd){//Last address of BlockCopyCacheAddr
@@ -620,20 +579,24 @@ u32int * checkAndClearBlockCopyCacheAddress(u32int *Addr,BCENTRY *bcStartAddr,u3
   return Addr;//Return Address that should be used to place next instruction
 }
 
-u32int* updateCurrBlockCopyCacheAddr(u32int* oldAddr, u32int nrOfAddedInstr,u32int* blockCopyCacheEnd){
-  oldAddr=oldAddr+nrOfAddedInstr;
-  if(oldAddr >= blockCopyCacheEnd ){//oldAddr=currBlockCopyCacheAddress blockCopyCacheAddresses will be used in a  cyclic manner
-                                    //-> if end of blockCopyCache is passed blockCopyCacheCurrAddress must be updated
-    oldAddr=oldAddr - (BLOCK_COPY_CACHE_SIZE-1);
+u32int *updateCurrBlockCopyCacheAddr(u32int *oldAddr, u32int nrOfAddedInstr, u32int *blockCopyCacheEnd)
+{
+  oldAddr += nrOfAddedInstr;
+  if (oldAddr >= blockCopyCacheEnd)
+  {
+    //oldAddr=currBlockCopyCacheAddress blockCopyCacheAddresses will be used in a  cyclic manner
+    //-> if end of blockCopyCache is passed blockCopyCacheCurrAddress must be updated
+    oldAddr -= (BLOCK_COPY_CACHE_SIZE - 1);
   }
   return oldAddr;
 }
+
 #endif
 
 
 #ifdef CONFIG_THUMB2
 
-void resolveSWI( u32int index, u32int * endAddress)
+static void resolveSWI( u32int index, u32int * endAddress)
 {
   u32int hypercall = 0;
   // Ok so endAddress holds the SWI we collided with. Check if it is word aligned
