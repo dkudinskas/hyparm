@@ -156,7 +156,7 @@ u32int undefinedInstruction(GCONTXT * context);
 
 #ifdef CONFIG_THUMB2
 /* Exclusive Thumb Instructions. */
-u32int itInstruction(GCONTXT * context);
+u32int t16ItInstruction(GCONTXT *context, u32int instruction);
 #endif
 
 
