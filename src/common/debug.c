@@ -89,7 +89,9 @@ u32int printf(const char *fmt, ...)
   return i;
 }
 
-#if CONFIG_MMC
+
+#ifdef CONFIG_MMC
+
 u32int fprintf(const char *fmt, ...)
 {
   va_list args;
@@ -105,4 +107,5 @@ u32int fprintf(const char *fmt, ...)
 
   return i;
 }
-#endif
+
+#endif /* CONFIG_MMC */

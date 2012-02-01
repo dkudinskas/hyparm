@@ -80,12 +80,12 @@ void removeBlockCopyCacheEntry(void *context, u32int blockCopyCacheAddress, u32i
 
 #elif defined(CONFIG_THUMB2)
 
-void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int HalfhypInstruction, u32int blkEndAddr,
+void addToBlockCache(void *start, u32int hypInstruction, u16int HalfhypInstruction, u32int blkEndAddr,
   u32int index, void *hdlFunct, BCENTRY *bcAddr);
 
 #else
 
-void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
+void addToBlockCache(void *start, u32int hypInstruction, u32int blkEndAddr,
   u32int index, void *hdlFunct, BCENTRY *bcAddr);
 
 #endif

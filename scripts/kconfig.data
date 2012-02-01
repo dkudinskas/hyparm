@@ -143,13 +143,9 @@ config DEBUG_DECODER
   bool "Debug instruction decoding"
   depends on DEBUG
 
-menuconfig DEBUG_SCANNER
+config DEBUG_SCANNER
   bool "Debug scanner"
   depends on DEBUG
-
-config DEBUG_SCANNER_CALL_SOURCE
-  bool "Track call source"
-  depends on DEBUG_SCANNER
 
 config DEBUG_SCANNER_COUNT_BLOCKS
   bool "Print number of scanned blocks"
@@ -360,5 +356,8 @@ config EMERGENCY_EXCEPTION_VECTOR
 
 config SCANNER_COUNT_BLOCKS
   bool "Count number of scanned blocks"
+
+config SCANNER_EXTRA_CHECKS
+  bool "Track call source and check for null pointers in scanner"
 
 endmenu

@@ -3,10 +3,6 @@
 
 #include "common/types.h"
 
-#ifdef CONFIG_THUMB2
-#include "common/thumbdefs.h"
-#endif
-
 #include "guestManager/guestContext.h"
 
 
@@ -44,12 +40,6 @@
 #endif /* CONFIG_THUMB2 */
 
 
-#if (CONFIG_DEBUG_SCANNER_CALL_SOURCE)
-void setScanBlockCallSource(u8int source);
-#else
-#define setScanBlockCallSource(source)
-#endif /* CONFIG_DEBUG_SCANNER_CALL_SOURCE */
-
 void scanBlock(GCONTXT * gc, u32int blkStartAddr);
 
 
@@ -58,9 +48,24 @@ u32int allSrcRegNonPC(u32int instruction);
 #endif
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
+
 void resetScanBlockCounter(void);
+
 #else
+
 #define resetScanBlockCounter()
+
 #endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
 
-#endif
+
+#ifdef CONFIG_SCANNER_EXTRA_CHECKS
+
+void setScanBlockCallSource(u8int source);
+
+#else
+
+#define setScanBlockCallSource(source)
+
+#endif /* CONFIG_SCANNER_EXTRA_CHECKS */
+
+#endif /* __INSTRUCTION_EMU__SCANNER_H__ */
