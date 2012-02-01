@@ -1,5 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #include "guestManager/guestContext.h"
 
@@ -16,7 +17,7 @@ void initGpmc()
   gpmc = (struct Gpmc*)mallocBytes(sizeof(struct Gpmc));
   if (gpmc == 0)
   {
-    DIE_NOW(0, "Failed to allocate GPMC.");
+    DIE_NOW(NULL, "Failed to allocate GPMC.");
   }
   else
   {
@@ -73,7 +74,7 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
   if (size != WORD)
   {
     // only word access allowed in these modules
-    DIE_NOW(0, "Gpmc: invalid access size.");
+    DIE_NOW(gc, "Gpmc: invalid access size.");
   }
 
   u32int regOffset = phyAddr - Q1_L3_GPMC;
@@ -104,7 +105,7 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
     case GPMC_NAND_ADDRESS_6:
     case GPMC_NAND_COMMAND_7:
     case GPMC_NAND_ADDRESS_7:
-      DIE_NOW(0, "Gpmc: load on write-only register.");
+      DIE_NOW(gc, "Gpmc: load on write-only register.");
       break;
     case GPMC_CONFIG1_0:
       val = gpmc->gpmcConfig1_0;

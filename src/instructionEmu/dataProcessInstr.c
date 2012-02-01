@@ -127,7 +127,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char * 
              ((context->CPSR & PSR_MODE) == PSR_SYS_MODE) )
         {
           // there are no SPSR's in usr or sys modes!
-          DIE_NOW(0, "arithLogicOp: exception return in guest usr/sys mode! bug.");
+          DIE_NOW(context, "arithLogicOp: exception return in guest usr/sys mode! bug.");
         }
         else
         {
@@ -150,7 +150,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char * 
               context->CPSR = context->SPSR_UND;
               break;
             default: 
-              DIE_NOW(0, "arithLogicOp: invalid SPSR read for current guest mode.");
+              DIE_NOW(context, "arithLogicOp: invalid SPSR read for current guest mode.");
           } 
         }
       }
@@ -369,7 +369,7 @@ u32int tstInstruction(GCONTXT *context, u32int instruction)
 u32int teqInstruction(GCONTXT *context, u32int instruction)
 {
 #ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(0, "teqInstruction is executed but not yet checked for blockCopyCompatibility");
+  DIE_NOW(context, "teqInstruction is executed but not yet checked for blockCopyCompatibility");
 #else
   invalidDataProcTrap(context, instruction, "TEQ instr");
 #endif
@@ -382,7 +382,7 @@ u32int teqInstruction(GCONTXT *context, u32int instruction)
 u32int cmpInstruction(GCONTXT *context, u32int instruction)
 {
 #ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(0, "cmpInstruction is executed but not yet checked for blockCopyCompatibility");
+  DIE_NOW(context, "cmpInstruction is executed but not yet checked for blockCopyCompatibility");
 #else
   invalidDataProcTrap(context, instruction, "CMP instr");
 #endif
@@ -395,7 +395,7 @@ u32int cmpInstruction(GCONTXT *context, u32int instruction)
 u32int cmnInstruction(GCONTXT *context, u32int instruction)
 {
 #ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(0, "cmnInstruction is executed but not yet checked for blockCopyCompatibility");
+  DIE_NOW(context, "cmnInstruction is executed but not yet checked for blockCopyCompatibility");
 #else
   invalidDataProcTrap(context, instruction, "CMN instr");
 #endif
@@ -467,7 +467,7 @@ u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
       {//bit 25 != 1 -> there can be registers, PC can possibly be read
         if((instruction & 0xF) != 0xF)
         {
-          DIE_NOW(0, "mov PCFunct: movPCFunct can only be called if last 4 bits are 1111\n");
+          DIE_NOW(context, "mov PCFunct: movPCFunct can only be called if last 4 bits are 1111\n");
         }else{
           //step 1 Copy PC (=instructionAddr2) to desReg
           currBlockCopyCacheAddr=savePCInReg(context, instructionAddr, currBlockCopyCacheAddr,  destReg);
@@ -491,7 +491,7 @@ u32int* movPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
     {//bit 25 != 1 -> there can be registers, PC can possibly be read
       if((instruction & 0xF) != 0xF)
       {
-        DIE_NOW(0, "mov PCFunct: movPCFunct can only be called if last 4 bits are 1111\n");
+        DIE_NOW(context, "mov PCFunct: movPCFunct can only be called if last 4 bits are 1111\n");
       }else{
         //Make instruction safe and return
         /* conditional instruction thus sometimes not executed */
@@ -547,7 +547,7 @@ u32int* mvnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
       //Here we know it is register or register-shifted register
       if(registerShifted)
       {
-        DIE_NOW(0,"MVNPC (register-shifted register) -> UNPREDICTABLE");
+        DIE_NOW(context,"MVNPC (register-shifted register) -> UNPREDICTABLE");
       }
       else
       {
@@ -572,7 +572,7 @@ u32int* mvnPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
     else
     {
       /* mvn with condition code != ALWAYS*/
-      DIE_NOW(0,"conditional mvn PCFunct not yet implemented");
+      DIE_NOW(context,"conditional mvn PCFunct not yet implemented");
     }
   }
 
@@ -601,7 +601,7 @@ u32int* lsrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   {
     if((instruction>>4 & 0b1) == 1)
     {//Bit 4 is 1 if extra register (LSR(register))
-      DIE_NOW(0,"lsrPCInstruction LSR(register) with a srcReg==PC is UNPREDICTABLE?");
+      DIE_NOW(context,"lsrPCInstruction LSR(register) with a srcReg==PC is UNPREDICTABLE?");
     }
     //Ready to do shift
     //save PC
@@ -621,7 +621,7 @@ u32int* lsrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   else
   {
     /*lsrPC Funct conditional*/
-    DIE_NOW(0,"lsrPCFunct conditional is not yet implemented");
+    DIE_NOW(context,"lsrPCFunct conditional is not yet implemented");
 
   }
 }
@@ -652,7 +652,7 @@ u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
     else
     {
       //ARM p 352
-      DIE_NOW(0,"asrPCInstruction: ASR(register) cannot take PC as input!->UNPREDICTABLE");
+      DIE_NOW(context,"asrPCInstruction: ASR(register) cannot take PC as input!->UNPREDICTABLE");
     }
 
     currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
@@ -662,19 +662,19 @@ u32int* asrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   }
   else
   {
-    DIE_NOW(0,"asrPCInstruction conditional");
+    DIE_NOW(context,"asrPCInstruction conditional");
   }
 }
 
 u32int* rrxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "rrx PCFunct unfinished\n");
+  DIE_NOW(context, "rrx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* rorPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "ror PCFunct unfinished\n");
+  DIE_NOW(context, "ror PCFunct unfinished\n");
   return 0;
 }
 

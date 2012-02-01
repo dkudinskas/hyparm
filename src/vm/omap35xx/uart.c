@@ -1,5 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #include "guestManager/guestContext.h"
 #include "guestManager/guestExceptions.h"
@@ -23,7 +24,7 @@ void initUart(u32int uartID)
   uart[uID] = (struct Uart *)mallocBytes(sizeof(struct Uart));
   if (uart[uID] == 0)
   {
-    DIE_NOW(0, "Failed to allocate uart.");
+    DIE_NOW(NULL, "Failed to allocate uart.");
   }
   memset((void*)uart[uID], 0, sizeof(struct Uart));
   DEBUG(VP_OMAP_35XX_UART, "Initializing Uart%x at %p" EOL, uartID, uart[uID]);
@@ -79,7 +80,7 @@ u32int loadUart(device *dev, ACCESS_SIZE size, u32int address)
 {
   if (size != BYTE)
   {
-    DIE_NOW(0, "UART: loadUart invalid access size - byte");
+    DIE_NOW(NULL, "UART: loadUart invalid access size - byte");
   }
 
   //We care about the real pAddr of the entry, not its vAddr
@@ -89,7 +90,7 @@ u32int loadUart(device *dev, ACCESS_SIZE size, u32int address)
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)
   {
-    DIE_NOW(0, "loadUart: invalid UART id.");
+    DIE_NOW(NULL, "loadUart: invalid UART id.");
   }
   u32int value = 0;
   u32int regOffs = phyAddr - getUartBaseAddr(uID);
@@ -153,7 +154,7 @@ u32int loadUart(device *dev, ACCESS_SIZE size, u32int address)
       if (getUartMode(uID+1) == configB)
       {
         // load XON1_ADDR1
-        DIE_NOW(0, "UART load XON1_ADDR1 unimplemented");
+        DIE_NOW(NULL, "UART load XON1_ADDR1 unimplemented");
       }
       else
       {
@@ -167,7 +168,7 @@ u32int loadUart(device *dev, ACCESS_SIZE size, u32int address)
       if (getUartMode(uID+1) == configB)
       {
         // load XON2_ADDR2
-        DIE_NOW(0, "UART load XON2_ADDR2 unimplemented");
+        DIE_NOW(NULL, "UART load XON2_ADDR2 unimplemented");
       }
       else
       {
@@ -180,7 +181,7 @@ u32int loadUart(device *dev, ACCESS_SIZE size, u32int address)
       if (getUartMode(uID+1) == configB)
       {
         // load TCR/XOFF1
-        DIE_NOW(0, "UART load TCR/XOFF1 unimplemented");
+        DIE_NOW(NULL, "UART load TCR/XOFF1 unimplemented");
       }
       else
       {
@@ -194,7 +195,7 @@ u32int loadUart(device *dev, ACCESS_SIZE size, u32int address)
         else
         {
           // sub-operational/sub-configA TCR_TLR mode, load xmission control
-          DIE_NOW(0, "UART store TCR unimplemented");
+          DIE_NOW(NULL, "UART store TCR unimplemented");
         }
       }
       break;
@@ -202,7 +203,7 @@ u32int loadUart(device *dev, ACCESS_SIZE size, u32int address)
       if (getUartMode(uID+1) == configB)
       {
         // store TLR/XOFF2
-        DIE_NOW(0, "UART load TLR/XOFF2 unimplemented");
+        DIE_NOW(NULL, "UART load TLR/XOFF2 unimplemented");
       }
       else
       {
@@ -216,7 +217,7 @@ u32int loadUart(device *dev, ACCESS_SIZE size, u32int address)
         else
         {
           // sub-operational/sub-configA TCR_TLR mode, store TLR reg
-          DIE_NOW(0, "UART store TLR unimplemented");
+          DIE_NOW(NULL, "UART store TLR unimplemented");
         }
       }
       break;
@@ -252,7 +253,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 {
   if (size != BYTE)
   {
-    DIE_NOW(0, "UART: storeUart invalid access size - byte");
+    DIE_NOW(NULL, "UART: storeUart invalid access size - byte");
   }
 
   //We care about the real pAddr of the entry, not its vAddr
@@ -262,7 +263,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)
   {
-    DIE_NOW(0, "storeUart: invalid UART id.");
+    DIE_NOW(NULL, "storeUart: invalid UART id.");
   }
   uID--; // array starts at 0
   u32int regOffs = phyAddr - getUartBaseAddr(uID+1);
@@ -551,7 +552,7 @@ static inline u32int getUartBaseAddr(u32int id)
     case 3:
       return UART3;
     default:
-      DIE_NOW(0, "getUartBaseAddr: invalid base id.");
+      DIE_NOW(NULL, "getUartBaseAddr: invalid base id.");
   }
   return -1;
 }
@@ -689,7 +690,7 @@ u8int uartRxByte(u32int uartID)
               throwInterrupt(UART3_IRQ);
               break;
             default:
-              DIE_NOW(0, "store to uart: invalid uID.");
+              DIE_NOW(NULL, "store to uart: invalid uID.");
           } // switch ends
         } // THR irq
       } // RHR irq
@@ -742,7 +743,7 @@ void uartPutRxByte(u8int byte, u32int uartID)
           throwInterrupt(UART3_IRQ);
           break;
         default:
-          DIE_NOW(0, "store to uart: invalid uID.");
+          DIE_NOW(NULL, "store to uart: invalid uID.");
       } // siwtch ends
     } // line status error IRQ enabled in UART
   }
@@ -774,7 +775,7 @@ void uartPutRxByte(u8int byte, u32int uartID)
             throwInterrupt(UART3_IRQ);
             break;
           default:
-            DIE_NOW(0, "store to uart: invalid uID.");
+            DIE_NOW(NULL, "store to uart: invalid uID.");
         } // siwtch ends
       } // line status error IRQ enabled in UART
     }
@@ -811,7 +812,7 @@ void uartPutRxByte(u8int byte, u32int uartID)
             throwInterrupt(UART3_IRQ);
             break;
           default:
-            DIE_NOW(0, "store to uart: invalid uID.");
+            DIE_NOW(NULL, "store to uart: invalid uID.");
         } // siwtch ends
       } // line status error IRQ enabled in UART
     } // RX character
@@ -844,7 +845,7 @@ void setIrqFlags(u32int flags, u32int uartID)
         throwInterrupt(UART3_IRQ);
         break;
       default:
-        DIE_NOW(0, "store to uart: invalid uID.");
+        DIE_NOW(NULL, "store to uart: invalid uID.");
     }
   }
 
@@ -880,7 +881,7 @@ void setIrqFlags(u32int flags, u32int uartID)
           throwInterrupt(UART3_IRQ);
           break;
         default:
-          DIE_NOW(0, "store to uart: invalid uID.");
+          DIE_NOW(NULL, "store to uart: invalid uID.");
       }
     }
     DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: enabling RX irq, set IIR to %#x" EOL, uart[uID]->iir);
@@ -911,7 +912,7 @@ void setIrqFlags(u32int flags, u32int uartID)
           throwInterrupt(UART3_IRQ);
           break;
         default:
-          DIE_NOW(0, "store to uart: invalid uID.");
+          DIE_NOW(NULL, "store to uart: invalid uID.");
       }
     }
     DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: disabling RHR irq, set IIR to %#x" EOL, uart[uID]->iir);
@@ -956,7 +957,7 @@ void setIrqFlags(u32int flags, u32int uartID)
         clearInterrupt(UART3_IRQ);
         break;
       default:
-        DIE_NOW(0, "store to uart: invalid uID.");
+        DIE_NOW(NULL, "store to uart: invalid uID.");
     }
   }
 }

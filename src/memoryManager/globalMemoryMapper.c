@@ -109,7 +109,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       else
       {
         printf("Instruction: %08x@%08x" EOL,instr, context->R15);
-        DIE_NOW(0, "Unknown THUMB32 load/store instr");
+        DIE_NOW(context, "Unknown THUMB32 load/store instr");
       }
     }
     else

@@ -1,11 +1,13 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #include "guestManager/guestContext.h"
 
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 
 #include "vm/omap35xx/sdma.h"
+#include "vm/omap35xx/timer32k.h"
 
 
 struct Sdma * sdma;
@@ -16,11 +18,11 @@ void initSdma()
   sdma = (struct Sdma*)mallocBytes(sizeof(struct Sdma));
   if (sdma == 0)
   {
-    DIE_NOW(0, "Failed to allocate sdma.");
+    DIE_NOW(NULL, "Failed to allocate sdma.");
   }
   else
   {
-    memset((void*)sdma, 0x0, sizeof(struct Sdma));
+    memset(sdma, 0, sizeof(struct Sdma));
     DEBUG(VP_OMAP_35XX_SDMA, "Initializing Sdma at %p size %#x" EOL, sdma, sizeof(struct Sdma));
   }
   resetSdma();

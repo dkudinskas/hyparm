@@ -1,4 +1,5 @@
 #include "common/debug.h"
+#include "common/stddef.h"
 
 /*
  * USAGE NOTES
@@ -60,7 +61,7 @@ static u64int uldiv_recursive(u64int dividend, u64int divisor, u64int acc);
     vectorType resultDef;                                                                          \
     if (divisor == (integralType)0)                                                                \
     {                                                                                              \
-      DIE_NOW(0, "Division by zero");                                                              \
+      DIE_NOW(NULL, "Division by zero");                                                              \
     }                                                                                              \
     if (dividend < divisor)                                                                        \
     {                                                                                              \
@@ -161,7 +162,7 @@ u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor)
   UDIV(u64int, u64intPair, result, ctzll, uldiv_recursive, result);
 #else
 # pragma message "*** WARNING *** __aeabi_uldivmod has no implementation for this compiler!"
-  DIE_NOW(0, "__aeabi_uldivmod not implemented");
+  DIE_NOW(NULL, "__aeabi_uldivmod not implemented");
 #endif
 }
 

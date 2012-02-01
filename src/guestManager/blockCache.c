@@ -1,5 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #include "guestManager/blockCache.h"
 #include "guestManager/guestContext.h"
@@ -489,7 +490,7 @@ u32int* checkAndMergeBlock(u32int* startOfBlock2, u32int* endOfBlock2, BCENTRY *
         offset=((pointerDest-1) - (startOfBlock2 + 1) + 2) << 2;
         if(offset> 0xFFFF)
         {
-          DIE_NOW(0, "Offset is to big -> instruction will get corrupted");
+          DIE_NOW(NULL, "Offset is to big -> instruction will get corrupted");
         }
         instruction = instruction & 0xFFFF0000;
         instruction = instruction + offset;

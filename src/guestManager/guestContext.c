@@ -38,7 +38,7 @@ GCONTXT *createGuestContext(void)
   context->coprocRegBank = (CREG *)mallocBytes(MAX_CRB_SIZE * sizeof(CREG));
   if (context->coprocRegBank == NULL)
   {
-    DIE_NOW(0, "Failed to allocate coprocessor register bank.");
+    DIE_NOW(context, "Failed to allocate coprocessor register bank.");
   }
   DEBUG(GUEST_CONTEXT, "allocateGuestContext: coprocessor register bank @ %p" EOL,
       context->coprocRegBank);
@@ -49,7 +49,7 @@ GCONTXT *createGuestContext(void)
   context->blockCache = (BCENTRY *)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   if (context->blockCache == NULL)
   {
-    DIE_NOW(0, "Failed to allocate basic block cache");
+    DIE_NOW(context, "Failed to allocate basic block cache");
   }
   DEBUG(GUEST_CONTEXT, "allocateGuestContext: block cache @ %p" EOL, context->blockCache);
   memset(context->blockCache, 0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
@@ -60,7 +60,7 @@ GCONTXT *createGuestContext(void)
   context->hardwareLibrary = initialiseHardwareLibrary();
   if (context->hardwareLibrary == NULL)
   {
-    DIE_NOW(0, "Hardware library initialisation failed.");
+    DIE_NOW(context, "Hardware library initialisation failed.");
   }
   /*
    * Setup guest memory protection

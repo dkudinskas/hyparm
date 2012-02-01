@@ -42,19 +42,16 @@ u32int mlaInstruction(GCONTXT *context, u32int instruction)
 u32int swpInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SWP unfinished");
-  return 0;
 }
 
 u32int sumlalInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SUMLAL unfinished");
-  return 0;
 }
 
 u32int sumullInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SUMULL unfinished");
-  return 0;
 }
 
 u32int pliInstruction(GCONTXT *context, u32int instruction)
@@ -72,13 +69,11 @@ u32int pliInstruction(GCONTXT *context, u32int instruction)
 u32int dbgInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "DBG unfinished");
-  return 0;
 }
 
 u32int dmbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "DBM unfinished");
-  return 0;
 }
 
 u32int dsbInstruction(GCONTXT *context, u32int instruction)
@@ -108,49 +103,41 @@ u32int isbInstruction(GCONTXT *context, u32int instruction)
 u32int bfcInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "BFC unfinished");
-  return 0;
 }
 
 u32int bfiInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "BFI unfinished");
-  return 0;
 }
 
 u32int mlsInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "MLS unfinished");
-  return 0;
 }
 
 u32int movwInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "MOVW unfinished");
-  return 0;
 }
 
 u32int movtInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "MOVT unfinished");
-  return 0;
 }
 
 u32int rbitInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "RBIT unfinished");
-  return 0;
 }
 
 u32int usbfxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "USBFX unfinished");
-  return 0;
 }
 
 u32int smcInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMC unfinished");
-  return 0;
 }
 
 u32int clrexInstruction(GCONTXT *context, u32int instruction)
@@ -168,13 +155,11 @@ u32int clrexInstruction(GCONTXT *context, u32int instruction)
 u32int yieldInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "YIELD unfinished");
-  return 0;
 }
 
 u32int wfeInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "WFE unfinished");
-  return 0;
 }
 
 u32int wfiInstruction(GCONTXT *context, u32int instruction)
@@ -325,258 +310,215 @@ u32int cpsInstruction(GCONTXT *context, u32int instr)
 u32int pkhbtInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "PKHBT unfinished");
-  return 0;
 }
 
 u32int pkhtbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "PKHTB unfinished");
-  return 0;
 }
 
 u32int qadd16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "QADD16 unfinished");
-  return 0;
 }
 
 u32int qadd8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "QADD8 unfinished");
-  return 0;
 }
 
 u32int qaddsubxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "QADDSUBX unfinished");
-  return 0;
 }
 
 u32int ubxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UBXT unfinished");
-  return 0;
 }
 
 u32int qsub16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "QSUB16 unfinished");
-  return 0;
 }
 
 u32int qsub8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "QSUB8 unfinished");
-  return 0;
 }
 
 u32int qsubaddxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "QSUBADDX unfinished");
-  return 0;
 }
 
 u32int sadd16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SADD16 unfinished");
-  return 0;
 }
 
 u32int sadd8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SADD8 unfinished");
-  return 0;
 }
 
 u32int saddsubxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SADDADDX unfinished");
-  return 0;
 }
 
 u32int shadd16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SHADD16 unfinished");
-  return 0;
 }
 
 u32int shadd8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SHADD8 unfinished");
-  return 0;
 }
 
 u32int shaddsubxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SHADDSUBX unfinished");
-  return 0;
 }
 
 u32int shsub16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SHSUB16 unfinished");
-  return 0;
 }
 
 u32int shsub8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SHSUB8 unfinished");
-  return 0;
 }
 
 u32int shsubaddxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SHSUBADDX unfinished");
-  return 0;
 }
 
 u32int ssub16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SSUB16 unfinished");
-  return 0;
 }
 
 u32int ssub8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SSUB8 unfinished");
-  return 0;
 }
 
 u32int ssubaddxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SSUBADDX unfinished");
-  return 0;
 }
 
 u32int uadd16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UADD16 unfinished");
-  return 0;
 }
 
 u32int uadd8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UADD8 unfinished");
-  return 0;
 }
 
 u32int uaddsubxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UADDSUBX unfinished");
-  return 0;
 }
 
 u32int uhadd16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UHADD16 unfinished");
-  return 0;
 }
 
 u32int uhadd8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UHADD8 unfinished");
-  return 0;
 }
 
 u32int uhaddsubxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UHADDSUBX unfinished");
-  return 0;
 }
 
 u32int uhsub16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UHSUB16 unfinished");
-  return 0;
 }
 
 u32int uhsub8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UHSUB8 unfinished");
-  return 0;
 }
 
 u32int uhsubaddxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UHSUBADDX unfinished");
-  return 0;
 }
 
 u32int uqadd16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UQADD16 unfinished");
-  return 0;
 }
 
 u32int uqadd8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UQADD8 unfinished");
-  return 0;
 }
 
 u32int uqaddsubxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UQADDSUBX unfinished");
-  return 0;
 }
 
 u32int uqsub16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UQSUB16 unfinished");
-  return 0;
 }
 u32int uqsub8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UQSUB8 unfinished");
-  return 0;
 }
 
 u32int uqsubaddxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UQSUBADDX unfinished");
-  return 0;
 }
 
 u32int usub16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "USUB16 unfinished");
-  return 0;
 }
 
 u32int usub8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "USUB8 unfinished");
-  return 0;
 }
 
 u32int usubaddxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "USUBADDX unfinished");
-  return 0;
 }
 
 u32int revInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "REV unfinished");
-  return 0;
 }
 
 u32int rev16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "REV16 unfinished");
-  return 0;
 }
 
 u32int revshInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "REVSH unfinished");
-  return 0;
 }
 
 u32int rfeInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "RFE unfinished");
-  return 0;
 }
 
 u32int sxthInstruction(GCONTXT *context, u32int instr)
@@ -588,7 +530,7 @@ u32int sxthInstruction(GCONTXT *context, u32int instr)
   u32int value = 0;
   if (regDest == 15 || regSrc == 15)
   {
-    DIE_NOW(0,"Rd/Rm is R15. Unpredictable behaviour" EOL);
+    DIE_NOW(context, "Rd/Rm is R15. Unpredictable behaviour" EOL);
   }
   if (evaluateConditionCode(context, instrCC))
   {
@@ -1210,9 +1152,10 @@ u32int mrsInstruction(GCONTXT *context, u32int instr)
 u32int svcInstruction(GCONTXT *context, u32int instruction)
 {
 #ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(0, "svcInstruction is executed but not yet checked for blockCopyCompatibility");
+  DIE_NOW(context, "svcInstruction is executed but not yet checked for blockCopyCompatibility");
+#else
+  DIE_NOW(context, "svcInstruction: I shouldn't be here");
 #endif
-  DIE_NOW(0,"I shouldn't be here");
 }
 
 u32int undefinedInstruction(GCONTXT *context, u32int instruction)
@@ -1231,67 +1174,67 @@ u32int t16ItInstruction(GCONTXT *context, u32int instruction)
 
 u32int* nopPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "nop PCFunct unfinished\n");
+  DIE_NOW(context, "nop PCFunct unfinished\n");
   return 0;
 }
 
 u32int* mulPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mul PCFunct unfinished\n");
+  DIE_NOW(context, "mul PCFunct unfinished\n");
   return 0;
 }
 
 u32int* mlaPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mla PCFunct unfinished\n");
+  DIE_NOW(context, "mla PCFunct unfinished\n");
   return 0;
 }
 
 u32int* swpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "swp PCFunct unfinished\n");
+  DIE_NOW(context, "swp PCFunct unfinished\n");
   return 0;
 }
 
 u32int* sumlalPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sumlal PCFunct unfinished\n");
+  DIE_NOW(context, "sumlal PCFunct unfinished\n");
   return 0;
 }
 
 u32int* sumullPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sumull PCFunct unfinished\n");
+  DIE_NOW(context, "sumull PCFunct unfinished\n");
   return 0;
 }
 
 u32int* pliPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "pli PCFunct unfinished\n");
+  DIE_NOW(context, "pli PCFunct unfinished\n");
   return 0;
 }
 
 u32int* dbgPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "dbg PCFunct unfinished\n");
+  DIE_NOW(context, "dbg PCFunct unfinished\n");
   return 0;
 }
 
 u32int* dmbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "dmb PCFunct unfinished\n");
+  DIE_NOW(context, "dmb PCFunct unfinished\n");
   return 0;
 }
 
 u32int* dsbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "dsb PCFunct unfinished\n");
+  DIE_NOW(context, "dsb PCFunct unfinished\n");
   return 0;
 }
 
 u32int* isbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "isb PCFunct shouldn't be used since isbInstructions are always emulated!!\n");
+  DIE_NOW(context, "isb PCFunct shouldn't be used since isbInstructions are always emulated!!\n");
   return 0;
 }
 
@@ -1303,7 +1246,7 @@ u32int* bfcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   u32int destReg = (instruction>>12) & 0xF;
   if(destReg == 0xF)
   {
-    DIE_NOW(0,"bfc PC: with Rd == PC -> UNPREDICTABLE");
+    DIE_NOW(context,"bfc PC: with Rd == PC -> UNPREDICTABLE");
   }
 
   //Other fields are safe
@@ -1315,13 +1258,13 @@ u32int* bfcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int* bfiPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "bfi PCFunct unfinished\n");
+  DIE_NOW(context, "bfi PCFunct unfinished\n");
   return 0;
 }
 
 u32int* mlsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mls PCFunct unfinished\n");
+  DIE_NOW(context, "mls PCFunct unfinished\n");
   return 0;
 }
 
@@ -1336,13 +1279,13 @@ u32int* movwPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
 
 u32int* movtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "movt PCFunct unfinished\n");
+  DIE_NOW(context, "movt PCFunct unfinished\n");
   return 0;
 }
 
 u32int* rbitPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "rbit PCFunct unfinished\n");
+  DIE_NOW(context, "rbit PCFunct unfinished\n");
   return 0;
 }
 
@@ -1351,7 +1294,7 @@ u32int* usbfxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int 
   //This cannot be a dangerous function see ARM ARM p. 778
   u32int instruction = *instructionAddr;
   if((instruction & 0xF) == 0xF || ((instruction>>12)&0xF)==0xF){
-    DIE_NOW(0, "ubfx PCFunct: with Rd or Rn == PC -> UNPREDICTABLE");
+    DIE_NOW(context, "ubfx PCFunct: with Rd or Rn == PC -> UNPREDICTABLE");
   }
   //Just copy the instruction
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
@@ -1362,318 +1305,318 @@ u32int* usbfxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int 
 
 u32int* smcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smc PCFunct unfinished\n");
+  DIE_NOW(context, "smc PCFunct unfinished\n");
   return 0;
 }
 
 u32int* clrexPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "clrex PCFunct unfinished\n");
+  DIE_NOW(context, "clrex PCFunct unfinished\n");
   return 0;
 }
 
 u32int* yieldPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "yield PCFunct unfinished\n");
+  DIE_NOW(context, "yield PCFunct unfinished\n");
   return 0;
 }
 
 u32int* wfePCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "wfe PCFunct unfinished\n");
+  DIE_NOW(context, "wfe PCFunct unfinished\n");
   return 0;
 }
 
 u32int* wfiPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "wfi PCFunct unfinished\n");
+  DIE_NOW(context, "wfi PCFunct unfinished\n");
   return 0;
 }
 
 u32int* sevPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sev PCFunct unfinished\n");
+  DIE_NOW(context, "sev PCFunct unfinished\n");
   return 0;
 }
 
 u32int* cpsiePCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "cpsie PCFunct unfinished\n");
+  DIE_NOW(context, "cpsie PCFunct unfinished\n");
   return 0;
 }
 
 u32int* cpsidPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "cpsid PCFunct unfinished\n");
+  DIE_NOW(context, "cpsid PCFunct unfinished\n");
   return 0;
 }
 
 u32int* cpsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "cps PCFunct unfinished\n");
+  DIE_NOW(context, "cps PCFunct unfinished\n");
   return 0;
 }
 
 u32int* pkhbtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "pkhbt PCFunct unfinished\n");
+  DIE_NOW(context, "pkhbt PCFunct unfinished\n");
   return 0;
 }
 
 u32int* pkhtbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "pkhtb PCFunct unfinished\n");
+  DIE_NOW(context, "pkhtb PCFunct unfinished\n");
   return 0;
 }
 
 u32int* qadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "qadd16 PCFunct unfinished\n");
+  DIE_NOW(context, "qadd16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* qadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "qadd8 PCFunct unfinished\n");
+  DIE_NOW(context, "qadd8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* qaddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "qaddsubx PCFunct unfinished\n");
+  DIE_NOW(context, "qaddsubx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* qsub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "qsub16 PCFunct unfinished\n");
+  DIE_NOW(context, "qsub16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* qsub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "qsub8 PCFunct unfinished\n");
+  DIE_NOW(context, "qsub8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* qsubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "qsubaddx PCFunct unfinished\n");
+  DIE_NOW(context, "qsubaddx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* sadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sadd16 PCFunct unfinished\n");
+  DIE_NOW(context, "sadd16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* sadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sadd8 PCFunct unfinished\n");
+  DIE_NOW(context, "sadd8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* saddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "saddsubx PCFunct unfinished\n");
+  DIE_NOW(context, "saddsubx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* shadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "shadd16 PCFunct unfinished\n");
+  DIE_NOW(context, "shadd16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* shadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "shadd8 PCFunct unfinished\n");
+  DIE_NOW(context, "shadd8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* shaddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "shaddsubx PCFunct unfinished\n");
+  DIE_NOW(context, "shaddsubx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* shsub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "shsub16 PCFunct unfinished\n");
+  DIE_NOW(context, "shsub16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* shsub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "shsub8 PCFunct unfinished\n");
+  DIE_NOW(context, "shsub8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* shsubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "shsubaddx PCFunct unfinished\n");
+  DIE_NOW(context, "shsubaddx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* ssub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "ssub16 PCFunct unfinished\n");
+  DIE_NOW(context, "ssub16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* ssub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "ssub8 PCFunct unfinished\n");
+  DIE_NOW(context, "ssub8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* ssubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "ssubaddx PCFunct unfinished\n");
+  DIE_NOW(context, "ssubaddx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uadd16 PCFunct unfinished\n");
+  DIE_NOW(context, "uadd16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uadd8 PCFunct unfinished\n");
+  DIE_NOW(context, "uadd8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uaddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uaddsubx PCFunct unfinished\n");
+  DIE_NOW(context, "uaddsubx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uhadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uhadd16 PCFunct unfinished\n");
+  DIE_NOW(context, "uhadd16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uhadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uhadd8 PCFunct unfinished\n");
+  DIE_NOW(context, "uhadd8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uhaddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uhaddsubx PCFunct unfinished\n");
+  DIE_NOW(context, "uhaddsubx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uhsub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uhsub16 PCFunct unfinished\n");
+  DIE_NOW(context, "uhsub16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uhsub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uhsub8 PCFunct unfinished\n");
+  DIE_NOW(context, "uhsub8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uhsubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uhsubaddx PCFunct unfinished\n");
+  DIE_NOW(context, "uhsubaddx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uqadd16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uqadd16 PCFunct unfinished\n");
+  DIE_NOW(context, "uqadd16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uqadd8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uqadd8 PCFunct unfinished\n");
+  DIE_NOW(context, "uqadd8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uqaddsubxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uqaddsubx PCFunct unfinished\n");
+  DIE_NOW(context, "uqaddsubx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uqsub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uqsub16 PCFunct unfinished\n");
+  DIE_NOW(context, "uqsub16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uqsub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uqsub8 PCFunct unfinished\n");
+  DIE_NOW(context, "uqsub8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uqsubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uqsubaddx PCFunct unfinished\n");
+  DIE_NOW(context, "uqsubaddx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* usub16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "usub16 PCFunct unfinished\n");
+  DIE_NOW(context, "usub16 PCFunct unfinished\n");
   return 0;
 }
 u32int* usub8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "usub8 PCFunct unfinished\n");
+  DIE_NOW(context, "usub8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* usubaddxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "usubaddx PCFunct unfinished\n");
+  DIE_NOW(context, "usubaddx PCFunct unfinished\n");
   return 0;
 }
 
 u32int* revPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "rev PCFunct unfinished\n");
+  DIE_NOW(context, "rev PCFunct unfinished\n");
   return 0;
 }
 
 u32int* rev16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "rev16 PCFunct unfinished\n");
+  DIE_NOW(context, "rev16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* revshPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "revsh PCFunct unfinished\n");
+  DIE_NOW(context, "revsh PCFunct unfinished\n");
   return 0;
 }
 
 u32int* rfePCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "rfe PCFunct unfinished\n");
+  DIE_NOW(context, "rfe PCFunct unfinished\n");
   return 0;
 }
 
 u32int* sxthPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sxth PCFunct unfinished\n");
+  DIE_NOW(context, "sxth PCFunct unfinished\n");
   return 0;
 }
 
 u32int* sxtb16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sxtb16 PCFunct unfinished\n");
+  DIE_NOW(context, "sxtb16 PCFunct unfinished\n");
   return 0;
 }
 
@@ -1684,7 +1627,7 @@ u32int* sxtbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
   if((instruction & 0xF)==0xF)
   {
     //ARM ARM p.752
-    DIE_NOW(0, "stxb PC: Rm = PC -> UNPREDICTABLE!");
+    DIE_NOW(context, "stxb PC: Rm = PC -> UNPREDICTABLE!");
   }
   //Always safe when not unpredictable
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
@@ -1700,7 +1643,7 @@ u32int* uxthPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
   if((instruction & 0xF)==0xF)
   {
     //ARM ARM p.836
-    DIE_NOW(0, "uxth PC: Rm = PC -> UNPREDICTABLE!");
+    DIE_NOW(context, "uxth PC: Rm = PC -> UNPREDICTABLE!");
   }
   //Always safe when not unpredictable
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
@@ -1711,7 +1654,7 @@ u32int* uxthPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
 
 u32int* uxtb16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uxtb16 PCFunct unfinished\n");
+  DIE_NOW(context, "uxtb16 PCFunct unfinished\n");
   return 0;
 }
 
@@ -1721,7 +1664,7 @@ u32int* uxtbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
   u32int instruction = *instructionAddr;
   if( (instruction & 0xF) == 0xF)
   {
-    DIE_NOW(0,"uxtbPCInstruction: Rm is PC -> unpredictable");
+    DIE_NOW(context,"uxtbPCInstruction: Rm is PC -> unpredictable");
   }
 
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
@@ -1732,157 +1675,157 @@ u32int* uxtbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int *
 
 u32int* sxtahPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sxtah PCFunct unfinished\n");
+  DIE_NOW(context, "sxtah PCFunct unfinished\n");
   return 0;
 }
 
 u32int* sxtab16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sxtab16 PCFunct unfinished\n");
+  DIE_NOW(context, "sxtab16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* sxtabPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sxtab PCFunct unfinished\n");
+  DIE_NOW(context, "sxtab PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uxtahPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uxtah PCFunct unfinished\n");
+  DIE_NOW(context, "uxtah PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uxtab16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uxtab16 PCFunct unfinished\n");
+  DIE_NOW(context, "uxtab16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* uxtabPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "uxtab PCFunct unfinished\n");
+  DIE_NOW(context, "uxtab PCFunct unfinished\n");
   return 0;
 }
 
 u32int* selPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "sel PCFunct unfinished\n");
+  DIE_NOW(context, "sel PCFunct unfinished\n");
   return 0;
 }
 
 u32int* setendPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "setend PCFunct unfinished\n");
+  DIE_NOW(context, "setend PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smuadPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smuad PCFunct unfinished\n");
+  DIE_NOW(context, "smuad PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smusdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smusd PCFunct unfinished\n");
+  DIE_NOW(context, "smusd PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smladPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlad PCFunct unfinished\n");
+  DIE_NOW(context, "smlad PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlaldPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlald PCFunct unfinished\n");
+  DIE_NOW(context, "smlald PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlsdPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlsd PCFunct unfinished\n");
+  DIE_NOW(context, "smlsd PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlsldPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlsld PCFunct unfinished\n");
+  DIE_NOW(context, "smlsld PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smmulPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smmul PCFunct unfinished\n");
+  DIE_NOW(context, "smmul PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smmlaPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smmla PCFunct unfinished\n");
+  DIE_NOW(context, "smmla PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smmlsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smmls PCFunct unfinished\n");
+  DIE_NOW(context, "smmls PCFunct unfinished\n");
   return 0;
 }
 
 u32int* srsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "srs PCFunct unfinished\n");
+  DIE_NOW(context, "srs PCFunct unfinished\n");
   return 0;
 }
 
 u32int* ssatPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "ssat PCFunct unfinished\n");
+  DIE_NOW(context, "ssat PCFunct unfinished\n");
   return 0;
 }
 
 u32int* ssat16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "ssat16 PCFunct unfinished\n");
+  DIE_NOW(context, "ssat16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* umaalPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "umaal PCFunct unfinished\n");
+  DIE_NOW(context, "umaal PCFunct unfinished\n");
   return 0;
 }
 
 u32int* usad8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "usad8 PCFunct unfinished\n");
+  DIE_NOW(context, "usad8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* usada8PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "usada8 PCFunct unfinished\n");
+  DIE_NOW(context, "usada8 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* usatPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "usat PCFunct unfinished\n");
+  DIE_NOW(context, "usat PCFunct unfinished\n");
   return 0;
 }
 
 u32int* usat16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "usat16 PCFunct unfinished\n");
+  DIE_NOW(context, "usat16 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* bkptPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "bkpt PCFunct unfinished\n");
+  DIE_NOW(context, "bkpt PCFunct unfinished\n");
   return 0;
 }
 
@@ -1892,7 +1835,7 @@ u32int* clzPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
   if((instruction & 0xF) == 0xF || ((instruction>>12 & 0xF)==0xF))
   {  //see ARM ARM clz p.384
-    DIE_NOW(0, "clz PCFunct: bits 0-3 = 0xF -> UNPREDICTABLE BEHAVIOR\n");
+    DIE_NOW(context, "clz PCFunct: bits 0-3 = 0xF -> UNPREDICTABLE BEHAVIOR\n");
   }
   //Since no register can be PC the instruction is save to execute -> copy it to blockCopyCache
   currBlockCopyCacheAddr=checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr,context->blockCache,(u32int*)context->blockCopyCache,(u32int*)context->blockCopyCacheEnd);
@@ -1903,151 +1846,151 @@ u32int* clzPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 
 u32int* pldPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "pld PCFunct unfinished\n");
+  DIE_NOW(context, "pld PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlabbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlabb PCFunct unfinished\n");
+  DIE_NOW(context, "smlabb PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlatbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlatb PCFunct unfinished\n");
+  DIE_NOW(context, "smlatb PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlabtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlabt PCFunct unfinished\n");
+  DIE_NOW(context, "smlabt PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlattPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlatt PCFunct unfinished\n");
+  DIE_NOW(context, "smlatt PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlawbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlawb PCFunct unfinished\n");
+  DIE_NOW(context, "smlawb PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlawtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlawt PCFunct unfinished\n");
+  DIE_NOW(context, "smlawt PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlalbbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlalbb PCFunct unfinished\n");
+  DIE_NOW(context, "smlalbb PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlaltbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlaltb PCFunct unfinished\n");
+  DIE_NOW(context, "smlaltb PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlalbtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlalbt PCFunct unfinished\n");
+  DIE_NOW(context, "smlalbt PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smlalttPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smlaltt PCFunct unfinished\n");
+  DIE_NOW(context, "smlaltt PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smulbbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smulbb PCFunct unfinished\n");
+  DIE_NOW(context, "smulbb PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smultbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smultb PCFunct unfinished\n");
+  DIE_NOW(context, "smultb PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smulbtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smulbt PCFunct unfinished\n");
+  DIE_NOW(context, "smulbt PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smulttPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smultt PCFunct unfinished\n");
+  DIE_NOW(context, "smultt PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smulwbPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smulwb PCFunct unfinished\n");
+  DIE_NOW(context, "smulwb PCFunct unfinished\n");
   return 0;
 }
 
 u32int* smulwtPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "smulwt PCFunct unfinished\n");
+  DIE_NOW(context, "smulwt PCFunct unfinished\n");
   return 0;
 }
 
 u32int* qaddPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "qadd PCFunct unfinished\n");
+  DIE_NOW(context, "qadd PCFunct unfinished\n");
   return 0;
 }
 
 u32int* qdaddPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "qdadd PCFunct unfinished\n");
+  DIE_NOW(context, "qdadd PCFunct unfinished\n");
   return 0;
 }
 
 u32int* qsubPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "qsub PCFunct unfinished\n");
+  DIE_NOW(context, "qsub PCFunct unfinished\n");
   return 0;
 }
 
 u32int* qdsubPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "qdsub PCFunct unfinished\n");
+  DIE_NOW(context, "qdsub PCFunct unfinished\n");
   return 0;
 }
 
 u32int* msrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "msr PCFunct unfinished\n");
+  DIE_NOW(context, "msr PCFunct unfinished\n");
   return 0;
 }
 
 u32int* mrsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mrs PCFunct unfinished\n");
+  DIE_NOW(context, "mrs PCFunct unfinished\n");
   return 0;
 }
 
 u32int* svcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "svc PCFunct unfinished\n");
+  DIE_NOW(context, "svc PCFunct unfinished\n");
   return 0;
 }
 
 u32int* undefinedPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "undefined PCFunct unfinished\n");
+  DIE_NOW(context, "undefined PCFunct unfinished\n");
   return 0;
 }
 

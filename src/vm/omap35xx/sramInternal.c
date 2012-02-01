@@ -1,4 +1,5 @@
 #include "common/debug.h"
+#include "common/stddef.h"
 
 #include "vm/omap35xx/sdram.h"
 #include "vm/omap35xx/sramInternal.h"
@@ -9,7 +10,7 @@
 
 u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int address)
 {
-  DIE_NOW(0, "SRAM_INTERNAL load unimplemented.");
+  DIE_NOW(NULL, "SRAM_INTERNAL load unimplemented.");
   u32int val = 0;
 
   //We care about the real physical address of the entry, not its virtual address

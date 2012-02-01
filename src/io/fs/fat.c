@@ -1,7 +1,7 @@
-#include "common/types.h"
-#include "common/debug.h"
 #include "common/alignFunctions.h"
+#include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #include "io/block.h"
 #include "io/mmc.h"
@@ -39,7 +39,7 @@ int fatMount(fatfs *fs, blockDevice *dev, int partNum)
   buffer = (char*)mallocBytes(0x1000);
   if (buffer == 0)
   {
-    DIE_NOW(0, "fatMount: failed to allocate block buffer");
+    DIE_NOW(NULL, "fatMount: failed to allocate block buffer");
   }
   else
   {
@@ -282,7 +282,7 @@ dentry *getPathDirEntry(fatfs *fs, const char *fname, int createNew)
   dentry *dirEntry = (dentry*)mallocBytes(sizeof(dentry));
   if (dirEntry == 0)
   {
-    DIE_NOW(0, "getPathDirEntry: failed to allocate dir entry struct");
+    DIE_NOW(NULL, "getPathDirEntry: failed to allocate dir entry struct");
   }
   else
   {
@@ -472,7 +472,7 @@ int fwrite(fatfs *fs, file *handle, void *src, u32int length)
       u32int allocatedCluster = fatGetFreeClus(fs);
       if (allocatedCluster == 0)
       {
-        DIE_NOW(0, "fwrite: cannot find a new free cluster. out of space??");
+        DIE_NOW(NULL, "fwrite: cannot find a new free cluster. out of space??");
       }
       // 2. set FAT entry for current cluster to point to allocatedCluster
       fatSetClusterValue(fs, currentCluster, allocatedCluster);
@@ -640,7 +640,7 @@ file* fopen(fatfs *fs, const char *fname)
   file *f = (file *)mallocBytes(sizeof(file));
   if (f == 0)
   {
-    DIE_NOW(0, "fopen: failed to allocate file struct.");
+    DIE_NOW(NULL, "fopen: failed to allocate file struct.");
   }
   memset(f, 0, sizeof(file));
 
@@ -663,7 +663,7 @@ file* fopen(fatfs *fs, const char *fname)
   f->lastCluster = (u8int *)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
   if (f->lastCluster == 0)
   {
-    DIE_NOW(0, "fopen: failed to allocate buffer for last cluster");
+    DIE_NOW(NULL, "fopen: failed to allocate buffer for last cluster");
   }
   memset(f->lastCluster, 0, fs->sectorsPerCluster * fs->bytesPerSector);
 
@@ -724,7 +724,7 @@ file *fnew(fatfs *fs, const char *fname)
   file *f = (file *)mallocBytes(sizeof(file));
   if (f == 0)
   {
-    DIE_NOW(0, "fnew: failed to allocate file struct");
+    DIE_NOW(NULL, "fnew: failed to allocate file struct");
   }
   else
   {
@@ -804,7 +804,7 @@ file *fnew(fatfs *fs, const char *fname)
   f->lastCluster = (u8int *)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
   if (f->lastCluster == 0)
   {
-    DIE_NOW(0, "fnew: failed to allocate buffer for last cluster");
+    DIE_NOW(NULL, "fnew: failed to allocate buffer for last cluster");
   }
   memset(f->lastCluster, 0, fs->sectorsPerCluster * fs->bytesPerSector);
 

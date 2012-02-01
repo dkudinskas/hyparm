@@ -556,7 +556,7 @@ void initialiseDevice(device * dev, const char * devName, bool isBus,
     if (!attachDevice(parent, dev))
     {
       printf("Failed to attach device %s to device %s" EOL, devName, parent->deviceName);
-      DIE_NOW(0, "ERROR.");
+      DIE_NOW(NULL, "ERROR.");
     }
   }
   dev->loadFunction = ldFn;

@@ -1,5 +1,6 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
+#include "common/stddef.h"
 
 #include "guestManager/guestContext.h"
 
@@ -17,7 +18,7 @@ void initPrm(void)
   prMan = (struct PowerAndResetManager*)mallocBytes(sizeof(struct PowerAndResetManager));
   if (prMan == 0)
   {
-    DIE_NOW(0, "Failed to allocate power and reset manager.");
+    DIE_NOW(NULL, "Failed to allocate power and reset manager.");
   }
   else
   {
@@ -74,7 +75,7 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address)
   if (size != WORD)
   {
     // only word access allowed in these modules
-    DIE_NOW(0, "PRM: invalid access size.");
+    DIE_NOW(NULL, "PRM: invalid access size.");
   }
 
   u32int base = phyAddr & 0xFFFFFF00;
@@ -100,10 +101,10 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address)
     case EMU_PRM:
     case NEON_PRM:
     case USBHOST_PRM:
-      DIE_NOW(0, "PRM load unimplemented.");
+      DIE_NOW(NULL, "PRM load unimplemented.");
       break;
     default:
-      DIE_NOW(0, "PRM: invalid base module.");
+      DIE_NOW(NULL, "PRM: invalid base module.");
   }
   return val;
 }
@@ -124,7 +125,7 @@ u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
     return prMan->prmClkoutCtrlReg;
   }
   else
-    DIE_NOW(0, "loadClockControlPrm loading from invalid register");
+    DIE_NOW(NULL, "loadClockControlPrm loading from invalid register");
   return 0;
 }
 
@@ -196,7 +197,7 @@ u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
       val = prMan->prmVoltSetup2;
       break;
     default:
-      DIE_NOW(0, "loadGlobalRegPrm loading non existing register!");
+      DIE_NOW(NULL, "loadGlobalRegPrm loading non existing register!");
   } // switch ends
   DEBUG(VP_OMAP_35XX_PRM, "loadGlobalRegPrm reg %x value %.8x" EOL, reg, val);
   return val;
@@ -222,7 +223,7 @@ u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
       val = prMan->prmIrqEnableMpuOcp;
       break;
     default:
-      DIE_NOW(0, "loadOcpSystemPrm loading non existing register!");
+      DIE_NOW(NULL, "loadOcpSystemPrm loading non existing register!");
   } // switch ends
   DEBUG(VP_OMAP_35XX_PRM, "loadOcpSystemPrm reg %x value %.8x" EOL, reg, val);
   return val;
@@ -245,7 +246,7 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   if (size != WORD)
   {
     // only word access allowed in these modules
-    DIE_NOW(0, "PRM: invalid access size.");
+    DIE_NOW(NULL, "PRM: invalid access size.");
   }
 
   u32int base = phyAddr & 0xFFFFFF00;
@@ -272,23 +273,23 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case NEON_PRM:
     case USBHOST_PRM:
       printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
-      DIE_NOW(0, " unimplemented.");
+      DIE_NOW(NULL, " unimplemented.");
       break;
     default:
-      DIE_NOW(0, "PRM: store to invalid base module.");
+      DIE_NOW(NULL, "PRM: store to invalid base module.");
   }
 }
 
 void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(0, " storeClockControlPrm unimplemented.");
+  DIE_NOW(NULL, " storeClockControlPrm unimplemented.");
 }
 
 void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(0, " storeGlobalRegPrm unimplemented.");
+  DIE_NOW(NULL, " storeGlobalRegPrm unimplemented.");
 }
 
 void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int value)
@@ -299,19 +300,19 @@ void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int valu
   switch (reg)
   {
     case PRM_REVISION_OCP:
-      DIE_NOW(0, "storeOcpSystemPrm: storing to R/O register (revision).");
+      DIE_NOW(NULL, "storeOcpSystemPrm: storing to R/O register (revision).");
       break;
     case PRM_SYSCONFIG_OCP:
       prMan->prmSysConfigOcp = value & PRM_SYSCONFIG_OCP_AUTOIDLE; // all other bits are reserved
       break;
     case PRM_IRQSTATUS_MPU_OCP:
-      DIE_NOW(0, "storeOcpSystemPrm store to IRQSTATUS. investigate.");
+      DIE_NOW(NULL, "storeOcpSystemPrm store to IRQSTATUS. investigate.");
       break;
     case PRM_IRQENABLE_MPU_OCP:
-      DIE_NOW(0, "storeOcpSystemPrm store to IRQENABLE. investigate.");
+      DIE_NOW(NULL, "storeOcpSystemPrm store to IRQENABLE. investigate.");
       break;
     default:
-      DIE_NOW(0, "storeOcpSystemPrm store to non existing register!");
+      DIE_NOW(NULL, "storeOcpSystemPrm store to non existing register!");
   } // switch ends
 }
 

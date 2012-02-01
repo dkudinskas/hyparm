@@ -1,5 +1,6 @@
 #include "common/bit.h"
 #include "common/debug.h"
+#include "common/stddef.h"
 
 #include "cpuArch/constants.h"
 
@@ -16,7 +17,7 @@ u32int zeroBits(u32int instruction, u32int startbit){
     case 16:
       return (instruction & 0xFFF0FFFF);
     default :
-      DIE_NOW(0, "zeroBits not implemented for this startbitvalue");
+      DIE_NOW(NULL, "zeroBits not implemented for this startbitvalue");
   }
 }
 
@@ -93,7 +94,7 @@ u32int* standardImmRegRSR(GCONTXT * context, u32int *  instructionAddr, u32int *
       }else{
         /* Not the immediate flavor => RSR of ordinary register flavor */
         if(registerShifted){
-          DIE_NOW(0, "standardImmRegRSR (register-shifted register) with PC is UNPREDICTABLE!");
+          DIE_NOW(context, "standardImmRegRSR (register-shifted register) with PC is UNPREDICTABLE!");
         }else{
           /* ordinary register flavor-> check regSrc1 & regSrc2 */
           if(srcReg1 == 0xF)
@@ -117,7 +118,7 @@ u32int* standardImmRegRSR(GCONTXT * context, u32int *  instructionAddr, u32int *
           printf("srcReg1 = %08x\n", srcReg1);
           printf("srcReg2 = %08x\n", srcReg2);
           printf("destReg = %08x\n", destReg);
-          DIE_NOW(0, "standardImmRegRSR special care should be taken it is not possible to use destReg");
+          DIE_NOW(context, "standardImmRegRSR special care should be taken it is not possible to use destReg");
           /*
            *  Not sure if this can occur.  If it occurs our usual trick won't work.
            *  It can still be solved using a scratch register.
@@ -185,7 +186,7 @@ u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int *  instructionAddr, u3
   {
     if(registerShifted) /* register-shifted register */
     {
-      DIE_NOW(0,"tstPCFunct: tst(register-shifted register) cannot have PC as source -> UNPREDICTABLE ");
+      DIE_NOW(context,"tstPCFunct: tst(register-shifted register) cannot have PC as source -> UNPREDICTABLE ");
     }
     /* if ordinary register flavor than rnIsPC & rmIsPC are already set correctly */
   }
@@ -193,7 +194,7 @@ u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int *  instructionAddr, u3
   if(rnIsPC || rmIsPC)
   { /*Instruction has to be changed to a PC safe instructionstream. */
     printf("instruction = %08x\n", instruction);
-    DIE_NOW(0,"standardImmRegRSRNoDest: this part is not tested.");
+    DIE_NOW(context,"standardImmRegRSRNoDest: this part is not tested.");
     /* No destination register so only source registers have to be checked*/
     scratchReg = findUnusedRegister(regSrc1, regSrc2, -1);
     /* place 'Backup scratchReg' instruction */
@@ -342,7 +343,7 @@ u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regDest)
     if( (i != regSrc1) && (i != regSrc2) && (i != regDest) )
       return i;
   }
-  DIE_NOW(0,"No unusedRegister, this cannot be happening!");
+  DIE_NOW(NULL, "No unusedRegister, this cannot be happening!");
   return -1;
 }
 #endif
@@ -524,7 +525,7 @@ u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int * carryFlag)
   // RRX can only shift right by 1
   if ((shiftType == SHIFT_TYPE_RRX) && (shamt != 1))
   {
-    DIE_NOW(0, "shiftVal() type rrx, but shamt not 1!");
+    DIE_NOW(NULL, "shiftVal: type rrx, but shamt not 1!");
   }
 
   u32int retVal = 0;
@@ -549,7 +550,7 @@ u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int * carryFlag)
        case SHIFT_TYPE_ASR:
        case SHIFT_TYPE_RRX:
        default:
-        DIE_NOW(0,"shiftVal(): unimplemented shiftType.");
+        DIE_NOW(NULL, "shiftVal: unimplemented shiftType");
      } // switch
   } // else
   return retVal;
@@ -611,7 +612,7 @@ u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int * shamt)
       }
 
     default:
-      DIE_NOW(0,"decodeShiftImmediate: voodoo dolls everywhere!");
+      DIE_NOW(NULL, "decodeShiftImmediate: voodoo dolls everywhere!");
   } // switch ends
 
   // compiler happy!
@@ -633,7 +634,7 @@ u32int decodeShift(u32int instrShiftType)
     case 3:
       return SHIFT_TYPE_ROR;
     default:
-      DIE_NOW(0, "voodoo dolls everywhere!");
+      DIE_NOW(NULL, "voodoo dolls everywhere!");
   } // switch ends
 }
 

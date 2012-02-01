@@ -1,15 +1,17 @@
 #include "common/debug.h"
+#include "common/stddef.h"
 
 #include "guestManager/guestContext.h"
-
-#include "vm/omap35xx/timer32k.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 #include "memoryManager/pageTable.h" // for getPhysicalAddress()
 
+#include "vm/omap35xx/timer32k.h"
+
 
 static u32int timer32SysconfReg = 0;
 static u32int counterVal = 0;
+
 
 u32int loadTimer32k(device *dev, ACCESS_SIZE size, u32int address)
 {
@@ -57,7 +59,7 @@ u32int loadTimer32k(device *dev, ACCESS_SIZE size, u32int address)
 
 void storeTimer32k(device * dev, ACCESS_SIZE size, u32int address, u32int value)
 {
-  DIE_NOW(0, "32k timer store unimplemented.");
+  DIE_NOW(NULL, "32k timer store unimplemented.");
 }
 
 void initTimer32k()

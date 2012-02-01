@@ -1,4 +1,5 @@
 #include "common/debug.h"
+#include "common/stddef.h"
 
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/coprocInstructions.h"
@@ -559,7 +560,7 @@ struct instruction32bit * decodeInstr(GCONTXT *context, u32int instr)
     case UNDEFINED_CATEGORY:
     default:
       dumpGuestContext(context);
-      DIE_NOW(0, "decoder: UNDEFINED category");
+      DIE_NOW(context, "decoder: UNDEFINED category");
   }
 
   return 0;
@@ -626,9 +627,7 @@ struct instruction32bit * decodeDataProcMisc(u32int instr)
       }
     }
   }
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeDataProcMisc unimplemented");
-  return 0;
+  DIE_NOW(NULL, "decoder: decodeDataProcMisc unimplemented");
 }
 
 
@@ -653,9 +652,7 @@ struct instruction32bit * decodeLoadStoreWordByte(u32int instr)
       index = index + 1;
     }
   }
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
-  return 0;
+  DIE_NOW(NULL, "decoder: decodeBranchBlockTransfer unimplemented");
 }
 
 
@@ -680,9 +677,7 @@ struct instruction32bit * decodeMedia(u32int instr)
       index = index + 1;
     }
   }
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeMedia unimplemented");
-  return 0;
+  DIE_NOW(NULL, "decoder: decodeMedia unimplemented");
 }
 
 
@@ -707,9 +702,7 @@ struct instruction32bit * decodeBranchBlockTransfer(u32int instr)
       index = index + 1;
     }
   }
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeBranchBlockTransfer unimplemented");
-  return 0;
+  DIE_NOW(NULL, "decoder: decodeBranchBlockTransfer unimplemented");
 }
 
 
@@ -734,9 +727,7 @@ struct instruction32bit * decodeSvcCoproc(u32int instr)
       index = index + 1;
     }
   }
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeSvcCoproc unimplemented");
-  return 0;
+  DIE_NOW(NULL, "decoder: decodeSvcCoproc unimplemented");
 }
 
 struct instruction32bit * decodeUnconditional(u32int instr)
@@ -761,9 +752,7 @@ struct instruction32bit * decodeUnconditional(u32int instr)
     }
   }
 
-  dumpGuestContext(getGuestContext());
-  DIE_NOW(0, "decoder: decodeUnconditional unimplemented");
-  return 0;
+  DIE_NOW(NULL, "decoder: decodeUnconditional unimplemented");
 }
 
 void dumpInstruction(const char * msg, u32int instr)

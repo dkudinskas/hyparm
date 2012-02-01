@@ -61,7 +61,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
 
     if (regDst2 == GPR_PC)
     {
-      DIE_NOW(0, "STR reg Rm == PC UNPREDICTABLE case!");
+      DIE_NOW(context, "STR reg Rm == PC UNPREDICTABLE case!");
     }
 
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
@@ -119,7 +119,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
     //if Rn == PC || n == t) then UNPREDICTABLE;
     if (regDst == GPR_PC || regDst == regSrc)
     {
-      DIE_NOW(0, "STR writeback UNPREDICTABLE case!");
+      DIE_NOW(context, "STR writeback UNPREDICTABLE case!");
     }
     // Rn = offsetAddr;
     storeGuestGPR(regDst, offsetAddress, context);
@@ -148,7 +148,7 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
 
   if (regSrc == GPR_PC)
   {
-    DIE_NOW(0, "STRB source register PC UNPREDICTABLE case.");
+    DIE_NOW(context, "STRB source register PC UNPREDICTABLE case.");
   }
   if (!regOrImm)
   {
@@ -176,7 +176,7 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
     // regDest2 == PC then UNPREDICTABLE
     if (regDst2 == 15)
     {
-      DIE_NOW(0, "STRB reg Rm == PC UNPREDICTABLE case!");
+      DIE_NOW(context, "STRB reg Rm == PC UNPREDICTABLE case!");
     }
 
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
@@ -228,7 +228,7 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
     //if Rn == PC || n == t) then UNPREDICTABLE;
     if ((regDst == 15) || (regDst == regSrc))
     {
-      DIE_NOW(0, "STRB writeback UNPREDICTABLE case!");
+      DIE_NOW(context, "STRB writeback UNPREDICTABLE case!");
     }
     // Rn = offsetAddr;
     storeGuestGPR(regDst, offsetAddress, context);
@@ -255,12 +255,12 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
   // P = 0 and W == 1 then STR as if user mode
   if (!preOrPost && writeBack)
   {
-    DIE_NOW(0, "STRH as user mode unimplemented.");
+    DIE_NOW(context, "STRH as user mode unimplemented.");
   }
 
   if (regSrc == GPR_PC)
   {
-    DIE_NOW(0, "STRH source register PC UNPREDICTABLE case.");
+    DIE_NOW(context, "STRH source register PC UNPREDICTABLE case.");
   }
 
   u32int offsetAddress;
@@ -297,7 +297,7 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
     // regDest2 == PC then UNPREDICTABLE
     if (regDst2 == 15)
     {
-      DIE_NOW(0, "STRH reg Rm == PC UNPREDICTABLE case!");
+      DIE_NOW(context, "STRH reg Rm == PC UNPREDICTABLE case!");
     }
 
     // (shift_t, shift_n) = (SRType_LSL, 0);
@@ -346,7 +346,7 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
     //if Rn == PC || n == t) then UNPREDICTABLE;
     if ((regDst == 15) || (regDst == regSrc))
     {
-      DIE_NOW(0, "STRH writeback UNPREDICTABLE case!");
+      DIE_NOW(context, "STRH writeback UNPREDICTABLE case!");
     }
     // Rn = offsetAddr;
     storeGuestGPR(regDst, offsetAddress, context);
@@ -373,7 +373,7 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
 
   if ((regSrc % 2) == 1)
   {
-    DIE_NOW(0, "STRD undefined case: regSrc must be even number!");
+    DIE_NOW(context, "STRD undefined case: regSrc must be even number!");
   }
 
   u32int offsetAddress = 0;
@@ -386,16 +386,16 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
   // P = 0 and W == 1 then STR as if user mode
   if ((prePost == 0) && (writeback != 0))
   {
-    DIE_NOW(0, "STRD unpredictable case (P=0 AND W=1)!");
+    DIE_NOW(context, "STRD unpredictable case (P=0 AND W=1)!");
   }
 
   if (wback && ((regDst == 15) || (regDst == regSrc) || (regDst == regSrc2)))
   {
-    DIE_NOW(0, "STRD unpredictable register selection!");
+    DIE_NOW(context, "STRD unpredictable register selection!");
   }
   if (regSrc2 == 15)
   {
-    DIE_NOW(0, "STRD: unpredictable case, regSrc2 = PC!");
+    DIE_NOW(context, "STRD: unpredictable case, regSrc2 = PC!");
   }
 
   if (regOrImm != 0)
@@ -425,7 +425,7 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
     // regDest2 == PC then UNPREDICTABLE
     if (regDst2 == GPR_PC)
     {
-      DIE_NOW(0, "STR reg Rm == PC UNPREDICTABLE case!");
+      DIE_NOW(context, "STR reg Rm == PC UNPREDICTABLE case!");
     }
 
     // if increment then base + offset else base - offset
@@ -501,11 +501,11 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
 
   if ((regN == GPR_PC) || (regD == GPR_PC) || (regT == GPR_PC))
   {
-    DIE_NOW(0, "STREX unpredictable case (PC used)");
+    DIE_NOW(context, "STREX unpredictable case (PC used)");
   }
   if ((regD == regN) || (regD == regT))
   {
-    DIE_NOW(0, "STREX unpredictable case (invalid register use)");
+    DIE_NOW(context, "STREX unpredictable case (invalid register use)");
   }
 
   u32int address = loadGuestGPR(regN, context);
@@ -537,11 +537,11 @@ u32int armStrexbInstruction(GCONTXT *context, u32int instruction)
 
   if ((regN == GPR_PC) || (regD == GPR_PC) || (regT == GPR_PC))
   {
-    DIE_NOW(0, "STREX unpredictable case (PC used)");
+    DIE_NOW(context, "STREX unpredictable case (PC used)");
   }
   if ((regD == regN) || (regD == regT))
   {
-    DIE_NOW(0, "STREX unpredictable case (invalid register use)");
+    DIE_NOW(context, "STREX unpredictable case (invalid register use)");
   }
 
   u32int address = loadGuestGPR(regN, context);
@@ -581,11 +581,11 @@ u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
 
   if ((regN == 15) || (regD == 15) || (regT == 15))
   {
-    DIE_NOW(0, "STREX unpredictable case (PC used)");
+    DIE_NOW(context, "STREX unpredictable case (PC used)");
   }
   if ((regD == regN) || (regD == regT))
   {
-    DIE_NOW(0, "STREX unpredictable case (invalid register use)");
+    DIE_NOW(context, "STREX unpredictable case (invalid register use)");
   }
 
   u32int address = loadGuestGPR(regN, context);
@@ -626,7 +626,7 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
   if (regD == GPR_PC || (regT % 2) || regT == GPR_LR || regN == GPR_PC || regD == regN
       || regD == regT || regD == (regT + 1))
   {
-    DIE_NOW(0, "STREXD unpredictable case");
+    DIE_NOW(context, "STREXD unpredictable case");
   }
 
   u32int address = loadGuestGPR(regN, context);
@@ -638,7 +638,7 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
   /*
    * FIXME STREXD: assuming littl endian
    */
-  DIE_NOW(0, "STREXD: assuming littlendian!");
+  DIE_NOW(context, "STREXD: assuming littlendian!");
 
   bool littleEndian = TRUE;
   if (littleEndian)

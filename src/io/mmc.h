@@ -1,12 +1,10 @@
 #ifndef __MMC_H__
 #define __MMC_H__
 
-#include "io/block.h"
-
 #include "common/types.h"
 
+#include "io/block.h"
 
-// uncomment me for MMC debug: #define MMC_DEBUG
 
 #define SD_VERSION_SD 0x20000
 #define SD_VERSION_2  (SD_VERSION_SD | 0x20)

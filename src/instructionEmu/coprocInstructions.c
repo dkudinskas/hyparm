@@ -154,85 +154,85 @@ u32int mrc2Instruction(GCONTXT *context, u32int instruction)
 
 u32int* mcrrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mcrr PCFunct unfinished\n");
+  DIE_NOW(context, "mcrr PCFunct unfinished\n");
   return 0;
 }
 
 u32int* mrrcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mrrc PCFunct unfinished\n");
+  DIE_NOW(context, "mrrc PCFunct unfinished\n");
   return 0;
 }
 
 u32int* cdpPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "cdp PCFunct unfinished\n");
+  DIE_NOW(context, "cdp PCFunct unfinished\n");
   return 0;
 }
 
 u32int* mrcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mrcPCInstruction is called but should always be critical");
+  DIE_NOW(context, "mrcPCInstruction is called but should always be critical");
   return 0;
 }
 
 u32int* mcrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mcr PCFunct shouldn't be launched since mcrPCInstruction is always emulated!\n");
+  DIE_NOW(context, "mcr PCFunct shouldn't be launched since mcrPCInstruction is always emulated!\n");
   return 0;
 }
 
 u32int* stcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "stc PCFunct unfinished\n");
+  DIE_NOW(context, "stc PCFunct unfinished\n");
   return 0;
 }
 
 u32int* ldcPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "ldc PCFunct unfinished\n");
+  DIE_NOW(context, "ldc PCFunct unfinished\n");
   return 0;
 }
 
 u32int* mrrc2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mrrc2 PCFunct unfinished\n");
+  DIE_NOW(context, "mrrc2 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* mcrr2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mcrr2 PCFunct unfinished\n");
+  DIE_NOW(context, "mcrr2 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* ldc2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "ldc2 PCFunct unfinished\n");
+  DIE_NOW(context, "ldc2 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* stc2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "stc2 PCFunct unfinished\n");
+  DIE_NOW(context, "stc2 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* cdp2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "cdp2 PCFunct unfinished\n");
+  DIE_NOW(context, "cdp2 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* mcr2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mcr2 PCFunct unfinished\n");
+  DIE_NOW(context, "mcr2 PCFunct unfinished\n");
   return 0;
 }
 
 u32int* mrc2PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  DIE_NOW(0, "mrc2 PCFunct unfinished\n");
+  DIE_NOW(context, "mrc2 PCFunct unfinished\n");
   return 0;
 }
 

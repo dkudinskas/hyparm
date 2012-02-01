@@ -5,6 +5,7 @@
 #include "common/debug.h"
 #include "common/memFunctions.h"
 #include "common/stdarg.h"
+#include "common/stddef.h"
 #include "common/string.h"
 
 #include "cpuArch/armv7.h"
@@ -100,7 +101,7 @@ void main(s32int argc, char *argv[])
   if ((ret = parseCommandline(argc, argv, &kernAddr, &initrdAddr)) < 0)
   {
     printUsage();
-    DIE_NOW(0, "Hypervisor startup aborted.");
+    DIE_NOW(NULL, "Hypervisor startup aborted.");
   }
 #endif /* CONFIG_CLI */
 
@@ -117,7 +118,7 @@ void main(s32int argc, char *argv[])
   u32int * blockCopyCache = (u32int*)mallocBytes(BLOCK_COPY_CACHE_SIZE_IN_BYTES);  //BLOCK_COPY_CACHE_SIZE_IN_BYTES
   if (blockCopyCache == 0)
   {
-    DIE_NOW(0, "Failed to allocate block copy cache.");
+    DIE_NOW(NULL, "Failed to allocate block copy cache.");
   }
   else
   {
