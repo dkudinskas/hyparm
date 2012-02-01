@@ -14,9 +14,7 @@ u32int armBInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
-#ifdef ARM_INSTR_TRACE
-  printf("Branch instr %#.8x @ %#.8x" EOL, instruction, context->R15);
-#endif
+  DEBUG(INTERPRETER_ARM_BRANCH, "armBInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
   u32int sign = instruction & 0x00800000;
   u32int link = instruction & 0x0F000000;
@@ -42,6 +40,10 @@ u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
    * NOTE: this instruction is unconditional and always switches to Thumb mode.
    */
 #ifdef CONFIG_THUMB2
+
+  DEBUG(INTERPRETER_ARM_BRANCH, "armBlxImmediateInstruction: %#.8x @ %#.8x" EOL, instruction,
+      context->R15);
+
   u32int offset = ((instruction & 0x00FFFFFF) << 2) | (instruction & 0x01000000) >> 23;
   u32int sign = offset >> 25;
 
@@ -65,6 +67,9 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
   {
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
+
+  DEBUG(INTERPRETER_ARM_BRANCH, "armBlxRegisterInstruction: %#.8x @ %#.8x" EOL, instruction,
+        context->R15);
 
   u32int regDest = (instruction & 0x0000000F); // holds dest addr and mode bit
 
@@ -104,6 +109,8 @@ u32int armBxInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
+  DEBUG(INTERPRETER_ARM_BRANCH, "armBxInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+
   u32int regDest = instruction & 0x0000000F;
   u32int destinationAddress = loadGuestGPR(regDest, context);
 
@@ -129,5 +136,7 @@ u32int armBxInstruction(GCONTXT *context, u32int instruction)
 
 u32int armBxjInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_ARM_BRANCH, "armBxjInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+
   DIE_NOW(context, "BXJ not implemented");
 }

@@ -164,6 +164,86 @@ config DEBUG_BLOCK_CACHE
   bool "Debug block cache"
   depends on DEBUG
 
+config DEBUG_INTERPRETER
+  bool "Debug interpreter"
+  depends on DEBUG
+
+menuconfig DEBUG_INTERPRETER_ALL
+  bool "Debug interpreter for all instruction sets"
+  depends on DEBUG_INTERPRETER
+  select DEBUG_INTERPRETER_ARM
+  select DEBUG_INTERPRETER_T16
+  select DEBUG_INTERPRETER_T32
+
+config DEBUG_INTERPRETER_ALL_BRANCH
+  bool "Debug branch operations"
+  depends on DEBUG_INTERPRETER_ALL
+  select DEBUG_INTERPRETER_ARM_BRANCH
+  select DEBUG_INTERPRETER_T16_BRANCH
+  select DEBUG_INTERPRETER_T32_BRANCH
+
+config DEBUG_INTERPRETER_ALL_LOAD
+  bool "Debug load operations"
+  depends on DEBUG_INTERPRETER_ALL
+  select DEBUG_INTERPRETER_ARM_LOAD
+  select DEBUG_INTERPRETER_T16_LOAD
+  select DEBUG_INTERPRETER_T32_LOAD
+
+config DEBUG_INTERPRETER_ALL_STORE
+  bool "Debug store operations"
+  depends on DEBUG_INTERPRETER_ALL
+  select DEBUG_INTERPRETER_ARM_STORE
+  select DEBUG_INTERPRETER_T16_STORE
+  select DEBUG_INTERPRETER_T32_STORE
+
+menuconfig DEBUG_INTERPRETER_ARM
+  bool "Debug ARM interpreter"
+  depends on DEBUG_INTERPRETER
+
+config DEBUG_INTERPRETER_ARM_BRANCH
+  bool "Debug branch operations"
+  depends on DEBUG_INTERPRETER_ARM
+
+config DEBUG_INTERPRETER_ARM_LOAD
+  bool "Debug load operations"
+  depends on DEBUG_INTERPRETER_ARM
+
+config DEBUG_INTERPRETER_ARM_STORE
+  bool "Debug store operations"
+  depends on DEBUG_INTERPRETER_ARM
+
+menuconfig DEBUG_INTERPRETER_T16
+  bool "Debug Thumb 16-bit interpreter"
+  depends on DEBUG_INTERPRETER
+
+config DEBUG_INTERPRETER_T16_BRANCH
+  bool "Debug branch operations"
+  depends on DEBUG_INTERPRETER_T16
+
+config DEBUG_INTERPRETER_T16_LOAD
+  bool "Debug load operations"
+  depends on DEBUG_INTERPRETER_T16
+
+config DEBUG_INTERPRETER_T16_STORE
+  bool "Debug store operations"
+  depends on DEBUG_INTERPRETER_T16
+
+menuconfig DEBUG_INTERPRETER_T32
+  bool "Debug Thumb 32-bit interpreter"
+  depends on DEBUG_INTERPRETER
+
+config DEBUG_INTERPRETER_T32_BRANCH
+  bool "Debug branch operations"
+  depends on DEBUG_INTERPRETER_T32
+
+config DEBUG_INTERPRETER_T32_LOAD
+  bool "Debug load operations"
+  depends on DEBUG_INTERPRETER_T32
+
+config DEBUG_INTERPRETER_T32_STORE
+  bool "Debug store operations"
+  depends on DEBUG_INTERPRETER_T32
+
 menuconfig DEBUG_PHYSICAL_PLATFORM
   bool "Debug physical hardware platform (drivers)"
   depends on DEBUG

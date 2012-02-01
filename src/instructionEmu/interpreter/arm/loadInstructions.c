@@ -15,6 +15,8 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+
   u32int regOrImm = instruction & 0x02000000; // 1 = reg, 0 = imm
   u32int preOrPost = instruction & 0x01000000; // 1 = pre, 0 = post
   u32int incOrDec = instruction & 0x00800000; // 1 = inc, 0 = dec
@@ -153,10 +155,11 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrbInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+
   u32int offset = 0;
   u32int offsetAddress = 0;
 
-  u32int condcode = (instruction & 0xF0000000) >> 28;
   u32int regOrImm = instruction & 0x02000000; // 1 = reg, 0 = imm
   u32int preOrPost = instruction & 0x01000000; // 1 = pre, 0 = post
   u32int incOrDec = instruction & 0x00800000; // 1 = inc, 0 = dec
@@ -263,6 +266,8 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrhInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+
   u32int preOrPost = instruction & 0x01000000; // 1 = pre, 0 = post
   u32int incOrDec = instruction & 0x00800000; // 1 = inc, 0 = dec
   u32int regOrImm = instruction & 0x00400000; // 1 = reg, 0 = imm
@@ -367,9 +372,7 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
   // put loaded val to reg
   storeGuestGPR(regDst, valueLoaded, context);
 
-#ifdef DATA_MOVE_TRACE
-  printf("ldrhInstr: %#.8x @ PC = %#.8x R[%x]=%x" EOL, instr, getRealPC(context), regDst, valueLoaded);
-#endif
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrhInstruction: R[%x]=%#.8x" EOL, regDst, valueLoaded);
 
   // wback = (P = 0) or (W = 1)
   bool wback = (preOrPost == 0) || (writeBack != 0);
@@ -398,6 +401,8 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrdInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+
   u32int prePost = instruction & 0x01000000;
   u32int upDown = instruction & 0x00800000;
   u32int regOrImm = instruction & 0x00400000; // 0 = reg, 1 = imm
@@ -406,10 +411,6 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
   u32int regSrc = (instruction & 0x000F0000) >> 16;
   u32int regDst = (instruction & 0x0000F000) >> 12;
   u32int regDst2 = regDst + 1;
-
-#ifdef DATA_MOVE_TRACE
-  printf("LDRD instruction: %#.8x @ PC = %#.8x" EOL, instruction, getRealPC(context));
-#endif
 
   if ((regDst % 2) == 1)
   {
@@ -452,9 +453,8 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
     {
       offsetAddress = baseAddress - imm32;
     }
-#ifdef DATA_MOVE_TRACE
-    printf("imm32=%x baseAddress=%#.8x offsetAddres=%#.8x" EOL, imm32, baseAddress, offsetAddress);
-#endif
+    DEBUG(INTERPRETER_ARM_LOAD, "armLdrdInstruction: imm32=%#.8x baseAddress=%#.8x offsetAddres="
+        "%#.8x" EOL, imm32, baseAddress, offsetAddress);
   } // Immediate case ends
   else
   {
@@ -478,9 +478,8 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
       // decrement
       offsetAddress = baseAddress - offsetRegisterValue;
     }
-#ifdef DATA_MOVE_TRACE
-    printf("Rm=%x baseAddress=%x offsetRegVal=%x" EOL, regSrc2, baseAddress, offsetRegisterValue);
-#endif
+    DEBUG(INTERPRETER_ARM_LOAD, "armLdrdInstruction: Rm=%x baseAddress=%#.8x offsetRegVal=%#.8x"
+        EOL, regSrc2, baseAddress, offsetAddress);
   } // Register case ends
 
   u32int address = 0;
@@ -493,9 +492,8 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
   {
     address = baseAddress;
   }
-#ifdef DATA_MOVE_TRACE
-  printf("LDRD: load address = %x" EOL, address);
-#endif
+
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrdInstruction: address = %#.8x" EOL, address);
 
   u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
   u32int valueLoaded2 = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address + 4);
@@ -503,9 +501,8 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
   storeGuestGPR(regDst, valueLoaded, context);
   storeGuestGPR(regDst2, valueLoaded2, context);
 
-#ifdef DATA_MOVE_TRACE
-  printf("LDRD: valueLoaded1 = %x valueLoaded2 = %x" EOL, valueLoaded, valueLoaded2);
-#endif
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrdInstruction: loaded %#.8x %#.8x " EOL, valueLoaded,
+      valueLoaded2);
 
   if (wback)
   {
@@ -522,6 +519,8 @@ u32int armLdrhtInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrhtInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+
   DIE_NOW(context, "armLdrhtInstruction not implemented");
 }
 
@@ -532,9 +531,7 @@ u32int armLdrexInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
-#ifdef DATA_MOVE_TRACE
-  printf("LDREX instruction: %#.8x @ PC = %#.8x" EOL, instruction, getRealPC(context));
-#endif
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrexInstruction: %#.8x @ %#.8x" EOL, instruction, getRealPC(context));
 
   u32int baseReg = (instruction & 0x000F0000) >> 16;
   u32int regDest = (instruction & 0x0000F000) >> 12;
@@ -547,9 +544,8 @@ u32int armLdrexInstruction(GCONTXT *context, u32int instruction)
   u32int baseVal = loadGuestGPR(baseReg, context);
   u32int value = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal);
 
-#ifdef DATA_MOVE_TRACE
-  printf("LDREX instruction: baseVal = %#.8x loaded %x, store to %x" EOL, baseVal, value, regDest);
-#endif
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrexInstruction: baseVal = %#.8x loaded %#.8x store to %#.8x"
+      EOL, baseVal, value, regDest);
 
   storeGuestGPR(regDest, value, context);
 
@@ -563,9 +559,7 @@ u32int armLdrexbInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
-#ifdef DATA_MOVE_TRACE
-  printf("LDREXB instruction: %08 @ PC = %#.8x" EOL, instruction, getRealPC(context));
-#endif
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrexbInstruction: %#.8x @ %#.8x" EOL, instruction, getRealPC(context));
 
   u32int baseReg = (instruction & 0x000F0000) >> 16;
   u32int regDest = (instruction & 0x0000F000) >> 12;
@@ -594,9 +588,7 @@ u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
-#ifdef DATA_MOVE_TRACE
-  printf("LDREXH instruction: %#.8x @ PC = %#.8x" EOL, instruction, getRealPC(context));
-#endif
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrexhInstruction: %#.8x @ %#.8x" EOL, instruction, getRealPC(context));
 
   u32int baseReg = (instruction & 0x000F0000) >> 16;
   u32int regDest = (instruction & 0x0000F000) >> 12;
@@ -624,9 +616,7 @@ u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
-#ifdef DATA_MOVE_TRACE
-  printf("LDREXD instruction: %#.8x @ PC = %#.8x" EOL, instr, getRealPC(context));
-#endif
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdrexdInstruction: %#.8x @ %#.8x" EOL, instruction, getRealPC(context));
 
   u32int baseReg = (instruction & 0x000F0000) >> 16;
   u32int regDest = (instruction & 0x0000F000) >> 12;
@@ -653,9 +643,7 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
-#ifdef DATA_MOVE_TRACE
-  printf("LDM instruction: %#.8x @ PC = %#.8x" EOL, instruction, getRealPC(context));
-#endif
+  DEBUG(INTERPRETER_ARM_LOAD, "armLdmInstruction: %#.8x @ %#.8x" EOL, instruction, getRealPC(context));
 
   u32int prePost = instruction & 0x01000000;
   u32int upDown = instruction & 0x00800000;
@@ -724,9 +712,8 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
       // R[i] = *(address);
       u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
       storeGuestGPR(i, valueLoaded, context);
-#ifdef DATA_MOVE_TRACE
-      printf("R[%x] = *(%#.8x) = %#.8x" EOL, i, address, valueLoaded);
-#endif
+      DEBUG(INTERPRETER_ARM_LOAD, "armLdmInstruction: R[%x] = *(%#.8x) = %#.8x" EOL, i, address,
+          valueLoaded);
       address = address + 4;
     }
   } // for ends

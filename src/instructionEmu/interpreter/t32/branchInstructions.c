@@ -12,6 +12,8 @@ u32int t32BImmediate17Instruction(GCONTXT *context, u32int instruction)
   /*
    * NOTE: this Thumb instruction contains a condition code field!
    */
+  DEBUG(INTERPRETER_T32_BRANCH, "t32BImmediate17Instruction: %#.8x @ %#.8x" EOL, instruction,
+      context->R15);
   if (!evaluateConditionCode(context, (instruction & 0x03c00000) >> 20))
   {
     /*
@@ -40,6 +42,8 @@ u32int t32BImmediate17Instruction(GCONTXT *context, u32int instruction)
 
 u32int t32BImmediate21Instruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T32_BRANCH, "t32BImmediate21Instruction: %#.8x @ %#.8x" EOL, instruction,
+      context->R15);
   u32int sign = (instruction & 0x04000000) >> 2;
   u32int bitI1 = (instruction & 0x00002000) << 11;
   u32int bitI2 = (instruction & 0x00000800) << 13;
@@ -63,6 +67,7 @@ u32int t32BImmediate21Instruction(GCONTXT *context, u32int instruction)
 
 u32int t32BlInstruction(GCONTXT *context, u32int instruction)
 {
+  DEBUG(INTERPRETER_T32_BRANCH, "t32BlInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
   u32int sign = (instruction & 0x04000000) >> 2;
   u32int bitI1 = (instruction & 0x00002000) << 11;
   u32int bitI2 = (instruction & 0x00000800) << 13;
@@ -91,6 +96,7 @@ u32int t32BlxImmediateInstruction(GCONTXT *context, u32int instruction)
   /*
    * NOTE: this instruction always switches to ARM mode.
    */
+  DEBUG(INTERPRETER_T32_BRANCH, "t32BlxInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
   u32int sign = (instruction & 0x04000000) >> 2;
   u32int bitI1 = (instruction & 0x00002000) << 11;
   u32int bitI2 = (instruction & 0x00000800) << 13;
