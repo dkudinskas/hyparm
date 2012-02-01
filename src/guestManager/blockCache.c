@@ -8,22 +8,52 @@
 #include "guestManager/guestContext.h"
 
 
-#ifdef DUMP_COLLISION_COUNTER
-static u32int collisionCounter = 0;
+#ifdef CONFIG_BLOCK_CACHE_COLLISION_COUNTER
+
+u64int collisionCounter;
+
+static inline u64int getCollisionCounter(void);
+static inline void incrementCollisionCounter(void);
+static inline void resetCollisionCounter(void);
+
+static inline u64int getCollisionCounter()
+{
+  return collisionCounter;
+}
+
+static inline void incrementCollisionCounter()
+{
+  collisionCounter++;
+}
+
+static inline void resetCollisionCounter()
+{
+  collisionCounter = 0;
+}
+
+#else
+
+#define getCollisionCounter()        (0ULL)
+#define incrementCollisionCounter()
+#define resetCollisionCounter()
+
 #endif
+
 
 #define NUMBER_OF_BITMAPS       16
 #define MEMORY_PER_BITMAP       0x10000000
 #define MEMORY_PER_BITMAP_BIT  (MEMORY_PER_BITMAP / 32) // should be 8 megabytes
 
+
 static u32int execBitMap[NUMBER_OF_BITMAPS];
 
-void initialiseBlockCache(BCENTRY * bcache)
+
+void initialiseBlockCache(BCENTRY *bcache)
 {
   int i = 0;
-#ifdef DUMP_COLLISION_COUNTER
-  collisionCounter = 0;
-#endif
+
+  resetCollisionCounter();
+
   DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, bcache);
 
   for (i = 0; i < BLOCK_CACHE_SIZE; i++)
@@ -387,18 +417,8 @@ void resolveCacheConflict(u32int index, BCENTRY * bcAddr)
   struct thumbEntry tb;
 #endif
   DEBUG(BLOCK_CACHE, "resolveCacheConflict: collision at index %#x" EOL, index);
-#ifdef DUMP_COLLISION_COUNTER
-  collisionCounter++;
-  if ((collisionCounter % 10) == 9)
-  {
-    DEBUG_INT_NOZEROS(collisionCounter);
-    DEBUG_STRING(" ");
-    if ((collisionCounter % 200) == 199)
-    {
-      DEBUG_NEWLINE();
-    }
-  }
-#endif
+
+  incrementCollisionCounter();
 
 #ifdef CONFIG_BLOCK_COPY
   removeBlockCopyCacheEntry(getGuestContext(), bcAddr[index].blockCopyCacheAddress,bcAddr[index].blockCopyCacheSize);
