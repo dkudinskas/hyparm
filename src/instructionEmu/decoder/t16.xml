@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<autodecoder name="t16">
+
+<category name="t16UnconditionalInstructions" mask="0x0000f800" value="0x0000e000">
+  <instruction name="B" mask="0x0000f800" value="0x0000e000" effect="t16BImmediate11Instruction" />
+</category>
+
+<category name="t16ConditionalBranchSvcInstructions" mask="0x0000f000" value="0x0000d000">
+  <instruction name="SVC" mask="0x0000ff00" value="0x0000df00" effect="svcInstruction" />
+  <instruction name="Bc [PC,#imm8]" mask="0x0000f000" value="0x0000d000" effect="t16BImmediate8Instruction" />
+</category>
+
+<category name="t16MiscInstructions" mask="0x0000f000" value="0x0000b000">
+  <instruction name="NOP" mask="0x0000ffff" value="0x0000bf00" />
+  <instruction name="PUSH {reglist}" mask="0x0000fe00" value="0x0000b400" />
+  <instruction name="SUB SP,SP,imm7" mask="0x0000ff80" value="0x0000b080" />
+  <instruction name="UXTB Rd, Rm" mask="0x0000ffc0" value="0x0000b2c0" />
+  <instruction name="UXTH Rd, Rm" mask="0x0000ffc0" value="0x0000b280" />
+  <instruction name="ADD SP, SP, #imm" mask="0x0000ff80" value="0x0000b000" />
+  <instruction name="POP reglist+PC" mask="0x0000ff00" value="0x0000bd00" effect="t16LdmInstruction" />
+  <instruction name="POP reglist" mask="0x0000fe00" value="0x0000bc00" />
+  <!-- ADD effect="t16ItInstruction" to make this trap (it should... while we have no support for it) -->
+  <instruction name="IT" mask="0x0000ff00" value="0x0000bf00" />
+</category>
+
+<category name="t16SPInstructions" mask="0x0000f800" value="0x0000a800">
+  <instruction name="ADD Rd, SP, #imm" mask="0x0000f800" value="0x0000a800" />
+</category>
+
+<category name="t16PCRelInstructions" mask="0x0000f800" value="0x0000a000">
+  <instruction name="ADR" mask="0x0000f800" value="0x0000a000" />
+</category>
+
+<category name="t16LoadStoreInstructions" mask="0x0000e000" value="0x00008000">
+  <instruction name="STR Rd, [SP,#imm8]" mask="0x0000f800" value="0x00009000" />
+  <instruction name="LDR Rd, [SP {,#imm8}]" mask="0x0000f800" value="0x00009800" />
+  <instruction name="LDRH Rt, [Rn{, #imm5}]" mask="0x0000f800" value="0x00008800" />
+  <instruction name="STRH Rt,[Rn,{,#imm}]" mask="0x0000f800" value="0x00008000" />
+</category>
+
+<category name="t16LoadStoreInstructions" mask="0x0000e000" value="0x00006000">
+  <instruction name="STR Rd, [Rn, {#imm5}]" mask="0x0000f800" value="0x00006000" />
+  <instruction name="LDR Rd, [Rn {,#imm5}]" mask="0x0000f800" value="0x00006800" />
+  <instruction name="LDRB Rd, #imm5" mask="0x00007800" value="0x00007800" />
+  <instruction name="STRB Rt, [Rn, #imm5]" mask="0x0000f800" value="0x00007000" />
+</category>
+
+<category name="t16ldrInstructions" mask="0x0000f800" value="0x00004800">
+  <instruction name="LDR Rt, label" mask="0x0000f800" value="0x00004800" />
+</category>
+
+<category name="t16SpecialBranchInstructions" mask="0x0000fc00" value="0x00004400">
+  <instruction name="BX" mask="0x0000ff80" value="0x00004700" effect="t16BxInstruction" />
+  <instruction name="BLX Rm" mask="0x0000ff80" value="0x00004780" effect="t16BlxRegisterInstruction" />
+  <instruction name="MOV PC, Rm" mask="0x0000ff07" value="0x00004607" effect="movInstruction" />
+  <instruction name="MOV Rd, Rm" mask="0x0000ff00" value="0x00004600" />
+  <instruction name="ADD Rdn,Rm" mask="0x0000ff00" value="0x00004400" />
+</category>
+
+<category name="t16DataProcInstructions" mask="0x0000fc00" value="0x00004000">
+  <instruction name="MVN Rd, Rm" mask="0x0000ffc0" value="0x000043c0" />
+  <instruction name="CMP Rn, Rm" mask="0x0000ffc0" value="0x00004280" />
+</category>
+
+<category name="t16ArithmeticInstructions" mask="0x0000c000" value="0x00000000">
+  <instruction name="ADD Rd, Rn, Rm" mask="0x0000ff00" value="0x00001800" />
+  <instruction name="CMP Rn, #imm8" mask="0x0000f800" value="0x00002800" />
+  <instruction name="SUB{S} Rd, Rn,#imm3" mask="0x0000fe00" value="0x00001e00" />
+  <instruction name="SUB{S} Rdn, #imm8" mask="0x0000f800" value="0x00003800" />
+  <instruction name="SUB{S} Rd, Rn Rm" mask="0x0000fe00" value="0x00001a00" />
+  <instruction name="MOV Rd, #imm8" mask="0x0000f800" value="0x00002000" />
+</category>
+
+</autodecoder>

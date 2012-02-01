@@ -4,8 +4,6 @@
 #include "common/types.h"
 
 
-// uncomment me to enable debug: #define GPTIMER_BE_DBG
-
 // #define BE_GPTIMER_COUNT       12
 #define BE_GPTIMER_COUNT        2 // just use GPTIMER1 and GPTIMER2 for now
 
@@ -142,18 +140,13 @@ void gptBEInit(u32int id);
 
 void gptBEReset(u32int id);
 
-
 u32int loadFromGPTimer(u32int id, u32int reg);
 
 void storeToGPTimer(u32int id, u32int reg, u32int value);
 
-
 void gptBEClearOverflowInterrupt(u32int id);
 
-#ifdef CONFIG_GUEST_FREERTOS
-/* FreeRTOS: Requires timer match interrupt handling */
 void gptBEClearMatchInterrupt(u32int id);
-#endif
 
 void gptBEDisableOverflowInterrupt(u32int id);
 
@@ -174,18 +167,6 @@ void gptBEWaitForReset(u32int id);
 void gptBEDumpRegisters(u32int id);
 
 u32int getInternalCounterVal(u32int clkId);
-
-#ifdef CONFIG_GUEST_FREERTOS
-void gptBEResetCount(u32int id);
-#endif
-
-struct GeneralPurposeTimerBE
-{
-  u32int baseAddress;
-  bool enabled;
-  //bool enabled;
-  //bool posted;
-};
 
 #endif
 

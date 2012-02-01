@@ -25,6 +25,9 @@ config BLOCK_COPY
   bool "Block copy"
   depends on DECODER_TABLE_SEARCH
 
+config PATH_AUTODECODER
+  string "Path to autodecoder"
+
 endmenu
 
 menu "Physical hardware platform"
@@ -103,7 +106,7 @@ menu "Virtual hardware platform"
 
 config THUMB2
   bool "Thumb-2 instruction set"
-  depends on ARCH_V7_A && !BLOCK_COPY && DECODER_TABLE_SEARCH
+  depends on ARCH_V7_A && !BLOCK_COPY
 
 endmenu
 
@@ -161,8 +164,36 @@ config DEBUG_BLOCK_CACHE
   bool "Debug block cache"
   depends on DEBUG
 
+menuconfig DEBUG_PHYSICAL_PLATFORM
+  bool "Debug physical hardware platform (drivers)"
+  depends on DEBUG
+
+config DEBUG_PP_OMAP_35XX_TIMER32K
+  bool "Debug 32 kHz timer (TIMER32K)"
+  depends on DEBUG_PHYSICAL_PLATFORM
+
+config DEBUG_PP_OMAP_35XX_CM
+  bool "Debug clock manager (CM)"
+  depends on DEBUG_PHYSICAL_PLATFORM
+
+config DEBUG_PP_OMAP_35XX_GPTIMER
+  bool "Debug general purpose timers (GPTIMER)"
+  depends on DEBUG_PHYSICAL_PLATFORM
+
+config DEBUG_PP_OMAP_35XX_INTC
+  bool "Debug interrupt controller (INTC)"
+  depends on DEBUG_PHYSICAL_PLATFORM
+
+config DEBUG_PP_OMAP_35XX_MMCHS
+  bool "Debug MMC host controller (MMCHS)"
+  depends on DEBUG_PHYSICAL_PLATFORM
+
+config DEBUG_PP_OMAP_35XX_UART
+  bool "Debug UART"
+  depends on DEBUG_PHYSICAL_PLATFORM
+
 menuconfig DEBUG_VIRTUAL_PLATFORM
-  bool "Debug virtual platform"
+  bool "Debug virtual hardware platform (emulation)"
   depends on DEBUG
 
 config DEBUG_VP_OMAP_35XX_LIBRARY
@@ -220,6 +251,18 @@ config DEBUG_VP_OMAP_35XX_UART
 config MMC
   bool "Use MMC/SD device to store debug output"
   depends on DEBUG
+
+config DEBUG_MMC
+  bool "Debug MMC block device"
+  depends on MMC
+
+config DEBUG_PARTITIONS
+  bool "Debug partition detection"
+  depends on MMC
+
+config DEBUG_FS_FAT
+  bool "Debug FAT file system"
+  depends on MMC
 
 menu "Hacks"
 

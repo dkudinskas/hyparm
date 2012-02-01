@@ -193,6 +193,6 @@
 /* generic load store instruction emulation  *
  * called when we permission fault on memory *
  * access to a protected area - must emulate */
-void emulateLoadStoreGeneric(GCONTXT * context, u32int address);
+void emulateLoadStoreGeneric(GCONTXT *context, u32int address);
 
 #endif

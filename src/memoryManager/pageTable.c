@@ -2746,7 +2746,7 @@ void mapAPBitsPageTable(u32int vAddr, pageTableDescriptor* guestNew, pageTableDe
       }
       case LARGE_PAGE:
       {
-        DIE_NOW(0, "mapAPBitsPageTable hit large page!\n");
+        DIE_NOW(0, "mapAPBitsPageTable hit large page!");
         break;
       }
       case SMALL_PAGE:

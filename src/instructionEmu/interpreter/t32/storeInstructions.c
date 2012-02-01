@@ -60,13 +60,13 @@ u32int t32StrbInstruction(GCONTXT * context, u32int instruction)
   {
     DIE_NOW(0, "Thumb32 STRB reg unimplemeted");
   }
-  //printf("strbInstr: regsrc=%x, regdst=%x, address=%x, value=%x, P=%x, U=%x, W=%x\n",regSrc,regDst,address,valueToStore, preOrPost, incOrDec, writeBack);
+  //printf("strbInstr: regsrc=%x, regdst=%x, address=%x, value=%x, P=%x, U=%x, W=%x" EOL,regSrc,regDst,address,valueToStore, preOrPost, incOrDec, writeBack);
 
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valueToStore & 0xFF));
 
   if (writeBack)
   {
-    //printf("STRB: storing %x to %x\n", address, regDst);
+    //printf("STRB: storing %x to %x" EOL, address, regDst);
     storeGuestGPR(regDst, valueToStore, context);
   }
 
@@ -134,7 +134,7 @@ u32int t32StrdImmediateInstruction(GCONTXT *context, u32int instruction)
   u32int address = prePost ? offsetAddress : baseAddress;
 
 #ifdef DATA_MOVE_TRACE
-  printf("store val1 = %x@%08x store val2 = %x@%08x\n", regDst, imm8, valueToStore, address, valueToStore2, address+4);
+  printf("store val1 = %x@%#.8x store val2 = %x@%#.8x" EOL, regDst, imm8, valueToStore, address, valueToStore2, address+4);
 #endif
 
   context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);

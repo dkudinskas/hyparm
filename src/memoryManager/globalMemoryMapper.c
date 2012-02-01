@@ -17,7 +17,7 @@
 /* generic load store instruction emulation  *
  * called when we permission fault on memory *
  * access to a protected area - must emulate */
-void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
+void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
 {
   u32int instr;
   u32int eobInstrBackup;
@@ -61,7 +61,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
       }
       else if ((instr & THUMB32_STRB_REG_MASK) == THUMB32_STRB_REG)
       {
-        DIE_NOW(0,"Unimplemented Thumb32 register generic load/store");
+        DIE_NOW(context, "Unimplemented Thumb32 register generic load/store");
       }
       /*
        * STRH
@@ -121,7 +121,7 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
        */
       else
       {
-        printf("Instruction: %08x@%08x\n",instr, context->R15);
+        printf("Instruction: %08x@%08x" EOL,instr, context->R15);
         DIE_NOW(0, "Unknown THUMB32 load/store instr");
       }
     }
@@ -210,8 +210,8 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
        */
       else
       {
-        printf("Unimplemented Thumb16 %08x@%08x\n",instr,address);
-        DIE_NOW(0,"Unimplemented Thumb16 Load/Store\n");
+        printf("Unimplemented Thumb16 %08x@%08x" EOL, instr, address);
+        DIE_NOW(context, "Unimplemented Thumb16 Load/Store");
       }
     }
     context->endOfBlockHalfInstr = eobHalfInstrBackup;
@@ -321,8 +321,8 @@ void emulateLoadStoreGeneric(GCONTXT * context, u32int address)
     }
     else
     {
-      printf("LoadStore @ %08x instruction %08x\n", context->R15, instr);
-      DIE_NOW(context, "Load/Store generic unimplemented\n");
+      printf("LoadStore @ %08x instruction %08x" EOL, context->R15, instr);
+      DIE_NOW(context, "Load/Store generic unimplemented");
     }
   }
   // restore end of block instruction

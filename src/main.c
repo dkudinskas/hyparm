@@ -211,23 +211,23 @@ void main(s32int argc, char *argv[])
   u32int err = 0;
   if ((err = mmcMainInit()) != 0)
   {
-    DIE_NOW(context, "Failed to initialize mmc code.\n");
+    DIE_NOW(context, "Failed to initialize mmc code.");
   }
 
   if ((err = partTableRead(&mmcDevice->blockDev, &primaryPartitionTable)) != 0)
   {
-    DIE_NOW(context, "Failed to read partition table.\n");
+    DIE_NOW(context, "Failed to read partition table.");
   }
 
   if ((err = fatMount(&mainFilesystem, &mmcDevice->blockDev, 1)) != 0)
   {
-    DIE_NOW(context, "Failed to mount FAT partition.\n");
+    DIE_NOW(context, "Failed to mount FAT partition.");
   }
 
   debugStream = fopen(&mainFilesystem, "debug");
   if (debugStream == 0)
   {
-    DIE_NOW(context, "Failed to open (create) debug stream file.\n");
+    DIE_NOW(context, "Failed to open (create) debug stream file.");
   }
 #endif /* CONFIG_MMC */
 
@@ -239,7 +239,7 @@ void main(s32int argc, char *argv[])
 #ifdef CONFIG_GUEST_FREERTOS
   if (ret == 2)
   {
-    DEBUG(STARTUP, "RTOS address: %x\n", kernAddr);
+    DEBUG(STARTUP, "RTOS address: %x" EOL, kernAddr);
     rtos = TRUE;
     bootFreeRtos(context, kernAddr);
   }

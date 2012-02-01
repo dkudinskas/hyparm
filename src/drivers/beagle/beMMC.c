@@ -7,16 +7,19 @@
 
 struct mmc mmchs;
 
-inline void writeWord(u32int addr, u32int value)
+
+static inline u32int readWord(u32int addr);
+static inline void writeWord(u32int addr, u32int value);
+
+
+static inline u32int readWord(u32int addr)
 {
-    volatile u32int *ptr = (u32int *)addr;
-    *ptr = value;
+  return *(volatile u32int *)addr;
 }
 
-inline u32int readWord(u32int addr)
+static inline void writeWord(u32int addr, u32int value)
 {
-    volatile u32int *ptr = (u32int *)addr;
-    return *ptr;
+  *(volatile u32int *)addr = value;
 }
 
 /* Host controller initialization needed before any MMC ops */
@@ -35,9 +38,9 @@ int mmcInit(struct mmc *mmc)
 
   // set voltage capabilities for this module
   u32int reg = readWord(dev->base + MMCHS_CAPA);
-  reg |= CAPA_VS30 | CAPA_VS18; 
+  reg |= CAPA_VS30 | CAPA_VS18;
   writeWord(dev->base + MMCHS_CAPA, reg);
-  
+
   reg = readWord(dev->base + MMCHS_CON) & RESERVED_MASK;
   writeWord(dev->base | MMCHS_CON,reg); //only default values needed here
 
@@ -45,20 +48,16 @@ int mmcInit(struct mmc *mmc)
   reg = readWord(dev->base + MMCHS_SYSCTL);
   reg &= ~(SYSCTL_ICE | SYSCTL_DTO_MASK | SYSCTL_CEN);
   writeWord(dev->base + MMCHS_SYSCTL, (reg & ~(SYSCTL_ICE | SYSCTL_CEN)) | SYSCTL_DTO_15THDTO);
-  
+
   reg = readWord(dev->base + MMCHS_SYSCTL) & ~(SYSCTL_ICE | CLKD_1023_M);
   writeWord(dev->base + MMCHS_SYSCTL, (dsor << CLKD_OFFSET) | SYSCTL_ICE);
-  
-#ifdef MMC_HS_DEBUG
-  printf("mmcInit: waiting for Internal Clock Stable (ICS)...");
-#endif
+
+  DEBUG(PP_OMAP_35XX_MMCHS, "mmcInit: waiting for Internal Clock Stable (ICS)...");
   while (!(readWord(dev->base + MMCHS_SYSCTL) & SYSCTL_ICS))
   {
     // do nothing
   }
-#ifdef MMC_HS_DEBUG
-  printf("done\n");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "done" EOL);
 
   // enable internal clock
   writeWord(dev->base + MMCHS_SYSCTL, readWord(dev->base | MMCHS_SYSCTL) | SYSCTL_CEN);
@@ -81,30 +80,22 @@ int mmcInit(struct mmc *mmc)
   // the init stream must be maintained for at least 80 cycles
   mdelay32k(50); // 50ms delay
 
-#ifdef MMC_HS_DEBUG
-  printf("mmcInit: waiting for CC...");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "mmcInit: waiting for CC...");
   while (!(readWord(dev->base + MMCHS_STAT) | STAT_CC))
   {
     // do nothing
   }
-#ifdef MMC_HS_DEBUG
-  printf("done\n");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "done" EOL);
 
   // clear command complete status bit
   writeWord(dev->base + MMCHS_STAT, STAT_CC);
   writeWord(dev->base + MMCHS_CMD, CMD0);
-#ifdef MMC_HS_DEBUG
-  printf("mmcInit: waiting for CC2...");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "mmcInit: waiting for CC2...");
   while (!(readWord(dev->base + MMCHS_STAT) | STAT_CC))
   {
     // do nothing
   }
-#ifdef MMC_HS_DEBUG
-  printf("done\n");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "done" EOL);
 
   // disable the init steam (should have lasted longer than 80 clock cycles)
   writeWord(dev->base + MMCHS_CON, readWord(dev->base + MMCHS_CON) & ~INIT_INITSTREAM);
@@ -114,9 +105,7 @@ int mmcInit(struct mmc *mmc)
 
 void mmcEnableClocks()
 {
-#ifdef MMC_HS_DEBUG
-  printf("MMCHS: Enabling clocks...");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "MMCHS: Enabling clocks...");
   //enable functional clocks
   u32int reg = clkManRegReadBE(CORE_CM, CM_FCLKEN1_CORE);
   reg |= EN_MMC1 | EN_MMC2 | EN_MMC3;
@@ -126,9 +115,7 @@ void mmcEnableClocks()
   reg = clkManRegReadBE(CORE_CM, CM_ICLKEN1_CORE);
   reg |= EN_MMC1 | EN_MMC2 | EN_MMC3;
   clkManRegWriteBE(CORE_CM, CM_ICLKEN1_CORE, reg);
-#ifdef MMC_HS_DEBUG
-  printf("done\n");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "done" EOL);
 }
 
 void mmcSoftReset(struct mmc *dev)
@@ -136,31 +123,23 @@ void mmcSoftReset(struct mmc *dev)
   u32int reg = readWord(dev->base + MMCHS_SYSCONFIG);
   writeWord(dev->base + MMCHS_SYSCONFIG, reg | SYSCONFIG_SOFTRESET);
 
-#ifdef MMC_HS_DEBUG
-  printf("MMCHS: Waiting for reset... ");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "MMCHS: Waiting for reset... ");
   //check if reset is finished
   while (!(readWord(dev->base + MMCHS_SYSSTATUS) & SYSSTATUS_RESETDONE))
   {
     // do nothing
   }
-#ifdef MMC_HS_DEBUG
-  printf("done\n");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "done" EOL);
 
   reg = readWord(dev->base + MMCHS_SYSCTL);
   writeWord(dev->base + MMCHS_SYSCTL, reg | SYSCTL_SRA);
 
-#ifdef MMC_HS_DEBUG
-  printf("MMCHS: Waiting for software reset for all... ");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "MMCHS: Waiting for software reset for all... ");
   while (readWord(dev->base + MMCHS_SYSCTL) & SYSCTL_SRA)
   {
     // do nothing
   }
-#ifdef MMC_HS_DEBUG
-  printf("done\n");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "done" EOL);
 }
 
 void mmcSetVoltageCapa(struct mmc *dev)
@@ -192,26 +171,20 @@ void mmcWakeupConfig(struct mmc *dev)
 int mmcSendCommand(struct mmc *dev, struct mmcCommand *cmd, struct mmcData *data)
 {
   u32int flags;
-#ifdef MMC_HS_DEBUG
-  printf("mmcSendCommand: waiting for PSTATE_DATI clear...\n");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: waiting for PSTATE_DATI clear..." EOL);
   while (readWord(dev->base + MMCHS_PSTATE) & PSTATE_DATI)
   {
     // do nothing
   }
 
-#ifdef MMC_HS_DEBUG
-  printf("mmcSendCommand: waiting for PSTATE_CMDI clear...\n");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: waiting for PSTATE_CMDI clear..." EOL);
   while (readWord(dev->base + MMCHS_PSTATE) & PSTATE_CMDI)
   {
     // do nothing
   }
 
   writeWord(dev->base + MMCHS_STAT, 0xFFFFFFFF);
-#ifdef MMC_HS_DEBUG
-  printf("mmcSendCommand: waiting for stat to clear\n");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: waiting for stat to clear" EOL);
   while (readWord(dev->base + MMCHS_STAT))
   {
     // do nothing
@@ -266,25 +239,19 @@ int mmcSendCommand(struct mmc *dev, struct mmcCommand *cmd, struct mmcData *data
 
   if (data)
   {
-#ifdef MMC_HS_DEBUG
-    printf("mmcSendCommand: Data command: ");
-#endif
+    DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: Data command: ");
     /* Set block & write flags if we're doing a data op */
     if ((cmd->idx == MMC_CMD_READ_MULTIPLE_BLOCK) ||
         (cmd->idx == MMC_CMD_WRITE_MULTIPLE_BLOCK))
     {
-#ifdef MMC_HS_DEBUG
-      printf("r/w multiple block\n");
-#endif
+      DEBUG(PP_OMAP_35XX_MMCHS, "r/w multiple block" EOL);
       flags |= (MSBS_MULTIBLK | BCE_ENABLE);
       data->blocksize = 512;
       writeWord(dev->base + MMCHS_BLK, (data->blocksize | (data->blocks << 16)));
     }
     else
     {
-#ifdef MMC_HS_DEBUG
-      printf("single block\n");
-#endif
+      DEBUG(PP_OMAP_35XX_MMCHS, "single block" EOL);
       writeWord(dev->base + MMCHS_BLK, data->blocksize | NBLK_STPCNT);
     }
 
@@ -307,7 +274,7 @@ int mmcSendCommand(struct mmc *dev, struct mmcCommand *cmd, struct mmcData *data
   {
     if (timeout > 1000000)
     {
-      printf("stat timeout\n");
+      printf("stat timeout" EOL);
       return 0;
     }
     timeout++;
@@ -318,16 +285,12 @@ int mmcSendCommand(struct mmc *dev, struct mmcCommand *cmd, struct mmcData *data
   //treat timeouts same as error for now
   if (stat & STAT_CTO)
   {
-#ifdef MMC_HS_DEBUG
-    printf("mmcSendCommand: stat timeout error\n");
-#endif
+    DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: stat timeout error" EOL);
     return -1;
   }
   else if (stat & STAT_ERRI)
   {
-#ifdef MMC_HS_DEBUG
-    printf("mmcSendCommand: stat error interrupt\n");
-#endif
+    DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: stat error interrupt" EOL);
     return -1;
   }
 
@@ -356,19 +319,15 @@ int mmcSendCommand(struct mmc *dev, struct mmcCommand *cmd, struct mmcData *data
 
   if (data && (data->flags & MMC_DATA_READ))
   {
-#ifdef MMC_HS_DEBUG
-    printf("mmcSendCommand: data read command, dest = %x size %x\n",
+    DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: data read command, dest = %p size %#x" EOL,
             data->dest, data->blocksize * data->blocks);
-#endif
     // doing a read op, start the read process
     mmcRead(dev, data->dest, data->blocksize * data->blocks);
   }
   else if (data && (data->flags & MMC_DATA_WRITE))
   {
-#ifdef MMC_HS_DEBUG
-    printf("mmcSendCommand: data write command, src = %x size %x\n",
+    DEBUG(PP_OMAP_35XX_MMCHS, "mmcSendCommand: data write command, src = %p size %#x" EOL,
             data->src, data->blocksize * data->blocks);
-#endif
     mmcWrite(dev, data->src, data->blocksize * data->blocks);
   }
   return 0;
@@ -402,7 +361,7 @@ int mmcRead(struct mmc* dev, char* buf, u32int size)
     {
       //HS read buffer is full and ready to read
       u32int index;
-      
+
       writeWord(dev->base + MMCHS_STAT, readWord(dev->base + MMCHS_STAT) | STAT_BRR);
 
       for (index = 0; index < count; index++)
@@ -458,10 +417,10 @@ int mmcWrite(struct mmc *dev, const char *buf, u32int size)
 
     if (stat & STAT_ERRI)
     {
-      printf("mmcWrite: STAT error = %08x\n", stat);
+      printf("mmcWrite: STAT error = %#.8x" EOL, stat);
       return 1;
     }
-    
+
     if (stat & STAT_BWR)
     {
       // HS write buffer has at least one block empty
@@ -482,7 +441,7 @@ int mmcWrite(struct mmc *dev, const char *buf, u32int size)
       writeWord(dev->base + MMCHS_STAT, readWord(dev->base + MMCHS_STAT) | STAT_TC);
       break;
     }
-  } //while size 
+  } //while size
 
   return 0;
 }
@@ -525,9 +484,7 @@ void mmcSetIOS(struct mmc *mmc)
   reg &= ~(SYSCTL_ICE | CLKD_1023_M);
   writeWord(mmc->base + MMCHS_SYSCTL, reg | SYSCTL_ICE | (divisor << CLKD_OFFSET));
 
-#ifdef MMC_HS_DEBUG
-  printf("setIOS: waiting for ICS stabilise...\n");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "setIOS: waiting for ICS stabilise..." EOL);
   while ((readWord(mmc->base + MMCHS_SYSCTL) & SYSCTL_ICS) == 0)
   {
     // do nothing
@@ -535,17 +492,14 @@ void mmcSetIOS(struct mmc *mmc)
 
   writeWord(mmc->base + MMCHS_SYSCTL, readWord(mmc->base + MMCHS_SYSCTL) | SYSCTL_CEN);
 
-#ifdef MMC_HS_DEBUG
-  printf("mmcSetIOS: done.\n");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "mmcSetIOS: done." EOL);
 }
 
 
 struct mmc* mmcInterfaceInit()
 {
-#ifdef MMC_HS_DEBUG
-  printf("mmcInterfaceInit(): HS interface init...");
-#endif
+  DEBUG(PP_OMAP_35XX_MMCHS, "mmcInterfaceInit(): HS interface init...");
+
   struct mmc *mmc = &mmchs;
 
   mmc->sendCommand = mmcSendCommand;
@@ -558,10 +512,8 @@ struct mmc* mmcInterfaceInit()
   mmc->voltages = MMC_VDD_32_33 | MMC_VDD_33_34 | MMC_VDD_165_195;
   mmc->hostCaps = MMC_MODE_4BIT | MMC_MODE_HS_52MHz | MMC_MODE_HS;
 
-#ifdef MMC_HS_DEBUG
-  printf("done\n");
-#endif
-  
+  DEBUG(PP_OMAP_35XX_MMCHS, "done" EOL);
+
   mmcRegister(mmc);
 
   return mmc;

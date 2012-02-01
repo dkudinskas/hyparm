@@ -36,10 +36,12 @@ CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc
 LDDEPS       :=
 LDFLAGS      := --error-unresolved-symbols
 OBJDUMPFLAGS := -M reg-names-std
+ADFLAGS      := --decoder-stages 1 --decoder-type g --exhaustive-test
 
 
 CLEAN_GOALS  := clean clean_% distclean
 CONFIG_GOALS := %config
+AD_GOALS     := autodecoder_arm autodecoder_t16 autodecoder_t32
 HELP_GOALS   := help
 
 # List of all goals for which no dependency files will be generated and no build goals will be included.
@@ -59,6 +61,13 @@ endif
 ifneq ($(filter $(CONFIG_GOALS),$(MAKECMDGOALS)),)
   ifneq ($(filter-out $(CONFIG_GOALS),$(MAKECMDGOALS)),)
     $(error The following goals must be specified separately: $(filter $(CONFIG_GOALS),$(MAKECMDGOALS)))
+  endif
+endif
+
+# Make autodecoder stuff run on its own.
+ifneq ($(filter $(AD_GOALS),$(MAKECMDGOALS)),)
+  ifneq ($(filter-out $(AD_GOALS),$(MAKECMDGOALS)),)
+    $(error The following goals must be specified separately: $(filter $(AD_GOALS),$(MAKECMDGOALS)))
   endif
 endif
 
@@ -298,6 +307,37 @@ $(SOURCE_PATH)/%.S.o: $(SOURCE_PATH)/%.S $(KCONFIG_CONFIG)
 	@echo 'CPP/AS   $<'
 	@$(CC) $(CPP_AFLAGS) $(CPPFLAGS) -c -o $@ $<
 
+
+  # Check if we are invoking autodecoder
+  ifneq ($(filter $(AD_GOALS),$(MAKECMDGOALS)),)
+
+    # Configured path to autodecoder overrides environment
+    ifneq ($(CONFIG_PATH_AUTODECODER),)
+      CONFIG_PATH_AUTODECODER := $(CONFIG_PATH_AUTODECODER:"%"=%)
+      ifneq ($(CONFIG_PATH_AUTODECODER),)
+        PATH_AUTODECODER := $(CONFIG_PATH_AUTODECODER:"%"=%)
+      endif
+    endif
+
+    # Crash and burn if the path to autodecoder is not configured
+    ifeq ($(PATH_AUTODECODER),)
+      $(error You need to set up the path to autodecoder)
+    endif
+
+.PHONY: $(AD_GOALS)
+
+.SECONDEXPANSION:
+AD_SRC_autodecoder_arm := arm
+AD_SRC_autodecoder_t16 := t16
+AD_SRC_autodecoder_t32 := t32
+
+$(AD_GOALS): $(SOURCE_PATH)/instructionEmu/decoder/$$(AD_SRC_$$@).xml $(KCONFIG_CONFIG) $(KCONFIG_OK)
+	cd $(PATH_AUTODECODER) && $(PATH_AUTODECODER)/autodecoder --generate-decoder \
+	  --decoder-spec $(abspath $<) $(ADFLAGS) \
+	  --out $(abspath $(patsubst %.xml,%Graph.inc.c,$<))
+
+  endif # ifneq ($(filter $(AD_GOALS),$(MAKECMDGOALS)),)
+
 endif # ifeq ($(filter $(NO_BUILD_GOALS)),)
 
 
@@ -319,21 +359,27 @@ distclean: clean clean_kconfig
 
 help:
 	@echo 'Cleaning targets:'
-	@echo '  clean          Remove files generated during hypervisor build'
-	@echo '  clean_kconfig  Remove files generated during KConfig build'
-	@echo '  distclean      Remove all generated files including $(KCONFIG_CONFIG)'
+	@echo '  clean             Remove files generated during hypervisor build'
+	@echo '  clean_kconfig     Remove files generated during KConfig build'
+	@echo '  distclean         Remove all generated files including $(KCONFIG_CONFIG)'
 	@echo
 	@echo 'Configuration targets:'
-	@echo '  config         Create or update $(KCONFIG_CONFIG)'
-	@echo '  defconfig      Create $(KCONFIG_CONFIG) with defaults from $(SCRIPT_PATH)/defconfig'
+	@echo '  config            Create or update $(KCONFIG_CONFIG)'
+	@echo '  defconfig         Create $(KCONFIG_CONFIG) with defaults from $(SCRIPT_PATH)/defconfig'
 	@echo
 	@echo 'Build targets:'
-	@echo '  all            Build all targets marked with [*]'
-	@echo '* binary         Build $(APP_NAME).bin'
-	@echo '* dump           Build $(APP_NAME).dump'
+	@echo '  all               Build all targets marked with [*]'
+	@echo '* binary            Build $(APP_NAME).bin'
+	@echo '* dump              Build $(APP_NAME).dump'
+	@echo
+	@echo 'Autodecoder targets:'
+	@echo '  autodecoder_arm   Create C source for ARM decoder'
+	@echo '  autodecoder_t16   Create C source for Thumb 16-bit decoder'
+	@echo '  autodecoder_t32   Create C source for Thumb 32-bit decoder'
 	@echo
 	@echo 'Some influential environment variables:'
-	@echo '  CROSS_COMPILE  Cross-compiler toolchain prefix'
+	@echo '  CROSS_COMPILE     Cross-compiler toolchain prefix'
+	@echo '  PATH_AUTODECODER  Path to autodecoder'
 	@echo
 	@echo 'Values for these variables specified in $(KCONFIG_CONFIG) override environment values.'
 

@@ -139,39 +139,39 @@ void dumpGuestContext(GCONTXT *context)
     printf("----------" EOL);
   }
 
-  printf("endOfBlockInstr: %08x\n", context->endOfBlockInstr);
+  printf("endOfBlockInstr: %#.8x" EOL, context->endOfBlockInstr);
 #ifdef CONFIG_THUMB2
-  printf("endOfBlockHalfInstr: %08x\n", context->endOfBlockHalfInstr);
+  printf("endOfBlockHalfInstr: %#.8x" EOL, context->endOfBlockHalfInstr);
 #endif
-  printf("handler function addr: %08x\n", (u32int)context->hdlFunct);
+  printf("handler function addr: %#.8x" EOL, (u32int)context->hdlFunct);
 
   /* Virtual Memory */
-  printf("guest OS virtual addressing enabled: %x\n", context->virtAddrEnabled);
-  printf("guest OS Page Table: %08x\n", (u32int)context->PT_os);
-  printf("guest OS Page Table (real): %08x\n", (u32int)context->PT_os_real);
-  printf("guest OS shadow Page Table: %08x\n", (u32int)context->PT_shadow);
-  printf("guest physical Page Table: %08x\n", (u32int)context->PT_physical);
-  printf("high exception vector flag: %x\n", context->guestHighVectorSet);
-  printf("registered exception vector:\n");
-  printf("Und: %08x\n", context->guestUndefinedHandler);
-  printf("Swi: %08x\n", context->guestSwiHandler);
-  printf("Pabt: %08x\n", context->guestPrefAbortHandler);
-  printf("Dabt: %08x\n", context->guestDataAbortHandler);
-  printf("Unused: %08x\n", context->guestUnusedHandler);
-  printf("IRQ: %08x\n", context->guestIrqHandler);
-  printf("FIQ: %08x\n", context->guestFiqHandler);
-  printf("Hardware library: not core dumping just yet\n");
-  printf("Interrupt pending: %x\n", context->guestIrqPending);
-  printf("Data abort pending: %x\n", context->guestDataAbtPending);
-  printf("Prefetch abort pending: %x\n", context->guestPrefetchAbtPending);
-  printf("Guest idle: %x\n", context->guestIdle);
-  printf("Block cache at: %08x\n", (u32int)context->blockCache);
+  printf("guest OS virtual addressing enabled: %x" EOL, context->virtAddrEnabled);
+  printf("guest OS Page Table: %#.8x" EOL, (u32int)context->PT_os);
+  printf("guest OS Page Table (real): %#.8x" EOL, (u32int)context->PT_os_real);
+  printf("guest OS shadow Page Table: %#.8x" EOL, (u32int)context->PT_shadow);
+  printf("guest physical Page Table: %#.8x" EOL, (u32int)context->PT_physical);
+  printf("high exception vector flag: %x" EOL, context->guestHighVectorSet);
+  printf("registered exception vector:" EOL);
+  printf("Und: %#.8x" EOL, context->guestUndefinedHandler);
+  printf("Swi: %#.8x" EOL, context->guestSwiHandler);
+  printf("Pabt: %#.8x" EOL, context->guestPrefAbortHandler);
+  printf("Dabt: %#.8x" EOL, context->guestDataAbortHandler);
+  printf("Unused: %#.8x" EOL, context->guestUnusedHandler);
+  printf("IRQ: %#.8x" EOL, context->guestIrqHandler);
+  printf("FIQ: %#.8x" EOL, context->guestFiqHandler);
+  printf("Hardware library: not core dumping just yet" EOL);
+  printf("Interrupt pending: %x" EOL, context->guestIrqPending);
+  printf("Data abort pending: %x" EOL, context->guestDataAbtPending);
+  printf("Prefetch abort pending: %x" EOL, context->guestPrefetchAbtPending);
+  printf("Guest idle: %x" EOL, context->guestIdle);
+  printf("Block cache at: %#.8x" EOL, (u32int)context->blockCache);
 
   int i = 0;
-  printf("Block Trace:\n");
+  printf("Block Trace:" EOL);
   for (i = BLOCK_HISOTRY_SIZE-1; i >= 0; i--)
   {
-    printf("%x: %08x\n", i, context->blockHistory[i]);
+    printf("%x: %#.8x" EOL, i, context->blockHistory[i]);
 
   }
 #ifdef CONFIG_BLOCK_COPY

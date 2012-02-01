@@ -9,13 +9,13 @@ int partTableRead(blockDevice *dev, partitionTable *table)
   char mbr[512];
   if (dev->blockRead(dev->devID, 0, 1, mbr) != 1)
   {
-    printf("partTableRead: Could not read the MBR block\n");
+    printf("partTableRead: Could not read the MBR block" EOL);
     return -1;
   }
 
   if (mbr[510] != 0x55 || mbr[511] != 0xAA)
   {
-    printf("partTableRead: invalid mbr signature\n");
+    printf("partTableRead: invalid mbr signature" EOL);
     return -1;
   }
 
@@ -40,17 +40,16 @@ void fillPartitionEntries(char *record, struct Partition *part)
   part->chsEnd[2] = record[7];
   part->lbaBegin = uaLoadWord(record+8);
   part->numberOfSectors = uaLoadWord(record+12);
-#ifdef PART_DEBUG
-  printf("fillPartitionEntries: part->status %02x\n", part->status); 
-  printf("fillPartitionEntries: part->chsStart[0] %02x\n", part->chsBegin[0]); 
-  printf("fillPartitionEntries: part->chsStart[1] %02x\n", part->chsBegin[1]); 
-  printf("fillPartitionEntries: part->chsStart[2] %02x\n", part->chsBegin[2]); 
-  printf("fillPartitionEntries: part->type %02x\n", part->type); 
-  printf("fillPartitionEntries: part->chsEnd[0] %02x\n", part->chsEnd[0]); 
-  printf("fillPartitionEntries: part->chsEnd[1] %02x\n", part->chsEnd[1]); 
-  printf("fillPartitionEntries: part->chsEnd[2] %02x\n", part->chsEnd[2]); 
-  printf("fillPartitionEntries: part->lbaBegin %08x\n", part->lbaBegin); 
-  printf("fillPartitionEntries: part->numberOfSectors %08x\n", part->numberOfSectors); 
-#endif
+
+  DEBUG(PARTITIONS, "fillPartitionEntries: part->status %#.2x" EOL, part->status);
+  DEBUG(PARTITIONS, "fillPartitionEntries: part->chsStart[0] %#.2x" EOL, part->chsBegin[0]);
+  DEBUG(PARTITIONS, "fillPartitionEntries: part->chsStart[1] %#.2x" EOL, part->chsBegin[1]);
+  DEBUG(PARTITIONS, "fillPartitionEntries: part->chsStart[2] %#.2x" EOL, part->chsBegin[2]);
+  DEBUG(PARTITIONS, "fillPartitionEntries: part->type %#.2x" EOL, part->type);
+  DEBUG(PARTITIONS, "fillPartitionEntries: part->chsEnd[0] %#.2x" EOL, part->chsEnd[0]);
+  DEBUG(PARTITIONS, "fillPartitionEntries: part->chsEnd[1] %#.2x" EOL, part->chsEnd[1]);
+  DEBUG(PARTITIONS, "fillPartitionEntries: part->chsEnd[2] %#.2x" EOL, part->chsEnd[2]);
+  DEBUG(PARTITIONS, "fillPartitionEntries: part->lbaBegin %#.8x" EOL, part->lbaBegin);
+  DEBUG(PARTITIONS, "fillPartitionEntries: part->numberOfSectors %#.8x" EOL, part->numberOfSectors);
 }
 

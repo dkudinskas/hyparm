@@ -356,7 +356,7 @@ u32int loadSgxCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStSt;
       break;
     default:
-      DIE_NOW(0, "loadSgxCm loading non existing register!" EOL);
+      DIE_NOW(0, "loadSgxCm loading non existing register!");
   } // switch ends
   DEBUG(VP_OMAP_35XX_CM, "loadSgxCm reg %x value %.8x" EOL, reg, val);
   return val;

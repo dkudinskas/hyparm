@@ -4,9 +4,6 @@
 #include "common/types.h"
 
 
-// uncomment me to enable debug : #define BE_UART_DBG
-
-
 // all register accesses are in words, 
 // all registers are 16 bits wide
 // all registers have top byte reserved (only bottom 8 bits are used)
@@ -156,7 +153,7 @@
 #define UART_WER_REG          0x0000005C // Wake-up enable register, R/W
 
 
-void serialPuts(char * c);
+void serialPuts(const char *c);
 
 void serialPutc(char c);
 
@@ -170,19 +167,7 @@ void beUartReset(u32int uartid);
 
 void beUartStartup(u32int uartid, u32int baudRate);
 
-u8int beLoadUart(u32int regOffs, u32int uartid);
-
-void beStoreUart(u32int regOffs, u8int value, u32int uartid);
-
 void beUartDumpRegs(u32int uartid);
 
-struct UartBackEnd
-{
-  u32int baseAddress;
-  u32int size;
-  u32int rxFifoSize;
-  u32int txFifoSize;
-  bool loopback;
-};
 
 #endif

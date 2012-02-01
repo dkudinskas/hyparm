@@ -16,7 +16,7 @@ memchunkListElem * chunkListRoot;
 
 void mallocInit(u32int startAddr, u32int size)
 {
-  DEBUG(MALLOC, "mallocInit(%08x, %x);\n", startAddr, size);
+  DEBUG(MALLOC, "mallocInit(%#.8x, %x);" EOL, startAddr, size);
 
   heapStart = startAddr;
   heapSize = size;
@@ -118,7 +118,7 @@ void * memset(void * dest, u32int c, u32int count)
 
 u32int mallocBytes(u32int size)
 {
-  DEBUG(MALLOC, "mallocBytes: size %x\n", size);
+  DEBUG(MALLOC, "mallocBytes: size %x" EOL, size);
 
   if ((size & 0x3) != 0)
   {
@@ -149,13 +149,13 @@ void dumpMallocs()
 {
   u32int i = 0;
   memchunkListElem * listPtr = chunkListRoot;
-  printf("Dumping malloc internal structures:\n");
-  printf("***********************************\n");
+  printf("Dumping malloc internal structures:" EOL);
+  printf("***********************************" EOL);
   for (i = 0; i < nrOfChunksAllocd; i++)
   {
-    printf("Chunk %x: prev = %x; next = %x\n", i, (u32int)listPtr->prevChunk, (u32int)listPtr->nextChunk);
-    printf("Start address: %08x; size %x\n", listPtr->chunk.startAddress, listPtr->chunk.size);
-    printf("-----------------------------------\n");
+    printf("Chunk %x: prev = %p; next = %p" EOL, i, listPtr->prevChunk, listPtr->nextChunk);
+    printf("Start address: %#.8x; size %#x" EOL, listPtr->chunk.startAddress, listPtr->chunk.size);
+    printf("-----------------------------------" EOL);
     listPtr = listPtr->nextChunk;
   }
 }
