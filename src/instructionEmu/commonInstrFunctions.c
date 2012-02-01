@@ -279,6 +279,9 @@ bool evaluateConditionCode(GCONTXT *context, u32int conditionCode)
 /* function to store a register value, evaluates modes. */
 void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
 {
+  /*
+   * FIXME: use context as first argument like every other func
+   */
   u32int guestMode = (context->CPSR) & PSR_MODE;
 
   if ((regDest < 8) || (regDest == 15))
@@ -434,6 +437,9 @@ u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u3
 /* function to load a register value, evaluates modes. */
 u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
 {
+  /*
+   * FIXME: use context as first argument like every other func
+   */
   u32int guestMode = context->CPSR & PSR_MODE;
   u32int value = 0;
 

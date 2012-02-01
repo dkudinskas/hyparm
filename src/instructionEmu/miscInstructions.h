@@ -16,7 +16,6 @@
 
 /* ARM instructions.  */
 u32int nopInstruction(GCONTXT * context);
-u32int bxInstruction(GCONTXT * context);
 u32int mulInstruction(GCONTXT * context);
 u32int mlaInstruction(GCONTXT * context);
 u32int swpInstruction(GCONTXT * context);
@@ -122,11 +121,9 @@ u32int usad8Instruction(GCONTXT * context);
 u32int usada8Instruction(GCONTXT * context);
 u32int usatInstruction(GCONTXT * context);
 u32int usat16Instruction(GCONTXT * context);
-/* V5J instruction.  */
-u32int bxjInstruction(GCONTXT * context);
+
 /* V5 Instructions.  */
 u32int bkptInstruction(GCONTXT * context);
-u32int blxInstruction(GCONTXT * context);
 u32int clzInstruction(GCONTXT * context);
 /* V5E "El Segundo" Instructions.  */
 u32int pldInstruction(GCONTXT * context);
@@ -154,7 +151,6 @@ u32int qdsubInstruction(GCONTXT * context);
 /* ARM Instructions.  */
 u32int msrInstruction(GCONTXT * context);
 u32int mrsInstruction(GCONTXT * context);
-u32int bInstruction  (GCONTXT * context);
 u32int svcInstruction(GCONTXT * context);
 u32int undefinedInstruction(GCONTXT * context);
 

@@ -57,8 +57,9 @@ typedef struct DirectoryEntry
 typedef struct FatFileHandle
 {
   dentry *dirEntry;
-  u32int lastCluster;
+  u32int lastClusterNr;
   u32int bytesInLastCluster;
+  u8int *lastCluster;
 } file;
 
 
@@ -74,6 +75,7 @@ void setFatDirEntry(fatfs *fs, dentry *d, u32int position);
 int fread(fatfs *fs, file *handle, void *out, u32int maxlen);
 int fwrite(fatfs *fs, file *handle, void *src, u32int length);
 int fdelete(fatfs *fs, file *handle);
+void fclose(fatfs *fs, file *handle);
 file* fopen(fatfs *fs, const char *fname);
 file* fnew(fatfs *fs, const char *fname);
 
@@ -89,7 +91,7 @@ u32int fatGetFreeClus(fatfs *fs);
 
 u32int fatGetNextClus(fatfs *fs, u32int clus);
 
-bool filenameMatch(const char *user, char *fatname);
+bool filenameMatch(const char *user, const char *fatname);
 
 dentry *getPathDirEntry(fatfs *fs, const char *fname, int createNew);
 

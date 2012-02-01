@@ -54,6 +54,10 @@ void DIE_NOW(GCONTXT *context, const char *msg)
   setEmergencyExceptionVector();
 #endif
 
+#ifdef CONFIG_MMC
+  fclose(&mainFilesystem, debugStream);
+#endif
+
   banner("ERROR");
   printf("%s" EOL, msg);
   if (context == 0)
