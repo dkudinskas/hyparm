@@ -12,14 +12,9 @@ void invalidDataProcTrap(const char * msg, GCONTXT * gc)
   DIE_NOW(gc, msg);
 }
 
-u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
+u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char * instrString)
 {
-  u32int instr = context->endOfBlockInstr;
-#ifdef CONFIG_BLOCK_COPY
-  u32int nextPC = context->PCOfLastInstruction;
-#else
-  u32int nextPC = context->R15;
-#endif
+  u32int nextPC = getRealPC(context);
   u32int regDest = (instr & 0x0000F000) >> 12;
 
   if (regDest != 0xF)
@@ -198,7 +193,7 @@ u32int arithLogicOp(GCONTXT * context, OPTYPE opType, const char * instrString)
 /*********************************/
 /* AND Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-u32int andInstruction(GCONTXT * context)
+u32int andInstruction(GCONTXT *context, u32int instruction)
 {
   printf("%.8x" EOL, context->endOfBlockInstr);
   DIE_NOW(context, "Unimplemented AND trap");
@@ -208,7 +203,7 @@ u32int andInstruction(GCONTXT * context)
 /*********************************/
 /* RSB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-u32int rsbInstruction(GCONTXT * context)
+u32int rsbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented RSB trap");
 }
@@ -217,7 +212,7 @@ u32int rsbInstruction(GCONTXT * context)
 /*********************************/
 /* RSB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-u32int rscInstruction(GCONTXT * context)
+u32int rscInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented RSC trap");
 }
@@ -226,13 +221,13 @@ u32int rscInstruction(GCONTXT * context)
 /*********************************/
 /* SUB Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-u32int subInstruction(GCONTXT * context)
+u32int subInstruction(GCONTXT *context, u32int instruction)
 {
 #ifdef CONFIG_BLOCK_COPY
   DIE_NOW(context, "subInstruction is executed but not yet checked for blockCopyCompatibility");
 #else
   OPTYPE opType = SUB;
-  return arithLogicOp(context, opType, "SUB instr ");
+  return arithLogicOp(context, instruction, opType, "SUB instr ");
 #endif
 }
 
@@ -240,7 +235,7 @@ u32int subInstruction(GCONTXT * context)
 /*********************************/
 /* SBC Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-u32int sbcInstruction(GCONTXT * context)
+u32int sbcInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented SBC trap");
 }
@@ -249,17 +244,17 @@ u32int sbcInstruction(GCONTXT * context)
 /*********************************/
 /* ADD Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-u32int addInstruction(GCONTXT * context)
+u32int addInstruction(GCONTXT *context, u32int instruction)
 {
   OPTYPE opType = ADD;
-  return arithLogicOp(context, opType, "ADD instr ");
+  return arithLogicOp(context, instruction, opType, "ADD instr ");
 }
 
 
 /*********************************/
 /* ADD Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-u32int adcInstruction(GCONTXT * context)
+u32int adcInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented ADC trap");
 }
@@ -268,7 +263,7 @@ u32int adcInstruction(GCONTXT * context)
 /*********************************/
 /* ORR Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-u32int orrInstruction(GCONTXT * context)
+u32int orrInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented ORR trap");
 }
@@ -277,7 +272,7 @@ u32int orrInstruction(GCONTXT * context)
 /*********************************/
 /* ORR Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-u32int eorInstruction(GCONTXT * context)
+u32int eorInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented EOR trap");
 }
@@ -286,7 +281,7 @@ u32int eorInstruction(GCONTXT * context)
 /*********************************/
 /* SBC Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
-u32int bicInstruction(GCONTXT * context)
+u32int bicInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented BIC trap");
 }
@@ -295,17 +290,17 @@ u32int bicInstruction(GCONTXT * context)
 /*********************************/
 /* MOV Rd, Rs                    */
 /*********************************/
-u32int movInstruction(GCONTXT * context)
+u32int movInstruction(GCONTXT *context, u32int instruction)
 {
   OPTYPE opType = MOV;
-  return arithLogicOp(context, opType, "MOV instr ");
+  return arithLogicOp(context, instruction, opType, "MOV instr ");
 }
 
 
 /*********************************/
 /* MVN Rd, Rs                    */
 /*********************************/
-u32int mvnInstruction(GCONTXT * context)
+u32int mvnInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented MVN trap");
 }
@@ -314,7 +309,7 @@ u32int mvnInstruction(GCONTXT * context)
 /*********************************/
 /* LSL Rd, Rs                    */
 /*********************************/
-u32int lslInstruction(GCONTXT * context)
+u32int lslInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented LSL trap");
 }
@@ -323,7 +318,7 @@ u32int lslInstruction(GCONTXT * context)
 /*********************************/
 /* LSR Rd, Rs                    */
 /*********************************/
-u32int lsrInstruction(GCONTXT * context)
+u32int lsrInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented LSR trap");
 }
@@ -332,7 +327,7 @@ u32int lsrInstruction(GCONTXT * context)
 /*********************************/
 /* ASR Rd, Rs                    */
 /*********************************/
-u32int asrInstruction(GCONTXT * context)
+u32int asrInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented ASR trap");
 }
@@ -341,7 +336,7 @@ u32int asrInstruction(GCONTXT * context)
 /*********************************/
 /* RRX Rd, Rs                    */
 /*********************************/
-u32int rrxInstruction(GCONTXT * context)
+u32int rrxInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented RRX trap");
 }
@@ -350,7 +345,7 @@ u32int rrxInstruction(GCONTXT * context)
 /*********************************/
 /* ROR Rd, Rs                    */
 /*********************************/
-u32int rorInstruction(GCONTXT * context)
+u32int rorInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented ROR trap");
 }
@@ -359,7 +354,7 @@ u32int rorInstruction(GCONTXT * context)
 /*********************************/
 /* TST Rs, Rs2/imm               */
 /*********************************/
-u32int tstInstruction(GCONTXT * context)
+u32int tstInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "Unimplemented tst interpreter");
 }
@@ -368,7 +363,7 @@ u32int tstInstruction(GCONTXT * context)
 /*********************************/
 /* TEQ Rs, Rs2/imm               */
 /*********************************/
-u32int teqInstruction(GCONTXT * context)
+u32int teqInstruction(GCONTXT *context, u32int instruction)
 {
 #ifdef CONFIG_BLOCK_COPY
   DIE_NOW(0, "teqInstruction is executed but not yet checked for blockCopyCompatibility");
@@ -382,7 +377,7 @@ u32int teqInstruction(GCONTXT * context)
 /*********************************/
 /* CMP Rs, Rs2/imm               */
 /*********************************/
-u32int cmpInstruction(GCONTXT * context)
+u32int cmpInstruction(GCONTXT *context, u32int instruction)
 {
 #ifdef CONFIG_BLOCK_COPY
   DIE_NOW(0, "cmpInstruction is executed but not yet checked for blockCopyCompatibility");
@@ -396,7 +391,7 @@ u32int cmpInstruction(GCONTXT * context)
 /*********************************/
 /* CMN Rs, Rs2/imm               */
 /*********************************/
-u32int cmnInstruction(GCONTXT * context)
+u32int cmnInstruction(GCONTXT *context, u32int instruction)
 {
 #ifdef CONFIG_BLOCK_COPY
   DIE_NOW(0, "cmnInstruction is executed but not yet checked for blockCopyCompatibility");

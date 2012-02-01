@@ -41,10 +41,10 @@ struct instruction32bit unconditionalInstructions[] = {
 // UNIMPLEMENTED: CLREX clear exclusive
 {1, clrexInstruction, clrexPCInstruction,       0xf57ff01f, 0xffffffff, "clrex"},
 // CPS: change processor state
-{1, cpsieInstruction, cpsiePCInstruction,       0xf1080000, 0xfffffe3f, "CPSIE"},
-{1, cpsieInstruction, cpsiePCInstruction,       0xf10a0000, 0xfffffe20, "CPSIE"},
-{1, cpsidInstruction, cpsidPCInstruction,       0xf10C0000, 0xfffffe3f, "CPSID"},
-{1, cpsidInstruction, cpsidPCInstruction,       0xf10e0000, 0xfffffe20, "CPSID"},
+{1, cpsInstruction, cpsiePCInstruction,       0xf1080000, 0xfffffe3f, "CPSIE"},
+{1, cpsInstruction, cpsiePCInstruction,       0xf10a0000, 0xfffffe20, "CPSIE"},
+{1, cpsInstruction, cpsidPCInstruction,       0xf10C0000, 0xfffffe3f, "CPSID"},
+{1, cpsInstruction, cpsidPCInstruction,       0xf10e0000, 0xfffffe20, "CPSID"},
 {1, cpsInstruction, cpsPCInstruction,         0xf1000000, 0xfff1fe20, "CPS"},
 // UNIMPLEMENTED: RFE return from exception
 {1, rfeInstruction, rfePCInstruction,         0xf8100a00, 0xfe50ffff, "rfe%23?id%24?ba\t%16-19r%21'!"},

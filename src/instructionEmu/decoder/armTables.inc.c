@@ -480,10 +480,10 @@ static struct instruction32bit armUnconditionalInstructions[] =
   // UNIMPLEMENTED: CLREX clear exclusive
   { TRUE,  &clrexInstruction,     0xf57ff01f, 0xffffffff, "clrex" },
   // CPS: change processor state
-  { TRUE,  &cpsieInstruction,     0xf1080000, 0xfffffe3f, "CPSIE" },
-  { TRUE,  &cpsieInstruction,     0xf10a0000, 0xfffffe20, "CPSIE" },
-  { TRUE,  &cpsidInstruction,     0xf10C0000, 0xfffffe3f, "CPSID" },
-  { TRUE,  &cpsidInstruction,     0xf10e0000, 0xfffffe20, "CPSID" },
+  { TRUE,  &cpsInstruction,       0xf1080000, 0xfffffe3f, "CPSIE" },
+  { TRUE,  &cpsInstruction,       0xf10a0000, 0xfffffe20, "CPSIE" },
+  { TRUE,  &cpsInstruction,       0xf10C0000, 0xfffffe3f, "CPSID" },
+  { TRUE,  &cpsInstruction,       0xf10e0000, 0xfffffe20, "CPSID" },
   { TRUE,  &cpsInstruction,       0xf1000000, 0xfff1fe20, "CPS" },
   // UNIMPLEMENTED: RFE return from exception
   { TRUE,  &rfeInstruction,       0xf8100a00, 0xfe50ffff, "rfe%23?id%24?ba\t%16-19r%21'!" },
