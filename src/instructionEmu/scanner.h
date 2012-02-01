@@ -16,20 +16,6 @@
 #define SCANNER_CALL_SOURCE_PABT_TRANSLATION     7
 
 
-// uncomment me to enable scanner debug: #define SCANNER_DEBUG
-// uncomment me to enable scanner debug for blockCopyCache: #define SCANNER_DEBUG_BLOCKCOPY
-
-
-#ifdef CONFIG_BLOCK_COPY
-
-#ifdef SCANNER_DEBUG_BLOCKCOPY
-  #define SCANNER_DEBUG
-#endif
-
-#endif
-
-
-
 void scanBlock(GCONTXT * gc, u32int blkStartAddr);
 
 

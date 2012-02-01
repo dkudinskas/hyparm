@@ -21,9 +21,6 @@
 #include "memoryManager/pageTable.h"
 
 
-// uncomment to enable remaining debug code not triggered from config: #define SCANNER_DEBUG
-
-
 #define INSTR_SWI            0xEF000000U
 #define INSTR_SWI_THUMB      0x0000DF00U
 #define INSTR_NOP_THUMB      0x0000BF00U
@@ -209,12 +206,10 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
       u32int svcCacheIndex = (svcCode >> 8) - 1;
       if (svcCacheIndex >= BLOCK_CACHE_SIZE)
       {
-        printf("Instr %.8x@%p", instruction, end);
-        DIE_NOW(context, "scanner: block cache index in SWI out of range.");
+        printf("scanArmBlock: instruction %#.8x @ %p", instruction, end);
+        DIE_NOW(context, "scanArmBlock: block cache index in SWI out of range.");
       }
-#ifdef SCANNER_DEBUG
-      printf("scanner: EOB instruction is SWI @ %p code %x" EOL, end, svcCacheIndex);
-#endif
+      DEBUG(SCANNER, "scanArmBlock: EOB instruction is SWI @ %p code %#x" EOL, end, svcCacheIndex);
       BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, svcCacheIndex);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
@@ -242,10 +237,8 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
     // iCacheFlushByMVA((u32int)currAddress);
   }
 
-#ifdef SCANNER_DEBUG
-    printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
-        currAddress, context->endOfBlockInstr, ((cacheIndex + 1) << 8), (u32int)context->hdlFunct);
-#endif
+  DEBUG(SCANNER, "scanArmBlock: EOB %#.8x @ %p SVC code %#x hdlrFuncPtr %p" EOL,
+      context->endOfBlockInstr, end, ((cacheIndex + 1) << 8), context->hdlFunct);
 
   addToBlockCache(context->blockCache, cacheIndex, (u32int) start, (u32int)end,
       context->endOfBlockInstr, BCENTRY_TYPE_ARM, context->hdlFunct);
@@ -315,12 +308,10 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       u32int cacheIndex = svcCode - 1;
       if (cacheIndex >= BLOCK_CACHE_SIZE)
       {
-        printf("Instr %.8x@%p", instruction, start);
+        printf("scanThumbBlock: instruction %#.8x @ %p", instruction, end);
         DIE_NOW(context, "scanThumbBlock: block cache index in SWI out of range");
       }
-#ifdef SCANNER_DEBUG
-      printf("scanner: EOB instruction is SWI @ %#.8x code %x" EOL, (u32int)start, cacheIndex);
-#endif
+      DEBUG(SCANNER, "scanThumbBlock: EOB instruction is SWI @ %p code %#x" EOL, end, cacheIndex);
       BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, cacheIndex);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
@@ -379,17 +370,13 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         break;
       }
     }
-#ifdef SCANNER_DBG
-    printf("Thumb svc on %#.8x" EOL,(u32int)end);
-#endif
+    DEBUG(SCANNER, "scanThumbBlock: svc on %#.8x" EOL, (u32int)end);
 
     context->hdlFunct = handler;
   }
 
-#ifdef SCANNER_DEBUG
-printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
-    start, context->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)context->hdlFunct);
-#endif
+  DEBUG(SCANNER, "scanThumbBlock: EOB %#.8x @ %p SVC code %#x hdlrFuncPtr %p" EOL,
+      context->endOfBlockInstr, end, ((cacheIndex + 1) << 8), context->hdlFunct);
 
   addToBlockCache(context->blockCache, cacheIndex, (u32int)start, (u32int)end,
       context->endOfBlockInstr, blockType, context->hdlFunct);
@@ -465,10 +452,8 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
    * pointer arithmetic gc->blcokCache+bcIndex  and save pointer as u32int
    */
   *(blockCopyCacheCurrAddress++) = (u32int)(context->blockCache + cacheIndex);
-#ifdef SCANNER_DEBUG_BLOCKCOPY
-  printf("Backpointer installed at: %08x; Contents=%08x\n", (u32int)(blockCopyCacheCurrAddress - 1),
-    *(blockCopyCacheCurrAddress - 1));
-#endif
+  DEBUG(SCANNER, "Backpointer installed at: %#.8x; Contents=%#.8x" EOL,
+      (u32int)(blockCopyCacheCurrAddress - 1), *(blockCopyCacheCurrAddress - 1));
   /*
    * After the Backpointer the instructions will be installed.
    * Here the guestprocess should continue it's execution.
@@ -505,9 +490,8 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
           (u32int *)context->blockCopyCacheEnd);
       *(blockCopyCacheCurrAddress++) = INSTR_SWI | ((cacheIndex + 1) << 8);
 
-#ifdef SCANNER_DEBUG2
-      printf("scanner: EOB %08x instr %08x SWIcode %x hdlrFuncPtr %08x", (u32int)currAddress, context->endOfBlockInstr, bcIndex, (u32int)context->hdlFunct);
-#endif
+      DEBUG(SCANNER, "EOB %p instr %#.8x SWIcode %#.2x hdlrFuncPtr %p" EOL, currAddress,
+          context->endOfBlockInstr, cacheIndex, context->hdlFunct);
 
       /*
        * We have to determine the size of the BlockCopyCache & If necessary patch the code
@@ -517,9 +501,8 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
       {
         if (reservedWord)
         {
-#ifdef SCANNER_DEBUG2
-          printf("Reserved WORD");
-#endif
+          DEBUG(SCANNER, "Reserved WORD" EOL);
+
           u32int* blockCopyLast = checkAndMergeBlock((u32int*)context->blockCopyCache,blockCopyCacheCurrAddress, context->blockCache,blockCopyCacheStartAddress, (u32int*)context->blockCopyCacheEnd);
 
           /*
@@ -537,9 +520,8 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
             /* Block is merged and moved to start of blockCopyCache.  We have to execute instructions from there!
              * But first word is backpointer and 2nd word is reserved word*/
             context->R15 = context->blockCopyCache + 8;
-#ifdef SCANNER_DEBUG2
-            printf("Block Merged.  New size = %08x\n", blockCopyCacheSize);
-#endif
+
+            DEBUG(SCANNER, "Block Merged.  New size = %#.8x" EOL, blockCopyCacheSize);
           }
           else
           {
@@ -554,9 +536,8 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
             blockCopyCacheSize = context->blockCopyCacheEnd - (((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE);
             blockCopyCacheSize += (u32int)blockCopyCacheCurrAddress - context->blockCopyCache;
             blockCopyCacheSize = blockCopyCacheSize >> 2;//we have casted pointers to u32int thus divide by 4 to get size in words
-#ifdef SCANNER_DEBUG_BLOCKCOPY
-            printf("Block exceeding end: blockCopyCacheSize=%08x\n", blockCopyCacheSize);
-#endif
+
+            DEBUG(SCANNER, "Block exceeding end: blockCopyCacheSize=%#.8x" EOL, blockCopyCacheSize);
         }
       }
       else
@@ -581,10 +562,8 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
       /* It doesn't matter if it points to the word before the blockCopyCache. (Guestcontext was even initialized this way) */
       context->blockCopyCacheLastUsedLine=(u32int)(blockCopyCacheCurrAddress-1);
 
-# ifdef SCANNER_DEBUG_BLOCKCOPY
-      printf("Block added with size of %08x words.\n", (u32int)blockCopyCacheCurrAddress
+      DEBUG(SCANNER, "Block added with size of %#.8x words" EOL, (u32int)blockCopyCacheCurrAddress
         - (u32int)blockCopyCacheStartAddress);
-# endif
       /*----------------END Install HdlFunct----------------*/
       return;
     }
@@ -649,10 +628,8 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
             }
             /* emptyWordPointer now points to the empty word*/
 
-# ifdef SCANNER_DEBUG_BLOCKCOPY
-            printf("emptyWordPointer : %08x\n", emptyWordPointer);
-            printf("destEmptyWord : %08x\n", (u32int)destEmptyWord);
-# endif
+            DEBUG(SCANNER, "emptyWordPointer : %#.8x" EOL, emptyWordPointer);
+            DEBUG(SCANNER, "destEmptyWord : %#.8x" EOL, destEmptyWord);
 
             while (emptyWordPointer != destEmptyWord)
             {
