@@ -50,7 +50,6 @@ static u32int execBitMap[NUMBER_OF_BITMAPS];
 static void clearExecBitMap(u32int address);
 static u32int findBlockCacheEntry(BCENTRY *blockCache, u32int address);
 static bool isBitmapSetForAddress(u32int address);
-static void resolveSWI(u32int index, u32int *endAddress);
 static void removeCacheEntries(BCENTRY *blockCache);
 static void removeCacheEntry(BCENTRY *blockCache, u32int index);
 static void resolveCacheConflict(BCENTRY *blockCache, u32int index);
@@ -273,24 +272,34 @@ static void resolveCacheConflict(BCENTRY *blockCache, u32int index)
     if (blockCache[i].type != BCENTRY_TYPE_INVALID
         && blockCache[i].endAddress == blockCache[index].endAddress && i != index)
     {
-#ifdef CONFIG_THUMB2
-      /* found a valid entry in the cache, that BB ends @ the same address as
-      * the block of the entry that we collided with.
-      * Call the resolve function to ensure that conflicts between Thumb and ARM SWIs
-      * will be resolved as approprate otherwise say 'hello' to segfault ^_^
-      * ARM: SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
-      * Thumb: SWI 0xDF<code> is replaced with SWI<newcode> where newcode points new entry
-      */
-      resolveSWI(i, (u32int*)blockCache[index].endAddress);
-#else
-      // found a valid entry in the cache, that BB ends @ the same address as
-      // the block of the entry that we collided with.
-      u32int hypercallSWI = *((u32int*)(blockCache[index].endAddress));
-      // SWI 0xEF<code> is replaced with SWI<newcode> where newcode points new entry
-      hypercallSWI = (hypercallSWI & 0xFF000000) | ((i + 1) << 8);
+      /*
+       * Found a valid entry in the cache, for which the block ends at the same address as the block
+       * of the entry we collided with. Update the SVC code of the new entry to the old index and
+       * return.
+       *
+       * We assume that both blocks are of the same type. Since we cannot switch between ARM and
+       * Thumb within a block, this assumption is valid. Hence, we only have to check the type of
+       * one of the entries to figure out whether we are dealing with ARM or Thumb entries. We use
+       * blockCache[index] because it yields the smallest compiled code (less spilling).
+       */
       DEBUG(BLOCK_CACHE, "resolveCacheConflict: found another block ending at the same address" EOL);
-      DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing hypercall with %#.8x" EOL, hypercallSWI);
-      *((u32int*)(blockCache[index].endAddress)) = hypercallSWI;
+#ifdef CONFIG_THUMB2
+      if (blockCache[index].type == BCENTRY_TYPE_ARM)
+      {
+#endif
+        u32int hyperCall = (*(u32int *)blockCache[index].endAddress & 0xFF000000) | ((i + 1) << 8);
+        DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing ARM hypercall with %#.8x" EOL,
+            hyperCall);
+        *(u32int *)blockCache[index].endAddress = hyperCall;
+#ifdef CONFIG_THUMB2
+      }
+      else
+      {
+        u16int hyperCall = (*(u16int *)blockCache[index].endAddress & 0x0000FF00) | (i + 1);
+        DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing T16 hypercall with %#.4x" EOL,
+            hyperCall);
+        *(u16int *)blockCache[index].endAddress = hyperCall;
+      }
 #endif
       return;
     }
@@ -589,57 +598,6 @@ u32int *updateCurrBlockCopyCacheAddr(u32int *oldAddr, u32int nrOfAddedInstr, u32
     oldAddr -= (BLOCK_COPY_CACHE_SIZE - 1);
   }
   return oldAddr;
-}
-
-#endif
-
-
-#ifdef CONFIG_THUMB2
-
-static void resolveSWI( u32int index, u32int * endAddress)
-{
-  u32int hypercall = 0;
-  // Ok so endAddress holds the SWI we collided with. Check if it is word aligned
-  if(((u32int)endAddress & 0x3) >= 0x2)
-  {
-    //Not word aligned. It must be a Thumb SWI
-    u16int * halfendAddress = (u16int*)endAddress;
-    //fetch the SWI
-    hypercall = *halfendAddress;
-    //adjust the hypercall
-    hypercall = ( (hypercall & 0xFF00) | (index+1));
-
-    //store it
-    *halfendAddress = hypercall;
-  }
-  // Tricky. It can be a Thumb or an ARM SWI. Check!
-  else
-  {
-    u16int * halfendAddress = (u16int*)endAddress;
-    u16int halfinstruction = 0;
-    halfinstruction = *halfendAddress;
-    // SVC 0 is not ours. Do not touch it but die instead and let me think on how to fix it :/
-    if( ( (halfinstruction & 0xDFFF) > INSTR_SWI_THUMB) && ( (halfinstruction & 0xDFFF) <= 0xDFFF ) )
-    {
-      //Ok so this is a thumb SWI
-      hypercall = *halfendAddress;
-      //adjust the hypercall
-      hypercall = ( (hypercall & 0xFF00) | (index+1));
-      * halfendAddress = hypercall;
-    }
-    else if ( (halfinstruction & 0xDFFF) == INSTR_SWI_THUMB)
-    {
-      DIE_NOW(0,"Damn. Seems like you hit a guest SVC. Fix me");
-    }
-    else // OK this is an ARM SWI
-    {
-      hypercall = *endAddress;
-      hypercall = (hypercall & 0xFF000000) | ((index + 1) << 8);
-      *endAddress = hypercall;
-    }
-  }
-  DEBUG(BLOCK_CACHE, "resolveCacheConflict: found another BB to end at same address; "
-      "replace hypercall with %#x" EOL, hypercall);
 }
 
 #endif
