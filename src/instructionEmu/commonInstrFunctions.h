@@ -6,6 +6,19 @@
 #include "guestManager/guestContext.h"
 
 
+#define ARM_EXTRACT_CONDITION_CODE(instructionWord)  (instructionWord >> 28)
+
+
+extern inline __attribute__((always_inline,gnu_inline)) u32int getRealPC(GCONTXT *context)
+{
+#ifdef CONFIG_BLOCK_COPY
+  return context->PCOfLastInstruction;
+#else
+  return context->R15;
+#endif
+}
+
+
 /* a function to serve as a dead-loop if we decode something invalid */
 void invalidInstruction(u32int instr, const char *msg) __attribute__((noreturn));
 
@@ -72,9 +85,6 @@ u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int * shamt);
 
 // take shift type field from instr, return shift type
 u32int decodeShift(u32int instrShiftType);
-
-// count the number of ones in a 32 bit stream
-u32int countBitsSet(u32int bitstream);
 
 
 #ifdef CONFIG_THUMB2

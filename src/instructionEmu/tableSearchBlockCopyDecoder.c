@@ -2,10 +2,14 @@
 
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/coprocInstructions.h"
-#include "instructionEmu/dataMoveInstr.h"
 #include "instructionEmu/dataProcessInstr.h"
 #include "instructionEmu/miscInstructions.h"
 #include "instructionEmu/tableSearchBlockCopyDecoder.h"
+
+#include "instructionEmu/interpreter/loadInstructions.h"
+#include "instructionEmu/interpreter/loadPCInstructions.h"
+#include "instructionEmu/interpreter/storeInstructions.h"
+#include "instructionEmu/interpreter/storePCInstructions.h"
 
 
 static u32int decodeTopLevelCategory(u32int instr);
@@ -62,17 +66,17 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 // UNIMPLEMENTED: SWP swap
 {1, swpInstruction, swpPCInstruction,         0x01000090, 0x0fb00ff0, "SWP"},
 // UNIMPLEMENTED:
-{1, strhtInstruction, strhtPCInstruction,       0x006000b0, 0x0f7000f0, "STRHT instruction"},
-{1, ldrhtInstruction, ldrhtPCInstruction,       0x003000b0, 0x0f3000f0, "LDRHT instruction"},
+{1, armStrhtInstruction, armStrhtPCInstruction,       0x006000b0, 0x0f7000f0, "STRHT instruction"},
+{1, armLdrhtInstruction, armLdrhtPCInstruction,       0x003000b0, 0x0f3000f0, "LDRHT instruction"},
 // store and load exclusive: must be emulated - user mode faults
-{1, ldrexbInstruction, ldrexbPCInstruction,      0x01d00f9f, 0x0ff00fff, "LDREXB"},
-{1, ldrexdInstruction, ldrexdPCInstruction,      0x01b00f9f, 0x0ff00fff, "LDREXD"},
-{1, ldrexhInstruction, ldrexhPCInstruction,      0x01f00f9f, 0x0ff00fff, "LDREXH"},
-{1, strexbInstruction, strexbPCInstruction,      0x01c00f90, 0x0ff00ff0, "STREXB"},
-{1, strexdInstruction, strexdPCInstruction,      0x01a00f90, 0x0ff00ff0, "STREXD"},
-{1, strexhInstruction, strexhPCInstruction,      0x01e00f90, 0x0ff00ff0, "STREXH"},
-{1, ldrexInstruction, ldrexPCInstruction,       0x01900f9f, 0x0ff00fff, "LDREX"},
-{1, strexInstruction, strexPCInstruction,       0x01800f90, 0x0ff00ff0, "STREX"},
+{1, armLdrexbInstruction, armLdrexbPCInstruction,      0x01d00f9f, 0x0ff00fff, "LDREXB"},
+{1, armLdrexdInstruction, armLdrexdPCInstruction,      0x01b00f9f, 0x0ff00fff, "LDREXD"},
+{1, armLdrexhInstruction, armLdrexhPCInstruction,      0x01f00f9f, 0x0ff00fff, "LDREXH"},
+{1, armStrexbInstruction, armStrexbPCInstruction,      0x01c00f90, 0x0ff00ff0, "STREXB"},
+{1, armStrexdInstruction, armStrexdPCInstruction,      0x01a00f90, 0x0ff00ff0, "STREXD"},
+{1, armStrexhInstruction, armStrexhPCInstruction,      0x01e00f90, 0x0ff00ff0, "STREXH"},
+{1, armLdrexInstruction, armLdrexPCInstruction,       0x01900f9f, 0x0ff00fff, "LDREX"},
+{1, armStrexInstruction, armStrexPCInstruction,       0x01800f90, 0x0ff00ff0, "STREX"},
 // SMULL - signed multiply, PC cannot be used as any destination
 {0, sumullInstruction, sumullPCInstruction,      0x00800090, 0x0fa000f0, "SMULL"},
 // SMLAL - signed multiply and accumulate, PC cannot be used as any destination
@@ -101,11 +105,11 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 {1, qsubInstruction, qsubPCInstruction,        0x01200050, 0x0ff00ff0, "qsub%c\t%12-15r, %0-3r, %16-19r"},
 {1, qdsubInstruction, qdsubPCInstruction,       0x01600050, 0x0ff00ff0, "qdsub%c\t%12-15r, %0-3r, %16-19r"},
 // LDRD: Rt1 must be even numbered and NOT 14, thus Rt2 cannot be PC. pass.
-{0, ldrdInstruction, ldrdPCInstruction,        0x004000d0, 0x0e5000f0, "LDRD Rt, [Rn, #imm]"},
-{0, ldrdInstruction, ldrdPCInstruction,        0x000000d0, 0x0e500ff0, "LDRD Rt, [Rn, Rm]"},
+{0, armLdrdInstruction, armLdrdPCInstruction,        0x004000d0, 0x0e5000f0, "LDRD Rt, [Rn, #imm]"},
+{0, armLdrdInstruction, armLdrdPCInstruction,        0x000000d0, 0x0e500ff0, "LDRD Rt, [Rn, Rm]"},
 // STRD: pass through, let them fail!
-{0, strdInstruction, strdPCInstruction,        0x004000f0, 0x0e5000f0, "STRD Rt, [Rn, #imm]"},
-{0, strdInstruction, strdPCInstruction,        0x000000f0, 0x0e500ff0, "STRD Rt, [Rn, Rm]"},
+{0, armStrdInstruction, armStrdPCInstruction,        0x004000f0, 0x0e5000f0, "STRD Rt, [Rn, #imm]"},
+{0, armStrdInstruction, armStrdPCInstruction,        0x000000f0, 0x0e500ff0, "STRD Rt, [Rn, Rm]"},
 /* ALL UNIMPLEMENTED: smlabs, smulbs etc */
 // signed 16 bit multiply, 32 bit accumulate
 {1, smlabbInstruction, smlabbPCInstruction,      0x01000080, 0x0ff000f0, "smlabb%c\t%16-19r, %0-3r, %8-11r, %12-15r"},
@@ -130,11 +134,11 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 {1, smulwbInstruction, smulwbPCInstruction,      0x012000a0, 0x0ff0f0f0, "smulwb%c\t%16-19r, %0-3r, %8-11r"},
 {1, smulwtInstruction, smulwtPCInstruction,      0x012000e0, 0x0ff0f0f0, "smulwt%c\t%16-19r, %0-3r, %8-11r"},
 // STRH: passthrough, will data abort if something wrong
-{0, strhInstruction, strhPCInstruction,        0x004000b0, 0x0e5000f0, "STRH Rt, [Rn, +-imm8]"},
-{0, strhInstruction, strhPCInstruction,        0x000000b0, 0x0e500ff0, "STRH Rt, [Rn], +-Rm"},
+{0, armStrhInstruction, armStrhPCInstruction,        0x004000b0, 0x0e5000f0, "STRH Rt, [Rn, +-imm8]"},
+{0, armStrhInstruction, armStrhPCInstruction,        0x000000b0, 0x0e500ff0, "STRH Rt, [Rn], +-Rm"},
 // LDRH cant load halfword to PC, passthrough
-{0, ldrhInstruction, ldrhPCInstruction,        0x00500090, 0x0e500090, "LDRH Rt, [Rn, +-imm8]"},
-{0, ldrhInstruction, ldrhPCInstruction,        0x00100090, 0x0e500f90, "LDRH Rt, [Rn], +-Rm"},
+{0, armLdrhInstruction, armLdrhPCInstruction,        0x00500090, 0x0e500090, "LDRH Rt, [Rn, +-imm8]"},
+{0, armLdrhInstruction, armLdrhPCInstruction,        0x00100090, 0x0e500f90, "LDRH Rt, [Rn], +-Rm"},
 // AND: Rd = PC end block, others are fine
 {1, andInstruction, andPCInstruction,         0x0000f000, 0x0fe0f010, "AND PC, Rn, Rm, #shamt"},
 {1, andInstruction, andPCInstruction,         0x0000f010, 0x0fe0f090, "AND PC, Rn, Rm, Rshamt"},
@@ -304,14 +308,14 @@ struct instruction32bit dataProcMiscInstructions_op1[] = {
 
 struct instruction32bit loadStoreWordByteInstructions[] = {
 // STR imm12 and reg are pass-through
-{0, strInstruction, strPCInstruction,         0x04000000, 0x0e100000, "STR Rt, [Rn, +-imm12]"},
-{0, strInstruction, strPCInstruction,         0x06000000, 0x0e100ff0, "STR Rt, [Rn], +-Rm"},
-{0, strInstruction, strPCInstruction,         0x04000000, 0x0c100010, "STR any? dont get this."},
-{0, strbInstruction, strbPCInstruction,        0x04400000, 0x0e500000, "STRB Rt, [Rn, +-imm12]"},
-{0, strbInstruction, strbPCInstruction,        0x06400000, 0x0e500010, "STRB Rt, [Rn], +-Rm"},
+{0, armStrInstruction, armStrPCInstruction,         0x04000000, 0x0e100000, "STR Rt, [Rn, +-imm12]"},
+{0, armStrInstruction, armStrPCInstruction,         0x06000000, 0x0e100ff0, "STR Rt, [Rn], +-Rm"},
+{0, armStrInstruction, armStrPCInstruction,         0x04000000, 0x0c100010, "STR any? dont get this."},
+{0, armStrbInstruction, armStrbPCInstruction,        0x04400000, 0x0e500000, "STRB Rt, [Rn, +-imm12]"},
+{0, armStrbInstruction, armStrbPCInstruction,        0x06400000, 0x0e500010, "STRB Rt, [Rn], +-Rm"},
 // LDR traps if dest = PC, otherwise pass through
-{1, ldrInstruction, ldrPCInstruction,         0x0410f000, 0x0c10f000, "LDR PC, Rn/#imm12"},
-{0, ldrInstruction, ldrPCInstruction,         0x04100000, 0x0c100000, "LDR Rd, Rn/#imm12"},
+{1, armLdrInstruction, armLdrPCInstruction,         0x0410f000, 0x0c10f000, "LDR PC, Rn/#imm12"},
+{0, armLdrInstruction, armLdrPCInstruction,         0x04100000, 0x0c100000, "LDR Rd, Rn/#imm12"},
 
 {1, undefinedInstruction, undefinedPCInstruction,   0x00000000, 0x00000000, UNDEFINED_INSTRUCTION}
 };
@@ -498,17 +502,17 @@ struct instruction32bit mediaInstructions[] = {
 
 struct instruction32bit branchBlockTransferInstructions[] = {
 // STM traps if ^ postfix, otherwise pass through
-{1, stmInstruction, stmPCInstruction,         0x08400000, 0x0e500000, "STM {regList}^"},
-{0, stmInstruction, stmPCInstruction,         0x08800000, 0x0ff00000, "STMIA {regList}"},
-{0, stmInstruction, stmPCInstruction,         0x08000000, 0x0e100000, "STM {regList}"},
+{1, armStmInstruction, armStmPCInstruction,         0x08400000, 0x0e500000, "STM {regList}^"},
+{0, armStmInstruction, armStmPCInstruction,         0x08800000, 0x0ff00000, "STMIA {regList}"},
+{0, armStmInstruction, armStmPCInstruction,         0x08000000, 0x0e100000, "STM {regList}"},
 // POP LDM syntax, only care if PC in reglist
-{1, popLdmInstruction ,popLdmPCInstruction,         0x08bd8000, 0x0fff8000, "LDM SP, {...r15}"},
-{0, popLdmInstruction, popLdmPCInstruction,        0x08bd0000, 0x0fff0000, "LDM SP, {reglist}"},
+{1, armLdmInstruction, armPopLdmPCInstruction,         0x08bd8000, 0x0fff8000, "LDM SP, {...r15}"},
+{0, armLdmInstruction, armPopLdmPCInstruction,        0x08bd0000, 0x0fff0000, "LDM SP, {reglist}"},
 // LDM traps if ^ postfix and/or PC is in register list, otherwise pass through
-{1, ldmInstruction, ldmPCInstruction,         0x08500000, 0x0e500000, "LDM Rn, {regList}^"},
-{1, ldmInstruction, ldmPCInstruction,         0x08108000, 0x0e108000, "LDM Rn, {..r15}"},
-{0, ldmInstruction, ldmPCInstruction,         0x08900000, 0x0f900000, "LDMIA Rn, {regList}"},
-{0, ldmInstruction, ldmPCInstruction,         0x08100000, 0x0e100000, "LDM Rn, {regList}"},
+{1, armLdmInstruction, armLdmPCInstruction,         0x08500000, 0x0e500000, "LDM Rn, {regList}^"},
+{1, armLdmInstruction, armLdmPCInstruction,         0x08108000, 0x0e108000, "LDM Rn, {..r15}"},
+{0, armLdmInstruction, armLdmPCInstruction,         0x08900000, 0x0f900000, "LDMIA Rn, {regList}"},
+{0, armLdmInstruction, armLdmPCInstruction,         0x08100000, 0x0e100000, "LDM Rn, {regList}"},
 // B/BL: always hypercall! obviously.
 {1, bInstruction, bPCInstruction,         0x0a000000, 0x0e000000, "BRANCH"},
 

@@ -9,7 +9,13 @@
 
 
 #define ARM_INSTRUCTION_SIZE           4
-#define THUMB_INSTRUCTION_SIZE         2
+#define T16_INSTRUCTION_SIZE           2
+#define T32_INSTRUCTION_SIZE           4
+
+
+#define GPR_SP                        13
+#define GPR_LR                        14
+#define GPR_PC                        15
 
 
 #define PSR_CC_FLAGS_NZCV     0xf0000000

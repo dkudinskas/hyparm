@@ -6,17 +6,17 @@
 static struct instruction32bit armBranchBlockTransferInstructions[] =
 {
   // STM traps if ^ postfix, otherwise pass through
-  { TRUE,  &stmInstruction,       0x08400000, 0x0e500000, "STM {regList}^" },
-  { FALSE, &stmInstruction,       0x08800000, 0x0ff00000, "STMIA {regList}" },
-  { FALSE, &stmInstruction,       0x08000000, 0x0e100000, "STM {regList}" },
+  { TRUE,  &armStmInstruction,    0x08400000, 0x0e500000, "STM {regList}^" },
+  { FALSE, &armStmInstruction,    0x08800000, 0x0ff00000, "STMIA {regList}" },
+  { FALSE, &armStmInstruction,    0x08000000, 0x0e100000, "STM {regList}" },
   // POP LDM syntax, only care if PC in reglist
-  { TRUE,  &popLdmInstruction,    0x08bd8000, 0x0fff8000, "LDM SP, {...r15}" },
-  { FALSE, &popLdmInstruction,    0x08bd0000, 0x0fff0000, "LDM SP, {reglist}" },
+  { TRUE,  &armLdmInstruction,    0x08bd8000, 0x0fff8000, "LDM SP, {...r15}" },
+  { FALSE, &armLdmInstruction,    0x08bd0000, 0x0fff0000, "LDM SP, {reglist}" },
   // LDM traps if ^ postfix and/or PC is in register list, otherwise pass through
-  { TRUE,  &ldmInstruction,       0x08500000, 0x0e500000, "LDM Rn, {regList}^" },
-  { TRUE,  &ldmInstruction,       0x08108000, 0x0e108000, "LDM Rn, {..r15}" },
-  { FALSE, &ldmInstruction,       0x08900000, 0x0f900000, "LDMIA Rn, {regList}" },
-  { FALSE, &ldmInstruction,       0x08100000, 0x0e100000, "LDM Rn, {regList}" },
+  { TRUE,  &armLdmInstruction,    0x08500000, 0x0e500000, "LDM Rn, {regList}^" },
+  { TRUE,  &armLdmInstruction,    0x08108000, 0x0e108000, "LDM Rn, {..r15}" },
+  { FALSE, &armLdmInstruction,    0x08900000, 0x0f900000, "LDMIA Rn, {regList}" },
+  { FALSE, &armLdmInstruction,    0x08100000, 0x0e100000, "LDM Rn, {regList}" },
   // B/BL: always hypercall! obviously.
   { TRUE,  &bInstruction,         0x0a000000, 0x0e000000, "BRANCH" },
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "branchBlockTransferInstructions" }
@@ -30,17 +30,17 @@ static struct instruction32bit armDataProcMiscInstructions_op0[] =
   // UNIMPLEMENTED: SWP swap
   { TRUE,  &swpInstruction,       0x01000090, 0x0fb00ff0, "SWP" },
   // UNIMPLEMENTED:
-  { TRUE,  &strhtInstruction,     0x006000b0, 0x0f7000f0, "STRHT instruction" },
-  { TRUE,  &ldrhtInstruction,     0x003000b0, 0x0f3000f0, "LDRHT instruction" },
+  { TRUE,  &armStrhtInstruction,  0x006000b0, 0x0f7000f0, "STRHT instruction" },
+  { TRUE,  &armLdrhtInstruction,  0x003000b0, 0x0f3000f0, "LDRHT instruction" },
   // store and load exclusive: must be emulated - user mode faults
-  { TRUE,  &ldrexbInstruction,    0x01d00f9f, 0x0ff00fff, "LDREXB" },
-  { TRUE,  &ldrexdInstruction,    0x01b00f9f, 0x0ff00fff, "LDREXD" },
-  { TRUE,  &ldrexhInstruction,    0x01f00f9f, 0x0ff00fff, "LDREXH" },
-  { TRUE,  &strexbInstruction,    0x01c00f90, 0x0ff00ff0, "STREXB" },
-  { TRUE,  &strexdInstruction,    0x01a00f90, 0x0ff00ff0, "STREXD" },
-  { TRUE,  &strexhInstruction,    0x01e00f90, 0x0ff00ff0, "STREXH" },
-  { TRUE,  &ldrexInstruction,     0x01900f9f, 0x0ff00fff, "LDREX" },
-  { TRUE,  &strexInstruction,     0x01800f90, 0x0ff00ff0, "STREX" },
+  { TRUE,  &armLdrexbInstruction, 0x01d00f9f, 0x0ff00fff, "LDREXB" },
+  { TRUE,  &armLdrexdInstruction, 0x01b00f9f, 0x0ff00fff, "LDREXD" },
+  { TRUE,  &armLdrexhInstruction, 0x01f00f9f, 0x0ff00fff, "LDREXH" },
+  { TRUE,  &armStrexbInstruction, 0x01c00f90, 0x0ff00ff0, "STREXB" },
+  { TRUE,  &armStrexdInstruction, 0x01a00f90, 0x0ff00ff0, "STREXD" },
+  { TRUE,  &armStrexhInstruction, 0x01e00f90, 0x0ff00ff0, "STREXH" },
+  { TRUE,  &armLdrexInstruction,  0x01900f9f, 0x0ff00fff, "LDREX" },
+  { TRUE,  &armStrexInstruction,  0x01800f90, 0x0ff00ff0, "STREX" },
   // SMULL - signed multiply, PC cannot be used as any destination
   { FALSE, &sumullInstruction,    0x00800090, 0x0fa000f0, "SMULL" },
   // SMLAL - signed multiply and accumulate, PC cannot be used as any destination
@@ -69,11 +69,11 @@ static struct instruction32bit armDataProcMiscInstructions_op0[] =
   { TRUE,  &qsubInstruction,      0x01200050, 0x0ff00ff0, "qsub%c\t%12-15r, %0-3r, %16-19r" },
   { TRUE,  &qdsubInstruction,     0x01600050, 0x0ff00ff0, "qdsub%c\t%12-15r, %0-3r, %16-19r" },
   // LDRD: Rt1 must be even numbered and NOT 14, thus Rt2 cannot be PC. pass.
-  { FALSE, &ldrdInstruction,      0x004000d0, 0x0e5000f0, "LDRD Rt, [Rn, #imm]" },
-  { FALSE, &ldrdInstruction,      0x000000d0, 0x0e500ff0, "LDRD Rt, [Rn, Rm]" },
+  { FALSE, &armLdrdInstruction,   0x004000d0, 0x0e5000f0, "LDRD Rt, [Rn, #imm]" },
+  { FALSE, &armLdrdInstruction,   0x000000d0, 0x0e500ff0, "LDRD Rt, [Rn, Rm]" },
   // STRD: pass through, let them fail!
-  { FALSE, &strdInstruction,      0x004000f0, 0x0e5000f0, "STRD Rt, [Rn, #imm]" },
-  { FALSE, &strdInstruction,      0x000000f0, 0x0e500ff0, "STRD Rt, [Rn, Rm]" },
+  { FALSE, &armStrdInstruction,   0x004000f0, 0x0e5000f0, "STRD Rt, [Rn, #imm]" },
+  { FALSE, &armStrdInstruction,   0x000000f0, 0x0e500ff0, "STRD Rt, [Rn, Rm]" },
   /* ALL UNIMPLEMENTED: smlabs, smulbs etc */
   // signed 16 bit multiply, 32 bit accumulate
   { TRUE,  &smlabbInstruction,    0x01000080, 0x0ff000f0, "smlabb%c\t%16-19r, %0-3r, %8-11r, %12-15r" },
@@ -98,11 +98,11 @@ static struct instruction32bit armDataProcMiscInstructions_op0[] =
   { TRUE,  &smulwbInstruction,    0x012000a0, 0x0ff0f0f0, "smulwb%c\t%16-19r, %0-3r, %8-11r" },
   { TRUE,  &smulwtInstruction,    0x012000e0, 0x0ff0f0f0, "smulwt%c\t%16-19r, %0-3r, %8-11r" },
   // STRH: passthrough, will data abort if something wrong
-  { FALSE, &strhInstruction,      0x004000b0, 0x0e5000f0, "STRH Rt, [Rn, +-imm8]" },
-  { FALSE, &strhInstruction,      0x000000b0, 0x0e500ff0, "STRH Rt, [Rn], +-Rm" },
+  { FALSE, &armStrhInstruction,   0x004000b0, 0x0e5000f0, "STRH Rt, [Rn, +-imm8]" },
+  { FALSE, &armStrhInstruction,   0x000000b0, 0x0e500ff0, "STRH Rt, [Rn], +-Rm" },
   // LDRH cant load halfword to PC, passthrough
-  { FALSE, &ldrhInstruction,      0x00500090, 0x0e500090, "LDRH Rt, [Rn, +-imm8]" },
-  { FALSE, &ldrhInstruction,      0x00100090, 0x0e500f90, "LDRH Rt, [Rn], +-Rm" },
+  { FALSE, &armLdrhInstruction,   0x00500090, 0x0e500090, "LDRH Rt, [Rn, +-imm8]" },
+  { FALSE, &armLdrhInstruction,   0x00100090, 0x0e500f90, "LDRH Rt, [Rn], +-Rm" },
   // AND: Rd = PC end block, others are fine
   { TRUE,  &andInstruction,       0x0000f000, 0x0fe0f010, "AND PC, Rn, Rm, #shamt" },
   { TRUE,  &andInstruction,       0x0000f010, 0x0fe0f090, "AND PC, Rn, Rm, Rshamt" },
@@ -272,14 +272,14 @@ static struct instruction32bit armDataProcMiscInstructions_op1[] =
 static struct instruction32bit armLoadStoreWordByteInstructions[] =
 {
   // STR imm12 and reg are pass-through
-  { FALSE, &strInstruction,       0x04000000, 0x0e100000, "STR Rt, [Rn, +-imm12]" },
-  { FALSE, &strInstruction,       0x06000000, 0x0e100ff0, "STR Rt, [Rn], +-Rm" },
-  { FALSE, &strInstruction,       0x04000000, 0x0c100010, "STR any? dont get this." },
-  { FALSE, &strbInstruction,      0x04400000, 0x0e500000, "STRB Rt, [Rn, +-imm12]" },
-  { FALSE, &strbInstruction,      0x06400000, 0x0e500010, "STRB Rt, [Rn], +-Rm" },
+  { FALSE, &armStrInstruction,    0x04000000, 0x0e100000, "STR Rt, [Rn, +-imm12]" },
+  { FALSE, &armStrInstruction,    0x06000000, 0x0e100ff0, "STR Rt, [Rn], +-Rm" },
+  { FALSE, &armStrInstruction,    0x04000000, 0x0c100010, "STR any? dont get this." },
+  { FALSE, &armStrbInstruction,   0x04400000, 0x0e500000, "STRB Rt, [Rn, +-imm12]" },
+  { FALSE, &armStrbInstruction,   0x06400000, 0x0e500010, "STRB Rt, [Rn], +-Rm" },
   // LDR traps if dest = PC, otherwise pass through
-  { TRUE,  &ldrInstruction,       0x0410f000, 0x0c10f000, "LDR PC, Rn/#imm12" },
-  { FALSE, &ldrInstruction,       0x04100000, 0x0c100000, "LDR Rd, Rn/#imm12" },
+  { TRUE,  &armLdrInstruction,    0x0410f000, 0x0c10f000, "LDR PC, Rn/#imm12" },
+  { FALSE, &armLdrInstruction,    0x04100000, 0x0c100000, "LDR Rd, Rn/#imm12" },
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "loadStoreWordByteInstructions" }
 };
 

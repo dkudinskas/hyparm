@@ -642,22 +642,6 @@ u32int decodeShift(u32int instrShiftType)
   return 0;
 }
 
-// count the number of ones in a 32 bit stream
-u32int countBitsSet(u32int bitstream)
-{
-  u32int bitsSet = 0;
-  int i = 0;
-  for (i = 0; i < 32; i++)
-  {
-    if ((bitstream >> i) & 0x1)
-    {
-      bitsSet++;
-    }
-  }
-  return bitsSet;
-}
-
-
 #ifdef CONFIG_THUMB2
 
 u32int fetchThumbInstr(u16int *currhwAddress)

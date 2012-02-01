@@ -38,10 +38,10 @@ static struct instruction32bit t16DataProcInstructions[] =
 
 static struct instruction32bit t16ldrInstructions[] =
 {
-  { FALSE, &ldrInstruction,       0x6800, 0xF800, "LDR<c> <Rt>, [<Rn>{,#<imm5>}]" },
-  { FALSE, &ldrInstruction,       0x9800, 0xF800, "LDR<c> <Rt>, [SP{,#<imm8>}]" },
-  { FALSE, &ldrInstruction,       0x4800, 0xF800, "LDR<c> <Rt>, <label>" },
-  { FALSE, &ldrInstruction,       0x5800, 0xFE00, "LDR<c> <Rt>, [<Rn>,<Rm>]" },
+  { FALSE, &t16LdrInstruction,    0x6800, 0xF800, "LDR<c> <Rt>, [<Rn>{,#<imm5>}]" },
+  { FALSE, &t16LdrInstruction,    0x9800, 0xF800, "LDR<c> <Rt>, [SP{,#<imm8>}]" },
+  { FALSE, &t16LdrInstruction,    0x4800, 0xF800, "LDR<c> <Rt>, <label>" },
+  { FALSE, &t16LdrInstruction,    0x5800, 0xFE00, "LDR<c> <Rt>, [<Rn>,<Rm>]" },
   { TRUE,  &undefinedInstruction, 0x0000, 0x0000, "t16ldrInstructions" }
 };
 
@@ -53,30 +53,30 @@ static struct instruction32bit t16LoadMultipleRegistersInstructions[] =
 
 static struct instruction32bit t16LoadStoreInstructions[] =
 {
-  { FALSE, &strInstruction,       0x6000, 0xF800, "STR Rd, [<Rn>, {#<imm5>}]" },
-  { FALSE, &strInstruction,       0x9000, 0xF800, "STR Rd, [SP,#<imm8]" },
-  { FALSE, &ldrInstruction,       0x6800, 0xF800, "LDR Rd, [<Rn> {,#<imm5>}]" },
-  { FALSE, &ldrInstruction,       0x9800, 0xF800, "LDR Rd, [SP {,#<imm8>}]" },
-  { FALSE, &ldrInstruction,       0x7800, 0x7800, "LDRB Rd, #<imm5>" },
-  { FALSE, &ldrhInstruction,      0x8800, 0xF800, "LDRH <Rt>, [<Rn>{, #<imm5>}]" },
-  { FALSE, &strbInstruction,      0x7000, 0xF800, "STRB <Rt>, [<Rn>, #<imm5>]" },
-  { FALSE, &strbInstruction,      0xA400, 0xFE00, "STRB <Rt>, [<Rn>, <Rm>]" },
-  { FALSE, &strhInstruction,      0x8000, 0xF800, "STRH <Rt>,[<Rn>,{,#<imm>}]" },
-  { FALSE, &strhInstruction,      0x5200, 0xFE00, "STRH <Rt>, [<Rn>,{,<Rm>}" },
+  { FALSE, &t16StrInstruction,    0x6000, 0xF800, "STR Rd, [<Rn>, {#<imm5>}]" },
+  { FALSE, &t16StrSpInstruction,  0x9000, 0xF800, "STR Rd, [SP,#<imm8]" },
+  { FALSE, &t16LdrInstruction,    0x6800, 0xF800, "LDR Rd, [<Rn> {,#<imm5>}]" },
+  { FALSE, &t16LdrInstruction,    0x9800, 0xF800, "LDR Rd, [SP {,#<imm8>}]" },
+  { FALSE, &t16LdrInstruction,    0x7800, 0x7800, "LDRB Rd, #<imm5>" },
+  { FALSE, &t16LdrhImmediateInstruction, 0x8800, 0xF800, "LDRH <Rt>, [<Rn>{, #<imm5>}]" },
+  { FALSE, &t16StrbInstruction,   0x7000, 0xF800, "STRB <Rt>, [<Rn>, #<imm5>]" },
+  { FALSE, &t16StrbInstruction,   0xA400, 0xFE00, "STRB <Rt>, [<Rn>, <Rm>]" },
+  { FALSE, &t16StrhInstruction,   0x8000, 0xF800, "STRH <Rt>,[<Rn>,{,#<imm>}]" },
+  { FALSE, &t16StrhInstruction,   0x5200, 0xFE00, "STRH <Rt>, [<Rn>,{,<Rm>}" },
   { TRUE,  &undefinedInstruction, 0x0000, 0x0000, "t16LoadStoreInstructions" }
 };
 
 static struct instruction32bit t16MiscInstructions[] =
 {
-  { FALSE, &stmInstruction,       0xB400, 0xFE00, "PUSH {reglist}" },
+  { FALSE, &t16PushInstruction,   0xB400, 0xFE00, "PUSH {reglist}" },
   { FALSE, &subInstruction,       0xB080, 0xFF80, "SUB SP,SP,<imm7" },
   { FALSE, &uxtbInstruction,      0xB2C0, 0xFFC0, "UXTB<c> <Rd>, <Rm>" },
   { FALSE, &uxthInstruction,      0xB280, 0xFFC0, "UXTH<C> <Rd>, <Rm>" },
   { FALSE, &addInstruction,       0xA800, 0xF800, "ADD <Rd>, SP, #<imm8>" },
   { FALSE, &addInstruction,       0xB000, 0xFF80, "ADD SP, SP, #<imm>" },
   // trap if PC is on POP reglist
-  { TRUE,  &popLdmInstruction,    0xBD00, 0xFF00, "POP <reglist+PC>" },
-  { FALSE, &popLdmInstruction,    0xBC00, 0xFE00, "POP <reglist>" },
+  { TRUE,  &t16LdmInstruction,    0xBD00, 0xFF00, "POP <reglist+PC>" },
+  { FALSE, &t16LdmInstruction,    0xBC00, 0xFE00, "POP <reglist>" },
   { FALSE, &nopInstruction,       0xBF00, 0xFFFF, "NOP" },
   // I think that the If-Then-Else Instruction does not need to trap -.-
   { FALSE, &itInstruction,        0xBF00, 0xFF00, "IT" },
@@ -86,7 +86,7 @@ static struct instruction32bit t16MiscInstructions[] =
 static struct instruction32bit t16PCRelInstructions[] =
 {
   // ADR instruction is add or sub but in any case it does not trap
-  { FALSE, &addInstruction,       0xA000,0xF800, "ADR <Rd>, <label>" },
+  { FALSE, &addInstruction,       0xA000, 0xF800, "ADR <Rd>, <label>" },
   { TRUE,  &undefinedInstruction, 0x0000, 0x0000, "t16PCRelInstructions" }
 };
 

@@ -56,7 +56,7 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY *bcAddr)
 
 #ifdef CONFIG_BLOCK_COPY  //function is too different
 void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr,
-                     u32int index, u32int blockCopyCacheSize, u32int blockCopyCacheAddress,u32int hypInstruction,u32int hdlFunct,BCENTRY * bcAddr)
+                     u32int index, u32int blockCopyCacheSize, u32int blockCopyCacheAddress,u32int hypInstruction,void *hdlFunct,BCENTRY * bcAddr)
 {
 #ifdef BLOCK_COPY_CACHE_DEBUG
   serial_putstring("blockCache: ADD[");
@@ -110,7 +110,7 @@ void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int halfhypI
 #else
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
 #endif
-                     u32int index, u32int hdlFunct, BCENTRY * bcAddr)
+                     u32int index, void *hdlFunct, BCENTRY * bcAddr)
 {
   DEBUG(BLOCK_CACHE, "addToBlockCache: index = %#x,@ %#.8x--%#.8x, handler = %#.8x, eobInstr = "
       "%#.8x" EOL, index, blkStartAddr, blkEndAddr, hdlFunct, hypInstruction);

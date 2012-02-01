@@ -41,7 +41,7 @@ struct blockCacheEntry
   u32int halfhyperedInstruction;
 #endif
   bool valid;
-  u32int hdlFunct;
+  void *hdlFunct;
 };
 
 
@@ -66,7 +66,7 @@ bool checkBlockCache(u32int blkStartAddr, u32int bcIndex, BCENTRY * bcAddr);
 #if defined(CONFIG_BLOCK_COPY)
 
 void addToBlockCache(u32int blkStartAddr, u32int blkEndAddr, u32int index, u32int blockCopyCacheSize,
-  u32int blockCopyCacheAddress,u32int hypInstruction,u32int hdlFunct,BCENTRY * bcAddr);
+  u32int blockCopyCacheAddress, u32int hypInstruction, void *hdlFunct, BCENTRY *bcAddr);
 
 /* checkAndClearBlockCopyCacheAddress will check an address you provide and return a valid address.  Always use the returned address!! */
 u32int *checkAndClearBlockCopyCacheAddress(u32int *Addr,BCENTRY *bcStartAddr,u32int* blockCopyCache,u32int* blockCopyCacheEnd);
@@ -81,12 +81,12 @@ void removeBlockCopyCacheEntry(void *context, u32int blockCopyCacheAddress, u32i
 #elif defined(CONFIG_THUMB2)
 
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u16int HalfhypInstruction, u32int blkEndAddr,
-  u32int index, u32int hdlFunct, BCENTRY * bcAddr);
+  u32int index, void *hdlFunct, BCENTRY *bcAddr);
 
 #else
 
 void addToBlockCache(u32int blkStartAddr, u32int hypInstruction, u32int blkEndAddr,
-  u32int index, u32int hdlFunct, BCENTRY * bcAddr);
+  u32int index, void *hdlFunct, BCENTRY *bcAddr);
 
 #endif
 

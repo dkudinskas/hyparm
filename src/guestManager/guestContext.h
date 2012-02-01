@@ -17,6 +17,8 @@
 struct guestContext;
 typedef struct guestContext GCONTXT;
 
+typedef u32int (*instructionHandler)(GCONTXT *context, u32int instruction);
+
 struct guestContext
 {
   u32int R0;
@@ -60,7 +62,7 @@ struct guestContext
 #ifdef CONFIG_THUMB2
   u32int endOfBlockHalfInstr;
 #endif
-  u32int (*hdlFunct)(GCONTXT * context);
+  instructionHandler hdlFunct;
   CREG * coprocRegBank;
   BCENTRY * blockCache;
   u32int blockHistory[BLOCK_HISOTRY_SIZE];
