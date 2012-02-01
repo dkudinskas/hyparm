@@ -3,6 +3,8 @@
 
 #include "cpuArch/armv7.h"
 
+#include "exceptions/exceptionHandlers.h"
+
 #include "guestBoot/loader.h"
 
 #include "instructionEmu/scanner.h"
@@ -84,6 +86,12 @@ void bootGuest(GCONTXT *context, u32int entryPoint)
    * be copied?
    */
   createVirtualMachineGPAtoRPA(context);
+  /*
+   * Reset exception counters
+   */
+  resetDataAbortCounter();
+  resetIrqCounter();
+  resetSvcCounter();
   /*
    * Scan initial block
    */

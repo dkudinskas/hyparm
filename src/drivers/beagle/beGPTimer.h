@@ -140,10 +140,6 @@ void gptBEInit(u32int id);
 
 void gptBEReset(u32int id);
 
-u32int loadFromGPTimer(u32int id, u32int reg);
-
-void storeToGPTimer(u32int id, u32int reg, u32int value);
-
 void gptBEClearOverflowInterrupt(u32int id);
 
 void gptBEClearMatchInterrupt(u32int id);
@@ -166,7 +162,17 @@ void gptBEWaitForReset(u32int id);
 
 void gptBEDumpRegisters(u32int id);
 
-u32int getInternalCounterVal(u32int clkId);
+u32int gptBEGetCounter(u32int clkId);
+
+void gptBEResetCounter(u32int id);
+
+/*
+ * FIXME: these should not be visible...
+ *
+ * ONLY for use by vm/omap35xx/gptimer.c!
+ */
+u32int loadFromGPTimer(u32int id, u32int reg);
+void storeToGPTimer(u32int id, u32int reg, u32int value);
 
 #endif
 

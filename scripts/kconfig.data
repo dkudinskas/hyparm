@@ -139,6 +139,10 @@ config DEBUG_EXCEPTION_HANDLERS
   bool "Debug exception handlers"
   depends on DEBUG
 
+config DEBUG_GUEST_EXCEPTIONS
+  bool "Debug guest exceptions"
+  depends on DEBUG
+
 config DEBUG_DECODER
   bool "Debug instruction decoding"
   depends on DEBUG
@@ -353,6 +357,15 @@ config EMERGENCY_EXCEPTION_VECTOR
   bool "Emergency exception vector"
   default y
   depends on ARCH_EXT_SECURITY
+
+config EXCEPTION_HANDLERS_COUNT_DATA_ABORT
+  bool "Count number of data aborts"
+
+config EXCEPTION_HANDLERS_COUNT_IRQ
+  bool "Count number of interrupts (IRQs)"
+
+config EXCEPTION_HANDLERS_COUNT_SVC
+  bool "Count number of software interrupts"
 
 config SCANNER_COUNT_BLOCKS
   bool "Count number of scanned blocks"

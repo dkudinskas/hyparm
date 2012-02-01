@@ -32,8 +32,94 @@ extern bool rtos;
 #endif
 
 
+#ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT
+
+u64int dataAbortCounter;
+
+static inline void incrementDataAbortCounter(void);
+
+u64int getDataAbortCounter()
+{
+  return dataAbortCounter;
+}
+
+static inline void incrementDataAbortCounter()
+{
+  dataAbortCounter++;
+}
+
+void resetDataAbortCounter()
+{
+  dataAbortCounter = 0;
+}
+
+#else
+
+#define incrementDataAbortCounter()
+
+#endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT */
+
+
+#ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_IRQ
+
+u64int irqCounter;
+
+static inline void incrementIrqCounter(void);
+
+u64int getIrqCounter()
+{
+  return irqCounter;
+}
+
+static inline void incrementIrqCounter()
+{
+  irqCounter++;
+}
+
+void resetIrqCounter()
+{
+  irqCounter = 0;
+}
+
+#else
+
+#define incrementIrqCounter()
+
+#endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_IRQ */
+
+
+#ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_SVC
+
+u64int svcCounter;
+
+static inline void incrementSvcCounter(void);
+
+u64int getSvcCounter()
+{
+  return svcCounter;
+}
+
+static inline void incrementSvcCounter()
+{
+  svcCounter++;
+}
+
+void resetSvcCounter()
+{
+  svcCounter = 0;
+}
+
+#else
+
+#define incrementSvcCounter()
+
+#endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_SVC */
+
+
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 {
+  incrementSvcCounter();
+
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
 
   // parse the instruction to find the start address of next block
@@ -121,10 +207,9 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
 GCONTXT *dataAbort(GCONTXT *context)
 {
+  incrementDataAbortCounter();
+
   /*
-   * FIXME: what is the following comment about???
-   * Markos: Stop the timer so we can resume from where we stopped
-   *
    * Make sure interrupts are disabled while we deal with data abort.
    */
   disableInterrupts();
@@ -228,6 +313,8 @@ GCONTXT *dataAbort(GCONTXT *context)
 
 void dataAbortPrivileged(u32int pc)
 {
+  incrementDataAbortCounter();
+
   /* Here if we abort in a priviledged mode, i.e its the Hypervisors fault */
   printf("dataAbortPrivileged: Hypervisor dabt in priv mode @ pc %#.8x" EOL, pc);
 
@@ -292,9 +379,6 @@ void undefinedPrivileged(void)
 GCONTXT *prefetchAbort(GCONTXT *context)
 {
   /*
-   * FIXME: what is the following comment about???
-   * Markos: Stop the time so we can resume from where we stopped
-   *
    * Make sure interrupts are disabled while we deal with prefetch abort.
    */
   disableInterrupts();
@@ -313,19 +397,7 @@ GCONTXT *prefetchAbort(GCONTXT *context)
         scanBlock(context, context->R15);
       }
       break;
-    case ifsDebugEvent:
-    case ifsAccessFlagFaultSection:
-    case ifsTranslationFaultSection:
-    case ifsAccessFlagFaultPage:
-    case ifsSynchronousExternalAbort:
-    case ifsDomainFaultSection:
-    case ifsDomainFaultPage:
-    case ifsTranslationTableTalk1stLvlSynchExtAbt:
-    case ifsPermissionFaultSection:
     case ifsTranslationTableWalk2ndLvllSynchExtAbt:
-      /*
-       * FIXME: with CONFIG_GUEST_FREERTOS, all above cases still fall through and will end up in the new code. Is this correct?
-       */
 #ifdef CONFIG_GUEST_FREERTOS
       if (shouldPrefetchAbort(ifar))
       {
@@ -335,6 +407,15 @@ GCONTXT *prefetchAbort(GCONTXT *context)
       }
       break;
 #endif
+    case ifsDebugEvent:
+    case ifsAccessFlagFaultSection:
+    case ifsTranslationFaultSection:
+    case ifsAccessFlagFaultPage:
+    case ifsSynchronousExternalAbort:
+    case ifsDomainFaultSection:
+    case ifsDomainFaultPage:
+    case ifsTranslationTableTalk1stLvlSynchExtAbt:
+    case ifsPermissionFaultSection:
     case ifsPermissionFaultPage:
     case ifsImpDepLockdown:
     case ifsMemoryAccessSynchParityError:
@@ -400,6 +481,8 @@ void monitorModePrivileged(void)
 
 GCONTXT *irq(GCONTXT *context)
 {
+  incrementIrqCounter();
+
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
   switch(activeIrqNumber)
@@ -411,15 +494,14 @@ GCONTXT *irq(GCONTXT *context)
       break;
     case GPT2_IRQ:
       throwInterrupt(activeIrqNumber);
+      /*
+       * FIXME: figure out which interrupt to clear and then clear the right one?
+       */
       gptBEClearOverflowInterrupt(2);
 #ifdef CONFIG_GUEST_FREERTOS
-      /*
-       * FIXME: Niels: I think this is a dirty hack.
-       * Shouldn't we figure out which interrupt to clear and then clear the right one?
-       */
       if (rtos)
       {
-        storeToGPTimer(2,GPT_REG_TCRR,0x0);
+        gptBEResetCounter(2);
         gptBEClearMatchInterrupt(2);
       }
 #endif
@@ -455,6 +537,8 @@ GCONTXT *irq(GCONTXT *context)
 
 void irqPrivileged()
 {
+  incrementIrqCounter();
+
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
   switch(activeIrqNumber)
@@ -465,15 +549,14 @@ void irqPrivileged()
       break;
     case GPT2_IRQ:
       throwInterrupt(activeIrqNumber);
+      /*
+       * FIXME: figure out which interrupt to clear and then clear the right one?
+       */
       gptBEClearOverflowInterrupt(2);
 #ifdef CONFIG_GUEST_FREERTOS
-      /*
-       * FIXME: Niels: I think this is a dirty hack.
-       * Shouldn't we figure out which interrupt to clear and then clear the right one?
-       */
       if (rtos)
       {
-        storeToGPTimer(2,GPT_REG_TCRR,0x0);
+        gptBEResetCounter(2);
         gptBEClearMatchInterrupt(2);
       }
 #endif

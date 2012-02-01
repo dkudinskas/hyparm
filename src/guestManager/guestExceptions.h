@@ -6,9 +6,6 @@
 #include "guestManager/guestContext.h"
 
 
-// uncomment me to enable debug : #define GUEST_EXCEPTIONS_DBG
-
-
 #define EXC_VECT_HIGH_OFFS  0xffff0000
 
 #define EXC_VECT_LOW_SVC   0x08
