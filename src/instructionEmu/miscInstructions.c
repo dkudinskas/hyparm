@@ -1726,12 +1726,6 @@ u32int* nopPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
   return 0;
 }
 
-u32int* bxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "bx PCFunct unfinished\n");
-  return 0;
-}
-
 u32int* mulPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mul PCFunct unfinished\n");
@@ -2377,21 +2371,9 @@ u32int* usat16PCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int
   return 0;
 }
 
-u32int* bxjPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "bxj PCFunct unfinished\n");
-  return 0;
-}
-
 u32int* bkptPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "bkpt PCFunct unfinished\n");
-  return 0;
-}
-
-u32int* blxPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  DIE_NOW(0, "blx PCFunct unfinished\n");
   return 0;
 }
 
@@ -2545,12 +2527,6 @@ u32int* msrPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * 
 u32int* mrsPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   DIE_NOW(0, "mrs PCFunct unfinished\n");
-  return 0;
-}
-
-u32int* bPCInstruction(GCONTXT * context, u32int *  instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
-{
-  //Currently a bInstruction is always replaced by an SVC -> do nothing and check for PC in handleFunct
   return 0;
 }
 

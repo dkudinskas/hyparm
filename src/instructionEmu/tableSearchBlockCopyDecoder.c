@@ -6,6 +6,7 @@
 #include "instructionEmu/miscInstructions.h"
 #include "instructionEmu/tableSearchBlockCopyDecoder.h"
 
+#include "instructionEmu/interpreter/branchPCInstructions.h"
 #include "instructionEmu/interpreter/loadInstructions.h"
 #include "instructionEmu/interpreter/loadPCInstructions.h"
 #include "instructionEmu/interpreter/storeInstructions.h"
@@ -51,7 +52,7 @@ struct instruction32bit unconditionalInstructions[] = {
 // UNIMPLEMENTED: SRS store return state
 {1, srsInstruction, srsPCInstruction,         0xf84d0500, 0xfe5fffe0, "srs%23?id%24?ba\t%16-19r%21'!, #%0-4d"},
 // BLX: branch and link to Thumb subroutine
-{1, blxInstruction, blxPCInstruction,         0xfa000000, 0xfe000000, "BLX #imm24"},
+{1, blxInstruction, armBlxPCInstruction,         0xfa000000, 0xfe000000, "BLX #imm24"},
 // PLD: preload data
 {1, pldInstruction, pldPCInstruction,         0xf450f000, 0xfc70f000, "PLD"},
 // PLI: preload instruction
@@ -88,15 +89,15 @@ struct instruction32bit dataProcMiscInstructions_op0[] = {
 // MLS: Rd = Rm * Rn - Ra; Rd != PC, pass through
 {0, mlsInstruction, mlsPCInstruction,         0x00600090, 0x0ff000f0, "MLS Rd, Rm, Rn, Ra"},
 // Branch and try to exchange to ARM mode.
-{1, bxInstruction, bxPCInstruction,          0x012FFF10, 0x0ffffff0, "bx%c\t%0-3r"},
+{1, bxInstruction, armBxPCInstruction,          0x012FFF10, 0x0ffffff0, "bx%c\t%0-3r"},
 // Branch and link and try to exchange to Jazelle mode.
-{1, bxjInstruction, bxjPCInstruction,         0x012fff20, 0x0ffffff0, "BXJ Rm"},
+{1, bxjInstruction, armBxjPCInstruction,         0x012fff20, 0x0ffffff0, "BXJ Rm"},
 // Software breakpoint instruction... not sure yet.
 {1, bkptInstruction, bkptPCInstruction,        0xe1200070, 0xfff000f0, "BKPT #imm8"},
 // UNIMPLEMENTED: SMC, previously SMI: secure monitor call
 {1, smcInstruction, smcPCInstruction,         0x01600070, 0x0ff000f0, "smc%c\t%e"},
 // Branch and link and try to exchange with Thumb mode.
-{1, blxInstruction, blxPCInstruction,         0x012fff30, 0x0ffffff0, "BLX Rm"},
+{1, blxInstruction, armBlxPCInstruction,         0x012fff30, 0x0ffffff0, "BLX Rm"},
 // CLZ: Count leading zeroes - Rd, Rm != PC, pass through
 {0, clzInstruction, clzPCInstruction,         0x016f0f10, 0x0fff0ff0, "CLZ Rd, Rm"},
 // UNIMPLEMENTED: saturated add/subtract/doubleAdd/doubleSubtract
@@ -514,7 +515,7 @@ struct instruction32bit branchBlockTransferInstructions[] = {
 {0, armLdmInstruction, armLdmPCInstruction,         0x08900000, 0x0f900000, "LDMIA Rn, {regList}"},
 {0, armLdmInstruction, armLdmPCInstruction,         0x08100000, 0x0e100000, "LDM Rn, {regList}"},
 // B/BL: always hypercall! obviously.
-{1, bInstruction, bPCInstruction,         0x0a000000, 0x0e000000, "BRANCH"},
+{1, bInstruction, armBPCInstruction,         0x0a000000, 0x0e000000, "BRANCH"},
 
 {1, undefinedInstruction, undefinedPCInstruction,   0x00000000, 0x00000000, UNDEFINED_INSTRUCTION}
 };
