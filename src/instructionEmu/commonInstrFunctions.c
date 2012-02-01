@@ -6,13 +6,6 @@
 #include "instructionEmu/commonInstrFunctions.h"
 
 
-/* a function to serve as a dead-loop if we decode something invalid */
-void invalidInstruction(u32int instr, const char *msg)
-{
-  printf("Invalid instruction detected! %.8x" EOL, instr);
-  DIE_NOW(0, msg);
-}
-
 #ifdef CONFIG_BLOCK_COPY
 u32int zeroBits(u32int instruction, u32int startbit){
   switch(startbit){
@@ -333,7 +326,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT * context)
           strPtr = (regDest == 13) ? (&(context->R13_UND)) : (&(context->R14_UND));
           break;
         default:
-          invalidInstruction(context->endOfBlockInstr, "storeGuestGPR: invalid CPSR mode!");
+          DIE_NOW(context, "storeGuestGPR: invalid CPSR mode!");
       } // switch ends
       *strPtr = value;
     } // R13/R14 ends
@@ -505,7 +498,7 @@ u32int loadGuestGPR(u32int regSrc, GCONTXT * context)
           ldPtr = (regSrc == 13) ? (&(context->R13_UND)) : (&(context->R14_UND));
           break;
         default:
-          invalidInstruction(context->endOfBlockInstr, "loadGuestGPR: invalid CPSR mode!");
+          DIE_NOW(context, "loadGuestGPR: invalid CPSR mode!");
       } // switch ends
       value = *ldPtr;
     } // R13/R14 ends

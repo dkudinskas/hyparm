@@ -24,10 +24,6 @@ extern inline __attribute__((always_inline,gnu_inline)) u32int getRealPC(GCONTXT
 }
 
 
-/* a function to serve as a dead-loop if we decode something invalid */
-void invalidInstruction(u32int instr, const char *msg) __attribute__((noreturn));
-
-
 #ifdef CONFIG_BLOCK_COPY
 /* a function that sets 4 bits to zero starting at startbit (left bit is most significant) */
 u32int zeroBits(u32int instruction, u32int startbit);

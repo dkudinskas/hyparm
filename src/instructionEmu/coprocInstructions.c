@@ -45,13 +45,13 @@ u32int mrcInstruction(GCONTXT *context, u32int instr)
       u32int regDestNr = (instr & 0x0000F000) >> 12;
       if (regDestNr == 0xF)
       {
-        DIE_NOW(context, "unimplemented load from CP15 to PC");
+        DIE_NOW(context, "mrcInstruction: unimplemented load from CP15 to PC");
       }
       storeGuestGPR(regDestNr, cregVal, context);
     }
     else
     {
-      invalidInstruction(instr, "Unknown coprocessor number");
+      DIE_NOW(context, "mrcInstruction: unknown coprocessor number");
     }
   }
 
@@ -90,7 +90,7 @@ u32int mcrInstruction(GCONTXT *context, u32int instr)
     }
     else
     {
-      invalidInstruction(instr, "Unknown coprocessor number");
+      DIE_NOW(context, "mcrInstruction: unknown coprocessor number");
     }
   }
 

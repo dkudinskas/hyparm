@@ -976,7 +976,7 @@ u32int msrInstruction(GCONTXT *context, u32int instr)
     u32int regSrc = instr & 0x0000000F;
     if (regSrc == 0xF)
     {
-      invalidInstruction(instr, "MSR cannot use PC as source register");
+      DIE_NOW(context, "msrInstruction: cannot use PC as source register");
     }
     value = loadGuestGPR(regSrc, context);
   }
@@ -1138,7 +1138,7 @@ u32int mrsInstruction(GCONTXT *context, u32int instr)
 
   if (regDest == 0xF)
   {
-    invalidInstruction(instr, "MRS cannot use PC as destination");
+    DIE_NOW(context, "mrsInstruction: cannot use PC as destination");
   }
 
   instrCC = (instr >> 28) & 0xF;
@@ -1173,7 +1173,7 @@ u32int mrsInstruction(GCONTXT *context, u32int instr)
         case PSR_USR_MODE:
         case PSR_SYS_MODE:
         default:
-          invalidInstruction(instr, "MRS cannot request spsr in user/system mode");
+          DIE_NOW(context, "mrsInstruction: cannot request spsr in user/system mode");
       } // switch ends
     } // spsr case ends
 #ifdef CONFIG_BLOCK_COPY_NO_IRQ
@@ -1213,15 +1213,12 @@ u32int svcInstruction(GCONTXT *context, u32int instruction)
   DIE_NOW(0, "svcInstruction is executed but not yet checked for blockCopyCompatibility");
 #endif
   DIE_NOW(0,"I shouldn't be here");
-#ifdef ARM_INSTR_TRACE
-  printf("SVC instr %08x @ %08x" EOL, instruction, context->R15);
-#endif
-  return 0;
 }
 
 u32int undefinedInstruction(GCONTXT *context, u32int instruction)
 {
-  invalidInstruction(instruction, "undefined instruction");
+  printf("undefinedInstruction %#.8x @ %#.8x", instruction, context->R15);
+  DIE_NOW(context, "undefined instruction");
 }
 
 u32int t16ItInstruction(GCONTXT *context, u32int instruction)
