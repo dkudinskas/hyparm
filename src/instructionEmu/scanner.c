@@ -210,12 +210,6 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
       BCENTRY * bcEntry = getBlockCacheEntry(svcCacheIndex, context->blockCache);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
-
-      if (bcEntry->halfhyperedInstruction)
-      {
-        DIE_NOW(context, "ARM code scan found non-ARM cache entry");
-      }
-
       context->hdlFunct = bcEntry->hdlFunct;
     }
     else //Handle guest SVC
@@ -391,58 +385,53 @@ printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
     start, context->endOfBlockInstr, ((bcIndex + 1) << 8), (u32int)context->hdlFunct);
 #endif
 
-/* add the block we just scanned to block cache
- * Ehm... Do not do that for guest SVC code. It messes up everything so
- * skipt it until I figure out what it going on
- */
-
   addToBlockCache(start, context->endOfBlockInstr, halfEndOfBlock, (u32int)end,
         cacheIndex, context->hdlFunct, context->blockCache);
   /* To ensure that subsequent fetches from eobAddress get a hypercall
-       * rather than the old cached copy...
-       * 1. clean data cache entry by address
-       * DCCMVAU, Clean data cache line by MVA to PoU: c7, 0, c11, 1
-       * 2. invalidate instruction cache entry by address.
-       * ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1
-       */
-      if(halfEndOfBlock == THUMB16)
-      {
-        asm("mcr p15, 0, %0, c7, c11, 1"
-            :
-            :"r"(end)
-            :"memory"
-        );
-        asm("mcr p15, 0, %0, c7, c5, 1"
-            :
-            :"r"(end)
-            :"memory"
-        );
-      }
-      else
-      {
-        //currhwAddress points to the second halfword
-        asm("mcr p15, 0, %0, c7, c11, 1"
-            :
-            :"r"(end)
-            :"memory"
-        );
-        asm("mcr p15, 0, %0, c7, c5, 1"
-            :
-            :"r"(end)
-            :"memory"
-        );
-        end--;
-        asm("mcr p15, 0, %0, c7, c11, 1"
-            :
-            :"r"(end)
-            :"memory"
-        );
-        asm("mcr p15, 0, %0, c7, c5, 1"
-            :
-            :"r"(end)
-            :"memory"
-        );
-      }
+   * rather than the old cached copy...
+   * 1. clean data cache entry by address
+   * DCCMVAU, Clean data cache line by MVA to PoU: c7, 0, c11, 1
+   * 2. invalidate instruction cache entry by address.
+   * ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1
+   */
+  if(halfEndOfBlock == THUMB16)
+  {
+    asm("mcr p15, 0, %0, c7, c11, 1"
+        :
+        :"r"(end)
+        :"memory"
+    );
+    asm("mcr p15, 0, %0, c7, c5, 1"
+        :
+        :"r"(end)
+        :"memory"
+    );
+  }
+  else
+  {
+    //currhwAddress points to the second halfword
+    asm("mcr p15, 0, %0, c7, c11, 1"
+        :
+        :"r"(end)
+        :"memory"
+    );
+    asm("mcr p15, 0, %0, c7, c5, 1"
+        :
+        :"r"(end)
+        :"memory"
+    );
+    end--;
+    asm("mcr p15, 0, %0, c7, c11, 1"
+        :
+        :"r"(end)
+        :"memory"
+    );
+    asm("mcr p15, 0, %0, c7, c5, 1"
+        :
+        :"r"(end)
+        :"memory"
+    );
+  }
   protectScannedBlock(start, end);
 }
 
