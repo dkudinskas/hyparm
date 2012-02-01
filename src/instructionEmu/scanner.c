@@ -136,9 +136,6 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     BCENTRY *bcEntry = getBlockCacheEntry(cacheIndex, context->blockCache);
     context->hdlFunct = bcEntry->hdlFunct;
     context->endOfBlockInstr = bcEntry->hyperedInstruction;
-#ifdef CONFIG_THUMB2
-    context->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
-#endif
 #ifdef CONFIG_BLOCK_COPY
     /* First word is a backpointer, second may be reserved */
     u32int *addressInBlockCopyCache = ((u32int *)bcEntry->blockCopyCacheAddress) + (bcEntry->reservedWord ? 2 : 1);
@@ -153,7 +150,6 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     //But also the PC of the last instruction of the block should be set
     context->PCOfLastInstruction = (u32int)bcEntry->endAddress;
 #endif
-
     return;
   }
 
@@ -214,17 +210,17 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
       BCENTRY * bcEntry = getBlockCacheEntry(svcCacheIndex, context->blockCache);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
-#ifdef CONFIG_THUMB2
-      context->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
-#endif
+
+      if (bcEntry->halfhyperedInstruction)
+      {
+        DIE_NOW(context, "ARM code scan found non-ARM cache entry");
+      }
+
       context->hdlFunct = bcEntry->hdlFunct;
     }
     else //Handle guest SVC
     {
       context->endOfBlockInstr = instruction;
-#ifdef CONFIG_THUMB2
-      context->endOfBlockHalfInstr = 0;
-#endif
       context->hdlFunct = handler;
     }
   }
@@ -236,10 +232,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
     // save end of block instruction and handler function pointer close to us...
     context->endOfBlockInstr = instruction;
     context->hdlFunct = handler;
-#ifdef CONFIG_THUMB2
     // Thumb compatibility
-    context->endOfBlockHalfInstr = 0;
-#endif
     // replace end of block instruction with hypercall of the appropriate code
     *end = INSTR_SWI | ((cacheIndex + 1) << 8);
     // if guest instruction stream is mapped with caching enabled, must maintain
@@ -253,7 +246,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 #endif
 
 #ifdef CONFIG_THUMB2
-  addToBlockCache(start, context->endOfBlockInstr, context->endOfBlockHalfInstr, (u32int)end,
+  addToBlockCache(start, context->endOfBlockInstr, 0, (u32int)end,
       cacheIndex, context->hdlFunct, context->blockCache);
 #else
   addToBlockCache(start, context->endOfBlockInstr, (u32int)end,
@@ -287,6 +280,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
   u16int *end;
   instructionHandler handler;
   u32int instruction;
+  u32int halfEndOfBlock;
 
   u16int *currtmpAddress = start;   //backup pointer  ?? seems to be start address of last instruction
 
@@ -331,13 +325,13 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       BCENTRY * bcEntry = getBlockCacheEntry(cacheIndex, context->blockCache);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
-      context->endOfBlockHalfInstr = bcEntry->halfhyperedInstruction;
+      halfEndOfBlock = bcEntry->halfhyperedInstruction;
       context->hdlFunct = bcEntry->hdlFunct;
     }
     else
     {
       context->endOfBlockInstr = instruction;
-      context->endOfBlockHalfInstr = THUMB16;
+      halfEndOfBlock = THUMB16;
       context->hdlFunct = handler;
     }
 
@@ -369,7 +363,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         end ++;
         instruction = (instruction<<16)|*end;
         context->endOfBlockInstr = instruction;
-        context->endOfBlockHalfInstr = THUMB32;
+        halfEndOfBlock = THUMB32;
         end --;
         *end = INSTR_NOP_THUMB;
         end ++;
@@ -380,7 +374,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       {
         instruction = *end;
         context->endOfBlockInstr = instruction;
-        context->endOfBlockHalfInstr = THUMB16;
+        halfEndOfBlock = THUMB16;
         *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
         break;
       }
@@ -402,7 +396,7 @@ printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
  * skipt it until I figure out what it going on
  */
 
-  addToBlockCache(start, context->endOfBlockInstr, context->endOfBlockHalfInstr, (u32int)end,
+  addToBlockCache(start, context->endOfBlockInstr, halfEndOfBlock, (u32int)end,
         cacheIndex, context->hdlFunct, context->blockCache);
   /* To ensure that subsequent fetches from eobAddress get a hypercall
        * rather than the old cached copy...
@@ -411,7 +405,7 @@ printf("scanner: EOB @ %#.8x insr %#.8x SVC code %x hdlrFuncPtr %x" EOL,
        * 2. invalidate instruction cache entry by address.
        * ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1
        */
-      if(context->endOfBlockHalfInstr == THUMB16)
+      if(halfEndOfBlock == THUMB16)
       {
         asm("mcr p15, 0, %0, c7, c11, 1"
             :

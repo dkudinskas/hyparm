@@ -31,15 +31,12 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
 #endif
 
 #ifdef CONFIG_THUMB2
-  u32int eobHalfInstrBackup;
-
   if (context->CPSR & PSR_T_BIT)
   {
     /*
      * Guest was executing in Thumb mode
      */
     instr = fetchThumbInstr((u16int *)(context->R15));
-    eobHalfInstrBackup = context->endOfBlockHalfInstr;
 
     if (TXX_IS_T32(instr))
     {
@@ -197,7 +194,6 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
         DIE_NOW(context, "Unimplemented Thumb16 Load/Store");
       }
     }
-    context->endOfBlockHalfInstr = eobHalfInstrBackup;
   }
   else
 #endif
