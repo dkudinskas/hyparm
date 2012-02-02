@@ -1,3 +1,4 @@
+#include "common/bit.h"
 #include "common/debug.h"
 #include "common/stddef.h"
 
@@ -47,7 +48,6 @@ u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor) __attribute__((exte
  * Helper functions.
  */
 
-static inline s32int ctzll(u64int n);
 static u32int uidiv_recursive(u32int dividend, u32int divisor, u32int acc);
 static u64int uldiv_recursive(u64int dividend, u64int divisor, u64int acc);
 
@@ -125,9 +125,9 @@ static u64int uldiv_recursive(u64int dividend, u64int divisor, u64int acc);
 u32int __aeabi_uidiv(u32int dividend, u32int divisor)
 {
 #ifdef HAVE_GCC_VECTOR
-  UDIV(u32int, u32intPair, result, __builtin_ctz, uidiv_recursive, result[0]);
+  UDIV(u32int, u32intPair, result, countTrailingZeros, uidiv_recursive, result[0]);
 #else
-  UDIV(u32int, u32int, result[2], __builtin_ctz, uidiv_recursive, result[0]);
+  UDIV(u32int, u32int, result[2], countTrailingZeros, uidiv_recursive, result[0]);
 #endif
 }
 
@@ -146,9 +146,9 @@ u32int __aeabi_uidiv(u32int dividend, u32int divisor)
 u32intPair __aeabi_uidivmod(u32int dividend, u32int divisor)
 {
 #ifdef HAVE_GCC_VECTOR
-  UDIV(u32int, u32intPair, result, __builtin_ctz, uidiv_recursive, result);
+  UDIV(u32int, u32intPair, result, countTrailingZeros, uidiv_recursive, result);
 #else
-  UDIV(u32int, u32int, result[2], __builtin_ctz, uidiv_recursive, *(u32intPair *)&result);
+  UDIV(u32int, u32int, result[2], countTrailingZeros, uidiv_recursive, *(u32intPair *)&result);
 #endif
 }
 
@@ -159,24 +159,11 @@ u32intPair __aeabi_uidivmod(u32int dividend, u32int divisor)
 u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor)
 {
 #ifdef HAVE_GCC_VECTOR
-  UDIV(u64int, u64intPair, result, ctzll, uldiv_recursive, result);
+  UDIV(u64int, u64intPair, result, countTrailingZeros64, uldiv_recursive, result);
 #else
 # pragma message "*** WARNING *** __aeabi_uldivmod has no implementation for this compiler!"
   DIE_NOW(NULL, "__aeabi_uldivmod not implemented");
 #endif
-}
-
-/*
- * Compute the logarithm in base 2, assuming that n is a power of two.
- */
-static inline s32int ctzll(u64int n)
-{
-  u32int loWord = n & 0xFFFFFFFF;
-  if (loWord)
-  {
-    return __builtin_ctz(loWord);
-  }
-  return __builtin_ctz((u32int)(n >> 32)) + 32;
 }
 
 /*

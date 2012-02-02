@@ -1,6 +1,7 @@
 #ifndef __GUEST_MANAGER__GUEST_CONTEXT_H__
 #define __GUEST_MANAGER__GUEST_CONTEXT_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "guestManager/blockCache.h"
@@ -11,13 +12,11 @@
 #include "memoryManager/memoryProtection.h"
 
 
-#define BLOCK_HISOTRY_SIZE     5
-
-
 struct guestContext;
 typedef struct guestContext GCONTXT;
 
 typedef u32int (*instructionHandler)(GCONTXT *context, u32int instruction);
+
 
 struct guestContext
 {
@@ -62,7 +61,10 @@ struct guestContext
   instructionHandler hdlFunct;
   CREG * coprocRegBank;
   BCENTRY * blockCache;
-  u32int blockHistory[BLOCK_HISOTRY_SIZE];
+#ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
+  u32int blockTrace[CONFIG_GUEST_CONTEXT_BLOCK_TRACE_SIZE];
+  u32int blockTraceIndex;
+#endif
   /* Virtual Addressing */
   descriptor* PT_physical; // guest physical to real physical PT
   descriptor* PT_os;       // guest OS to guest Physical PT
@@ -97,6 +99,26 @@ struct guestContext
   u32int PCOfLastInstruction;/*This will contain the value the program counter should have when the last instruction is executing*/
 #endif
 };
+
+
+#ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
+
+__macro__ void traceBlock(GCONTXT *context, u32int startAddress)
+{
+  context->blockTraceIndex++;
+  if (context->blockTraceIndex > CONFIG_GUEST_CONTEXT_BLOCK_TRACE_SIZE)
+  {
+    context->blockTraceIndex = 0;
+  }
+  context->blockTrace[context->blockTraceIndex] = startAddress;
+}
+
+#else
+
+#define traceBlock(context, startAddress)
+
+#endif /* CONFIG_GUEST_CONTEXT_BLOCK_TRACE */
+
 
 GCONTXT *createGuestContext(void);
 

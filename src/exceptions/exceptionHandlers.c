@@ -173,12 +173,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     DIE_NOW(context, "softwareInterrupt: Invalid nextPC. Instr to implement?");
   }
 
-  int i = 0;
-  for (i = BLOCK_HISOTRY_SIZE-1; i > 0; i--)
-  {
-    context->blockHistory[i] = context->blockHistory[i-1];
-  }
-  context->blockHistory[0] = nextPC;
+  traceBlock(context, nextPC);
   context->R15 = nextPC;
 
   // deliver interrupts
@@ -207,14 +202,16 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
 GCONTXT *dataAbort(GCONTXT *context)
 {
-  incrementDataAbortCounter();
-
   /*
    * Make sure interrupts are disabled while we deal with data abort.
    */
   disableInterrupts();
+  incrementDataAbortCounter();
+  u32int dfar = getDFAR();
+  DFSR dfsr = getDFSR();
+  DEBUG_MMC(EXCEPTION_HANDLERS_TRACE_DABT, "dataAbort: DFAR=%#.8x DFSR=%#.8x" EOL, dfar, *(u32int *)&dfsr);
   /* Encodings: Page 1289 & 1355 */
-  u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
+  u32int faultStatus = (dfsr.fs3_0) | (dfsr.fs4 << 4);
   switch (faultStatus)
   {
     case dfsPermissionSection:
@@ -222,12 +219,11 @@ GCONTXT *dataAbort(GCONTXT *context)
     {
       // Check if the addr we have faulted on is caused by
       // a memory protection the hypervisor has enabled
-      DFSR dfsr = getDFSR();
       bool isPrivAccess = (context->CPSR & PSR_MODE) != PSR_USR_MODE;
       if (context->virtAddrEnabled)
       {
 #ifndef CONFIG_BLOCK_COPY
-        if (shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
+        if (shouldDataAbort(isPrivAccess, dfsr.WnR, dfar))
         {
           deliverDataAbort(context);
           setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION);
@@ -238,7 +234,7 @@ GCONTXT *dataAbort(GCONTXT *context)
       }
 
       // interpret the load/store
-      emulateLoadStoreGeneric(context, getDFAR());
+      emulateLoadStoreGeneric(context, dfar);
 
       // load/store might still have failed if it was LDRT/STRT
       if (!context->guestDataAbtPending)
@@ -247,12 +243,12 @@ GCONTXT *dataAbort(GCONTXT *context)
 #ifdef CONFIG_THUMB2
         if (context->CPSR & PSR_T_BIT)
         {
-          context->R15 = context->R15 + 2;
+          context->R15 = context->R15 + T16_INSTRUCTION_SIZE;
         }
         else
 #endif
         {
-          context->R15 = context->R15 + 4;
+          context->R15 = context->R15 + ARM_INSTRUCTION_SIZE;
         }
       }
       else
@@ -267,13 +263,12 @@ GCONTXT *dataAbort(GCONTXT *context)
     case dfsTranslationSection:
     case dfsTranslationPage:
     {
-      DFSR dfsr = getDFSR();
       /*
        * Markos: I think this means that the guest was trying to write within its
        * allowed memory area in user mode
        */
       bool isPrivAccess = (context->CPSR & PSR_MODE) != PSR_USR_MODE;
-      if (shouldDataAbort(isPrivAccess, dfsr.WnR, getDFAR()))
+      if (shouldDataAbort(isPrivAccess, dfsr.WnR, dfar))
       {
         deliverDataAbort(context);
         setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_TRANSLATION);
@@ -282,10 +277,8 @@ GCONTXT *dataAbort(GCONTXT *context)
       break;
     }
     case dfsSyncExternalAbt:
-    {
       printDataAbort();
-      DIE_NOW(context, "dataAbort: synchronous external abort hit!");
-    }
+      DIE_NOW(context, "synchronous external abort hit!");
     case dfsAlignmentFault:
     case dfsDebugEvent:
     case dfsAccessFlagSection:
@@ -303,9 +296,9 @@ GCONTXT *dataAbort(GCONTXT *context)
     case dfsTranslationTableWalkLvl1SyncParityErr:
     case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
-      printf("dataAbort: unimplemented user data abort %#.8x" EOL, faultStatus);
+      printf("unimplemented user data abort %#.8x" EOL, faultStatus);
       printDataAbort();
-      DIE_NOW(NULL, "dataAbort: unimplemented user data abort");
+      DIE_NOW(context, "unimplemented user data abort");
   }
   enableInterrupts();
   return context;
@@ -314,20 +307,23 @@ GCONTXT *dataAbort(GCONTXT *context)
 void dataAbortPrivileged(u32int pc)
 {
   incrementDataAbortCounter();
+  u32int dfar = getDFAR();
+  DFSR dfsr = getDFSR();
+  DEBUG_MMC(EXCEPTION_HANDLERS_TRACE_DABT, "dataAbortPrivileged: PC=%#.8x DFAR=%#.8x DFSR=%#.8x"
+      EOL, pc, dfar, *(u32int *)&dfsr);
 
   /* Here if we abort in a priviledged mode, i.e its the Hypervisors fault */
   printf("dataAbortPrivileged: Hypervisor dabt in priv mode @ pc %#.8x" EOL, pc);
 
   printDataAbort();
-  u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
+  u32int faultStatus = (dfsr.fs3_0) | (dfsr.fs4 << 4);
   switch(faultStatus)
   {
     case dfsTranslationSection:
     case dfsTranslationPage:
     {
       //Mostly likely trying to access a page of physical memory, just map it.
-      u32int memAddr = getDFAR();
-      if( (memAddr >= BEAGLE_RAM_START) && (memAddr <= BEAGLE_RAM_END) )
+      if((dfar >= BEAGLE_RAM_START) && (dfar <= BEAGLE_RAM_END))
       {
         DIE_NOW(NULL, "Translation fault inside physical RAM range");
       }
