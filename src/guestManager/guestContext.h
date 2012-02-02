@@ -122,7 +122,7 @@ struct guestContext
 __macro__ void traceBlock(GCONTXT *context, u32int startAddress)
 {
   context->blockTraceIndex++;
-  if (context->blockTraceIndex > CONFIG_GUEST_CONTEXT_BLOCK_TRACE_SIZE)
+  if (context->blockTraceIndex >= CONFIG_GUEST_CONTEXT_BLOCK_TRACE_SIZE)
   {
     context->blockTraceIndex = 0;
   }

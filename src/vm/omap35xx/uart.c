@@ -396,7 +396,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int address, u32int value)
         }
 
         // bits [4:7] Can be written only when EFR_REG[4] = 1
-        if ((uart[uID]->efr && UART_EFR_ENHANCED_EN) == 0)
+        if (!(uart[uID]->efr & UART_EFR_ENHANCED_EN))
         {
           // enchaned features disabled. only write bottom four bits
           uart[uID]->mcr = (uart[uID]->mcr & 0xFFFFFFE0) | (value & 0x1F);
@@ -921,7 +921,7 @@ void setIrqFlags(u32int flags, u32int uartID)
 
   // bits [4:7] Can be written only when EFR_REG[4] = 1
   u32int writenValue = flags;
-  if ((uart[uID]->efr && UART_EFR_ENHANCED_EN) == 0)
+  if (!(uart[uID]->efr & UART_EFR_ENHANCED_EN))
   {
     // enchaned features disabled. only write bottom four bits
     writenValue &= 0xF;
