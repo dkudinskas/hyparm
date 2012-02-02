@@ -3,54 +3,21 @@
 
 #include "common/types.h"
 
-#include "memoryManager/pageTable.h" // for ACCESS_TYPE enum
-
+#include "memoryManager/pageTable.h" // for AccessType enum
 
 // uncomment me for memory protection debug: #define MEM_PROT_DBG
 
-//function ptr definition
-typedef void (*memProtPtr)(u32int, u32int);
+#define DACR_NO_ACCESS   0
+#define DACR_CLIENT      1
+#define DACR_RESERVED    2
+#define DACR_MANAGER     3
 
-/* List of pages in a protected address range */
-struct pageList
-{
-  u32int pteAddr; //any addr in the pteAddr
-  struct pageList* next;
-  ACCESS_TYPE prevAccessBits;
-};
-typedef struct pageList PLIST;
-
-/* linked list entry, holding address range we want to protect */
-struct memProtectionEntry
-{
-  //Address range we want to protect
-  u32int protStartAddr;
-  u32int protEndAddr;
-  //Address of page table entry boundaries
-  u32int pteStartAddr;
-  u32int pteEndAddr;
-  memProtPtr ptr;
-  struct memProtectionEntry* next;
-  PLIST* plist;
-};
-typedef struct memProtectionEntry MPE;
-
-struct memProtection
-{
-  MPE* first;
-  u32int maxEntries;
-};
-typedef struct memProtection MEMPROT;
-
-MEMPROT* initialiseMemoryProtection(void);
-memProtPtr checkProtectionArray(u32int address);
-u32int addProtection(u32int startAddr, u32int endAddr, memProtPtr ptr, ACCESS_TYPE protection);
-u32int removeProtection(u32int startAddr);
+void guestWriteProtect(u32int startAddress, u32int endAddress);
 
 // returns true if data abort to be delivered to guest
 bool shouldDataAbort(bool privAccess, bool isWrite, u32int address);
 
 // returns true if prefetch abort to be delivered to guest
-bool shouldPrefetchAbort(u32int address);
+bool shouldPrefetchAbort(bool privAccess, u32int address);
 
 #endif

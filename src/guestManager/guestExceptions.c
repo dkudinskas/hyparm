@@ -19,6 +19,10 @@
 void deliverServiceCall(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverServiceCall: @ PC = %#.8x" EOL, context->R15);
+  if (!isGuestInPrivMode(context))
+  {
+    guestToPrivMode();
+  }
   // 2. copy guest CPSR into SPSR_SVC
   context->SPSR_SVC = context->CPSR;
   // 3. put guest CPSR in SVC mode
@@ -80,13 +84,12 @@ void throwInterrupt(u32int irqNumber)
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
-        DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: enable guest interrupts" EOL);
+//        DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: enable guest interrupts" EOL);
         context->guestIrqPending = TRUE;
       }
       else
       {
-        DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: guest is not ready to handle IRQ: %#.8x" EOL,
-            irqNumber);
+//        DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: guest is not ready to handle IRQ: %#.8x" EOL, irqNumber);
       }
       break;
     case UART1_IRQ:
@@ -126,6 +129,10 @@ void throwInterrupt(u32int irqNumber)
 
 void deliverInterrupt(GCONTXT *context)
 {
+  if (!isGuestInPrivMode(context))
+  {
+    DIE_NOW(context, "guest irq in guest user mode.\n");
+  }
   // 1. reset irq pending flag.
   context->guestIrqPending = FALSE;
   // 2. copy guest CPSR into SPSR_IRQ
@@ -167,6 +174,10 @@ void deliverInterrupt(GCONTXT *context)
 
 void deliverDataAbort(GCONTXT *context)
 {
+  if (!isGuestInPrivMode(context))
+  {
+    guestToPrivMode();
+  }
   // 1. reset abt pending flag
   context->guestDataAbtPending = FALSE;
   // 2. copy CPSR into SPSR_ABT
@@ -199,8 +210,13 @@ void deliverDataAbort(GCONTXT *context)
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
 
+
 void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isWrite, u32int domain)
 {
+  if (context->R15 == 0x000d3d2c)
+  {
+    DIE_NOW(context, "stop");
+  }
   // set CP15 Data Fault Status Register
   u32int dfsr = (faultType & 0xF) | ((faultType & 0x10) << 6);
   dfsr |= domain << 4;
@@ -209,7 +225,7 @@ void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isW
     dfsr |= 0x800; // write-not-read bit
   }
   DEBUG(GUEST_EXCEPTIONS, "throwDataAbort: address %#.8x: faultType %#x, isWrite %x, dom %#x, @ PC"
-      "%#.8x, dfsr %#.8x" EOL, address, faultType, isWrite, domain, context->R15, dfsr);
+      " %#.8x, dfsr %#.8x" EOL, address, faultType, isWrite, domain, context->R15, dfsr);
   setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
   // set CP15 Data Fault Address Register to 'address'
   setCregVal(6, 0, 0, 0, context->coprocRegBank, address);
@@ -217,8 +233,13 @@ void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isW
   context->guestDataAbtPending = TRUE;
 }
 
+
 void deliverPrefetchAbort(GCONTXT *context)
 {
+  if (!isGuestInPrivMode(context))
+  {
+    guestToPrivMode();
+  }
   // 1. reset abt pending flag
   context->guestPrefetchAbtPending = FALSE;
   // 2. copy CPSR into SPSR_ABT
@@ -226,7 +247,7 @@ void deliverPrefetchAbort(GCONTXT *context)
   // 3. put guest CPSR in ABT mode
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
   // 4. set LR to PC+8
-  context->R14_ABT = context->R15 + 8;
+  context->R14_ABT = context->R15 + 4;
   // 5. set PC to guest irq handler address
   if (context->virtAddrEnabled)
   {
@@ -247,9 +268,9 @@ void deliverPrefetchAbort(GCONTXT *context)
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
 
-void throwPrefetchAbort(u32int address, u32int faultType)
+
+void throwPrefetchAbort(GCONTXT *context, u32int address, u32int faultType)
 {
-  GCONTXT* context = getGuestContext();
   // set CP15 Data Fault Status Register
   u32int ifsr = (faultType & 0xF) | ((faultType & 0x10) << 10);
 

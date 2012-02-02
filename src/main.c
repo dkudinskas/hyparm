@@ -32,18 +32,15 @@
 #ifdef CONFIG_GUEST_FREERTOS
 #include "guestBoot/freertos.h"
 #endif
+
 #include "guestBoot/linux.h"
 #include "guestBoot/image.h"
 
-#include "memoryManager/addressing.h" /* For virtual addressing initialisation */
-#include "memoryManager/cp15coproc.h"
-#include "memoryManager/frameAllocator.h"
+#include "memoryManager/addressing.h"
 
+#include "vm/omap35xx/cp15coproc.h"
 #include "vm/omap35xx/hardwareLibrary.h"
 
-
-#define HIDDEN_RAM_START   0x8f000000
-#define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
 
 #define CL_OPTION_FAST_UART          1
 #define CL_OPTION_GUEST_OS           2
@@ -90,10 +87,15 @@ void main(s32int argc, char *argv[])
   memset(&config, 0, sizeof(struct runtimeConfiguration));
   config.guestOS = GUEST_OS_LINUX;
 
+#ifdef CONFIG_MMC
+  mmcDevice = 0;
+  debugStream = 0;
+#endif
+
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
 
-  mallocInit(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
+  mallocInit();
 
   /* initialise uart backend, important to be before any debug output. */
   /* init function initialises UARTs in disabled mode. */
@@ -115,15 +117,12 @@ void main(s32int argc, char *argv[])
   processCommandLine(&config, argc - 1, argv + 1);
   dumpRuntimeConfiguration(&config);
 
-  /* create the frametable from which we can alloc memory */
-  initialiseFrameTable();
-
   /* initialize guest context */
   GCONTXT *context = createGuestContext();
   setGuestContext(context);
 
   /* Setup MMU for Hypervisor */
-  initialiseVirtualAddressing();
+  initVirtualAddressing();
 
 #ifdef CONFIG_CLI
   /*
@@ -143,7 +142,7 @@ void main(s32int argc, char *argv[])
 
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
-
+  printf("about to init mmc.\n");
 #ifdef CONFIG_MMC
   u32int err = 0;
   if ((err = mmcMainInit()) != 0)
@@ -203,6 +202,7 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
     switch (p->argumentId)
     {
       case CL_OPTION_GUEST_OS:
+      {
         if (hadGuestOption)
         {
           printf("Error: duplicate option: guest OS '%s'" EOL, p->value);
@@ -225,7 +225,9 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
         }
         hadGuestOption = TRUE;
         break;
+      }
       case CL_OPTION_GUEST_KERNEL:
+      {
         if (config->guestKernelAddress)
         {
           printf("Error: duplicate option: kernel address '%s'" EOL, p->value);
@@ -237,7 +239,9 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
           success = FALSE;
         }
         break;
+      }
       case CL_OPTION_GUEST_INITRD:
+      {
         if (config->guestInitialRAMDiskAddress)
         {
           printf("Error: duplicate option: RAM disk address '%s'" EOL, p->value);
@@ -249,6 +253,7 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
           success = FALSE;
         }
         break;
+      }
       default:
         printf("Error: unrecognized option '%s'" EOL, p->value);
         success = FALSE;

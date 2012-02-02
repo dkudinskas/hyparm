@@ -29,7 +29,7 @@ u32int armLdrexInstruction(GCONTXT *context, u32int instruction)
   }
 
   u32int baseVal = loadGuestGPR(baseReg, context);
-  u32int value = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal);
+  u32int value = vmLoad(WORD, baseVal);
 
   DEBUG(INTERPRETER_ARM_LOAD_SYNC, "armLdrexInstruction: baseVal = %#.8x loaded %#.8x store to "
       "%#.8x" EOL, baseVal, value, regDest);
@@ -58,7 +58,7 @@ u32int armLdrexbInstruction(GCONTXT *context, u32int instruction)
 
   u32int baseVal = loadGuestGPR(baseReg, context);
   // byte zero extended to word...
-  u32int value = ((u32int) context->hardwareLibrary->loadFunction(context->hardwareLibrary, BYTE, baseVal) & 0xFF);
+  u32int value = vmLoad(BYTE, baseVal) & 0xFF;
   storeGuestGPR(regDest, value, context);
 
   return context->R15 + ARM_INSTRUCTION_SIZE;
@@ -82,7 +82,7 @@ u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
   }
   u32int baseVal = loadGuestGPR(baseReg, context);
   // halfword zero extended to word...
-  u32int value = ((u32int) context->hardwareLibrary->loadFunction(context->hardwareLibrary, HALFWORD, baseVal) & 0xFFFF);
+  u32int value = vmLoad(HALFWORD, baseVal) & 0xFFFF;
   storeGuestGPR(regDest, value, context);
 
   return context->R15 + ARM_INSTRUCTION_SIZE;
@@ -107,8 +107,8 @@ u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
   }
   u32int baseVal = loadGuestGPR(baseReg, context);
 
-  u32int value = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal);
-  u32int value2 = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseVal + 4);
+  u32int value = vmLoad(WORD, baseVal);
+  u32int value2 = vmLoad(WORD, baseVal+4);
   storeGuestGPR(regDest, value, context);
   storeGuestGPR(regDest + 1, value2, context);
 
@@ -117,8 +117,13 @@ u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
 
 u32int armStrexInstruction(GCONTXT *context, u32int instruction)
 {
+  if ((context->R15 & 0xfff00000) == 0xfff00000)
+  {
+    printf("armStrexInstruction: pc %08x, instr %08x\n", context->R15, instruction);
+  }
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
+    printf("armStrexInstruction: contidion not met.\n");
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
@@ -127,6 +132,10 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
   u32int regN = (instruction & 0x000F0000) >> 16;
   u32int regD = (instruction & 0x0000F000) >> 12;
   u32int regT = (instruction & 0x0000000F);
+  if ((context->R15 & 0xfff00000) == 0xfff00000)
+  {
+    printf("armStrexInstruction: Rn %x, Rd %x Rt %x\n", regN, regD, regT);
+  }
 
   if ((regN == GPR_PC) || (regD == GPR_PC) || (regT == GPR_PC))
   {
@@ -139,11 +148,19 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
 
   u32int address = loadGuestGPR(regN, context);
   u32int valToStore = loadGuestGPR(regT, context);
+  if ((context->R15 & 0xfff00000) == 0xfff00000)
+  {
+    printf("armStrexInstruction: addres %08x, valToStore %08x\n", address, valToStore);
+  }
 
   DEBUG(INTERPRETER_ARM_STORE_SYNC, "armStrexInstruction: address = %#.8x, valToStore = %#.8x, "
       "valueFromReg %#.8x" EOL, address, valToStore, regT);
 
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore);
+  vmStore(WORD, address, valToStore);
+  if ((context->R15 & 0xfff00000) == 0xfff00000)
+  {
+    printf("armStrexInstruction: value at %08x = %08x\n", address, *(u32int*)address);
+  }
   // operation succeeded updating memory, flag regD (0 - updated, 1 - fail)
   storeGuestGPR(regD, 0, context);
 
@@ -175,7 +192,7 @@ u32int armStrexbInstruction(GCONTXT *context, u32int instruction)
   u32int address = loadGuestGPR(regN, context);
 
   u32int valToStore = loadGuestGPR(regT, context);
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valToStore & 0xFF));
+  vmStore(BYTE, address, valToStore & 0xFF);
 
   storeGuestGPR(regD, 0, context);
 
@@ -214,8 +231,7 @@ u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
   u32int address = loadGuestGPR(regN, context);
 
   u32int valToStore = loadGuestGPR(regT, context);
-
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, address, (valToStore & 0xFFFF));
+  vmStore(HALFWORD, address, valToStore & 0xFFFF);
   storeGuestGPR(regD, 0, context);
 
   return context->R15 + ARM_INSTRUCTION_SIZE;
@@ -261,13 +277,13 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
   bool littleEndian = TRUE;
   if (littleEndian)
   {
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore2);
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address + 4, valToStore1);
+    vmStore(WORD, address, valToStore2);
+    vmStore(WORD, address+4, valToStore1);
   }
   else
   {
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valToStore1);
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address + 4, valToStore2);
+    vmStore(WORD, address, valToStore1);
+    vmStore(WORD, address+4, valToStore2);
   }
   storeGuestGPR(regD, 0, context);
 

@@ -404,6 +404,15 @@ u32int fatGetFreeClus(fatfs *fs)
 /* Writes n bytes from src to file */
 int fwrite(fatfs *fs, file *handle, void *src, u32int length)
 {
+  if (handle == 0)
+  {
+    return 0;
+  }
+  if (handle->dirEntry == 0)
+  {
+    return 0;
+  }
+
   DEBUG(FS_FAT, "fwrite: file '%s' data length %#x" EOL, handle->dirEntry->filename, length);
 
   // we expect the file to exist already

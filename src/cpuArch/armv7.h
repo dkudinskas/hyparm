@@ -61,6 +61,8 @@
 
 int cleanupBeforeBoot(void);
 
+void cache_flush(void);
+
 void icache_enable(void);
 void icache_disable(void);
 void dcache_enable(void);

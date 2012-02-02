@@ -4,7 +4,7 @@
 #include "common/types.h"
 
 
-#define BLOCK_CACHE_SIZE    96
+#define BLOCK_CACHE_SIZE    256
 
 
 #define BCENTRY_TYPE_INVALID  0

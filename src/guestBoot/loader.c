@@ -87,12 +87,6 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
    */
   context->os = os;
   /*
-   * TODO: add virtual addressing startup for the new VM here.
-   * Need to create a Global Page table/map for the VM and add mappings for where the kernel is to
-   * be copied?
-   */
-  createVirtualMachineGPAtoRPA(context);
-  /*
    * Reset exception counters and loop detector
    */
   resetDataAbortCounter();

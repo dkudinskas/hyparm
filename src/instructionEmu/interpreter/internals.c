@@ -35,19 +35,28 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
       switch (opType)
       {
         case ADD:
+        {
           nextPC = loadGuestGPR(regSrc, context) + armExpandImm12(imm12);
           if (regSrc == 0xF)
           {
             nextPC += 8;
           }
           break;
+        }
         case SUB:
+        {
+          // if S bit is set, this is return from exception!
+          if (setFlags != 0)
+          {
+            DIE_NOW(context, "SUBS return from exception case unimplemented.\n");
+          }
           nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
           if (regSrc == 0xF)
           {
             nextPC += 8;
           }
           break;
+        }
         default:
           DIE_NOW(context, "invalid arithLogicOp opType");
       }

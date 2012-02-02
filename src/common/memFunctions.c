@@ -19,12 +19,15 @@ void free(void *pointer)
   /*
    * TODO: implement free
    */
-  printf("free: pointer = %p (TODO)" EOL, pointer);
+//  printf("free: pointer = %p (TODO)" EOL, pointer);
 }
 
 
-void mallocInit(u32int startAddr, u32int size)
+void mallocInit()
 {
+  u32int startAddr = HIDDEN_RAM_START;
+  u32int size = HIDDEN_RAM_SIZE;
+
   DEBUG(MALLOC, "mallocInit(%#.8x, %x);" EOL, startAddr, size);
 
   heapStart = startAddr;
@@ -56,12 +59,14 @@ void mallocInit(u32int startAddr, u32int size)
     chunkList->chunk.size = 0;
   }
   chunkList = chunkListRoot;
+
+//  memset((void*)startAddr, 0, size);
 }
 
 /**
  * memory move
  */
-void * memmove(void * dest,const void *src, u32int count)
+void* memmove(void * dest,const void *src, u32int count)
 {
   char *tmp, *s;
 
@@ -89,7 +94,7 @@ void * memmove(void * dest,const void *src, u32int count)
 /**
 * memory set
 */
-void * memset(void * dest, u32int c, u32int count)
+void* memset(void * dest, u32int c, u32int count)
 {
   //This tests to see if dest is word aligned & that count is a multiple of 4
   if (((u32int)dest & 0x3F) && ((count & 0x3) == count))
@@ -125,49 +130,8 @@ void * memset(void * dest, u32int c, u32int count)
   return dest;
 }
 
-void *mallocBytes(u32int size)
-{
-  DEBUG(MALLOC, "mallocBytes: size %x" EOL, size);
 
-  if ((size & 0x3) != 0)
-  {
-    DIE_NOW(NULL, "mallocBytes not word aligned.");
-  }
 
-  if ((freePtr + size) >= heapEnd)
-  {
-    DIE_NOW(NULL, "malloc out of heap space.");
-  }
-
-  chunkList->nextChunk = (memchunkListElem*)(((u32int)chunkList) + sizeof(memchunkListElem));
-
-  memchunkListElem * tmp = chunkList;
-  chunkList = chunkList->nextChunk;
-
-  chunkList->prevChunk = tmp;
-
-  chunkList->chunk.startAddress = freePtr;
-  chunkList->chunk.size = size;
-  nrOfChunksAllocd++;
-
-  freePtr = freePtr + size;
-  return (void *)chunkList->chunk.startAddress;
-}
-
-void dumpMallocs()
-{
-  u32int i = 0;
-  memchunkListElem * listPtr = chunkListRoot;
-  printf("Dumping malloc internal structures:" EOL);
-  printf("***********************************" EOL);
-  for (i = 0; i < nrOfChunksAllocd; i++)
-  {
-    printf("Chunk %x: prev = %p; next = %p" EOL, i, listPtr->prevChunk, listPtr->nextChunk);
-    printf("Start address: %#.8x; size %#x" EOL, listPtr->chunk.startAddress, listPtr->chunk.size);
-    printf("-----------------------------------" EOL);
-    listPtr = listPtr->nextChunk;
-  }
-}
 
 /* This version of memcpy assumes disjoint ptrs src, dst */
 void *memcpy(void *dst, const void *src, u32int count)
@@ -207,3 +171,85 @@ void *memcpy(void *dst, const void *src, u32int count)
   return dst;
 }
 
+
+void dumpMallocs()
+{
+  u32int i = 0;
+  memchunkListElem * listPtr = chunkListRoot;
+  printf("Dumping malloc internal structures:" EOL);
+  printf("***********************************" EOL);
+  for (i = 0; i < nrOfChunksAllocd; i++)
+  {
+    printf("Chunk %x: prev = %p; next = %p" EOL, i, listPtr->prevChunk, listPtr->nextChunk);
+    printf("Start address: %#.8x; size %#x" EOL, listPtr->chunk.startAddress, listPtr->chunk.size);
+    printf("-----------------------------------" EOL);
+    listPtr = listPtr->nextChunk;
+  }
+}
+
+
+void *mallocBytes(u32int size)
+{
+  DEBUG(MALLOC, "mallocBytes: size %x" EOL, size);
+
+  if ((size & 0x3) != 0)
+  {
+    DIE_NOW(NULL, "mallocBytes not word aligned.");
+  }
+
+  if ((freePtr + size) >= heapEnd)
+  {
+    DIE_NOW(NULL, "malloc out of heap space.");
+  }
+
+  chunkList->nextChunk = (memchunkListElem*)(((u32int)chunkList) + sizeof(memchunkListElem));
+
+  memchunkListElem * tmp = chunkList;
+  chunkList = chunkList->nextChunk;
+
+  chunkList->prevChunk = tmp;
+
+  chunkList->chunk.startAddress = freePtr;
+  chunkList->chunk.size = size;
+  nrOfChunksAllocd++;
+
+  freePtr = freePtr + size;
+  return (void *)chunkList->chunk.startAddress;
+}
+
+
+void* mallocBytesWithAlign(u32int size, u32int alignBits)
+{
+  DEBUG(MALLOC, "mallocBytesWithAlign: size %x alingn bits %x" EOL, size, alignBits);
+
+  if ((freePtr + size) >= heapEnd)
+  {
+    DIE_NOW(0, "malloc out of heap space.");
+  }
+
+  chunkList->nextChunk = (memchunkListElem*)(((u32int)chunkList) + sizeof(memchunkListElem));
+
+  DEBUG(MALLOC, "mallocBytesWithAlign: freePtr %08x" EOL, freePtr);
+
+  // need X bytes aligned at N bits
+  u32int alignMask = ~((1 << alignBits) - 1);
+  // only adjust pointer if not aligned as requested!
+  if (freePtr != (freePtr & alignMask))
+  {
+    freePtr = (freePtr & alignMask) + (1 << alignBits);
+  } 
+  
+  DEBUG(MALLOC, "mallocBytesWithAlign: freePtr now %08x, alignMask %08x" EOL, freePtr, alignMask);
+
+  memchunkListElem * tmp = chunkList;
+  chunkList = chunkList->nextChunk;
+
+  chunkList->prevChunk = tmp;
+
+  chunkList->chunk.startAddress = freePtr;
+  chunkList->chunk.size = size;
+  nrOfChunksAllocd++;
+ 
+  freePtr = freePtr + size;
+  return (void*)chunkList->chunk.startAddress;
+}

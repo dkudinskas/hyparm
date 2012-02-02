@@ -63,18 +63,13 @@ void initGpmc()
   // TODO: add rest
 }
 
-/* load function */
-u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
+/* top load function */
+u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   if (size != WORD)
   {
     // only word access allowed in these modules
-    DIE_NOW(gc, "Gpmc: invalid access size.");
+    DIE_NOW(NULL, "Gpmc: invalid access size.");
   }
 
   u32int regOffset = phyAddr - Q1_L3_GPMC;
@@ -105,7 +100,7 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
     case GPMC_NAND_ADDRESS_6:
     case GPMC_NAND_COMMAND_7:
     case GPMC_NAND_ADDRESS_7:
-      DIE_NOW(gc, "Gpmc: load on write-only register.");
+      DIE_NOW(NULL, "Gpmc: load on write-only register.");
       break;
     case GPMC_CONFIG1_0:
       val = gpmc->gpmcConfig1_0;
@@ -157,27 +152,22 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address)
       break;
     default:
       printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
-          address, (u32int)size);
-      DIE_NOW(gc, "Gpmc: load on invalid register.");
+          virtAddr, (u32int)size);
+      DIE_NOW(NULL, "Gpmc: load on invalid register.");
   }
 
   DEBUG(VP_OMAP_35XX_GPMC, "%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %#x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size);
 
   return val;
 }
 
 
 /* top store function */
-void storeGpmc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
+void storeGpmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_GPMC, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size, value);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
   switch (phyAddr - Q1_L3_GPMC)
   {
@@ -191,9 +181,9 @@ void storeGpmc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       gpmc->gpmcSysConfig = value & GPMC_SYSCONFIG_MASK;
       break;
     case GPMC_SYSSTATUS:
-      DIE_NOW(gc, "Gpmc: store to read-only register.");
+      DIE_NOW(NULL, "Gpmc: store to read-only register.");
       break;
     default:
-      DIE_NOW(gc, "Gpmc: store to invalid register.");
+      DIE_NOW(NULL, "Gpmc: store to invalid register.");
   }
 }

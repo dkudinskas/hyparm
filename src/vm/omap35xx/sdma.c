@@ -4,8 +4,6 @@
 
 #include "guestManager/guestContext.h"
 
-#include "memoryManager/pageTable.h" // for getPhysicalAddress()
-
 #include "vm/omap35xx/sdma.h"
 #include "vm/omap35xx/timer32k.h"
 
@@ -71,12 +69,8 @@ void resetSdma()
 }
 
 
-u32int loadSdma(device * dev, ACCESS_SIZE size, u32int address)
+u32int loadSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
   u32int value = 0;
   u32int regOffs = phyAddr - SDMA;
   bool found = FALSE;
@@ -102,14 +96,14 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int address)
     case SDMA_CAPS_4:
     case SDMA_GCR:
       printf("loadSdma reg %#x" EOL, regOffs);
-      DIE_NOW(gc, "SDMA: load from unimplemented register.");
+      DIE_NOW(NULL, "SDMA: load from unimplemented register.");
       break;
   } // switch ends
 
   if (found)
   {
     DEBUG(VP_OMAP_35XX_SDMA, "%s: load from address %#.8x reg %#x value %#.8x" EOL, dev->deviceName,
-        address, regOffs, value);
+        virtAddr, regOffs, value);
     return value;
   }
 
@@ -136,35 +130,31 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int address)
     case SDMA_CCFNi:
     case SDMA_COLORi:
       printf("loadSdma indexed reg %#x reg %#x" EOL, indexedRegOffs + 0x80, regOffs);
-      DIE_NOW(gc, "SDMA: load from unimplemented register");
+      DIE_NOW(NULL, "SDMA: load from unimplemented register");
       break;
     default:
       printf("loadSdma indexed reg %#x reg %#x" EOL, indexedRegOffs + 0x80, regOffs);
-      DIE_NOW(gc, "SDMA: load from undefined register");
+      DIE_NOW(NULL, "SDMA: load from undefined register");
   }
 }
 
 
-void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
+void storeSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
   u32int regOffs = phyAddr - SDMA;
   bool found = FALSE;
 
   DEBUG(VP_OMAP_35XX_SDMA, "%s: store to address %.8x reg %.8x value %.8x" EOL, dev->deviceName,
-      address, regOffs, value);
+      virtAddr, regOffs, value);
   switch (regOffs)
   {
     case SDMA_REVISION:
-      DIE_NOW(gc, "SDMA storing to revision register (read only)");
+      DIE_NOW(NULL, "SDMA storing to revision register (read only)");
       break;
     case SDMA_GCR:
       if (sdma->gcr != value)
       {
-        DIE_NOW(gc, "SDMA storing value to GCR!");
+        DIE_NOW(NULL, "SDMA storing value to GCR!");
       }
       sdma->gcr = value;
       found = TRUE;
@@ -184,7 +174,7 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case SDMA_CAPS_3:
     case SDMA_CAPS_4:
       printf("storeSdma reg %x value %.8x" EOL, regOffs, value);
-      DIE_NOW(gc, "SDMA: store to unimplemented register.");
+      DIE_NOW(NULL, "SDMA: store to unimplemented register.");
       break;
   } // switch ends
 
@@ -259,7 +249,7 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     default:
       printf("storeSdma indexed reg %x reg %x value %.8x" EOL, indexedRegOffs + 0x80, regOffs,
           value);
-      DIE_NOW(gc, "SDMA: store to undefined register.");
+      DIE_NOW(NULL, "SDMA: store to undefined register.");
   }
 }
 

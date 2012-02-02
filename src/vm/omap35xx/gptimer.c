@@ -57,22 +57,15 @@ void resetGPTimer(void)
 }
 
 
-u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
+u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   if (size == BYTE)
   {
     DIE_NOW(NULL, "GPT: loadGPTimer invalid access size - byte");
   }
 
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   u32int val = 0;
-
   u32int regOffs = phyAddr - GPTIMER1;
-
   switch (regOffs)
   {
     case GPT_REG_TIOCP_CFG:
@@ -172,17 +165,13 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
  return val;
 }
 
-void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
+
+void storeGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   if (size == BYTE)
   {
     DIE_NOW(NULL, "GPT: storeGPTimer invalid access size - byte");
   }
-
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
 
   u32int regOffs = phyAddr - GPTIMER1;
 
@@ -303,7 +292,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
           dev->deviceName, value);
       break;
     default:
-      DIE_NOW(gc, "GPT: store to undefined register.");
+      DIE_NOW(NULL, "GPT: store to undefined register.");
   } // switch ends
 }
 

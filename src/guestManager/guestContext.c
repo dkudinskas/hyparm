@@ -8,61 +8,61 @@
 
 #include "vm/omap35xx/sdram.h"
 
+#include "memoryManager/addressing.h"
 
 GCONTXT *createGuestContext(void)
 {
-  /*
-   * Allocate guest context
-   */
+  // Allocate guest context
   GCONTXT *context = (GCONTXT *)mallocBytes(sizeof(GCONTXT));
   if (context == 0)
   {
-    DIE_NOW(NULL, "allocateGuest: Failed to allocate guest context.");
+    DIE_NOW(NULL, "Failed to allocate guest context.");
   }
-  DEBUG(GUEST_CONTEXT, "allocateGuestContext: @ %p; initialising..." EOL, context);
-  /*
-   * Set initial values
-   */
+  DEBUG(GUEST_CONTEXT, "createGuestContext: @ %p; initialising..." EOL, context);
+  
+  // Set initial values
   memset(context, 0, sizeof(GCONTXT));
   context->CPSR = (PSR_F_BIT | PSR_I_BIT | PSR_SVC_MODE);
-  /*
-   * Initialise coprocessor register bank
-   */
+
+  // Initialise coprocessor register bank
   context->coprocRegBank = (CREG *)mallocBytes(MAX_CRB_SIZE * sizeof(CREG));
   if (context->coprocRegBank == NULL)
   {
     DIE_NOW(context, "Failed to allocate coprocessor register bank.");
   }
-  DEBUG(GUEST_CONTEXT, "allocateGuestContext: coprocessor register bank @ %p" EOL,
+  DEBUG(GUEST_CONTEXT, "createGuestContext: coprocessor register bank @ %p" EOL,
       context->coprocRegBank);
   initCRB(context->coprocRegBank);
-  /*
-   * Initialise block cache
-   */
+
+  // Initialise block cache
   context->blockCache = (BCENTRY *)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   if (context->blockCache == NULL)
   {
     DIE_NOW(context, "Failed to allocate basic block cache");
   }
-  DEBUG(GUEST_CONTEXT, "allocateGuestContext: block cache @ %p" EOL, context->blockCache);
+  DEBUG(GUEST_CONTEXT, "createGuestContext: block cache @ %p" EOL, context->blockCache);
   memset(context->blockCache, 0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   initialiseBlockCache(context->blockCache);
-  /*
-   * Initialise virtual hardware devices
-   */
+
+  // virtual machine page table structs
+  context->pageTables = (pageTablesVM*)mallocBytes(sizeof(pageTablesVM));
+  if (context->pageTables == NULL)
+  {
+    DIE_NOW(context, "Failed to allocate page tables struct");
+  }
+  DEBUG(GUEST_CONTEXT, "allocateGuestContext: page tables @ %p" EOL, context->pageTables);
+  memset(context->pageTables, 0, sizeof(pageTablesVM));
+
+
+  // Initialise virtual hardware devices
   context->hardwareLibrary = initialiseHardwareLibrary();
   if (context->hardwareLibrary == NULL)
   {
     DIE_NOW(context, "Hardware library initialisation failed.");
   }
-  /*
-   * Setup guest memory protection
-   */
-  context->memProt = initialiseMemoryProtection();
-  /*
-   * Print the address of the block trace, it may come in handy when debugging...
-   */
+
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
+  // Print the address of the block trace, it may come in handy when debugging...
   DEBUG(GUEST_CONTEXT, "allocateGuestContext: block trace @ %p" EOL, &(context->blockTrace));
 #endif
   return context;
@@ -70,7 +70,7 @@ GCONTXT *createGuestContext(void)
 
 void dumpGuestContext(GCONTXT *context)
 {
-  printf("============== DUMP GUEST CONTEXT ===============" EOL);
+  printf("====== DUMP GUEST CONTEXT @ %p ==============" EOL, context);
 
   const char *modeString;
   u32int *r8 = &(context->R8);
@@ -138,15 +138,19 @@ void dumpGuestContext(GCONTXT *context)
     printf("----------" EOL);
   }
 
-  printf("endOfBlockInstr: %#.8x" EOL, context->endOfBlockInstr);
+  printf("endOfBlockInstr: %#.8x @ %p" EOL, context->endOfBlockInstr, &context->endOfBlockInstr);
   printf("handler function addr: %#.8x" EOL, (u32int)context->hdlFunct);
 
   /* Virtual Memory */
+  pageTablesVM* ptVM = context->pageTables;
+  printf("virtual machine page table struct at %p" EOL, ptVM);
   printf("guest OS virtual addressing enabled: %x" EOL, context->virtAddrEnabled);
-  printf("guest OS Page Table: %#.8x" EOL, (u32int)context->PT_os);
-  printf("guest OS Page Table (real): %#.8x" EOL, (u32int)context->PT_os_real);
-  printf("guest OS shadow Page Table: %#.8x" EOL, (u32int)context->PT_shadow);
-  printf("guest physical Page Table: %#.8x" EOL, (u32int)context->PT_physical);
+  printf("guest OS Page Table (VA): %p" EOL, ptVM->guestVirtual);
+  printf("guest OS Page Table (PA): %p" EOL, ptVM->guestPhysical);
+  printf("Shadow Page Table Priv: %p, User %p" EOL, ptVM->shadowPriv, ptVM->shadowUser);
+  printf("Current active shadow PT: %p" EOL, ptVM->shadowActive);
+  /* .. thats it with virtual memory stuff */
+  printf("Hypervisor page table: %p" EOL, ptVM->hypervisor);
   printf("high exception vector flag: %x" EOL, context->guestHighVectorSet);
   printf("registered exception vector:" EOL);
   printf("Und: %#.8x" EOL, context->guestUndefinedHandler);
@@ -181,8 +185,31 @@ void dumpGuestContext(GCONTXT *context)
       printf("%3u: %#.8x" EOL, printIndex, context->blockTrace[traceIndex]);
     }
   }
-
 #endif
-
   dumpSdramStats();
+}
+
+
+bool isGuestInPrivMode(GCONTXT * context)
+{
+  u32int modeField = context->CPSR & PSR_MODE;
+  return (modeField == PSR_USR_MODE) ? FALSE : TRUE;
+}
+
+
+/**
+ * switching from privileged to user mode
+ **/
+void guestToUserMode()
+{
+  privToUserAddressing();
+}
+
+
+/**
+ * switching from user to privileged mode
+ **/
+void guestToPrivMode()
+{
+  userToPrivAddressing();
 }

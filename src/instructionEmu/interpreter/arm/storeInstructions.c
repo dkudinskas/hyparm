@@ -107,7 +107,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
   valueToStore = (regSrc == GPR_PC) ? (valueToStore + 8) : valueToStore;
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
+  vmStore(WORD, address, valueToStore);
 
   // wback = (P = 0) or (W = 1)
   bool wback = !preOrPost || writeBack;
@@ -216,7 +216,7 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valueToStore & 0xFF));
+  vmStore(BYTE, address, valueToStore & 0xFF);
 
   // wback = (P = 0) or (W = 1)
   bool wback = !preOrPost || writeBack;
@@ -334,7 +334,7 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
     DIE_NOW(context, "Rd [Rn, Rm/#imm] unaligned address!");
   }
 
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, address, valueToStore);
+  vmStore(HALFWORD, address, valueToStore & 0xFFFF);
 
   // wback = (P = 0) or (W = 1)
   bool wback = !preOrPost || writeBack;
@@ -460,8 +460,8 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
   DEBUG(INTERPRETER_ARM_STORE, "armStrdInstruction: store address = %#.8x, values %#.8x %#.8x" EOL,
       address, valueToStore, valueToStore2);
 
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address + 4, valueToStore2);
+  vmStore(WORD, address, valueToStore);
+  vmStore(WORD, address+4, valueToStore2);
 
   if (wback)
   {
@@ -543,7 +543,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
       // emulating store. Validate cache if needed
       validateCachePreChange(context->blockCache, address);
       // *(address)= R[i];
-      context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueLoaded);
+      vmStore(WORD, address, valueLoaded);
       address = address + 4;
     }
   } // for ends
@@ -553,7 +553,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
     // emulating store. Validate cache if needed
     validateCachePreChange(context->blockCache, address);
     // *(address)= PC+8 - architectural feature due to pipeline..
-    context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, (loadGuestGPR(15, context) + 8));
+    vmStore(WORD, address, (loadGuestGPR(15, context) + 8));
   }
 
   // if writeback then baseReg = baseReg - 4 * number of registers to store;

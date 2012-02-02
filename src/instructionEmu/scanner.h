@@ -20,7 +20,6 @@
 
 
 #ifdef CONFIG_THUMB2
-
 __macro__ u32int fetchThumbInstr(u16int *instructionPointer)
 {
   u16int halfWord = *instructionPointer;
@@ -41,7 +40,6 @@ __macro__ u32int fetchThumbInstr(u16int *instructionPointer)
       return halfWord;
   }
 }
-
 /*
  * Checks whether an instruction word of a Thumb instruction is a Thumb-32 instruction.
  */
@@ -49,7 +47,6 @@ __macro__ bool txxIsThumb32(u32int instruction)
 {
   return instruction & 0xFFFF0000;
 }
-
 #endif /* CONFIG_THUMB2 */
 
 
@@ -57,24 +54,16 @@ void scanBlock(GCONTXT * gc, u32int blkStartAddr);
 
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
-
 void resetScanBlockCounter(void);
-
 #else
-
 #define resetScanBlockCounter()
-
 #endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
 
 
 #ifdef CONFIG_SCANNER_EXTRA_CHECKS
-
 void setScanBlockCallSource(u8int source);
-
 #else
-
 #define setScanBlockCallSource(source)
-
 #endif /* CONFIG_SCANNER_EXTRA_CHECKS */
 
 #endif /* __INSTRUCTION_EMU__SCANNER_H__ */

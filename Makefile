@@ -337,6 +337,7 @@ clean:
 	@find $(SOURCE_PATH) -name '*.c.d.*' -exec rm {} +
 	@find $(SOURCE_PATH) -name '*.o' -exec rm {} +
 	@find $(SOURCE_PATH) -name '*.S.[ds]' -exec rm {} +
+	@rm $(OUTPUT_PATH)/* 
 	@rm $(KCONFIG_AUTOCONFIG) $(KCONFIG_AUTOHEADER) $(KCONFIG_OK) \
 	  $(OUTPUT_PATH)/$(APP_NAME).{elf,map,bin,dump} 2> /dev/null || :
 

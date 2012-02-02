@@ -75,6 +75,7 @@ void dieNow(GCONTXT *context, const char *caller, const char *msg)
   infiniteIdleLoop();
 }
 
+
 u32int printf(const char *fmt, ...)
 {
   va_list args;
@@ -87,6 +88,7 @@ u32int printf(const char *fmt, ...)
 
   /* Print the string */
   serialPuts(printbuffer);
+//  fwrite(&mainFilesystem, debugStream, printbuffer, strlen(printbuffer));
 
   return i;
 }

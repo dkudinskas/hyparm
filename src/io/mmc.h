@@ -200,10 +200,6 @@ int mmcMainInit(void);
 
 int mmcRegister(struct mmc *mmc);
 
-/* Host controller init func, we only have 1 for now 
-   which is provided by the backend driver */
-struct mmc* mmcInterfaceInit(void);
-
 u32int mmcBlockRead(int devid, u32int start, u64int blockCount, void *dst);
 
 u32int mmcBlockWrite(int devid, u32int start, u64int blockCount, const void *src);

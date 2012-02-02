@@ -184,11 +184,10 @@
 void initGpmc(void);
 
 /* top load function */
-u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int address);
-
+u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 
 /* top store function */
-void storeGpmc(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+void storeGpmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 
 struct Gpmc

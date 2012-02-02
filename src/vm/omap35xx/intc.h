@@ -332,11 +332,10 @@ void initIntc(void);
 void intcReset(void);
 
 /* top load function */
-u32int loadIntc(device * dev, ACCESS_SIZE size, u32int address);
-
+u32int loadIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 
 /* top store function */
-void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+void storeIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 void maskInterrupt(u32int interruptNumber);
 

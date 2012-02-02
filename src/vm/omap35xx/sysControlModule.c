@@ -7,7 +7,6 @@
 #include "vm/omap35xx/sysControlModule.h"
 
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
-#include "memoryManager/pageTable.h" // for getPhysicalAddress()
 
 
 struct SystemControlModule *sysCtrlModule;
@@ -153,51 +152,46 @@ void initSysControlModule()
 }
 
 /* load function */
-u32int loadSysCtrlModule(device *dev, ACCESS_SIZE size, u32int address)
+u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_SCM, "%s load from pAddr: %#.8x, vAddr %#.8x, aSize %x" EOL, dev->deviceName,
-      phyAddr, address, (u32int)size);
+      phyAddr, virtAddr, (u32int)size);
 
   if (size != WORD)
   {
     // only word access allowed in these modules
-    DIE_NOW(gc, "SysControlModule: invalid access size.");
+    DIE_NOW(NULL, "SysControlModule: invalid access size.");
   }
 
   u32int val = 0;
 
   if ((phyAddr >= SYS_CTRL_MOD_INTERFACE) && (phyAddr < (SYS_CTRL_MOD_INTERFACE + 36)))
   {
-    val = loadInterfaceScm(dev, address, phyAddr);
+    val = loadInterfaceScm(dev, virtAddr, phyAddr);
   }
   else if ( (phyAddr >= SYS_CTRL_MOD_PADCONFS) && (phyAddr < (SYS_CTRL_MOD_PADCONFS + 564)))
   {
-    val = loadPadconfsScm(dev, address, phyAddr);
+    val = loadPadconfsScm(dev, virtAddr, phyAddr);
   }
   else if ( (phyAddr >= SYS_CTRL_MOD_GENERAL) && (phyAddr < (SYS_CTRL_MOD_GENERAL + 767)))
   {
-    val = loadGeneralScm(dev, address, phyAddr);
+    val = loadGeneralScm(dev, virtAddr, phyAddr);
   }
   else if ( (phyAddr >= SYS_CTRL_MOD_MEM_WKUP) && (phyAddr < (SYS_CTRL_MOD_MEM_WKUP + 1024)))
   {
-    val = loadMemWkupScm(dev, address, phyAddr);
+    val = loadMemWkupScm(dev, virtAddr, phyAddr);
   }
   else if ( (phyAddr >= SYS_CTRL_MOD_PADCONFS_WKUP) && (phyAddr < (SYS_CTRL_MOD_PADCONFS_WKUP + 80)))
   {
-    val = loadPadconfsWkupScm(dev, address, phyAddr);
+    val = loadPadconfsWkupScm(dev, virtAddr, phyAddr);
   }
   else if ( (phyAddr >= SYS_CTRL_MOD_GENERAL_WKUP) && (phyAddr < (SYS_CTRL_MOD_GENERAL_WKUP + 31)))
   {
-    val = loadGeneralWkupScm(dev, address, phyAddr);
+    val = loadGeneralWkupScm(dev, virtAddr, phyAddr);
   }
   else
   {
-    DIE_NOW(gc, "SysControlModule: invalid base module.");
+    DIE_NOW(NULL, "SysControlModule: invalid base module.");
   }
 
   return val;
@@ -264,45 +258,40 @@ u32int loadGeneralWkupScm(device *dev, u32int address, u32int phyAddr)
 }
 
 /* top store function */
-void storeSysCtrlModule(device *dev, ACCESS_SIZE size, u32int address, u32int value)
+void storeSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_SCM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %x, value %#.8x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size, value);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
   if ((phyAddr >= SYS_CTRL_MOD_INTERFACE) && (phyAddr < (SYS_CTRL_MOD_INTERFACE + 36)))
   {
-    storeInterfaceScm(dev, address, phyAddr, value);
+    storeInterfaceScm(dev, virtAddr, phyAddr, value);
   }
   else if ( (phyAddr >= SYS_CTRL_MOD_PADCONFS) && (phyAddr < (SYS_CTRL_MOD_PADCONFS + 564)))
   {
-    storePadconfsScm(dev, address, phyAddr, value);
+    storePadconfsScm(dev, virtAddr, phyAddr, value);
   }
   else if ( (phyAddr >= SYS_CTRL_MOD_GENERAL) && (phyAddr < (SYS_CTRL_MOD_GENERAL + 767)))
   {
-    storeGeneralScm(dev, address, phyAddr, value);
+    storeGeneralScm(dev, virtAddr, phyAddr, value);
   }
   else if ( (phyAddr >= SYS_CTRL_MOD_MEM_WKUP) && (phyAddr < (SYS_CTRL_MOD_MEM_WKUP + 1024)))
   {
-    storeMemWkupScm(dev, address, phyAddr, value);
+    storeMemWkupScm(dev, virtAddr, phyAddr, value);
   }
   else if ( (phyAddr >= SYS_CTRL_MOD_PADCONFS_WKUP) && (phyAddr < (SYS_CTRL_MOD_PADCONFS_WKUP + 80)))
   {
-    storePadconfsWkupScm(dev, address, phyAddr, value);
+    storePadconfsWkupScm(dev, virtAddr, phyAddr, value);
   }
   else if ( (phyAddr >= SYS_CTRL_MOD_GENERAL_WKUP) && (phyAddr < (SYS_CTRL_MOD_GENERAL_WKUP + 31)))
   {
-    storeGeneralWkupScm(dev, address, phyAddr, value);
+    storeGeneralWkupScm(dev, virtAddr, phyAddr, value);
   }
   else
   {
     printf("%s store to pAddr: %#.8x, vAddr %#.8x, aSize %x, value %#.8x" EOL,
-        dev->deviceName, phyAddr, address, (u32int)size, value);
-    DIE_NOW(gc, "Invalid base module.");
+        dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
+    DIE_NOW(NULL, "Invalid base module.");
   }
 }
 

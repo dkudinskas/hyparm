@@ -123,72 +123,69 @@ void initClockManager()
 /*************************************************************************
  *                           Load  Functions                             *
  *************************************************************************/
-u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int address)
+u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_CM, "%s load from pAddr: %.8x, vAddr %.8x, aSize %x" EOL, dev->deviceName,
-      phyAddr, address, (u32int)size);
+      phyAddr, virtAddr, (u32int)size);
 
   if (size != WORD)
   {
     // only word access allowed in these modules
-    DIE_NOW(gc, "CM: invalid access size.");
+    DIE_NOW(NULL, "CM: invalid access size.");
   }
   u32int val = 0;
   u32int base = phyAddr & 0xFFFFFF00;
   switch (base)
   {
     case IVA2_CM:
-      val = loadIva2Cm(dev, address, phyAddr);
+      val = loadIva2Cm(dev, virtAddr, phyAddr);
       break;
     case OCP_System_Reg_CM:
-      val = loadOcpSystemCm(dev, address, phyAddr);
+      val = loadOcpSystemCm(dev, virtAddr, phyAddr);
       break;
     case MPU_CM:
-      val = loadMpuCm(dev, address, phyAddr);
+      val = loadMpuCm(dev, virtAddr, phyAddr);
       break;
     case CORE_CM:
-      val = loadCoreCm(dev, address, phyAddr);
+      val = loadCoreCm(dev, virtAddr, phyAddr);
       break;
     case SGX_CM:
-      val = loadSgxCm(dev, address, phyAddr);
+      val = loadSgxCm(dev, virtAddr, phyAddr);
       break;
     case WKUP_CM:
-      val = loadWkupCm(dev, address, phyAddr);
+      val = loadWkupCm(dev, virtAddr, phyAddr);
       break;
     case Clock_Control_Reg_CM:
-      val = loadClockControlCm(dev, address, phyAddr);
+      val = loadClockControlCm(dev, virtAddr, phyAddr);
       break;
     case DSS_CM:
-      val = loadDssCm(dev, address, phyAddr);
+      val = loadDssCm(dev, virtAddr, phyAddr);
       break;
     case CAM_CM:
-      val = loadCamCm(dev, address, phyAddr);
+      val = loadCamCm(dev, virtAddr, phyAddr);
       break;
     case PER_CM:
-      val = loadPerCm(dev, address, phyAddr);
+      val = loadPerCm(dev, virtAddr, phyAddr);
       break;
     case EMU_CM:
-      val = loadEmuCm(dev, address, phyAddr);
+      val = loadEmuCm(dev, virtAddr, phyAddr);
       break;
     case Global_Reg_CM:
-      val = loadGlobalRegCm(dev, address, phyAddr);
+      val = loadGlobalRegCm(dev, virtAddr, phyAddr);
       break;
     case NEON_CM:
-      val = loadNeonCm(dev, address, phyAddr);
+      val = loadNeonCm(dev, virtAddr, phyAddr);
       break;
     case USBHOST_CM:
-      val = loadUsbHostCm(dev, address, phyAddr);
+      val = loadUsbHostCm(dev, virtAddr, phyAddr);
       break;
     default:
-      DIE_NOW(gc, "CM: invalid base module.");
+      DIE_NOW(NULL, "CM: invalid base module.");
   } // switch ends
   return val;
 } // loadClockManager
+
 
 u32int loadIva2Cm(device * dev, u32int address, u32int phyAddr)
 {
@@ -614,58 +611,55 @@ u32int loadUsbHostCm(device * dev, u32int address, u32int phyAddr)
 /*************************************************************************
  *                           Store Functions                             *
  *************************************************************************/
-void storeClockManager(device * dev, ACCESS_SIZE size, u32int address, u32int value)
+void storeClockManager(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
   DEBUG(VP_OMAP_35XX_CM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size, value);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
   u32int base = phyAddr & 0xFFFFFF00;
   switch (base)
   {
     case CORE_CM:
-      storeCoreCm(dev, address, phyAddr, value);
+      storeCoreCm(dev, virtAddr, phyAddr, value);
       break;
     case WKUP_CM:
-      storeWkupCm(dev, address, phyAddr, value);
+      storeWkupCm(dev, virtAddr, phyAddr, value);
       break;
     case PER_CM:
-      storePerCm(dev, address, phyAddr, value);
+      storePerCm(dev, virtAddr, phyAddr, value);
       break;
     case IVA2_CM:
-      storeIva2Cm(dev, address, phyAddr, value);
+      storeIva2Cm(dev, virtAddr, phyAddr, value);
       break;
     case OCP_System_Reg_CM:
-      storeOcpSystemCm(dev, address, phyAddr, value);
+      storeOcpSystemCm(dev, virtAddr, phyAddr, value);
       break;
     case MPU_CM:
-      storeMpuCm(dev, address, phyAddr, value);
+      storeMpuCm(dev, virtAddr, phyAddr, value);
       break;
     case SGX_CM:
-      storeSgxCm(dev, address, phyAddr, value);
+      storeSgxCm(dev, virtAddr, phyAddr, value);
       break;
     case Clock_Control_Reg_CM:
-      storeClockControlCm(dev, address, phyAddr, value);
+      storeClockControlCm(dev, virtAddr, phyAddr, value);
       break;
     case DSS_CM:
-      storeDssCm(dev, address, phyAddr, value);
+      storeDssCm(dev, virtAddr, phyAddr, value);
       break;
     case CAM_CM:
-      storeCamCm(dev, address, phyAddr, value);
+      storeCamCm(dev, virtAddr, phyAddr, value);
       break;
     case EMU_CM:
-      storeEmuCm(dev, address, phyAddr, value);
+      storeEmuCm(dev, virtAddr, phyAddr, value);
       break;
     case Global_Reg_CM:
-      storeGlobalRegCm(dev, address, phyAddr, value);
+      storeGlobalRegCm(dev, virtAddr, phyAddr, value);
       break;
     case NEON_CM:
-      storeNeonCm(dev, address, phyAddr, value);
+      storeNeonCm(dev, virtAddr, phyAddr, value);
       break;
     case USBHOST_CM:
-      storeUsbHostCm(dev, address, phyAddr, value);
+      storeUsbHostCm(dev, virtAddr, phyAddr, value);
       break;
     default:
       DIE_NOW(NULL, "CM: store to invalid base module.");
