@@ -12,10 +12,6 @@
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/scanner.h"
 
-#ifdef CONFIG_BLOCK_COPY
-#include "instructionEmu/tableSearchBlockCopyDecoder.h"
-#endif
-
 #include "memoryManager/mmu.h"
 #include "memoryManager/pageTable.h"
 
@@ -315,7 +311,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
       blockType = bcEntry->type;
-      endIs16Bit = blockType == BCENTRY_TYPE_THUMB && !TXX_IS_T32(bcEntry->hyperedInstruction);
+      endIs16Bit = blockType == BCENTRY_TYPE_THUMB && !txxIsThumb32(bcEntry->hyperedInstruction);
       context->hdlFunct = bcEntry->hdlFunct;
     }
     else
@@ -469,8 +465,8 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
   while (1)
   {
     //binary & checks types -> do a cast of function pointer to u32int
-    struct instruction32bit *decodedInstruction = decodeInstr(context, instruction);
-    if (decodedInstruction->replaceCode)
+    struct decodingTableEntry *decodedInstruction = decodeArmInstruction(instruction);
+    if (decodedInstruction->replace)
     {
       /*
        * Critical instruction!
@@ -480,7 +476,7 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
        *Finish block by installing SVC
        *Save end of block instruction and handler function pointer close to us... */
       context->endOfBlockInstr = instruction;
-      context->hdlFunct = decodedInstruction->hdlFunct;
+      context->hdlFunct = decodedInstruction->handler;
       context->PCOfLastInstruction = (u32int)currAddress;
       /* replace end of block instruction with hypercall of the appropriate code
        *Check if there is room on blockCopyCacheCurrAddress and if not make it */

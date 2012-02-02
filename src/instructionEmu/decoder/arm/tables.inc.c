@@ -3,7 +3,7 @@
  */
 
 
-static struct instruction32bit armBranchBlockTransferInstructions[] =
+static struct decodingTableEntry armBranchBlockTransferInstructions[] =
 {
   // STM traps if ^ postfix, otherwise pass through
   { TRUE,  &armStmInstruction,    0x08400000, 0x0e500000, "STM {regList}^" },
@@ -23,7 +23,7 @@ static struct instruction32bit armBranchBlockTransferInstructions[] =
 };
 
 // register/shifter register cases, etc
-static struct instruction32bit armDataProcMiscInstructions_op0[] =
+static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
 {
   // NOP is just a nop...
   { FALSE, &nopInstruction,       0xe1a00000, 0xffffffff, "NOP" },
@@ -203,7 +203,7 @@ static struct instruction32bit armDataProcMiscInstructions_op0[] =
 };
 
 // immediate cases and random hints
-static struct instruction32bit armDataProcMiscInstructions_op1[] =
+static struct decodingTableEntry armDataProcMiscInstructions_op1[] =
 {
   // UNIMPLEMENTED: yield hint
   { TRUE,  &armYieldInstruction,     0x0320f001, 0x0fffffff, "yield%c" },
@@ -266,10 +266,10 @@ static struct instruction32bit armDataProcMiscInstructions_op1[] =
   { TRUE,  &armMvnInstruction,       0x03e0f000, 0x0fe0f000, "MVN PC, Rn, #imm" },
   { FALSE, &armMvnInstruction,       0x03e00000, 0x0fe00000, "MVN Rd, Rn, #imm" },
 
-  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "dataProcMiscInstructions_op1" }
+  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "armDataProcMiscInstructions_op1" }
 };
 
-static struct instruction32bit armLoadStoreWordByteInstructions[] =
+static struct decodingTableEntry armLoadStoreWordByteInstructions[] =
 {
   // STR imm12 and reg are pass-through
   { FALSE, &armStrInstruction,    0x04000000, 0x0e100000, "STR Rt, [Rn, +-imm12]" },
@@ -280,10 +280,10 @@ static struct instruction32bit armLoadStoreWordByteInstructions[] =
   // LDR traps if dest = PC, otherwise pass through
   { TRUE,  &armLdrInstruction,    0x0410f000, 0x0c10f000, "LDR PC, Rn/#imm12" },
   { FALSE, &armLdrInstruction,    0x04100000, 0x0c100000, "LDR Rd, Rn/#imm12" },
-  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "loadStoreWordByteInstructions" }
+  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "armLoadStoreWordByteInstructions" }
 };
 
-static struct instruction32bit armMediaInstructions[] =
+static struct decodingTableEntry armMediaInstructions[] =
 {
   // BFC: bit field clear, dest PC not allowed.
   { FALSE, &armBfcInstruction,       0x07c0001f, 0x0fe0007f, "BFC Rd, #LSB, #width" },
@@ -454,20 +454,20 @@ static struct instruction32bit armMediaInstructions[] =
   { FALSE, &armUsatInstruction,      0x06e00050, 0x0fe00070, "USAT Rd,#sat_imm,Rn,ASR #imm" },
   { FALSE, &armUsat16Instruction,    0x06e00f30, 0x0ff00ff0, "USAT16 Rd,#imm,Rn" },
 
-  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "mediaInstructions" }
+  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "armMediaInstructions" }
 };
 
-static struct instruction32bit armSvcCoprocInstructions[] =
+static struct decodingTableEntry armSvcCoprocInstructions[] =
 {
   // well obviously.
   { TRUE,  &svcInstruction,       0x0f000000, 0x0f000000, "SWI code" },
   // Generic coprocessor instructions.
   { TRUE,  &armMrcInstruction,    0x0e100010, 0x0f100010, "MRC" },
   { TRUE,  &armMcrInstruction,    0x0e000010, 0x0f100010, "MCR" },
-  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "svcCoprocInstructions" }
+  { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "armSvcCoprocInstructions" }
 };
 
-static struct instruction32bit armUnconditionalInstructions[] =
+static struct decodingTableEntry armUnconditionalInstructions[] =
 {
   // UNIMPLEMENTED: data memory barrier
   { TRUE,  &armDmbInstruction,       0xf57ff050, 0xfffffff0, "dmb\t%U" },
@@ -504,7 +504,7 @@ static struct instruction32bit armUnconditionalInstructions[] =
  * Identify unconditional instructions first, and terminate the table with a category that catches
  * all instructions, to detect unimplemented and (truly) undefined instructions.
  */
-static struct TopLevelCategory armCategories[] =
+static struct decodingTable armCategories[] =
 {
   { 0xF0000000, 0xF0000000, armUnconditionalInstructions },
   { 0x0E000000, 0x00000000, armDataProcMiscInstructions_op0 },

@@ -7,14 +7,14 @@
 #include "instructionEmu/interpreter.h"
 
 
-struct TopLevelCategory
+struct decodingTable
 {
   u32int mask;             /* Recognise if (instr & mask) == value.  */
   u32int value;
-  struct instruction32bit *table;
+  struct decodingTableEntry *table;
 };
 
-struct instruction32bit
+struct decodingTableEntry
 {
   s16int replace;
   instructionHandler handler;
@@ -24,18 +24,18 @@ struct instruction32bit
 };
 
 
-#include "instructionEmu/decoder/armTables.inc.c"
+#include "instructionEmu/decoder/arm/tables.inc.c"
 
 #ifdef CONFIG_THUMB2
-#include "instructionEmu/decoder/t16Tables.inc.c"
-#include "instructionEmu/decoder/t32Tables.inc.c"
+#include "instructionEmu/decoder/t16/tables.inc.c"
+#include "instructionEmu/decoder/t32/tables.inc.c"
 #endif
 
 
-static instructionHandler decode(struct TopLevelCategory *categories, u32int instruction);
+static instructionHandler decode(struct decodingTable *categories, u32int instruction);
 
 
-static instructionHandler decode(struct TopLevelCategory *categories, u32int instruction)
+static instructionHandler decode(struct decodingTable *categories, u32int instruction)
 {
   /*
    * Find the top level category for this instruction
@@ -47,28 +47,28 @@ static instructionHandler decode(struct TopLevelCategory *categories, u32int ins
   /*
    * Get the decoding table for this category and decode the instruction
    */
-  struct instruction32bit *table = categories->table;
-  if (!table)
+  struct decodingTableEntry *entry = categories->table;
+  if (!entry)
   {
     printf("decode: cannot classify instruction %#.8x", instruction);
     DIE_NOW(NULL, "undefined instruction");
   }
-  while ((instruction & table->mask) != table->value)
+  while ((instruction & entry->mask) != entry->value)
   {
-    table++;
+    entry++;
   }
-  DEBUG(DECODER, "decode: instruction = %#.8x, replace = %x, handler = %p" EOL, instruction, table->replace, table->handler);
+  DEBUG(DECODER, "decode: instruction = %#.8x, replace = %x, handler = %p" EOL, instruction, entry->replace, entry->handler);
   /*
    * If the mask is zero at this point, we have hit the end of the decoding table. This means we
    * do not know what to do with this instruction; dump it...
    */
-  if (table->mask == 0)
+  if (entry->mask == 0)
   {
     printf("decode: cannot decode instruction %#.8x classified as '%s'" EOL, instruction,
-        table->instructionString);
+        entry->instructionString);
     DIE_NOW(NULL, "undefined instruction");
   }
-  return table->replace ? table->handler : NULL;
+  return entry->replace ? entry->handler : NULL;
 }
 
 instructionHandler decodeArmInstruction(u32int instruction)
@@ -84,7 +84,7 @@ instructionHandler decodeThumbInstruction(u32int instruction)
   /*
    * For Thumb, we still need to determine which table of top-level categories to use
    */
-  struct TopLevelCategory *categories;
+  struct decodingTable *categories;
   switch(instruction & THUMB32 << 16)
   {
     case THUMB32_1 << 16:

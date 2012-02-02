@@ -1,5 +1,4 @@
-#include "instructionEmu/commonInstrFunctions.h"
-
+#include "instructionEmu/interpreter/blockCopy.h"
 #include "instructionEmu/interpreter/internals.h"
 
 #include "instructionEmu/interpreter/arm/dataProcessPCInstructions.h"

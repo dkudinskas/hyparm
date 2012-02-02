@@ -1,6 +1,6 @@
 #include "common/debug.h"
 
-#include "instructionEmu/commonInstrFunctions.h"
+#include "instructionEmu/interpreter/blockCopy.h"
 
 #include "instructionEmu/interpreter/arm/storePCInstructions.h"
 

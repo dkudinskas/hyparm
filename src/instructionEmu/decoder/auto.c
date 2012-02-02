@@ -10,8 +10,8 @@
 
 instructionHandler decodeArmInstruction(u32int instruction)
 {
-#include "instructionEmu/decoder/armGraph.inc.c"
-  DIE_NOW(NULL, "decodeArmInstruction: control fell through");
+#include "instructionEmu/decoder/arm/graph.inc.c"
+  DIE_NOW(NULL, "control fell through");
 }
 
 #ifdef CONFIG_THUMB2
@@ -19,15 +19,15 @@ instructionHandler decodeArmInstruction(u32int instruction)
 static inline __attribute__((always_inline))
   instructionHandler decodeT16Instruction(u32int instruction)
 {
-#include "instructionEmu/decoder/t16Graph.inc.c"
-  DIE_NOW(NULL, "decodeT16Instruction: control fell through");
+#include "instructionEmu/decoder/t16/graph.inc.c"
+  DIE_NOW(NULL, "control fell through");
 }
 
 static inline __attribute__((always_inline))
   instructionHandler decodeT32Instruction(u32int instruction)
 {
-#include "instructionEmu/decoder/t32Graph.inc.c"
-  DIE_NOW(NULL, "decodeT32Instruction: control fell through");
+#include "instructionEmu/decoder/t32/graph.inc.c"
+  DIE_NOW(NULL, "control fell through");
 }
 
 instructionHandler __attribute__((flatten)) decodeThumbInstruction(u32int instruction)

@@ -182,7 +182,7 @@ endif # ifneq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
 
 
 HYPARM_DIRS-y := common cpuArch drivers/beagle exceptions guestBoot guestManager instructionEmu \
-                 instructionEmu/interpreter memoryManager vm/omap35xx
+                 instructionEmu/decoder instructionEmu/interpreter memoryManager vm/omap35xx
 
 # Debugging
 HYPARM_DIRS-$(CONFIG_MMC) += io io/fs
@@ -320,10 +320,10 @@ AD_SRC_autodecoder_arm := arm
 AD_SRC_autodecoder_t16 := t16
 AD_SRC_autodecoder_t32 := t32
 
-$(AD_GOALS): $(SOURCE_PATH)/instructionEmu/decoder/$$(AD_SRC_$$@).xml $(KCONFIG_CONFIG) $(KCONFIG_OK)
+$(AD_GOALS): $(SOURCE_PATH)/instructionEmu/decoder/$$(AD_SRC_$$@)/decoder.xml $(KCONFIG_CONFIG) $(KCONFIG_OK)
 	cd $(PATH_AUTODECODER) && $(PATH_AUTODECODER)/autodecoder --generate-decoder \
 	  --decoder-spec $(abspath $<) $(ADFLAGS) \
-	  --out $(abspath $(patsubst %.xml,%Graph.inc.c,$<))
+	  --out $(abspath $(patsubst %decoder.xml,%graph.inc.c,$<))
 
   endif # ifneq ($(filter $(AD_GOALS),$(MAKECMDGOALS)),)
 

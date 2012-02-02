@@ -17,6 +17,9 @@ typedef struct guestContext GCONTXT;
 
 typedef u32int (*instructionHandler)(GCONTXT *context, u32int instruction);
 
+typedef u32int *(*pcInstructionHandler)(GCONTXT *context, u32int *instructionAddr,
+  u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
+
 
 struct guestContext
 {
