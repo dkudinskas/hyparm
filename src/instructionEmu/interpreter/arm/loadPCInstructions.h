@@ -1,5 +1,5 @@
-#ifndef __INSTRUCTION_EMU__EMULATOR__LOAD_PC_INSTRUCTIONS_H__
-#define __INSTRUCTION_EMU__EMULATOR__LOAD_PC_INSTRUCTIONS_H__
+#ifndef __INSTRUCTION_EMU__INTERPRETER__ARM__LOAD_PC_INSTRUCTIONS_H__
+#define __INSTRUCTION_EMU__INTERPRETER__ARM__LOAD_PC_INSTRUCTIONS_H__
 
 #include "common/types.h"
 
@@ -12,11 +12,6 @@ u32int *armLdrhPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *
 u32int *armLdrdPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
 
 u32int *armLdrhtPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
-
-u32int *armLdrexPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
-u32int *armLdrexbPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
-u32int *armLdrexhPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
-u32int *armLdrexdPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
 
 u32int *armLdmPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
 

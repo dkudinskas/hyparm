@@ -1,6 +1,6 @@
 #include "common/debug.h"
 
-#include "instructionEmu/interpreter/branchPCInstructions.h"
+#include "instructionEmu/interpreter/arm/branchPCInstructions.h"
 
 
 u32int *armBPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)

@@ -169,7 +169,7 @@ autodecoder_t16_monolithic_16:
   {
     return 0;
   }
-  return movInstruction;
+  return t16MovInstruction;
 
 
 autodecoder_t16_monolithic_28:

@@ -1,32 +1,28 @@
-#include "common/debug.h"
+#include "instructionEmu/interpreter/internals.h"
 
-#include "cpuArch/constants.h"
-
-#include "instructionEmu/commonInstrFunctions.h"
-
-#include "instructionEmu/interpreter/coprocInstructions.h"
+#include "instructionEmu/interpreter/arm/coprocInstructions.h"
 
 #include "memoryManager/cp15coproc.h"
 
 
 u32int armCdpInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "CDP instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }
 
 u32int armCdp2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "CDP2 instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }
 
 u32int armLdcInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "LDC instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }
 
 u32int armLdc2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "LDC2 instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }
 
 u32int armMcrInstruction(GCONTXT *context, u32int instruction)
@@ -49,7 +45,7 @@ u32int armMcrInstruction(GCONTXT *context, u32int instruction)
     }
     else
     {
-      DIE_NOW(context, "armMcrInstruction: unknown coprocessor number");
+      DIE_NOW(context, "unknown coprocessor number");
     }
   }
 
@@ -58,17 +54,17 @@ u32int armMcrInstruction(GCONTXT *context, u32int instruction)
 
 u32int armMcr2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "MCR2 instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }
 
 u32int armMcrrInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "MCRR instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }
 
 u32int armMcrr2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "MCRR2 instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }
 
 u32int armMrcInstruction(GCONTXT *context, u32int instruction)
@@ -89,13 +85,13 @@ u32int armMrcInstruction(GCONTXT *context, u32int instruction)
       u32int regDestNr = (instruction & 0x0000F000) >> 12;
       if (regDestNr == 0xF)
       {
-        DIE_NOW(context, "armMrcInstruction: unimplemented load from CP15 to PC");
+        DIE_NOW(context, "unimplemented load from CP15 to PC");
       }
       storeGuestGPR(regDestNr, cregVal, context);
     }
     else
     {
-      DIE_NOW(context, "armMrcInstruction: unknown coprocessor number");
+      DIE_NOW(context, "unknown coprocessor number");
     }
   }
 
@@ -104,25 +100,25 @@ u32int armMrcInstruction(GCONTXT *context, u32int instruction)
 
 u32int armMrc2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "MRC2 instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }
 
 u32int armMrrcInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "MRRC instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }
 
 u32int armMrrc2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "MRRC2 instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }
 
 u32int armStcInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "STC instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }
 
 u32int armStc2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "STC2 instruction unimplemented");
+  DIE_NOW(context, "not implemented");
 }

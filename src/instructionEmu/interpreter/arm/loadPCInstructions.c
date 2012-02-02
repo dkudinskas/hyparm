@@ -2,7 +2,7 @@
 
 #include "instructionEmu/commonInstrFunctions.h"
 
-#include "instructionEmu/interpreter/loadPCInstructions.h"
+#include "instructionEmu/interpreter/arm/loadPCInstructions.h"
 
 
 /*
@@ -87,26 +87,6 @@ u32int *armLdrdPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *
 u32int *armLdrhtPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
 {
   DIE_NOW(context, "ldrht PCFunct unfinished\n");
-}
-
-u32int *armLdrexPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
-{
-  DIE_NOW(context, "ldrex PCFunct unfinished\n");
-}
-
-u32int *armLdrexbPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
-{
-  DIE_NOW(context, "ldrexb PCFunct unfinished\n");
-}
-
-u32int *armLdrexhPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
-{
-  DIE_NOW(context, "ldrexh PCFunct unfinished\n");
-}
-
-u32int *armLdrexdPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
-{
-  DIE_NOW(context, "ldrexd PCFunct unfinished\n");
 }
 
 u32int *armLdmPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)

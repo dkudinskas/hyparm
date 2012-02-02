@@ -4,13 +4,7 @@
 #include "cpuArch/constants.h"
 
 #include "instructionEmu/decoder.h"
-#include "instructionEmu/dataProcessInstr.h"
-#include "instructionEmu/miscInstructions.h"
-
-#include "instructionEmu/interpreter/branchInstructions.h"
-#include "instructionEmu/interpreter/coprocInstructions.h"
-#include "instructionEmu/interpreter/loadInstructions.h"
-#include "instructionEmu/interpreter/storeInstructions.h"
+#include "instructionEmu/interpreter.h"
 
 
 struct TopLevelCategory

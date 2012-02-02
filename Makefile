@@ -190,10 +190,7 @@ endif # ifneq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
 
 
 HYPARM_DIRS-y := common cpuArch drivers/beagle exceptions guestBoot guestManager instructionEmu \
-                 instructionEmu/interpreter/arm memoryManager vm/omap35xx
-
-# Virtual hardware platform
-HYPARM_DIRS-$(CONFIG_THUMB2) += instructionEmu/interpreter/t16 instructionEmu/interpreter/t32
+                 instructionEmu/interpreter memoryManager vm/omap35xx
 
 # Debugging
 HYPARM_DIRS-$(CONFIG_MMC) += io io/fs

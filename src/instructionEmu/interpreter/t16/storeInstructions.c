@@ -1,17 +1,13 @@
-#include "common/debug.h"
+#include "instructionEmu/interpreter/internals.h"
 
-#include "cpuArch/constants.h"
-
-#include "instructionEmu/commonInstrFunctions.h"
-
-#include "instructionEmu/interpreter/storeInstructions.h"
+#include "instructionEmu/interpreter/t16/storeInstructions.h"
 
 #include "memoryManager/globalMemoryMapper.h"
 
 
 u32int t16StrInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T16_STORE, "t16StrInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG_TRACE(INTERPRETER_T16_STORE, context, instruction);
 
   u32int regSrc = instruction & 0x7;
   u32int regDst = (instruction & 0x38) >> 3;
@@ -31,7 +27,7 @@ u32int t16StrInstruction(GCONTXT *context, u32int instruction)
 
 u32int t16StrSpInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T16_STORE, "t16StrSpInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG_TRACE(INTERPRETER_T16_STORE, context, instruction);
 
   u32int regSrc = (instruction & 0x700) >> 8;
   u32int imm32 = (instruction & 0xFF) << 2; //extend
@@ -49,7 +45,7 @@ u32int t16StrSpInstruction(GCONTXT *context, u32int instruction)
 
 u32int t16StrbInstruction(GCONTXT * context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T16_STORE, "t16StrbInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG_TRACE(INTERPRETER_T16_STORE, context, instruction);
   u32int imm32;
   u32int regSrc = (instruction & 0x0007);
   u32int regDst = (instruction & 0x0038)>>3;
@@ -78,7 +74,7 @@ u32int t16StrbInstruction(GCONTXT * context, u32int instruction)
 
 u32int t16StrhInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T16_STORE, "t16StrhInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG_TRACE(INTERPRETER_T16_STORE, context, instruction);
   u32int regSrc = (instruction & 0x0007);
   u32int regDst = (instruction & 0x0038)>>3;
   u32int offset = 0;
@@ -108,7 +104,7 @@ u32int t16StrhInstruction(GCONTXT *context, u32int instruction)
 
 u32int t16PushInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_T16_STORE, "t16PushInstruction: %#.4x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG_TRACE(INTERPRETER_T16_STORE, context, instruction);
 
   u32int regList = ((((instruction & 0x0100) >> 8) << 15)) | (instruction & 0x00FF);
   u32int address = loadGuestGPR(GPR_SP, context);

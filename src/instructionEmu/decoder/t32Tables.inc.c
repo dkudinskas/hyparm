@@ -5,46 +5,46 @@
 static struct instruction32bit t32DataProcInstructions[] =
 {
   // this is for T2 encoding, page 480
-  { FALSE, &movInstruction,       0xF04F0000, 0xFBEF1000, "MOVW<c> <Rd>, #<imm12>" },
+  { FALSE, &t32MovInstruction,       0xF04F0000, 0xFBEF1000, "MOVW<c> <Rd>, #<imm12>" },
   // this is for T3 encoding
-  { FALSE, &movInstruction,       0xF2400000, 0xFBF00000, "MOVW<c> <Rd>, #<imm16>" },
-  { FALSE, &movInstruction,       0xF04F0000, 0xFBEF8000, "MOV{S}/W <Rd>, #<immt12>" },
-  { FALSE, &movInstruction,       0xF2400000, 0xFBF08000, "MOVW <Rd>, #<imm16>" },
-  { FALSE, &movtInstruction,      0xF2C00000, 0xFBF08000, "MOVT<c> <Rd>, #<imm16>" },
-  { FALSE, &orrInstruction,       0xEA400000, 0xFFE08000, "ORR{S} <Rd>, <Rn>{,<shift>}" },
-  { FALSE, &orrInstruction,       0xF0400000, 0xFBE08000, "ORR{S} <Rd>, <Rn>,#<imm12>" },
-  { FALSE, &andInstruction,       0xEA000000, 0xFFF00000, "AND{S}.W <Rd>. <Rn>. <Rm>" },
+  { FALSE, &t32MovInstruction,       0xF2400000, 0xFBF00000, "MOVW<c> <Rd>, #<imm16>" },
+  { FALSE, &t32MovInstruction,       0xF04F0000, 0xFBEF8000, "MOV{S}/W <Rd>, #<immt12>" },
+  { FALSE, &t32MovInstruction,       0xF2400000, 0xFBF08000, "MOVW <Rd>, #<imm16>" },
+  { FALSE, &t32MovtInstruction,      0xF2C00000, 0xFBF08000, "MOVT<c> <Rd>, #<imm16>" },
+  { FALSE, &t32OrrInstruction,       0xEA400000, 0xFFE08000, "ORR{S} <Rd>, <Rn>{,<shift>}" },
+  { FALSE, &t32OrrInstruction,       0xF0400000, 0xFBE08000, "ORR{S} <Rd>, <Rn>,#<imm12>" },
+  { FALSE, &t32AndInstruction,       0xEA000000, 0xFFF00000, "AND{S}.W <Rd>. <Rn>. <Rm>" },
   //trap for RD=15
-  { TRUE,  &andInstruction,       0xF0000F00, 0xFBE08F00, "AND{S}<c> PC, <Rm>, #<imm12>" },
-  { FALSE, &andInstruction,       0xF0000000, 0xFBE08000, "AND{S}<c> <Rd>, <Rm>, #<imm12>" },
-  { FALSE, &addInstruction,       0xF1000000, 0xFBE08000, "ADD{S}.W <Rd>, <Rn>, #<imm8>" },
-  { FALSE, &addInstruction,       0xEB000000, 0xFFE08000, "ADD{S}.W <Rd>, <Rn>, <Rm>{, <shift>}" },
+  { TRUE,  &t32AndInstruction,       0xF0000F00, 0xFBE08F00, "AND{S}<c> PC, <Rm>, #<imm12>" },
+  { FALSE, &t32AndInstruction,       0xF0000000, 0xFBE08000, "AND{S}<c> <Rd>, <Rm>, #<imm12>" },
+  { FALSE, &t32AddInstruction,       0xF1000000, 0xFBE08000, "ADD{S}.W <Rd>, <Rn>, #<imm8>" },
+  { FALSE, &t32AddInstruction,       0xEB000000, 0xFFE08000, "ADD{S}.W <Rd>, <Rn>, <Rm>{, <shift>}" },
   //ADD -> RD=PC -> CMN page 306
-  { TRUE,  addInstruction,        0xF1000F00, 0xFBE08F00, "ADD{S}.W PC, <Rn>, #<imm8>" },
+  { TRUE,  t32AddInstruction,        0xF1000F00, 0xFBE08F00, "ADD{S}.W PC, <Rn>, #<imm8>" },
   /*
    * FIXME: impossible
    * RN=SP -> unimplemented. Should be OK
-   * { FALSE, &addInstruction,       0xF10D8000, 0xFBEF8000, "ADD{S}.W <Rd>, SP, #<imm8>" },
+   * { FALSE, &t32AddInstruction,       0xF10D8000, 0xFBEF8000, "ADD{S}.W <Rd>, SP, #<imm8>" },
    */
   // Encoding T4
-  { FALSE, &addInstruction,       0xF2000000, 0xF2008000, "ADDW <Rd>, <Rn>, #<imm12>" },
+  { FALSE, &t32AddInstruction,       0xF2000000, 0xF2008000, "ADDW <Rd>, <Rn>, #<imm12>" },
   // RC=PC
-  { TRUE,  &addInstruction,       0xF20F0000, 0xF20F8000, "ADDW PC, <Rn>, #<imm12>" },
+  { TRUE,  &t32AddInstruction,       0xF20F0000, 0xF20F8000, "ADDW PC, <Rn>, #<imm12>" },
   // RN=SP -> should be ok
-  { FALSE, &addInstruction,       0xF20D0000, 0xF20F8000, "ADDW <Rd>, SP, #<imm8>" },
-  { FALSE, &bicInstruction,       0xF0200000, 0xFBE08000, "BIC{S} <Rd>, <Rn>, #<imm12>" },
-  { FALSE, &rsbInstruction,       0xF1C00000, 0xFBE08000, "RSB <Rd>, <Rn>, #<imm12>" },
-  { FALSE, &rsbInstruction,       0xEBC00000, 0xFFE08000, "RSB <Rd>, <Rn>, <Rm>{,<shift>}" },
-  { FALSE, &subInstruction,       0xF1A00000, 0xFBE08000, "SUB{S}.W <Rd>, <Rn>, #<imm12>" },
-  { FALSE, &subInstruction,       0xF2A00000, 0xFBE08000, "SUB{S}W <Rd>, <Rn>, #<imm12>" },
-  { FALSE, &subInstruction,       0xEBA00000, 0xFFE08000, "SUB{S}.W <Rd>, <Rn>, <Rm>{,<shitft>}" },
+  { FALSE, &t32AddInstruction,       0xF20D0000, 0xF20F8000, "ADDW <Rd>, SP, #<imm8>" },
+  { FALSE, &t32BicInstruction,       0xF0200000, 0xFBE08000, "BIC{S} <Rd>, <Rn>, #<imm12>" },
+  { FALSE, &t32RsbInstruction,       0xF1C00000, 0xFBE08000, "RSB <Rd>, <Rn>, #<imm12>" },
+  { FALSE, &t32RsbInstruction,       0xEBC00000, 0xFFE08000, "RSB <Rd>, <Rn>, <Rm>{,<shift>}" },
+  { FALSE, &t32SubInstruction,       0xF1A00000, 0xFBE08000, "SUB{S}.W <Rd>, <Rn>, #<imm12>" },
+  { FALSE, &t32SubInstruction,       0xF2A00000, 0xFBE08000, "SUB{S}W <Rd>, <Rn>, #<imm12>" },
+  { FALSE, &t32SubInstruction,       0xEBA00000, 0xFFE08000, "SUB{S}.W <Rd>, <Rn>, <Rm>{,<shitft>}" },
   // RN = SP -> should be ok
-  { FALSE, &subInstruction,       0xF2AB0000, 0xFBEF8000, "SUBW <Rd>, SP, #<imm12>" },
-  { FALSE, &subInstruction,       0xEBAB0000, 0xFFEF8000, "SUB{S} <Rd>, SP, <Rm>{,<shift>}" },
-  { FALSE, &mvnInstruction,       0xEA6F0000, 0xFFEF8000, "MVN<c> <Rd>, <Rm>{,<shift>}" },
+  { FALSE, &t32SubInstruction,       0xF2AB0000, 0xFBEF8000, "SUBW <Rd>, SP, #<imm12>" },
+  { FALSE, &t32SubInstruction,       0xEBAB0000, 0xFFEF8000, "SUB{S} <Rd>, SP, <Rm>{,<shift>}" },
+  { FALSE, &t32MvnInstruction,       0xEA6F0000, 0xFFEF8000, "MVN<c> <Rd>, <Rm>{,<shift>}" },
   /*
    * FIXME: impossible
-   * { FALSE, &mvnInstruction,       0xE0AF0000, 0xFBEF8000, "MVN<c> <Rd>, #<imm12>" },
+   * { FALSE, &t32MvnInstruction,       0xE0AF0000, 0xFBEF8000, "MVN<c> <Rd>, #<imm12>" },
    */
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32DataProcInstructions" }
 };
@@ -86,8 +86,8 @@ static struct instruction32bit t32LoadHalfWordInstructions[] =
 
 static struct instruction32bit t32MultiplyInstructions[] =
 {
-  { FALSE, &mulInstruction,       0xFB00F000, 0xFFF0F0F0, "MULW <Rd>, <Rn>, <Rm>" },
-  { FALSE, &smullInstruction,     0xFB800000, 0xFFE000F0, "SMULL <RdLo>, <RdHi>, <Rn>, <Rm>" },
+  { FALSE, &t32MulInstruction,       0xFB00F000, 0xFFF0F0F0, "MULW <Rd>, <Rn>, <Rm>" },
+  { FALSE, &t32SmullInstruction,     0xFB800000, 0xFFE000F0, "SMULL <RdLo>, <RdHi>, <Rn>, <Rm>" },
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "t32MultiplyInstructions" }
 };
 

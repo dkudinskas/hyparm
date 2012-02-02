@@ -6,10 +6,10 @@
 
 #ifdef CONFIG_THUMB2
 # include "instructionEmu/commonInstrFunctions.h"
+# include "instructionEmu/decoder.h"
 #endif
 
-#include "instructionEmu/interpreter/loadInstructions.h"
-#include "instructionEmu/interpreter/storeInstructions.h"
+#include "instructionEmu/interpreter.h"
 
 #include "memoryManager/globalMemoryMapper.h"
 

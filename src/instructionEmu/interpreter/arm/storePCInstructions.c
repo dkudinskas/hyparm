@@ -2,7 +2,7 @@
 
 #include "instructionEmu/commonInstrFunctions.h"
 
-#include "instructionEmu/interpreter/storePCInstructions.h"
+#include "instructionEmu/interpreter/arm/storePCInstructions.h"
 
 
 u32int *armStrPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
@@ -61,26 +61,6 @@ u32int *armStrdPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *
 u32int *armStrhtPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
 {
   DIE_NOW(context, "strht PCFunct unfinished\n");
-}
-
-u32int *armStrexPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
-{
-  DIE_NOW(context, "strex PCFunct unfinished\n");
-}
-
-u32int *armStrexbPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
-{
-  DIE_NOW(context, "strexb PCFunct unfinished\n");
-}
-
-u32int *armStrexhPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
-{
-  DIE_NOW(context, "strexh PCFunct unfinished\n");
-}
-
-u32int *armStrexdPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
-{
-  DIE_NOW(context, "strexd PCFunct unfinished\n");
 }
 
 u32int* armStmPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)

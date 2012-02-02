@@ -1,8 +1,6 @@
 #include "common/debug.h"
 
-#include "instructionEmu/commonInstrFunctions.h"
-
-#include "instructionEmu/interpreter/coprocPCInstructions.h"
+#include "instructionEmu/interpreter/arm/coprocPCInstructions.h"
 
 
 u32int *armCdpPCInstruction(GCONTXT *context, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
