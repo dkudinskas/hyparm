@@ -523,6 +523,8 @@ u32int rfeInstruction(GCONTXT *context, u32int instruction)
 
 u32int sxthInstruction(GCONTXT *context, u32int instr)
 {
+  DIE_NOW(context, "SXTH unfinished");
+#if 0
   u32int instrCC = (instr >> 28) & 0xF;
   u32int regSrc = (instr & 0xF);
   u32int regDest = (instr & 0x0000F000) >> 12;
@@ -558,199 +560,167 @@ u32int sxthInstruction(GCONTXT *context, u32int instr)
     storeGuestGPR(regDest,value,context);
   }
   return context->R15 + 4;
+#endif
 }
 
 u32int sxtb16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SXTB16 unfinished");
-  return 0;
 }
 
 u32int sxtbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SXTB unfinished");
-  return 0;
 }
 
 u32int uxthInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UXTHunfinished");
-  return 0;
 }
 
 u32int uxtb16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UXTB16 unfinished");
-  return 0;
 }
 
 u32int uxtbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UXTB unfinished");
-  return 0;
 }
 
 u32int sxtahInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SXTAH unfinished");
-  return 0;
 }
 
 u32int sxtab16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SXTAB16 unfinished");
-  return 0;
 }
 
 u32int sxtabInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SXTAB unfinished");
-  return 0;
 }
 
 u32int uxtahInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UXTAH unfinished");
-  return 0;
 }
 
 u32int uxtab16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UXTAB16 unfinished");
-  return 0;
 }
 
 u32int uxtabInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UXTAB unfinished");
-  return 0;
 }
 
 u32int selInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SEL unfinished");
-  return 0;
 }
 
 u32int setendInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SETEND unfinished");
-  return 0;
 }
 
 u32int smuadInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMUAD unfinished");
-  return 0;
 }
 
 u32int smusdInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMUSD unfinished");
-  return 0;
 }
 
 u32int smladInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLAD unfinished");
-  return 0;
 }
 
 u32int smlaldInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLALD unfinished");
-  return 0;
 }
 
 u32int smlsdInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLSD unfinished");
-  return 0;
 }
 
 u32int smlsldInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLSLD unfinished");
-  return 0;
 }
 
 u32int smmulInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMMUL unfinished");
-  return 0;
 }
 
 u32int smmlaInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMMLA unfinished");
-  return 0;
 }
 
 u32int smmlsInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMMLS unfinished");
-  return 0;
 }
 
 u32int srsInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SRS unfinished");
-  return 0;
 }
 
 u32int ssatInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SSAT unfinished");
-  return 0;
 }
 
 u32int ssat16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "ssat16 unfinished");
-  return 0;
 }
 
 u32int umaalInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "UMAAL unfinished");
-  return 0;
 }
 
 u32int usad8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "USAD8 unfinished");
-  return 0;
 }
 
 u32int usada8Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "USADA unfinished");
-  return 0;
 }
 
 u32int usatInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "USAT unfinished");
-  return 0;
 }
 
 u32int usat16Instruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "USAT16 unfinished");
-  return 0;
 }
-
 
 u32int bkptInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "BKPT unfinished");
-  return 0;
 }
 
 u32int clzInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "CLZ unfinished");
-  return 0;
 }
 
 u32int pldInstruction(GCONTXT *context, u32int instruction)
@@ -758,137 +728,112 @@ u32int pldInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: PLD!" EOL);
 #endif
-#ifdef CONFIG_BLOCK_COPY
-  return context->PCOfLastInstruction + 4;
-#else
-  return context->R15+4;
-#endif
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int smlabbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLABB unfinished");
-  return 0;
 }
 
 u32int smlatbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLATB unfinished");
-  return 0;
 }
 
 u32int smlabtInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLABT unfinished");
-  return 0;
 }
 
 u32int smlattInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLATT unfinished");
-  return 0;
 }
 
 u32int smlawbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLAWB unfinished");
-  return 0;
 }
 
 u32int smlawtInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLAWT unfinished");
-  return 0;
 }
 
 u32int smlalbbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLALBB unfinished");
-  return 0;
 }
 
 u32int smlaltbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLALTB unfinished");
-  return 0;
 }
 
 u32int smlalbtInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLALBT unfinished");
-  return 0;
 }
 
 u32int smlalttInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMLALTT unfinished");
-  return 0;
 }
 
 u32int smullInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMULL unfinished");
-  return 0;
 }
 
 u32int smulbbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMULBB unfinished");
-  return 0;
 }
 
 u32int smultbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMULTB unfinished");
-  return 0;
 }
 
 u32int smulbtInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMULBT unfinished");
-  return 0;
 }
 
 u32int smulttInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMULTT unfinished");
-  return 0;
 }
 
 u32int smulwbInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMULWD unfinished");
-  return 0;
 }
 
 u32int smulwtInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "SMULWT unfinished");
-  return 0;
 }
 
 u32int qaddInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "QADD unfinished");
-  return 0;
 }
 
 u32int qdaddInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "QDADD unfinished");
-  return 0;
 }
 
 u32int qsubInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "QSUB unfinished");
-  return 0;
 }
 
 u32int qdsubInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "QDSUB unfinished");
-  return 0;
 }
 
 u32int msrInstruction(GCONTXT *context, u32int instr)
@@ -900,7 +845,6 @@ u32int msrInstruction(GCONTXT *context, u32int instr)
 
   u32int value = 0;
   u32int nextPC = 0;
-
 
   if (!evaluateConditionCode(context, instrCC))
   {

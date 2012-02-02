@@ -205,117 +205,117 @@
 <category name="MEDIA_CATEGORY" mask="0x0e000010" value="0x06000010">
   <instruction name="BFC Rd, #LSB, #width" mask="0x0fe0007f" value="0x07c0001f" />
   <instruction name="BFI Rd, #LSB, #width" mask="0x0fe00070" value="0x07c00010" />
-  <instruction name="rbit%c\t%12-15r, %0-3r" mask="0x0fff0ff0" value="0x06ff0f30" effect="rbitInstruction" />
+  <instruction name="RBIT Rd,Rm" mask="0x0fff0ff0" value="0x06ff0f30" />
   <instruction name="UBFX Rd, Rn, width" mask="0x0fa00070" value="0x07a00050" />
-  <instruction name="pkhbt%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06800010" effect="pkhbtInstruction" />
-  <instruction name="pkhbt%c\t%12-15r, %16-19r, %0-3r, lsl #%7-11d" mask="0x0ff00070" value="0x06800010" effect="pkhbtInstruction" />
-  <instruction name="pkhtb%c\t%12-15r, %16-19r, %0-3r, asr #32" mask="0x0ff00ff0" value="0x06800050" effect="pkhtbInstruction" />
-  <instruction name="pkhtb%c\t%12-15r, %16-19r, %0-3r, asr #%7-11d" mask="0x0ff00070" value="0x06800050" effect="pkhtbInstruction" />
-  <instruction name="qadd16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06200f10" effect="qadd16Instruction" />
-  <instruction name="qadd8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06200f90" effect="qadd8Instruction" />
-  <instruction name="qaddsubx%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06200f30" effect="qaddsubxInstruction" />
-  <instruction name="qsub16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06200f70" effect="qsub16Instruction" />
-  <instruction name="qsub8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06200ff0" effect="qsub8Instruction" />
-  <instruction name="qsubaddx%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06200f50" effect="qsubaddxInstruction" />
-  <instruction name="sadd16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06100f10" effect="sadd16Instruction" />
-  <instruction name="sadd8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06100f90" effect="sadd8Instruction" />
-  <instruction name="saddsubx%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06100f30" effect="saddsubxInstruction" />
-  <instruction name="ssub16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06100f70" effect="ssub16Instruction" />
-  <instruction name="ssub8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06100ff0" effect="ssub8Instruction" />
-  <instruction name="ssubaddx%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06100f50" effect="ssubaddxInstruction" />
-  <instruction name="shadd16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06300f10" effect="shadd16Instruction" />
-  <instruction name="shadd8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06300f90" effect="shadd8Instruction" />
-  <instruction name="shaddsubx%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06300f30" effect="shaddsubxInstruction" />
-  <instruction name="shsub16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06300f70" effect="shsub16Instruction" />
-  <instruction name="shsub8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06300ff0" effect="shsub8Instruction" />
-  <instruction name="shsubaddx%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06300f50" effect="shsubaddxInstruction" />
-  <instruction name="uadd16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06500f10" effect="uadd16Instruction" />
-  <instruction name="uadd8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06500f90" effect="uadd8Instruction" />
-  <instruction name="uaddsubx%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06500f30" effect="uaddsubxInstruction" />
-  <instruction name="usub16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06500f70" effect="usub16Instruction" />
-  <instruction name="usub8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06500ff0" effect="usub8Instruction" />
-  <instruction name="usubaddx%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06500f50" effect="usubaddxInstruction" />
-  <instruction name="uhadd16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06700f10" effect="uhadd16Instruction" />
-  <instruction name="uhadd8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06700f90" effect="uhadd8Instruction" />
-  <instruction name="uhaddsubxc\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06700f30" effect="uhaddsubxInstruction" />
-  <instruction name="uhsub16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06700f70" effect="uhsub16Instruction" />
-  <instruction name="uhsub8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06700ff0" effect="uhsub8Instruction" />
-  <instruction name="uhsubaddx%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06700f50" effect="uhsubaddxInstruction" />
-  <instruction name="uqadd16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06600f10" effect="uqadd16Instruction" />
-  <instruction name="uqadd8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06600f90" effect="uqadd8Instruction" />
-  <instruction name="uqaddsubx%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06600f30" effect="uqaddsubxInstruction" />
-  <instruction name="uqsub16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06600f70" effect="uqsub16Instruction" />
-  <instruction name="uqsub8%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06600ff0" effect="uqsub8Instruction" />
-  <instruction name="uqsubaddx%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06600f50" effect="uqsubaddxInstruction" />
-  <instruction name="rev%c\t%12-15r, %0-3r" mask="0x0fff0ff0" value="0x06bf0f30" effect="revInstruction" />
-  <instruction name="rev16%c\t%12-15r, %0-3r" mask="0x0fff0ff0" value="0x06bf0fb0" effect="rev16Instruction" />
-  <instruction name="revsh%c\t%12-15r, %0-3r" mask="0x0fff0ff0" value="0x06ff0fb0" effect="revshInstruction" />
-  <instruction name="sxth%c\t%12-15r, %0-3r" mask="0x0fff0ff0" value="0x06bf0070" effect="sxthInstruction" />
-  <instruction name="sxth%c\t%12-15r, %0-3r, ror #8" mask="0x0fff0ff0" value="0x06bf0470" effect="sxthInstruction" />
-  <instruction name="sxth%c\t%12-15r, %0-3r, ror #16" mask="0x0fff0ff0" value="0x06bf0870" effect="sxthInstruction" />
-  <instruction name="sxth%c\t%12-15r, %0-3r, ror #24" mask="0x0fff0ff0" value="0x06bf0c70" effect="sxthInstruction" />
-  <instruction name="sxtb16%c\t%12-15r, %0-3r" mask="0x0fff0ff0" value="0x068f0070" effect="sxtb16Instruction" />
-  <instruction name="sxtb16%c\t%12-15r, %0-3r, ror #8" mask="0x0fff0ff0" value="0x068f0470" effect="sxtb16Instruction" />
-  <instruction name="sxtb16%c\t%12-15r, %0-3r, ror #16" mask="0x0fff0ff0" value="0x068f0870" effect="sxtb16Instruction" />
-  <instruction name="sxtb16%c\t%12-15r, %0-3r, ror #24" mask="0x0fff0ff0" value="0x068f0c70" effect="sxtb16Instruction" />
-  <instruction name="sxtb%c\t%12-15r, %0-3r" mask="0x0fff0ff0" value="0x06af0070" />
-  <instruction name="sxtb%c\t%12-15r, %0-3r, ror #8" mask="0x0fff0ff0" value="0x06af0470" />
-  <instruction name="sxtb%c\t%12-15r, %0-3r, ror #16" mask="0x0fff0ff0" value="0x06af0870" />
-  <instruction name="sxtb%c\t%12-15r, %0-3r, ror #24" mask="0x0fff0ff0" value="0x06af0c70" />
-  <instruction name="UXTH Rd, Rn" mask="0x0fff0ff0" value="0x06ff0070" />
-  <instruction name="UXTH Rd, Rn, ROR #8" mask="0x0fff0ff0" value="0x06ff0470" />
-  <instruction name="UXTH Rd, Rn, ROR #16" mask="0x0fff0ff0" value="0x06ff0870" />
-  <instruction name="UXTH Rd, Rn, ROR #24" mask="0x0fff0ff0" value="0x06ff0c70" />
-  <instruction name="UXTB16 Rd, Rn" mask="0x0fff0ff0" value="0x06cf0070" />
-  <instruction name="UXTB16 Rd, Rn, ROR #8" mask="0x0fff0ff0" value="0x06cf0470" />
-  <instruction name="UXTB16 Rd, Rn, ROR #16" mask="0x0fff0ff0" value="0x06cf0870" />
-  <instruction name="UXTB16 Rd, Rn, ROR #24" mask="0x0fff0ff0" value="0x06cf0c70" />
-  <instruction name="UXTB Rd, Rn" mask="0x0fff0ff0" value="0x06ef0070" />
-  <instruction name="UXTB Rd, Rn, ROR #8" mask="0x0fff0ff0" value="0x06ef0470" />
-  <instruction name="UXTB Rd, Rn, ROR #16" mask="0x0fff0ff0" value="0x06ef0870" />
-  <instruction name="UXTB Rd, Rn, ROR #24" mask="0x0fff0ff0" value="0x06ef0c70" />
-  <instruction name="sxtah%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06b00070" effect="sxtahInstruction" />
-  <instruction name="sxtah%c\t%12-15r, %16-19r, %0-3r, ror #8" mask="0x0ff00ff0" value="0x06b00470" effect="sxtahInstruction" />
-  <instruction name="sxtah%c\t%12-15r, %16-19r, %0-3r, ror #16" mask="0x0ff00ff0" value="0x06b00870" effect="sxtahInstruction" />
-  <instruction name="sxtah%c\t%12-15r, %16-19r, %0-3r, ror #24" mask="0x0ff00ff0" value="0x06b00c70" effect="sxtahInstruction" />
-  <instruction name="sxtab16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06800070" effect="sxtab16Instruction" />
-  <instruction name="sxtab16%c\t%12-15r, %16-19r, %0-3r, ror #8" mask="0x0ff00ff0" value="0x06800470" effect="sxtab16Instruction" />
-  <instruction name="sxtab16%c\t%12-15r, %16-19r, %0-3r, ror #16" mask="0x0ff00ff0" value="0x06800870" effect="sxtab16Instruction" />
-  <instruction name="sxtab16%c\t%12-15r, %16-19r, %0-3r, ror #24" mask="0x0ff00ff0" value="0x06800c70" effect="sxtab16Instruction" />
-  <instruction name="sxtab%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06a00070" effect="sxtabInstruction" />
-  <instruction name="sxtab%c\t%12-15r, %16-19r, %0-3r, ror #8" mask="0x0ff00ff0" value="0x06a00470" effect="sxtabInstruction" />
-  <instruction name="sxtab%c\t%12-15r, %16-19r, %0-3r, ror #16" mask="0x0ff00ff0" value="0x06a00870" effect="sxtabInstruction" />
-  <instruction name="sxtab%c\t%12-15r, %16-19r, %0-3r, ror #24" mask="0x0ff00ff0" value="0x06a00c70" effect="sxtabInstruction" />
-  <instruction name="uxtah%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06f00070" effect="uxtahInstruction" />
-  <instruction name="uxtah%c\t%12-15r, %16-19r, %0-3r, ror #8" mask="0x0ff00ff0" value="0x06f00470" effect="uxtahInstruction" />
-  <instruction name="uxtah%c\t%12-15r, %16-19r, %0-3r, ror #16" mask="0x0ff00ff0" value="0x06f00870" effect="uxtahInstruction" />
-  <instruction name="uxtah%c\t%12-15r, %16-19r, %0-3r, ror #24" mask="0x0ff00ff0" value="0x06f00c70" effect="uxtahInstruction" />
-  <instruction name="uxtab16%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06c00070" effect="uxtab16Instruction" />
-  <instruction name="uxtab16%c\t%12-15r, %16-19r, %0-3r, ror #8" mask="0x0ff00ff0" value="0x06c00470" effect="uxtab16Instruction" />
-  <instruction name="uxtab16%c\t%12-15r, %16-19r, %0-3r, ror #16" mask="0x0ff00ff0" value="0x06c00870" effect="uxtab16Instruction" />
-  <instruction name="uxtab16%c\t%12-15r, %16-19r, %0-3r, ROR #24" mask="0x0ff00ff0" value="0x06c00c70" effect="uxtab16Instruction" />
-  <instruction name="uxtab%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06e00070" effect="uxtabInstruction" />
-  <instruction name="uxtab%c\t%12-15r, %16-19r, %0-3r, ror #8" mask="0x0ff00ff0" value="0x06e00470" effect="uxtabInstruction" />
-  <instruction name="uxtab%c\t%12-15r, %16-19r, %0-3r, ror #16" mask="0x0ff00ff0" value="0x06e00870" effect="uxtabInstruction" />
-  <instruction name="uxtab%c\t%12-15r, %16-19r, %0-3r, ror #24" mask="0x0ff00ff0" value="0x06e00c70" effect="uxtabInstruction" />
-  <instruction name="sel%c\t%12-15r, %16-19r, %0-3r" mask="0x0ff00ff0" value="0x06800fb0" effect="selInstruction" />
-  <instruction name="smuad%5'x%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0d0" value="0x0700f010" effect="smuadInstruction" />
-  <instruction name="smusd%5'x%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0d0" value="0x0700f050" effect="smusdInstruction" />
-  <instruction name="smlad%5'x%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000d0" value="0x07000010" effect="smladInstruction" />
-  <instruction name="smlald%5'x%c\t%12-15r, %16-19r, %0-3r, %8-11r" mask="0x0ff000d0" value="0x07400010" effect="smlaldInstruction" />
-  <instruction name="smlsd%5'x%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000d0" value="0x07000050" effect="smlsdInstruction" />
-  <instruction name="smlsld%5'x%c\t%12-15r, %16-19r, %0-3r, %8-11r" mask="0x0ff000d0" value="0x07400050" effect="smlsldInstruction" />
-  <instruction name="smmul%5'r%c\t%16-19r, %0-3r, %8-11r" mask="0x0ff0f0d0" value="0x0750f010" effect="smmulInstruction" />
-  <instruction name="smmla%5'r%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000d0" value="0x07500010" effect="smmlaInstruction" />
-  <instruction name="smmls%5'r%c\t%16-19r, %0-3r, %8-11r, %12-15r" mask="0x0ff000d0" value="0x075000d0" effect="smmlsInstruction" />
-  <instruction name="ssat%c\t%12-15r, #%16-20W, %0-3r" mask="0x0fe00ff0" value="0x06a00010" effect="ssatInstruction" />
-  <instruction name="ssat%c\t%12-15r, #%16-20W, %0-3r, lsl #%7-11d" mask="0x0fe00070" value="0x06a00010" effect="ssatInstruction" />
-  <instruction name="ssat%c\t%12-15r, #%16-20W, %0-3r, asr #%7-11d" mask="0x0fe00070" value="0x06a00050" effect="ssatInstruction" />
-  <instruction name="ssat16%c\t%12-15r, #%16-19W, %0-3r" mask="0x0ff00ff0" value="0x06a00f30" effect="ssat16Instruction" />
-  <instruction name="usat%c\t%12-15r, #%16-20d, %0-3r" mask="0x0fe00ff0" value="0x06e00010" effect="usatInstruction" />
-  <instruction name="usat%c\t%12-15r, #%16-20d, %0-3r, lsl #%7-11d" mask="0x0fe00070" value="0x06e00010" effect="usatInstruction" />
-  <instruction name="usat%c\t%12-15r, #%16-20d, %0-3r, asr #%7-11d" mask="0x0fe00070" value="0x06e00050" effect="usatInstruction" />
-  <instruction name="usat16%c\t%12-15r, #%16-19d, %0-3r" mask="0x0ff00ff0" value="0x06e00f30" effect="usat16Instruction" />
+  <instruction name="PKHBT Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06800010" />
+  <instruction name="PKHBT Rd,Rn,Rm,LSL #imm" mask="0x0ff00070" value="0x06800010" />
+  <instruction name="PKHBT Rd,Rn,Rm,ASR #32" mask="0x0ff00ff0" value="0x06800050" />
+  <instruction name="PKHBT Rd,Rn,Rm,ASR #imm" mask="0x0ff00070" value="0x06800050" />
+  <instruction name="QADD16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06200f10" />
+  <instruction name="QADD8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06200f90" />
+  <instruction name="QASX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06200f30" />
+  <instruction name="QSUB16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06200f70" />
+  <instruction name="QSUB8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06200ff0" />
+  <instruction name="QSAX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06200f50" />
+  <instruction name="SADD16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06100f10" />
+  <instruction name="SADD8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06100f90" />
+  <instruction name="SASX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06100f30" />
+  <instruction name="SSUB16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06100f70" />
+  <instruction name="SSUB8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06100ff0" />
+  <instruction name="SSAX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06100f50" />
+  <instruction name="SHADD16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06300f10" />
+  <instruction name="SHADD8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06300f90" />
+  <instruction name="SHASX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06300f30" />
+  <instruction name="SHSUB16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06300f70" />
+  <instruction name="SHSUB8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06300ff0" />
+  <instruction name="SHSAX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06300f50" />
+  <instruction name="UADD16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06500f10" />
+  <instruction name="UADD8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06500f90" />
+  <instruction name="UASX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06500f30" />
+  <instruction name="USUB16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06500f70" />
+  <instruction name="USUB8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06500ff0" />
+  <instruction name="USAX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06500f50" />
+  <instruction name="UHADD16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06700f10" />
+  <instruction name="UHADD8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06700f90" />
+  <instruction name="UHASX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06700f30" />
+  <instruction name="UHSUB16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06700f70" />
+  <instruction name="UHSUB8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06700ff0" />
+  <instruction name="UHSAX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06700f50" />
+  <instruction name="UQADD16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06600f10" />
+  <instruction name="UQADD8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06600f90" />
+  <instruction name="UQASX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06600f30" />
+  <instruction name="UQSUB16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06600f70" />
+  <instruction name="UQSUB8 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06600ff0" />
+  <instruction name="UQSAX Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06600f50" />
+  <instruction name="REV Rd,Rm" mask="0x0fff0ff0" value="0x06bf0f30" />
+  <instruction name="REV16 Rd,Rm" mask="0x0fff0ff0" value="0x06bf0fb0" />
+  <instruction name="REVSH Rd,Rm" mask="0x0fff0ff0" value="0x06ff0fb0" />
+  <instruction name="SXTH Rd,Rm" mask="0x0fff0ff0" value="0x06bf0070" />
+  <instruction name="SXTH Rd,Rm,ROR #8" mask="0x0fff0ff0" value="0x06bf0470" />
+  <instruction name="SXTH Rd,Rm,ROR #16" mask="0x0fff0ff0" value="0x06bf0870" />
+  <instruction name="SXTH Rd,Rm,ROR #24" mask="0x0fff0ff0" value="0x06bf0c70" />
+  <instruction name="SXTB16 Rd,Rm" mask="0x0fff0ff0" value="0x068f0070" />
+  <instruction name="SXTB16 Rd,Rm,ROR #8" mask="0x0fff0ff0" value="0x068f0470" />
+  <instruction name="SXTB16 Rd,Rm,ROR #16" mask="0x0fff0ff0" value="0x068f0870" />
+  <instruction name="SXTB16 Rd,Rm,ROR #24" mask="0x0fff0ff0" value="0x068f0c70" />
+  <instruction name="SXTB Rd,Rm" mask="0x0fff0ff0" value="0x06af0070" />
+  <instruction name="SXTB Rd,Rm,ROR #8" mask="0x0fff0ff0" value="0x06af0470" />
+  <instruction name="SXTB Rd,Rm,ROR #16" mask="0x0fff0ff0" value="0x06af0870" />
+  <instruction name="SXTB Rd,Rm,ROR #24" mask="0x0fff0ff0" value="0x06af0c70" />
+  <instruction name="UXTH Rd,Rm" mask="0x0fff0ff0" value="0x06ff0070" />
+  <instruction name="UXTH Rd,Rm,ROR #8" mask="0x0fff0ff0" value="0x06ff0470" />
+  <instruction name="UXTH Rd,Rm,ROR #16" mask="0x0fff0ff0" value="0x06ff0870" />
+  <instruction name="UXTH Rd,Rm,ROR #24" mask="0x0fff0ff0" value="0x06ff0c70" />
+  <instruction name="UXTB16 Rd,Rm" mask="0x0fff0ff0" value="0x06cf0070" />
+  <instruction name="UXTB16 Rd,Rm,ROR #8" mask="0x0fff0ff0" value="0x06cf0470" />
+  <instruction name="UXTB16 Rd,Rm,ROR #16" mask="0x0fff0ff0" value="0x06cf0870" />
+  <instruction name="UXTB16 Rd,Rm,ROR #24" mask="0x0fff0ff0" value="0x06cf0c70" />
+  <instruction name="UXTB Rd,Rm" mask="0x0fff0ff0" value="0x06ef0070" />
+  <instruction name="UXTB Rd,Rm,ROR #8" mask="0x0fff0ff0" value="0x06ef0470" />
+  <instruction name="UXTB Rd,Rm,ROR #16" mask="0x0fff0ff0" value="0x06ef0870" />
+  <instruction name="UXTB Rd,Rm,ROR #24" mask="0x0fff0ff0" value="0x06ef0c70" />
+  <instruction name="SXTAH Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06b00070" />
+  <instruction name="SXTAH Rd,Rn,Rm,ROR #8" mask="0x0ff00ff0" value="0x06b00470" />
+  <instruction name="SXTAH Rd,Rn,Rm,ROR #16" mask="0x0ff00ff0" value="0x06b00870" />
+  <instruction name="SXTAH Rd,Rn,Rm,ROR #24" mask="0x0ff00ff0" value="0x06b00c70" />
+  <instruction name="SXTAB16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06800070" />
+  <instruction name="SXTAB16 Rd,Rn,Rm,ROR #8" mask="0x0ff00ff0" value="0x06800470" />
+  <instruction name="SXTAB16 Rd,Rn,Rm,ROR #16" mask="0x0ff00ff0" value="0x06800870" />
+  <instruction name="SXTAB16 Rd,Rn,Rm,ROR #24" mask="0x0ff00ff0" value="0x06800c70" />
+  <instruction name="SXTAB Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06a00070" />
+  <instruction name="SXTAB Rd,Rn,Rm,ROR #8" mask="0x0ff00ff0" value="0x06a00470" />
+  <instruction name="SXTAB Rd,Rn,Rm,ROR #16" mask="0x0ff00ff0" value="0x06a00870" />
+  <instruction name="SXTAB Rd,Rn,Rm,ROR #24" mask="0x0ff00ff0" value="0x06a00c70" />
+  <instruction name="UXTAH Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06f00070" />
+  <instruction name="UXTAH Rd,Rn,Rm,ROR #8" mask="0x0ff00ff0" value="0x06f00470" />
+  <instruction name="UXTAH Rd,Rn,Rm,ROR #16" mask="0x0ff00ff0" value="0x06f00870" />
+  <instruction name="UXTAH Rd,Rn,Rm,ROR #24" mask="0x0ff00ff0" value="0x06f00c70" />
+  <instruction name="UXTAB16 Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06c00070" />
+  <instruction name="UXTAB16 Rd,Rn,Rm,ROR #8" mask="0x0ff00ff0" value="0x06c00470" />
+  <instruction name="UXTAB16 Rd,Rn,Rm,ROR #16" mask="0x0ff00ff0" value="0x06c00870" />
+  <instruction name="UXTAB16 Rd,Rn,Rm,ROR #24" mask="0x0ff00ff0" value="0x06c00c70" />
+  <instruction name="UXTAB Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06e00070" />
+  <instruction name="UXTAB Rd,Rn,Rm,ROR #8" mask="0x0ff00ff0" value="0x06e00470" />
+  <instruction name="UXTAB Rd,Rn,Rm,ROR #16" mask="0x0ff00ff0" value="0x06e00870" />
+  <instruction name="UXTAB Rd,Rn,Rm,ROR #24" mask="0x0ff00ff0" value="0x06e00c70" />
+  <instruction name="SEL Rd,Rn,Rm" mask="0x0ff00ff0" value="0x06800fb0" />
+  <instruction name="SMUAD{X} Rd,Rn,Rm" mask="0x0ff0f0d0" value="0x0700f010" />
+  <instruction name="SMUSD{X} Rd,Rn,Rm" mask="0x0ff0f0d0" value="0x0700f050" />
+  <instruction name="SMLAD{X} Rd,Rn,Rm,Ra" mask="0x0ff000d0" value="0x07000010" />
+  <instruction name="SMLALD{X} RdLo,RdHi,Rn,Rm" mask="0x0ff000d0" value="0x07400010" />
+  <instruction name="SMLSD{X} Rd,Rn,Rm,Ra" mask="0x0ff000d0" value="0x07000050" />
+  <instruction name="SMLSLD{X} RdLo,RdHi,Rn,Rm" mask="0x0ff000d0" value="0x07400050" />
+  <instruction name="SMMUL{R} Rd,Rn,Rm" mask="0x0ff0f0d0" value="0x0750f010" />
+  <instruction name="SMMLA{R} Rd,Rn,Rm,Ra" mask="0x0ff000d0" value="0x07500010" />
+  <instruction name="SMMLS{R} Rd,Rn,Rm,Ra" mask="0x0ff000d0" value="0x075000d0" />
+  <instruction name="SSAT Rd,#sat_imm,Rn" mask="0x0fe00ff0" value="0x06a00010" />
+  <instruction name="SSAT Rd,#sat_imm,Rn,LSL #imm" mask="0x0fe00070" value="0x06a00010" />
+  <instruction name="SSAT Rd,#sat_imm,Rn,ASR #imm" mask="0x0fe00070" value="0x06a00050" />
+  <instruction name="SSAT16 Rd,#imm,Rn" mask="0x0ff00ff0" value="0x06a00f30" />
+  <instruction name="USAT Rd,#sat_imm,Rn" mask="0x0fe00ff0" value="0x06e00010" />
+  <instruction name="USAT Rd,#sat_imm,Rn,LSL #imm" mask="0x0fe00070" value="0x06e00010" />
+  <instruction name="USAT Rd,#sat_imm,Rn,ASR #imm" mask="0x0fe00070" value="0x06e00050" />
+  <instruction name="USAT16 Rd,#imm,Rn" mask="0x0ff00ff0" value="0x06e00f30" />
 </category>
 
 <category name="BRANCH_BLOCK_TRANSFER_CATEGORY" mask="0x0c000000" value="0x08000000">
