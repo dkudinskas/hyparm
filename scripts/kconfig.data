@@ -182,6 +182,12 @@ config DEBUG_INTERPRETER_ALL_BRANCH
   select DEBUG_INTERPRETER_T16_BRANCH
   select DEBUG_INTERPRETER_T32_BRANCH
 
+config DEBUGINTERPRETER_ALL_COPROC
+  bool "Debug coprocessor operations"
+  depends on DEBUG_INTERPRETER_ALL
+  select DEBUG_INTERPRETER_ARM_COPROC
+  select DEBUG_INTERPRETER_T32_COPROC
+
 config DEBUG_INTERPRETER_ALL_LOAD
   bool "Debug load operations"
   depends on DEBUG_INTERPRETER_ALL
@@ -202,6 +208,10 @@ menuconfig DEBUG_INTERPRETER_ARM
 
 config DEBUG_INTERPRETER_ARM_BRANCH
   bool "Debug branch operations"
+  depends on DEBUG_INTERPRETER_ARM
+
+config DEBUG_INTERPRETER_ARM_COPROC
+  bool "Debug coprocessor operations"
   depends on DEBUG_INTERPRETER_ARM
 
 config DEBUG_INTERPRETER_ARM_LOAD
@@ -234,6 +244,10 @@ menuconfig DEBUG_INTERPRETER_T32
 
 config DEBUG_INTERPRETER_T32_BRANCH
   bool "Debug branch operations"
+  depends on DEBUG_INTERPRETER_T32
+
+config DEBUG_INTERPRETER_T32_COPROC
+  bool "Debug coprocessor operations"
   depends on DEBUG_INTERPRETER_T32
 
 config DEBUG_INTERPRETER_T32_LOAD

@@ -2226,9 +2226,9 @@ autodecoder_arm_monolithic_8:
 autodecoder_arm_monolithic_7:
   if ((instruction & (1u << 20)) == 0)
   {
-    return mcrInstruction;
+    return armMcrInstruction;
   }
-  return mrcInstruction;
+  return armMrcInstruction;
 
 
 

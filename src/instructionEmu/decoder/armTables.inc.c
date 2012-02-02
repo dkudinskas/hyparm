@@ -465,8 +465,8 @@ static struct instruction32bit armSvcCoprocInstructions[] =
   // well obviously.
   { TRUE,  &svcInstruction,       0x0f000000, 0x0f000000, "SWI code" },
   // Generic coprocessor instructions.
-  { TRUE,  &mrcInstruction,       0x0e100010, 0x0f100010, "MRC" },
-  { TRUE,  &mcrInstruction,       0x0e000010, 0x0f100010, "MCR" },
+  { TRUE,  &armMrcInstruction,    0x0e100010, 0x0f100010, "MRC" },
+  { TRUE,  &armMcrInstruction,    0x0e000010, 0x0f100010, "MCR" },
   { TRUE,  &undefinedInstruction, 0x00000000, 0x00000000, "svcCoprocInstructions" }
 };
 

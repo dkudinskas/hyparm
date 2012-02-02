@@ -2,13 +2,14 @@
 #include "common/stddef.h"
 
 #include "instructionEmu/decoder.h"
-#include "instructionEmu/coprocInstructions.h"
 #include "instructionEmu/dataProcessInstr.h"
 #include "instructionEmu/miscInstructions.h"
 #include "instructionEmu/tableSearchBlockCopyDecoder.h"
 
 #include "instructionEmu/interpreter/branchInstructions.h"
 #include "instructionEmu/interpreter/branchPCInstructions.h"
+#include "instructionEmu/interpreter/coprocInstructions.h"
+#include "instructionEmu/interpreter/coprocPCInstructions.h"
 #include "instructionEmu/interpreter/loadInstructions.h"
 #include "instructionEmu/interpreter/loadPCInstructions.h"
 #include "instructionEmu/interpreter/storeInstructions.h"
@@ -526,8 +527,8 @@ struct instruction32bit svcCoprocInstructions[] = {
 // well obviously.
 {1, svcInstruction, svcPCInstruction,         0x0f000000, 0x0f000000, "SWI code"},
 // Generic coprocessor instructions.
-{1, mrcInstruction, mrcPCInstruction,     0x0e100010, 0x0f100010, "MRC"},
-{1, mcrInstruction, mcrPCInstruction,     0x0e000010, 0x0f100010, "MCR"},
+{1, armMrcInstruction, armMrcPCInstruction,     0x0e100010, 0x0f100010, "MRC"},
+{1, armMcrInstruction, armMcrPCInstruction,     0x0e000010, 0x0f100010, "MCR"},
 
 {1, undefinedInstruction, undefinedPCInstruction,   0x00000000, 0x00000000, UNDEFINED_INSTRUCTION}
 };

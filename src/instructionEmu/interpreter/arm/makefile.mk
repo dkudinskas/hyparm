@@ -1,7 +1,9 @@
 HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/branchInstructions.c
+HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/coprocInstructions.c
 HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/loadInstructions.c
 HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/storeInstructions.c
 
 HYPARM_SRCS_C-$(CONFIG_BLOCK_COPY) += instructionEmu/interpreter/arm/branchPCInstructions.c
+HYPARM_SRCS_C-$(CONFIG_BLOCK_COPY) += instructionEmu/interpreter/arm/coprocPCInstructions.c
 HYPARM_SRCS_C-$(CONFIG_BLOCK_COPY) += instructionEmu/interpreter/arm/loadPCInstructions.c
 HYPARM_SRCS_C-$(CONFIG_BLOCK_COPY) += instructionEmu/interpreter/arm/storePCInstructions.c
