@@ -75,8 +75,6 @@ u32int getPhysicalAddress(descriptor* ptd, u32int virtualAddress);
 
 bool isAddrInGuestPT(u32int vaddr);
 
-void dumpPageTable(descriptor* ptd);
-
 u32int findVAforPA(u32int physAddr);
 u32int findGuestVAforPA(u32int physAddr);
 
@@ -165,7 +163,7 @@ struct pTSimpleDescriptor
   u32int imp:1; // 9 imp use to indicate memory protection is active
   u32int:8; // 17-10 Ignored
   u32int sectiontype:1; //18
-  u32int:12; //31-19 Ignored
+  u32int:13; //31-19 Ignored
 };
 
 //large/small page descriptor type 0b01

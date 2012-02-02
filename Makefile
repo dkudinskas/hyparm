@@ -29,8 +29,8 @@ OBJDUMP       = $(CROSS_COMPILE)objdump
 AFLAGS       := --fatal-warnings
 CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
                 -O3 -ffreestanding -fno-common -fno-stack-protector \
-                -Wall -Wextra -Wformat=2 -Winline -Wstrict-prototypes -Wwrite-strings \
-                -Wno-empty-body -Wno-unused-label -Wno-unused-parameter \
+                -Wall -Wextra -Wformat=2 -Winline -Wredundant-decls -Wstrict-prototypes \
+                -Wwrite-strings -Wno-empty-body -Wno-unused-label -Wno-unused-parameter \
                 -Werror=implicit-function-declaration
 CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc
 LDDEPS       :=
@@ -284,7 +284,7 @@ $(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_OK)
 ifneq ($(VERBOSE),)
 	@echo 'DEP      $<'
 endif
-	@$(CC) -M $(CPPFLAGS) -MG -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
+	@$(CC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
 
 # Generate dependency files for all assembly source files that require preprocessing. This rule is
 # exactly the same as the rule above, except that it generates *.S.d files from *.S files.
@@ -292,7 +292,7 @@ $(SOURCE_PATH)/%.S.d: $(SOURCE_PATH)/%.S $(KCONFIG_OK)
 ifneq ($(VERBOSE),)
 	@echo 'DEP      $<'
 endif
-	@$(CC) -M $(CPPFLAGS) -MG -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
+	@$(CC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
 
 
 $(SOURCE_PATH)/%.c.o: $(SOURCE_PATH)/%.c

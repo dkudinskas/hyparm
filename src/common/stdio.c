@@ -667,6 +667,8 @@ int
            * types some checks are always false. This is normal, it allows code that deals with the
            * sign to be optimized away through constant propagation and dead code elimination.
            */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
           switch (modifier)
           {
             case 'L':
@@ -676,6 +678,7 @@ int
               VSPRINTF_DECIMAL(u32int, u32int, FALSE, /* no abs function required */);
               break;
           }
+#pragma GCC diagnostic pop
           break;
         case 's':
         {
