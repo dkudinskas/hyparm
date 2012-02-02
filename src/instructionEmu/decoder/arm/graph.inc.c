@@ -18,201 +18,191 @@
  *
  ******************************************************************************/
 
-autodecoder_arm_monolithic_624:
+autodecoder_arm_monolithic_547:
   if ((instruction & (1u << 29)) == 0)
   {
-    goto autodecoder_arm_monolithic_621;
+    goto autodecoder_arm_monolithic_544;
   }
 
-autodecoder_arm_monolithic_623:
+autodecoder_arm_monolithic_546:
   if ((instruction & (1u << 30)) == 0)
   {
-    goto autodecoder_arm_monolithic_621;
+    goto autodecoder_arm_monolithic_544;
   }
 
-autodecoder_arm_monolithic_622:
+autodecoder_arm_monolithic_545:
   if ((instruction & (1u << 31)) == 0)
   {
-    goto autodecoder_arm_monolithic_621;
+    goto autodecoder_arm_monolithic_544;
   }
 
-autodecoder_arm_monolithic_585:
-  if ((instruction & (1u << 15)) == 0)
-  {
-    goto autodecoder_arm_monolithic_584;
-  }
-
-autodecoder_arm_monolithic_500:
-  if ((instruction & (1u << 27)) == 0)
-  {
-    goto autodecoder_arm_monolithic_499;
-  }
-
-autodecoder_arm_monolithic_20:
-  if (instruction & (1u << 28))
-  {
-    goto autodecoder_arm_monolithic_3;
-  }
-  goto autodecoder_arm_monolithic_19;
-
-autodecoder_arm_monolithic_499:
-  if ((instruction & (1u << 12)) == 0)
-  {
-    goto autodecoder_arm_monolithic_496;
-  }
-
-autodecoder_arm_monolithic_498:
+autodecoder_arm_monolithic_509:
   if ((instruction & (1u << 13)) == 0)
   {
-    goto autodecoder_arm_monolithic_496;
+    goto autodecoder_arm_monolithic_508;
   }
 
-autodecoder_arm_monolithic_497:
+autodecoder_arm_monolithic_448:
   if ((instruction & (1u << 14)) == 0)
   {
-    goto autodecoder_arm_monolithic_496;
+    goto autodecoder_arm_monolithic_446;
   }
 
-autodecoder_arm_monolithic_471:
+autodecoder_arm_monolithic_447:
+  if ((instruction & (1u << 12)) == 0)
+  {
+    goto autodecoder_arm_monolithic_446;
+  }
+
+autodecoder_arm_monolithic_444:
+  if (instruction & (1u << 27))
+  {
+    goto autodecoder_arm_monolithic_25;
+  }
+
+autodecoder_arm_monolithic_443:
   if ((instruction & (1u << 28)) == 0)
   {
-    goto autodecoder_arm_monolithic_470;
+    goto autodecoder_arm_monolithic_442;
   }
 
-autodecoder_arm_monolithic_83:
+autodecoder_arm_monolithic_81:
+  if ((instruction & (1u << 15)) == 0)
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_80:
   if ((instruction & (1u << 26)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_82:
+autodecoder_arm_monolithic_79:
   if ((instruction & (1u << 25)) == 0)
   {
-    goto autodecoder_arm_monolithic_81;
+    goto autodecoder_arm_monolithic_78;
   }
 
-autodecoder_arm_monolithic_29:
+autodecoder_arm_monolithic_34:
   if (instruction & (1u << 4))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_28:
+autodecoder_arm_monolithic_33:
   if (instruction & (1u << 24))
   {
-    goto autodecoder_arm_monolithic_23;
+    goto autodecoder_arm_monolithic_28;
   }
-  goto autodecoder_arm_monolithic_27;
+  goto autodecoder_arm_monolithic_32;
 
-autodecoder_arm_monolithic_81:
+autodecoder_arm_monolithic_78:
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_80;
+    goto autodecoder_arm_monolithic_77;
+  }
+
+autodecoder_arm_monolithic_58:
+  if ((instruction & (1u << 24)) == 0)
+  {
+    goto autodecoder_arm_monolithic_32;
   }
 
 autodecoder_arm_monolithic_57:
-  if ((instruction & (1u << 24)) == 0)
+  if (instruction & (1u << 7))
+  {
+    goto autodecoder_arm_monolithic_28;
+  }
+
+autodecoder_arm_monolithic_56:
+  if (instruction & (1u << 8))
+  {
+    goto autodecoder_arm_monolithic_28;
+  }
+
+autodecoder_arm_monolithic_55:
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_28;
+  }
+
+autodecoder_arm_monolithic_54:
+  if (instruction & (1u << 11))
+  {
+    goto autodecoder_arm_monolithic_28;
+  }
+
+autodecoder_arm_monolithic_53:
+  if (instruction & (1u << 9))
+  {
+    goto autodecoder_arm_monolithic_28;
+  }
+
+autodecoder_arm_monolithic_52:
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_28;
+  }
+
+autodecoder_arm_monolithic_51:
+  if ((instruction & (1u << 21)) == 0)
   {
     goto autodecoder_arm_monolithic_27;
   }
 
-autodecoder_arm_monolithic_56:
-  if (instruction & (1u << 7))
-  {
-    goto autodecoder_arm_monolithic_23;
-  }
-
-autodecoder_arm_monolithic_55:
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_23;
-  }
-
-autodecoder_arm_monolithic_54:
+autodecoder_arm_monolithic_50:
   if ((instruction & (1u << 20)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_53:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    return armPldInstruction;
-  }
-
-autodecoder_arm_monolithic_52:
+autodecoder_arm_monolithic_49:
   if ((instruction & (1u << 16)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_51:
+autodecoder_arm_monolithic_48:
   if ((instruction & (1u << 19)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_50:
+autodecoder_arm_monolithic_47:
   if ((instruction & (1u << 18)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_49:
+autodecoder_arm_monolithic_46:
   if ((instruction & (1u << 17)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_48:
+autodecoder_arm_monolithic_45:
   if ((instruction & (1u << 6)) == 0)
   {
-    goto autodecoder_arm_monolithic_47;
+    goto autodecoder_arm_monolithic_44;
   }
 
-autodecoder_arm_monolithic_36:
+autodecoder_arm_monolithic_37:
   if (instruction & (1u << 5))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_35:
-  if (instruction & (1u << 8))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_34:
-  if (instruction & (1u << 11))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_33:
-  if (instruction & (1u << 10))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_32:
-  if (instruction & (1u << 9))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_31:
+autodecoder_arm_monolithic_36:
   if ((instruction & (1u << 22)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
@@ -221,70 +211,42 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   return armDmbInstruction;
 
 
-autodecoder_arm_monolithic_47:
+autodecoder_arm_monolithic_44:
   if ((instruction & (1u << 3)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_46:
+autodecoder_arm_monolithic_43:
   if (instruction & (1u << 5))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_45:
-  if (instruction & (1u << 8))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_44:
-  if (instruction & (1u << 11))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_43:
-  if (instruction & (1u << 10))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
 autodecoder_arm_monolithic_42:
-  if (instruction & (1u << 9))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_41:
   if ((instruction & (1u << 0)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_40:
+autodecoder_arm_monolithic_41:
   if ((instruction & (1u << 2)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_39:
+autodecoder_arm_monolithic_40:
   if ((instruction & (1u << 1)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_38:
+autodecoder_arm_monolithic_39:
   if ((instruction & (1u << 22)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
@@ -293,122 +255,111 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   return armClrexInstruction;
 
 
-autodecoder_arm_monolithic_80:
+autodecoder_arm_monolithic_77:
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_27;
+    goto autodecoder_arm_monolithic_32;
   }
 
-autodecoder_arm_monolithic_79:
+autodecoder_arm_monolithic_76:
   if (instruction & (1u << 7))
   {
-    goto autodecoder_arm_monolithic_23;
+    goto autodecoder_arm_monolithic_28;
   }
 
-autodecoder_arm_monolithic_78:
+autodecoder_arm_monolithic_75:
+  if (instruction & (1u << 8))
+  {
+    goto autodecoder_arm_monolithic_28;
+  }
+
+autodecoder_arm_monolithic_74:
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_28;
+  }
+
+autodecoder_arm_monolithic_73:
+  if (instruction & (1u << 11))
+  {
+    goto autodecoder_arm_monolithic_28;
+  }
+
+autodecoder_arm_monolithic_72:
+  if (instruction & (1u << 9))
+  {
+    goto autodecoder_arm_monolithic_28;
+  }
+
+autodecoder_arm_monolithic_71:
   if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_77;
+    goto autodecoder_arm_monolithic_70;
   }
 
-autodecoder_arm_monolithic_23:
-  if ((instruction & (1u << 20)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_22:
+autodecoder_arm_monolithic_28:
   if (instruction & (1u << 21))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return armPldInstruction;
+  goto autodecoder_arm_monolithic_27;
 
-autodecoder_arm_monolithic_77:
+autodecoder_arm_monolithic_70:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_27;
+  }
+
+autodecoder_arm_monolithic_69:
   if ((instruction & (1u << 20)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_76:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    return armPldInstruction;
-  }
-
-autodecoder_arm_monolithic_75:
+autodecoder_arm_monolithic_68:
   if ((instruction & (1u << 16)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_74:
+autodecoder_arm_monolithic_67:
   if ((instruction & (1u << 19)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_73:
+autodecoder_arm_monolithic_66:
   if ((instruction & (1u << 18)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_72:
+autodecoder_arm_monolithic_65:
   if ((instruction & (1u << 17)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_71:
+autodecoder_arm_monolithic_64:
   if ((instruction & (1u << 6)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_70:
+autodecoder_arm_monolithic_63:
   if ((instruction & (1u << 5)) == 0)
   {
-    goto autodecoder_arm_monolithic_69;
-  }
-
-autodecoder_arm_monolithic_63:
-  if (instruction & (1u << 8))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_62:
-  if (instruction & (1u << 11))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_61:
-  if (instruction & (1u << 10))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+    goto autodecoder_arm_monolithic_62;
   }
 
 autodecoder_arm_monolithic_60:
-  if (instruction & (1u << 9))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_59:
   if ((instruction & (1u << 22)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
@@ -417,35 +368,7 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   return armIsbInstruction;
 
 
-autodecoder_arm_monolithic_69:
-  if (instruction & (1u << 8))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_68:
-  if (instruction & (1u << 11))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_67:
-  if (instruction & (1u << 10))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_66:
-  if (instruction & (1u << 9))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_65:
+autodecoder_arm_monolithic_62:
   if ((instruction & (1u << 22)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
@@ -454,22 +377,30 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   return armDsbInstruction;
 
 
-
 autodecoder_arm_monolithic_27:
   if ((instruction & (1u << 20)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
+  return armPldInstruction;
 
-autodecoder_arm_monolithic_26:
+
+autodecoder_arm_monolithic_32:
   if (instruction & (1u << 21))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_25:
+autodecoder_arm_monolithic_31:
+  if ((instruction & (1u << 20)) == 0)
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_30:
   if ((instruction & (1u << 22)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
@@ -478,113 +409,171 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   return armPliInstruction;
 
 
-autodecoder_arm_monolithic_470:
+autodecoder_arm_monolithic_442:
+  if ((instruction & (1u << 15)) == 0)
+  {
+    goto autodecoder_arm_monolithic_441;
+  }
+
+autodecoder_arm_monolithic_417:
   if (instruction & (1u << 26))
   {
-    goto autodecoder_arm_monolithic_149;
+    goto autodecoder_arm_monolithic_141;
   }
 
-autodecoder_arm_monolithic_469:
+autodecoder_arm_monolithic_416:
   if (instruction & (1u << 25))
   {
-    goto autodecoder_arm_monolithic_232;
+    goto autodecoder_arm_monolithic_234;
   }
 
-autodecoder_arm_monolithic_468:
+autodecoder_arm_monolithic_415:
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_467;
+    goto autodecoder_arm_monolithic_414;
   }
 
-autodecoder_arm_monolithic_377:
+autodecoder_arm_monolithic_357:
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_376;
+    goto autodecoder_arm_monolithic_356;
   }
 
-autodecoder_arm_monolithic_353:
+autodecoder_arm_monolithic_325:
   if (instruction & (1u << 7))
   {
-    goto autodecoder_arm_monolithic_295;
+    goto autodecoder_arm_monolithic_284;
   }
 
-autodecoder_arm_monolithic_352:
+autodecoder_arm_monolithic_324:
+  if ((instruction & (1u << 8)) == 0)
+  {
+    goto autodecoder_arm_monolithic_320;
+  }
+
+autodecoder_arm_monolithic_323:
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_monolithic_320;
+  }
+
+autodecoder_arm_monolithic_322:
+  if ((instruction & (1u << 11)) == 0)
+  {
+    goto autodecoder_arm_monolithic_320;
+  }
+
+autodecoder_arm_monolithic_321:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_320;
+  }
+
+autodecoder_arm_monolithic_317:
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_310;
+    goto autodecoder_arm_monolithic_299;
   }
 
-autodecoder_arm_monolithic_351:
+autodecoder_arm_monolithic_316:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_315:
   if (instruction & (1u << 20))
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_350:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_349;
-  }
-
-autodecoder_arm_monolithic_340:
+autodecoder_arm_monolithic_314:
   if ((instruction & (1u << 16)) == 0)
   {
-    goto autodecoder_arm_monolithic_336;
+    goto autodecoder_arm_monolithic_310;
   }
 
-autodecoder_arm_monolithic_339:
+autodecoder_arm_monolithic_313:
   if ((instruction & (1u << 19)) == 0)
   {
-    goto autodecoder_arm_monolithic_336;
+    goto autodecoder_arm_monolithic_310;
   }
 
-autodecoder_arm_monolithic_338:
+autodecoder_arm_monolithic_312:
   if ((instruction & (1u << 18)) == 0)
   {
-    goto autodecoder_arm_monolithic_336;
+    goto autodecoder_arm_monolithic_310;
   }
 
-autodecoder_arm_monolithic_337:
+autodecoder_arm_monolithic_311:
   if ((instruction & (1u << 17)) == 0)
   {
-    goto autodecoder_arm_monolithic_336;
+    goto autodecoder_arm_monolithic_310;
   }
 
-autodecoder_arm_monolithic_335:
+autodecoder_arm_monolithic_309:
   if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_monolithic_321;
+    goto autodecoder_arm_monolithic_303;
   }
-  goto autodecoder_arm_monolithic_334;
+  goto autodecoder_arm_monolithic_308;
 
-autodecoder_arm_monolithic_584:
+autodecoder_arm_monolithic_320:
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_299;
+  }
+  goto autodecoder_arm_monolithic_319;
+
+autodecoder_arm_monolithic_508:
+  if (instruction & (1u << 14))
+  {
+    goto autodecoder_arm_monolithic_446;
+  }
+
+autodecoder_arm_monolithic_507:
+  if ((instruction & (1u << 12)) == 0)
+  {
+    goto autodecoder_arm_monolithic_506;
+  }
+
+autodecoder_arm_monolithic_446:
   if ((instruction & (1u << 27)) == 0)
   {
-    goto autodecoder_arm_monolithic_583;
+    goto autodecoder_arm_monolithic_445;
   }
 
-autodecoder_arm_monolithic_540:
-  if (instruction & (1u << 12))
+autodecoder_arm_monolithic_25:
+  if (instruction & (1u << 28))
+  {
+    goto autodecoder_arm_monolithic_3;
+  }
+  goto autodecoder_arm_monolithic_24;
+
+autodecoder_arm_monolithic_445:
+  if (instruction & (1u << 28))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+  goto autodecoder_arm_monolithic_441;
+
+autodecoder_arm_monolithic_506:
+  if ((instruction & (1u << 27)) == 0)
   {
     goto autodecoder_arm_monolithic_505;
   }
 
-autodecoder_arm_monolithic_539:
-  if (instruction & (1u << 13))
-  {
-    goto autodecoder_arm_monolithic_505;
-  }
-
-autodecoder_arm_monolithic_538:
-  if ((instruction & (1u << 14)) == 0)
-  {
-    goto autodecoder_arm_monolithic_537;
-  }
-
-autodecoder_arm_monolithic_505:
+autodecoder_arm_monolithic_481:
   if ((instruction & (1u << 28)) == 0)
   {
-    goto autodecoder_arm_monolithic_504;
+    goto autodecoder_arm_monolithic_24;
+  }
+
+autodecoder_arm_monolithic_480:
+  if ((instruction & (1u << 15)) == 0)
+  {
+    goto autodecoder_arm_monolithic_479;
   }
 
 autodecoder_arm_monolithic_3:
@@ -602,211 +591,126 @@ autodecoder_arm_monolithic_2:
     printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
 
-autodecoder_arm_monolithic_537:
-  if ((instruction & (1u << 28)) == 0)
-  {
-    goto autodecoder_arm_monolithic_504;
-  }
-
-autodecoder_arm_monolithic_536:
+autodecoder_arm_monolithic_479:
   if (instruction & (1u << 26))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_535:
+autodecoder_arm_monolithic_478:
   if ((instruction & (1u << 25)) == 0)
   {
-    goto autodecoder_arm_monolithic_534;
+    goto autodecoder_arm_monolithic_477;
   }
   return armBlxImmediateInstruction;
 
 
-autodecoder_arm_monolithic_534:
+autodecoder_arm_monolithic_477:
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_533;
+    goto autodecoder_arm_monolithic_476;
   }
 
-autodecoder_arm_monolithic_519:
+autodecoder_arm_monolithic_462:
   if (instruction & (1u << 7))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_518:
-  if (instruction & (1u << 20))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-  goto autodecoder_arm_monolithic_517;
-
-autodecoder_arm_monolithic_533:
-  if (instruction & (1u << 7))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_532:
-  if ((instruction & (1u << 20)) == 0)
-  {
-    goto autodecoder_arm_monolithic_517;
-  }
-
-autodecoder_arm_monolithic_531:
-  if (instruction & (1u << 6))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_530:
-  if (instruction & (1u << 3))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_529:
-  if (instruction & (1u << 5))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_528:
+autodecoder_arm_monolithic_461:
   if (instruction & (1u << 8))
   {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+    goto autodecoder_arm_monolithic_460;
   }
+    printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
 
-autodecoder_arm_monolithic_527:
-  if ((instruction & (1u << 11)) == 0)
+autodecoder_arm_monolithic_476:
+  if (instruction & (1u << 7))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_526:
-  if (instruction & (1u << 10))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_525:
-  if ((instruction & (1u << 9)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_524:
-  if (instruction & (1u << 0))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_523:
-  if (instruction & (1u << 2))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_522:
-  if (instruction & (1u << 1))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_521:
-  if (instruction & (1u << 22))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-  return armRfeInstruction;
-
-
-autodecoder_arm_monolithic_517:
-  if ((instruction & (1u << 16)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_516:
-  if ((instruction & (1u << 19)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_515:
-  if ((instruction & (1u << 18)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_514:
-  if (instruction & (1u << 17))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_513:
-  if (instruction & (1u << 6))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_512:
-  if (instruction & (1u << 5))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_511:
+autodecoder_arm_monolithic_475:
   if ((instruction & (1u << 8)) == 0)
   {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+    goto autodecoder_arm_monolithic_474;
   }
 
-autodecoder_arm_monolithic_510:
-  if (instruction & (1u << 11))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_509:
+autodecoder_arm_monolithic_460:
   if ((instruction & (1u << 10)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_508:
+autodecoder_arm_monolithic_459:
+  if (instruction & (1u << 11))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_458:
   if (instruction & (1u << 9))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_507:
+autodecoder_arm_monolithic_457:
+  if (instruction & (1u << 20))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_456:
+  if ((instruction & (1u << 16)) == 0)
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_455:
+  if ((instruction & (1u << 19)) == 0)
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_454:
+  if ((instruction & (1u << 18)) == 0)
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_453:
+  if (instruction & (1u << 17))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_452:
+  if (instruction & (1u << 6))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_451:
+  if (instruction & (1u << 5))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_450:
   if ((instruction & (1u << 22)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
@@ -815,140 +719,217 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   return armSrsInstruction;
 
 
-autodecoder_arm_monolithic_583:
-  if (instruction & (1u << 12))
-  {
-    goto autodecoder_arm_monolithic_496;
-  }
-
-autodecoder_arm_monolithic_582:
-  if (instruction & (1u << 13))
-  {
-    goto autodecoder_arm_monolithic_496;
-  }
-
-autodecoder_arm_monolithic_581:
-  if ((instruction & (1u << 14)) == 0)
-  {
-    goto autodecoder_arm_monolithic_580;
-  }
-
-autodecoder_arm_monolithic_496:
-  if (instruction & (1u << 28))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_495:
-  if (instruction & (1u << 26))
-  {
-    goto autodecoder_arm_monolithic_473;
-  }
-
-autodecoder_arm_monolithic_494:
-  if (instruction & (1u << 25))
-  {
-    goto autodecoder_arm_monolithic_480;
-  }
-
-autodecoder_arm_monolithic_493:
-  if (instruction & (1u << 4))
-  {
-    goto autodecoder_arm_monolithic_486;
-  }
-  goto autodecoder_arm_monolithic_492;
-
-autodecoder_arm_monolithic_580:
-  if ((instruction & (1u << 28)) == 0)
-  {
-    goto autodecoder_arm_monolithic_579;
-  }
-
-autodecoder_arm_monolithic_560:
-  if (instruction & (1u << 26))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_559:
-  if (instruction & (1u << 25))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_558:
-  if ((instruction & (1u << 24)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_557:
-  if (instruction & (1u << 23))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_556:
-  if (instruction & (1u << 20))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_555:
-  if (instruction & (1u << 21))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_554:
-  if ((instruction & (1u << 16)) == 0)
-  {
-    goto autodecoder_arm_monolithic_553;
-  }
-
-autodecoder_arm_monolithic_547:
-  if (instruction & (1u << 19))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_546:
-  if (instruction & (1u << 18))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_545:
-  if (instruction & (1u << 17))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_544:
-  if (instruction & (1u << 11))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_543:
+autodecoder_arm_monolithic_474:
   if (instruction & (1u << 10))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_542:
+autodecoder_arm_monolithic_473:
+  if ((instruction & (1u << 11)) == 0)
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_472:
+  if ((instruction & (1u << 9)) == 0)
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_471:
+  if ((instruction & (1u << 20)) == 0)
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_470:
+  if (instruction & (1u << 6))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_469:
+  if (instruction & (1u << 3))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_468:
+  if (instruction & (1u << 5))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_467:
+  if (instruction & (1u << 0))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_466:
+  if (instruction & (1u << 2))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_465:
+  if (instruction & (1u << 1))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_464:
+  if (instruction & (1u << 22))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+  return armRfeInstruction;
+
+
+autodecoder_arm_monolithic_505:
+  if ((instruction & (1u << 28)) == 0)
+  {
+    goto autodecoder_arm_monolithic_441;
+  }
+
+autodecoder_arm_monolithic_504:
+  if (instruction & (1u << 15))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_503:
+  if (instruction & (1u << 26))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_502:
+  if (instruction & (1u << 25))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_501:
+  if ((instruction & (1u << 24)) == 0)
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_500:
+  if (instruction & (1u << 10))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_499:
+  if (instruction & (1u << 11))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_498:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_497;
+  }
+
+autodecoder_arm_monolithic_490:
+  if (instruction & (1u << 23))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_489:
+  if (instruction & (1u << 21))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_488:
+  if (instruction & (1u << 20))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_487:
+  if (instruction & (1u << 16))
+  {
+    goto autodecoder_arm_monolithic_486;
+  }
+    printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+
+autodecoder_arm_monolithic_497:
+  if (instruction & (1u << 23))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_496:
+  if (instruction & (1u << 21))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_495:
+  if (instruction & (1u << 20))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_494:
+  if ((instruction & (1u << 16)) == 0)
+  {
+    goto autodecoder_arm_monolithic_493;
+  }
+
+autodecoder_arm_monolithic_486:
+  if (instruction & (1u << 19))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_485:
+  if (instruction & (1u << 18))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_484:
+  if (instruction & (1u << 17))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_483:
   if (instruction & (1u << 22))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
@@ -957,35 +938,14 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   return armSetendInstruction;
 
 
-autodecoder_arm_monolithic_553:
+autodecoder_arm_monolithic_493:
   if (instruction & (1u << 5))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_552:
-  if (instruction & (1u << 11))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_551:
-  if (instruction & (1u << 10))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_550:
-  if (instruction & (1u << 9))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_549:
+autodecoder_arm_monolithic_492:
   if (instruction & (1u << 22))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
@@ -994,67 +954,67 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   return armCpsInstruction;
 
 
-autodecoder_arm_monolithic_579:
+autodecoder_arm_monolithic_441:
   if (instruction & (1u << 26))
   {
-    goto autodecoder_arm_monolithic_473;
+    goto autodecoder_arm_monolithic_419;
   }
 
-autodecoder_arm_monolithic_578:
+autodecoder_arm_monolithic_440:
   if (instruction & (1u << 25))
   {
-    goto autodecoder_arm_monolithic_480;
+    goto autodecoder_arm_monolithic_426;
   }
 
-autodecoder_arm_monolithic_577:
+autodecoder_arm_monolithic_439:
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_576;
+    goto autodecoder_arm_monolithic_438;
   }
 
-autodecoder_arm_monolithic_486:
+autodecoder_arm_monolithic_430:
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_485;
+    goto autodecoder_arm_monolithic_429;
   }
 
-autodecoder_arm_monolithic_484:
+autodecoder_arm_monolithic_428:
   if (instruction & (1u << 7))
   {
-    goto autodecoder_arm_monolithic_295;
+    goto autodecoder_arm_monolithic_284;
   }
 
-autodecoder_arm_monolithic_483:
+autodecoder_arm_monolithic_427:
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_478;
+    goto autodecoder_arm_monolithic_424;
   }
 
-autodecoder_arm_monolithic_482:
+autodecoder_arm_monolithic_319:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_318:
   if (instruction & (1u << 20))
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_481:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_349;
-  }
-
-autodecoder_arm_monolithic_336:
+autodecoder_arm_monolithic_310:
   if ((instruction & (1u << 6)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_321:
+autodecoder_arm_monolithic_303:
   if ((instruction & (1u << 5)) == 0)
   {
-    goto autodecoder_arm_monolithic_320;
+    return 0;
   }
 
-autodecoder_arm_monolithic_313:
+autodecoder_arm_monolithic_302:
   if (instruction & (1u << 22))
   {
     return armSmcInstruction;
@@ -1062,16 +1022,1026 @@ autodecoder_arm_monolithic_313:
   return armBkptInstruction;
 
 
-autodecoder_arm_monolithic_621:
-  if ((instruction & (1u << 15)) == 0)
+autodecoder_arm_monolithic_544:
+  if ((instruction & (1u << 13)) == 0)
   {
-    goto autodecoder_arm_monolithic_620;
+    goto autodecoder_arm_monolithic_541;
   }
 
-autodecoder_arm_monolithic_613:
+autodecoder_arm_monolithic_543:
+  if ((instruction & (1u << 14)) == 0)
+  {
+    goto autodecoder_arm_monolithic_541;
+  }
+
+autodecoder_arm_monolithic_542:
+  if ((instruction & (1u << 12)) == 0)
+  {
+    goto autodecoder_arm_monolithic_541;
+  }
+
+autodecoder_arm_monolithic_540:
+  if (instruction & (1u << 27))
+  {
+    goto autodecoder_arm_monolithic_24;
+  }
+
+autodecoder_arm_monolithic_539:
+  if ((instruction & (1u << 15)) == 0)
+  {
+    goto autodecoder_arm_monolithic_538;
+  }
+
+autodecoder_arm_monolithic_532:
+  if ((instruction & (1u << 26)) == 0)
+  {
+    goto autodecoder_arm_monolithic_531;
+  }
+
+autodecoder_arm_monolithic_141:
+  if ((instruction & (1u << 25)) == 0)
+  {
+    goto autodecoder_arm_monolithic_139;
+  }
+
+autodecoder_arm_monolithic_140:
+  if (instruction & (1u << 4))
+  {
+    goto autodecoder_arm_monolithic_137;
+  }
+
+autodecoder_arm_monolithic_139:
+  if ((instruction & (1u << 20)) == 0)
+  {
+    return 0;
+  }
+  return armLdrInstruction;
+
+
+autodecoder_arm_monolithic_531:
+  if ((instruction & (1u << 25)) == 0)
+  {
+    goto autodecoder_arm_monolithic_530;
+  }
+
+autodecoder_arm_monolithic_234:
+  if ((instruction & (1u << 4)) == 0)
+  {
+    goto autodecoder_arm_monolithic_233;
+  }
+
+autodecoder_arm_monolithic_189:
+  if ((instruction & (1u << 24)) == 0)
+  {
+    goto autodecoder_arm_monolithic_188;
+  }
+
+autodecoder_arm_monolithic_173:
+  if ((instruction & (1u << 7)) == 0)
+  {
+    goto autodecoder_arm_monolithic_157;
+  }
+
+autodecoder_arm_monolithic_172:
+  if (instruction & (1u << 8))
+  {
+    goto autodecoder_arm_monolithic_157;
+  }
+
+autodecoder_arm_monolithic_171:
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_157;
+  }
+
+autodecoder_arm_monolithic_170:
+  if (instruction & (1u << 11))
+  {
+    goto autodecoder_arm_monolithic_157;
+  }
+
+autodecoder_arm_monolithic_169:
+  if (instruction & (1u << 9))
+  {
+    goto autodecoder_arm_monolithic_157;
+  }
+
+autodecoder_arm_monolithic_168:
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_153;
+  }
+
+autodecoder_arm_monolithic_167:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_166:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_165:
+  if (instruction & (1u << 16))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_164:
+  if (instruction & (1u << 19))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_163:
+  if (instruction & (1u << 18))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_162:
+  if (instruction & (1u << 17))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_161:
+  if ((instruction & (1u << 6)) == 0)
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_160:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_159:
+  if (instruction & (1u << 22))
+  {
+    return armMsrInstruction;
+  }
+  return armDbgInstruction;
+
+
+autodecoder_arm_monolithic_233:
+  if ((instruction & (1u << 24)) == 0)
+  {
+    goto autodecoder_arm_monolithic_188;
+  }
+
+autodecoder_arm_monolithic_232:
+  if ((instruction & (1u << 7)) == 0)
+  {
+    goto autodecoder_arm_monolithic_231;
+  }
+
+autodecoder_arm_monolithic_157:
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_153;
+  }
+
+autodecoder_arm_monolithic_156:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_155:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+  return armMsrInstruction;
+
+autodecoder_arm_monolithic_231:
+  if (instruction & (1u << 8))
+  {
+    goto autodecoder_arm_monolithic_203;
+  }
+
+autodecoder_arm_monolithic_230:
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_203;
+  }
+
+autodecoder_arm_monolithic_229:
+  if (instruction & (1u << 11))
+  {
+    goto autodecoder_arm_monolithic_203;
+  }
+
+autodecoder_arm_monolithic_228:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_227;
+  }
+
+autodecoder_arm_monolithic_203:
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_153;
+  }
+
+autodecoder_arm_monolithic_202:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_201:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_200:
+  if (instruction & (1u << 16))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_199:
+  if (instruction & (1u << 19))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_198:
+  if (instruction & (1u << 18))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_197:
+  if (instruction & (1u << 17))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_196:
+  if (instruction & (1u << 6))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_195:
+  if (instruction & (1u << 3))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_194:
+  if (instruction & (1u << 5))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_193:
+  if (instruction & (1u << 0))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_192:
+  if (instruction & (1u << 2))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_191:
+  if (instruction & (1u << 1))
+  {
+    return armMsrInstruction;
+  }
+  goto autodecoder_arm_monolithic_190;
+
+autodecoder_arm_monolithic_227:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_226;
+  }
+
+autodecoder_arm_monolithic_153:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_152;
+  }
+
+autodecoder_arm_monolithic_149:
+  if (instruction & (1u << 16))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_148:
+  if (instruction & (1u << 19))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_147:
+  if (instruction & (1u << 18))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_146:
+  if (instruction & (1u << 17))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+  goto autodecoder_arm_monolithic_145;
+
+autodecoder_arm_monolithic_226:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_225:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_224:
+  if (instruction & (1u << 16))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_223:
+  if (instruction & (1u << 19))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_222:
+  if (instruction & (1u << 18))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_221:
+  if (instruction & (1u << 17))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_220:
+  if (instruction & (1u << 6))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_219:
+  if (instruction & (1u << 3))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_218:
+  if (instruction & (1u << 5))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_217:
+  if ((instruction & (1u << 0)) == 0)
+  {
+    goto autodecoder_arm_monolithic_216;
+  }
+
+autodecoder_arm_monolithic_209:
+  if (instruction & (1u << 2))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_208:
+  if ((instruction & (1u << 1)) == 0)
+  {
+    goto autodecoder_arm_monolithic_207;
+  }
+
+autodecoder_arm_monolithic_205:
+  if (instruction & (1u << 22))
+  {
+    return armMsrInstruction;
+  }
+  return armWfiInstruction;
+
+
+autodecoder_arm_monolithic_207:
+  if (instruction & (1u << 22))
+  {
+    return armMsrInstruction;
+  }
+  return armYieldInstruction;
+
+
+autodecoder_arm_monolithic_216:
+  if ((instruction & (1u << 2)) == 0)
+  {
+    goto autodecoder_arm_monolithic_215;
+  }
+
+autodecoder_arm_monolithic_212:
+  if (instruction & (1u << 1))
+  {
+    return armMsrInstruction;
+  }
+
+autodecoder_arm_monolithic_211:
+  if (instruction & (1u << 22))
+  {
+    return armMsrInstruction;
+  }
+  return armSevInstruction;
+
+
+autodecoder_arm_monolithic_215:
+  if ((instruction & (1u << 1)) == 0)
+  {
+    goto autodecoder_arm_monolithic_190;
+  }
+
+autodecoder_arm_monolithic_214:
+  if (instruction & (1u << 22))
+  {
+    return armMsrInstruction;
+  }
+  return armWfeInstruction;
+
+
+autodecoder_arm_monolithic_190:
+  if (instruction & (1u << 22))
+  {
+    return armMsrInstruction;
+  }
+  return 0;
+
+autodecoder_arm_monolithic_530:
+  if ((instruction & (1u << 4)) == 0)
+  {
+    goto autodecoder_arm_monolithic_414;
+  }
+
+autodecoder_arm_monolithic_529:
+  if ((instruction & (1u << 24)) == 0)
+  {
+    goto autodecoder_arm_monolithic_356;
+  }
+
+autodecoder_arm_monolithic_528:
+  if (instruction & (1u << 7))
+  {
+    goto autodecoder_arm_monolithic_284;
+  }
+
+autodecoder_arm_monolithic_527:
+  if ((instruction & (1u << 8)) == 0)
+  {
+    goto autodecoder_arm_monolithic_523;
+  }
+
+autodecoder_arm_monolithic_526:
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_monolithic_523;
+  }
+
+autodecoder_arm_monolithic_525:
+  if ((instruction & (1u << 11)) == 0)
+  {
+    goto autodecoder_arm_monolithic_523;
+  }
+
+autodecoder_arm_monolithic_524:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_523;
+  }
+
+autodecoder_arm_monolithic_520:
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_299;
+  }
+
+autodecoder_arm_monolithic_519:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_518:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_517:
+  if ((instruction & (1u << 16)) == 0)
+  {
+    goto autodecoder_arm_monolithic_513;
+  }
+
+autodecoder_arm_monolithic_516:
+  if ((instruction & (1u << 19)) == 0)
+  {
+    goto autodecoder_arm_monolithic_513;
+  }
+
+autodecoder_arm_monolithic_515:
+  if ((instruction & (1u << 18)) == 0)
+  {
+    goto autodecoder_arm_monolithic_513;
+  }
+
+autodecoder_arm_monolithic_514:
+  if ((instruction & (1u << 17)) == 0)
+  {
+    goto autodecoder_arm_monolithic_513;
+  }
+
+autodecoder_arm_monolithic_512:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_511;
+  }
+
+autodecoder_arm_monolithic_308:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_307;
+  }
+
+autodecoder_arm_monolithic_305:
+  if (instruction & (1u << 22))
+  {
+    return 0;
+  }
+  return armBlxRegisterInstruction;
+
+
+autodecoder_arm_monolithic_307:
+  if (instruction & (1u << 22))
+  {
+    return 0;
+  }
+  return armBxInstruction;
+
+
+autodecoder_arm_monolithic_523:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_522;
+  }
+
+autodecoder_arm_monolithic_299:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_152;
+  }
+
+autodecoder_arm_monolithic_298:
+  if (instruction & (1u << 16))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_297:
+  if (instruction & (1u << 19))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_296:
+  if (instruction & (1u << 18))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_295:
+  if (instruction & (1u << 17))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_294:
+  if ((instruction & (1u << 6)) == 0)
+  {
+    goto autodecoder_arm_monolithic_293;
+  }
+
+autodecoder_arm_monolithic_288:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_287;
+  }
+
+autodecoder_arm_monolithic_285:
+  if (instruction & (1u << 22))
+  {
+    return armMvnInstruction;
+  }
+  return 0;
+
+autodecoder_arm_monolithic_356:
+  if (instruction & (1u << 7))
+  {
+    goto autodecoder_arm_monolithic_355;
+  }
+  goto autodecoder_arm_monolithic_188;
+
+autodecoder_arm_monolithic_414:
+  if ((instruction & (1u << 24)) == 0)
+  {
+    goto autodecoder_arm_monolithic_188;
+  }
+
+autodecoder_arm_monolithic_413:
+  if (instruction & (1u << 7))
+  {
+    goto autodecoder_arm_monolithic_367;
+  }
+
+autodecoder_arm_monolithic_412:
+  if ((instruction & (1u << 8)) == 0)
+  {
+    goto autodecoder_arm_monolithic_411;
+  }
+
+autodecoder_arm_monolithic_381:
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_monolithic_367;
+  }
+
+autodecoder_arm_monolithic_380:
+  if ((instruction & (1u << 11)) == 0)
+  {
+    goto autodecoder_arm_monolithic_367;
+  }
+
+autodecoder_arm_monolithic_379:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_367;
+  }
+
+autodecoder_arm_monolithic_378:
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_366;
+  }
+
+autodecoder_arm_monolithic_377:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_376:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_375:
+  if ((instruction & (1u << 16)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_374:
+  if ((instruction & (1u << 19)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_373:
+  if ((instruction & (1u << 18)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_372:
+  if ((instruction & (1u << 17)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_371:
+  if (instruction & (1u << 6))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_370:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_369:
+  if (instruction & (1u << 22))
+  {
+    return 0;
+  }
+  return armBxjInstruction;
+
+
+autodecoder_arm_monolithic_411:
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_367;
+  }
+
+autodecoder_arm_monolithic_410:
+  if (instruction & (1u << 11))
+  {
+    goto autodecoder_arm_monolithic_367;
+  }
+
+autodecoder_arm_monolithic_409:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_408;
+  }
+
+autodecoder_arm_monolithic_367:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_366:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_152;
+  }
+
+autodecoder_arm_monolithic_365:
+  if (instruction & (1u << 16))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_364:
+  if (instruction & (1u << 19))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_363:
+  if (instruction & (1u << 18))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_362:
+  if (instruction & (1u << 17))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_361:
+  if ((instruction & (1u << 6)) == 0)
+  {
+    goto autodecoder_arm_monolithic_293;
+  }
+
+autodecoder_arm_monolithic_360:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_287;
+  }
+
+autodecoder_arm_monolithic_359:
+  if (instruction & (1u << 22))
+  {
+    return armMvnInstruction;
+  }
+  return armRorInstruction;
+
+
+autodecoder_arm_monolithic_293:
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_290;
+  }
+
+autodecoder_arm_monolithic_292:
+  if (instruction & (1u << 22))
+  {
+    return armMvnInstruction;
+  }
+  return armLslInstruction;
+
+
+autodecoder_arm_monolithic_408:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_407;
+  }
+
+autodecoder_arm_monolithic_391:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_152;
+  }
+
+autodecoder_arm_monolithic_390:
+  if (instruction & (1u << 16))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_389:
+  if (instruction & (1u << 19))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_388:
+  if (instruction & (1u << 18))
+  {
+    goto autodecoder_arm_monolithic_143;
+  }
+
+autodecoder_arm_monolithic_387:
+  if ((instruction & (1u << 17)) == 0)
+  {
+    goto autodecoder_arm_monolithic_386;
+  }
+
+autodecoder_arm_monolithic_143:
+  if (instruction & (1u << 22))
+  {
+    return armMvnInstruction;
+  }
+    printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+
+autodecoder_arm_monolithic_386:
+  if ((instruction & (1u << 6)) == 0)
+  {
+    goto autodecoder_arm_monolithic_385;
+  }
+
+autodecoder_arm_monolithic_384:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_287;
+  }
+
+autodecoder_arm_monolithic_383:
+  if (instruction & (1u << 22))
+  {
+    return armMvnInstruction;
+  }
+  return armRrxInstruction;
+
+
+autodecoder_arm_monolithic_287:
+  if (instruction & (1u << 22))
+  {
+    return armMvnInstruction;
+  }
+  return armAsrInstruction;
+
+
+autodecoder_arm_monolithic_385:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_145;
+  }
+
+autodecoder_arm_monolithic_290:
+  if (instruction & (1u << 22))
+  {
+    return armMvnInstruction;
+  }
+  return armLsrInstruction;
+
+
+autodecoder_arm_monolithic_145:
+  if ((instruction & (1u << 22)) == 0)
+  {
+    return armMovInstruction;
+  }
+  return armMvnInstruction;
+
+
+
+autodecoder_arm_monolithic_152:
+  if ((instruction & (1u << 22)) == 0)
+  {
+    return armOrrInstruction;
+  }
+  return armBicInstruction;
+
+
+
+autodecoder_arm_monolithic_407:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_406;
+  }
+
+autodecoder_arm_monolithic_394:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_393:
+  if (instruction & (1u << 6))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_392:
+  if (instruction & (1u << 5))
+  {
+    return 0;
+  }
+  return armMsrInstruction;
+
+
+autodecoder_arm_monolithic_188:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_187;
+  }
+
+autodecoder_arm_monolithic_180:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_179;
+  }
+
+autodecoder_arm_monolithic_176:
+  if ((instruction & (1u << 22)) == 0)
+  {
+    return armAdcInstruction;
+  }
+  return armRscInstruction;
+
+
+
+autodecoder_arm_monolithic_179:
+  if ((instruction & (1u << 22)) == 0)
+  {
+    return armAddInstruction;
+  }
+  return armSbcInstruction;
+
+
+
+autodecoder_arm_monolithic_187:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_186;
+  }
+
+autodecoder_arm_monolithic_183:
+  if ((instruction & (1u << 22)) == 0)
+  {
+    return armEorInstruction;
+  }
+  return armRsbInstruction;
+
+
+
+autodecoder_arm_monolithic_186:
+  if ((instruction & (1u << 22)) == 0)
+  {
+    return armAndInstruction;
+  }
+  return armSubInstruction;
+
+
+
+autodecoder_arm_monolithic_541:
   if ((instruction & (1u << 27)) == 0)
   {
-    goto autodecoder_arm_monolithic_612;
+    goto autodecoder_arm_monolithic_538;
+  }
+
+autodecoder_arm_monolithic_24:
+  if ((instruction & (1u << 15)) == 0)
+  {
+    goto autodecoder_arm_monolithic_23;
   }
 
 autodecoder_arm_monolithic_19:
@@ -1093,1010 +2063,10 @@ autodecoder_arm_monolithic_17:
   }
   goto autodecoder_arm_monolithic_16;
 
-autodecoder_arm_monolithic_612:
-  if ((instruction & (1u << 12)) == 0)
-  {
-    goto autodecoder_arm_monolithic_609;
-  }
-
-autodecoder_arm_monolithic_611:
-  if ((instruction & (1u << 13)) == 0)
-  {
-    goto autodecoder_arm_monolithic_609;
-  }
-
-autodecoder_arm_monolithic_610:
-  if ((instruction & (1u << 14)) == 0)
-  {
-    goto autodecoder_arm_monolithic_609;
-  }
-
-autodecoder_arm_monolithic_601:
+autodecoder_arm_monolithic_23:
   if ((instruction & (1u << 26)) == 0)
   {
-    goto autodecoder_arm_monolithic_600;
-  }
-
-autodecoder_arm_monolithic_149:
-  if ((instruction & (1u << 25)) == 0)
-  {
-    goto autodecoder_arm_monolithic_147;
-  }
-
-autodecoder_arm_monolithic_148:
-  if (instruction & (1u << 4))
-  {
-    goto autodecoder_arm_monolithic_145;
-  }
-
-autodecoder_arm_monolithic_147:
-  if ((instruction & (1u << 20)) == 0)
-  {
-    return 0;
-  }
-  return armLdrInstruction;
-
-
-autodecoder_arm_monolithic_600:
-  if ((instruction & (1u << 25)) == 0)
-  {
-    goto autodecoder_arm_monolithic_599;
-  }
-
-autodecoder_arm_monolithic_232:
-  if ((instruction & (1u << 4)) == 0)
-  {
-    goto autodecoder_arm_monolithic_231;
-  }
-
-autodecoder_arm_monolithic_197:
-  if ((instruction & (1u << 24)) == 0)
-  {
-    goto autodecoder_arm_monolithic_196;
-  }
-
-autodecoder_arm_monolithic_181:
-  if ((instruction & (1u << 7)) == 0)
-  {
-    goto autodecoder_arm_monolithic_180;
-  }
-
-autodecoder_arm_monolithic_177:
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_161;
-  }
-
-autodecoder_arm_monolithic_176:
-  if (instruction & (1u << 20))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_175:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_174:
-  if (instruction & (1u << 16))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_173:
-  if (instruction & (1u << 19))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_172:
-  if (instruction & (1u << 18))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_171:
-  if (instruction & (1u << 17))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_170:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_169:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_168:
-  if (instruction & (1u << 8))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_167:
-  if (instruction & (1u << 11))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_166:
-  if (instruction & (1u << 10))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_165:
-  if (instruction & (1u << 9))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_164:
-  if (instruction & (1u << 22))
-  {
-    return armMsrInstruction;
-  }
-  return armDbgInstruction;
-
-
-autodecoder_arm_monolithic_231:
-  if ((instruction & (1u << 24)) == 0)
-  {
-    goto autodecoder_arm_monolithic_196;
-  }
-
-autodecoder_arm_monolithic_230:
-  if ((instruction & (1u << 7)) == 0)
-  {
-    goto autodecoder_arm_monolithic_229;
-  }
-
-autodecoder_arm_monolithic_180:
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_161;
-  }
-
-autodecoder_arm_monolithic_179:
-  if (instruction & (1u << 20))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_178:
-  if (instruction & (1u << 21))
-  {
-    return armMsrInstruction;
-  }
-  return 0;
-
-autodecoder_arm_monolithic_229:
-  if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_228;
-  }
-
-autodecoder_arm_monolithic_161:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_160;
-  }
-
-autodecoder_arm_monolithic_157:
-  if (instruction & (1u << 16))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_156:
-  if (instruction & (1u << 19))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_155:
-  if (instruction & (1u << 18))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_154:
-  if (instruction & (1u << 17))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-  goto autodecoder_arm_monolithic_153;
-
-autodecoder_arm_monolithic_228:
-  if (instruction & (1u << 20))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_227:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_226:
-  if (instruction & (1u << 16))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_225:
-  if (instruction & (1u << 19))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_224:
-  if (instruction & (1u << 18))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_223:
-  if (instruction & (1u << 17))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_222:
-  if (instruction & (1u << 6))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_221:
-  if (instruction & (1u << 3))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_220:
-  if (instruction & (1u << 5))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_219:
-  if (instruction & (1u << 8))
-  {
-    goto autodecoder_arm_monolithic_201;
-  }
-
-autodecoder_arm_monolithic_218:
-  if (instruction & (1u << 11))
-  {
-    goto autodecoder_arm_monolithic_201;
-  }
-
-autodecoder_arm_monolithic_217:
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_201;
-  }
-
-autodecoder_arm_monolithic_216:
-  if ((instruction & (1u << 9)) == 0)
-  {
-    goto autodecoder_arm_monolithic_215;
-  }
-
-autodecoder_arm_monolithic_201:
-  if (instruction & (1u << 0))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_200:
-  if (instruction & (1u << 2))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_199:
-  if (instruction & (1u << 1))
-  {
-    return armMsrInstruction;
-  }
-  goto autodecoder_arm_monolithic_198;
-
-autodecoder_arm_monolithic_215:
-  if ((instruction & (1u << 0)) == 0)
-  {
-    goto autodecoder_arm_monolithic_214;
-  }
-
-autodecoder_arm_monolithic_207:
-  if (instruction & (1u << 2))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_206:
-  if ((instruction & (1u << 1)) == 0)
-  {
-    goto autodecoder_arm_monolithic_205;
-  }
-
-autodecoder_arm_monolithic_203:
-  if (instruction & (1u << 22))
-  {
-    return armMsrInstruction;
-  }
-  return armWfiInstruction;
-
-
-autodecoder_arm_monolithic_205:
-  if (instruction & (1u << 22))
-  {
-    return armMsrInstruction;
-  }
-  return armYieldInstruction;
-
-
-autodecoder_arm_monolithic_214:
-  if ((instruction & (1u << 2)) == 0)
-  {
-    goto autodecoder_arm_monolithic_213;
-  }
-
-autodecoder_arm_monolithic_210:
-  if (instruction & (1u << 1))
-  {
-    return armMsrInstruction;
-  }
-
-autodecoder_arm_monolithic_209:
-  if (instruction & (1u << 22))
-  {
-    return armMsrInstruction;
-  }
-  return armSevInstruction;
-
-
-autodecoder_arm_monolithic_213:
-  if ((instruction & (1u << 1)) == 0)
-  {
-    goto autodecoder_arm_monolithic_198;
-  }
-
-autodecoder_arm_monolithic_212:
-  if (instruction & (1u << 22))
-  {
-    return armMsrInstruction;
-  }
-  return armWfeInstruction;
-
-
-autodecoder_arm_monolithic_198:
-  if (instruction & (1u << 22))
-  {
-    return armMsrInstruction;
-  }
-  return 0;
-
-autodecoder_arm_monolithic_599:
-  if ((instruction & (1u << 4)) == 0)
-  {
-    goto autodecoder_arm_monolithic_467;
-  }
-
-autodecoder_arm_monolithic_598:
-  if ((instruction & (1u << 24)) == 0)
-  {
-    goto autodecoder_arm_monolithic_376;
-  }
-
-autodecoder_arm_monolithic_597:
-  if (instruction & (1u << 7))
-  {
-    goto autodecoder_arm_monolithic_295;
-  }
-
-autodecoder_arm_monolithic_596:
-  if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_595;
-  }
-
-autodecoder_arm_monolithic_310:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_160;
-  }
-
-autodecoder_arm_monolithic_309:
-  if (instruction & (1u << 16))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_308:
-  if (instruction & (1u << 19))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_307:
-  if (instruction & (1u << 18))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_306:
-  if (instruction & (1u << 17))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_305:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_304;
-  }
-
-autodecoder_arm_monolithic_299:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_298;
-  }
-
-autodecoder_arm_monolithic_296:
-  if (instruction & (1u << 22))
-  {
-    return armMvnInstruction;
-  }
-  return 0;
-
-autodecoder_arm_monolithic_595:
-  if (instruction & (1u << 20))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_594:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_349;
-  }
-
-autodecoder_arm_monolithic_593:
-  if ((instruction & (1u << 16)) == 0)
-  {
-    goto autodecoder_arm_monolithic_589;
-  }
-
-autodecoder_arm_monolithic_592:
-  if ((instruction & (1u << 19)) == 0)
-  {
-    goto autodecoder_arm_monolithic_589;
-  }
-
-autodecoder_arm_monolithic_591:
-  if ((instruction & (1u << 18)) == 0)
-  {
-    goto autodecoder_arm_monolithic_589;
-  }
-
-autodecoder_arm_monolithic_590:
-  if ((instruction & (1u << 17)) == 0)
-  {
-    goto autodecoder_arm_monolithic_589;
-  }
-
-autodecoder_arm_monolithic_588:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_587;
-  }
-
-autodecoder_arm_monolithic_334:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_333;
-  }
-
-autodecoder_arm_monolithic_327:
-  if ((instruction & (1u << 8)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_326:
-  if ((instruction & (1u << 11)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_325:
-  if ((instruction & (1u << 10)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_324:
-  if ((instruction & (1u << 9)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_323:
-  if (instruction & (1u << 22))
-  {
-    return 0;
-  }
-  return armBlxRegisterInstruction;
-
-
-autodecoder_arm_monolithic_333:
-  if ((instruction & (1u << 8)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_332:
-  if ((instruction & (1u << 11)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_331:
-  if ((instruction & (1u << 10)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_330:
-  if ((instruction & (1u << 9)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_329:
-  if (instruction & (1u << 22))
-  {
-    return 0;
-  }
-  return armBxInstruction;
-
-
-autodecoder_arm_monolithic_376:
-  if (instruction & (1u << 7))
-  {
-    goto autodecoder_arm_monolithic_375;
-  }
-  goto autodecoder_arm_monolithic_196;
-
-autodecoder_arm_monolithic_467:
-  if ((instruction & (1u << 24)) == 0)
-  {
-    goto autodecoder_arm_monolithic_196;
-  }
-
-autodecoder_arm_monolithic_466:
-  if ((instruction & (1u << 7)) == 0)
-  {
-    goto autodecoder_arm_monolithic_465;
-  }
-
-autodecoder_arm_monolithic_411:
-  if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_410;
-  }
-
-autodecoder_arm_monolithic_386:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_160;
-  }
-
-autodecoder_arm_monolithic_385:
-  if (instruction & (1u << 16))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_384:
-  if (instruction & (1u << 19))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_383:
-  if (instruction & (1u << 18))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_382:
-  if (instruction & (1u << 17))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_381:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_304;
-  }
-
-autodecoder_arm_monolithic_380:
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_379;
-  }
-  goto autodecoder_arm_monolithic_298;
-
-autodecoder_arm_monolithic_304:
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_301;
-  }
-  goto autodecoder_arm_monolithic_303;
-
-autodecoder_arm_monolithic_465:
-  if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_464;
-  }
-
-autodecoder_arm_monolithic_429:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_160;
-  }
-
-autodecoder_arm_monolithic_428:
-  if (instruction & (1u << 16))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_427:
-  if (instruction & (1u << 19))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_426:
-  if (instruction & (1u << 18))
-  {
-    goto autodecoder_arm_monolithic_151;
-  }
-
-autodecoder_arm_monolithic_425:
-  if ((instruction & (1u << 17)) == 0)
-  {
-    goto autodecoder_arm_monolithic_424;
-  }
-
-autodecoder_arm_monolithic_151:
-  if (instruction & (1u << 22))
-  {
-    return armMvnInstruction;
-  }
-    printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-
-autodecoder_arm_monolithic_424:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_423;
-  }
-
-autodecoder_arm_monolithic_418:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_298;
-  }
-
-autodecoder_arm_monolithic_417:
-  if (instruction & (1u << 8))
-  {
-    goto autodecoder_arm_monolithic_379;
-  }
-
-autodecoder_arm_monolithic_416:
-  if (instruction & (1u << 11))
-  {
-    goto autodecoder_arm_monolithic_379;
-  }
-
-autodecoder_arm_monolithic_415:
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_379;
-  }
-
-autodecoder_arm_monolithic_414:
-  if ((instruction & (1u << 9)) == 0)
-  {
-    goto autodecoder_arm_monolithic_413;
-  }
-
-autodecoder_arm_monolithic_379:
-  if (instruction & (1u << 22))
-  {
-    return armMvnInstruction;
-  }
-  return armRorInstruction;
-
-
-autodecoder_arm_monolithic_413:
-  if (instruction & (1u << 22))
-  {
-    return armMvnInstruction;
-  }
-  return armRrxInstruction;
-
-
-autodecoder_arm_monolithic_298:
-  if (instruction & (1u << 22))
-  {
-    return armMvnInstruction;
-  }
-  return armAsrInstruction;
-
-
-autodecoder_arm_monolithic_423:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_422;
-  }
-
-autodecoder_arm_monolithic_301:
-  if (instruction & (1u << 22))
-  {
-    return armMvnInstruction;
-  }
-  return armLsrInstruction;
-
-
-autodecoder_arm_monolithic_422:
-  if (instruction & (1u << 8))
-  {
-    goto autodecoder_arm_monolithic_303;
-  }
-
-autodecoder_arm_monolithic_421:
-  if (instruction & (1u << 11))
-  {
-    goto autodecoder_arm_monolithic_303;
-  }
-
-autodecoder_arm_monolithic_420:
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_303;
-  }
-
-autodecoder_arm_monolithic_419:
-  if ((instruction & (1u << 9)) == 0)
-  {
-    goto autodecoder_arm_monolithic_153;
-  }
-
-autodecoder_arm_monolithic_303:
-  if (instruction & (1u << 22))
-  {
-    return armMvnInstruction;
-  }
-  return armLslInstruction;
-
-
-autodecoder_arm_monolithic_153:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armMovInstruction;
-  }
-  return armMvnInstruction;
-
-
-
-autodecoder_arm_monolithic_160:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armOrrInstruction;
-  }
-  return armBicInstruction;
-
-
-
-autodecoder_arm_monolithic_464:
-  if (instruction & (1u << 20))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_463:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_462;
-  }
-
-autodecoder_arm_monolithic_447:
-  if ((instruction & (1u << 16)) == 0)
-  {
-    goto autodecoder_arm_monolithic_443;
-  }
-
-autodecoder_arm_monolithic_446:
-  if ((instruction & (1u << 19)) == 0)
-  {
-    goto autodecoder_arm_monolithic_443;
-  }
-
-autodecoder_arm_monolithic_445:
-  if ((instruction & (1u << 18)) == 0)
-  {
-    goto autodecoder_arm_monolithic_443;
-  }
-
-autodecoder_arm_monolithic_444:
-  if ((instruction & (1u << 17)) == 0)
-  {
-    goto autodecoder_arm_monolithic_443;
-  }
-
-autodecoder_arm_monolithic_441:
-  if (instruction & (1u << 6))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_440:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_439;
-  }
-
-autodecoder_arm_monolithic_435:
-  if ((instruction & (1u << 8)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_434:
-  if ((instruction & (1u << 11)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_433:
-  if ((instruction & (1u << 10)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_432:
-  if ((instruction & (1u << 9)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_431:
-  if (instruction & (1u << 22))
-  {
-    return 0;
-  }
-  return armBxjInstruction;
-
-
-autodecoder_arm_monolithic_443:
-  if (instruction & (1u << 6))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_442:
-  if (instruction & (1u << 5))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_439:
-  if (instruction & (1u << 8))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_438:
-  if (instruction & (1u << 11))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_437:
-  if (instruction & (1u << 10))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_436:
-  if (instruction & (1u << 9))
-  {
-    return 0;
-  }
-  return armMsrInstruction;
-
-
-autodecoder_arm_monolithic_196:
-  if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_195;
-  }
-
-autodecoder_arm_monolithic_188:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_187;
-  }
-
-autodecoder_arm_monolithic_184:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armAdcInstruction;
-  }
-  return armRscInstruction;
-
-
-
-autodecoder_arm_monolithic_187:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armAddInstruction;
-  }
-  return armSbcInstruction;
-
-
-
-autodecoder_arm_monolithic_195:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_194;
-  }
-
-autodecoder_arm_monolithic_191:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armEorInstruction;
-  }
-  return armRsbInstruction;
-
-
-
-autodecoder_arm_monolithic_194:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armAndInstruction;
-  }
-  return armSubInstruction;
-
-
-
-autodecoder_arm_monolithic_620:
-  if ((instruction & (1u << 27)) == 0)
-  {
-    goto autodecoder_arm_monolithic_619;
-  }
-
-autodecoder_arm_monolithic_504:
-  if ((instruction & (1u << 26)) == 0)
-  {
-    goto autodecoder_arm_monolithic_503;
+    goto autodecoder_arm_monolithic_22;
   }
 
 autodecoder_arm_monolithic_11:
@@ -2136,21 +2106,21 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   return svcInstruction;
 
 
-autodecoder_arm_monolithic_503:
+autodecoder_arm_monolithic_22:
   if ((instruction & (1u << 25)) == 0)
   {
-    goto autodecoder_arm_monolithic_502;
+    goto autodecoder_arm_monolithic_21;
   }
   return armBInstruction;
 
 
-autodecoder_arm_monolithic_502:
+autodecoder_arm_monolithic_21:
   if ((instruction & (1u << 20)) == 0)
   {
     goto autodecoder_arm_monolithic_16;
   }
 
-autodecoder_arm_monolithic_501:
+autodecoder_arm_monolithic_20:
   if ((instruction & (1u << 22)) == 0)
   {
     return 0;
@@ -2166,169 +2136,57 @@ autodecoder_arm_monolithic_16:
   return armStmInstruction;
 
 
-autodecoder_arm_monolithic_619:
-  if (instruction & (1u << 12))
-  {
-    goto autodecoder_arm_monolithic_609;
-  }
-
-autodecoder_arm_monolithic_618:
-  if (instruction & (1u << 13))
-  {
-    goto autodecoder_arm_monolithic_609;
-  }
-
-autodecoder_arm_monolithic_617:
-  if ((instruction & (1u << 14)) == 0)
-  {
-    goto autodecoder_arm_monolithic_616;
-  }
-
-autodecoder_arm_monolithic_609:
-  if (instruction & (1u << 26))
-  {
-    goto autodecoder_arm_monolithic_473;
-  }
-
-autodecoder_arm_monolithic_608:
-  if (instruction & (1u << 25))
-  {
-    goto autodecoder_arm_monolithic_480;
-  }
-
-autodecoder_arm_monolithic_607:
-  if (instruction & (1u << 4))
-  {
-    goto autodecoder_arm_monolithic_606;
-  }
-
-autodecoder_arm_monolithic_492:
-  if ((instruction & (1u << 24)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_491:
-  if ((instruction & (1u << 7)) == 0)
-  {
-    goto autodecoder_arm_monolithic_490;
-  }
-
-autodecoder_arm_monolithic_487:
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_478;
-  }
-
-autodecoder_arm_monolithic_410:
-  if (instruction & (1u << 20))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_409:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_408;
-  }
-
-autodecoder_arm_monolithic_393:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_392;
-  }
-
-autodecoder_arm_monolithic_389:
-  if (instruction & (1u << 5))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_388:
-  if (instruction & (1u << 22))
-  {
-    return 0;
-  }
-  return armSmlawtInstruction;
-
-autodecoder_arm_monolithic_392:
-  if (instruction & (1u << 5))
-  {
-    return 0;
-  }
-  goto autodecoder_arm_monolithic_391;
-
-autodecoder_arm_monolithic_616:
+autodecoder_arm_monolithic_538:
   if ((instruction & (1u << 26)) == 0)
   {
-    goto autodecoder_arm_monolithic_615;
+    goto autodecoder_arm_monolithic_537;
   }
 
-autodecoder_arm_monolithic_473:
+autodecoder_arm_monolithic_419:
   if ((instruction & (1u << 25)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_472:
+autodecoder_arm_monolithic_418:
   if ((instruction & (1u << 4)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_145:
+autodecoder_arm_monolithic_137:
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_144;
+    goto autodecoder_arm_monolithic_136;
   }
 
-autodecoder_arm_monolithic_99:
+autodecoder_arm_monolithic_96:
   if ((instruction & (1u << 7)) == 0)
   {
-    goto autodecoder_arm_monolithic_98;
-  }
-
-autodecoder_arm_monolithic_93:
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_89;
-  }
-
-autodecoder_arm_monolithic_92:
-  if ((instruction & (1u << 20)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+    goto autodecoder_arm_monolithic_95;
   }
 
 autodecoder_arm_monolithic_91:
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_87;
+  }
+
+autodecoder_arm_monolithic_90:
   if (instruction & (1u << 21))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_90:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_86;
-  }
-    printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-
-autodecoder_arm_monolithic_98:
-  if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_97;
-  }
-
 autodecoder_arm_monolithic_89:
-  if ((instruction & (1u << 21)) == 0)
+  if ((instruction & (1u << 20)) == 0)
   {
-    goto autodecoder_arm_monolithic_88;
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_85:
+autodecoder_arm_monolithic_88:
   if (instruction & (1u << 6))
   {
     goto autodecoder_arm_monolithic_84;
@@ -2336,181 +2194,300 @@ autodecoder_arm_monolithic_85:
     printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
 
-autodecoder_arm_monolithic_88:
+autodecoder_arm_monolithic_95:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_94;
+  }
+
+autodecoder_arm_monolithic_87:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_86;
+  }
+
+autodecoder_arm_monolithic_83:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_82;
+  }
+    printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+
+autodecoder_arm_monolithic_86:
   if (instruction & (1u << 6))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_87:
+autodecoder_arm_monolithic_85:
   if (instruction & (1u << 5))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  goto autodecoder_arm_monolithic_86;
+  goto autodecoder_arm_monolithic_84;
 
-autodecoder_arm_monolithic_97:
-  if ((instruction & (1u << 20)) == 0)
-  {
-    goto autodecoder_arm_monolithic_96;
-  }
-
-autodecoder_arm_monolithic_95:
+autodecoder_arm_monolithic_94:
   if (instruction & (1u << 21))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_94:
+autodecoder_arm_monolithic_93:
+  if ((instruction & (1u << 20)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_92:
   if (instruction & (1u << 6))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  goto autodecoder_arm_monolithic_86;
+  goto autodecoder_arm_monolithic_84;
 
-autodecoder_arm_monolithic_96:
-  if (instruction & (1u << 21))
+autodecoder_arm_monolithic_136:
+  if ((instruction & (1u << 7)) == 0)
+  {
+    goto autodecoder_arm_monolithic_135;
+  }
+
+autodecoder_arm_monolithic_119:
+  if ((instruction & (1u << 8)) == 0)
+  {
+    goto autodecoder_arm_monolithic_115;
+  }
+
+autodecoder_arm_monolithic_118:
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_monolithic_115;
+  }
+
+autodecoder_arm_monolithic_117:
+  if ((instruction & (1u << 11)) == 0)
+  {
+    goto autodecoder_arm_monolithic_115;
+  }
+
+autodecoder_arm_monolithic_116:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_115;
+  }
+
+autodecoder_arm_monolithic_112:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_111;
+  }
+
+autodecoder_arm_monolithic_107:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_106;
+  }
+
+autodecoder_arm_monolithic_102:
+  if (instruction & (1u << 20))
+  {
+    goto autodecoder_arm_monolithic_101;
+  }
+  goto autodecoder_arm_monolithic_82;
+
+autodecoder_arm_monolithic_106:
+  if (instruction & (1u << 20))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
-  return 0;
 
-autodecoder_arm_monolithic_144:
-  if ((instruction & (1u << 7)) == 0)
+autodecoder_arm_monolithic_105:
+  if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_monolithic_143;
+    goto autodecoder_arm_monolithic_104;
   }
+  goto autodecoder_arm_monolithic_103;
 
-autodecoder_arm_monolithic_126:
-  if ((instruction & (1u << 23)) == 0)
+autodecoder_arm_monolithic_111:
+  if (instruction & (1u << 21))
   {
-    goto autodecoder_arm_monolithic_125;
-  }
-
-autodecoder_arm_monolithic_120:
-  if ((instruction & (1u << 20)) == 0)
-  {
-    goto autodecoder_arm_monolithic_119;
+    goto autodecoder_arm_monolithic_109;
   }
 
 autodecoder_arm_monolithic_110:
-  if ((instruction & (1u << 21)) == 0)
+  if ((instruction & (1u << 20)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
 autodecoder_arm_monolithic_109:
-  if ((instruction & (1u << 16)) == 0)
-  {
-    goto autodecoder_arm_monolithic_84;
-  }
-
-autodecoder_arm_monolithic_108:
-  if ((instruction & (1u << 19)) == 0)
-  {
-    goto autodecoder_arm_monolithic_84;
-  }
-
-autodecoder_arm_monolithic_107:
-  if ((instruction & (1u << 18)) == 0)
-  {
-    goto autodecoder_arm_monolithic_84;
-  }
-
-autodecoder_arm_monolithic_106:
-  if ((instruction & (1u << 17)) == 0)
-  {
-    goto autodecoder_arm_monolithic_84;
-  }
-
-autodecoder_arm_monolithic_105:
   if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_monolithic_84;
+    goto autodecoder_arm_monolithic_108;
   }
-  goto autodecoder_arm_monolithic_104;
+  goto autodecoder_arm_monolithic_82;
 
-autodecoder_arm_monolithic_119:
-  if (instruction & (1u << 21))
-  {
-    goto autodecoder_arm_monolithic_84;
-  }
-
-autodecoder_arm_monolithic_118:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_112;
-  }
-
-autodecoder_arm_monolithic_117:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_111;
-  }
-
-autodecoder_arm_monolithic_116:
+autodecoder_arm_monolithic_135:
   if ((instruction & (1u << 8)) == 0)
   {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
+    goto autodecoder_arm_monolithic_134;
+  }
+
+autodecoder_arm_monolithic_127:
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_monolithic_115;
+  }
+
+autodecoder_arm_monolithic_126:
+  if ((instruction & (1u << 11)) == 0)
+  {
+    goto autodecoder_arm_monolithic_115;
+  }
+
+autodecoder_arm_monolithic_125:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_115;
+  }
+
+autodecoder_arm_monolithic_124:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_123;
+  }
+
+autodecoder_arm_monolithic_121:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_113;
+  }
+
+autodecoder_arm_monolithic_120:
+  if ((instruction & (1u << 20)) == 0)
+  {
+    goto autodecoder_arm_monolithic_97;
+  }
+
+autodecoder_arm_monolithic_101:
+  if ((instruction & (1u << 16)) == 0)
+  {
+    goto autodecoder_arm_monolithic_82;
+  }
+
+autodecoder_arm_monolithic_100:
+  if ((instruction & (1u << 19)) == 0)
+  {
+    goto autodecoder_arm_monolithic_82;
+  }
+
+autodecoder_arm_monolithic_99:
+  if ((instruction & (1u << 18)) == 0)
+  {
+    goto autodecoder_arm_monolithic_82;
+  }
+
+autodecoder_arm_monolithic_98:
+  if ((instruction & (1u << 17)) == 0)
+  {
+    goto autodecoder_arm_monolithic_82;
+  }
+
+autodecoder_arm_monolithic_97:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_82;
+  }
+  return 0;
+
+autodecoder_arm_monolithic_123:
+  if (instruction & (1u << 21))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_122:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+    printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+
+autodecoder_arm_monolithic_134:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_133;
   }
 
 autodecoder_arm_monolithic_115:
-  if ((instruction & (1u << 11)) == 0)
+  if ((instruction & (1u << 23)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
 autodecoder_arm_monolithic_114:
-  if ((instruction & (1u << 10)) == 0)
+  if (instruction & (1u << 21))
   {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+    goto autodecoder_arm_monolithic_82;
   }
 
 autodecoder_arm_monolithic_113:
-  if (instruction & (1u << 9))
-  {
-    goto autodecoder_arm_monolithic_111;
-  }
-    printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-
-autodecoder_arm_monolithic_125:
   if (instruction & (1u << 20))
   {
-    goto autodecoder_arm_monolithic_123;
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
+  goto autodecoder_arm_monolithic_104;
 
-autodecoder_arm_monolithic_124:
-  if ((instruction & (1u << 21)) == 0)
+autodecoder_arm_monolithic_133:
+  if ((instruction & (1u << 23)) == 0)
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
 
-autodecoder_arm_monolithic_123:
-  if ((instruction & (1u << 6)) == 0)
+autodecoder_arm_monolithic_132:
+  if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_122;
+    goto autodecoder_arm_monolithic_131;
   }
 
-autodecoder_arm_monolithic_121:
+autodecoder_arm_monolithic_128:
+  if (instruction & (1u << 6))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_82:
   if (instruction & (1u << 5))
   {
-    goto autodecoder_arm_monolithic_103;
-  }
-    printf("Undefined instruction: %#.8x" EOL, instruction);
+      printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+  return 0;
 
-autodecoder_arm_monolithic_122:
+autodecoder_arm_monolithic_131:
+  if (instruction & (1u << 20))
+  {
+      printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+  }
+
+autodecoder_arm_monolithic_130:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_129;
+  }
+
+autodecoder_arm_monolithic_104:
   if (instruction & (1u << 5))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
@@ -2518,282 +2495,116 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
   goto autodecoder_arm_monolithic_103;
 
-autodecoder_arm_monolithic_143:
-  if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_142;
-  }
-
-autodecoder_arm_monolithic_140:
-  if ((instruction & (1u << 20)) == 0)
-  {
-    goto autodecoder_arm_monolithic_139;
-  }
-
-autodecoder_arm_monolithic_136:
-  if ((instruction & (1u << 21)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_135:
-  if ((instruction & (1u << 16)) == 0)
-  {
-    goto autodecoder_arm_monolithic_131;
-  }
-
-autodecoder_arm_monolithic_134:
-  if ((instruction & (1u << 19)) == 0)
-  {
-    goto autodecoder_arm_monolithic_131;
-  }
-
-autodecoder_arm_monolithic_133:
-  if ((instruction & (1u << 18)) == 0)
-  {
-    goto autodecoder_arm_monolithic_131;
-  }
-
-autodecoder_arm_monolithic_132:
-  if (instruction & (1u << 17))
-  {
-    goto autodecoder_arm_monolithic_130;
-  }
-
-autodecoder_arm_monolithic_131:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_129;
-  }
-
-autodecoder_arm_monolithic_84:
-  if (instruction & (1u << 5))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-  return 0;
-
-autodecoder_arm_monolithic_139:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_138;
-  }
-
-autodecoder_arm_monolithic_130:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_104;
-  }
-
-autodecoder_arm_monolithic_129:
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_128;
-  }
-  return 0;
-
-autodecoder_arm_monolithic_104:
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_103;
-  }
-  return 0;
-
-autodecoder_arm_monolithic_138:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_112;
-  }
-
-autodecoder_arm_monolithic_137:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_111;
-  }
-
-autodecoder_arm_monolithic_128:
-  if (instruction & (1u << 8))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_127:
-  if (instruction & (1u << 9))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-  return 0;
-
-autodecoder_arm_monolithic_112:
-  if (instruction & (1u << 5))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-  goto autodecoder_arm_monolithic_111;
-
-autodecoder_arm_monolithic_142:
-  if (instruction & (1u << 20))
-  {
-    goto autodecoder_arm_monolithic_103;
-  }
-
-autodecoder_arm_monolithic_141:
-  if ((instruction & (1u << 21)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_103:
-  if ((instruction & (1u << 8)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_102:
-  if ((instruction & (1u << 11)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_101:
-  if ((instruction & (1u << 10)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_100:
-  if (instruction & (1u << 9))
-  {
-    return 0;
-  }
-    printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-
-autodecoder_arm_monolithic_615:
+autodecoder_arm_monolithic_537:
   if ((instruction & (1u << 25)) == 0)
   {
-    goto autodecoder_arm_monolithic_614;
+    goto autodecoder_arm_monolithic_536;
   }
 
-autodecoder_arm_monolithic_480:
-  if ((instruction & (1u << 24)) == 0)
+autodecoder_arm_monolithic_426:
+  if (instruction & (1u << 24))
   {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_479:
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_478;
+    goto autodecoder_arm_monolithic_425;
   }
   return 0;
 
-autodecoder_arm_monolithic_614:
+autodecoder_arm_monolithic_536:
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_576;
+    goto autodecoder_arm_monolithic_438;
   }
 
-autodecoder_arm_monolithic_606:
+autodecoder_arm_monolithic_535:
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_485;
+    goto autodecoder_arm_monolithic_429;
   }
 
-autodecoder_arm_monolithic_605:
+autodecoder_arm_monolithic_534:
   if ((instruction & (1u << 7)) == 0)
   {
-    goto autodecoder_arm_monolithic_604;
+    goto autodecoder_arm_monolithic_533;
   }
 
-autodecoder_arm_monolithic_295:
+autodecoder_arm_monolithic_284:
+  if ((instruction & (1u << 8)) == 0)
+  {
+    goto autodecoder_arm_monolithic_283;
+  }
+
+autodecoder_arm_monolithic_272:
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_monolithic_268;
+  }
+
+autodecoder_arm_monolithic_271:
+  if ((instruction & (1u << 11)) == 0)
+  {
+    goto autodecoder_arm_monolithic_268;
+  }
+
+autodecoder_arm_monolithic_270:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_268;
+  }
+
+autodecoder_arm_monolithic_269:
   if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_294;
+    goto autodecoder_arm_monolithic_268;
   }
 
-autodecoder_arm_monolithic_283:
-  if ((instruction & (1u << 20)) == 0)
-  {
-    goto autodecoder_arm_monolithic_282;
-  }
-
-autodecoder_arm_monolithic_263:
+autodecoder_arm_monolithic_265:
   if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_262;
+    goto autodecoder_arm_monolithic_264;
   }
 
 autodecoder_arm_monolithic_249:
-  if (instruction & (1u << 6))
+  if ((instruction & (1u << 20)) == 0)
   {
-    goto autodecoder_arm_monolithic_236;
-  }
-
-autodecoder_arm_monolithic_248:
-  if ((instruction & (1u << 3)) == 0)
-  {
-    goto autodecoder_arm_monolithic_236;
-  }
-
-autodecoder_arm_monolithic_247:
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_236;
-  }
-
-autodecoder_arm_monolithic_246:
-  if ((instruction & (1u << 8)) == 0)
-  {
-    goto autodecoder_arm_monolithic_235;
-  }
-
-autodecoder_arm_monolithic_245:
-  if ((instruction & (1u << 11)) == 0)
-  {
-    goto autodecoder_arm_monolithic_86;
-  }
-
-autodecoder_arm_monolithic_244:
-  if ((instruction & (1u << 10)) == 0)
-  {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_248;
   }
 
 autodecoder_arm_monolithic_243:
-  if ((instruction & (1u << 9)) == 0)
+  if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
 autodecoder_arm_monolithic_242:
-  if ((instruction & (1u << 0)) == 0)
+  if ((instruction & (1u << 3)) == 0)
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
 autodecoder_arm_monolithic_241:
-  if ((instruction & (1u << 2)) == 0)
+  if (instruction & (1u << 5))
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
 autodecoder_arm_monolithic_240:
-  if ((instruction & (1u << 1)) == 0)
+  if ((instruction & (1u << 0)) == 0)
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
 autodecoder_arm_monolithic_239:
+  if ((instruction & (1u << 2)) == 0)
+  {
+    goto autodecoder_arm_monolithic_84;
+  }
+
+autodecoder_arm_monolithic_238:
+  if ((instruction & (1u << 1)) == 0)
+  {
+    goto autodecoder_arm_monolithic_84;
+  }
+
+autodecoder_arm_monolithic_237:
   if ((instruction & (1u << 22)) == 0)
   {
     return armLdrexdInstruction;
@@ -2802,64 +2613,67 @@ autodecoder_arm_monolithic_239:
 
 
 
-autodecoder_arm_monolithic_262:
+autodecoder_arm_monolithic_248:
   if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_monolithic_236;
+    goto autodecoder_arm_monolithic_84;
   }
 
-autodecoder_arm_monolithic_261:
-  if ((instruction & (1u << 3)) == 0)
-  {
-    goto autodecoder_arm_monolithic_236;
-  }
-
-autodecoder_arm_monolithic_260:
+autodecoder_arm_monolithic_247:
   if (instruction & (1u << 5))
   {
-    goto autodecoder_arm_monolithic_236;
+    goto autodecoder_arm_monolithic_84;
   }
 
-autodecoder_arm_monolithic_259:
-  if ((instruction & (1u << 8)) == 0)
+autodecoder_arm_monolithic_246:
+  if ((instruction & (1u << 22)) == 0)
   {
-    goto autodecoder_arm_monolithic_235;
+    return armStrexdInstruction;
+  }
+  return armStrexhInstruction;
+
+
+
+autodecoder_arm_monolithic_264:
+  if ((instruction & (1u << 20)) == 0)
+  {
+    goto autodecoder_arm_monolithic_263;
   }
 
 autodecoder_arm_monolithic_258:
-  if ((instruction & (1u << 11)) == 0)
+  if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
 autodecoder_arm_monolithic_257:
-  if ((instruction & (1u << 10)) == 0)
+  if ((instruction & (1u << 3)) == 0)
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
 autodecoder_arm_monolithic_256:
-  if ((instruction & (1u << 9)) == 0)
+  if (instruction & (1u << 5))
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
 autodecoder_arm_monolithic_255:
   if ((instruction & (1u << 0)) == 0)
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
 autodecoder_arm_monolithic_254:
   if ((instruction & (1u << 2)) == 0)
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
 autodecoder_arm_monolithic_253:
   if ((instruction & (1u << 1)) == 0)
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
 autodecoder_arm_monolithic_252:
@@ -2871,102 +2685,19 @@ autodecoder_arm_monolithic_252:
 
 
 
-autodecoder_arm_monolithic_282:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_281;
-  }
-
-autodecoder_arm_monolithic_272:
+autodecoder_arm_monolithic_263:
   if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_monolithic_236;
+    goto autodecoder_arm_monolithic_84;
   }
 
-autodecoder_arm_monolithic_271:
+autodecoder_arm_monolithic_262:
   if (instruction & (1u << 5))
   {
-    goto autodecoder_arm_monolithic_236;
+    goto autodecoder_arm_monolithic_84;
   }
 
-autodecoder_arm_monolithic_270:
-  if ((instruction & (1u << 8)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_269:
-  if ((instruction & (1u << 11)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_268:
-  if ((instruction & (1u << 10)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_267:
-  if ((instruction & (1u << 9)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_266:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armStrexdInstruction;
-  }
-  return armStrexhInstruction;
-
-
-
-autodecoder_arm_monolithic_281:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_236;
-  }
-
-autodecoder_arm_monolithic_280:
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_236;
-  }
-
-autodecoder_arm_monolithic_279:
-  if ((instruction & (1u << 8)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_278:
-  if ((instruction & (1u << 11)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_277:
-  if ((instruction & (1u << 10)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_276:
-  if ((instruction & (1u << 9)) == 0)
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_275:
+autodecoder_arm_monolithic_261:
   if ((instruction & (1u << 22)) == 0)
   {
     return armStrexInstruction;
@@ -2975,105 +2706,127 @@ autodecoder_arm_monolithic_275:
 
 
 
-autodecoder_arm_monolithic_294:
+autodecoder_arm_monolithic_283:
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_268;
+  }
+
+autodecoder_arm_monolithic_282:
+  if (instruction & (1u << 11))
+  {
+    goto autodecoder_arm_monolithic_268;
+  }
+
+autodecoder_arm_monolithic_281:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_280;
+  }
+
+autodecoder_arm_monolithic_268:
   if (instruction & (1u << 20))
   {
-    goto autodecoder_arm_monolithic_236;
+    goto autodecoder_arm_monolithic_84;
   }
 
-autodecoder_arm_monolithic_293:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_292;
-  }
-
-autodecoder_arm_monolithic_285:
+autodecoder_arm_monolithic_267:
   if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_monolithic_236;
+    goto autodecoder_arm_monolithic_84;
   }
 
-autodecoder_arm_monolithic_284:
+autodecoder_arm_monolithic_266:
   if (instruction & (1u << 5))
   {
-    goto autodecoder_arm_monolithic_236;
+    goto autodecoder_arm_monolithic_84;
   }
     printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
 
-autodecoder_arm_monolithic_292:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_236;
-  }
-
-autodecoder_arm_monolithic_291:
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_236;
-  }
-
-autodecoder_arm_monolithic_290:
-  if (instruction & (1u << 8))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_289:
-  if (instruction & (1u << 11))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_288:
-  if (instruction & (1u << 10))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-
-autodecoder_arm_monolithic_287:
-  if (instruction & (1u << 9))
-  {
-      printf("Undefined instruction: %#.8x" EOL, instruction);
-DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
-  }
-  return armSwpInstruction;
-
-
-autodecoder_arm_monolithic_604:
+autodecoder_arm_monolithic_280:
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_478;
+    goto autodecoder_arm_monolithic_274;
   }
 
-autodecoder_arm_monolithic_603:
+autodecoder_arm_monolithic_279:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_278;
+  }
+
+autodecoder_arm_monolithic_274:
   if (instruction & (1u << 20))
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_602:
-  if ((instruction & (1u << 21)) == 0)
+autodecoder_arm_monolithic_273:
+  if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_monolithic_349;
+    return 0;
   }
 
-autodecoder_arm_monolithic_589:
+autodecoder_arm_monolithic_108:
+  if (instruction & (1u << 5))
+  {
+    return 0;
+  }
+    printf("Undefined instruction: %#.8x" EOL, instruction);
+DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
+
+autodecoder_arm_monolithic_278:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_277:
+  if (instruction & (1u << 6))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_276:
+  if (instruction & (1u << 5))
+  {
+    return 0;
+  }
+  return armSwpInstruction;
+
+
+autodecoder_arm_monolithic_533:
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_424;
+  }
+
+autodecoder_arm_monolithic_522:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_521:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_513:
   if ((instruction & (1u << 6)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_587:
+autodecoder_arm_monolithic_511:
   if ((instruction & (1u << 5)) == 0)
   {
-    goto autodecoder_arm_monolithic_320;
+    return 0;
   }
 
-autodecoder_arm_monolithic_586:
+autodecoder_arm_monolithic_510:
   if ((instruction & (1u << 22)) == 0)
   {
     return 0;
@@ -3081,191 +2834,81 @@ autodecoder_arm_monolithic_586:
   return armSmcInstruction;
 
 
-autodecoder_arm_monolithic_320:
-  if (instruction & (1u << 8))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_319:
-  if (instruction & (1u << 11))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_318:
-  if (instruction & (1u << 10))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_317:
-  if (instruction & (1u << 9))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_316:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armQsubInstruction;
-  }
-  return armQdsubInstruction;
-
-
-
-autodecoder_arm_monolithic_349:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_348:
-  if (instruction & (1u << 5))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_347:
-  if (instruction & (1u << 8))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_346:
-  if (instruction & (1u << 11))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_345:
-  if (instruction & (1u << 10))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_344:
-  if (instruction & (1u << 9))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_343:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armQaddInstruction;
-  }
-  return armQdaddInstruction;
-
-
-
-autodecoder_arm_monolithic_485:
+autodecoder_arm_monolithic_429:
   if ((instruction & (1u << 7)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_375:
-  if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_374;
-  }
-
-autodecoder_arm_monolithic_370:
-  if (instruction & (1u << 20))
-  {
-    goto autodecoder_arm_monolithic_359;
-  }
-
-autodecoder_arm_monolithic_369:
-  if (instruction & (1u << 21))
-  {
-    goto autodecoder_arm_monolithic_368;
-  }
-  goto autodecoder_arm_monolithic_358;
-
-autodecoder_arm_monolithic_374:
-  if ((instruction & (1u << 20)) == 0)
-  {
-    goto autodecoder_arm_monolithic_373;
-  }
-
-autodecoder_arm_monolithic_359:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_358;
-  }
-
-autodecoder_arm_monolithic_356:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_236;
-  }
-
 autodecoder_arm_monolithic_355:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    return 0;
-  }
-  return armLdrhtInstruction;
-
-
-autodecoder_arm_monolithic_358:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_236;
-  }
-
-autodecoder_arm_monolithic_357:
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_236;
-  }
-  return 0;
-
-autodecoder_arm_monolithic_373:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_372;
-  }
-
-autodecoder_arm_monolithic_368:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_236;
-  }
-
-autodecoder_arm_monolithic_367:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_366:
   if (instruction & (1u << 8))
   {
-    goto autodecoder_arm_monolithic_361;
+    goto autodecoder_arm_monolithic_341;
   }
 
-autodecoder_arm_monolithic_365:
-  if (instruction & (1u << 11))
-  {
-    goto autodecoder_arm_monolithic_361;
-  }
-
-autodecoder_arm_monolithic_364:
+autodecoder_arm_monolithic_354:
   if (instruction & (1u << 10))
   {
-    goto autodecoder_arm_monolithic_361;
+    goto autodecoder_arm_monolithic_341;
   }
 
-autodecoder_arm_monolithic_363:
+autodecoder_arm_monolithic_353:
+  if (instruction & (1u << 11))
+  {
+    goto autodecoder_arm_monolithic_341;
+  }
+
+autodecoder_arm_monolithic_352:
   if ((instruction & (1u << 9)) == 0)
   {
-    goto autodecoder_arm_monolithic_362;
+    goto autodecoder_arm_monolithic_351;
   }
 
-autodecoder_arm_monolithic_361:
+autodecoder_arm_monolithic_341:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_340;
+  }
+
+autodecoder_arm_monolithic_336:
+  if (instruction & (1u << 21))
+  {
+    goto autodecoder_arm_monolithic_333;
+  }
+  goto autodecoder_arm_monolithic_335;
+
+autodecoder_arm_monolithic_340:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_339;
+  }
+
+autodecoder_arm_monolithic_333:
+  if ((instruction & (1u << 20)) == 0)
+  {
+    goto autodecoder_arm_monolithic_332;
+  }
+
+autodecoder_arm_monolithic_328:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_84;
+  }
+  goto autodecoder_arm_monolithic_327;
+
+autodecoder_arm_monolithic_332:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_84;
+  }
+
+autodecoder_arm_monolithic_331:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_330:
   if (instruction & (1u << 22))
   {
     return armStrhtInstruction;
@@ -3273,7 +2916,90 @@ autodecoder_arm_monolithic_361:
     printf("Undefined instruction: %#.8x" EOL, instruction);
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
 
-autodecoder_arm_monolithic_362:
+autodecoder_arm_monolithic_339:
+  if ((instruction & (1u << 20)) == 0)
+  {
+    goto autodecoder_arm_monolithic_338;
+  }
+
+autodecoder_arm_monolithic_335:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_84;
+  }
+
+autodecoder_arm_monolithic_334:
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_84;
+  }
+  return 0;
+
+autodecoder_arm_monolithic_338:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_84;
+  }
+
+autodecoder_arm_monolithic_337:
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_84;
+  }
+  goto autodecoder_arm_monolithic_103;
+
+autodecoder_arm_monolithic_351:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_350;
+  }
+
+autodecoder_arm_monolithic_347:
+  if (instruction & (1u << 21))
+  {
+    goto autodecoder_arm_monolithic_346;
+  }
+  return 0;
+
+autodecoder_arm_monolithic_350:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_349;
+  }
+
+autodecoder_arm_monolithic_346:
+  if ((instruction & (1u << 20)) == 0)
+  {
+    goto autodecoder_arm_monolithic_345;
+  }
+
+autodecoder_arm_monolithic_342:
+  if (instruction & (1u << 6))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_327:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    return 0;
+  }
+  return armLdrhtInstruction;
+
+
+autodecoder_arm_monolithic_345:
+  if (instruction & (1u << 6))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_344:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_343:
   if ((instruction & (1u << 22)) == 0)
   {
     return 0;
@@ -3281,44 +3007,25 @@ autodecoder_arm_monolithic_362:
   return armStrhtInstruction;
 
 
-autodecoder_arm_monolithic_372:
+autodecoder_arm_monolithic_349:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_348:
   if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_monolithic_236;
+    return 0;
   }
 
-autodecoder_arm_monolithic_371:
-  if ((instruction & (1u << 5)) == 0)
+autodecoder_arm_monolithic_129:
+  if (instruction & (1u << 5))
   {
-    goto autodecoder_arm_monolithic_111;
+    return 0;
   }
 
-autodecoder_arm_monolithic_236:
-  if (instruction & (1u << 8))
-  {
-    goto autodecoder_arm_monolithic_86;
-  }
-
-autodecoder_arm_monolithic_235:
-  if (instruction & (1u << 11))
-  {
-    goto autodecoder_arm_monolithic_86;
-  }
-
-autodecoder_arm_monolithic_234:
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_86;
-  }
-
-autodecoder_arm_monolithic_233:
-  if (instruction & (1u << 9))
-  {
-    goto autodecoder_arm_monolithic_86;
-  }
-  return 0;
-
-autodecoder_arm_monolithic_111:
+autodecoder_arm_monolithic_103:
   if (instruction & (1u << 22))
   {
       printf("Undefined instruction: %#.8x" EOL, instruction);
@@ -3326,180 +3033,86 @@ DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
   }
   return 0;
 
-autodecoder_arm_monolithic_576:
+autodecoder_arm_monolithic_438:
   if ((instruction & (1u << 24)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_575:
-  if ((instruction & (1u << 7)) == 0)
+autodecoder_arm_monolithic_437:
+  if (instruction & (1u << 7))
   {
-    goto autodecoder_arm_monolithic_490;
+    goto autodecoder_arm_monolithic_425;
   }
 
-autodecoder_arm_monolithic_574:
+autodecoder_arm_monolithic_436:
+  if (instruction & (1u << 8))
+  {
+    goto autodecoder_arm_monolithic_425;
+  }
+
+autodecoder_arm_monolithic_435:
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_425;
+  }
+
+autodecoder_arm_monolithic_434:
+  if (instruction & (1u << 11))
+  {
+    goto autodecoder_arm_monolithic_425;
+  }
+
+autodecoder_arm_monolithic_433:
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_432;
+  }
+
+autodecoder_arm_monolithic_425:
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_478;
+    goto autodecoder_arm_monolithic_424;
   }
+  return 0;
 
-autodecoder_arm_monolithic_573:
-  if (instruction & (1u << 20))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_572:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_408;
-  }
-
-autodecoder_arm_monolithic_571:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_570;
-  }
-
-autodecoder_arm_monolithic_566:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_565;
-  }
-
-autodecoder_arm_monolithic_563:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armSmulwtInstruction;
-  }
-  return armSmulttInstruction;
-
-
-
-autodecoder_arm_monolithic_565:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armSmlawtInstruction;
-  }
-  return armSmulbtInstruction;
-
-
-
-autodecoder_arm_monolithic_570:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_391;
-  }
-
-autodecoder_arm_monolithic_569:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armSmulwbInstruction;
-  }
-  return armSmultbInstruction;
-
-
-
-autodecoder_arm_monolithic_391:
-  if (instruction & (1u << 22))
-  {
-    return 0;
-  }
-  return armSmlawbInstruction;
-
-
-autodecoder_arm_monolithic_408:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_407;
-  }
-
-autodecoder_arm_monolithic_400:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_399;
-  }
-
-autodecoder_arm_monolithic_396:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armSmlattInstruction;
-  }
-  return armSmlalttInstruction;
-
-
-
-autodecoder_arm_monolithic_399:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armSmlabtInstruction;
-  }
-  return armSmlalbtInstruction;
-
-
-
-autodecoder_arm_monolithic_407:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_406;
-  }
-
-autodecoder_arm_monolithic_403:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armSmlatbInstruction;
-  }
-  return armSmlaltbInstruction;
-
-
-
-autodecoder_arm_monolithic_406:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return armSmlabbInstruction;
-  }
-  return armSmlalbbInstruction;
-
-
-
-autodecoder_arm_monolithic_490:
+autodecoder_arm_monolithic_432:
   if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_489;
+    goto autodecoder_arm_monolithic_431;
   }
 
-autodecoder_arm_monolithic_478:
+autodecoder_arm_monolithic_424:
   if ((instruction & (1u << 21)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_477:
+autodecoder_arm_monolithic_423:
   if (instruction & (1u << 16))
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
-autodecoder_arm_monolithic_476:
+autodecoder_arm_monolithic_422:
   if (instruction & (1u << 19))
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
-autodecoder_arm_monolithic_475:
+autodecoder_arm_monolithic_421:
   if (instruction & (1u << 18))
   {
-    goto autodecoder_arm_monolithic_86;
+    goto autodecoder_arm_monolithic_84;
   }
 
-autodecoder_arm_monolithic_474:
+autodecoder_arm_monolithic_420:
   if ((instruction & (1u << 17)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_86:
+autodecoder_arm_monolithic_84:
   if (instruction & (1u << 22))
   {
     return 0;
@@ -3508,97 +3121,73 @@ autodecoder_arm_monolithic_86:
 DIE_NOW(NULL, "autoDecoder (arm): undefined instruction");
 
 
-autodecoder_arm_monolithic_489:
-  if (instruction & (1u << 20))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_488:
+autodecoder_arm_monolithic_431:
   if (instruction & (1u << 21))
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_462:
+autodecoder_arm_monolithic_406:
+  if (instruction & (1u << 20))
+  {
+    return 0;
+  }
+
+autodecoder_arm_monolithic_405:
   if ((instruction & (1u << 16)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_461:
+autodecoder_arm_monolithic_404:
   if ((instruction & (1u << 19)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_460:
+autodecoder_arm_monolithic_403:
   if ((instruction & (1u << 18)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_459:
+autodecoder_arm_monolithic_402:
   if ((instruction & (1u << 17)) == 0)
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_458:
+autodecoder_arm_monolithic_401:
   if (instruction & (1u << 6))
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_457:
+autodecoder_arm_monolithic_400:
   if (instruction & (1u << 3))
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_456:
+autodecoder_arm_monolithic_399:
   if (instruction & (1u << 5))
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_455:
-  if (instruction & (1u << 8))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_454:
-  if (instruction & (1u << 11))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_453:
-  if (instruction & (1u << 10))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_452:
-  if (instruction & (1u << 9))
-  {
-    return 0;
-  }
-
-autodecoder_arm_monolithic_451:
+autodecoder_arm_monolithic_398:
   if (instruction & (1u << 0))
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_450:
+autodecoder_arm_monolithic_397:
   if (instruction & (1u << 2))
   {
     return 0;
   }
 
-autodecoder_arm_monolithic_449:
+autodecoder_arm_monolithic_396:
   if (instruction & (1u << 1))
   {
     return 0;
