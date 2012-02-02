@@ -14,5 +14,5 @@ void bootFreeRtos(GCONTXT *context, u32int loadAddress)
   setupMemoryTags(&tagList);
   setupEndTag(&tagList);
 
-  bootGuest(context, loadAddress);
+  bootGuest(context, GUEST_OS_FREERTOS, loadAddress);
 }

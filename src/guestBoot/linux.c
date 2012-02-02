@@ -42,5 +42,5 @@ void bootLinux(GCONTXT *context, u32int loadAddress, u32int initrdAddress)
   }
   setupEndTag(&tagList);
 
-  bootGuest(context, entryPoint);
+  bootGuest(context, GUEST_OS_LINUX, entryPoint);
 }

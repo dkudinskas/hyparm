@@ -26,6 +26,9 @@
 
 #define DIE_NOW(context, msg)  dieNow(context, __func__, msg)
 
+#define EXPAND_TO_STRING(s)    TO_STRING(s)
+#define TO_STRING(s)           #s
+
 
 void dieNow(GCONTXT *context, const char *caller, const char *msg)
   __attribute__((noreturn));

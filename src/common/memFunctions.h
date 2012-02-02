@@ -27,12 +27,14 @@ struct chunkLinkedListElement
 
 void mallocInit(u32int startAddr, u32int size);
 
-u32int mallocBytes(u32int size);
+void *mallocBytes(u32int size);
 
 void * memmove(void * dest,const void *src, u32int count);
 void * memset(void * dest, u32int c, u32int count);
 void * memcpy(void *dst, const void *src, u32int count);
 
 void dumpMallocs(void);
+
+void free(void *pointer);
 
 #endif

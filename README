@@ -38,7 +38,7 @@ git clone git://git.silverarrow.org/shared/freertos-ported.git
 
 6. Run the program by invoking:
 
-go 0x8c000000 -rtos 0x80300000
+go 0x8c000000 -guest freertos -kernel 0x80300000
 
 Note: Remember to change the default memory locations as appropriate.
 
@@ -47,22 +47,15 @@ COMPILING THE HYPERVISOR:
 
 A cross-compiler toolchain is required for building the hypervisor. It must be set using the CROSS_COMPILE variable, either from the environment, or as part of the command line to make.
 
-The hypervisor supports compiling for multiple "targets", which can be set using the TARGET variable. A target is an abstract concept that refers to:
-- the physical platform the hypervisor is built for;
-- a set of compile-time options.
+The hypervisor can be customized at compile time using 'make config'. The default configuration can be restored at any time using 'make defconfig'.
 
-Currently, the following targets are supported:
-- beagle: build for the BeagleBoard (based on TI OMAP3530);
-- beagle-autodecoder: same as the above, but use an optimized (auto-generated) instruction decoder.
+Typical example of the steps required to compile the hypervisor:
 
-The following targets are incomplete and non-functional:
-- tegra250
+# export CROSS_COMPILE=/opt/arm-none-eabi-4.4/bin/arm-none-eabi-
+# make config
+# make
 
-Typical example of how to set CROSS_COMPILE and TARGET:
-export CROSS_COMPILE=/opt/arm-none-eabi-4.4/bin/arm-none-eabi-
-make TARGET=beagle-autodecoder
-
-Each target has a corresponding target_name.config file in the build directory. Targets can be edited by manipulating their respective .config files; new targets may also be created by creating new .config files for them. No changes to the Makefile are required.
+Compile-time configuration is managed through Kconfig. Configuration options are defined in 'scripts/kconfig.data'.
 
 
 GIT:

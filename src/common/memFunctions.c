@@ -14,6 +14,15 @@ memchunkListElem * chunkList;
 memchunkListElem * chunkListRoot;
 
 
+void free(void *pointer)
+{
+  /*
+   * TODO: implement free
+   */
+  printf("free: pointer = %p (TODO)" EOL, pointer);
+}
+
+
 void mallocInit(u32int startAddr, u32int size)
 {
   DEBUG(MALLOC, "mallocInit(%#.8x, %x);" EOL, startAddr, size);
@@ -116,7 +125,7 @@ void * memset(void * dest, u32int c, u32int count)
   return dest;
 }
 
-u32int mallocBytes(u32int size)
+void *mallocBytes(u32int size)
 {
   DEBUG(MALLOC, "mallocBytes: size %x" EOL, size);
 
@@ -142,7 +151,7 @@ u32int mallocBytes(u32int size)
   nrOfChunksAllocd++;
 
   freePtr = freePtr + size;
-  return chunkList->chunk.startAddress;
+  return (void *)chunkList->chunk.startAddress;
 }
 
 void dumpMallocs()

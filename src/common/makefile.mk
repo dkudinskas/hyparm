@@ -1,4 +1,5 @@
 HYPARM_SRCS_C-y += common/alignFunctions.c
+HYPARM_SRCS_C-y += common/commandLine.c
 HYPARM_SRCS_C-y += common/ctype.c
 HYPARM_SRCS_C-y += common/debug.c
 HYPARM_SRCS_C-y += common/div.c

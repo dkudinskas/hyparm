@@ -45,11 +45,9 @@ int strncmp(const char *s1, const char *s2, s32int n)
 u32int strlen(const char *s)
 {
   const char *p = s;
-  while (*p++)
+  while (*p)
   {
-   /*
-    * Do nothing as long as p points to a non-null character.
-    */
+    p++;
   }
   return p - s;
 }

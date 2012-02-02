@@ -27,11 +27,6 @@
 #include "memoryManager/memoryConstants.h"
 
 
-#ifdef CONFIG_GUEST_FREERTOS
-extern bool rtos;
-#endif
-
-
 #ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT
 
 u64int dataAbortCounter;
@@ -495,7 +490,7 @@ GCONTXT *irq(GCONTXT *context)
        */
       gptBEClearOverflowInterrupt(2);
 #ifdef CONFIG_GUEST_FREERTOS
-      if (rtos)
+      if (context->os == GUEST_OS_FREERTOS)
       {
         gptBEResetCounter(2);
         gptBEClearMatchInterrupt(2);
@@ -550,7 +545,7 @@ void irqPrivileged()
        */
       gptBEClearOverflowInterrupt(2);
 #ifdef CONFIG_GUEST_FREERTOS
-      if (rtos)
+      if (getGuestContext()->os == GUEST_OS_FREERTOS)
       {
         gptBEResetCounter(2);
         gptBEClearMatchInterrupt(2);

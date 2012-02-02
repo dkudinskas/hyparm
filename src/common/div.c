@@ -1,4 +1,5 @@
 #include "common/bit.h"
+#include "common/compiler.h"
 #include "common/debug.h"
 #include "common/stddef.h"
 
@@ -11,22 +12,11 @@
 
 
 /*
- * To respect the EABI, we need to use vector types in here. But subscripting vectors is only
- * supported from GCC 4.6.x onwards;
- */
-#ifdef __GNUC__
-#if ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
-#define HAVE_GCC_VECTOR 1
-#endif
-#endif
-
-
-/*
- * Vector types. These are by convention returned in r0-r3.
- * Do not alter the following definitions.
+ * Vector types. These are by convention returned in r0-r3. Subscripting vectors is not supported
+ * by every version of GCC, hence we need to check. Do not alter the following definitions.
  */
 
-#ifdef HAVE_GCC_VECTOR
+#ifdef COMPILER_HAS_GCC_VECTOR_TYPES
 typedef u32int u32intPair __attribute__((vector_size(8)));
 #else
 typedef u64int u32intPair;
@@ -124,7 +114,7 @@ static u64int uldiv_recursive(u64int dividend, u64int divisor, u64int acc);
  */
 u32int __aeabi_uidiv(u32int dividend, u32int divisor)
 {
-#ifdef HAVE_GCC_VECTOR
+#ifdef COMPILER_HAS_GCC_VECTOR_TYPES
   UDIV(u32int, u32intPair, result, countTrailingZeros, uidiv_recursive, result[0]);
 #else
   UDIV(u32int, u32int, result[2], countTrailingZeros, uidiv_recursive, result[0]);
@@ -145,7 +135,7 @@ u32int __aeabi_uidiv(u32int dividend, u32int divisor)
  */
 u32intPair __aeabi_uidivmod(u32int dividend, u32int divisor)
 {
-#ifdef HAVE_GCC_VECTOR
+#ifdef COMPILER_HAS_GCC_VECTOR_TYPES
   UDIV(u32int, u32intPair, result, countTrailingZeros, uidiv_recursive, result);
 #else
   UDIV(u32int, u32int, result[2], countTrailingZeros, uidiv_recursive, *(u32intPair *)&result);
@@ -158,7 +148,7 @@ u32intPair __aeabi_uidivmod(u32int dividend, u32int divisor)
  */
 u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor)
 {
-#ifdef HAVE_GCC_VECTOR
+#ifdef COMPILER_HAS_GCC_VECTOR_TYPES
   UDIV(u64int, u64intPair, result, countTrailingZeros64, uldiv_recursive, result);
 #else
 # pragma message "*** WARNING *** __aeabi_uldivmod has no implementation for this compiler!"

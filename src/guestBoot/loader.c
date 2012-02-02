@@ -77,9 +77,14 @@
 extern void callKernel(s32int, s32int, struct tag *tagList, u32int entryPoint) __attribute__((noreturn));
 
 
-void bootGuest(GCONTXT *context, u32int entryPoint)
+void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
 {
   DEBUG(STARTUP, "bootGuest: entryPoint = %#.8x" EOL, entryPoint);
+  /*
+   * The guest OS type is a parameter to bootGuest to ensure that an OS type is stored in the guest
+   * context, and to ensure that it happens in the right place.
+   */
+  context->os = os;
   /*
    * TODO: add virtual addressing startup for the new VM here.
    * Need to create a Global Page table/map for the VM and add mappings for where the kernel is to

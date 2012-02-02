@@ -7,6 +7,7 @@
 #endif
 
 #include "common/bit.h"
+#include "common/compiler.h"
 #include "common/ctype.h"
 #include "common/stdio.h"
 #include "common/stdlib.h"
@@ -668,8 +669,10 @@ int
            * types some checks are always false. This is normal, it allows code that deals with the
            * sign to be optimized away through constant propagation and dead code elimination.
            */
+#ifdef COMPILER_CAN_HIDE_WARNINGS
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wtype-limits"
+#endif
           switch (modifier)
           {
             case 'L':
@@ -679,7 +682,9 @@ int
               VSPRINTF_DECIMAL(u32int, u32int, FALSE, /* no abs function required */);
               break;
           }
+#ifdef COMPILER_CAN_HIDE_WARNINGS
 #pragma GCC diagnostic pop
+#endif
           break;
         case 's':
         {
@@ -854,7 +859,7 @@ static int _vsscanf(const char *s, const char *format, va_list args)
 {
   const char *const sOrigin = s;
   s32int convertedItemCount = 0;
-  while (*format && *s)
+  while (*format)
   {
     /*
      * Check for whitespace, percentage sign or other non-whitespace character in format string

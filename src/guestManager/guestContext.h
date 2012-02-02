@@ -21,6 +21,13 @@ typedef u32int *(*pcInstructionHandler)(GCONTXT *context, u32int *instructionAdd
   u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
 
 
+enum guestOSType
+{
+  GUEST_OS_NOT_SET = 0,
+  GUEST_OS_LINUX,
+  GUEST_OS_FREERTOS
+};
+
 struct guestContext
 {
   u32int R0;
@@ -92,6 +99,8 @@ struct guestContext
   bool guestDataAbtPending;
   bool guestPrefetchAbtPending;
   bool guestIdle;
+  /* for OS-specific quirks */
+  enum guestOSType os;
 #ifdef CONFIG_BLOCK_COPY
   /* This is the blokCache with copied instructions we use u32int because the content of the address cannot be typed*/
   u32int blockCopyCache; 
