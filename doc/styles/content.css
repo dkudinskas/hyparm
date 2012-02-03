@@ -1,0 +1,67 @@
+@charset "UTF-8";
+
+html, body
+{
+  background-color: #fff;
+}
+
+body
+{
+  margin: 2em 2em 2em 2em;
+}
+
+h1, h2, h3
+{
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+}
+
+h2
+{
+  margin-top: 1.5em;
+}
+
+h3
+{
+  margin-top: 1.2em;
+}
+
+p
+{
+  line-height: 1.2em;
+  text-align: justify;
+}
+
+code, pre
+{
+  font-size: 0.8em;
+}
+
+code em, pre em
+{
+  color: #ff5555;
+  font-style: normal;
+}
+
+code
+{
+  color: #555555;
+}
+
+pre
+{
+  background-color: #e7e7e7;
+  border-left: 0.33em solid #aaa;
+  padding: 0.5em 0.5em 0.5em 0.5em;
+  white-space: pre-wrap;
+}
+
+ol > li, ul > li
+{
+  margin-bottom: 0.2em;
+}
+
+ol > li:last-child, ul > li:last-child
+{
+  margin-bottom: 0;
+}

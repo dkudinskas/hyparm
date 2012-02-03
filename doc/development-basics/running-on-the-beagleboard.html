@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="../styles/common.css" rel="stylesheet" type="text/css" />
+  <link href="../styles/content.css" rel="stylesheet" type="text/css" />
+  <script src="../scripts/mootools-core-1.4.3-full-nocompat.js" type="text/javascript"></script>
+  <script src="../scripts/content.js" type="text/javascript"></script>
+  <title>Running on the BeagleBoard</title>
+</head>
+<body>
+
+<h1>Running on the BeagleBoard</h1>
+
+<p>
+To launch the hypervisor from U-Boot, load it at address <code>0x8c000000</code> and use the <code>go</code> command as follows:
+</p>
+
+<pre>
+# go 8c000000 <em>parameters</em>
+</pre>
+
+<p>
+You need to specify the guest kernel location, and optionally the OS type and initial RAM disk location, through command-line parameters:
+</p>
+
+<ul>
+
+<li>
+<code>-guest <em>type</em></code> optionally specifies the guest OS type. Currently, the hypervisor supports two types: <code>linux</code> and <code>freertos</code>. When omitted, the guest OS type defaults to <code>linux</code>.
+</li>
+
+<li>
+<code>-kernel <em>address</em></code> specifies the guest kernel address. This parameter is required and its value must be specified in hexadecimal representation.
+</li>
+
+<li>
+<code>-initrd <em>address</em></code> optionally specifies the location of an initial RAM disk image in memory. Its value must be specified in hexadecimal representation.
+</li>
+
+</ul>
+
+</body>
+</html>

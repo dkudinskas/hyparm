@@ -1,0 +1,49 @@
+@charset "UTF-8";
+
+html, body
+{
+  background-color: #f4f4f4;
+}
+
+body
+{
+  margin: 0.8em 0.8em 0.8em 0.8em;
+}
+
+div#tocList ul
+{
+  list-style-position: inside;
+  list-style-type: none;
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+}
+
+div#tocList > ul > li
+{
+  font-weight: bold;
+  margin-bottom: 0.8em;
+}
+
+div#tocList > ul > li:last-child
+{
+  margin-bottom: 0;
+}
+
+div#tocList > ul > li > ul
+{
+  font-size: 0.8em;
+  font-weight: normal;
+  margin-left: 1em;
+}
+
+div#tocList > ul > li > ul > li
+{
+  margin-bottom: 0;
+  margin-top: 0.2em;
+}
+
+div#tocText
+{
+  display: none;
+  visibility: hidden;
+}
