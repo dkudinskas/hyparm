@@ -42,11 +42,35 @@ GCONTXT *createGuestContext(void)
   context->blockCache = (BCENTRY *)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   if (context->blockCache == NULL)
   {
-    DIE_NOW(context, "Failed to allocate basic block cache");
+    DIE_NOW(context, "Failed to allocate block cache");
   }
   DEBUG(GUEST_CONTEXT, "allocateGuestContext: block cache @ %p" EOL, context->blockCache);
   memset(context->blockCache, 0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   initialiseBlockCache(context->blockCache);
+  /*
+   * Initialise block copy cache
+   */
+#ifdef CONFIG_BLOCK_COPY
+  context->blockCopyCache = (u32int *)mallocBytes(BLOCK_COPY_CACHE_SIZE * sizeof(u32int));
+  if (context->blockCopyCache == NULL)
+  {
+    DIE_NOW(context, "Failed to allocate block copy cache");
+  }
+  DEBUG(GUEST_CONTEXT, "allocateGuestContext: block copy cache @ %p" EOL, context->blockCopyCache);
+  memset(context->blockCopyCache, 0, BLOCK_COPY_CACHE_SIZE * sizeof(u32int));
+  context->blockCopyCacheEnd = context->blockCopyCache + BLOCK_COPY_CACHE_SIZE - 1;
+  context->blockCopyCacheLastUsedLine = context->blockCopyCache - 1;
+  /*
+   * Install unconditional branch to the beginning at the end of the block copy cache. The offset
+   * given in the branch instruction determines is a number of words, not bytes. Since the value of
+   * the PC -- in ARM mode -- at a given address is always (address + 8), and the instruction will
+   * be put at (BLOCK_COPY_CACHE_SIZE - 1), the offset to the beginning of the block copy cache is:
+   *
+   * branchOffset = (BLOCK_COPY_CACHE_SIZE - 1) + 2
+   */
+  s32int branchOffset = - (s32int)(BLOCK_COPY_CACHE_SIZE + 1);
+  *(context->blockCopyCacheEnd) = (CC_AL << 28) | (0b1010 << 24) | (*(u32int *)&branchOffset & 0xFFFFFF);
+#endif
   /*
    * Initialise virtual hardware devices
    */
@@ -185,20 +209,11 @@ void dumpGuestContext(GCONTXT *context)
 
 #ifdef CONFIG_BLOCK_COPY
   /* BlockCache with copied code */
-  printf("gc blockCopyCache: %08x\n", (u32int)context->blockCopyCache);
-  printf("gc blockCopyCacheEnd: %08x\n", (u32int)context->blockCopyCacheEnd);
-  printf("gc blockCopyCacheLastUsedLine: %08x\n", (u32int)context->blockCopyCacheLastUsedLine);
-  printf("gc PCOfLastInstruction: %08x\n", (u32int)context->PCOfLastInstruction);
+  printf("gc blockCopyCache: %p" EOL, context->blockCopyCache);
+  printf("gc blockCopyCacheEnd: %p" EOL, context->blockCopyCacheEnd);
+  printf("gc blockCopyCacheLastUsedLine: %p" EOL, context->blockCopyCacheLastUsedLine);
+  printf("gc PCOfLastInstruction: %#.8x" EOL, context->PCOfLastInstruction);
 #endif
 
   dumpSdramStats();
 }
-
-#ifdef CONFIG_BLOCK_COPY
-void registerBlockCopyCache(GCONTXT *gc, u32int * blockCopyCache, u32int size)
-{
-  gc->blockCopyCache = (u32int)blockCopyCache;
-  gc->blockCopyCacheEnd = (u32int)(blockCopyCache + size - 1);  // !pointer arithmetic size is size in number of u32ints
-  gc->blockCopyCacheLastUsedLine = (u32int)(blockCopyCache-1);
-}
-#endif

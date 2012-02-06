@@ -136,7 +136,7 @@ descriptor* createHypervisorPageTable()
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
 #ifdef CONFIG_BLOCK_COPY
-  u32int blockCopyCache = gc->blockCopyCache;
+  u32int blockCopyCache = (u32int)gc->blockCopyCache;
   //blockCopyCache is set to Hypervisordomain in mapHypervisorMemory (See logfile:pageTablesOutput.log)
 
   //TODO: Check if it is possible to change accessbits for a smaller part.  Since 1 section = 1 MB which is much larger than the blockCopyCache.
@@ -195,7 +195,7 @@ descriptor* createGuestOSPageTable()
   printf("End shadow PT dump.\n");
 #endif
 #ifdef CONFIG_BLOCK_COPY
-  u32int blockCopyCache = gc->blockCopyCache;
+  u32int blockCopyCache = (u32int)gc->blockCopyCache;
   //TODO: Check if it is possible to change accessbits for a smaller part.  Since 1 section = 1 MB which is much larger than the blockCopyCache.
   //Make sure that blockCopyCache is accessible for guestOS
   if(setAccessBits(ptd, blockCopyCache, PRIV_RW_USR_RO)>7){

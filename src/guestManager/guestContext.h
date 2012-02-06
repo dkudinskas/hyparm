@@ -107,10 +107,10 @@ struct guestContext
   enum guestOSType os;
 #ifdef CONFIG_BLOCK_COPY
   /* This is the blokCache with copied instructions we use u32int because the content of the address cannot be typed*/
-  u32int blockCopyCache; 
-  u32int blockCopyCacheLastUsedLine; /* This points to the last used line of the block cache.  This is for knowing where to place*/
+  u32int *blockCopyCache;
+  u32int *blockCopyCacheLastUsedLine; /* This points to the last used line of the block cache.  This is for knowing where to place*/
                                        /*the next entry. this will be on blockCopyCacheLastUsedLine+1;*/
-  u32int blockCopyCacheEnd; /* This points to the end of the blockCache. This address is the last address off blockCopyCache!*/
+  u32int *blockCopyCacheEnd; /* This points to the end of the blockCache. This address is the last address off blockCopyCache!*/
                               /* This will contain an unconditional branch to begin ofblockCopyCache*/
   u32int PCOfLastInstruction;/*This will contain the value the program counter should have when the last instruction is executing*/
 #endif
@@ -139,10 +139,6 @@ __macro__ void traceBlock(GCONTXT *context, u32int startAddress)
 GCONTXT *createGuestContext(void);
 
 void dumpGuestContext(GCONTXT * gc);
-
-#ifdef CONFIG_BLOCK_COPY
-void registerBlockCopyCache(GCONTXT *gc, u32int * blockCopyCache, u32int size);
-#endif
 
 /*
  * Gets the guest context pointer.

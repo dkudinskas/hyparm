@@ -162,7 +162,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     /* First word is a backpointer, second may be reserved */
     u32int *addressInBlockCopyCache = ((u32int *)bcEntry->blockCopyCacheAddress) + (bcEntry->reservedWord ? 2 : 1);
     // The programcounter of the code that is executing should be set to the code in the blockCache
-    if ((u32int)addressInBlockCopyCache >= context->blockCopyCacheEnd)
+    if (addressInBlockCopyCache >= context->blockCopyCacheEnd)
     {
       /* blockCopyCacheAddresses will be used in a  cyclic manner
       -> if end of blockCopyCache is passed blockCopyCacheCurrAddress must be updated */
@@ -533,22 +533,22 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
             blockCopyCacheStartAddress = (u32int*)(((u32int)blockCopyCacheStartAddress) |0b1);
             /* Block is merged and moved to start of blockCopyCache.  We have to execute instructions from there!
              * But first word is backpointer and 2nd word is reserved word*/
-            context->R15 = context->blockCopyCache + 8;
+            context->R15 = (u32int)context->blockCopyCache + 8;
 
             DEBUG(SCANNER, "Block Merged.  New size = %#.8x" EOL, blockCopyCacheSize);
           }
           else
           {
             /* No patching needs to be done just set blockCopyCacheSize */
-            blockCopyCacheSize = context->blockCopyCacheEnd - (((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE);
-            blockCopyCacheSize += (u32int)blockCopyCacheCurrAddress - context->blockCopyCache;
+            blockCopyCacheSize = (u32int)context->blockCopyCacheEnd - (((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE);
+            blockCopyCacheSize += (u32int)(blockCopyCacheCurrAddress - context->blockCopyCache);
             blockCopyCacheSize = blockCopyCacheSize >> 2; //we have casted pointers to u32int thus divide by 4 to get size in words
           }
         }//end of reserved word case
         else
         {
-            blockCopyCacheSize = context->blockCopyCacheEnd - (((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE);
-            blockCopyCacheSize += (u32int)blockCopyCacheCurrAddress - context->blockCopyCache;
+            blockCopyCacheSize = (u32int)context->blockCopyCacheEnd - (((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE);
+            blockCopyCacheSize += (u32int)(blockCopyCacheCurrAddress - context->blockCopyCache);
             blockCopyCacheSize = blockCopyCacheSize >> 2;//we have casted pointers to u32int thus divide by 4 to get size in words
 
             DEBUG(SCANNER, "Block exceeding end: blockCopyCacheSize=%#.8x" EOL, blockCopyCacheSize);
@@ -574,7 +574,7 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
       protectScannedBlock(startAddress, currAddress);
       //update blockCopyCacheLastUsedLine (blockCopyCacheLastUsedLine is u32int -> add nrOfInstructions*4
       /* It doesn't matter if it points to the word before the blockCopyCache. (Guestcontext was even initialized this way) */
-      context->blockCopyCacheLastUsedLine=(u32int)(blockCopyCacheCurrAddress-1);
+      context->blockCopyCacheLastUsedLine = blockCopyCacheCurrAddress - 1;
 
       DEBUG(SCANNER, "Block added with size of %#.8x words" EOL, (u32int)blockCopyCacheCurrAddress
         - (u32int)blockCopyCacheStartAddress);
@@ -619,9 +619,9 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
              * |      ...          |  = Here starts the translated block
              *
              * blockCopyCacheStartAddress**/
-            u32int emptyWordPointer;
-            u32int destEmptyWord = (u32int)(blockCopyCacheStartAddress + 1);
-            u32int tempWordPointer;
+            u32int *emptyWordPointer;
+            u32int *destEmptyWord = blockCopyCacheStartAddress + 1;
+            u32int *tempWordPointer;
             blockCopyCacheCurrAddress=(u32int*)((u32int)blockCopyCacheCurrAddress & 0xFFFFFFFE);/*Set last bit back to zero*/
             /* destEmptyWord can be set incorrectly if blockCopyCacheStartAddress is blockCopyCacheEnd -4
              * Because then destEmptyWord will be blockCopyCacheEnd but blockCopyCacheEnd contains a static branch
@@ -633,31 +633,30 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
 
             /*Set place for the reserved word correct now it is right before the instructions for the last instruction*/
             /*set pointer to the empty word.*/
-            emptyWordPointer=(u32int)(blockCopyCacheCurrAddress-6);
+            emptyWordPointer= blockCopyCacheCurrAddress - 6;
             if(emptyWordPointer < context->blockCopyCache)
             {
               /* If we are before the start of the Block Copy Cache than we need to go to the corresponding place near the end*/
-              u32int diff = context->blockCopyCache - emptyWordPointer;
-              emptyWordPointer = context->blockCopyCacheEnd-diff;
+              emptyWordPointer = context->blockCopyCacheEnd - (context->blockCopyCache - emptyWordPointer);
             }
             /* emptyWordPointer now points to the empty word*/
 
-            DEBUG(SCANNER, "emptyWordPointer : %#.8x" EOL, emptyWordPointer);
-            DEBUG(SCANNER, "destEmptyWord : %#.8x" EOL, destEmptyWord);
+            DEBUG(SCANNER, "emptyWordPointer : %p" EOL, emptyWordPointer);
+            DEBUG(SCANNER, "destEmptyWord : %p" EOL, destEmptyWord);
 
             while (emptyWordPointer != destEmptyWord)
             {
               /* As long as the empty word isn't at its place keep on moving instructions */
-              tempWordPointer = emptyWordPointer - 4; /* previous word */
-              if(tempWordPointer == (context->blockCopyCache - 4))
+              tempWordPointer = emptyWordPointer - 1; /* previous word */
+              if(tempWordPointer == (context->blockCopyCache - 1))
               {
                 /* Be careful when exceeding start of blockCopyCache */
-                tempWordPointer = context->blockCopyCacheEnd - 4;
+                tempWordPointer = context->blockCopyCacheEnd - 1;
               }
               *((u32int *)emptyWordPointer) = *((u32int *)tempWordPointer);
               emptyWordPointer=tempWordPointer;
             }
-            *((u32int *)emptyWordPointer)= 0;/*Clear it so it cannot be a cause for confusion while debugging*/
+            *emptyWordPointer= 0;/*Clear it so it cannot be a cause for confusion while debugging*/
             reservedWord = 1;/*From now on there is a reserved word to save backups*/
             /* Indicate that a free word is available at start of blockCopyCache */
             blockCopyCacheStartAddress=(u32int*) ( ((u32int)blockCopyCacheStartAddress) |0b1);
