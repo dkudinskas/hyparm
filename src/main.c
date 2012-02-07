@@ -172,10 +172,6 @@ void main(s32int argc, char *argv[])
   }
 #endif /* CONFIG_MMC */
 
-#ifdef CONFIG_BLOCK_COPY_NO_IRQ
-  disableInterrupts();
-#endif
-
   // does not return
   switch (config.guestOS)
   {

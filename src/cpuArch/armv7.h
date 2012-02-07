@@ -74,14 +74,10 @@ void l2_cache_disable(void);
   }
 
 
-#ifdef CONFIG_BLOCK_COPY_NO_IRQ
-#define enableInterrupts() {}
-#else
 #define enableInterrupts() \
   { \
     __asm__ __volatile__ ("CPSIE i"); \
   }
-#endif
 
 #define disableInterrupts() \
   { \

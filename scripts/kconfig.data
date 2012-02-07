@@ -401,10 +401,6 @@ config DEBUG_FS_FAT
 
 menu "Hacks"
 
-config BLOCK_COPY_NO_IRQ
-  bool "Disable interrupts"
-  depends on BLOCK_COPY
-
 config CLI
   bool "Command-line interface"
 

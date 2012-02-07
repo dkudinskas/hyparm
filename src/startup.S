@@ -416,13 +416,8 @@ setGuestContext:
    */
   TST     R0, #PSR_T_BIT
   AND     R0, R0, #PSR_CC_FLAGS_NZCV
-.ifdef CONFIG_BLOCK_COPY_NO_IRQ
-  ORREQ   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT | PSR_I_BIT)
-  ORRNE   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT | PSR_I_BIT | PSR_T_BIT)
-.else
   ORREQ   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
   ORRNE   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT | PSR_T_BIT)
-.endif
   /*
    * Also update guest PC when guest is in Thumb mode, then save SPSR
    */

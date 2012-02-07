@@ -13,10 +13,6 @@ callKernel:
   BIC    r4, #0x01F
   ORR    r4, #0x010
   ORR    r4, #0x100
-.ifdef CONFIG_BLOCK_COPY_NO_IRQ
-  /*Make sure interupts are disabled*/
-  ORR    r4, #0x80
-.endif
   ORR    r4, #0x040
   MSR    SPSR, r4
 

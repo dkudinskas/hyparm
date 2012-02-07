@@ -63,9 +63,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
             context->guestIrqPending = TRUE;
           }
         }
-#ifndef CONFIG_BLOCK_COPY_NO_IRQ
         oldCpsr &= ~PSR_I_BIT;
-#endif
       }
       if (affectF)
       {
@@ -218,22 +216,7 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
           DIE_NOW(context, "mrsInstruction: cannot request spsr in user/system mode");
       } // switch ends
     } // spsr case ends
-#ifdef CONFIG_BLOCK_COPY_NO_IRQ
-    /* Mask interrupts */
-    value |= 0x80;
-    /* When Interrupts are disabled the mask bit will be one but we don't want linux to now this *
-     * This will crash with undefined handler
-     * storeGuestGPR(regDest, (value & ~0x00000080), context); *
-     * Use a hack to resolve this issue -> normally default behaviour but if certain instruction than modified behaviour */
-    if (instr == 0xe10f2000)
-    {
-      storeGuestGPR(regDest, (value & ~0x80), context);
-    }
-    else
-#endif
-    {
-      storeGuestGPR(regDest, value, context);
-    }
+    storeGuestGPR(regDest, value, context);
   } // condition met ends
 
   return getRealPC(context) + ARM_INSTRUCTION_SIZE;
@@ -269,10 +252,6 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
     u32int immediate = instruction & 0x00000FFF;
     value = armExpandImm12(immediate);
   }
-
-#ifdef CONFIG_BLOCK_COPY_NO_IRQ
-  value = value | 0x80;
-#endif
 
   u32int oldValue = 0;
   if (cpsrOrSpsr == 0)
