@@ -1,6 +1,8 @@
 #include "cpuArch/armv7.h"
+#include "cpuArch/constants.h"
 
 #include "common/debug.h"
+#include "common/stddef.h"
 #include "common/string.h"
 
 #include "drivers/beagle/beUart.h"
@@ -13,6 +15,22 @@
 #define TERMINAL_WIDTH  80
 
 
+extern u32int abtStack;
+extern u32int abtStackEnd;
+
+extern u32int fiqStack;
+extern u32int fiqStackEnd;
+
+extern u32int irqStack;
+extern u32int irqStackEnd;
+
+extern u32int svcStack;
+extern u32int svcStackEnd;
+
+extern u32int undStack;
+extern u32int undStackEnd;
+
+
 #ifdef CONFIG_MMC
 extern fatfs mainFilesystem;
 extern file * debugStream;
@@ -21,6 +39,10 @@ extern file * debugStream;
 #ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
 extern void setEmergencyExceptionVector(void);
 #endif
+
+
+void dumpStackFromParameters(u32int snapshotOrigin, u32int psr, u32int *stack)
+  __attribute__((externally_visible));
 
 
 static void banner(const char *msg)
@@ -70,9 +92,94 @@ void dieNow(GCONTXT *context, const char *caller, const char *msg)
   {
     dumpGuestContext(context);
   }
+#ifdef CONFIG_DUMP_STACK
+  dumpStack();
+#endif
   banner("HALT");
 
   infiniteIdleLoop();
+}
+
+void dumpStack()
+{
+  __asm__ __volatile__("MOV R0, LR; MRS R1, CPSR; MOV R2, SP; B dumpStackFromParameters");
+}
+
+void dumpStackFromParameters(u32int snapshotOrigin, u32int psr, u32int *stack)
+{
+  const char *modeString;
+  u32int *stackBegin, *stackEnd;
+
+  switch (psr & PSR_MODE)
+  {
+    case PSR_SYS_MODE:
+      modeString = "SYS";
+      stackBegin = NULL;
+      stackEnd = NULL;
+      break;
+    case PSR_FIQ_MODE:
+      modeString = "FIQ";
+      stackBegin = &fiqStack;
+      stackEnd = &fiqStackEnd;
+      break;
+    case PSR_IRQ_MODE:
+      modeString = "IRQ";
+      stackBegin = &irqStack;
+      stackEnd = &irqStackEnd;
+      break;
+    case PSR_SVC_MODE:
+      modeString = "SVC";
+      stackBegin = &svcStack;
+      stackEnd = &svcStackEnd;
+      break;
+    case PSR_ABT_MODE:
+      modeString = "ABT";
+      stackBegin = &abtStack;
+      stackEnd = &abtStackEnd;
+      break;
+    case PSR_UND_MODE:
+      modeString = "UND";
+      stackBegin = &undStack;
+      stackEnd = &undStackEnd;
+      break;
+    default:
+      modeString = "???";
+      stackBegin = NULL;
+      stackEnd = NULL;
+      return;
+  }
+
+  printf("CPSR = %#.8x (mode: %s); SP = %p width PC = %#.8x" EOL, psr, modeString, stack, snapshotOrigin);
+
+  if (stackBegin == NULL)
+  {
+    printf("Error: there is no stack associated with this mode!" EOL);
+  }
+  else
+  {
+    printf("Stack top: %p; limit: %p" EOL, stackBegin, stackEnd);
+    if (stack > stackBegin)
+    {
+      printf("Error: stack for this mode is corrupt" EOL);
+    }
+    else
+    {
+      if (stack < stackEnd)
+      {
+        printf("Warning: stack pointer exceeds limit!" EOL);
+      }
+      else if (stack == stackEnd)
+      {
+        printf("Warning: stack pointer hit limit!" EOL);
+      }
+
+      while (stack < stackBegin)
+      {
+        stack++;
+        printf("%p: %#.8x" EOL, stack, *stack);
+      }
+    }
+  }
 }
 
 u32int printf(const char *fmt, ...)

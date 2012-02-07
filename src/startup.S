@@ -741,14 +741,29 @@ guestContextSpace:
  */
   .balign 8
 stackSpaceEnd:
+.global svcStackEnd
+.global svcStack
+svcStackEnd:
   .space 1024 /* SVC */
 svcStack:
+.global abtStackEnd
+.global abtStack
+abtStackEnd:
   .space 1024 /* ABT */
 abtStack:
+.global undStackEnd
+.global undStack
+undStackEnd:
   .space 1024 /* UND */
 undStack:
+.global irqStackEnd
+.global irqStack
+irqStackEnd:
   .space 1024 /* IRQ */
 irqStack:
+.global fiqStackEnd
+.global fiqStack
+fiqStackEnd:
   .space 1024 /* FIQ */
 fiqStack:
 stackSpaceBegin:

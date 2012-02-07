@@ -404,6 +404,9 @@ menu "Hacks"
 config CLI
   bool "Command-line interface"
 
+config DUMP_STACK
+  bool "Dump stack on crash"
+
 config EMERGENCY_EXCEPTION_VECTOR
   bool "Emergency exception vector"
   default y
