@@ -27,6 +27,21 @@ The kernel must be cross-compiled, similar to the hypervisor. Before you get sta
 # export CROSS_COMPILE=/opt/arm-none-eabi-4.4/bin/arm-none-eabi-
 </pre>
 
+<p>
+Building with GNU make 3.82 and up will fail with a message similar to the one below:
+</p>
+
+<pre>
+Makefile:442: *** mixed implicit and normal rules.  Stop.
+</pre>
+
+<p>The solution is to edit the Makefile and split all mixed rules. Alternatively, apply the patch from the <code>contrib/linux</code> directory:</p>
+
+<pre>
+cd linux-2.6.28.1
+patch -p1 &lt; ../hyparm/contrib/linux/linux-2.6.28.1-make-compatibility.patch
+</pre>
+
 <h3>Configuring for the BeagleBoard</h3>
 
 <p>
