@@ -40,5 +40,62 @@ You need to specify the guest kernel location, and optionally the OS type and in
 
 </ul>
 
+<h2>SD cards</h2>
+
+<h3>Booting from an SD card</h3>
+
+<p>
+To initialize your SD card for use with the BeagleBoard, use the <code>mkcard</code> script from the <code>contrib/boot</code> directory:
+</p>
+
+<pre>
+# sudo contrib/boot/mkcard <em>device-path</em>
+</pre>
+
+<p>
+The <code><em>device-path</em></code> must be set to the path in <code>/dev</code> of your card reader, e.g., <code>/dev/sdb</code>, <code>/dev/mmcblkp0</code>, ...
+The script will create a small FAT partition for booting and a big partition to house a Linux filesystem.
+</p>
+
+<p>Binaries of the two bootloaders, X-Loader and U-Boot, must be copied <em>in order</em> to the boot partition:</p>
+
+<pre>
+# sudo udisks --mount <em>boot-partition-path</em>
+# sudo cp contrib/boot/reference/MLO_revc_v3 /media/boot/MLO
+# sudo cp contrib/boot/reference/u-boot-revc4.bin /media/boot/U-BOOT.BIN
+# sudo udisks --unmount <em>boot-partition-path</em>
+</pre>
+
+<p>
+You can now use the SD card with the BeagleBoard (tap the reset button while holding the user button).
+</p>
+
+<h3>Flashing new bootloaders to the NAND</h3>
+
+<p>
+Save the files to be flashed on the boot partition of the SD card:
+</p>
+
+<pre>
+# sudo cp contrib/boot/hyparm/x-load.bin.ift /media/boot/FLASH_XL
+# sudo cp contrib/boot/hyparm/u-boot.bin /media/boot/FLASH_UB
+</pre>
+
+<p>
+Now, boot the BeagleBoard from the SD card and use the following commands to flash the NAND:</p>
+</p>
+
+<pre>
+OMAP3 beagleboard.org # mmc init
+OMAP3 beagleboard.org # fatload mmc 0 0x80200000 FLASH_XL
+OMAP3 beagleboard.org # nandecc hw
+OMAP3 beagleboard.org # nand erase 0 80000
+OMAP3 beagleboard.org # nand write.i 0x80200000 0 80000
+OMAP3 beagleboard.org # fatload mmc 0 0x80200000 FLASH_UB
+OMAP3 beagleboard.org # nandecc sw
+OMAP3 beagleboard.org # nand erase 80000 160000
+OMAP3 beagleboard.org # nand write.i 0x80200000 80000 160000
+</pre>
+
 </body>
 </html>
