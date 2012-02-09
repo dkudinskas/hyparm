@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="../styles/common.css" rel="stylesheet" type="text/css" />
+  <link href="../styles/content.css" rel="stylesheet" type="text/css" />
+  <script src="../scripts/mootools-core-1.4.3-full-nocompat.js" type="text/javascript"></script>
+  <script src="../scripts/content.js" type="text/javascript"></script>
+  <title>Linux</title>
+</head>
+<body>
+
+<h1>Linux</h1>
+
+<p>
+Current development focuses on <a href="http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.28.1.tar.bz2">Linux kernel 2.6.28.1</a>.
+</p>
+
+<h2>Building a kernel</h2>
+
+<p>
+The kernel must be cross-compiled, similar to the hypervisor. Before you get started, you must set both <code>ARCH</code> and <code>CROSS_COMPILE</code> environment variables, e.g.:
+</p>
+
+<pre>
+# export ARCH=arm
+# export CROSS_COMPILE=/opt/arm-none-eabi-4.4/bin/arm-none-eabi-
+</pre>
+
+<p>
+Building with GNU make 3.82 and up will fail with a message similar to the one below:
+</p>
+
+<pre>
+Makefile:442: *** mixed implicit and normal rules.  Stop.
+</pre>
+
+<p>The solution is to edit the Makefile and split all mixed rules. Alternatively, apply the patch from the <code>contrib/linux</code> directory:</p>
+
+<pre>
+cd linux-2.6.28.1
+patch -p1 &lt; ../hyparm/contrib/linux/linux-2.6.28.1-make-compatibility.patch
+</pre>
+
+<h3>Configuring for the BeagleBoard</h3>
+
+<p>
+Example kernel configurations for use with the hypervisor are provided in the <code>contrib/linux</code> directory.
+If you want to start from the default configuration, the steps differ by kernel version:
+</p>
+
+<ul>
+
+<li>
+Starting from commit <code>455d4d2dc76471baec0c70daf8ff6c09fc743c24</code> (v2.6.37-rc1 and up):
+<pre>
+# make omap2plus_defconfig
+</pre>
+</li>
+
+<li>
+Starting from commit <code>07a8c03f3e06129e847acd068b8b89c13357ee64</code> (v2.6.35 to v2.6.36): 
+<pre>
+# make omap3_defconfig
+</pre>
+</li>
+
+<li>
+Older versions:
+<pre>
+make omap3_beagle_defconfig
+</pre>
+</li>
+
+</ul>
+
+<h3>Creating a U-Boot image</h3>
+
+<p>
+You need to make a U-Boot image to use the kernel with the bootloader on the BeagleBoard and the hypervisor.
+This requires the <code>mkimage</code> program to be installed on your computer.
+In order to have the kernel build system create a U-Boot image of the compressed kernel for you, type:
+</p>
+
+<pre>
+# make uImage
+</pre>
+
+<p>
+If you want a U-Boot image of the uncompressed kernel, you will need to create it manually by running the following commands from the root of the kernel tree:
+</p>
+
+<pre>
+# ${CROSS_COMPILE}objcopy -O binary -R .note -R .note.gnu.build-id -R .comment -S vmlinux arch/arm/boot/Image
+# mkimage -A arm -O linux -T kernel -C none -a 0x80008000 -e 0x80008000 -n 'My Linux image' -d arch/arm/boot/Image arch/arm/boot/uImage
+</pre>
+
+<p>
+The last step is taken from <code>arch/arm/boot/.uImage.cmd</code> by replacing <code>zImage</code> with <code>Image</code>.
+Values for the <code>-a</code> and <code>-e</code> parameters may differ; adapt if necessary.
+</p>
+
+<h2>Browsing the kernel source tree</h2>
+
+<p>
+The <a href="http://lxr.linux.no/linux">Linux Cross Reference</a> is a handy interface to browse the kernel source tree.
+</p>
+
+</body>
+</html>
