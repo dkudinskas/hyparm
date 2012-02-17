@@ -81,4 +81,9 @@ u32int shiftVal(u32int imm32, u8int shiftType, u32int shamt, u8int *carryFlag);
 /* function to store a register value, evaluates modes. */
 void storeGuestGPR(u32int regDest, u32int value, GCONTXT *context);
 
+#ifdef CONFIG_GUEST_TEST
+// function to evaluate breakpoint value in unittests
+void evalBkptVal(GCONTXT *context, u32int value);
+#endif
+
 #endif
