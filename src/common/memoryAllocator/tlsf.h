@@ -6,6 +6,7 @@
  */
 
 
+#include "common/assert.h"
 #include "common/types.h"
 
 
@@ -54,6 +55,9 @@ enum tlsfPrivateConstants
 #define BLOCK_HEADER_SIZE_BITS      ~(BLOCK_HEADER_PREV_FREE_BIT | BLOCK_HEADER_FREE_BIT)
 
 
+#define TLSF_INSIST(cond, msg)  { ASSERT(cond, msg); if (!(cond)) { status--; } }
+
+
 struct blockHeader
 {
   /* Points to the previous physical block. */
@@ -65,6 +69,12 @@ struct blockHeader
   /* Next and previous free blocks. */
   struct blockHeader *nextFree;
   struct blockHeader *previousFree;
+};
+
+struct integrity
+{
+  int previousStatus;
+  int status;
 };
 
 struct pool
@@ -79,5 +89,8 @@ struct pool
   /* Head of free lists. */
   struct blockHeader *blocks[FL_INDEX_COUNT][SL_INDEX_COUNT];
 };
+
+
+typedef void (* heapWalker)(void *pointer, u32int size, s32int used, void *user);
 
 #endif /* __COMMON__MEMORY_ALLOCATOR__TLSF_H__ */
