@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="../styles/common.css" rel="stylesheet" type="text/css" />
+  <link href="../styles/content.css" rel="stylesheet" type="text/css" />
+  <script src="../scripts/mootools-core-1.4.3-full-nocompat.js" type="text/javascript"></script>
+  <script src="../scripts/content.js" type="text/javascript"></script>
+  <title>Compiling the code</title>
+</head>
+<body>
+
+<h1>Compiling the code</h1>
+
+<h2>Introduction</h2>
+
+<p>
+A cross-toolchain is required for building the hypervisor.
+Cross-toolchains create and work with executable code for platforms different from the host platform on which the toolchain runs.
+They can be custom built using <a href="http://crosstool-ng.org/">crosstool-ng</a>.
+Ready-to-use toolchains can be downloaded from <a href="http://www.mentor.com/embedded-software/sourcery-tools/sourcery-codebench/editions/lite-edition/">Mentor Graphics</a>.
+</p>
+
+<p>
+The cross-toolchain prefix must be set in the <code>CROSS_COMPILE</code> environment variable:
+</p>
+
+<pre>
+# export CROSS_COMPILE=/opt/arm-none-eabi-4.4/bin/arm-none-eabi-
+</pre>
+
+<p>
+The hypervisor can be customized at compile time using <code>make config</code>.
+The default configuration can be restored at any time using <code>make defconfig</code>.
+Next, the hypervisor can be built using <code>make</code>.
+</p>
+
+<p>
+The build system supports parallel build with <code>make -j<em>N</em></code> where <em>N</em> denotes the number of parallel jobs.
+</p>
+
+<h2>Example build steps</h2>
+
+<p>A typical example of the steps to compile the hypervisor:</p>
+
+<pre>
+# export CROSS_COMPILE=/opt/arm-none-eabi-4.4/bin/arm-none-eabi-
+# make config
+# make
+</pre>
+
+</body>
+</html>

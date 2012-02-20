@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="../styles/common.css" rel="stylesheet" type="text/css" />
+  <link href="../styles/content.css" rel="stylesheet" type="text/css" />
+  <script src="../scripts/mootools-core-1.4.3-full-nocompat.js" type="text/javascript"></script>
+  <script src="../scripts/content.js" type="text/javascript"></script>
+  <title>Compile-time configuration</title>
+</head>
+<body>
+
+<h1>Compile-time configuration</h1>
+
+<p>
+Compile-time configuration is managed through <a href="http://www.kernel.org/doc/Documentation/kbuild/kconfig-language.txt">Kconfig</a>.
+All configuration options are defined in <code>scripts/kconfig.data</code>.
+</p>
+
+<h2>Modifications to Kconfig</h2>
+
+<p>
+The version of Kconfig in the repository is slightly modified to fit the needs of this project.
+The most important change is that in the generated C header, all symbols starting with <code>CONFIG_DEBUG_</code> are <em>always</em> defined.
+The corresponding macros have the value <code>0</code> when disabled and <code>1</code> when enabled.
+</p>
+
+<h2>Updating Kconfig</h2>
+<p>
+The <code>scripts</code> directory contains a script to update the copy of Kconfig in the repository with Kconfig from the Linux kernel.
+</p>
+
+</body>
+</html>

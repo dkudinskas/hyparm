@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="../styles/common.css" rel="stylesheet" type="text/css" />
+  <link href="../styles/content.css" rel="stylesheet" type="text/css" />
+  <script src="../scripts/mootools-core-1.4.3-full-nocompat.js" type="text/javascript"></script>
+  <script src="../scripts/content.js" type="text/javascript"></script>
+  <title>Debugging on the BeagleBoard</title>
+</head>
+<body>
+
+<h1>Debugging on the BeagleBoard</h1>
+
+<h2>Introduction</h2>
+
+<p>
+Debugging the hypervisor on the BeagleBoard is done using the <a href="http://www.tincantools.com/wiki/Flyswatter">Flyswatter</a> JTAG debugger and <a href="http://openocd.sourceforge.net/">OpenOCD</a>.
+</p>
+
+<h2>Connecting the Flyswatter</h2>
+
+<h3>Persistent device names</h3>
+
+<p>
+When connecting the Flyswatter debugger under Linux, two <code>/dev/ttyUSB*</code> devices are created.
+These devices are not always numbered consistently, especially if other devices with the similar functionaly are or have been attached to the system.
+The udev rules shown below will help to avoid confusion by creating the symlinks <code>/dev/beagleboard</code> and <code>/dev/flyswatter</code>.
+</p>
+
+<pre>
+ACTION!="add|change", GOTO="flyswatter_end"
+SUBSYSTEM!="tty", GOTO="flyswatter_end"
+KERNEL!="ttyUSB[0-9]*|ttyACM[0-9]*", GOTO="flyswatter_end"
+
+SUBSYSTEMS=="usb-serial", ENV{ID_PORT}="$attr{port_number}"
+
+IMPORT="path_id %p"
+
+IMPORT="usb_id --export %p"
+ENV{ID_SERIAL}!="TinCanTools_Flyswatter_FS000000", GOTO="flyswatter_end"
+SUBSYSTEMS=="usb", ENV{ID_IFACE}="$attr{bInterfaceNumber}"
+ENV{ID_IFACE}=="00", SYMLINK+="flyswatter"
+ENV{ID_IFACE}=="01", SYMLINK+="beagleboard"
+
+LABEL="flyswatter_end"
+</pre>
+
+<p>
+To use these rules, store them in a file called <code>99-flywatter.rules</code> in your udev rules directory (typically <code>/etc/udev/rules.d</code>).
+</p>
+
+<h2>Installing OpenOCD</h2>
+
+<p>
+Prerequisites:
+</p>
+
+<ul>
+
+<li>
+<a href="http://www.gnu.org/software/automake/">GNU Automake</a>
+</li>
+
+<li>
+<a href="http://www.gnu.org/software/libtool/">GNU Libtool</a>
+</li>
+
+<li>
+<a href="http://www.intra2net.com/en/developer/libftdi/">libFTDI</a>
+</li>
+
+</ul>
+
+<p>
+Clone the OpenOCD Git repository, and check out the commit with hash <code>a1cf1b52444c67b6c56ad58fe29be5a285b244cb</code> (stm32 : change returned value of mass_erase function) in a new branch:
+</p>
+
+<pre>
+git clone git://openocd.git.sourceforge.net/gitroot/openocd/openocd
+cd openocd
+git checkout -b hyparm a1cf1b52444c67b6c56ad58fe29be5a285b244cb
+</pre>
+
+<p>
+This commit is the most recent one known to be working fine for debugging the processor on the BeagleBoard with the Flyswatter.
+</p>
+
+<p>
+To build and install OpenOCD in <code>/opt/openocd</code>:
+</p>
+
+<pre>
+./bootstrap
+./configure --prefix=/opt/openocd --enable-ft2232_libftdi --enable-maintainer-mode
+make
+sudo make install
+</pre>
+
+<h2>Using OpenOCD</h2>
+
+<h3>Running OpenOCD</h3>
+<p>
+OpenOCD must be run as <code>root</code>.
+You will also need to specify the configuration file for the board and the debugger as command-line parameters:
+</p>
+
+<pre>
+sudo openocd -f interface/flyswatter.cfg -f board/ti_beagleboard.cfg
+</pre>
+
+<p>
+The paths for the configuration files are relative to the OpenOCD installation prefix and hence never change.
+To avoid having to specify these configuration files each time, you can make a configuration file called <code>openocd.cfg</code> in <code><em>PREFIX</em>/share/openocd/site</code> with the following contents:
+</p>
+
+<pre>
+source [find interface/flyswatter.cfg]
+source [find board/ti_beagleboard.cfg]
+</pre>
+
+<p>
+By default, OpenOCD will listen for a TCP connection on port 4444 of the loopback interface.
+You can use a telnet client to connect to it:
+</p>
+
+<pre>
+telnet localhost 4444
+</pre>
+
+<h3>Communicating with the Flyswatter</h3>
+
+
+
+<h3>Breakpoints</h3>
+
+<p>
+<a href="http://en.wikipedia.org/wiki/Breakpoint">Breakpoints</a> intentionally halt the execution of a program for debugging purposes. There are two kinds of breakpoints:
+</p>
+
+<p>
+<strong>Instruction breakpoints</strong> are used to halt the execution of a program before a specific instruction is executed. They can either be triggered from within the target software, or configured in the target hardware:
+</p>
+
+<ul>
+
+<li>
+Software instruction breakpoints are triggered when the processor executes a <code>BKPT</code> instruction.
+This instruction is unconditional, and is available in both ARM and Thumb mode.
+</li>
+
+<li>
+Hardware instruction breakpoints can be set using the <code>bp</code> command and unset using the <code>rbp</code> command.
+</li>
+
+</ul>
+
+<p>
+<strong>Data breakpoints</strong> or <strong>watchpoints</strong> are used to halt program execution when some specific address in the memory is read from or written to.
+They can be set using the <code>wp</code> command and unset using the <code>rwp</code> command.
+</p>
+
+<p>
+To step from a breakpoint in OpenOCD, use the <code>step <em>address</em></code> command with the address of the next instruction.
+</p>
+
+</body>
+</html>

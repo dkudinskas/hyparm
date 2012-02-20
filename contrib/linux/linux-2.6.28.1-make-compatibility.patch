@@ -1,0 +1,41 @@
+From: Niels Penneman <niels.penneman@elis.ugent.be>
+Date: Mon, 17 Oct 2011 16:10:59 +0200
+Subject: [PATCH] GNU Make 3.82 compatibility
+
+---
+ Makefile |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 71e98e9..f4161a1 100644
+--- a/Makefile
++++ b/Makefile
+@@ -439,7 +439,11 @@ ifeq ($(config-targets),1)
+ include $(srctree)/arch/$(SRCARCH)/Makefile
+ export KBUILD_DEFCONFIG KBUILD_KCONFIG
+ 
+-config %config: scripts_basic outputmakefile FORCE
++config: scripts_basic outputmakefile FORCE
++	$(Q)mkdir -p include/linux include/config
++	$(Q)$(MAKE) $(build)=scripts/kconfig $@
++
++%config: scripts_basic outputmakefile FORCE
+ 	$(Q)mkdir -p include/linux include/config
+ 	$(Q)$(MAKE) $(build)=scripts/kconfig $@
+ 
+@@ -1604,7 +1608,11 @@ endif
+ 	$(Q)$(MAKE) $(build)=$(build-dir) $(target-dir)$(notdir $@)
+ 
+ # Modules
+-/ %/: prepare scripts FORCE
++/: prepare scripts FORCE
++	$(cmd_crmodverdir)
++	$(Q)$(MAKE) KBUILD_MODULES=$(if $(CONFIG_MODULES),1) \
++	$(build)=$(build-dir)
++%/: prepare scripts FORCE
+ 	$(cmd_crmodverdir)
+ 	$(Q)$(MAKE) KBUILD_MODULES=$(if $(CONFIG_MODULES),1) \
+ 	$(build)=$(build-dir)
+-- 
+1.7.3.4
+

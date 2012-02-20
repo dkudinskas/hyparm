@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="../styles/common.css" rel="stylesheet" type="text/css" />
+  <link href="../styles/content.css" rel="stylesheet" type="text/css" />
+  <script src="../scripts/mootools-core-1.4.3-full-nocompat.js" type="text/javascript"></script>
+  <script src="../scripts/content.js" type="text/javascript"></script>
+  <title>Git tips and tricks</title>
+</head>
+<body>
+
+<h1>Git tips and tricks</h1>
+
+<p>
+The repository of the hypervisor is managed through Git.
+For basic information on how to set up Git, take a look at <a href="http://help.github.com/linux-set-up-git/">GitHub Help</a>.
+If you want a GUI to browse the repository and its history, try <a href="http://git.gnome.org/browse/gitg/">gitg</a> or <a href="http://sourceforge.net/projects/qgit/">qgit</a>.
+</p>
+
+<h2>Fixing mistakes</h2>
+
+<p>
+To revert uncommitted changes in a single file:
+</p>
+
+<pre>
+git checkout -- filename
+</pre>
+
+<h2>Merging</h2>
+
+<p>
+To get some branch from a forked repository:
+</p>
+
+<pre>
+git remote add fork git://github.com/username/hyparm.git
+git fetch fork
+git checkout -b somebranch fork/master
+</pre>
+
+<p>
+To merge the current branch with some branch from a forked repository:
+</p>
+
+<pre>
+git remote add fork git://github.com/username/hyparm.git
+git pull fork somebranch
+</pre>
+
+<h2>Searching</h2>
+
+<p>
+To list all tags that contain a specific commit:
+</p>
+
+<pre>
+git tag --contains commit-hash
+</pre>
+
+</body>
+</html>

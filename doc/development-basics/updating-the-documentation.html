@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="../styles/common.css" rel="stylesheet" type="text/css" />
+  <link href="../styles/content.css" rel="stylesheet" type="text/css" />
+  <script src="../scripts/mootools-core-1.4.3-full-nocompat.js" type="text/javascript"></script>
+  <script src="../scripts/content.js" type="text/javascript"></script>
+  <title>Updating the documentation</title>
+</head>
+<body>
+
+<h1>Updating the documentation</h1>
+
+<p>
+All documentation belongs in the <code>doc</code> folder, except for source code comments and a few occasional <code>README</code> files.
+</p>
+
+<p>
+Content pages can be authored with any text editor. Only the <em>body</em> may be changed; head sections (page title, styles, scripts) are automatically managed by the <code>update-doc</code> script in the <code>scripts</code> directory. All content, other than the table of contents, is authored in plain HTML.
+</p>
+
+<h2>Adding new pages</h2>
+
+<p>
+To add new pages, add an entry to the table of contents in <code>toc.html</code> and run <code>update-doc</code> to have a blank page generated for you with the correct markup and scripts. When done editing the page, run <code>update-doc</code> again to update the page title. The table of contents has the following structure:
+</p>
+
+<pre>
+Section 1
+* Topic 1.1
+* Topic 1.2
+
+Section 2
+* Topic 2.1
+* Topic 2.2
+</pre>
+
+<p>
+The following rules apply:
+</p>
+
+<ul>
+
+<li>
+Each topic corresponds to one HTML page.
+</li>
+
+<li>
+Sections do not have pages of their own. However, each section corresponds to a subdirectory of the <code>doc</code> directory. All the topics that belong to a particular section are stored in this subdirectory.
+</li>
+
+<li>
+Nesting topics is not supported.
+</li>
+
+<li>
+Extra whitespace will be ignored.
+</li>
+
+</ul>
+
+<h2>Editing pages</h2>
+
+<p>
+Topics can be edited any time without the need to invoke scripts or perform special operations.
+When updating the first-level heading (<code>&lt;h1&gt;</code> tag), either update the title of the page accordingly, or run <code>update-doc</code>.
+</p>
+
+<p>
+The styles for topics can be modified by editing <code>doc/css/content.css</code>. Similarly, JavaScript can be inserted in topic pages by editing <code>doc/scripts/content.js</code>. If you wish to change the heading of all pages, e.g. to include an extra script, update the template in <code>doc/template/content.html</code> and run <code>update-doc</code>.
+</p>
+
+<h2>Deleting pages</h2>
+
+<p>
+To delete pages from the documentation, you will need to:
+</p>
+
+<ol>
+
+<li>
+remove them from the table of contents in <code>toc.html</code>;
+</li>
+
+<li>
+remove them from the Git repository:
+<pre>
+git rm doc/<em>section</em>/<em>topic</em>.html
+</pre>
+</li>
+
+</body>
+</html>

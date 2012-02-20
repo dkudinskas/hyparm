@@ -1,0 +1,170 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+use Cwd 'abs_path';
+use File::Basename;
+
+
+my $DOC_PATH = 'doc';
+my $DOC_TEMPLATE_PATH = 'doc/template';
+my $SCRIPT_PATH = 'scripts';
+
+sub readFile($)
+{
+  my $fileName = shift;
+  my $fileSize = -s $fileName;
+  my $fileHandle;
+  my $buffer;
+  open $fileHandle, "<$fileName";
+  my $read = read $fileHandle, $buffer, $fileSize;
+  close $fileHandle;
+  die "Error: failed to read $fileName" if $read != $fileSize;
+  return $buffer;
+}
+
+sub writeFile($$)
+{
+  my $fileName = shift;
+  my $buffer = shift;
+  my $fileHandle;
+  open $fileHandle, ">$fileName";
+  print $fileHandle $buffer;
+  close $fileHandle;
+}
+
+sub parseTOC($)
+{
+  my $path = shift;
+  my $toc = readFile("$path/toc.html");
+  die "Error: failed to parse table of contents" if $toc !~ m/<div id="tocText">([^<]+)<\/div>/m;
+  $toc = $1;
+  $toc =~ s/^\s+//;
+  $toc =~ s/\s+$//;
+
+  my $currentPath = '';
+  my @items = split /\n/, $toc;
+  my @htmlFiles = ();
+  foreach my $item (@items)
+  {
+    next if $item eq '';
+    $item =~ s/\s+/ /;
+
+    my $fsName = lc $item;
+    $fsName =~ s/^\* //;
+    $fsName =~ s/[^a-z]+/-/g;
+
+    if ($item =~ /^\* /)
+    {
+      die "Error: TOC entry '$item' is invalid\n" if $currentPath eq '';
+      push @htmlFiles, "$currentPath$fsName.html";
+    }
+    else
+    {
+      $currentPath = "$path/$fsName/";
+    }
+  }
+  return @htmlFiles;
+}
+
+sub splitHTML($)
+{
+  my $html = shift;
+  my @top = split /<body>/, $html, 2;
+  return () if @top != 2;
+  my @parts = split /<\/body>/, pop @top, 2;
+  return () if @parts != 2;
+  unshift @parts, pop @top;
+  return @parts;
+}
+
+sub fixHTML($$@)
+{
+  my ($docAbsolutePath, $htmlFile, @templateBits) = @_;
+  my $updated = 0;
+
+  die "Error: bug in path conversion" if $htmlFile !~ /^\Q$docAbsolutePath\E(.*)$/;
+  my $relativePath = $1;
+  $relativePath =~ s/^\///;
+
+  print "$relativePath: ";
+
+  my $depth = () = $relativePath =~ /\//g;
+  my $root = '../' x $depth;
+
+  my $top = $templateBits[0];
+  my $bottom = $templateBits[1];
+  $top =~ s/\{\$ROOT\}/$root/g;
+
+  my $html;
+  if (-f $htmlFile)
+  {
+    $html = readFile($htmlFile);
+    my @parts = splitHTML($html);
+
+    my $title = '';
+    if ($parts[1] =~ m/<h1>([^>]+)<\/h1>/m)
+    {
+      $title = $1;
+    }
+
+
+    $top =~ s/\{\$TITLE\}/$title/g;
+
+    if ($parts[0] ne $top)
+    {
+      $parts[0] = $top;
+      $updated = 1;
+    }
+
+    if ($parts[2] ne $bottom)
+    {
+      $parts[2] = $bottom;
+      $updated = 1;
+    }
+
+    if ($updated)
+    {
+      writeFile("$htmlFile", "$parts[0]<body>$parts[1]</body>$parts[2]");
+      print "updated\n";
+    }
+    else
+    {
+      print "up to date\n";
+    }
+  }
+  else
+  {
+    $top =~ s/\{\$TITLE\}//g;
+    $updated = 1;
+    writeFile("$htmlFile", "$top<body>\n</body>$bottom");
+    print "new file\n";
+  }
+
+  return $updated;
+}
+
+sub main
+{
+  # Where are we? Determine path to hypervisor tree as default value.
+  my ($fileName, $path) = fileparse(__FILE__);
+  my $hyparmTree = abs_path("$path/..");
+
+  my $docAbsolutePath = abs_path("$hyparmTree/$DOC_PATH");
+
+  my @templateBits = splitHTML(readFile("$docAbsolutePath/template/content.html"));
+  die "Error: invalid template" if @templateBits != 3;
+  splice @templateBits, 1, 1;
+
+  my @htmlFiles = parseTOC($docAbsolutePath);
+  push @htmlFiles, abs_path("$docAbsolutePath/default.html");
+  my $updated = 0;
+  foreach my $htmlFile (@htmlFiles)
+  {
+    $updated = $updated | fixHTML($docAbsolutePath, $htmlFile, @templateBits);
+  }
+  return $updated;
+}
+
+exit main;
