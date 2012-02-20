@@ -57,7 +57,7 @@ static instructionHandler decode(struct TopLevelCategory *categories, u32int ins
   {
     table++;
   }
-  DEBUG(DECODER, "decode: instruction = %#.8x, replace = %x, handler = %p" EOL, instruction, table->replace, table->handler);
+  DEBUG(DECODER, "decode: instruction = %#.8x, replace = %x, handler = %p, instr = %s" EOL, instruction, table->replace, table->handler, table->instructionString);
   /*
    * If the mask is zero at this point, we have hit the end of the decoding table. This means we
    * do not know what to do with this instruction; dump it...
