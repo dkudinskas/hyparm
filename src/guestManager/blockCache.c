@@ -1,6 +1,6 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/string.h"
 
 #include "guestManager/blockCache.h"
 #include "guestManager/guestContext.h"

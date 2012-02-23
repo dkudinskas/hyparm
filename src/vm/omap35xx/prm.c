@@ -1,6 +1,7 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "guestManager/guestContext.h"
 
@@ -15,7 +16,7 @@ struct PowerAndResetManager * prMan;
 void initPrm(void)
 {
   // init function: setup device, reset register values to defaults!
-  prMan = (struct PowerAndResetManager*)mallocBytes(sizeof(struct PowerAndResetManager));
+  prMan = (struct PowerAndResetManager*)malloc(sizeof(struct PowerAndResetManager));
   if (prMan == 0)
   {
     DIE_NOW(NULL, "Failed to allocate power and reset manager.");

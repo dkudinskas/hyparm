@@ -70,6 +70,16 @@ __macro__ s32int countTrailingZeros64(u64int x)
   return __builtin_ctz((u32int)(x >> 32)) + 32;
 }
 
+__macro__ u32int findFirstBitSet(u32int x)
+{
+  return __builtin_ffs(x);
+}
+
+__macro__ u32int findLastBitSet(u32int x)
+{
+  return x ? (sizeof(u32int) << 3) - countLeadingZeros(x) : 0;
+}
+
 /*
  * signExtend
  * Converts an n-bit signed value (0 < n < 32) into a 32-bit signed value through sign extension.

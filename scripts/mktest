@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+if (@ARGV != 1 || $ARGV[0] !~ /\.bin$/)
+{
+	die "Syntax: $0 filename.bin\n";
+}
+
+my $binfile = $ARGV[0];
+
+# size loadadr entr 0000 64XNAME
+
+my $size = -s $binfile;
+my $loadAddr = 0x80008000;
+my $epAddr = 0x80008001;
+my $outfile = 'out.tst';
+
+
+my($fs, $fd, $buffer);
+
+open $fs, "< $binfile" or die "Failed to open file for reading: $binfile ($!)\n";
+binmode $fs;
+
+open $fd, "> $outfile" or die "Failed to open file for writing: $outfile ($!)\n";
+binmode $fd;
+
+if ((read $fs, $buffer, $size) != $size)
+{
+	die "Failed to read file: $binfile\n";
+}
+
+print $fd pack('N', $size);
+print $fd pack('N', $loadAddr);
+print $fd pack('N', $epAddr);
+print $fd pack('N', 0);
+
+print $fd '****************************************************************';
+
+print $fd $buffer;
+
+close $fs;
+close $fd;

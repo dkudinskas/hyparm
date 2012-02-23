@@ -1,5 +1,5 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
+#include "common/string.h"
 
 #include "memoryManager/addressing.h"
 #include "memoryManager/cp15coproc.h"

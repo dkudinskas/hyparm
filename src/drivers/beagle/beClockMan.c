@@ -1,6 +1,7 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "drivers/beagle/beClockMan.h"
 
@@ -16,7 +17,7 @@ static struct ClockManagerBE *clkManBE;
 
 void clkManBEInit()
 {
-  clkManBE = (struct ClockManagerBE*)mallocBytes(sizeof(struct ClockManagerBE));
+  clkManBE = (struct ClockManagerBE*)malloc(sizeof(struct ClockManagerBE));
   if (clkManBE == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate CLK_MAN_BE.");

@@ -1,6 +1,7 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "drivers/beagle/beIntc.h"
 
@@ -22,7 +23,7 @@ static inline void intcRegWriteBE(u32int regOffs, u32int value);
 
 void intcBEInit()
 {
-  intcBE = (struct InterruptControllerBE *)mallocBytes(sizeof(struct InterruptControllerBE));
+  intcBE = (struct InterruptControllerBE *)malloc(sizeof(struct InterruptControllerBE));
   if (intcBE == 0)
   {
     DIE_NOW(NULL, "Failed to allocate INTC_BE.");

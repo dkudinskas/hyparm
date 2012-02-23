@@ -25,7 +25,8 @@ enum guestOSType
 {
   GUEST_OS_NOT_SET = 0,
   GUEST_OS_LINUX,
-  GUEST_OS_FREERTOS
+  GUEST_OS_FREERTOS,
+  GUEST_OS_TEST
 };
 
 struct guestContext

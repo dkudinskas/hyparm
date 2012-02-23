@@ -1,6 +1,7 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "drivers/beagle/beIntc.h"
 
@@ -16,7 +17,7 @@ struct InterruptController * irqController;
 
 void initIntc()
 {
-  irqController = (struct InterruptController *)mallocBytes(sizeof(struct InterruptController));
+  irqController = (struct InterruptController *)malloc(sizeof(struct InterruptController));
   if (irqController == 0)
   {
     DIE_NOW(NULL, "Failed to allocate INTC.");

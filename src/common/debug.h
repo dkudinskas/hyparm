@@ -8,6 +8,14 @@
 #include "guestManager/guestContext.h"
 
 
+#define ASSERT(cond, msg)                                                                          \
+  {                                                                                                \
+    if (!(cond))                                                                                   \
+    {                                                                                              \
+      dieNow(NULL, __func__, "assertion (" #cond ") failed: " msg);                                \
+    }                                                                                              \
+  }
+
 #define DEBUG(what, ...)                                                                           \
   {                                                                                                \
     if (CONFIG_DEBUG_ ## what)                                                                     \

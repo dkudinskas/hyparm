@@ -36,7 +36,7 @@ u32int fatBlockWrite(fatfs *fs, u32int start, u64int blkCount, const void *src)
 int fatMount(fatfs *fs, blockDevice *dev, int partNum)
 {
   DEBUG(FS_FAT, "fatMount: mount partition %#x" EOL, partNum);
-  buffer = (char*)mallocBytes(0x1000);
+  buffer = (char*)malloc(0x1000);
   if (buffer == 0)
   {
     DIE_NOW(NULL, "fatMount: failed to allocate block buffer");
@@ -279,7 +279,7 @@ dentry *getPathDirEntry(fatfs *fs, const char *fname, int createNew)
 {
   DEBUG(FS_FAT, "getPathDirEntry: %s" EOL, fname);
   //root dir searching only, assume its a single file we're searching for
-  dentry *dirEntry = (dentry*)mallocBytes(sizeof(dentry));
+  dentry *dirEntry = (dentry*)malloc(sizeof(dentry));
   if (dirEntry == 0)
   {
     DIE_NOW(NULL, "getPathDirEntry: failed to allocate dir entry struct");
@@ -637,7 +637,7 @@ file* fopen(fatfs *fs, const char *fname)
   }
 
   // allocate space for file handle
-  file *f = (file *)mallocBytes(sizeof(file));
+  file *f = (file *)malloc(sizeof(file));
   if (f == 0)
   {
     DIE_NOW(NULL, "fopen: failed to allocate file struct.");
@@ -660,7 +660,7 @@ file* fopen(fatfs *fs, const char *fname)
   }
 
   // everything seems fine, allocate buffer space
-  f->lastCluster = (u8int *)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
+  f->lastCluster = (u8int *)malloc(fs->sectorsPerCluster * fs->bytesPerSector);
   if (f->lastCluster == 0)
   {
     DIE_NOW(NULL, "fopen: failed to allocate buffer for last cluster");
@@ -721,7 +721,7 @@ file *fnew(fatfs *fs, const char *fname)
     return 0;
   }
 
-  file *f = (file *)mallocBytes(sizeof(file));
+  file *f = (file *)malloc(sizeof(file));
   if (f == 0)
   {
     DIE_NOW(NULL, "fnew: failed to allocate file struct");
@@ -801,7 +801,7 @@ file *fnew(fatfs *fs, const char *fname)
   DEBUG(FS_FAT, "fnew: f->bytesInLastCluster %#x" EOL, f->bytesInLastCluster);
 
   // everything seems fine, allocate buffer space
-  f->lastCluster = (u8int *)mallocBytes(fs->sectorsPerCluster * fs->bytesPerSector);
+  f->lastCluster = (u8int *)malloc(fs->sectorsPerCluster * fs->bytesPerSector);
   if (f->lastCluster == 0)
   {
     DIE_NOW(NULL, "fnew: failed to allocate buffer for last cluster");

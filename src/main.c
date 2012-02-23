@@ -4,10 +4,12 @@
 
 #include "common/commandLine.h"
 #include "common/debug.h"
-#include "common/memFunctions.h"
+#include "common/markers.h"
 #include "common/stdarg.h"
 #include "common/stddef.h"
 #include "common/string.h"
+
+#include "common/memoryAllocator/allocator.h"
 
 #include "cpuArch/armv7.h"
 
@@ -34,6 +36,9 @@
 #ifdef CONFIG_GUEST_FREERTOS
 #include "guestBoot/freertos.h"
 #endif
+#ifdef CONFIG_GUEST_TEST
+#include "guestBoot/test.h"
+#endif
 #include "guestBoot/linux.h"
 #include "guestBoot/image.h"
 
@@ -56,6 +61,7 @@
 
 #define CL_VALUE_GUEST_OS_FREERTOS   "freertos"
 #define CL_VALUE_GUEST_OS_LINUX      "linux"
+#define CL_VALUE_GUEST_OS_TEST       "test"
 
 
 struct runtimeConfiguration
@@ -97,7 +103,7 @@ void main(s32int argc, char *argv[])
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
 
-  mallocInit(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
+  initialiseAllocator(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
 
   /* initialise uart backend, important to be before any debug output. */
   /* init function initialises UARTs in disabled mode. */
@@ -111,6 +117,11 @@ void main(s32int argc, char *argv[])
 #else
   beUartStartup(3, 115200);
 #endif
+
+  /*
+   * Print the bounds of the hypervisor image in RAM.
+   */
+  DEBUG(STARTUP, "Hypervisor @ %#.8x -- %#.8x" EOL, HYPERVISOR_IMAGE_START_ADDRESS, HYPERVISOR_IMAGE_END_ADDRESS);
 
   /*
    * Use command line arguments passed by U-Boot to update the runtime configuration structure. The
@@ -175,6 +186,11 @@ void main(s32int argc, char *argv[])
   // does not return
   switch (config.guestOS)
   {
+#ifdef CONFIG_GUEST_TEST
+    case GUEST_OS_TEST:
+      bootTest(context, config.guestKernelAddress);
+      break;
+#endif
 #ifdef CONFIG_GUEST_FREERTOS
     case GUEST_OS_FREERTOS:
       bootFreeRtos(context, config.guestKernelAddress);
@@ -214,13 +230,14 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
         }
         else if (strcmp(p->value, CL_VALUE_GUEST_OS_FREERTOS) == 0)
         {
-          printf("set guest=freertos" EOL);
           config->guestOS = GUEST_OS_FREERTOS;
         }
         else if (strcmp(p->value, CL_VALUE_GUEST_OS_LINUX) == 0)
         {
-          printf("set guest=linux" EOL);
           config->guestOS = GUEST_OS_LINUX;
+        }
+        else if (strcmp(p->value, CL_VALUE_GUEST_OS_TEST) == 0) {
+          config->guestOS = GUEST_OS_TEST;
         }
         else
         {

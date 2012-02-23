@@ -1,6 +1,7 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "cpuArch/constants.h"
 
@@ -14,7 +15,7 @@ GCONTXT *createGuestContext(void)
   /*
    * Allocate guest context
    */
-  GCONTXT *context = (GCONTXT *)mallocBytes(sizeof(GCONTXT));
+  GCONTXT *context = (GCONTXT *)malloc(sizeof(GCONTXT));
   if (context == 0)
   {
     DIE_NOW(NULL, "allocateGuest: Failed to allocate guest context.");
@@ -28,7 +29,7 @@ GCONTXT *createGuestContext(void)
   /*
    * Initialise coprocessor register bank
    */
-  context->coprocRegBank = (CREG *)mallocBytes(MAX_CRB_SIZE * sizeof(CREG));
+  context->coprocRegBank = (CREG *)malloc(MAX_CRB_SIZE * sizeof(CREG));
   if (context->coprocRegBank == NULL)
   {
     DIE_NOW(context, "Failed to allocate coprocessor register bank.");
@@ -39,7 +40,7 @@ GCONTXT *createGuestContext(void)
   /*
    * Initialise block cache
    */
-  context->blockCache = (BCENTRY *)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
+  context->blockCache = (BCENTRY *)malloc(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   if (context->blockCache == NULL)
   {
     DIE_NOW(context, "Failed to allocate block cache");
@@ -51,7 +52,7 @@ GCONTXT *createGuestContext(void)
    * Initialise block copy cache
    */
 #ifdef CONFIG_BLOCK_COPY
-  context->blockCopyCache = (u32int *)mallocBytes(BLOCK_COPY_CACHE_SIZE * sizeof(u32int));
+  context->blockCopyCache = (u32int *)malloc(BLOCK_COPY_CACHE_SIZE * sizeof(u32int));
   if (context->blockCopyCache == NULL)
   {
     DIE_NOW(context, "Failed to allocate block copy cache");
