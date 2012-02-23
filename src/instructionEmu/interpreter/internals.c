@@ -469,3 +469,20 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT *context)
     } // R13/R14 ends
   } // mode specific else ends
 }
+
+#ifdef CONFIG_GUEST_TEST
+/*
+ * This function is used in unit tests. It evaluates the value passed to the BKPT instruction.
+ * Current values:
+ * 0      pass
+ * other  fail
+ */
+void evalBkptVal(GCONTXT *context, u32int value) {
+  switch(value) {
+    case 0:
+      DIE_NOW(context, "test passed");
+    default:
+      DIE_NOW(context, "test failed");
+  }
+}
+#endif

@@ -6,4 +6,4 @@ HYPARM_SRCS_C-$(CONFIG_GUEST_FREERTOS) += guestBoot/freertos.c
 
 HYPARM_SRCS_C-$(CONFIG_GUEST_TEST) += guestBoot/test.c
 
-HYPARM_SRCS_S-y += guestBoot/callKernel.s
+HYPARM_SRCS_SX-y += guestBoot/callKernel.S

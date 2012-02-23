@@ -11,4 +11,6 @@ u32int t16ItInstruction(GCONTXT *context, u32int instruction);
 u32int t16UxtbInstruction(GCONTXT *context, u32int instruction);
 u32int t16UxthInstruction(GCONTXT *context, u32int instruction);
 
+u32int t16BkptInstruction(GCONTXT *context, u32int instruction);
+
 #endif

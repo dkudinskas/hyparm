@@ -82,7 +82,7 @@ static struct decodingTableEntry t16LoadStoreInstructions[] =
 static struct decodingTableEntry t16MiscInstructions[] =
 {
   { FALSE, &t16PushInstruction,   0xB400, 0xFE00, "PUSH {reglist}" },
-  { FALSE, &t16SubInstruction,       0xB080, 0xFF80, "SUB SP,SP,<imm7" },
+  { FALSE, &t16SubInstruction,       0xB080, 0xFF80, "SUB SP,SP,<imm7>" },
   { FALSE, &t16UxtbInstruction,      0xB2C0, 0xFFC0, "UXTB<c> <Rd>, <Rm>" },
   { FALSE, &t16UxthInstruction,      0xB280, 0xFFC0, "UXTH<C> <Rd>, <Rm>" },
   /*
@@ -94,6 +94,7 @@ static struct decodingTableEntry t16MiscInstructions[] =
   { TRUE,  &t16LdmInstruction,    0xBD00, 0xFF00, "POP <reglist+PC>" },
   { FALSE, &t16LdmInstruction,    0xBC00, 0xFE00, "POP <reglist>" },
   { FALSE, &nopInstruction,       0xBF00, 0xFFFF, "NOP" },
+  { TRUE, &t16BkptInstruction,    0xBE00, 0xFF00, "BKPT <imm8>" },
   /*
    * FIXME: implement IT support
    * Markos: I think that the If-Then-Else Instruction does not need to trap -.-
