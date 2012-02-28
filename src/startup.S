@@ -422,7 +422,7 @@ setGuestContext:
   TST     R0, #PSR_T_BIT
   SUBNE   LR, LR, #2
 #endif
-  MSR     SPSR, R0
+  MSR     SPSR_cxsf, R0
   POP     {R0}
   /*
    * Save guest PC on stack, then perform exception return (pop PC and restore SPSR to CPSR)
@@ -454,7 +454,7 @@ setGuestContext:
    */
   BIC     R0, R0, #PSR_MODE
   ORR     R0, R0, #PSR_USR_MODE
-  MSR     SPSR, R0
+  MSR     SPSR_cxsf, R0
   POP     {R0}
   /*
    * Get value of PC saved in guest context into LR
