@@ -15,7 +15,6 @@ choice
 
 config DECODER_AUTO
   bool "Auto-generated decoder"
-  select THUMB_IGNORE_IT if THUMB2
 
 config DECODER_TABLE_SEARCH
   bool "Handcrafted table search decoder"
@@ -125,7 +124,6 @@ config GUEST_ANDROID
 config GUEST_FREERTOS
   bool "FreeRTOS"
   depends on THUMB2
-  select THUMB_IGNORE_IT
 
 config GUEST_TEST
   bool "Unit testing"
@@ -464,10 +462,6 @@ config LOOP_DETECTOR_DIE_TRESHOLD
 
 config BLOCK_CACHE_COLLISION_COUNTER
   bool "Count number of collisions in block cache"
-
-config THUMB_IGNORE_IT
-  bool "Treat Thumb IT instruction as safe"
-  depends on THUMB2
 
 config KERNEL_ANDROID
   bool "Small hacks for linux kernel 2.6.37 (Android)"

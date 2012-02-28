@@ -163,6 +163,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   {
     if (code == 0) // svc in Thumb is between 0x01 and 0xFF
     {
+      DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt %#.2x @ %#.8x is a guest system call" EOL, code, context->R15);
       gSVC = TRUE;
     }
   }

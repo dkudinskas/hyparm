@@ -22,27 +22,30 @@ u32int t32MRSInstruction(GCONTXT *context, u32int instruction)
   {
     if (instruction & 0x00100000)
     {
+      u32int value = 0;
       switch (context->CPSR & PSR_MODE)
       {
-        case PSR_ABT_MODE:
-          storeGuestGPR(reg, context->SPSR_ABT, context);
-          break;
         case PSR_FIQ_MODE:
-          storeGuestGPR(reg, context->SPSR_FIQ, context);
+          value = context->SPSR_FIQ;
           break;
         case PSR_IRQ_MODE:
-          storeGuestGPR(reg, context->SPSR_IRQ, context);
+          value = context->SPSR_IRQ;
           break;
         case PSR_SVC_MODE:
-          storeGuestGPR(reg, context->SPSR_SVC, context);
+          value = context->SPSR_SVC;
+          break;
+        case PSR_ABT_MODE:
+          value = context->SPSR_ABT;
           break;
         case PSR_UND_MODE:
-          storeGuestGPR(reg, context->SPSR_UND, context);
+          value = context->SPSR_UND;
           break;
+        case PSR_USR_MODE:
+        case PSR_SYS_MODE:
         default:
-          DIE_NOW(context, "Undefined mode");
-          break;
+          DIE_NOW(context, "mrsInstruction: cannot request spsr in user/system mode");
       }
+      storeGuestGPR(reg, value, context);
     }
     else
     {
@@ -62,10 +65,7 @@ u32int t32BImmediate17Instruction(GCONTXT *context, u32int instruction)
   DEBUG_TRACE(INTERPRETER_T32_BRANCH, context, instruction);
   if (!evaluateConditionCode(context, (instruction & 0x03c00000) >> 20))
   {
-    /*
-     * FIXME: why T16?
-     */
-    return context->R15 + T16_INSTRUCTION_SIZE;
+    return context->R15 + T32_INSTRUCTION_SIZE;
   }
   u32int sign = (instruction & 0x04000000) >> 6;
   u32int bitJ1 = (instruction & 0x00002000) << 5;
@@ -74,10 +74,8 @@ u32int t32BImmediate17Instruction(GCONTXT *context, u32int instruction)
       | /* imm6 */  ((instruction & 0x003F0000) >> 4)
       | /* imm11 */ ((instruction & 0x000007FF) << 1);
   offset = signExtend(offset, 20);
-  /*
-   * FIXME: why T16?
-   */
-  return context->R15 + T16_INSTRUCTION_SIZE + offset;
+
+  return context->R15 + T32_INSTRUCTION_SIZE + offset;
 }
 
 u32int t32BImmediate21Instruction(GCONTXT *context, u32int instruction)
@@ -92,10 +90,8 @@ u32int t32BImmediate21Instruction(GCONTXT *context, u32int instruction)
       | /* imm10 */ ((instruction & 0x03FF0000) >> 4)
       | /* imm11 */ ((instruction & 0x000007FF) << 1);
   offset = signExtend(offset, 24);
-  /*
-   * FIXME: why T16?
-   */
-  return context->R15 + T16_INSTRUCTION_SIZE + offset;
+
+  return context->R15 + T32_INSTRUCTION_SIZE + offset;
 }
 
 u32int t32BlInstruction(GCONTXT *context, u32int instruction)
@@ -110,10 +106,8 @@ u32int t32BlInstruction(GCONTXT *context, u32int instruction)
       | /* imm10 */ ((instruction & 0x03FF0000) >> 4)
       | /* imm11 */ ((instruction & 0x000007FF) << 1);
   offset = signExtend(offset, 24);
-  /*
-   * FIXME: why T16?
-   */
-  u32int currentPC = context->R15 + T16_INSTRUCTION_SIZE;
+
+  u32int currentPC = context->R15 + T32_INSTRUCTION_SIZE;
   storeGuestGPR(14, currentPC | 1, context);
   return currentPC + offset;
 }

@@ -6,7 +6,6 @@
 
 #include "vm/omap35xx/intc.h"
 
-
 u32int armBkptInstruction(GCONTXT *context, u32int instruction)
 {
 #ifdef CONFIG_GUEST_TEST

@@ -94,7 +94,7 @@ static struct instruction32bit t16MiscInstructions[] =
   { TRUE,  &t16LdmInstruction,    0xBD00, 0xFF00, "POP <reglist+PC>" },
   { FALSE, &t16LdmInstruction,    0xBC00, 0xFE00, "POP <reglist>" },
   { FALSE, &nopInstruction,       0xBF00, 0xFFFF, "NOP" },
-  { TRUE, &t16BkptInstruction,    0xBE00, 0xFF00, "BKPT <imm8>" },
+  { TRUE,  &t16BkptInstruction,    0xBE00, 0xFF00, "BKPT <imm8>" },
   /*
    * FIXME: implement IT support
    * Markos: I think that the If-Then-Else Instruction does not need to trap -.-
@@ -103,11 +103,7 @@ static struct instruction32bit t16MiscInstructions[] =
    * since Markos has ignored this, the Thumb demo breaks if we trap on IT (it is broken anyway
    * after +/- 17 seconds).
    */
-#ifdef CONFIG_THUMB_IGNORE_IT
-  { FALSE, &t16ItInstruction,     0xBF00, 0xFF00, "IT" },
-#else
-  { TRUE,  &t16ItInstruction,     0xBF00, 0xFF00, "IT" },
-#endif
+  { TRUE, &t16ItInstruction,     0xBF00, 0xFF00, "IT" },
   { TRUE,  &undefinedInstruction, 0x0000, 0x0000, "t16MiscInstructions" }
 };
 

@@ -17,6 +17,7 @@
 #include "memoryManager/mmu.h"
 #include "memoryManager/pageTable.h"
 
+#include "instructionEmu/interpreter/internals.h"
 
 #define INSTR_SWI            0xEF000000U
 #define INSTR_SWI_THUMB      0x0000DF00U
@@ -255,7 +256,6 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
   protectScannedBlock(start, end);
 }
 
-
 #ifdef CONFIG_THUMB2
 
 static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
@@ -267,6 +267,9 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
   u32int endIs16Bit;
 
   u16int *currtmpAddress = start;   //backup pointer  ?? seems to be start address of last instruction
+
+  // Get current ITSTATE from CPSR
+  u8int ITSTATE = ((context->CPSR & PSR_ITSTATE_7_2) >> 8) | ((context->CPSR & PSR_ITSTATE_1_0) >> 25);
 
   end = start;
   while (TRUE)
@@ -285,25 +288,50 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 
     if ((handler = decodeThumbInstruction(instruction)) != NULL)
     {
-      break;
+      if (ITSTATE != 0)
+      {
+        // When sensitive instruction is found in IT block check whether it should be replaced
+        if (evaluateConditionCode(context, (ITSTATE & 0xF0) >> 4))
+        {
+          break;
+        }
+      }
+      else
+      {
+        break;
+      }
     }
 
     end++;
+
+    // ITAdvance()
+    if (ITSTATE != 0)
+    {
+      if ((ITSTATE & 0x7) == 0)
+      {
+        ITSTATE = 0;
+      }
+      else
+      {
+        ITSTATE = (ITSTATE & 0xE0) | ((ITSTATE << 1) & 0x1F);
+      }
+    }
   }
 
-  if (((instruction & INSTR_SWI_THUMB_MIX) == INSTR_SWI_THUMB_MIX) || ( ((instruction & 0xFFFF) >= 0xDF00) && ((instruction & 0xFFFF) <= 0xDFFF) ) ) // FIX ME -> This doesn't look right
+  //FIXME -> This doesn't look right
+  if ((instruction & INSTR_SWI_THUMB) == INSTR_SWI_THUMB)
   {
-    u32int svcCode = (instruction & 0xFF); // NOP|SVC -> Keep the last 8 bits
+    u32int svcCode = instruction & 0xFF;
     if (svcCode > 0)
     {
-      // we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
+      // we hit a SVC that we placed ourselves as EOB. retrieve the real EOB...
       u32int cacheIndex = svcCode - 1;
       if (cacheIndex >= BLOCK_CACHE_SIZE)
       {
         printf("scanThumbBlock: instruction %#.8x @ %p", instruction, end);
         DIE_NOW(context, "scanThumbBlock: block cache index in SWI out of range");
       }
-      DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB instruction is SWI @ %p code %#x" EOL, end, cacheIndex);
+      DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB instruction is SVC @ %p code %#x" EOL, end, cacheIndex);
       BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, cacheIndex);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
@@ -311,13 +339,12 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       endIs16Bit = blockType == BCENTRY_TYPE_THUMB && !txxIsThumb32(bcEntry->hyperedInstruction);
       context->hdlFunct = bcEntry->hdlFunct;
     }
-    else
+    else // Guest SVC
     {
       context->endOfBlockInstr = instruction;
       endIs16Bit = TRUE;
       context->hdlFunct = handler;
     }
-
   }
   /* If the instruction is not a SWI placed by the hypervisor OR
    * it is a non-SWI instruction, then proceed as normal
@@ -335,34 +362,33 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
      * Thumb-32 compatible encoding.
      */
     end = currtmpAddress; // restore starting pointer and do what we did before
-    instruction = * end;
-    switch(instruction & THUMB32)
+    instruction = *end;
+    switch (instruction & THUMB32)
     {
       case THUMB32_1:
       case THUMB32_2:
       case THUMB32_3:
       {
-        instruction = *end;
-        end ++;
-        instruction = (instruction<<16)|*end;
+        end++;
+        instruction = (instruction << 16) | *end;
         context->endOfBlockInstr = instruction;
         endIs16Bit = FALSE;
-        end --;
+        // Replace instruction with SVC and NOP, both 16 bit instructions
+        end--;
+        *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
+        end++;
         *end = INSTR_NOP_THUMB;
-        end ++;
-        *end = INSTR_SWI_THUMB|((cacheIndex+1) & 0xFF);
         break;
       }
       default:
       {
-        instruction = *end;
         context->endOfBlockInstr = instruction;
         endIs16Bit = TRUE;
         *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
         break;
       }
     }
-    DEBUG(SCANNER_EXTRA, "scanThumbBlock: svc on %#.8x" EOL, (u32int)end);
+    DEBUG(SCANNER_EXTRA, "scanThumbBlock: SVC on %#.8x" EOL, (u32int)end);
 
     context->hdlFunct = handler;
   }
@@ -416,11 +442,9 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         :"r"(end)
         :"memory"
     );
+    end++;
   }
 
-  /*
-   * FIXME: is end still correct for the case endIs16Bit == FALSE?
-   */
   protectScannedBlock(start, end);
 }
 

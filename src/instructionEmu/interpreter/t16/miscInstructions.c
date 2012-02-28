@@ -5,7 +5,44 @@
 
 u32int t16ItInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "no support for ITSTATE (CONFIG_THUMB_IGNORE_IT not set)");
+  // Get ITSTATE from instruction
+  u8int ITSTATE = instruction & 0xFF;
+  u32int offset = 0;
+  u16int* end = (u16int *) context->R15;
+  end++;
+
+  /*
+   * ITAdvance()
+   * Instructions that will not be executed are immediately skipped.
+   */
+  while (!evaluateConditionCode(context, (ITSTATE & 0xF0) >> 4))
+  {
+    u32int instruction = *end;
+    if ((ITSTATE & 0x7) == 0)
+    {
+      ITSTATE = 0;
+    }
+    else
+    {
+      ITSTATE = (ITSTATE & 0xE0) | ((ITSTATE << 1) & 0x1F);
+    }
+
+    switch (instruction & THUMB32)
+    {
+      case THUMB32_1:
+      case THUMB32_2:
+      case THUMB32_3:
+        end++;
+        break;
+    }
+    end++;
+  }
+
+  // Update ITSTATE in CPSR
+  context->CPSR = (context->CPSR & ~(PSR_ITSTATE_7_2 | PSR_ITSTATE_1_0));
+  context->CPSR = context->CPSR | ((ITSTATE & 0xFC) << 8) | ((ITSTATE & 0x3) << 25);
+
+  return (u32int) end;
 }
 
 u32int t16UxtbInstruction(GCONTXT *context, u32int instruction)
