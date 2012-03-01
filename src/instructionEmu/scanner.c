@@ -318,8 +318,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
     }
   }
 
-  //FIXME -> This doesn't look right
-  if ((instruction & INSTR_SWI_THUMB) == INSTR_SWI_THUMB)
+  if ((instruction & INSTR_SWI_THUMB) == INSTR_SWI_THUMB && !((instruction >> 16) & THUMB32))
   {
     u32int svcCode = instruction & 0xFF;
     if (svcCode > 0)
@@ -329,7 +328,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       if (cacheIndex >= BLOCK_CACHE_SIZE)
       {
         printf("scanThumbBlock: instruction %#.8x @ %p", instruction, end);
-        DIE_NOW(context, "scanThumbBlock: block cache index in SWI out of range");
+        DIE_NOW(context, "scanThumbBlock: block cache index in SVC out of range");
       }
       DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB instruction is SVC @ %p code %#x" EOL, end, cacheIndex);
       BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, cacheIndex);
