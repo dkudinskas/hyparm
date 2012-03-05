@@ -661,7 +661,11 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
 
   if (isPCinRegList)
   {
-    return getRealPC(context);
+    /*
+     * it is important that we load R15 instead of PCOfLastInstruction
+     * because we have fetched the PC from memory and stored it in context->R15
+     */
+    return context->R15;
   }
   else
   {

@@ -258,7 +258,6 @@ GCONTXT *dataAbort(GCONTXT *context)
       bool isPrivAccess = (context->CPSR & PSR_MODE) != PSR_USR_MODE;
       if (context->virtAddrEnabled)
       {
-#ifndef CONFIG_BLOCK_COPY
         if (shouldDataAbort(isPrivAccess, dfsr.WnR, dfar))
         {
           deliverDataAbort(context);
@@ -266,7 +265,6 @@ GCONTXT *dataAbort(GCONTXT *context)
           scanBlock(context, context->R15);
           break;
         }
-#endif
       }
 
       // interpret the load/store
