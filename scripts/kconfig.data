@@ -1,10 +1,42 @@
 menu "General setup"
 
+config PREDICTABLE_DEBUGGING
+  bool "Maximize predictability for debugging"
+  select EMERGENCY_EXCEPTION_VECTOR if ARCH_EXT_SECURITY
+  select SCANNER_EXTRA_CHECKS
+
+choice
+  prompt "Compiler optimization level"
+  default OLEVEL_3
+
+config OLEVEL_0
+  bool "None (-O0)"
+
+config OLEVEL_S
+  bool "Size (-Os)"
+  depends on !PREDICTABLE_DEBUGGING
+
+config OLEVEL_1
+  bool "Level 1 (-O1)"
+  depends on !PREDICTABLE_DEBUGGING
+
+config OLEVEL_2
+  bool "Level 2 (-O2)"
+  depends on !PREDICTABLE_DEBUGGING
+
+config OLEVEL_3
+  bool "Level 3 (-O3)"
+  depends on !PREDICTABLE_DEBUGGING
+
+endchoice
+
 config BUILD_SSP
   bool "Enable stack-smashing protector"
+  depends on !PREDICTABLE_DEBUGGING
 
 config BUILD_LTO
   bool "Link-time optimization (requires toolchain support)"
+  depends on !PREDICTABLE_DEBUGGING
 
 config BUILD_SAVE_TEMPS
   bool "Save intermediate files during build (requires GCC >= 4.5)"
