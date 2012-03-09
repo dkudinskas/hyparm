@@ -60,6 +60,8 @@
 #define PSR_UND_MODE                0x1b
 #define PSR_SYS_MODE                0x1f
 
+#define PSR_APSR         (PSR_CC_FLAGS_NZCV | PSR_Q_BIT | PSR_SIMD_FLAGS_GE)
+#define PSR_EXEC_BITS    (PSR_ITSTATE_1_0 | PSR_ITSTATE_7_2 | PSR_J_BIT | PSR_T_BIT)
 
 #define CC_EQ   0x0  // equals
 #define CC_NE   0x1  // not equals

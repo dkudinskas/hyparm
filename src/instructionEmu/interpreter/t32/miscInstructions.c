@@ -8,21 +8,23 @@
 
 u32int t32MRSInstruction(GCONTXT *context, u32int instruction)
 {
+  u32int readSpsr = instruction & 0x00100000;
   u32int reg = (instruction & 0x0F00) >> 8;
-  if (context->CPSR & PSR_USR_MODE)
+
+  u32int value = 0;
+
+  if ((context->CPSR & PSR_MODE) == PSR_USR_MODE)
   {
-    if (instruction & 0x00100000)
+    if (readSpsr)
     {
       DIE_NOW(context, "SPSR read bit can not be set in USR mode");
     }
-    u32int APSR = context->CPSR & (PSR_CC_FLAGS_NZCV | PSR_Q_BIT | PSR_SIMD_FLAGS_GE);
-    storeGuestGPR(reg, APSR, context);
+    value = context->CPSR & PSR_APSR;
   }
   else
   {
-    if (instruction & 0x00100000)
+    if (readSpsr)
     {
-      u32int value = 0;
       switch (context->CPSR & PSR_MODE)
       {
         case PSR_FIQ_MODE:
@@ -45,14 +47,15 @@ u32int t32MRSInstruction(GCONTXT *context, u32int instruction)
         default:
           DIE_NOW(context, "mrsInstruction: cannot request spsr in user/system mode");
       }
-      storeGuestGPR(reg, value, context);
     }
     else
     {
-      u32int maskedCPSR = context->CPSR & ~(PSR_ITSTATE_1_0 | PSR_J_BIT | PSR_ITSTATE_7_2 | PSR_T_BIT);
-      storeGuestGPR(reg, maskedCPSR, context);
+      // CPSR is read with execution state bits other than E masked out
+      value = context->CPSR & ~PSR_EXEC_BITS;
     }
   }
+
+  storeGuestGPR(reg, value, context);
 
   return context->R15 + T32_INSTRUCTION_SIZE;
 }

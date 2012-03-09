@@ -173,12 +173,10 @@ u32int armIsbInstruction(GCONTXT *context, u32int instruction)
 
 u32int armMrsInstruction(GCONTXT *context, u32int instruction)
 {
-  int regSrc   =  instruction & 0x00400000;
+  int readSpsr =  instruction & 0x00400000;
   int regDest  = (instruction & 0x0000F000) >> 12;
 
-  int instrCC = 0;
   u32int value = 0;
-  u32int nextPC = 0;
 
 #ifdef ARM_INSTR_TRACE
   printf("MRS instr %08x @ %08x" EOL, instruction, context->R15);
@@ -189,46 +187,53 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
     DIE_NOW(context, "mrsInstruction: cannot use PC as destination");
   }
 
-  instrCC = (instruction >> 28) & 0xF;
-  if (evaluateConditionCode(context, instrCC))
+  if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    if (regSrc == 0)
+    if ((context->CPSR & PSR_MODE) == PSR_USR_MODE)
     {
-      // CPSR case
-      value = context->CPSR;
+      if (readSpsr)
+      {
+        DIE_NOW(context, "SPSR read bit can not be set in USR mode");
+      }
+      value = context->CPSR & PSR_APSR;
     }
     else
     {
-      // SPSR case
-      int guestMode = (context->CPSR) & PSR_MODE;
-      switch(guestMode)
+      if (readSpsr)
       {
-        case PSR_FIQ_MODE:
-          value = context->SPSR_FIQ;
-          break;
-        case PSR_IRQ_MODE:
-          value = context->SPSR_IRQ;
-          break;
-        case PSR_SVC_MODE:
-          value = context->SPSR_SVC;
-          break;
-        case PSR_ABT_MODE:
-          value = context->SPSR_ABT;
-          break;
-        case PSR_UND_MODE:
-          value = context->SPSR_UND;
-          break;
-        case PSR_USR_MODE:
-        case PSR_SYS_MODE:
-        default:
-          DIE_NOW(context, "mrsInstruction: cannot request spsr in user/system mode");
-      } // switch ends
-    } // spsr case ends
+        switch(context->CPSR & PSR_MODE)
+        {
+          case PSR_FIQ_MODE:
+            value = context->SPSR_FIQ;
+            break;
+          case PSR_IRQ_MODE:
+            value = context->SPSR_IRQ;
+            break;
+          case PSR_SVC_MODE:
+            value = context->SPSR_SVC;
+            break;
+          case PSR_ABT_MODE:
+            value = context->SPSR_ABT;
+            break;
+          case PSR_UND_MODE:
+            value = context->SPSR_UND;
+            break;
+          case PSR_USR_MODE:
+          case PSR_SYS_MODE:
+          default:
+            DIE_NOW(context, "mrsInstruction: cannot request spsr in user/system mode");
+        }
+      }
+      else
+      {
+        // CPSR is read with execution state bits other than E masked out
+        value = context->CPSR & ~PSR_EXEC_BITS;
+      }
+    }
     storeGuestGPR(regDest, value, context);
   } // condition met ends
 
-  nextPC = context->R15 + 4;
-  return nextPC;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armMsrInstruction(GCONTXT *context, u32int instruction)
