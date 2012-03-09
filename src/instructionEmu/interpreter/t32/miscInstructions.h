@@ -5,6 +5,7 @@
 
 #include "guestManager/guestContext.h"
 
-u32int t32MRSInstruction(GCONTXT *context, u32int instruction);
+
+u32int t32MrsInstruction(GCONTXT *context, u32int instruction);
 
 #endif

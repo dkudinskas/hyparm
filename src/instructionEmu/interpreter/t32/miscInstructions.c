@@ -6,7 +6,8 @@
 
 #include "instructionEmu/interpreter/t32/miscInstructions.h"
 
-u32int t32MRSInstruction(GCONTXT *context, u32int instruction)
+
+u32int t32MrsInstruction(GCONTXT *context, u32int instruction)
 {
   u32int readSpsr = instruction & 0x00100000;
   u32int reg = (instruction & 0x0F00) >> 8;
@@ -45,7 +46,7 @@ u32int t32MRSInstruction(GCONTXT *context, u32int instruction)
         case PSR_USR_MODE:
         case PSR_SYS_MODE:
         default:
-          DIE_NOW(context, "mrsInstruction: cannot request spsr in user/system mode");
+          DIE_NOW(context, "cannot request spsr in user/system mode");
       }
     }
     else

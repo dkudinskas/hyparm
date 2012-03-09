@@ -70,14 +70,32 @@ __macro__ s32int countTrailingZeros64(u64int x)
   return __builtin_ctz((u32int)(x >> 32)) + 32;
 }
 
+/*
+ * findFirstBitSet
+ * Returns one plus the index of the least-significant 1-bit.
+ */
 __macro__ u32int findFirstBitSet(u32int x)
 {
   return __builtin_ffs(x);
 }
 
+/*
+ * findLastBitSet
+ * Returns one plus the index of the most significant 1-bit.
+ */
 __macro__ u32int findLastBitSet(u32int x)
 {
   return x ? (sizeof(u32int) << 3) - countLeadingZeros(x) : 0;
+}
+
+/*
+ * maskedBitShift
+ * Shifts the given value left as many positions as there are trailing zeros in the given mask, and
+ * then applies the mask to the shifted value. If mask is 0, the result is undefined.
+ */
+__macro__ u32int maskedBitShift(u32int value, u32int mask)
+{
+  return (value << countTrailingZeros(mask)) & mask;
 }
 
 /*

@@ -1,3 +1,5 @@
+#include "common/bit.h"
+
 #include "instructionEmu/interpreter/internals.h"
 
 #include "instructionEmu/interpreter/t16/miscInstructions.h"
@@ -6,7 +8,7 @@
 u32int t16ItInstruction(GCONTXT *context, u32int instruction)
 {
   // Get ITSTATE from instruction
-  u8int ITSTATE = instruction & 0xFF;
+  u32int itState = instruction & 0xFF;
   u32int offset = 0;
   u16int* end = (u16int *) context->R15;
   end++;
@@ -15,19 +17,18 @@ u32int t16ItInstruction(GCONTXT *context, u32int instruction)
    * ITAdvance()
    * Instructions that will not be executed are immediately skipped.
    */
-  while (!evaluateConditionCode(context, (ITSTATE & 0xF0) >> 4))
+  while (!evaluateConditionCode(context, itState >> 4))
   {
-    u32int instruction = *end;
-    if ((ITSTATE & 0x7) == 0)
+    if ((itState & 0x7) == 0)
     {
-      ITSTATE = 0;
+      itState = 0;
     }
     else
     {
-      ITSTATE = (ITSTATE & 0xE0) | ((ITSTATE << 1) & 0x1F);
+      itState = (itState & 0xE0) | ((itState << 1) & 0x1F);
     }
 
-    switch (instruction & THUMB32)
+    switch (*end & THUMB32)
     {
       case THUMB32_1:
       case THUMB32_2:
@@ -40,7 +41,7 @@ u32int t16ItInstruction(GCONTXT *context, u32int instruction)
 
   // Update ITSTATE in CPSR
   context->CPSR = (context->CPSR & ~(PSR_ITSTATE_7_2 | PSR_ITSTATE_1_0));
-  context->CPSR = context->CPSR | ((ITSTATE & 0xFC) << 8) | ((ITSTATE & 0x3) << 25);
+  context->CPSR = context->CPSR | maskedBitShift(itState, PSR_ITSTATE_7_2) | maskedBitShift(itState, PSR_ITSTATE_1_0);
 
   return (u32int) end;
 }
