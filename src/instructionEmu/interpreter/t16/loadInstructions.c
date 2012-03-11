@@ -97,7 +97,7 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T16_LOAD, context, instruction);
 
-  u32int baseReg = 0;
+  u32int nextPC;
   u32int regList = 0;
   u32int baseAddress = 0;
 
@@ -110,33 +110,46 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
     DIE_NOW(context, "trapped but PC is not on the list...");
   }
   regList = ( ((instruction & 0x0100)>>8) << 15 ) | (instruction & 0x00FF);
-  baseReg = 0xD; // hardcode SP register
-  baseAddress = loadGuestGPR(baseReg, context);
+
+  // Get baseAddress from SP
+  baseAddress = loadGuestGPR(GPR_SP, context);
   // for i = 0 to 7. POP accepts only low registers
   for (i = 7; i >= 0; i--)
   {
     // if current register set
-    if ( ((regList >> i) & 0x1) == 0x1)
+    if (((regList >> i) & 0x1) == 0x1)
     {
       valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
       storeGuestGPR(i, valueLoaded, context);
       baseAddress = baseAddress + 4;
     }
   } // for ends
+
   // and now take care of the PC
-  //thumb always update the SP
-  if( ( instruction & 0x0100))
+  if ((instruction & 0x0100))
   {
-    valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
-    storeGuestGPR(0xF, valueLoaded, context);
+    nextPC = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
     baseAddress += 4;
   }
 
-  storeGuestGPR(baseReg, baseAddress, context);
-  if (!(context->R15 & 0x1)) // In which mode are we returning to?
+  // thumb always updates the SP
+  storeGuestGPR(GPR_SP, baseAddress, context);
+
+  /*
+   * Return to ARM mode if the LSB is not set; also make sure the target address is word-aligned.
+   */
+  if (nextPC & 1)
   {
-    context->CPSR &= ~PSR_T_BIT;
+    nextPC ^= 1;
   }
-  context->R15 &= ~0x1;
-  return context->R15;
+  else if (!(nextPC & 2))
+  {
+    context->CPSR ^= PSR_T_BIT;
+  }
+  else
+  {
+    DIE_NOW(context, "unpredictable branch to unaligned ARM address");
+  }
+
+  return nextPC;
 }

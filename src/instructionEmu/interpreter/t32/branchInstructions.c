@@ -57,7 +57,7 @@ u32int t32BlInstruction(GCONTXT *context, u32int instruction)
   offset = signExtend(offset, 25);
 
   u32int currentPC = context->R15 + T32_INSTRUCTION_SIZE;
-  storeGuestGPR(14, currentPC | 1, context);
+  storeGuestGPR(GPR_LR, currentPC | 1, context);
   return currentPC + offset;
 }
 

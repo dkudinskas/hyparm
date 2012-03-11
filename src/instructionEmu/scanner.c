@@ -174,6 +174,8 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 {
+  DEBUG(SCANNER, "scanArmBlock @ %#.8x" EOL, context->R15);
+
   u32int *end;
   instructionHandler handler;
   u32int instruction;
@@ -260,6 +262,8 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 
 static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 {
+  DEBUG(SCANNER, "scanThumbBlock @ %#.8x" EOL, context->R15);
+
   u16int *end;
   instructionHandler handler;
   u32int instruction;
@@ -269,7 +273,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
   u16int *currtmpAddress = start;   //backup pointer  ?? seems to be start address of last instruction
 
   // Get current ITSTATE from CPSR
-  u8int ITSTATE = ((context->CPSR & PSR_ITSTATE_7_2) >> 8) | ((context->CPSR & PSR_ITSTATE_1_0) >> 25);
+  u32int itState = ((context->CPSR & PSR_ITSTATE_7_2) >> 8) | ((context->CPSR & PSR_ITSTATE_1_0) >> 25);
 
   end = start;
   while (TRUE)
@@ -288,10 +292,10 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 
     if ((handler = decodeThumbInstruction(instruction)) != NULL)
     {
-      if (ITSTATE != 0)
+      if (itState != 0)
       {
         // When sensitive instruction is found in IT block check whether it should be replaced
-        if (evaluateConditionCode(context, (ITSTATE & 0xF0) >> 4))
+        if (evaluateConditionCode(context, (itState & 0xF0) >> 4))
         {
           break;
         }
@@ -305,15 +309,15 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
     end++;
 
     // ITAdvance()
-    if (ITSTATE != 0)
+    if (itState != 0)
     {
-      if ((ITSTATE & 0x7) == 0)
+      if ((itState & 0x7) == 0)
       {
-        ITSTATE = 0;
+        itState = 0;
       }
       else
       {
-        ITSTATE = (ITSTATE & 0xE0) | ((ITSTATE << 1) & 0x1F);
+        itState = (itState & 0xE0) | ((itState << 1) & 0x1F);
       }
     }
   }

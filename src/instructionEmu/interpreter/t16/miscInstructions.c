@@ -9,7 +9,6 @@ u32int t16ItInstruction(GCONTXT *context, u32int instruction)
 {
   // Get ITSTATE from instruction
   u32int itState = instruction & 0xFF;
-  u32int offset = 0;
   u16int* end = (u16int *) context->R15;
   end++;
 
