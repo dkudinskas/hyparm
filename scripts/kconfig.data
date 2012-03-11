@@ -159,6 +159,7 @@ config GUEST_FREERTOS
 
 config GUEST_TEST
   bool "Unit testing"
+  depends on THUMB2
 
 endmenu
 
