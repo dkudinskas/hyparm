@@ -649,6 +649,20 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
 
   if (isPCinRegList)
   {
+    // If PC is in the list this is an interworking branch
+    if (context->R15 & 0x1)
+    {
+#ifdef CONFIG_THUMB2
+      context->CPSR |= PSR_T_BIT;
+      context->R15 &= ~1;
+#else
+    DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
+#endif
+    }
+    else if (context->R15 & 0x2)
+    {
+      DIE_NOW(context, "unpredictable branch to unaligned ARM address");
+    }
     return context->R15;
   }
   else
