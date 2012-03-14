@@ -270,9 +270,9 @@ static void restoreReplacedInstruction(BCENTRY *blockCache, u32int index)
         DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring T32 %#.8x @ %#.8x",
             blockCache[index].hyperedInstruction, blockCache[index].endAddress);
         u16int *bpointer = (u16int *)(blockCache[index].endAddress);
-        *bpointer = (u16int)(blockCache[index].hyperedInstruction & 0xFFFF);
-        bpointer--;
         *bpointer = (u16int)(blockCache[index].hyperedInstruction >> 16);
+        bpointer++;
+        *bpointer = (u16int)(blockCache[index].hyperedInstruction & 0xFFFF);
       }
       else
       {
