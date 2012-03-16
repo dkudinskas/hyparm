@@ -14,8 +14,8 @@
 
 void initSdram(void);
 
-u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address);
-void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+u32int loadSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 void dumpSdramStats(void);
 

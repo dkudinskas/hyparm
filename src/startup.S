@@ -525,15 +525,19 @@ dabtHandler:
     restore_r0_r14
     restore_cpsr_pc_usr_mode
 
+
 .global dabtHandlerPriv
 dabtHandlerPriv:
   POP    {LR}
-  /* SEGFAULT in the hypervisor */
-  PUSH   {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
+  SUB    LR, LR, #8
+  STMFD  SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R14}
   /* PC of the aborting instruction in @param1 of C handler */
-  SUB    R0, LR, #8
+  MOV    R0, LR
   BL     dataAbortPrivileged
-  /* SEGFAULT in hypervisor: should never return from that handler */
+ /* LR is adjusted on the top of the stack, pop it into PC (exc return)*/
+  LDMFD    SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, PC}^
+
+  /* should never hit this */
 dabtPrivLoop:
   B      dabtPrivLoop
 
@@ -582,7 +586,7 @@ pabthandler:
   /* We were in USR mode, we must have been running guest code */
   save_cc_r0_to_r14 /* pops LR */
   /* Get the instr that aborted, after we fix up we probably want to re-try it */
-  save_pc_abort
+  save_pc
 
   /*
    * Pointer to guest context is already in R0!

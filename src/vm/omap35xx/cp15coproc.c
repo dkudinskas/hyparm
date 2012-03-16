@@ -2,7 +2,9 @@
 #include "common/string.h"
 
 #include "memoryManager/addressing.h"
-#include "memoryManager/cp15coproc.h"
+#include "memoryManager/mmu.h"
+
+#include "vm/omap35xx/cp15coproc.h"
 
 
 void initCRB(CREG * crb)
@@ -343,39 +345,58 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==1 && opc1==0 && CRm==0 && opc2==0)
   {
-#ifdef COPROC_DEBUG
-    printf("setCregVal: sys ctrl reg: %x\n", val);
-#endif
     // SCTRL: System control register
-    // check for MMU enable
-    if( (0 == (oldVal & 0x1)) && (1 == (val & 0x1)) )
+    if (((oldVal & SYS_CTRL_MMU_ENABLE) == 0) && ((val & SYS_CTRL_MMU_ENABLE) != 0))
     {
-#ifdef COPROC_DEBUG
-      printf("MMU enable.\n");
-#endif
-      guestEnableVirtMem();
+      printf("CP15: SysCtrl - MMU enable.\n");
+      guestEnableMMU();
     }
-#ifdef COPROC_DEBUG
-    else if((1 == (oldVal & 0x1)) && (0 == (val & 0x1)))
+    else if (((oldVal & SYS_CTRL_MMU_ENABLE)!=0) && ((val & SYS_CTRL_MMU_ENABLE)==0))
     {
-      printf("MMU disable.\n");
+      printf("CP15: SysCtrl - MMU disable.\n");
+      guestDisableMMU();
     }
-#endif
+
     //Interupt handler remap
-    if( (0 == (oldVal & 0x2000)) && (0 != (val & 0x2000)) )
+    if (((oldVal & SYS_CTRL_HIGH_VECS) == 0) && ((val & SYS_CTRL_HIGH_VECS) != 0))
     {
-#ifdef COPROC_DEBUG
-      printf("CP15: high interrupt vector set.\n");
-#endif
-      (getGuestContext())->guestHighVectorSet = TRUE;
+      printf("CP15: SysCtrl - high interrupt vector set.\n");
+      (getGuestContext())->guestHighVectorSet = TRUE; 
+    }
+    else if (((oldVal & SYS_CTRL_HIGH_VECS) != 0) && ((val & SYS_CTRL_HIGH_VECS) == 0))
+    {
+      printf("CP15: SysCtrl - low interrupt vector set.\n");
+      (getGuestContext())->guestHighVectorSet = FALSE; 
+    }
+
+    if ((val & SYS_CTRL_ACCESS_FLAG) != 0)
+    {
+      DIE_NOW(0, "CP15: SysCtrl - set access flag, investigate.\n");
+    }
+    if ((val & SYS_CTRL_HW_ACC_FLAG) != 0)
+    {
+      DIE_NOW(0, "CP15: SysCtrl - set hw access flag, investigate.\n");
+    }
+    if ((val & SYS_CTRL_TEX_REMAP) != 0)
+    {
+//      DIE_NOW(0, "CP15: SysCtrl - set tex remap, investigate.\n");
+    }
+    if ((val & SYS_CTRL_VECT_INTERRUPT) != 0)
+    {
+      DIE_NOW(0, "CP15: SysCtrl - set interrupt vector, investigate.\n");
     }
   }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==0)
   {
-#ifdef COPROC_DEBUG
+//#ifdef COPROC_DEBUG
     printf("setCregVal: TTBR0 write %x\n", val);
-#endif
-    initialiseGuestShadowPageTable(val);
+//#endif
+    // must calculate: bits 31 to (14-N) give TTBR value. N is [0:2] of TTBCR!
+    u32int ttbcr = getCregVal(2, 0, 0, 1, crbPtr);
+    u32int N = ttbcr & 0x7;
+    u32int bottomBitNumber = 14 - N;
+    u32int mask = ~((1 << bottomBitNumber)-1);
+    guestSetPageTableBase(val & mask);
   }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==1)
   {
@@ -394,10 +415,10 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   {
     if (oldVal != val)
     {
-#ifdef COPROC_DEBUG
+//#ifdef COPROC_DEBUG
       printf("CP15: DACR change val %x old DACR %x\n", val, oldVal);
-#endif
-      changeGuestDomainAccessControl(oldVal, val);
+//#endif
+      changeGuestDACR(oldVal, val);
     }
   }
 #ifdef COPROC_DEBUG
@@ -426,11 +447,16 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // ICIALLU: invalidate all instruction caches to PoC
     printf("setCregVal: invalidate all iCaches to PoC\n");
   }
+#endif
   else if (CRn==7 && opc1==0 && CRm==5 && opc2==1)
   {
     // ICIMVAU: invalidate instruction caches by MVA to PoU
+#ifdef COPROC_DEBUG
     printf("setCregVal: invalidate iCaches by MVA to PoC: %x\n", val);
+#endif
+    mmuInvalidateIcacheByMVA(val);
   }
+#ifdef COPROC_DEBUG
   else if (CRn==7 && opc1==0 && CRm==5 && opc2==4)
   {
     // CP15DSB: Instruction Synchronization Barrier operation
@@ -456,11 +482,16 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // DCCISW: clean and invalidate data cache line by set/way
     printf("setCregVal: clean and invalidate Dcache line, set/way: %x\n", val);
   }
+#endif
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==1)
   {
     // DCCMVAC: clean data cache line by MVA to PoC
+#ifdef COPROC_DEBUG
     printf("setCregVal: clean Dcache line by MVA to PoC: %x\n", val);
+#endif
+    mmuCleanDcacheByMVA(val);
   }
+#ifdef COPROC_DEBUG
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==2)
   {
     // DCCSW: clean data cache line by set/way to PoC
@@ -535,9 +566,9 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==1)
   {
     // CONTEXTID: context ID register
-#ifdef COPROC_DEBUG
+//#ifdef COPROC_DEBUG
     printf("setCregVal: WARN: CONTEXTID value %x\n", val);
-#endif
+//#endif
     asm("mcr p15, 0, %0, c13, c0, 1"
     :
     :"r"(val)

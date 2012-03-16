@@ -5,6 +5,7 @@
 
 #include "instructionEmu/scanner.h"
 
+#include "memoryManager/mmu.h"
 
 #ifdef CONFIG_BLOCK_CACHE_COLLISION_COUNTER
 
@@ -229,14 +230,17 @@ static void resolveCacheConflict(BCENTRY *blockCache, u32int index)
         DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing ARM hypercall with %#.8x" EOL,
             hyperCall);
         *(u32int *)blockCache[index].endAddress = hyperCall;
+        mmuInvalidateIcacheByMVA(blockCache[index].endAddress);
+        mmuCleanDcacheByMVA(blockCache[index].endAddress);
 #ifdef CONFIG_THUMB2
       }
       else
       {
         u16int hyperCall = (*(u16int *)blockCache[index].endAddress & 0x0000FF00) | (i + 1);
-        DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing T16 hypercall with %#.4x" EOL,
-            hyperCall);
-        *(u16int *)blockCache[index].endAddress = hyperCall;
+        DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing T16 hypercall with %#.4x" EOL, hyperCall);
+        *(u16int*)blockCache[index].endAddress = hyperCall;
+        mmuInvalidateIcacheByMVA(blockCache[index].endAddress);
+        mmuCleanDcacheByMVA(blockCache[index].endAddress);
       }
 #endif
       return;
@@ -255,19 +259,24 @@ static void restoreReplacedInstruction(BCENTRY *blockCache, u32int index)
   switch (blockCache[index].type)
   {
     case BCENTRY_TYPE_ARM:
+    {
       DEBUG(BLOCK_CACHE, "restoreReplacedInstruction: restoring ARM %#.8x @ %#.8x" EOL,
           blockCache[index].hyperedInstruction, blockCache[index].endAddress);
       *((u32int*)(blockCache[index].endAddress)) = blockCache[index].hyperedInstruction;
+      mmuInvalidateIcacheByMVA(blockCache[index].endAddress);
+      mmuCleanDcacheByMVA(blockCache[index].endAddress);
       break;
+    }
 #ifdef CONFIG_THUMB2
     case BCENTRY_TYPE_THUMB:
+    {
       if (txxIsThumb32(blockCache[index].hyperedInstruction))
       {
         /*
          * Restore Thumb 32-bit instruction. Word-alignment is not guaranteed, so we must perform
          * two halfword-size stores!
          */
-        DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring T32 %#.8x @ %#.8x",
+        DEBUG(BLOCK_CACHE, "restoreReplacedInstruction: restoring T32 %#.8x @ %#.8x",
             blockCache[index].hyperedInstruction, blockCache[index].endAddress);
         u16int *bpointer = (u16int *)(blockCache[index].endAddress);
         *bpointer = (u16int)(blockCache[index].hyperedInstruction >> 16);
@@ -279,11 +288,14 @@ static void restoreReplacedInstruction(BCENTRY *blockCache, u32int index)
         /*
          * Restore Thumb 16-bit instruction.
          */
-        DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring T16 %#.4x @ %#.8x" EOL,
+        DEBUG(BLOCK_CACHE, "restoreReplacedInstruction: restoring T16 %#.4x @ %#.8x" EOL,
             blockCache[index].hyperedInstruction, blockCache[index].endAddress);
-        *((u16int *)(blockCache[index].endAddress)) = (u16int)blockCache[index].hyperedInstruction;
+        *((u16int*)(blockCache[index].endAddress)) = (u16int)blockCache[index].hyperedInstruction;
+        mmuInvalidateIcacheByMVA(blockCache[index].endAddress);
+        mmuCleanDcacheByMVA(blockCache[index].endAddress);
       }
       break;
+    }
 #endif
   }
 }

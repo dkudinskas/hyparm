@@ -108,7 +108,7 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
   }
 
   // DO the actual load from memory
-  u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
+  u32int valueLoaded = vmLoad(WORD, address);
 
   // LDR loading to PC should load a word-aligned value
   if ((regDst == 15) && ((valueLoaded & 0x3) != 0))
@@ -228,7 +228,7 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
   }
 
   // DO the actual load from memory
-  u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, BYTE, address) & 0xFF;
+  u32int valueLoaded = vmLoad(BYTE, address) & 0xFF;
 
   // put loaded val to reg
   storeGuestGPR(regDst, valueLoaded, context);
@@ -356,7 +356,7 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
     }
   } // reg case done
 
-  u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, HALFWORD, address);
+  u32int valueLoaded = vmLoad(HALFWORD, address) & 0xFFFF;
 
   // put loaded val to reg
   storeGuestGPR(regDst, valueLoaded, context);
@@ -480,8 +480,8 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
 
   DEBUG(INTERPRETER_ARM_LOAD, "armLdrdInstruction: address = %#.8x" EOL, address);
 
-  u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
-  u32int valueLoaded2 = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address + 4);
+  u32int valueLoaded = vmLoad(WORD, address);
+  u32int valueLoaded2 = vmLoad(WORD, address+4);
   // put loaded values to their registers
   storeGuestGPR(regDst, valueLoaded, context);
   storeGuestGPR(regDst2, valueLoaded2, context);
@@ -583,7 +583,7 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
         isPCinRegList = TRUE;
       }
       // R[i] = *(address);
-      u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, address);
+      u32int valueLoaded = vmLoad(WORD, address);
       storeGuestGPR(i, valueLoaded, context);
       DEBUG(INTERPRETER_ARM_LOAD, "armLdmInstruction: R[%x] = *(%#.8x) = %#.8x" EOL, i, address,
           valueLoaded);
@@ -634,10 +634,6 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
           break;
         default:
           DIE_NOW(context, "exception return from sys/usr mode!");
-      }
-      if ((modeSpsr & PSR_MODE) == PSR_USR_MODE)
-      {
-        DIE_NOW(context, "exception return to user mode!");
       }
       context->CPSR = modeSpsr;
     }

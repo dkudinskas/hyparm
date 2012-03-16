@@ -88,21 +88,26 @@ enum enum_access_type
 typedef enum enum_access_type access_type;
 
 void mmuInit(void);
-void mmuInsertPt0(descriptor* addr);
-void mmuInsertPt1(descriptor* addr);
-descriptor* mmuGetPt0(void);
+void mmuSetTTBCR(u32int value);
+void mmuSetTTBR0(simpleEntry* addr);
+void mmuSetTTBR1(simpleEntry* addr);
+simpleEntry* mmuGetTTBR0(void);
+
 void mmuEnableVirtAddr(void);
 void mmuDisableVirtAddr(void);
 bool isMmuEnabled(void);
 
-void clearInstructionCache(void);
-void clearDataCache(void);
-void clearTLB(void);
-void clearTLBbyMVA(u32int address);
-void dataBarrier(void);
-void setTTBCR(u32int value);
-void setDomain(u8int domain, access_type access);
-void setTexRemap(bool enable);
+
+void mmuClearInstructionCache(void);
+void mmuClearDataCache(void);
+void mmuClearTLB(void);
+void mmuClearTLBbyMVA(u32int address);
+void mmuDataBarrier(void);
+void mmuSetDomain(u8int domain, access_type access);
+void mmuSetTexRemap(bool enable);
+
+void mmuInvalidateIcacheByMVA(u32int mva);
+void mmuCleanDcacheByMVA(u32int mva);
 
 u32int getDFAR(void);
 DFSR getDFSR(void);

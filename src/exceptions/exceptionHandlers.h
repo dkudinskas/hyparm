@@ -5,43 +5,31 @@
 
 #include "guestManager/guestContext.h"
 
+#include "memoryManager/mmu.h"
 
 #ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT
-
 u64int getDataAbortCounter(void);
 void resetDataAbortCounter(void);
-
 #else
-
 #define getDataAbortCounter()    (0ULL)
 #define resetDataAbortCounter()
-
 #endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT */
 
-
 #ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_IRQ
-
 u64int getIrqCounter(void);
 void resetIrqCounter(void);
-
 #else
-
 #define getIrqCounter()    (0ULL)
 #define resetIrqCounter()
-
 #endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_IRQ */
 
 
 #ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_SVC
-
 u64int getSvcCounter(void);
 void resetSvcCounter(void);
-
 #else
-
 #define getSvcCounter()    (0ULL)
 #define resetSvcCounter()
-
 #endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_SVC */
 
 
@@ -64,5 +52,9 @@ void irqPrivileged(void);
 
 void fiq(void);
 
+void dabtTranslationFault(GCONTXT * gc, DFSR dfsr, u32int dfar);
+void dabtPermissionFault(GCONTXT * gc, DFSR dfsr, u32int dfar);
+
+void iabtTranslationFault(GCONTXT * gc, IFSR ifsr, u32int ifar);
 #endif
 

@@ -19,112 +19,84 @@
 #include "vm/omap35xx/intc.h"
 #include "vm/omap35xx/uart.h"
 
+#include "instructionEmu/loadStoreDecode.h"
 #include "instructionEmu/loopDetector.h"
 #include "instructionEmu/scanner.h"
 
-#include "memoryManager/addressing.h"
-#include "memoryManager/globalMemoryMapper.h"
-#include "memoryManager/mmu.h"
+#include "memoryManager/shadowMap.h"
 #include "memoryManager/memoryConstants.h"
 
 
 #ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT
-
 u64int dataAbortCounter;
-
 static inline void incrementDataAbortCounter(void);
-
 u64int getDataAbortCounter()
 {
   return dataAbortCounter;
 }
-
 static inline void incrementDataAbortCounter()
 {
   dataAbortCounter++;
 }
-
 void resetDataAbortCounter()
 {
   dataAbortCounter = 0;
 }
-
 #else
-
 #define incrementDataAbortCounter()
-
 #endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT */
 
 
 #ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_IRQ
-
 u64int irqCounter;
-
 static inline void incrementIrqCounter(void);
-
 u64int getIrqCounter()
 {
   return irqCounter;
 }
-
 static inline void incrementIrqCounter()
 {
   irqCounter++;
 }
-
 void resetIrqCounter()
 {
   irqCounter = 0;
 }
-
 #else
-
 #define incrementIrqCounter()
-
 #endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_IRQ */
 
 
 #ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_SVC
-
 u64int svcCounter;
-
 static inline void incrementSvcCounter(void);
-
 u64int getSvcCounter()
 {
   return svcCounter;
 }
-
 static inline void incrementSvcCounter()
 {
   svcCounter++;
 }
-
 void resetSvcCounter()
 {
   svcCounter = 0;
 }
-
 #else
-
 #define incrementSvcCounter()
-
 #endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_SVC */
 
 
 #ifdef CONFIG_LOOP_DETECTOR
-
 /*
  * We do not care about initializing this variable, because the loop detector is reset during boot.
  * If the initial value would evaluate to TRUE, an extra reset happens at start.
  */
 bool mustResetLoopDetector;
-
 static inline void delayResetLoopDetector(void)
 {
   mustResetLoopDetector = TRUE;
 }
-
 static inline void resetLoopDetectorIfNeeded(GCONTXT *context)
 {
   if (mustResetLoopDetector)
@@ -133,12 +105,9 @@ static inline void resetLoopDetectorIfNeeded(GCONTXT *context)
     mustResetLoopDetector = FALSE;
   }
 }
-
 #else
-
 #define delayResetLoopDetector()
 #define resetLoopDetectorIfNeeded(context)
-
 #endif /* CONFIG_LOOP_DETECTOR */
 
 
@@ -150,15 +119,12 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
   // parse the instruction to find the start address of next block
   u32int nextPC = 0;
-#ifdef CONFIG_THUMB2
   bool gSVC = FALSE;
-#endif
   instructionHandler instrHandler;
 
 #ifdef CONFIG_THUMB2
   /* Make sure that any SVC that is not part of the scanner
-   * will be delivered to the guest
-   */
+   * will be delivered to the guest */
   if (context->CPSR & PSR_T_BIT) // Thumb
   {
     if (code == 0) // svc in Thumb is between 0x01 and 0xFF
@@ -175,17 +141,19 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
       gSVC = TRUE;
     }
   }
-
-  // Do we need to forward it to the guest?
-  if (gSVC)
-  {
-    deliverServiceCall(context);
 #else
   if (code <= 0xFF)
   {
     DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt %#.2x @ %#.8x is a guest system call" EOL, code, context->R15);
-    deliverServiceCall(context);
+    gSVC = TRUE;
+  }
 #endif
+
+  u32int cpsrOld = context->CPSR;
+  // Do we need to forward it to the guest?
+  if (gSVC)
+  {
+    deliverServiceCall(context);
     nextPC = context->R15;
   }
   else
@@ -203,16 +171,29 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   traceBlock(context, nextPC);
   context->R15 = nextPC;
 
-  // deliver interrupts
-  /* Maybe a timer interrupt is pending on real INTC but
-   * hasn't been acked yet
-   */
+  /* Maybe a timer interrupt is pending on real INTC but hasn't been acked yet */
   if (context->guestIrqPending)
   {
     if ((context->CPSR & PSR_I_BIT) == 0)
     {
       deliverInterrupt(context);
     }
+  }
+
+
+  if (((cpsrOld & PSR_MODE) != PSR_USR_MODE) &&
+      ((context->CPSR & PSR_MODE) == PSR_USR_MODE))
+  {
+    // guest was in privileged mode, after interpreting switched to user mode.
+    // return from exception, CPS or MSR. act accordingly
+    guestToUserMode();
+  }
+  if (((cpsrOld & PSR_MODE) == PSR_USR_MODE) &&
+      ((context->CPSR & PSR_MODE) != PSR_USR_MODE))
+  {
+    // guest was in user mode. we hit a guest SVC. switch guest to privileged mode
+    // return from exception, CPS or MSR. act accordingly
+    guestToPrivMode();
   }
 
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = %#.8x" EOL, nextPC);
@@ -231,11 +212,13 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   }
   else
   {
+    printf("SVC: returning to user mode, pc %08x\n", context->R15);
     delayResetLoopDetector();
   }
 
   return context;
 }
+
 
 GCONTXT *dataAbort(GCONTXT *context)
 {
@@ -244,76 +227,23 @@ GCONTXT *dataAbort(GCONTXT *context)
    */
   disableInterrupts();
   incrementDataAbortCounter();
-  u32int dfar = getDFAR();
-  DFSR dfsr = getDFSR();
-  DEBUG_MMC(EXCEPTION_HANDLERS_TRACE_DABT, "dataAbort: DFAR=%#.8x DFSR=%#.8x" EOL, dfar, *(u32int *)&dfsr);
   /* Encodings: Page 1289 & 1355 */
-  u32int faultStatus = (dfsr.fs3_0) | (dfsr.fs4 << 4);
+  u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
   switch (faultStatus)
   {
     case dfsPermissionSection:
     case dfsPermissionPage:
     {
-      // Check if the addr we have faulted on is caused by
-      // a memory protection the hypervisor has enabled
-      bool isPrivAccess = (context->CPSR & PSR_MODE) != PSR_USR_MODE;
-      if (context->virtAddrEnabled)
-      {
-        if (shouldDataAbort(isPrivAccess, dfsr.WnR, dfar))
-        {
-          deliverDataAbort(context);
-          setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION);
-          scanBlock(context, context->R15);
-          break;
-        }
-      }
-
-      // interpret the load/store
-      emulateLoadStoreGeneric(context, dfar);
-
-      // load/store might still have failed if it was LDRT/STRT
-      if (!context->guestDataAbtPending)
-      {
-        // ONLY move to the next instruction, if the guest hasn't aborted...
-#ifdef CONFIG_THUMB2
-        if (context->CPSR & PSR_T_BIT)
-        {
-          context->R15 = context->R15 + T16_INSTRUCTION_SIZE;
-        }
-        else
-#endif
-        {
-          context->R15 = context->R15 + ARM_INSTRUCTION_SIZE;
-        }
-      }
-      else
-      {
-        // deliver the abort!
-        deliverDataAbort(context);
-        setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_PERMISSION);
-        scanBlock(context, context->R15);
-      }
+      dabtPermissionFault(context, getDFSR(), getDFAR());
       break;
     }
     case dfsTranslationSection:
     case dfsTranslationPage:
     {
-      /*
-       * Markos: I think this means that the guest was trying to write within its
-       * allowed memory area in user mode
-       */
-      bool isPrivAccess = (context->CPSR & PSR_MODE) != PSR_USR_MODE;
-      if (shouldDataAbort(isPrivAccess, dfsr.WnR, dfar))
-      {
-        deliverDataAbort(context);
-        setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_TRANSLATION);
-        scanBlock(context, context->R15);
-      }
+      dabtTranslationFault(context, getDFSR(), getDFAR());
       break;
     }
     case dfsSyncExternalAbt:
-      printDataAbort();
-      DIE_NOW(context, "synchronous external abort hit!");
     case dfsAlignmentFault:
     case dfsDebugEvent:
     case dfsAccessFlagSection:
@@ -339,33 +269,19 @@ GCONTXT *dataAbort(GCONTXT *context)
   return context;
 }
 
+
 void dataAbortPrivileged(u32int pc)
 {
   incrementDataAbortCounter();
-  u32int dfar = getDFAR();
-  DFSR dfsr = getDFSR();
-  DEBUG_MMC(EXCEPTION_HANDLERS_TRACE_DABT, "dataAbortPrivileged: PC=%#.8x DFAR=%#.8x DFSR=%#.8x"
-      EOL, pc, dfar, *(u32int *)&dfsr);
 
-  /* Here if we abort in a priviledged mode, i.e its the Hypervisors fault */
-  printf("dataAbortPrivileged: Hypervisor dabt in priv mode @ pc %#.8x" EOL, pc);
-
-  printDataAbort();
-  u32int faultStatus = (dfsr.fs3_0) | (dfsr.fs4 << 4);
+  printf("dataAbortPrivileged: DFAR %08x pc %08x\n", getDFAR(), pc);
+  u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
   switch(faultStatus)
   {
     case dfsTranslationSection:
     case dfsTranslationPage:
     {
-      //Mostly likely trying to access a page of physical memory, just map it.
-      if((dfar >= BEAGLE_RAM_START) && (dfar <= BEAGLE_RAM_END))
-      {
-        DIE_NOW(NULL, "Translation fault inside physical RAM range");
-      }
-      else
-      {
-        DIE_NOW(NULL, "Translation fault for area not in RAM!");
-      }
+      dabtTranslationFault(getGuestContext(), getDFSR(), getDFAR());
       break;
     }
     case dfsAlignmentFault:
@@ -388,13 +304,11 @@ void dataAbortPrivileged(u32int pc)
     case dfsTranslationTableWalkLvl1SyncParityErr:
     case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
-      printf("dataAbortPrivileged: UNIMPLEMENTED data abort type.");
+      printf("dataAbortPrivileged: UNIMPLEMENTED data abort type.\n");
       printDataAbort();
-      DIE_NOW(NULL, "Entering infinite loop");
+      DIE_NOW(0, "Entering infinite loop\n");
       break;
   }
-
-  DIE_NOW(NULL, "At end of hypervisor data abort handler. Stopping");
 }
 
 GCONTXT *undefined(GCONTXT *context)
@@ -420,16 +334,15 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 
   switch(faultStatus)
   {
+    case ifsTranslationFaultSection:
     case ifsTranslationFaultPage:
-      if (shouldPrefetchAbort(ifar))
-      {
-        deliverPrefetchAbort(context);
-        setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_TRANSLATION);
-        scanBlock(context, context->R15);
-      }
+    {
+      iabtTranslationFault(context, ifsr, ifar);
       break;
+    }
     case ifsTranslationTableWalk2ndLvllSynchExtAbt:
 #ifdef CONFIG_GUEST_FREERTOS
+    {
       if (shouldPrefetchAbort(ifar))
       {
         deliverPrefetchAbort(context);
@@ -437,10 +350,10 @@ GCONTXT *prefetchAbort(GCONTXT *context)
         scanBlock(context, context->R15);
       }
       break;
+    }
 #endif
     case ifsDebugEvent:
     case ifsAccessFlagFaultSection:
-    case ifsTranslationFaultSection:
     case ifsAccessFlagFaultPage:
     case ifsSynchronousExternalAbort:
     case ifsDomainFaultSection:
@@ -463,10 +376,12 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 
 void prefetchAbortPrivileged(void)
 {
+  DIE_NOW(0, "prefetchAbortPrivileged: unimplemented");
   disableInterrupts();
   IFSR ifsr = getIFSR();
   u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
-  switch(faultStatus){
+  switch(faultStatus)
+  {
     case ifsTranslationFaultPage:
     case ifsDebugEvent:
     case ifsAccessFlagFaultSection:
@@ -623,4 +538,125 @@ void irqPrivileged()
 void fiq(void)
 {
   DIE_NOW(NULL, "fiq: FIQ handler unimplemented!");
+}
+
+
+
+void dabtPermissionFault(GCONTXT * gc, DFSR dfsr, u32int dfar)
+{
+  // Check if the addr we have faulted on is caused by 
+  // a memory protection the hypervisor has enabled
+
+//  printf("dabtPermissionFault: dfar %08x, priv %x, write %x\n",
+//         dfar, isGuestInPrivMode(gc), dfsr.WnR);
+  // ok, more stuff to do here as well! whilst a translation fault can mean we haven't yet shadow mapped
+  // an address, permission faults can become spurious, when we have protected a memory region because it
+  // mapped a guest page table at the time of shadow-mapping. If the page-table in question has been removed by
+  // the guest, the hypervisor may have not removed the memory protection! therefore, we must take the faulting address
+  // and validate the permission fault, and possibly remove the memory protection
+
+  // the validation process is complicated by the fact that permission faults may be generated by several
+  // different causes: gPT write-protection, hardware access, executed-code protection
+  // DFAR is the virtual address that faulted upon access. its a permission fault - thus a page table entry MUST
+  // exist. GET it now.
+
+  // try to match this entry address/value pair with the list of all page table entry address/value pairs that 
+  // the hypervisor saved:
+  // this saved list is generated when on demand shadow mapping entries, we check the underlying guets PA being mapped
+  // and compare it with existing known page table guest PAs. if its a match, we must write-protect access to this
+  // virtual address, and then add an entry to this list of 'remembered' mappings.
+
+  // when validating the permission fault, if we find that the page table that cause the write-protect is no longer
+  // there, lets remove the write-protection, and remove the appropriate entry from the linked list!
+  if (gc->virtAddrEnabled)
+  {
+    if (shouldDataAbort(isGuestInPrivMode(gc), dfsr.WnR, dfar))
+    {
+      deliverDataAbort(gc);
+      setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION);
+      scanBlock(gc, gc->R15);
+      return;
+    }
+  }
+
+  // interpret the load/store
+  emulateLoadStoreGeneric(gc, dfar);
+  
+  // load/store might still have failed if it was LDRT/STRT
+  if (!gc->guestDataAbtPending)
+  {
+    // ONLY move to the next instruction, if the guest hasn't aborted...
+#ifdef CONFIG_THUMB2
+    if (gc->CPSR & PSR_T_BIT)
+    {
+      gc->R15 = gc->R15 + T16_INSTRUCTION_SIZE;
+    }
+    else
+#endif
+    {
+      gc->R15 = gc->R15 + ARM_INSTRUCTION_SIZE;
+    }
+  }
+  else
+  {
+    // deliver the abort!
+    deliverDataAbort(gc);
+    setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_PERMISSION);
+    scanBlock(gc, gc->R15);
+  }
+}
+
+
+void dabtTranslationFault(GCONTXT * gc, DFSR dfsr, u32int dfar)
+{
+  /* if we hit this - that means that:
+     mem access address corresponding 1st level page table entry FAULT/reserved
+     or corresponding 2nd level page table entry FAULT
+     see if translation fault should be forwarded to the guest!
+     if THAT fails, then really panic.
+   */
+//  printf("dabtTranslationFault: dfar %08x, priv %x, write %x\n",
+//         dfar, isGuestInPrivMode(gc), dfsr.WnR);
+  if (!shadowMap(dfar))
+  {
+    // failed to shadow map!
+    if (shouldDataAbort(isGuestInPrivMode(gc), dfsr.WnR, dfar))
+    {
+      deliverDataAbort(gc);
+      setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_TRANSLATION);
+      scanBlock(gc, gc->R15);
+      return;
+    }
+    else
+    {
+      DIE_NOW(0, "dabtTranslationFault: panic now!\n");
+    }
+  }
+}
+
+
+void iabtTranslationFault(GCONTXT * gc, IFSR ifsr, u32int ifar)
+{
+  /* if we hit this - that means that:
+     mem access address corresponding 1st level page table entry FAULT/reserved
+     or corresponding 2nd level page table entry FAULT
+     see if translation fault should be forwarded to the guest!
+     if THAT fails, then really panic.
+   */
+//  printf("iabtTranslationFault: ifar %08x, priv %x\n", ifar, isGuestInPrivMode(gc));
+  if (!shadowMap(ifar))
+  {
+    // failed to shadow map!
+    if (shouldPrefetchAbort(isGuestInPrivMode(gc), ifar))
+    {
+      deliverPrefetchAbort(gc);
+      setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_TRANSLATION);
+      scanBlock(gc, gc->R15);
+      return;
+    }
+    else
+    {
+      DIE_NOW(0, "iabtTranslationFault: panic now!\n");
+    }
+  }
 }

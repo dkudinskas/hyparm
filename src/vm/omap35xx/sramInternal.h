@@ -25,10 +25,10 @@
 #define FIQ_EXCEPTION_ADDR            0x4020FFFC
 
 
-u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int address);
-void storeSramInternal(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeSramInternal(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
-void registerGuestHandler(GCONTXT * gc, u32int address, u32int value);
+void registerGuestHandler(u32int address, u32int value);
 
 #endif
 

@@ -6,7 +6,6 @@ static inline void set_cr(unsigned int val);
 static void cp_delay(void);
 static void cache_enable(u32int cache_bit);
 static void cache_disable(u32int cache_bit);
-static void cache_flush(void);
 
 extern void v7_flush_dcache_all(u32int dev);
 
@@ -56,7 +55,7 @@ static void cache_disable(u32int cache_bit)
   set_cr(reg & ~cache_bit);
 }
 
-static void cache_flush()
+void cache_flush()
 {
   asm ("mcr p15, 0, %0, c7, c5, 0": :"r" (0));
 }

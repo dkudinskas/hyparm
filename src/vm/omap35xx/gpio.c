@@ -67,13 +67,8 @@ void resetGpio(u32int num)
 
 
 /* load function */
-u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
+u32int loadGpio(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   u32int regOffset = 0;
   u32int gpioNum = 0;
   switch (phyAddr & 0xFFFFF000)
@@ -103,7 +98,7 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
       regOffset = phyAddr - GPIO6;
       break;
     default:
-      DIE_NOW(gc, "GPIO: loadGpio - invalid gpio number for base address");
+      DIE_NOW(NULL, "GPIO: loadGpio - invalid gpio number for base address");
   }
 
   u32int val = 0;
@@ -177,26 +172,21 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address)
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
       printf("GPIO: load from unimplemented register %x" EOL, regOffset);
-      DIE_NOW(gc, "panic.");
+      DIE_NOW(NULL, "panic.");
     default:
-      DIE_NOW(gc, "Gpio: load on invalid register.");
+      DIE_NOW(NULL, "Gpio: load on invalid register.");
   }
   DEBUG(VP_OMAP_35XX_GPIO, "%s load from pAddr: %.8x, vAddr: %.8x access size %x val = %.8x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size, val);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size, val);
   return val;
 }
 
 
 /* top store function */
-void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
+void storeGpio(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_GPIO, "%s store to pAddr: %.8x, vAddr: %.8x, access size: %x, val %.8x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size, value);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
   u32int regOffset = 0;
   u32int gpioNum = 0;
@@ -227,13 +217,13 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       regOffset = phyAddr - GPIO6;
       break;
     default:
-      DIE_NOW(gc, "GPIO: storeGpio - invalid gpio number for base address");
+      DIE_NOW(NULL, "GPIO: storeGpio - invalid gpio number for base address");
   }
 
   switch (regOffset)
   {
     case GPIO_REVISION:
-      DIE_NOW(gc, "GPIO: storing to a R/O reg (revision)");
+      DIE_NOW(NULL, "GPIO: storing to a R/O reg (revision)");
       break;
     case GPIO_SYSCONFIG:
       if ((value & GPIO_SYSCONFIG_SOFTRESET) == GPIO_SYSCONFIG_SOFTRESET)
@@ -247,40 +237,40 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       }
       break;
     case GPIO_SYSSTATUS:
-      DIE_NOW(gc, "GPIO: storing to a R/O reg (sysStatus)");
+      DIE_NOW(NULL, "GPIO: storing to a R/O reg (sysStatus)");
       break;
     case GPIO_IRQSTATUS1:
       if (value != 0xffffffff)
       {
-        DIE_NOW(gc, "GPIO: clearing random interrupts. have a look!...");
+        DIE_NOW(NULL, "GPIO: clearing random interrupts. have a look!...");
       }
       gpio[gpioNum]->gpioIrqStatus1 = gpio[gpioNum]->gpioIrqStatus1 & ~value;
       break;
     case GPIO_IRQENABLE1:
       if (value != 0)
       {
-        DIE_NOW(gc, "GPIO: enabling interrupt! have a look at this...");
+        DIE_NOW(NULL, "GPIO: enabling interrupt! have a look at this...");
       }
       gpio[gpioNum]->gpioIrqEnable1 = value;
       break;
     case GPIO_IRQSTATUS2:
       if (value != 0xffffffff)
       {
-        DIE_NOW(gc, "GPIO: clearing random interrupts. have a look!...");
+        DIE_NOW(NULL, "GPIO: clearing random interrupts. have a look!...");
       }
       gpio[gpioNum]->gpioIrqStatus2 = gpio[gpioNum]->gpioIrqStatus2 & ~value;
       break;
     case GPIO_IRQENABLE2:
       if (value != 0)
       {
-        DIE_NOW(gc, "GPIO: enabling interrupt! have a look at this...");
+        DIE_NOW(NULL, "GPIO: enabling interrupt! have a look at this...");
       }
       gpio[gpioNum]->gpioIrqEnable2 = value;
       break;
     case GPIO_CTRL:
       if ((value & GPIO_CTRL_DISABLEMOD) == GPIO_CTRL_DISABLEMOD)
       {
-        DIE_NOW(gc, "GPIO: disabling module! investigate.");
+        DIE_NOW(NULL, "GPIO: disabling module! investigate.");
       }
       gpio[gpioNum]->gpioCtrl = value & ~GPIO_CTRL_RESERVED;
       break;
@@ -335,9 +325,9 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
       printf("GPIO: store to unimplemented register %x" EOL, regOffset);
-      DIE_NOW(gc, "panic.");
+      DIE_NOW(NULL, "panic.");
     default:
-      DIE_NOW(gc, "Gpio: store to invalid register.");
+      DIE_NOW(NULL, "Gpio: store to invalid register.");
   }
 }
 

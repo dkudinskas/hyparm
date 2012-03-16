@@ -1,11 +1,11 @@
 #include "common/debug.h"
 #include "common/types.h"
-#include "common/memFunctions.h"
 #include "common/byteOrder.h"
 
 #include "io/mmc.h"
 
 #include "drivers/beagle/be32kTimer.h"
+#include "drivers/beagle/beMMC.h"
 
 #include "cpuArch/armv7.h"
 

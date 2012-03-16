@@ -58,11 +58,10 @@ void resetGpio(u32int num);
 
 
 /* top load function */
-u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address);
-
+u32int loadGpio(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 
 /* top store function */
-void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+void storeGpio(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 
 struct Gpio
