@@ -97,7 +97,7 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T16_LOAD, context, instruction);
 
-  u32int nextPC;
+  u32int nextPC = 0;
   u32int regList = 0;
   u32int baseAddress = 0;
 
@@ -109,7 +109,7 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
   {
     DIE_NOW(context, "trapped but PC is not on the list...");
   }
-  regList = ( ((instruction & 0x0100)>>8) << 15 ) | (instruction & 0x00FF);
+  regList = (((instruction & 0x0100) >> 8) << 15) | (instruction & 0x00FF);
 
   // Get baseAddress from SP
   baseAddress = loadGuestGPR(GPR_SP, context);
