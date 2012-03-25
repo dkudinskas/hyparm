@@ -152,7 +152,12 @@ u32int armDbgInstruction(GCONTXT *context, u32int instruction)
 
 u32int armDmbInstruction(GCONTXT *context, u32int instruction)
 {
+#ifdef CONFIG_KERNEL_ANDROID
+  printf("Warning: DMB (ignored)!" EOL);
+  return context->R15 + ARM_INSTRUCTION_SIZE;
+#else
   DIE_NOW(context, "not implemented");
+#endif
 }
 
 u32int armDsbInstruction(GCONTXT *context, u32int instruction)
