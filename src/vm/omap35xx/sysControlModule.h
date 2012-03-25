@@ -312,6 +312,9 @@
 #define CONTROL_WKUP_DEBOBS_4                          0x00000018
 #define CONTROL_SEC_DAP                                0x0000001C
 
+#define STATUS_REGISTER                                0x000001DC
+#define OMAP3530_CHIPID                                0x00000C00
+
 
 
 void initSysControlModule(void);

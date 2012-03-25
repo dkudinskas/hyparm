@@ -226,6 +226,12 @@ u32int loadGeneralScm(device *dev, u32int address, u32int phyAddr)
     case CONTROL_DEVCONF1:
       val = sysCtrlModule->ctrlDevConf1;
       break;
+    case CONTROL_STATUS:
+      val = sysCtrlModule->ctrlStatus;
+      break;
+    case STATUS_REGISTER:
+      val = OMAP3530_CHIPID;
+      break;
     default:
       printf("loadGeneralScm: unimplemented reg addr %#.8x" EOL, phyAddr);
       DIE_NOW(NULL, "loadGeneralScm loading non existing/unimplemented register!");
