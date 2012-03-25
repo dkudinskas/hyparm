@@ -88,8 +88,10 @@
 #define Q1_RESERVED2_SIZE            0x08000000
 #define Q1_L3_INTERCONNECT           0x68000000
 #define Q1_L3_INTERCONNECT_SIZE      0x08000000
-#define Q1_L3_GPMC                     0x6E000000
-#define Q1_L3_GPMC_SIZE                0x01000000
+#define Q1_L3_GPMC                   0x6E000000
+#define Q1_L3_GPMC_SIZE              0x01000000
+#define Q1_L3_PM                     0x68010000
+#define Q1_L3_PM_SIZE                0x00004400
 #define Q1_SDRC_SMS                  0x70000000
 #define Q1_SDRC_SMS_SIZE             0x10000000
 
