@@ -274,7 +274,7 @@ void dataAbortPrivileged(u32int pc)
 {
   incrementDataAbortCounter();
 
-  printf("dataAbortPrivileged: DFAR %08x pc %08x\n", getDFAR(), pc);
+  printf("dataAbortPrivileged: DFAR %08x pc %08x" EOL, getDFAR(), pc);
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
   switch(faultStatus)
   {
@@ -304,7 +304,7 @@ void dataAbortPrivileged(u32int pc)
     case dfsTranslationTableWalkLvl1SyncParityErr:
     case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
-      printf("dataAbortPrivileged: UNIMPLEMENTED data abort type.\n");
+      printf("dataAbortPrivileged: UNIMPLEMENTED data abort type." EOL);
       printDataAbort();
       DIE_NOW(0, "Entering infinite loop\n");
       break;
