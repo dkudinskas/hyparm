@@ -83,7 +83,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT *context);
 
 #ifdef CONFIG_GUEST_TEST
 // function to evaluate breakpoint value in unittests
-void evalBkptVal(GCONTXT *context, u32int value);
+void evalBkptVal(GCONTXT *context, u32int value) __attribute__((noreturn));
 #endif
 
 #endif
