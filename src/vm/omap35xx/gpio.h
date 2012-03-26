@@ -52,17 +52,13 @@
 #define GPIO_SETDATAOUT          0x094
 
 
+void connectGpio(u32int gpioNumber, u32int physicalGpioNumber);
+
 void initGpio(u32int gpioNumber);
 
-void resetGpio(u32int num);
+u32int loadGpio(device *dev, ACCESS_SIZE size, u32int address);
 
-
-/* top load function */
-u32int loadGpio(device * dev, ACCESS_SIZE size, u32int address);
-
-
-/* top store function */
-void storeGpio(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+void storeGpio(device *dev, ACCESS_SIZE size, u32int address, u32int value);
 
 
 struct Gpio
@@ -85,14 +81,7 @@ struct Gpio
   u32int gpioFallingDetect;
   u32int gpioDebounceEnable;
   u32int gpioDebouncingTime;
-  u32int gpioClearIrqEnable1;
-  u32int gpioSetIrqEnable1;
-  u32int gpioClearIrqEnable2;
-  u32int gpioSetIrqEnable2;
-  u32int gpioClearWkuEnable;
-  u32int gpioSetWkuEnable;
-  u32int gpioClearDataOut;
-  u32int gpioSetDataOut;
+  s32int physicalId;
 };
 
 #endif
