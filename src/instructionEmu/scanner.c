@@ -22,6 +22,7 @@
 #define INSTR_SWI            0xEF000000U
 #define INSTR_SWI_THUMB      0x0000DF00U
 #define INSTR_NOP_THUMB      0x0000BF00U
+#define INSTR_SWI_THUMB_MASK 0x0000FF00U
 #define INSTR_SWI_THUMB_MIX  ((INSTR_SWI_THUMB << 16) | INSTR_NOP_THUMB)
 
 
@@ -322,7 +323,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
     }
   }
 
-  if (!txxIsThumb32(instruction) && ((instruction & INSTR_SWI_THUMB) == INSTR_SWI_THUMB))
+  if (!txxIsThumb32(instruction) && ((instruction & INSTR_SWI_THUMB_MASK) == INSTR_SWI_THUMB))
   {
     u32int svcCode = instruction & 0xFF;
     if (svcCode > 0)
