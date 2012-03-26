@@ -238,7 +238,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAdd
       break;
     case GPT_REG_TMAR:
 #ifdef CONFIG_GUEST_FREERTOS
-      if (gc->os == GUEST_OS_FREERTOS)
+      if (getGuestContext()->os == GUEST_OS_FREERTOS)
       {
         /*
          * FIXME: Use a higher TMAR value to make sure that Guest is ready to accept interrupts.

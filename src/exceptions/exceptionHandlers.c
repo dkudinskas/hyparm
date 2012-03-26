@@ -378,7 +378,7 @@ GCONTXT *prefetchAbort(GCONTXT *context)
     }
     case ifsTranslationTableWalk2ndLvllSynchExtAbt:
 #ifdef CONFIG_GUEST_FREERTOS
-      if (shouldPrefetchAbort(ifar))
+      if (shouldPrefetchAbort(isGuestInPrivMode(context), ifar))
       {
         deliverPrefetchAbort(context);
         setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_FREERTOS);
