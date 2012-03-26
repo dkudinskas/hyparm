@@ -315,14 +315,14 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
     if (svcCode > 0)
     {
       // we hit a SVC that we placed ourselves as EOB. retrieve the real EOB...
-      u32int cacheIndex = svcCode - 1;
-      if (cacheIndex >= BLOCK_CACHE_SIZE)
+      u32int svcCacheIndex = svcCode - 1;
+      if (svcCacheIndex >= BLOCK_CACHE_SIZE)
       {
         printf("scanThumbBlock: instruction %#.8x @ %p", instruction, end);
         DIE_NOW(context, "scanThumbBlock: block cache index in SVC out of range");
       }
-      DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB instruction is SVC @ %p code %#x" EOL, end, cacheIndex);
-      BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, cacheIndex);
+      DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB instruction is SVC @ %p code %#x" EOL, end, svcCacheIndex);
+      BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, svcCacheIndex);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
       blockType = bcEntry->type;
