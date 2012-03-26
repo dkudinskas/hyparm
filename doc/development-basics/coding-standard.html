@@ -34,9 +34,27 @@ if (condition)
   /* one or more LoC */
 }
 </pre>
+Also use curly brackets in cases of <code>switch</code> statements:
+<pre>
+switch (condition)
+{
+  case C1:
+  {
+    /* one or more LoC */
+    break;
+  }
+}
+</pre>
 </li>
 
 <li>Use longer variable names if needed, but make them logical. Try not to name variables as acronyms, or undecodable text combinations. (<code>u32int uloina</code> is absolutely horrible, <code>u32int upLimitOfUnsIntArray</code> is long, but it's still better).</li>
+
+<li>In pointer types, use a space before the <code>*</code> and no space after. Use this consistently throughout declarations, casts, etc.:
+<pre>
+u32int *someVar;
+castedPtr = (u32int *)anotherVar;
+</pre>
+</li>
 
 <li>Try to break lines into two where needed, avoid excessively long lines of code.</li>
 
