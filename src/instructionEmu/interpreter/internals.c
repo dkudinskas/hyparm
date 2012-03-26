@@ -128,6 +128,16 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
           default:
             DIE_NOW(context, "arithLogicOp: no SPSR for current guest mode");
         }
+
+        // Align PC
+        if (context->CPSR & PSR_T_BIT)
+        {
+          nextPC &= ~1;
+        }
+        else
+        {
+          nextPC &= ~3;
+        }
       }
       else
       {
@@ -135,30 +145,15 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
       }
     }
 
-    context->R15 = nextPC;
-#ifdef CONFIG_THUMB2
-    /*
-     * FIXME: Niels: WHY ??
-     * Did you mean interworking bit ?
-     */
-    // clear thumb bit if needed
-    nextPC &= ~1;
-#endif
+    if (nextPC & 1)
+    {
+      DIE_NOW(context, "Interworking branch not allowed");
+    }
     return nextPC;
   }
   else
   {
-    nextPC = getRealPC(context);
-#ifdef CONFIG_THUMB2
-    if (context->CPSR & PSR_T_BIT)
-    {
-      nextPC += T16_INSTRUCTION_SIZE;
-    }
-    else
-#endif
-    {
-      nextPC += ARM_INSTRUCTION_SIZE;
-    }
+    nextPC = getRealPC(context) + ARM_INSTRUCTION_SIZE;
     return nextPC;
   }
 }

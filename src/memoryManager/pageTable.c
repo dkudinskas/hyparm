@@ -173,6 +173,11 @@ descriptor* createGuestOSPageTable()
   smallMapMemory(ptd, excHdlrSramStart, excHdlrSramEnd,
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
 
+  /*
+   * All connected GPIOs must be mapped here!
+   */
+  smallMapMemory(ptd, GPIO5, (GPIO5 + GPIO5_SIZE - 1), HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);
+
   // interrupt controller
   smallMapMemory(ptd, INTERRUPT_CONTROLLER, (INTERRUPT_CONTROLLER+INTERRUPT_CONTROLLER_SIZE-1),
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0);

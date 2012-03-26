@@ -44,6 +44,7 @@
 #include "instructionEmu/interpreter/t32/branchInstructions.h"
 #include "instructionEmu/interpreter/t32/dataProcessInstructions.h"
 #include "instructionEmu/interpreter/t32/loadInstructions.h"
+#include "instructionEmu/interpreter/t32/miscInstructions.h"
 #include "instructionEmu/interpreter/t32/multiplyInstructions.h"
 #include "instructionEmu/interpreter/t32/storeInstructions.h"
 

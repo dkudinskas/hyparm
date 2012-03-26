@@ -662,13 +662,26 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
   if (isPCinRegList)
   {
     /*
-     * it is important that we load R15 instead of PCOfLastInstruction
-     * because we have fetched the PC from memory and stored it in context->R15
+     * BLOCK COPY WARNING: we must use context->R15 instead of getRealPC(context) because we just
+     * updated the former!
+     *
+     * If PC is in the list this is an interworking branch.
      */
+    if (context->R15 & 0x1)
+    {
+#ifdef CONFIG_THUMB2
+      context->CPSR |= PSR_T_BIT;
+      context->R15 &= ~1;
+#else
+      DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
+#endif
+    }
+    else if (context->R15 & 0x2)
+    {
+      DIE_NOW(context, "unpredictable branch to unaligned ARM address");
+    }
     return context->R15;
   }
-  else
-  {
-    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
-  }
+
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }

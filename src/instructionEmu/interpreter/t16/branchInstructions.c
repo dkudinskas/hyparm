@@ -34,7 +34,36 @@ u32int t16BImmediate11Instruction(GCONTXT *context, u32int instruction)
 u32int t16BlxRegisterInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T16_BRANCH, context, instruction);
-  DIE_NOW(context, "not implemented");
+
+  u32int regDest = (instruction & 0x0078) >> 3;
+
+  if (regDest == GPR_PC)
+  {
+    DIE_NOW(context, "use of PC is unpredictable");
+  }
+  u32int destinationAddress = loadGuestGPR(regDest, context);
+
+  u32int nextInstrAddress = context->R15 + T16_INSTRUCTION_SIZE;
+  nextInstrAddress |= 0x1;
+  storeGuestGPR(GPR_LR, nextInstrAddress, context);
+
+  /*
+   * Return to ARM mode if the LSB is not set; also make sure the target address is word-aligned.
+   */
+  if (destinationAddress & 1)
+  {
+    destinationAddress ^= 1;
+  }
+  else if (!(destinationAddress & 2))
+  {
+    context->CPSR ^= PSR_T_BIT;
+  }
+  else
+  {
+    DIE_NOW(context, "unpredictable branch to unaligned ARM address");
+  }
+
+  return destinationAddress;
 }
 
 u32int t16BxInstruction(GCONTXT *context, u32int instruction)

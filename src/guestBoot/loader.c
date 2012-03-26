@@ -80,6 +80,18 @@ extern void callKernel(s32int, s32int, struct tag *tagList, u32int entryPoint) _
 
 void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
 {
+#ifdef CONFIG_GUEST_TEST
+  /*
+   * If LSB of entryPoint is 1 switch to thumb mode and make LSB 0
+   */
+  if ((entryPoint & 1) == 1)
+  {
+    DEBUG(STARTUP, "bootGuest: switching to thumb mode" EOL);
+    entryPoint &= ~1;
+    context->CPSR |= PSR_T_BIT;
+  }
+#endif
+
   DEBUG(STARTUP, "bootGuest: entryPoint = %#.8x" EOL, entryPoint);
   /*
    * The guest OS type is a parameter to bootGuest to ensure that an OS type is stored in the guest
@@ -114,6 +126,17 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
   //The code from the blockCache should be executed  :  getGuestContext()->blockCopyCache
   //But first entry in blockCopyCache is backpointer -> next entry (blockCopyCache is u32int => +4)
   entryPoint = (u32int)context->blockCopyCache + 4;
+#endif
+
+#ifdef CONFIG_GUEST_TEST
+  /*
+   * When thumb mode set LSB of entryPoint to 1.
+   * In callKernel the SPSR thumb bit will be set.
+   */
+  if (context->CPSR & PSR_T_BIT)
+  {
+    entryPoint |= 1;
+  }
 #endif
 
   DEBUG(STARTUP, "bootGuest: callKernel" EOL);

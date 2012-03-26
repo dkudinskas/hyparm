@@ -5,6 +5,8 @@
 
 #include "guestManager/guestExceptions.h"
 
+#include "memoryManager/cp15coproc.h"
+
 #include "vm/omap35xx/intc.h"
 
 
@@ -35,11 +37,11 @@ void deliverServiceCall(GCONTXT *context)
     context->R14_SVC = context->R15 + ARM_INSTRUCTION_SIZE;
 #ifdef CONFIG_THUMB2
   }
-  /*
-   * FIXME Niels: I think this depends on a CP15 value
-   */
-  // 5. Clear Thumb bit
-  context->CPSR &= ~PSR_T_BIT;
+  // 5. Clear Thumb bit if SCTLR.TE bit is not set
+  if (~(getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE))
+  {
+    context->CPSR &= ~PSR_T_BIT;
+  }
 #endif
   // 6. set PC to guest svc handler address
   if (context->virtAddrEnabled)
@@ -132,15 +134,17 @@ void deliverInterrupt(GCONTXT *context)
   context->SPSR_IRQ = context->CPSR;
   // 3. put guest CPSR in IRQ mode
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_IRQ_MODE;
+
 #ifdef CONFIG_THUMB2
-  /*
-   * FIXME Niels: I think this depends on a CP15 value
-   */
-  // 4. clear Thumb bit
-  context->CPSR &= ~PSR_T_BIT; // FIX ME. This needs to be hardcoded somewhere
+  // 4. Clear Thumb bit if SCTLR.TE bit is not set
+  if (~(getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE))
+  {
+    context->CPSR &= ~PSR_T_BIT;
+  }
 #endif
   // 5. set LR to PC+4
-  context->R14_IRQ = context->R15 + 4;
+  context->R14_IRQ = context->R15 + LR_OFFSET_IRQ;
+
   // 6. set PC to guest irq handler address
   if (context->virtAddrEnabled)
   {
@@ -174,7 +178,7 @@ void deliverDataAbort(GCONTXT *context)
   // 3. put guest CPSR in ABT mode
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
   // 4. set LR to PC+8
-  context->R14_ABT = context->R15 + 8;
+  context->R14_ABT = context->R15 + LR_OFFSET_DATA_ABT;
   // 5. set PC to guest irq handler address
   if (context->virtAddrEnabled)
   {
@@ -222,7 +226,7 @@ void deliverPrefetchAbort(GCONTXT *context)
   // 3. put guest CPSR in ABT mode
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
   // 4. set LR to PC+8
-  context->R14_ABT = context->R15 + 8;
+  context->R14_ABT = context->R15 + LR_OFFSET_PREFETCH_ABT;
   // 5. set PC to guest irq handler address
   if (context->virtAddrEnabled)
   {

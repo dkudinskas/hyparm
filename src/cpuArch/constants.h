@@ -60,6 +60,8 @@
 #define PSR_UND_MODE                0x1b
 #define PSR_SYS_MODE                0x1f
 
+#define PSR_APSR         (PSR_CC_FLAGS_NZCV | PSR_Q_BIT | PSR_SIMD_FLAGS_GE)
+#define PSR_EXEC_BITS    (PSR_ITSTATE_1_0 | PSR_ITSTATE_7_2 | PSR_J_BIT | PSR_T_BIT)
 
 #define CC_EQ   0x0  // equals
 #define CC_NE   0x1  // not equals
@@ -89,6 +91,12 @@
 #define SHIFT_TYPE_RRX    0x3
 #define SHIFT_TYPE_ROR    0x4
 
+// System control register
+#define SCTLR_TE    0x4000000  // Thumb Exception enable
+
+#define LR_OFFSET_IRQ             4
+#define LR_OFFSET_DATA_ABT        8
+#define LR_OFFSET_PREFETCH_ABT    8
 
 
 #endif
