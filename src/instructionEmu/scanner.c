@@ -322,7 +322,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
     }
   }
 
-  if ((instruction & INSTR_SWI_THUMB) == INSTR_SWI_THUMB && !((instruction >> 16) & THUMB32))
+  if (!txxIsThumb32(instruction) && ((instruction & INSTR_SWI_THUMB) == INSTR_SWI_THUMB))
   {
     u32int svcCode = instruction & 0xFF;
     if (svcCode > 0)
