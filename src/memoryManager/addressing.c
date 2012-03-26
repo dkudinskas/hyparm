@@ -34,7 +34,7 @@ void initVirtualAddressing()
 #endif
 
   mmuInit();
-  mmuSetTTBR0(gc->pageTables->hypervisor);
+  mmuSetTTBR0(gc->pageTables->hypervisor, 0);
   mmuEnableVirtAddr();
 #ifdef ADDRESSING_DEBUG
   printf("initVirtualAddressing: done\n");
@@ -163,9 +163,9 @@ void setupShadowPageTable(simpleEntry* pageTablePtr)
 void guestSetPageTableBase(u32int ttbr)
 {
   GCONTXT* gc = getGuestContext();
-//#ifdef ADDRESSING_DEBUG
+#ifdef ADDRESSING_DEBUG
   printf("guestSetPageTableBase: ttbr %08x @ pc %08x\n", ttbr, gc->R15);
-//#endif
+#endif
 
   gc->pageTables->guestPhysical = (simpleEntry*)ttbr;
   gc->pageTables->guestVirtual = 0;
@@ -182,9 +182,9 @@ void guestSetPageTableBase(u32int ttbr)
  **/
 void guestEnableMMU()
 {
-//#ifdef ADDRESSING_DEBUG
+#ifdef ADDRESSING_DEBUG
   printf("guestEnableMMU: guest turning on virtual memory\n");
-//#endif
+#endif
   GCONTXT* context = getGuestContext();
 
   if (context->pageTables->guestPhysical == 0)
@@ -198,6 +198,8 @@ void guestEnableMMU()
   
   // initialise double-shadow page tables now
   initialiseShadowPageTables(context);
+  // if initializing vmem, realy must clean and invalidate the TLB!
+  mmuInvalidateUTLB();
 }
 
 
@@ -210,6 +212,15 @@ void guestDisableMMU()
   DIE_NOW(0, "guestDisableMMU: unimplemented.");
 }
 
+
+void guestSetContextID(u32int contextid)
+{
+#ifdef ADDRESSING_DEBUG
+  printf("guestSetContextID: value %x\n", contextid);
+#endif
+  GCONTXT* context = getGuestContext();
+  context->pageTables->contextID = (contextid & 0xFF);
+}
 
 /**
  * switching guest addressing from privileged to user mode
@@ -241,16 +252,16 @@ void privToUserAddressing()
   }
 
   //anything in caches needs to be written back now
-  mmuDataBarrier();
+  mmuDataMemoryBarrier();
 
   // set translation table base register in the physical MMU!
-  mmuSetTTBR0(gc->pageTables->shadowActive);
+  mmuSetTTBR0(gc->pageTables->shadowActive, (0x100 | gc->pageTables->contextID) );
 
   // clean out all TLB entries - may have conflicting entries
-  mmuClearTLB();
+  mmuInvalidateUTLB();
 
   //just to make sure
-  mmuClearInstructionCache(); 
+  mmuInstructionSync();
 }
 
 
@@ -283,16 +294,16 @@ void userToPrivAddressing()
   }
 
   //anything in caches needs to be written back now
-  mmuDataBarrier();
+  mmuDataMemoryBarrier();
 
   // set translation table base register in the physical MMU!
-  mmuSetTTBR0(gc->pageTables->shadowActive);
+  mmuSetTTBR0(gc->pageTables->shadowActive, (0x100 | gc->pageTables->contextID) );
 
   // clean out all TLB entries - may have conflicting entries
-  mmuClearTLB();
+  mmuInvalidateUTLB();
 
   //just to make sure
-  mmuClearInstructionCache(); 
+  mmuInstructionSync();
 }
 
 
@@ -305,7 +316,7 @@ void initialiseShadowPageTables(GCONTXT* gc)
   printf("initialiseShadowPageTables: create double-shadows!\n");
 #endif
   mmuClearDataCache();
-  mmuDataBarrier();
+  mmuDataMemoryBarrier();
 
   invalidatePageTableInfo();
 #ifdef ADDRESSING_DEBUG
@@ -317,10 +328,10 @@ void initialiseShadowPageTables(GCONTXT* gc)
   gc->pageTables->shadowUser = (simpleEntry*)newLevelOnePageTable();
   setupShadowPageTable(gc->pageTables->shadowPriv);
   setupShadowPageTable(gc->pageTables->shadowUser);
-//#ifdef ADDRESSING_DEBUG
+#ifdef ADDRESSING_DEBUG
   printf("initialiseShadowPageTables: allocated spt priv %p; spt usr %p\n",
              gc->pageTables->shadowPriv, gc->pageTables->shadowUser);
-//#endif
+#endif
 
   // which shadow PT will be in use depends on guest mode
   gc->pageTables->shadowActive = isGuestInPrivMode(gc) ? 
@@ -338,16 +349,17 @@ void initialiseShadowPageTables(GCONTXT* gc)
   clearBlockCache(gc->blockCache);
 
   //anything in caches needs to be written back now
-  mmuDataBarrier();
+  mmuDataMemoryBarrier();
 
   // set translation table base register in the physical MMU!
-  mmuSetTTBR0(gc->pageTables->shadowActive);
+//  mmuSetTTBR0(gc->pageTables->shadowActive, (0x100 | (gc->pageTables->contextID * 2)) );
+  mmuSetTTBR0(gc->pageTables->shadowActive, (0x100 | gc->pageTables->contextID) );
 
   // clean out all TLB entries - may have conflicting entries
-  mmuClearTLB();
+  mmuInvalidateUTLB();
 
   //just to make sure
-  mmuClearInstructionCache(); 
+  mmuInstructionSync();
 }
 
 
@@ -366,23 +378,23 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
     simpleEntry* gpt = 0;
     if (context->pageTables->guestVirtual == 0)
     {
-//#ifdef ADDRESSING_DEBUG
+#ifdef ADDRESSING_DEBUG
       printf("changeGuestDACR: guestVirtual PT not set. hack a 1-2-1 of %p\n",
                                           context->pageTables->guestPhysical);
-//#endif
+#endif
       tempFirst = getEntryFirst(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical);
       backupEntry = *(u32int*)tempFirst;
-//#ifdef ADDRESSING_DEBUG
+#ifdef ADDRESSING_DEBUG
       printf("changeGuestDACR: backed up entry %08x @ %p\n", backupEntry, tempFirst);
-//#endif
+#endif
       mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
                 (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
                 HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
-      mmuClearTLBbyMVA((u32int)context->pageTables->guestPhysical);
+      mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
       gpt = context->pageTables->guestPhysical;
-//#ifdef ADDRESSING_DEBUG
+#ifdef ADDRESSING_DEBUG
       printf("changeGuestDACR: gpt now set to %p\n", gpt);
-//#endif
+#endif
       backedUp = TRUE;
     }
     else
@@ -469,16 +481,12 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
     {
       // if we dont have gPT1 VA we must have backed up the lvl1 entry. restore now
       *(u32int*)tempFirst = backupEntry;
-      mmuClearTLBbyMVA((u32int)context->pageTables->guestPhysical);
+      mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
 #ifdef ADDRESSING_DEBUG
       printf("shadowMap: restore backed up entry %08x @ %p\n", backupEntry, tempFirst);
 #endif
     }
-  }
-  else
-  {
-    // virtual memory turned off. doesnt effect anything.
-    return;
+    mmuInvalidateUTLB();
   }
 }
 

@@ -6,24 +6,6 @@
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/interpreter.h"
 
-
-struct TopLevelCategory
-{
-  u32int mask;             /* Recognise if (instr & mask) == value.  */
-  u32int value;
-  struct instruction32bit *table;
-};
-
-struct instruction32bit
-{
-  s16int replace;
-  instructionHandler handler;
-  u32int value;            /* If arch == 0 then value is a sentinel.  */
-  u32int mask;             /* Recognise inst if (op & mask) == value.  */
-  const char *instructionString; /* How to disassemble this insn.  */
-};
-
-
 #include "instructionEmu/decoder/arm/tables.inc.c"
 
 #ifdef CONFIG_THUMB2
@@ -32,10 +14,7 @@ struct instruction32bit
 #endif
 
 
-static instructionHandler decode(struct TopLevelCategory *categories, u32int instruction);
-
-
-static instructionHandler decode(struct TopLevelCategory *categories, u32int instruction)
+static armInstruction* decode(struct TopLevelCategory *categories, u32int instruction)
 {
   /*
    * Find the top level category for this instruction
@@ -47,7 +26,7 @@ static instructionHandler decode(struct TopLevelCategory *categories, u32int ins
   /*
    * Get the decoding table for this category and decode the instruction
    */
-  struct instruction32bit *table = categories->table;
+  armInstruction *table = categories->table;
   if (!table)
   {
     printf("decode: cannot classify instruction %#.8x", instruction);
@@ -68,10 +47,10 @@ static instructionHandler decode(struct TopLevelCategory *categories, u32int ins
         table->instructionString);
     DIE_NOW(NULL, "undefined instruction");
   }
-  return table->replace ? table->handler : NULL;
+  return table;
 }
 
-instructionHandler decodeArmInstruction(u32int instruction)
+armInstruction* decodeArmInstruction(u32int instruction)
 {
   return decode(armCategories, instruction);
 }

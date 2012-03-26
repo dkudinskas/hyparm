@@ -113,6 +113,7 @@ static inline void resetLoopDetectorIfNeeded(GCONTXT *context)
 
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 {
+  disableInterrupts();
   incrementSvcCounter();
 
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
@@ -120,7 +121,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   // parse the instruction to find the start address of next block
   u32int nextPC = 0;
   bool gSVC = FALSE;
-  instructionHandler instrHandler;
 
 #ifdef CONFIG_THUMB2
   /* Make sure that any SVC that is not part of the scanner
@@ -148,7 +148,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   }
 #endif
 
-  u32int cpsrOld = context->CPSR;
   // Do we need to forward it to the guest?
   if (gSVC)
   {
@@ -157,9 +156,23 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   }
   else
   {
-    // get interpreter function pointer and call it
-    instrHandler = context->hdlFunct;
-    nextPC = instrHandler(context, context->endOfBlockInstr);
+    u32int cpsrOld = context->CPSR;
+    nextPC = context->hdlFunct(context, context->endOfBlockInstr);
+    u32int cpsrNew = context->CPSR;
+    if (((cpsrOld & PSR_MODE) != PSR_USR_MODE) &&
+        ((cpsrNew & PSR_MODE) == PSR_USR_MODE))
+    {
+      // guest was in privileged mode, after interpreting switched to user mode.
+      // return from exception, CPS or MSR. act accordingly
+      guestToUserMode();
+    }
+    else if (((cpsrOld & PSR_MODE) == PSR_USR_MODE) &&
+             ((cpsrNew & PSR_MODE) != PSR_USR_MODE))
+    {
+      // guest was in user mode. we hit a guest SVC. switch guest to privileged mode
+      // return from exception, CPS or MSR. act accordingly
+      guestToPrivMode();
+    }
   }
 
   if (nextPC == 0)
@@ -178,21 +191,9 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
       deliverInterrupt(context);
     }
   }
-
-
-  if (((cpsrOld & PSR_MODE) != PSR_USR_MODE) &&
-      ((context->CPSR & PSR_MODE) == PSR_USR_MODE))
+  else if (context->guestDataAbtPending)
   {
-    // guest was in privileged mode, after interpreting switched to user mode.
-    // return from exception, CPS or MSR. act accordingly
-    guestToUserMode();
-  }
-  if (((cpsrOld & PSR_MODE) == PSR_USR_MODE) &&
-      ((context->CPSR & PSR_MODE) != PSR_USR_MODE))
-  {
-    // guest was in user mode. we hit a guest SVC. switch guest to privileged mode
-    // return from exception, CPS or MSR. act accordingly
-    guestToPrivMode();
+    deliverDataAbort(context);
   }
 
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = %#.8x" EOL, nextPC);
@@ -206,15 +207,21 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
      */
     resetLoopDetectorIfNeeded(context);
     runLoopDetector(context);
-    setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
+    if (context->guestDataAbtPending)
+    {
+      setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION);
+    }
+    else
+    {
+      setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
+    }
     scanBlock(context, context->R15);
   }
   else
   {
-    printf("SVC: returning to user mode, pc %08x\n", context->R15);
     delayResetLoopDetector();
   }
-
+  enableInterrupts();
   return context;
 }
 
@@ -271,9 +278,8 @@ GCONTXT *dataAbort(GCONTXT *context)
 
 void dataAbortPrivileged(u32int pc)
 {
+  disableInterrupts();
   incrementDataAbortCounter();
-
-  printf("dataAbortPrivileged: DFAR %08x pc %08x\n", getDFAR(), pc);
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
   switch(faultStatus)
   {
@@ -303,11 +309,13 @@ void dataAbortPrivileged(u32int pc)
     case dfsTranslationTableWalkLvl1SyncParityErr:
     case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
+      printf("dataAbortPrivileged pc %08x addr %08x\n", pc, getDFAR());
       printf("dataAbortPrivileged: UNIMPLEMENTED data abort type.\n");
       printDataAbort();
       DIE_NOW(0, "Entering infinite loop\n");
       break;
   }
+  enableInterrupts();
 }
 
 GCONTXT *undefined(GCONTXT *context)
@@ -376,7 +384,6 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 void prefetchAbortPrivileged(void)
 {
   DIE_NOW(0, "prefetchAbortPrivileged: unimplemented");
-  disableInterrupts();
   IFSR ifsr = getIFSR();
   u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
   switch(faultStatus)
@@ -545,28 +552,6 @@ void dabtPermissionFault(GCONTXT * gc, DFSR dfsr, u32int dfar)
 {
   // Check if the addr we have faulted on is caused by 
   // a memory protection the hypervisor has enabled
-
-//  printf("dabtPermissionFault: dfar %08x, priv %x, write %x\n",
-//         dfar, isGuestInPrivMode(gc), dfsr.WnR);
-  // ok, more stuff to do here as well! whilst a translation fault can mean we haven't yet shadow mapped
-  // an address, permission faults can become spurious, when we have protected a memory region because it
-  // mapped a guest page table at the time of shadow-mapping. If the page-table in question has been removed by
-  // the guest, the hypervisor may have not removed the memory protection! therefore, we must take the faulting address
-  // and validate the permission fault, and possibly remove the memory protection
-
-  // the validation process is complicated by the fact that permission faults may be generated by several
-  // different causes: gPT write-protection, hardware access, executed-code protection
-  // DFAR is the virtual address that faulted upon access. its a permission fault - thus a page table entry MUST
-  // exist. GET it now.
-
-  // try to match this entry address/value pair with the list of all page table entry address/value pairs that 
-  // the hypervisor saved:
-  // this saved list is generated when on demand shadow mapping entries, we check the underlying guets PA being mapped
-  // and compare it with existing known page table guest PAs. if its a match, we must write-protect access to this
-  // virtual address, and then add an entry to this list of 'remembered' mappings.
-
-  // when validating the permission fault, if we find that the page table that cause the write-protect is no longer
-  // there, lets remove the write-protection, and remove the appropriate entry from the linked list!
   if (gc->virtAddrEnabled)
   {
     if (shouldDataAbort(isGuestInPrivMode(gc), dfsr.WnR, dfar))

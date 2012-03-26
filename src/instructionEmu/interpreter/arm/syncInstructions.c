@@ -117,13 +117,8 @@ u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
 
 u32int armStrexInstruction(GCONTXT *context, u32int instruction)
 {
-  if ((context->R15 & 0xfff00000) == 0xfff00000)
-  {
-    printf("armStrexInstruction: pc %08x, instr %08x\n", context->R15, instruction);
-  }
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    printf("armStrexInstruction: contidion not met.\n");
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
@@ -132,10 +127,6 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
   u32int regN = (instruction & 0x000F0000) >> 16;
   u32int regD = (instruction & 0x0000F000) >> 12;
   u32int regT = (instruction & 0x0000000F);
-  if ((context->R15 & 0xfff00000) == 0xfff00000)
-  {
-    printf("armStrexInstruction: Rn %x, Rd %x Rt %x\n", regN, regD, regT);
-  }
 
   if ((regN == GPR_PC) || (regD == GPR_PC) || (regT == GPR_PC))
   {
@@ -148,19 +139,10 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
 
   u32int address = loadGuestGPR(regN, context);
   u32int valToStore = loadGuestGPR(regT, context);
-  if ((context->R15 & 0xfff00000) == 0xfff00000)
-  {
-    printf("armStrexInstruction: addres %08x, valToStore %08x\n", address, valToStore);
-  }
-
   DEBUG(INTERPRETER_ARM_STORE_SYNC, "armStrexInstruction: address = %#.8x, valToStore = %#.8x, "
       "valueFromReg %#.8x" EOL, address, valToStore, regT);
 
   vmStore(WORD, address, valToStore);
-  if ((context->R15 & 0xfff00000) == 0xfff00000)
-  {
-    printf("armStrexInstruction: value at %08x = %08x\n", address, *(u32int*)address);
-  }
   // operation succeeded updating memory, flag regD (0 - updated, 1 - fail)
   storeGuestGPR(regD, 0, context);
 

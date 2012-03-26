@@ -11,7 +11,9 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction);
 u32int armLdrhInstruction(GCONTXT *context, u32int instruction);
 u32int armLdrdInstruction(GCONTXT *context, u32int instruction);
 
+u32int armLdrtInstruction(GCONTXT *context, u32int instruction);
 u32int armLdrhtInstruction(GCONTXT *context, u32int instruction);
+u32int armLdrbtInstruction(GCONTXT *context, u32int instruction);
 
 u32int armLdmInstruction(GCONTXT *context, u32int instruction);
 

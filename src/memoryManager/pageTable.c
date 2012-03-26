@@ -210,7 +210,8 @@ void mapSmallPage(simpleEntry* pageTable, u32int virtAddr, u32int physical,
 #endif
       // store metadata
       addPageTableEntry((pageTableEntry*)first, (u32int)pAddr, domain);
-      addPageTableInfo((pageTableEntry*)first, (u32int)vAddr, pAddr, TRUE);
+      u32int mapped = ((u32int)first - (u32int)pageTable) << 18;
+      addPageTableInfo((pageTableEntry*)first, (u32int)vAddr, pAddr, mapped, TRUE);
       break;
     }
     case PAGE_TABLE:
@@ -379,13 +380,21 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
         {
           DIE_NOW(0, "getPhysicalAddress: Large page case unimplemented\n");
         }
+        // may not be shadow mapped? try it.
+        case FAULT:
+        {
+          if (!shadowMap(virtAddr))
+          {
+            printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
+            DIE_NOW(0, "getPhysicalAddress: failed to shadow map, lvl2\n");
+          }
+        }
         case SMALL_PAGE: //fall through
         case SMALL_PAGE_3:
         {
           smallPageEntry* smallPage = (smallPageEntry*)entrySecond;
           return (smallPage->addr << 12) | (virtAddr & ~SMALL_PAGE_MASK);
         }
-        case FAULT: //fall through
         default:
         {
           printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
@@ -473,7 +482,7 @@ void splitSectionToSmallPages(simpleEntry* pageTable, u32int virtAddr)
   printf("splitSectionToSmallPages: section entry @ %08x = %08x\n",
         (u32int)sectionEntryPtr, *(u32int*)sectionEntryPtr);
 #endif
-  mmuClearTLBbyMVA(virtAddr);
+  mmuInvalidateUTLBbyMVA(virtAddr);
 
   // 2. invalidate entry.
   sectionEntryPtr->type = 0;
@@ -546,11 +555,11 @@ bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr)
 }
 
 
-void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, bool host)
+void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u32int mapped, bool host)
 {
 #ifdef PAGE_TABLE_DBG
-  printf("addPageTableInfo: entry %08x @ %p, PA %08x VA %08x, host %x\n",
-        *(u32int*)entry, entry, physical, virtual, host);
+  printf("addPageTableInfo: entry %08x @ %p, PA %08x VA %08x, mapped %08x host %x\n",
+        *(u32int*)entry, entry, physical, virtual, mapped, host);
 #endif
   GCONTXT* context = getGuestContext();
   
@@ -562,6 +571,7 @@ void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, bo
   newEntry->physAddr = physical;
   newEntry->virtAddr = virtual;
   newEntry->host = host;
+  newEntry->mappedMegabyte = mapped;
   newEntry->nextEntry = 0;
 
   ptInfo* head = (host) ? context->pageTables->sptInfo : context->pageTables->gptInfo;
@@ -892,19 +902,14 @@ void pageTableEdit(u32int address, u32int newVal)
       {
         if ((oldGuestEntry->type == SMALL_PAGE) || (oldGuestEntry->type == SMALL_PAGE_3))
         {
-          printf("pageTableEdit: addr %08x newVal %08x\n", address, newVal);
-          printf("pageTableEdit: virtualAddr %08x oldguestEntry %08x newGuestEntry %08x\n",
-                          virtualAddress, *(u32int*)oldGuestEntry, *(u32int*)newGuestEntry);
           if (shadowUser->type != FAULT)
           {
             shadowUser = getEntrySecond((pageTableEntry*)shadowUser, virtualAddress);
-            printf("pageTableEdit: shadowUser %08x @ %p\n", *(u32int*)shadowUser, shadowUser);
             shadowUnmapSmallPage((smallPageEntry*)shadowUser, (smallPageEntry*)oldGuestEntry, virtualAddress);
           }
           if (shadowPriv->type != FAULT)
           {
             shadowPriv = getEntrySecond((pageTableEntry*)shadowPriv, virtualAddress);
-            printf("pageTableEdit: shadowPriv %08x @ %p\n", *(u32int*)shadowPriv, shadowPriv);
             shadowUnmapSmallPage((smallPageEntry*)shadowPriv, (smallPageEntry*)oldGuestEntry, virtualAddress);
           }
         }
@@ -1012,9 +1017,10 @@ void pageTableEdit(u32int address, u32int newVal)
       }
     } // else second-level entry ends 
   } // editing entry attributes ends
-  mmuClearTLBbyMVA(address);
+//  mmuClearTLBbyMVA(address);
+  mmuInvalidateUTLB();
   mmuClearDataCache();
-  mmuDataBarrier();
+  mmuDataMemoryBarrier();
 }
 
 
@@ -1133,6 +1139,8 @@ void editAttributesSmallPage(smallPageEntry* oldPage, smallPageEntry* newPage, s
     // quick exit if not shadow mapped yet
     return;
   }
+  printf("editAttributesSmallPage: oldPage %08x, newPage %08x shadowPage %08x\n",
+         *(u32int*)oldPage, *(u32int*)newPage, *(u32int*)shadowPage);
 
   if (oldPage->addr != newPage->addr)
   {

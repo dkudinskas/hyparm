@@ -89,8 +89,8 @@ typedef enum enum_access_type access_type;
 
 void mmuInit(void);
 void mmuSetTTBCR(u32int value);
-void mmuSetTTBR0(simpleEntry* addr);
-void mmuSetTTBR1(simpleEntry* addr);
+void mmuSetTTBR0(simpleEntry* addr, u32int asid);
+void mmuSetTTBR1(simpleEntry* addr, u32int asid);
 simpleEntry* mmuGetTTBR0(void);
 
 void mmuEnableVirtAddr(void);
@@ -98,21 +98,49 @@ void mmuDisableVirtAddr(void);
 bool isMmuEnabled(void);
 
 
+void mmuInvIcacheToPOU(void);
+void mmuInvIcacheByMVAtoPOU(u32int mva);
+
+void mmuInstructionSync(void);
+
+void mmuInvBranchPredictorArray(void);
+
+void mmuCleanDcacheByMVAtoPOC(u32int mva);
+void mmuCleanDcacheBySetWay(u32int mva);
+
+void mmuCleanDCacheByMVAtoPOU(u32int mva);
+void mmuCleanInvDCacheByMVAtoPOC(u32int mva);
+void mmuCleanInvDCacheBySetWay(u32int setWay);
+
+void mmuDataSyncBarrier(void);
+void mmuDataMemoryBarrier(void);
+
 void mmuClearInstructionCache(void);
 void mmuClearDataCache(void);
-void mmuClearTLB(void);
+
+void mmuInvalidateITLB(void);
+void mmuInvalidateITLBbyMVA(u32int mva);
+void mmuInvalidateITLBbyASID(u32int asid);
+
+void mmuInvalidateDTLB(void);
+void mmuInvalidateDTLBbyMVA(u32int mva);
+void mmuInvalidateDTLBbyASID(u32int asid);
+
+void mmuInvalidateUTLB(void);
+void mmuInvalidateUTLBbyMVA(u32int mva);
+
 void mmuClearTLBbyMVA(u32int address);
-void mmuDataBarrier(void);
 void mmuSetDomain(u8int domain, access_type access);
 void mmuSetTexRemap(bool enable);
+void mmuSetContextID(u32int asid);
 
-void mmuInvalidateIcacheByMVA(u32int mva);
-void mmuCleanDcacheByMVA(u32int mva);
 
 u32int getDFAR(void);
 DFSR getDFSR(void);
 u32int getIFAR(void);
 IFSR getIFSR(void);
+
+void mmuPageTableEdit(u32int entryAddr, u32int pageAddr);
 
 void printDataAbort(void); //gets & prints the dfsr & dfar
 void printPrefetchAbort(void); //gets & prints the ifsr & ifar

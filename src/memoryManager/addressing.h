@@ -21,6 +21,8 @@ void guestSetPageTableBase(u32int ttbr);
 void guestEnableMMU(void);
 void guestDisableMMU(void);
 
+void guestSetContextID(u32int contextid);
+
 void privToUserAddressing(void);
 void userToPrivAddressing(void);
 

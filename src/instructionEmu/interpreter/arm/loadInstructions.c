@@ -4,6 +4,8 @@
 
 #include "instructionEmu/interpreter/arm/loadInstructions.h"
 
+#include "guestManager/guestExceptions.h"
+
 
 u32int armLdrInstruction(GCONTXT *context, u32int instruction)
 {
@@ -497,17 +499,24 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
+
+u32int armLdrtInstruction(GCONTXT *context, u32int instruction)
+{
+  return armLdrInstruction(context, instruction);
+}
+
+
 u32int armLdrhtInstruction(GCONTXT *context, u32int instruction)
 {
-  if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
-  {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
-
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
-  DIE_NOW(context, "not implemented");
+  return armLdrhInstruction(context, instruction);
 }
+
+
+u32int armLdrbtInstruction(GCONTXT *context, u32int instruction)
+{
+  return armLdrbInstruction(context, instruction);
+}
+
 
 u32int armLdmInstruction(GCONTXT *context, u32int instruction)
 {

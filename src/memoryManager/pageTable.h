@@ -140,6 +140,7 @@ struct PageTableMetaData
   pageTableEntry* firstLevelEntry;
   u32int virtAddr;
   u32int physAddr;
+  u32int mappedMegabyte;
   bool host;
   struct PageTableMetaData* nextEntry;
 };
@@ -173,7 +174,7 @@ bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr);
 
 void pageTableEdit(u32int address, u32int newVal);
 
-void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, bool host);
+void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u32int mapped, bool host);
 ptInfo* getPageTableInfo(pageTableEntry* firstLevelEntry);
 void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host);
 void dumpPageTableInfo(void);

@@ -471,16 +471,22 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
+
+u32int armStrtInstruction(GCONTXT *context, u32int instruction)
+{
+  return armStrInstruction(context, instruction);
+}
+
+
 u32int armStrhtInstruction(GCONTXT *context, u32int instruction)
 {
-  if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
-  {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
+  return armStrhInstruction(context, instruction);
+}
 
-  DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
 
-  DIE_NOW(context, "not implemented");
+u32int armStrbtInstruction(GCONTXT *context, u32int instruction)
+{
+  return armStrbInstruction(context, instruction);
 }
 
 u32int armStmInstruction(GCONTXT *context, u32int instruction)

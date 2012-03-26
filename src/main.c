@@ -65,14 +65,12 @@ static bool stringToAddress(const char *str, u32int *address);
 
 extern void setGuestContext(GCONTXT *gContext);
 
-
 #ifdef CONFIG_MMC
 fatfs mainFilesystem;
 partitionTable primaryPartitionTable;
 struct mmc *mmcDevice;
 file * debugStream;
 #endif
-
 
 static void dumpRuntimeConfiguration(struct runtimeConfiguration *config)
 {
@@ -86,7 +84,7 @@ void main(s32int argc, char *argv[])
   struct runtimeConfiguration config;
   memset(&config, 0, sizeof(struct runtimeConfiguration));
   config.guestOS = GUEST_OS_LINUX;
-
+  
 #ifdef CONFIG_MMC
   mmcDevice = 0;
   debugStream = 0;
@@ -142,7 +140,6 @@ void main(s32int argc, char *argv[])
 
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
-  printf("about to init mmc.\n");
 #ifdef CONFIG_MMC
   u32int err = 0;
   if ((err = mmcMainInit()) != 0)

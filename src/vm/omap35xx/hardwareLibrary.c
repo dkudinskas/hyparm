@@ -19,7 +19,6 @@
 #include "vm/omap35xx/uart.h"
 #include "vm/omap35xx/controlModule.h"
 
-
 device * initialiseHardwareLibrary()
 {
   DEBUG(VP_OMAP_35XX_LIBRARY, "Initialising device library..." EOL);
@@ -617,6 +616,7 @@ u32int vmLoad(ACCESS_SIZE size, u32int virtAddr)
 {
   GCONTXT * gc = getGuestContext();
   u32int physAddr = 0;
+
   if (gc->virtAddrEnabled)
   {
     physAddr = getPhysicalAddress(gc->pageTables->shadowActive, virtAddr);
@@ -626,11 +626,6 @@ u32int vmLoad(ACCESS_SIZE size, u32int virtAddr)
     physAddr = getPhysicalAddress(gc->pageTables->hypervisor, virtAddr);
   }
   u32int value = gc->hardwareLibrary->loadFunction(gc->hardwareLibrary, size, virtAddr, physAddr); 
-  if (physAddr == 0x8042a870)
-  {
-    printf("vmLoad size %x va %08x val %x pc %08x\n", size, virtAddr, value, gc->R15);
-//    DIE_NOW(gc, "hit");
-  }
   return value;
 }
 
@@ -646,11 +641,6 @@ void vmStore(ACCESS_SIZE size, u32int virtAddr, u32int value)
   else
   {
     physAddr = getPhysicalAddress(gc->pageTables->hypervisor, virtAddr);
-  }
-  if (physAddr == 0x8042a870)
-  {
-    printf("vmStore size %x va %08x val %x pc %08x\n", size, virtAddr, value, gc->R15);
-//    DIE_NOW(gc, "hit");
   }
   gc->hardwareLibrary->storeFunction(gc->hardwareLibrary, size, virtAddr, physAddr, value);
 }

@@ -153,13 +153,14 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 {
   u32int *end;
-  instructionHandler handler;
+  armInstruction *instr;
   u32int instruction;
   /*
    * Find the next sensitive instruction
    */
   end = start;
-  while ((handler = decodeArmInstruction(*end)) == NULL)
+
+  while ((instr = decodeArmInstruction(*end))->replace == 0x0)
   {
     end++;
   }
@@ -189,7 +190,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
     else //Handle guest SVC
     {
       context->endOfBlockInstr = instruction;
-      context->hdlFunct = handler;
+      context->hdlFunct = instr->handler;
     }
   }
   /* If the instruction is not a SWI placed by the hypervisor OR
@@ -199,7 +200,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
   {
     // save end of block instruction and handler function pointer close to us...
     context->endOfBlockInstr = instruction;
-    context->hdlFunct = handler;
+    context->hdlFunct = instr->handler;
     // Thumb compatibility
     // replace end of block instruction with hypercall of the appropriate code
     *end = INSTR_SWI | ((cacheIndex + 1) << 8);
@@ -221,8 +222,8 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
    * 2. invalidate instruction cache entry by address.
    * ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1
    */
-  mmuInvalidateIcacheByMVA((u32int)end);
-  mmuCleanDcacheByMVA((u32int)end);
+  mmuInvIcacheByMVAtoPOU((u32int)end);
+  mmuCleanDcacheByMVAtoPOC((u32int)end);
   guestWriteProtect((u32int)start, (u32int)end);
 }
 
