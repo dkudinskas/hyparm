@@ -28,7 +28,7 @@ NCONF_OBJS    := $(foreach OBJ, $(NCONF_SRCS:.c=.o), $(KCONFIG_SOURCE_PATH)/$(OB
 KCONFIG_OBJS  := $(foreach OBJ, $(KCONFIG_SRCS:.c=.o), $(KCONFIG_SOURCE_PATH)/$(OBJ))
 
 
-NCONF_LDFLAGS := -lmenu -lpanel
+NCONF_LDFLAGS := -lmenu -lncurses -lpanel
 
 
 CONFIG_GOALS  += $(KCONFIG_APPS) $(KCONFIG_AUTOHEADER) $(KCONFIG_AUTOCONFIG)

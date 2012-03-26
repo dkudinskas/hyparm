@@ -1,0 +1,19 @@
+@charset "UTF-8";
+
+html, body
+{
+  cursor: default;
+  font-family: "Serif", serif;
+  font-size: 10pt;
+}
+
+a
+{
+  color: #33f;
+  text-decoration: none;
+}
+
+a:hover
+{
+  text-decoration: underline;
+}

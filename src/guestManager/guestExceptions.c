@@ -202,11 +202,7 @@ void deliverDataAbort(GCONTXT *context)
   }
   else
   {
-#ifdef CONFIG_GUEST_FREERTOS
     context->R15 = context->guestDataAbortHandler;
-#else
-    DIE_NOW(context, "deliverInterrupt: Data abort to be delivered with guest vmem off.");
-#endif
   }
   // update AFI bits for IRQ:
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;

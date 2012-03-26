@@ -128,6 +128,17 @@ _start:
     STR     R3, [R2], #4
 #endif /* CONFIG_ARCH_EXT_SECURITY */
   /*
+   * Set up SSP if enabled before we use any stacks...
+   * TODO: make the guard value a random number.
+   */
+#ifdef CONFIG_BUILD_SSP
+  MOVW    R3, #0x7ACC
+  MOVT    R3, #0xBAD5
+  MOV     R2, R3
+  LDR     R3, =__stack_chk_guard
+  STR     R2, [R3]
+#endif /* CONFIG_BUILD_SSP */
+  /*
    * Branch to main.
    * This function must never return.
    */
@@ -730,18 +741,48 @@ guestContextSpace:
  * Allocate stack space. Note that stacks grown down, i.e., every PUSH lowers the value of SP, and
  * every POP increases the value of SP. Hence, labels have to be put after the reserved space.
  *
- * WARNING: EABI requires 8-byte aligned stacks!!!
+ * WARNING: EABI requires 8-byte aligned stacks (on public interfaces)!
  */
   .balign 8
 stackSpaceEnd:
+.global svcStackEnd
+.global svcStack
+svcStackEnd:
   .space 1024 /* SVC */
 svcStack:
+.global abtStackEnd
+.global abtStack
+abtStackEnd:
   .space 1024 /* ABT */
 abtStack:
+.global undStackEnd
+.global undStack
+undStackEnd:
   .space 1024 /* UND */
 undStack:
+.global irqStackEnd
+.global irqStack
+irqStackEnd:
   .space 1024 /* IRQ */
 irqStack:
+.global fiqStackEnd
+.global fiqStack
+fiqStackEnd:
   .space 1024 /* FIQ */
 fiqStack:
 stackSpaceBegin:
+
+/*
+ * Guard value for GCC stack-smashing protection (SSP).
+ *
+ * WARNING: the placement is important -- we have descending stacks, so the guard value can never be
+ * overwritten. Keep it like that!
+ */
+#ifdef CONFIG_BUILD_SSP
+
+.global __stack_chk_guard
+__stack_chk_guard:
+
+  .space 4
+
+#endif /* CONFIG_BUILD_SSP */

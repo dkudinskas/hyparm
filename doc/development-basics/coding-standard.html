@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="../styles/common.css" rel="stylesheet" type="text/css" />
+  <link href="../styles/content.css" rel="stylesheet" type="text/css" />
+  <script src="../scripts/mootools-core-1.4.3-full-nocompat.js" type="text/javascript"></script>
+  <script src="../scripts/content.js" type="text/javascript"></script>
+  <title>Coding standard</title>
+</head>
+<body>
+
+<h1>Coding standard</h1>
+
+<p>
+These are the coding standard rules. Many places in current code might breach them. If you find such place and have time, tidy it up.
+</p>
+
+<ol>
+
+<li>Functions, variables, types in <code>typedef</code>s start with non-capital letters, and are written in non-capital (with exceptions in rule 2). <code>#define</code>'d macros are all in capitals.</li>
+
+<li>No underscores in variable or function names. Use capital letters to separate words instead (not <code>function_name</code> but <code>functionName</code>). Use underscores only to separate words in <code>#define</code>'d macros (e.g. <code>#define MY_MACRO_NAME</code>).</li>
+
+<li>Use common <code>typedef</code>'d types (<code>u32int</code> instead of <code>unsigned int</code>).</li>
+
+<li>No function bodies in header files.</li>
+
+<li>
+Use curly brackets everywhere, don't skip them where optional in control statements. Curly brackets are always in their own line, e.g.:
+<pre>
+if (condition)
+{
+  /* one or more LoC */
+}
+</pre>
+Also use curly brackets in cases of <code>switch</code> statements:
+<pre>
+switch (condition)
+{
+  case C1:
+  {
+    /* one or more LoC */
+    break;
+  }
+}
+</pre>
+</li>
+
+<li>Use longer variable names if needed, but make them logical. Try not to name variables as acronyms, or undecodable text combinations. (<code>u32int uloina</code> is absolutely horrible, <code>u32int upLimitOfUnsIntArray</code> is long, but it's still better).</li>
+
+<li>In pointer types, use a space before the <code>*</code> and no space after. Use this consistently throughout declarations, casts, etc.:
+<pre>
+u32int *someVar;
+castedPtr = (u32int *)anotherVar;
+</pre>
+</li>
+
+<li>Try to break lines into two where needed, avoid excessively long lines of code.</li>
+
+<li>Avoid "magic numbers". Try to <code>#define</code> them if they are needed. If they are not needed, they should not be there.</li>
+
+<li>Add more rules if they are sensible, and will help keep the codebase clean...</li>
+
+</ol>
+
+</body>
+</html>

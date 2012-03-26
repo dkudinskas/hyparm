@@ -33,6 +33,8 @@
 void dieNow(GCONTXT *context, const char *caller, const char *msg)
   __attribute__((noreturn));
 
+void dumpStack(void) __attribute__((naked));
+
 /* output to serial */
 u32int printf(const char *fmt, ...)
   __attribute__((format(__printf__, 1, 2)));

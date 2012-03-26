@@ -1,5 +1,8 @@
 menu "General setup"
 
+config BUILD_SSP
+  bool "Enable stack-smashing protector"
+
 config BUILD_LTO
   bool "Link-time optimization (requires toolchain support)"
 
@@ -396,6 +399,9 @@ menu "Hacks"
 
 config CLI
   bool "Command-line interface"
+
+config DUMP_STACK
+  bool "Dump stack on crash"
 
 config EMERGENCY_EXCEPTION_VECTOR
   bool "Emergency exception vector"

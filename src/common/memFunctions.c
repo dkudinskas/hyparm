@@ -68,12 +68,13 @@ void mallocInit()
  */
 void* memmove(void * dest,const void *src, u32int count)
 {
-  char *tmp, *s;
+  char *tmp;
+  const char *s;
 
   if (dest <= src)
   {
-    tmp = (char *) dest;
-    s = (char *) src;
+    tmp = (char *)dest;
+    s = (const char *)src;
     while (count--)
     {
       *tmp++ = *s++;
@@ -81,8 +82,8 @@ void* memmove(void * dest,const void *src, u32int count)
   }
   else
   {
-    tmp = (char *) dest + count;
-    s = (char *) src + count;
+    tmp = (char *)dest + count;
+    s = (const char *)src + count;
     while (count--)
     {
       *--tmp = *--s;
@@ -148,7 +149,7 @@ void *memcpy(void *dst, const void *src, u32int count)
       if (i + 3 > count - 1)
         break; //don't copy too much
 
-      *(u32int *)dst_tmp = *(u32int *)src_tmp;
+      *(u32int *)dst_tmp = *(const u32int *)src_tmp;
       dst_tmp += 4;
       src_tmp += 4;
     }
