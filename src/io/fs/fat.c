@@ -1,6 +1,8 @@
 #include "common/alignFunctions.h"
 #include "common/debug.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "io/block.h"
 #include "io/mmc.h"
