@@ -467,6 +467,7 @@ device * initialiseHardwareLibrary()
     memset((void*)gpio5, 0x0, sizeof(device));
   }
   initGpio(5);
+  connectGpio(5, 5);
   initialiseDevice(gpio5, "GPIO5", FALSE,
                    GPIO5, (u32int)(GPIO5 -1 + GPIO5_SIZE),
                    l4IntPer, &loadGpio, &storeGpio);
