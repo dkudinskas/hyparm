@@ -1,4 +1,5 @@
 #include "cpuArch/armv7.h"
+#include "cpuArch/cache.h"
 
 
 static inline unsigned int get_cr(void);
@@ -7,7 +8,6 @@ static void cp_delay(void);
 static void cache_enable(u32int cache_bit);
 static void cache_disable(u32int cache_bit);
 
-extern void v7_flush_dcache_all(u32int dev);
 
 /***
  * CACHE functions

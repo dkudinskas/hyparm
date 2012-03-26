@@ -4,8 +4,8 @@
 #include "memoryManager/mmu.h"
 
 #include "cpuArch/armv7.h"
+#include "cpuArch/cache.h"
 
-extern void v7_flush_dcache_all(u32int dev);
 
 static const char* dataAbtFaultString[] =
 {
