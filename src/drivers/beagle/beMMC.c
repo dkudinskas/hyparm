@@ -392,7 +392,7 @@ int mmcRead(struct mmc* dev, char* buf, u32int size)
 
 int mmcWrite(struct mmc *dev, const char *buf, u32int size)
 {
-  u32int *input = (u32int *)buf;
+  const u32int *input = (const u32int *)buf;
   u32int stat, count;
 
   /* start polled write */
