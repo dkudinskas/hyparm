@@ -774,7 +774,6 @@ void pageTableEdit(u32int address, u32int newVal)
   GCONTXT* context = getGuestContext();
 
   u32int virtualAddress;
-  pageTableEntry* pageTableEntryGuest = 0;
   bool firstLevelEntry;
   simpleEntry* oldGuestEntry = (simpleEntry*)address;
   simpleEntry* newGuestEntry = (simpleEntry*)&newVal;
@@ -837,7 +836,6 @@ void pageTableEdit(u32int address, u32int newVal)
     {
       DIE_NOW(context, "pageTableEdit: guestVirtual not set\n");
     }
-    pageTableEntryGuest = head->firstLevelEntry;
     virtualAddress = ((u32int)head->firstLevelEntry - (u32int)context->pageTables->guestVirtual) << 18;
     virtualAddress |= ((address & 0x3FC) << 10);
 #ifdef PAGE_TABLE_DBG
