@@ -11,7 +11,7 @@
 #include "vm/omap35xx/gptimer.h"
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/intc.h"
-#include "vm/omap35xx/pm.h";
+#include "vm/omap35xx/pm.h"
 #include "vm/omap35xx/prm.h"
 #include "vm/omap35xx/sdma.h"
 #include "vm/omap35xx/sdram.h"
