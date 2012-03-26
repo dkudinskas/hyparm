@@ -366,31 +366,21 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
      * Thumb-32 compatible encoding.
      */
     end = currtmpAddress; // restore starting pointer and do what we did before
-    instruction = *end;
-    switch (instruction & THUMB32)
+    if(txxIsThumb32(instruction))
     {
-      case THUMB32_1:
-      case THUMB32_2:
-      case THUMB32_3:
-      {
-        end++;
-        instruction = (instruction << 16) | *end;
-        context->endOfBlockInstr = instruction;
-        endIs16Bit = FALSE;
-        // Replace instruction with SVC and NOP, both 16 bit instructions
-        end--;
-        *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
-        end++;
-        *end = INSTR_NOP_THUMB;
-        break;
-      }
-      default:
-      {
-        context->endOfBlockInstr = instruction;
-        endIs16Bit = TRUE;
-        *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
-        break;
-      }
+      context->endOfBlockInstr = instruction;
+      endIs16Bit = FALSE;
+      // Replace instruction with SVC and NOP, both 16 bit instructions
+      *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
+      end++;
+      *end = INSTR_NOP_THUMB;
+      end--;
+    }
+    else
+    {
+      context->endOfBlockInstr = instruction;
+      endIs16Bit = TRUE;
+      *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
     }
     DEBUG(SCANNER_EXTRA, "scanThumbBlock: SVC on %#.8x" EOL, (u32int)end);
 
@@ -435,7 +425,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         :"r"(end)
         :"memory"
     );
-    end--;
+    end++;
     asm("mcr p15, 0, %0, c7, c11, 1"
         :
         :"r"(end)
@@ -446,7 +436,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         :"r"(end)
         :"memory"
     );
-    end++;
+    end--;
   }
 
   protectScannedBlock(start, end);

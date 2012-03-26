@@ -128,6 +128,7 @@ void throwInterrupt(u32int irqNumber)
 
 void deliverInterrupt(GCONTXT *context)
 {
+  DEBUG(GUEST_EXCEPTIONS, "deliverInterrupt: @ PC = %#.8x" EOL, context->R15);
   // 1. reset irq pending flag.
   context->guestIrqPending = FALSE;
   // 2. copy guest CPSR into SPSR_IRQ
@@ -171,6 +172,7 @@ void deliverInterrupt(GCONTXT *context)
 
 void deliverDataAbort(GCONTXT *context)
 {
+  DEBUG(GUEST_EXCEPTIONS, "deliverDataAbort: @ PC = %#.8x" EOL, context->R15);
   // 1. reset abt pending flag
   context->guestDataAbtPending = FALSE;
   // 2. copy CPSR into SPSR_ABT
@@ -219,6 +221,7 @@ void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isW
 
 void deliverPrefetchAbort(GCONTXT *context)
 {
+  DEBUG(GUEST_EXCEPTIONS, "deliverPrefetchAbort: @ PC = %#.8x" EOL, context->R15);
   // 1. reset abt pending flag
   context->guestPrefetchAbtPending = FALSE;
   // 2. copy CPSR into SPSR_ABT

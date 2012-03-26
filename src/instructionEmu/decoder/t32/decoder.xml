@@ -9,6 +9,7 @@
 </category>
 
 <category name="t32BranchMiscInstructions" mask="0xf8008000" value="0xf0008000">
+  <instruction name="MRS Rd, s/cpsr" mask="0xffe0a000" value="0xf3e08000" effect="t32MrsInstruction" />
   <instruction name="B imm17" mask="0xf800d000" value="0xf0008000" effect="t32BImmediate17Instruction" />
   <instruction name="B imm21" mask="0xf800d000" value="0xf0009000" effect="t32BImmediate21Instruction" />
   <instruction name="BL, #imm21" mask="0xf800d000" value="0xf000d000" effect="t32BlInstruction" />

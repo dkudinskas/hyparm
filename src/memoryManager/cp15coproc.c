@@ -170,6 +170,12 @@ void initCRB(CREG * crb)
   crb[i].value = 0;
   crb[i].valid = TRUE;
 
+  /* CP15DMB
+   * Data Memory Barrier operation */
+  i = crbIndex(7, 0, 10, 5);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
   /* DCCMVAU:
    * clean data cache line by MVA to PoU, write only */
   i = crbIndex(7, 0, 11, 1);
@@ -289,10 +295,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   // if we are writting to this register, it's probably valid already!
   crbPtr[index].valid = TRUE;
 
-#ifdef COPROC_DEBUG
-  printf("setCregVal (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
-         CRn, opc1, CRm, opc2, val);
-#endif
+  DEBUG(INTERPRETER_ARM_COPROC, "setCregVal (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n" EOL, CRn, opc1, CRm, opc2, val);
 
   /* probably a better place to put these checks */
   if (CRn==0 && opc1==1 && CRm==0 && opc2==0)
@@ -580,10 +583,7 @@ u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPt
   u32int index = crbIndex(CRn, opc1, CRm, opc2);
   reg = crbPtr[index];
 
-#ifdef COPROC_DEBUG
-  printf("getCreg (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
-         CRn, opc1, CRm, opc2, reg.value);
-#endif
+  DEBUG(INTERPRETER_ARM_COPROC, "getCreg (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n", CRn, opc1, CRm, opc2, reg.value);
 
   if (reg.valid)
   {
