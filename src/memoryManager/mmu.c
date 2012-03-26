@@ -75,221 +75,64 @@ void mmuInit()
   printf("MMU init" EOL);
 #endif
 
-  dataBarrier();
-  clearTLB();
-  clearInstructionCache();
-  setTTBCR(0);
+  mmuDataBarrier();
+  mmuClearTLB();
+  mmuClearInstructionCache();
+//  mmuSetTTBCR(0);
+  mmuSetTTBR0(0);
 }
 
-void dataBarrier()
+/**
+ * set translation table base constrol register
+ **/
+void mmuSetTTBCR(u32int value)
 {
 #ifdef MMU_DBG
-  printf("Data Barrier" EOL);
+  printf("MMU: set TTBCR to %x" EOL, value);
 #endif
-  /*
-   * It doesn't matter which register it written/nor the value inside it
-   * Page: 153
-   */
-  asm ("mcr p15, 0, r0, c7, c10, 5"
-  :
-  :
-  :"memory"
-      );
-}
-
-void clearTLB()
-{
-#ifdef MMU_DBG
-  printf("Clearing TLB" EOL);
-#endif
-  /*
-   * It doesn't matter which register it written/nor the value inside it
-   * Page 1373
-   */
-  asm ("mcr p15, 0, r0, c8, c7, 0"
-  :
-  :
-  :"memory"
-      );
-}
-
-//Clears any matching entries to <address> from the TLB
-void clearTLBbyMVA(u32int address)
-{
-  address &= 0xFFFFF000;
-#ifdef MMU_DBG
-  printf("Clearing TLB of virt addr: %.8x" EOL, address);
-#endif
-  // mcr coproc opc1 Rt CRn CRm opc2
-  asm ("mcr p15, 0, %0, c8, c7, 1"
-  :
-  :"r"(address)
-  :"memory"
-      );
-}
-
-void clearInstructionCache()
-{
-#ifdef MMU_DBG
-  printf("Clearing caches" EOL);
-#endif
-  // Page: 1361
-  asm ("mcr p15, 0, r0, c7, c5, 0"
-  :
-  :
-  :"memory"
-      );
-}
-
-
-void clearDataCache(void)
-{
-  /* turn off L2 cache */
-  l2_cache_disable();
-  /* invalidate L2 cache also */
-  v7_flush_dcache_all(BOARD_DEVICE_TYPE);
-
-  /* mem barrier to sync up things */
-  asm("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
-
-  l2_cache_enable();
-}
-
-//Need to set range of TTBCR
-void setTTBCR(u32int value)
-{
-  /* Page: 1348
-   * Translation Table Register 0
-   * Inner Non-cacheable
-   */
-  asm("mcr p15, 0, %0, c2, c0, 0"
+  asm("mcr p15, 0, %0, c2, c0, 2"
   :
   :"r"(value)
-  :"memory"
      );
 }
 
-void setDomain(u8int domain, access_type access)
-{
-  //access is a two bit field 00 = no access, 01=client, 10=reserved, 11=manager
-#ifdef MMU_DBG
-  printf("Setting domain: %x, with access bits %x" EOL, domain, (u8int)access);
-#endif
-
-  u32int value;
-  asm volatile("mrc p15, 0, %0, c3, c0, 0"
-  : "=r"(value)
-  :
-  : "memory"
-     );
-#ifdef MMU_DBG
-  printf("Domain Register before update: %x" EOL, value);
-#endif
-  //clear the current domain
-  u32int mask = ~(0b11 << (domain*2));
-  value = value & mask;
-  //Set the domain
-  value = value | (access << ((domain)*2));
-  asm volatile("mcr p15, 0, %0, c3, c0, 0"
-  :
-  : "r"(value)
-  : "memory"
-     );
-
-#ifdef MMU_DBG
-  asm volatile("mrc p15, 0, %0, c3, c0, 0"
-  : "=r"(value)
-  :
-  : "memory"
-              );
-  printf("Domain Register after update: %x" EOL, value);
-#endif
-}
-
-
-void setTexRemap(bool enable)
+void mmuSetTTBR0(simpleEntry* addr)
 {
 #ifdef MMU_DBG
-  printf("setTexRemap: %x" EOL, enable);
-#endif
-
-  u32int value;
-  asm volatile("mrc p15, 0, %0, c1, c0, 0"
-  : "=r"(value)
-  :
-  : "memory"
-     );
-#ifdef MMU_DBG
-  u32int treEnabled = ((value & 0x10000000) == 0x10000000) ? TRUE : FALSE;
-  printf("setTexRemap: currently SCTRL.TRE = %x" EOL, treEnabled);
-#endif
-
-  if (enable)
-  {
-    value |= 0x10000000;
-  }
-  else
-  {
-    value &= 0xEFFFFFFF;
-  }
-
-  asm volatile("mcr p15, 0, %0, c1, c0, 0"
-  :
-  : "r"(value)
-  : "memory"
-     );
-
-#ifdef MMU_DBG
-  asm volatile("mrc p15, 0, %0, c1, c0, 0"
-  : "=r"(value)
-  :
-  : "memory"
-              );
-  printf("setTexRemap: SCTRL after update %x" EOL, value);
-#endif
-}
-
-
-void mmuInsertPt0(descriptor* addr)
-{
-#ifdef MMU_DBG
-  printf("Add entry into TTBR0: %.8x" EOL, (u32int)addr);
-#endif
-  /* TODO: need to improve this to insert the correct bit masks
-   * TTBR0(1348): base address of translation table 0
-   */
-  asm("mcr p15, 0, %0,c2,c0,0"
-  :
-  :"r"(addr)
-     );
-}
-
-void mmuInsertPt1(descriptor* addr)
-{
-#ifdef MMU_DBG
-  printf("Add entry into TTBR1: %.8x" EOL, (u32int)addr);
+  printf("MMU: set translation table base register 0 to %08x" EOL, (u32int)addr);
 #endif
   //TODO: need to improve this to insert the correct bit masks
-  asm("mcr p15, 0, %0,c2,c0,1"
+  asm("mcr p15, 0, %0, c2, c0, 0"
   :
   :"r"(addr)
      );
 }
 
-descriptor* mmuGetPt0()
+void mmuSetTTBR1(simpleEntry* addr)
+{
+#ifdef MMU_DBG
+  printf("MMU: set translation table base register 1 to %08x" EOL, (u32int)addr);
+#endif
+  //TODO: need to improve this to insert the correct bit masks
+  asm("mcr p15, 0, %0, c2, c0, 1"
+  :
+  :"r"(addr)
+     );
+}
+
+simpleEntry* mmuGetTTBR0()
 {
   u32int regVal = 0;
   //TODO: need to improve this to insert the correct bit masks
-  asm("mrc p15, 0, %0,c2,c0,0"
+  asm("mrc p15, 0, %0, c2, c0, 0"
       :"=r"(regVal)
       :
       );
 #ifdef MMU_DBG
-  printf("Get TTBR0: %.8x" EOL, (u32int)regVal);
+  printf("MMU: get translation table base register 0, val %08x" EOL, (u32int)regVal);
 #endif
-  return (descriptor*)regVal;
+  return (simpleEntry*)regVal;
 }
-
 
 
 void mmuEnableVirtAddr()
@@ -327,9 +170,204 @@ bool isMmuEnabled()
   :"=r"(tempReg)
   :
   : "memory");
-
+  
   return (tempReg & 0x1) ? TRUE : FALSE;
+         
 }
+
+
+/**
+ * clear and invalidate host instruction cache
+ **/
+void mmuClearInstructionCache()
+{
+#ifdef MMU_DBG
+  printf("mmuClearInstructionCache: clearing host iCache" EOL);
+#endif
+  asm ("mcr p15, 0, r0, c7, c5, 0"
+  :
+  :
+  :"memory"
+      );
+}
+
+/**
+ * clear and invalidate host data cache
+ **/
+void mmuClearDataCache(void)
+{
+#ifdef MMU_DBG
+  printf("mmuClearDataCache: clearing host dCache" EOL);
+#endif
+
+  /* turn off L2 cache */
+  l2_cache_disable();
+  /* invalidate L2 cache also */
+  v7_flush_dcache_all(BOARD_DEVICE_TYPE);
+
+  /* mem barrier to sync up things */
+  asm("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
+
+  l2_cache_enable();
+}
+
+
+/**
+ * clear the entire physical TLB of the host
+ **/
+void mmuClearTLB()
+{
+#ifdef MMU_DBG
+  printf("mmuClearTLB: clearing host TLB" EOL);
+#endif
+  // mcr coproc opc1 Rt CRn CRm opc2
+  //It doesn't matter which register it written/nor the value inside it
+  asm ("mcr p15, 0, r0, c8, c7, 0"
+  :
+  :
+  :"memory"
+      );
+}
+
+
+/**
+ * Clears any matching entries to <address> from the host TLB
+ **/
+void mmuClearTLBbyMVA(u32int address)
+{
+  address &= 0xFFFFF000;
+#ifdef MMU_DBG
+  printf("mmuClearTLBbyMVA: Clearing host TLB for MVA %08x" EOL, address);
+#endif
+  // mcr coproc opc1 Rt CRn CRm opc2
+  asm ("mcr p15, 0, %0, c8, c7, 1"
+  :
+  :"r"(address)
+      );
+}
+
+
+void mmuDataBarrier()
+{
+#ifdef MMU_DBG
+  printf("mmuDataBarrier" EOL);
+#endif
+    //It doesn't matter which register it written/nor the value inside it
+  asm ("mcr p15, 0, r0, c7, c10, 5"
+  :
+  :
+  :"memory"
+      );
+}
+
+void mmuSetDomain(u8int domain, access_type access)
+{
+  //access is a two bit field 00 = no access, 01=client, 10=reserved, 11=manager
+#ifdef MMU_DBG
+  printf("mmuSetDomain: Setting domain: %x, with access bits %x" EOL, domain, (u8int)access);
+#endif
+
+  u32int value;
+  asm volatile("mrc p15, 0, %0, c3, c0, 0"
+  : "=r"(value)
+  :
+  : "memory"
+     );
+#ifdef MMU_DBG
+  printf("mmuSetDomain: Domain Register before update: %x" EOL, value);
+#endif
+  //clear the current domain
+  u32int mask = ~(0b11 << (domain*2));
+  value = value & mask;
+  //Set the domain
+  value = value | (access << ((domain)*2));
+  asm volatile("mcr p15, 0, %0, c3, c0, 0"
+  :
+  : "r"(value)
+  : "memory"
+     );
+
+#ifdef MMU_DBG
+  asm volatile("mrc p15, 0, %0, c3, c0, 0"
+  : "=r"(value)
+  :
+  : "memory"
+              );
+  printf("mmuSetDomain: Domain Register after update: %x" EOL, value);
+#endif
+}
+
+
+void mmuSetTexRemap(bool enable)
+{
+#ifdef MMU_DBG
+  printf("mmuSetTexRemap: %x" EOL, enable);
+#endif
+
+  u32int value;
+  asm volatile("mrc p15, 0, %0, c1, c0, 0"
+  : "=r"(value)
+  :
+  : "memory"
+     );
+#ifdef MMU_DBG
+  u32int treEnabled = ((value & 0x10000000) == 0x10000000) ? TRUE : FALSE; 
+  printf("mmuSetTexRemap: currently SCTRL.TRE = %x" EOL, treEnabled);
+#endif
+
+  if (enable)
+  {
+    value |= 0x10000000;
+  }
+  else
+  {
+    value &= 0xEFFFFFFF;
+  }
+
+  asm volatile("mcr p15, 0, %0, c1, c0, 0"
+  :
+  : "r"(value)
+  : "memory"
+     );
+
+#ifdef MMU_DBG
+  asm volatile("mrc p15, 0, %0, c1, c0, 0"
+  : "=r"(value)
+  :
+  : "memory"
+              );
+  printf("mmuSetTexRemap: SCTRL after update %x" EOL, value);
+#endif
+}
+
+
+void mmuInvalidateIcacheByMVA(u32int mva)
+{
+#ifdef MMU_DBG
+  printf("mmuInvalidateIcacheByMVA: invalidate Icache by MVA %08x" EOL, mva);
+#endif
+
+  asm("mcr p15, 0, %0, c7, c5, 1"
+      :
+      :"r"(mva)
+      :"memory"
+  );
+}
+
+
+void mmuCleanDcacheByMVA(u32int mva)
+{
+#ifdef MMU_DBG
+  printf("mmuClearDcacheByMVA: Clearing dcache by MVA %08x" EOL, mva);
+#endif
+
+  asm("mcr p15, 0, %0, c7, c11, 1"
+      :
+      :"r"(mva)
+      :"memory"
+  );
+}
+
 
 u32int getDFAR()
 {
@@ -373,9 +411,10 @@ void printDataAbort()
   u32int dfar = getDFAR();
   u32int faultStatus = dfsr.fs4 << 4 | dfsr.fs3_0;
 
-  printf("Data Abort Address: %.8x" EOL, dfar);
-  printf("Fault type: %s (%x), domain %x, Write not Read: %x, External: %x" EOL,
-      dataAbtFaultString[dfsr.fs3_0], faultStatus, dfsr.domain, dfsr.WnR, dfsr.ExT);
+  printf("Data Abort Address: %08x" EOL, dfar);
+  printf("Fault type: ");
+  printf("%s", (char*)dataAbtFaultString[dfsr.fs3_0]);
+  printf(" (%x), domain %x, Write not Read: %x, External: %x" EOL,  faultStatus, dfsr.domain, dfsr.WnR, dfsr.ExT);
 }
 
 void printPrefetchAbort()
@@ -384,7 +423,8 @@ void printPrefetchAbort()
   u32int ifar = getIFAR();
   u32int faultStatus = ifsr.fs3_0 | (ifsr.fs4 << 4);
 
-  printf("Prefetch Abort Address: %.8x" EOL, ifar);
-  printf("Fault type: %s (%x), External: %x" EOL, prefetchAbtFaultString[faultStatus], faultStatus,
-      ifsr.ExT);
+  printf("Prefetch Abort Address: %08x" EOL, ifar);
+  printf("Fault type: ");
+  printf("%s", (char*)prefetchAbtFaultString[faultStatus]);
+  printf(" (%x),  External: %x" EOL, faultStatus, ifsr.ExT);
 }

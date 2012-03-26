@@ -66,58 +66,51 @@ void dumpSdramStats()
 }
 
 
-u32int loadSdram(device * dev, ACCESS_SIZE size, u32int address)
+u32int loadSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   u32int val = 0;
 
-  //We care about the real physical address of the entry, not its virtual address
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_SDRAM, "%s load from physical address: %#.8x, vAddr %#.8x, access size %#x"
-      EOL, dev->deviceName, phyAddr, address, (u32int)size);
+      EOL, dev->deviceName, phyAddr, virtAddr, (u32int)size);
 
   switch (size)
   {
     case WORD:
     {
-      u32int * memPtr = (u32int*)address;
+      u32int * memPtr = (u32int*)virtAddr;
       val = *memPtr;
       break;
     }
     case HALFWORD:
     {
-      u16int * memPtr = (u16int*)address;
+      u16int * memPtr = (u16int*)virtAddr;
       val = *memPtr;
       break;
     }
     case BYTE:
     {
-      u8int * memPtr = (u8int*)address;
+      u8int * memPtr = (u8int*)virtAddr;
       val = *memPtr;
       break;
     }
     default:
       printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr,
-          address);
-      DIE_NOW(gc, "Invalid access size.");
+          virtAddr);
+      DIE_NOW(NULL, "Invalid access size.");
   }
   return val;
 }
 
-void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value)
-{
-  //We care about the real physical address of the entry, not its virtual address
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
 
+void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+{
   DEBUG(VP_OMAP_35XX_SDRAM, "%s store to physical address: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x"
-      EOL, dev->deviceName, phyAddr, address, (u32int)size, value);
+      EOL, dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
+//  fprintf("%s store to physical address: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x\n",
+//         dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
 #ifdef SDRAM_STORE_COUNTER
-  u32int index = (address >> 20) & 0xFFF;
+  u32int index = (virtAddr >> 20) & 0xFFF;
   sdram->storeCounters[index] = sdram->storeCounters[index] + 1;
 #endif
 
@@ -126,32 +119,32 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case WORD:
     {
       // I presume page table edits only happen in full word accesses... dont they?
-      if (isAddrInGuestPT(address))
+      if (isAddrInPageTable(getGuestContext()->pageTables->guestPhysical, phyAddr))
       {
-        pageTableEdit(address, value);
+        pageTableEdit(virtAddr, value);
       }
       // store the value...
-      u32int * memPtr = (u32int*)address;
+      u32int * memPtr = (u32int*)virtAddr;
       *memPtr = value;
       break;
     }
     case HALFWORD:
     {
       // store the value...
-      u16int * memPtr = (u16int*)address;
+      u16int * memPtr = (u16int*)virtAddr;
       *memPtr = (u16int)value;
       break;
     }
     case BYTE:
     {
       // store the value...
-      u8int * memPtr = (u8int*)address;
+      u8int * memPtr = (u8int*)virtAddr;
       *memPtr = (u8int)value;
       break;
     }
     default:
       printf("%s store to physical address: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL,
-          dev->deviceName, phyAddr, address, (u32int)size, value);
-      DIE_NOW(gc, "Invalid access size.");
+          dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
+      DIE_NOW(NULL, "Invalid access size.");
   }
 }

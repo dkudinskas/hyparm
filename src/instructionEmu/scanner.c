@@ -34,14 +34,13 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex);
 static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex);
 #endif
 
-static void protectScannedBlock(void *start, void *end);
-
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
 
 u64int scanBlockCounter;
 
 static inline u64int getScanBlockCounter(void);
+
 static inline void incrementScanBlockCounter(void);
 
 static inline u64int getScanBlockCounter()
@@ -91,13 +90,9 @@ void setScanBlockCallSource(u8int source)
 
 
 #ifdef CONFIG_DEBUG_SCANNER_MARK_INTERVAL
-
 #define MARK_MASK  ((1 << CONFIG_DEBUG_SCANNER_MARK_INTERVAL) - 1)
-
 #else
-
 #define MARK_MASK  (0U)
-
 #endif /* CONFIG_DEBUG_SCANNER_MARK_INTERVAL */
 
 
@@ -246,21 +241,12 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
    * 2. invalidate instruction cache entry by address.
    * ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1
    */
-  asm("mcr p15, 0, %0, c7, c11, 1"
-      :
-      :"r"(end)
-      :"memory"
-  );
-  asm("mcr p15, 0, %0, c7, c5, 1"
-      :
-      :"r"(end)
-      :"memory"
-  );
-  protectScannedBlock(start, end);
+  mmuInvalidateIcacheByMVA((u32int)end);
+  mmuCleanDcacheByMVA((u32int)end);
+  guestWriteProtect((u32int)start, (u32int)end);
 }
 
 #ifdef CONFIG_THUMB2
-
 static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 {
   DEBUG(SCANNER, "scanThumbBlock @ %#.8x" EOL, context->R15);
@@ -439,70 +425,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
     end--;
   }
 
-  protectScannedBlock(start, end);
+  guestWriteProtect((u32int)start, (u32int)end);
 }
 
-#endif
-
-
-static void protectScannedBlock(void *start, void *end)
-{
-  u32int startAddress = (u32int)start;
-  u32int endAddress = (u32int)end;
-  // 1. get page table entry for this address
-  descriptor* ptBase = mmuGetPt0();
-  descriptor* ptEntryAddr = get1stLevelPtDescriptorAddr(ptBase, startAddress);
-
-  switch(ptEntryAddr->type)
-  {
-    case SECTION:
-    {
-      if ((startAddress & 0xFFF00000) != (endAddress & 0xFFF00000))
-      {
-        u32int mbStart = startAddress & 0xFFF00000;
-        u32int mbEnd   = endAddress & 0xFFF00000;
-        if (mbStart != (mbEnd - 0x00100000))
-        {
-          printf("startAddress %#.8x, endAddress %#.8x" EOL, startAddress, endAddress);
-          DIE_NOW(NULL, "protectScannedBlock: Basic block crosses non-sequential section boundary!");
-        }
-      }
-      addProtection(startAddress, endAddress, 0, PRIV_RW_USR_RO);
-      break;
-    }
-    case PAGE_TABLE:
-    {
-      u32int ptEntryLvl2 = *(u32int*)(get2ndLevelPtDescriptor((pageTableDescriptor*)ptEntryAddr, endAddress));
-      switch(ptEntryLvl2 & 0x3)
-      {
-        case LARGE_PAGE:
-          printf("Page size: 64KB (large), %#.8x" EOL, ptEntryLvl2);
-          DIE_NOW(NULL, "Unimplemented.");
-          break;
-        case SMALL_PAGE:
-          if ((ptEntryLvl2 & 0x30) != 0x20)
-          {
-            addProtection(startAddress, endAddress, 0, PRIV_RW_USR_RO);
-          }
-          break;
-        case FAULT:
-          printf("Page invalid, %#.8x" EOL, ptEntryLvl2);
-          DIE_NOW(NULL, "Unimplemented.");
-          break;
-        default:
-          DIE_NOW(NULL, "Unrecognized second level entry");
-          break;
-      }
-      break;
-    }
-    case FAULT:
-      printf("Entry for basic block: invalid, %p" EOL, ptEntryAddr);
-      DIE_NOW(NULL, "Unimplemented.");
-      break;
-    case RESERVED:
-      DIE_NOW(NULL, "Entry for basic block: reserved. Error.");
-      break;
-    default:
-      DIE_NOW(NULL, "Unrecognized second level entry. Error.");
-  }
-}
+#endif /* CONFIG_THUMB2 */

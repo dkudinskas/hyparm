@@ -56,9 +56,9 @@ void connectGpio(u32int gpioNumber, u32int physicalGpioNumber);
 
 void initGpio(u32int gpioNumber);
 
-u32int loadGpio(device *dev, ACCESS_SIZE size, u32int address);
+u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress);
 
-void storeGpio(device *dev, ACCESS_SIZE size, u32int address, u32int value);
+void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress, u32int value);
 
 
 struct Gpio

@@ -1,6 +1,5 @@
 #include "common/alignFunctions.h"
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
 
 #include "io/block.h"
@@ -404,6 +403,11 @@ u32int fatGetFreeClus(fatfs *fs)
 /* Writes n bytes from src to file */
 int fwrite(fatfs *fs, file *handle, void *src, u32int length)
 {
+  if (handle == NULL || handle->dirEntry == NULL)
+  {
+    return 0;
+  }
+
   DEBUG(FS_FAT, "fwrite: file '%s' data length %#x" EOL, handle->dirEntry->filename, length);
 
   // we expect the file to exist already

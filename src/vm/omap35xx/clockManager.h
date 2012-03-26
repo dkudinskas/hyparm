@@ -239,7 +239,7 @@
 void initClockManager(void);
 
 /* top load function */
-u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int address);
+u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 
 u32int loadIva2Cm(device * dev, u32int address, u32int phyAddr);
 u32int loadOcpSystemCm(device * dev, u32int address, u32int phyAddr);
@@ -258,7 +258,7 @@ u32int loadUsbHostCm(device * dev, u32int address, u32int phyAddr);
 
 
 /* top store function */
-void storeClockManager(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+void storeClockManager(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 void storeIva2Cm(device * dev, u32int address, u32int phyAddr, u32int value);
 void storeOcpSystemCm(device * dev, u32int address, u32int phyAddr, u32int value);

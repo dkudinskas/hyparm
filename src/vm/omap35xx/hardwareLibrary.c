@@ -18,6 +18,7 @@
 #include "vm/omap35xx/sysControlModule.h"
 #include "vm/omap35xx/timer32k.h"
 #include "vm/omap35xx/uart.h"
+#include "vm/omap35xx/controlModule.h"
 
 
 device *initialiseHardwareLibrary()
@@ -34,7 +35,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(topLevelBus, "TopLevelBus", TRUE, 0, 0xFFFFFFFF,
                    0, &loadGeneric, &storeGeneric);
 
-
   // QUARTER 0
   device *q0bus = (device *)malloc(sizeof(device));
   if (q0bus == NULL)
@@ -45,7 +45,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(q0bus, "Q0Bus", TRUE, QUARTER0, (u32int)(QUARTER0+QUARTER_SIZE-1),
                    topLevelBus, &loadGeneric, &storeGeneric);
 
-
   // QUARTER 1
   device *q1bus = (device *)malloc(sizeof(device));
   if (q1bus == NULL)
@@ -55,7 +54,6 @@ device *initialiseHardwareLibrary()
   memset(q1bus, 0, sizeof(device));
   initialiseDevice(q1bus, "Q1Bus", TRUE, QUARTER1, (u32int)(QUARTER1-1+QUARTER_SIZE),
                    topLevelBus, &loadGeneric, &storeGeneric);
-
 
   // Q1: ON CHIP MEMORY (OCM, parent Q1)
   device *onChipMemory = (device *)malloc(sizeof(device));
@@ -68,7 +66,6 @@ device *initialiseHardwareLibrary()
                    Q1_ON_CHIP_MEMORY, (u32int)(Q1_ON_CHIP_MEMORY+Q1_ON_CHIP_MEMORY_SIZE-1),
                    q1bus, &loadGeneric, &storeGeneric);
 
-
   // OCM: secure boot rom (parent ocm)
   device *bootRomSecure = (device *)malloc(sizeof(device));
   if (bootRomSecure == NULL)
@@ -79,7 +76,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(bootRomSecure, "BOOT_ROM_SECURE", FALSE,
               Q1_OCM_BOOT_ROM_SECURE, (u32int)(Q1_OCM_BOOT_ROM_SECURE+Q1_OCM_BOOT_ROM_SECURE_SIZE-1),
               onChipMemory, &loadGeneric, &storeGeneric);
-
 
   // OCM: public boot rom
   device *bootRomPublic = (device *)malloc(sizeof(device));
@@ -92,7 +88,6 @@ device *initialiseHardwareLibrary()
               Q1_OCM_BOOT_ROM_PUBLIC, (u32int)(Q1_OCM_BOOT_ROM_PUBLIC+Q1_OCM_BOOT_ROM_PUBLIC_SIZE-1),
               onChipMemory, &loadGeneric, &storeGeneric);
 
-
   // OCM: internal sram
   device *sramInternal = (device *)malloc(sizeof(device));
   if (sramInternal == NULL)
@@ -104,7 +99,6 @@ device *initialiseHardwareLibrary()
               Q1_OCM_SRAM_INTERNAL, (u32int)(Q1_OCM_SRAM_INTERNAL+Q1_OCM_SRAM_INTERNAL_SIZE-1),
               onChipMemory, &loadSramInternal, &storeSramInternal);
 
-
   // Q1: LEVEL3 INTERCONNECT (L3INT, parent Q1)
   device *l3Interconnect = (device *)malloc(sizeof(device));
   if (l3Interconnect == NULL)
@@ -115,7 +109,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(l3Interconnect, "L3_INTERCONNECT", TRUE,
                    Q1_L3_INTERCONNECT, (u32int)(Q1_L3_INTERCONNECT+Q1_L3_INTERCONNECT_SIZE-1),
                    q1bus, &loadGeneric, &storeGeneric);
-
 
   // L3INT: general purpose memory controller
   device *gpmcModule = (device *)malloc(sizeof(device));
@@ -129,7 +122,6 @@ device *initialiseHardwareLibrary()
                    Q1_L3_GPMC, (u32int)(Q1_L3_GPMC-1+Q1_L3_GPMC_SIZE),
                    l3Interconnect, &loadGpmc, &storeGpmc);
 
-
   // Q1: LEVEL4 INTERCONNECT (L4INT, parent Q1)
   device *l4Interconnect = (device *)malloc(sizeof(device));
   if (l4Interconnect == NULL)
@@ -141,7 +133,6 @@ device *initialiseHardwareLibrary()
                    Q1_L4_INTERCONNECT, (u32int)(Q1_L4_INTERCONNECT+Q1_L4_INTERCONNECT_SIZE-1),
                    q1bus, &loadGeneric, &storeGeneric);
 
-
   // L4INT: core
   device *l4IntCore = (device *)malloc(sizeof(device));
   if (l4IntCore == NULL)
@@ -152,7 +143,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(l4IntCore, "L4_INTERCONNECT_CORE", TRUE,
                    Q1_L4_INT_CORE, (u32int)(Q1_L4_INT_CORE-1+Q1_L4_INT_CORE_SIZE),
                    l4Interconnect, &loadGeneric, &storeGeneric);
-
 
   // L4INT_CORE: system control module
   device *sysCtrlMod = (device *)malloc(sizeof(device));
@@ -166,7 +156,6 @@ device *initialiseHardwareLibrary()
                    SYS_CONTROL_MODULE, (u32int)(SYS_CONTROL_MODULE -1 + SYS_CONTROL_MODULE_SIZE),
                    l4IntCore, &loadSysCtrlModule, &storeSysCtrlModule);
 
-
   // L4INT_CORE: clock manager (and DPLL)
   device *clockManager = (device *)malloc(sizeof(device));
   if (clockManager == NULL)
@@ -178,7 +167,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(clockManager, "CLOCK_MAN", FALSE,
                    CLOCK_MANAGER, (u32int)(CLOCK_MANAGER -1 + CLOCK_MANAGER_SIZE),
                    l4IntCore, &loadClockManager, &storeClockManager);
-
 
   // L4INT_CORE: SDMA
   device *sdmaModule = (device *)malloc(sizeof(device));
@@ -192,7 +180,6 @@ device *initialiseHardwareLibrary()
                    SDMA, (u32int)(SDMA -1 + SDMA_SIZE),
                    l4IntCore, &loadSdma, &storeSdma);
 
-
   // L4INT_CORE: uart1
   device *uart1 = (device *)malloc(sizeof(device));
   if (uart1 == NULL)
@@ -204,7 +191,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(uart1, "UART1", FALSE,
                    UART1, (u32int)(UART1 -1 + UART1_SIZE),
                    l4IntCore, &loadUart, &storeUart);
-
 
   // L4INT_CORE: uart2
   device *uart2 = (device *)malloc(sizeof(device));
@@ -218,7 +204,6 @@ device *initialiseHardwareLibrary()
                    UART2, (u32int)(UART2 - 1 + UART2_SIZE),
                    l4IntCore, &loadUart, &storeUart);
 
-
   // L4INT_CORE: interrupt controller
   device *intc = (device *)malloc(sizeof(device));
   if (intc == NULL)
@@ -231,7 +216,6 @@ device *initialiseHardwareLibrary()
                    INTERRUPT_CONTROLLER, (u32int)(INTERRUPT_CONTROLLER -1 + INTERRUPT_CONTROLLER_SIZE),
                    l4IntCore, &loadIntc, &storeIntc);
 
-
   // L4INT_CORE: core wakeup interconnect
   device *l4CoreWakeupInt = (device *)malloc(sizeof(device));
   if (l4CoreWakeupInt == NULL)
@@ -242,7 +226,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(l4CoreWakeupInt, "L4_CORE_WAKEUP_INT", TRUE,
                    L4_CORE_WAKEUP_INT, (u32int)(L4_CORE_WAKEUP_INT-1+L4_CORE_WAKEUP_INT_SIZE),
                    l4IntCore, &loadGeneric, &storeGeneric);
-
 
   // L4_CORE_WAKEUP: power and reset manager
   device *prm = (device *)malloc(sizeof(device));
@@ -256,6 +239,17 @@ device *initialiseHardwareLibrary()
                    PRM, (u32int)(PRM -1 + PRM_SIZE),
                    l4CoreWakeupInt, &loadPrm, &storePrm);
 
+  // L4_CORE_WAKEUP: power and reset manager
+  device * ctrlModID = (device*)malloc(sizeof(device));
+  if (ctrlModID == 0)
+  {
+    DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate control module ID.");
+  }
+  memset(ctrlModID, 0, sizeof(device));
+  initControlModule();
+  initialiseDevice(ctrlModID, "CONTROL_MODULE_ID", FALSE,
+                   CONTROL_MODULE_ID, (u32int)(CONTROL_MODULE_ID -1 + CONTROL_MODULE_ID_SIZE),
+                   l4CoreWakeupInt, &loadControlModule, &storeControlModule);
 
   // L4_CORE_WAKEUP: general purpose I/O 1
   device *gpio1 = (device *)malloc(sizeof(device));
@@ -269,7 +263,6 @@ device *initialiseHardwareLibrary()
                    GPIO1, (u32int)(GPIO1 -1 + GPIO1_SIZE),
                    l4CoreWakeupInt, &loadGpio, &storeGpio);
 
-
   // L4_CORE_WAKEUP: watchdog timer 2
   device *wdtimer2 = (device *)malloc(sizeof(device));
   if (wdtimer2 == NULL)
@@ -280,7 +273,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(wdtimer2, "WDTIMER2", FALSE,
                    WDTIMER2, (u32int)(WDTIMER2 -1 + WDTIMER2_SIZE),
                    l4CoreWakeupInt, &loadGeneric, &storeGeneric);
-
 
   // L4_CORE_WAKEUP: general purpose timer 1
   device *gptimer1 = (device *)malloc(sizeof(device));
@@ -294,7 +286,6 @@ device *initialiseHardwareLibrary()
                    GPTIMER1, (u32int)(GPTIMER1 -1 + GPTIMER1_SIZE),
                    l4CoreWakeupInt, &loadGPTimer, &storeGPTimer);
 
-
   // L4_CORE_WAKEUP: 32 Kiloherz synchronised timer
   device *timer32k = (device *)malloc(sizeof(device));
   if (timer32k == NULL)
@@ -307,7 +298,6 @@ device *initialiseHardwareLibrary()
                    TIMER_32K, (u32int)(TIMER_32K -1 + TIMER_32K_SIZE),
                    l4CoreWakeupInt, &loadTimer32k, &storeTimer32k);
 
-
   // L4 interconnect: L4 interconnect peripherals
   device *l4IntPer = (device *)malloc(sizeof(device));
   if (l4IntPer == NULL)
@@ -318,7 +308,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(l4IntPer, "L4_INT_PER", TRUE,
                    Q1_L4_INT_PER, (u32int)(Q1_L4_INT_PER -1 + Q1_L4_INT_PER_SIZE),
                    l4Interconnect, &loadGeneric, &storeGeneric);
-
 
   // L4INT_PER: uart3
   device *uart3 = (device *)malloc(sizeof(device));
@@ -332,7 +321,6 @@ device *initialiseHardwareLibrary()
                    UART3, (u32int)(UART3 -1 + UART3_SIZE),
                    l4IntPer, &loadUart, &storeUart);
 
-
   // L4_INT_PER: general purpose I/O 2
   device *gpio2 = (device *)malloc(sizeof(device));
   if (gpio2 == NULL)
@@ -344,7 +332,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(gpio2, "GPIO2", FALSE,
                    GPIO2, (u32int)(GPIO2 -1 + GPIO2_SIZE),
                    l4IntPer, &loadGpio, &storeGpio);
-
 
   // L4_INT_PER: general purpose I/O 3
   device *gpio3 = (device *)malloc(sizeof(device));
@@ -358,7 +345,6 @@ device *initialiseHardwareLibrary()
                    GPIO3, (u32int)(GPIO3 -1 + GPIO3_SIZE),
                    l4IntPer, &loadGpio, &storeGpio);
 
-
   // L4_INT_PER: general purpose I/O 4
   device *gpio4 = (device *)malloc(sizeof(device));
   if (gpio4 == NULL)
@@ -370,7 +356,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(gpio4, "GPIO4", FALSE,
                    GPIO4, (u32int)(GPIO4 -1 + GPIO4_SIZE),
                    l4IntPer, &loadGpio, &storeGpio);
-
 
   // L4_INT_PER: general purpose I/O 5
   device *gpio5 = (device *)malloc(sizeof(device));
@@ -384,7 +369,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(gpio5, "GPIO5", FALSE,
                    GPIO5, (u32int)(GPIO5 -1 + GPIO5_SIZE),
                    l4IntPer, &loadGpio, &storeGpio);
-
 
   // L4_INT_PER: general purpose I/O 6
   device *gpio6 = (device *)malloc(sizeof(device));
@@ -408,7 +392,6 @@ device *initialiseHardwareLibrary()
   initialiseDevice(q2bus, "Q2Bus", TRUE, QUARTER2, (u32int)(QUARTER2-1+QUARTER_SIZE),
                    topLevelBus, &loadGeneric, &storeGeneric);
 
-
   // Q2: sdram
   device *sdramModule = (device *)malloc(sizeof(device));
   if (sdramModule == NULL)
@@ -421,7 +404,6 @@ device *initialiseHardwareLibrary()
                    Q2_SDRC_SMS, (u32int)(Q2_SDRC_SMS+Q2_SDRC_SMS_SIZE-1),
                    q2bus, &loadSdram, &storeSdram);
 
-
   // QUARTER 3
   device *q3bus = (device *)malloc(sizeof(device));
   if (q3bus == NULL)
@@ -431,7 +413,6 @@ device *initialiseHardwareLibrary()
   memset(q3bus, 0, sizeof(device));
   initialiseDevice(q3bus, "Q3Bus", TRUE, QUARTER3, (u32int)(QUARTER3-1+QUARTER_SIZE),
                    topLevelBus, &loadGeneric, &storeGeneric);
-
 
   return topLevelBus;
 }
@@ -498,12 +479,8 @@ inline bool isAddressInDevice(u32int address, device *dev)
 /**************************************
  * generic LOAD/STORE functions       *
  **************************************/
-void storeGeneric(device *dev, ACCESS_SIZE size, u32int address, u32int value)
+void storeGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  GCONTXT *gc = getGuestContext();
-  descriptor *ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   if (dev->isBus)
   {
     // bus device
@@ -513,30 +490,24 @@ void storeGeneric(device *dev, ACCESS_SIZE size, u32int address, u32int value)
       if (isAddressInDevice(phyAddr, dev->attachedDevices[index]))
       {
         // hit the address range!
-        dev->attachedDevices[index]->storeFunction(dev->attachedDevices[index], size, address,
-            value);
+        dev->attachedDevices[index]->storeFunction(dev->attachedDevices[index], size, virtAddr, phyAddr, value);
         return;
       }
     }
-    printf("Store to %s at address %.8x physical %.8x value %.8x" EOL, dev->deviceName, address,
-        phyAddr, value);
-    DIE_NOW(gc, "No child of current device holds load address in range.");
+    printf("Store to %s at address %.8x physical %.8x value %.8x" EOL, dev->deviceName, virtAddr, phyAddr, value);
+    DIE_NOW(NULL, "No child of current device holds load address in range.");
   }
   else
   {
     // not a bus, end device
     printf("Store to %s at address %.8x physical %.8x value %.8x" EOL,
-           dev->deviceName, address, phyAddr, value);
-    DIE_NOW(gc, "End device didn't implement custom store function!");
+           dev->deviceName, virtAddr, phyAddr, value);
+    DIE_NOW(NULL, "End device didn't implement custom store function!");
   }
 }
 
-u32int loadGeneric(device *dev, ACCESS_SIZE size, u32int address)
+u32int loadGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  GCONTXT * gc = getGuestContext();
-  descriptor *ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   if (dev->isBus)
   {
     // bus device
@@ -546,18 +517,61 @@ u32int loadGeneric(device *dev, ACCESS_SIZE size, u32int address)
       if (isAddressInDevice(phyAddr, dev->attachedDevices[index]))
       {
         // hit the address range!
-        return dev->attachedDevices[index]->loadFunction(dev->attachedDevices[index], size, address);
+        return dev->attachedDevices[index]->loadFunction(dev->attachedDevices[index], size, virtAddr, phyAddr);
       }
     }
-    printf("Load from %s address %.8x physical %.8x" EOL, dev->deviceName, address, phyAddr);
-    DIE_NOW(gc, "No child of current device holds load address in range.");
+    printf("Load from %s address %.8x physical %.8x" EOL, dev->deviceName, virtAddr, phyAddr);
+    DIE_NOW(NULL, "No child of current device holds load address in range.");
   }
   else
   {
     // not a bus, end device
-    printf("Load from %s address %.8x physical %.8x" EOL, dev->deviceName, address, phyAddr);
-    DIE_NOW(gc, "End device didn't implement custom load function!");
+    printf("Load from %s address %.8x physical %.8x" EOL, dev->deviceName, virtAddr, phyAddr);
+    DIE_NOW(NULL, "End device didn't implement custom load function!");
   }
 
   return 0;
+}
+
+
+u32int vmLoad(ACCESS_SIZE size, u32int virtAddr)
+{
+  GCONTXT * gc = getGuestContext();
+  u32int physAddr = 0;
+  if (gc->virtAddrEnabled)
+  {
+    physAddr = getPhysicalAddress(gc->pageTables->shadowActive, virtAddr);
+  }
+  else
+  {
+    physAddr = getPhysicalAddress(gc->pageTables->hypervisor, virtAddr);
+  }
+  u32int value = gc->hardwareLibrary->loadFunction(gc->hardwareLibrary, size, virtAddr, physAddr); 
+  if (physAddr == 0x8042a870)
+  {
+    printf("vmLoad size %x va %08x val %x pc %08x\n", size, virtAddr, value, gc->R15);
+//    DIE_NOW(gc, "hit");
+  }
+  return value;
+}
+
+
+void vmStore(ACCESS_SIZE size, u32int virtAddr, u32int value)
+{
+  GCONTXT * gc = getGuestContext();
+  u32int physAddr = 0;
+  if (gc->virtAddrEnabled)
+  {
+    physAddr = getPhysicalAddress(gc->pageTables->shadowActive, virtAddr);
+  }
+  else
+  {
+    physAddr = getPhysicalAddress(gc->pageTables->hypervisor, virtAddr);
+  }
+  if (physAddr == 0x8042a870)
+  {
+    printf("vmStore size %x va %08x val %x pc %08x\n", size, virtAddr, value, gc->R15);
+//    DIE_NOW(gc, "hit");
+  }
+  gc->hardwareLibrary->storeFunction(gc->hardwareLibrary, size, virtAddr, physAddr, value);
 }

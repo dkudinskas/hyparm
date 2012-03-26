@@ -61,17 +61,12 @@ void initPrm(void)
 /*************************************************************************
  *                           Load  Functions                             *
  *************************************************************************/
-u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address)
+u32int loadPrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   u32int val = 0;
 
-  //We care about the real physical address of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_PRM, "%s load from physical address: %.8x, vAddr %.8x, aSize %x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size);
 
   if (size != WORD)
   {
@@ -83,13 +78,13 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address)
   switch (base)
   {
     case Clock_Control_Reg_PRM:
-      val = loadClockControlPrm(dev, address, phyAddr);
+      val = loadClockControlPrm(dev, virtAddr, phyAddr);
       break;
     case Global_Reg_PRM:
-      val = loadGlobalRegPrm(dev, address, phyAddr);
+      val = loadGlobalRegPrm(dev, virtAddr, phyAddr);
       break;
     case OCP_System_Reg_PRM:
-      val = loadOcpSystemPrm(dev, address, phyAddr);
+      val = loadOcpSystemPrm(dev, virtAddr, phyAddr);
       break;
     case IVA2_PRM:
     case MPU_PRM:
@@ -234,15 +229,10 @@ u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
 /*************************************************************************
  *                           Store Functions                             *
  *************************************************************************/
-void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
+void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  //We care about the real physical address of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_PRM, "%s store to pAddr: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size, value);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
   if (size != WORD)
   {
@@ -254,13 +244,13 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   switch (base)
   {
     case Clock_Control_Reg_PRM:
-      storeClockControlPrm(dev, address, phyAddr, value);
+      storeClockControlPrm(dev, virtAddr, phyAddr, value);
       break;
     case Global_Reg_PRM:
-      storeGlobalRegPrm(dev, address, phyAddr, value);
+      storeGlobalRegPrm(dev, virtAddr, phyAddr, value);
       break;
     case OCP_System_Reg_PRM:
-      storeOcpSystemPrm(dev, address, phyAddr, value);
+      storeOcpSystemPrm(dev, virtAddr, phyAddr, value);
       break;
     case IVA2_PRM:
     case MPU_PRM:
@@ -273,7 +263,7 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case EMU_PRM:
     case NEON_PRM:
     case USBHOST_PRM:
-      printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
+      printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, virtAddr, value);
       DIE_NOW(NULL, " unimplemented.");
       break;
     default:

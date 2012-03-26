@@ -317,7 +317,7 @@
 void initSysControlModule(void);
 
 /* top load function */
-u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int address);
+u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 
 u32int loadInterfaceScm(device * dev, u32int address, u32int phyAddr);
 u32int loadPadconfsScm(device * dev, u32int address, u32int phyAddr);
@@ -327,7 +327,7 @@ u32int loadPadconfsWkupScm(device * dev, u32int address, u32int phyAddr);
 u32int loadGeneralWkupScm(device * dev, u32int address, u32int phyAddr);
 
 /* top store function */
-void storeSysCtrlModule(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+void storeSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 void storeInterfaceScm(device * dev, u32int address, u32int phyAddr, u32int value);
 void storePadconfsScm(device * dev, u32int address, u32int phyAddr, u32int value);
