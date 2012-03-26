@@ -46,7 +46,7 @@ void initProtectionMechanism()
   /**
    * initialization of PM_GPMC
    */
-  pmgpmc = (struct PmGpmci *)malloc(sizeof(struct PmGpmc));
+  pmgpmc = (struct PmGpmc *)malloc(sizeof(struct PmGpmc));
   if (pmgpmc == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate PM_GPMC.");
