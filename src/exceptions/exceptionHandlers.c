@@ -340,9 +340,8 @@ void dataAbortPrivileged(u32int pc)
     case dfsTranslationTableWalkLvl1SyncParityErr:
     case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
-      printf("dataAbortPrivileged: UNIMPLEMENTED data abort type.\n");
       printDataAbort();
-      DIE_NOW(0, "Entering infinite loop\n");
+      DIE_NOW(NULL, "unimplemented data abort type");
       break;
   }
 }
