@@ -56,6 +56,12 @@ void initPrm(void)
   prMan->prmSysConfigOcp    = 0x1;
   prMan->prmIrqStatusMpuOcp = 0x0;
   prMan->prmIrqEnableMpuOcp = 0x0;
+  // Wakeup registers
+  prMan->prmWkenWkup       = 0x3CB;
+  prMan->prmMpugrpselWkup  = 0x3CB;
+  prMan->prmIva2grpselWkup = 0;
+  prMan->prmWkstWkup       = 0;
+
 }
 
 /*************************************************************************
@@ -86,11 +92,13 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     case OCP_System_Reg_PRM:
       val = loadOcpSystemPrm(dev, virtAddr, phyAddr);
       break;
+    case WKUP_PRM:
+      val = loadWakeUpPrm(dev, virtAddr, phyAddr);
+      break;
     case IVA2_PRM:
     case MPU_PRM:
     case CORE_PRM:
     case SGX_PRM:
-    case WKUP_PRM:
     case DSS_PRM:
     case CAM_PRM:
     case PER_PRM:
@@ -225,6 +233,31 @@ u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
   return val;
 }
 
+u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
+{
+  u32int val = 0;
+  u32int reg = phyAddr - WKUP_PRM;
+  switch (reg)
+  {
+    case PM_WKEN_WKUP:
+      val = prMan->prmWkenWkup;
+      break;
+    case PM_MPUGRPSEL_WKUP:
+      val = prMan->prmMpugrpselWkup;
+      break;
+    case PM_IVA2GRPSEL_WKUP:
+      val = prMan->prmIva2grpselWkup;
+      break;
+    case PM_WKST_WKUP:
+      val = prMan->prmWkstWkup;
+      break;
+    default:
+      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      DIE_NOW(NULL, "loadWakeUpPrm loading non existing register!");
+  }
+  DEBUG(VP_OMAP_35XX_PRM, "loadWakeUpPrm reg %x value %.8x" EOL, reg, val);
+  return val;
+}
 
 /*************************************************************************
  *                           Store Functions                             *

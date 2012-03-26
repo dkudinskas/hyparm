@@ -11,6 +11,7 @@
 #include "vm/omap35xx/gptimer.h"
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/intc.h"
+#include "vm/omap35xx/pm.h";
 #include "vm/omap35xx/prm.h"
 #include "vm/omap35xx/sdma.h"
 #include "vm/omap35xx/sdram.h"
@@ -121,6 +122,18 @@ device *initialiseHardwareLibrary()
   initialiseDevice(gpmcModule, "GPMC", FALSE,
                    Q1_L3_GPMC, (u32int)(Q1_L3_GPMC-1+Q1_L3_GPMC_SIZE),
                    l3Interconnect, &loadGpmc, &storeGpmc);
+
+  // L3INT: Protection Mechanism (PM)
+  device *pmModule = (device *)malloc(sizeof(device));
+  if (pmModule == NULL)
+  {
+    DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate Protection Mechanism module.");
+  }
+  memset(pmModule, 0, sizeof(device));
+  initProtectionMechanism();
+  initialiseDevice(pmModule, "L3_PM", FALSE,
+                   Q1_L3_PM, (u32int)(Q1_L3_PM + Q1_L3_PM_SIZE - 1),
+                   l3Interconnect, &loadProtectionMechanism, &storeProtectionMechanism);
 
   // Q1: LEVEL4 INTERCONNECT (L4INT, parent Q1)
   device *l4Interconnect = (device *)malloc(sizeof(device));

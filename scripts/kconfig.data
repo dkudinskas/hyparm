@@ -398,6 +398,10 @@ config DEBUG_VP_OMAP_35XX_GPMC
   bool "Debug memory controller (GPMC)"
   depends on DEBUG_VIRTUAL_PLATFORM
 
+config DEBUG_VP_OMAP_35XX_PM
+  bool "Debug L3 protection mechanism (PM)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+  
 config DEBUG_VP_OMAP_35XX_PRM
   bool "Debug power and reset manager (PRM)"
   depends on DEBUG_VIRTUAL_PLATFORM

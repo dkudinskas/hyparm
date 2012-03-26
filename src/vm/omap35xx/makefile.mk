@@ -7,6 +7,7 @@ HYPARM_SRCS_C-y += vm/omap35xx/gptimer.c
 HYPARM_SRCS_C-y += vm/omap35xx/hardwareLibrary.c
 HYPARM_SRCS_C-y += vm/omap35xx/intc.c
 HYPARM_SRCS_C-y += vm/omap35xx/led.c
+HYPARM_SRCS_C-y += vm/omap35xx/pm.c
 HYPARM_SRCS_C-y += vm/omap35xx/prm.c
 HYPARM_SRCS_C-y += vm/omap35xx/sdma.c
 HYPARM_SRCS_C-y += vm/omap35xx/sdram.c
