@@ -6,12 +6,19 @@
 #include "guestManager/guestContext.h"
 
 
-instructionHandler decodeArmInstruction(u32int instruction);
+typedef enum
+{
+  IRC_SAFE = 0,
+  IRC_REPLACE = 1
+} instructionReplaceCode;
+
+
+instructionReplaceCode decodeArmInstruction(u32int instruction, instructionHandler *handler);
 
 
 #ifdef CONFIG_THUMB2
 
-instructionHandler decodeThumbInstruction(u32int instruction);
+instructionReplaceCode decodeThumbInstruction(u32int instruction, instructionHandler *handler);
 
 #endif /* CONFIG_THUMB2 */
 

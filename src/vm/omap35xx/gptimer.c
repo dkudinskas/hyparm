@@ -11,9 +11,6 @@
 #include "vm/omap35xx/clockManager.h"
 #include "vm/omap35xx/gptimer.h"
 
-#include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
-#include "memoryManager/pageTable.h" // for getPhysicalAddress()
-
 
 struct GeneralPurposeTimer * gptimer;
 
@@ -211,7 +208,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAdd
     case GPT_REG_TCRR:
     {
       // make sure we dont throw irq's too often...
-      u32int adjustedValue = value << 14;
+      u32int adjustedValue = value << 12;
       storeToGPTimer(2, regOffs, adjustedValue);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to internal clock register value %#.8x" EOL,
           dev->deviceName, value);
@@ -220,7 +217,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAdd
     case GPT_REG_TLDR:
     {
       // make sure we dont throw irq's too often...
-      u32int adjustedValue = value << 14;
+      u32int adjustedValue = value << 12;
       storeToGPTimer(2, regOffs, adjustedValue);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to counter reload value %#.8x" EOL, dev->deviceName,
           value);

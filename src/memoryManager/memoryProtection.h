@@ -14,6 +14,8 @@
 
 void guestWriteProtect(u32int startAddress, u32int endAddress);
 
+void writeProtectRange(simpleEntry* pageTable, u32int start, u32int end);
+
 // returns true if data abort to be delivered to guest
 bool shouldDataAbort(bool privAccess, bool isWrite, u32int address);
 

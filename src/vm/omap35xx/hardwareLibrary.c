@@ -551,6 +551,7 @@ u32int vmLoad(ACCESS_SIZE size, u32int virtAddr)
 {
   GCONTXT * gc = getGuestContext();
   u32int physAddr = 0;
+
   if (gc->virtAddrEnabled)
   {
     physAddr = getPhysicalAddress(gc->pageTables->shadowActive, virtAddr);
@@ -559,12 +560,7 @@ u32int vmLoad(ACCESS_SIZE size, u32int virtAddr)
   {
     physAddr = getPhysicalAddress(gc->pageTables->hypervisor, virtAddr);
   }
-  u32int value = gc->hardwareLibrary->loadFunction(gc->hardwareLibrary, size, virtAddr, physAddr); 
-  if (physAddr == 0x8042a870)
-  {
-    printf("vmLoad size %x va %08x val %x pc %08x\n", size, virtAddr, value, gc->R15);
-//    DIE_NOW(gc, "hit");
-  }
+  u32int value = gc->hardwareLibrary->loadFunction(gc->hardwareLibrary, size, virtAddr, physAddr);
   return value;
 }
 

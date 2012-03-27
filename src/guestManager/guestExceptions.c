@@ -16,10 +16,10 @@
  * block and get a data abort in privileged mode, and then it crashes...
  */
 
-
 void deliverServiceCall(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverServiceCall: @ PC = %#.8x" EOL, context->R15);
+//  printf("deliverServiceCall: @ PC %#.8x\n", context->R15);
   if (!isGuestInPrivMode(context))
   {
     guestToPrivMode();
@@ -176,6 +176,7 @@ void deliverInterrupt(GCONTXT *context)
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
 
+
 void deliverDataAbort(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverDataAbort: @ PC = %#.8x" EOL, context->R15);
@@ -213,10 +214,6 @@ void deliverDataAbort(GCONTXT *context)
 
 void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isWrite, u32int domain)
 {
-  if (context->R15 == 0x000d3d2c)
-  {
-    DIE_NOW(context, "stop");
-  }
   // set CP15 Data Fault Status Register
   u32int dfsr = (faultType & 0xF) | ((faultType & 0x10) << 6);
   dfsr |= domain << 4;

@@ -11,7 +11,9 @@ u32int armStrbInstruction(GCONTXT *context, u32int instruction);
 u32int armStrhInstruction(GCONTXT *context, u32int instruction);
 u32int armStrdInstruction(GCONTXT *context, u32int instruction);
 
+u32int armStrtInstruction(GCONTXT *context, u32int instruction);
 u32int armStrhtInstruction(GCONTXT *context, u32int instruction);
+u32int armStrbtInstruction(GCONTXT *context, u32int instruction);
 
 u32int armStmInstruction(GCONTXT *context, u32int instruction);
 

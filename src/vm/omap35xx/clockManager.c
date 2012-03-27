@@ -5,9 +5,6 @@
 
 #include "guestManager/guestContext.h"
 
-#include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
-#include "memoryManager/pageTable.h" // for getPhysicalAddress()
-
 #include "vm/omap35xx/clockManager.h"
 
 

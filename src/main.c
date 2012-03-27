@@ -94,7 +94,7 @@ void main(s32int argc, char *argv[])
   struct runtimeConfiguration config;
   memset(&config, 0, sizeof(struct runtimeConfiguration));
   config.guestOS = GUEST_OS_LINUX;
-
+ 
 #ifdef CONFIG_MMC
   mmcDevice = NULL;
   debugStream = NULL;

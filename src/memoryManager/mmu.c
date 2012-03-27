@@ -75,11 +75,10 @@ void mmuInit()
   printf("MMU init" EOL);
 #endif
 
-  mmuDataBarrier();
-  mmuClearTLB();
+  mmuDataMemoryBarrier();
+  mmuInvalidateUTLB();
   mmuClearInstructionCache();
-//  mmuSetTTBCR(0);
-  mmuSetTTBR0(0);
+  mmuSetTTBR0(0, 0);
 }
 
 /**
@@ -96,38 +95,54 @@ void mmuSetTTBCR(u32int value)
      );
 }
 
-void mmuSetTTBR0(simpleEntry* addr)
+void mmuSetTTBR0(simpleEntry* addr, u32int asid)
 {
 #ifdef MMU_DBG
-  printf("MMU: set translation table base register 0 to %08x" EOL, (u32int)addr);
+  printf("MMU: set TTBR0 to %08x" EOL, (u32int)addr);
 #endif
-  //TODO: need to improve this to insert the correct bit masks
-  asm("mcr p15, 0, %0, c2, c0, 0"
-  :
-  :"r"(addr)
-     );
+  // set context id to reserved value
+  mmuSetContextID(0);
+
+  // instruction sync barrier
+  mmuInstructionSync();
+  
+  asm("mcr p15, 0, %0, c2, c0, 0": :"r"(addr));
+
+  // instruction sync barrier
+  mmuInstructionSync();
+
+  // set context id to new value
+  mmuSetContextID(asid);
+
+  // instruction sync barrier
+  mmuInstructionSync();
 }
 
-void mmuSetTTBR1(simpleEntry* addr)
+void mmuSetTTBR1(simpleEntry* addr, u32int asid)
 {
 #ifdef MMU_DBG
   printf("MMU: set translation table base register 1 to %08x" EOL, (u32int)addr);
 #endif
-  //TODO: need to improve this to insert the correct bit masks
-  asm("mcr p15, 0, %0, c2, c0, 1"
-  :
-  :"r"(addr)
-     );
+  // set context id to reserved value
+  mmuSetContextID(0);
+
+  // instruction sync barrier
+  mmuInstructionSync();
+  
+  asm("mcr p15, 0, %0, c2, c0, 1": :"r"(addr));
+
+  // instruction sync barrier
+  mmuInstructionSync();
+
+  // set context id to new value
+  mmuSetContextID(asid);
 }
 
 simpleEntry* mmuGetTTBR0()
 {
   u32int regVal = 0;
   //TODO: need to improve this to insert the correct bit masks
-  asm("mrc p15, 0, %0, c2, c0, 0"
-      :"=r"(regVal)
-      :
-      );
+  asm("mrc p15, 0, %0, c2, c0, 0":"=r"(regVal));
 #ifdef MMU_DBG
   printf("MMU: get translation table base register 0, val %08x" EOL, (u32int)regVal);
 #endif
@@ -166,10 +181,7 @@ bool isMmuEnabled()
 {
   u32int tempReg = 0;
   //This may need a bit of investigation/logic to ensure the bit masks we set are correct
-  asm volatile("mrc p15, 0, %0, c1, c0, 0\n\t"
-  :"=r"(tempReg)
-  :
-  : "memory");
+  asm volatile("mrc p15, 0, %0, c1, c0, 0\n\t" :"=r"(tempReg));
   
   return (tempReg & 0x1) ? TRUE : FALSE;
          
@@ -184,12 +196,191 @@ void mmuClearInstructionCache()
 #ifdef MMU_DBG
   printf("mmuClearInstructionCache: clearing host iCache" EOL);
 #endif
-  asm ("mcr p15, 0, r0, c7, c5, 0"
-  :
-  :
-  :"memory"
-      );
+  asm ("mcr p15, 0, %0, c7, c5, 0": : "r"(0));
 }
+
+
+void mmuInvIcacheToPOU(void)
+{
+#ifdef MMU_DBG
+  printf("mmuInvIcacheByMVAtoPOU: inv all iCaches to PoU" EOL);
+#endif
+  asm("mcr p15, 0, %0, c7, c5, 0": :"r"(0));
+}
+
+
+void mmuInvIcacheByMVAtoPOU(u32int mva)
+{
+#ifdef MMU_DBG
+  printf("mmuInvIcacheByMVAtoPOU: inv iCache by MVA to PoU %08x" EOL, mva);
+#endif
+
+  asm("mcr p15, 0, %0, c7, c5, 1": :"r"(mva));
+}
+
+
+void mmuInstructionSync()
+{
+#ifdef MMU_DBG
+  printf("mmuInstructionSync" EOL);
+#endif
+  asm ("mcr p15, 0, %0, c7, c5, 4": : "r"(0));
+}
+
+
+void mmuInvBranchPredictorArray()
+{
+#ifdef MMU_DBG
+  printf("mmuInvBranchPredictorArray" EOL);
+#endif
+  asm ("mcr p15, 0, %0, c7, c5, 6": : "r"(0));
+}
+
+
+void mmuCleanDcacheByMVAtoPOC(u32int mva)
+{
+#ifdef MMU_DBG
+  printf("mmuCleanDcacheByMVAtoPOC: Clearing dcache by MVA to POC %08x" EOL, mva);
+#endif
+  asm("mcr p15, 0, %0, c7, c10, 1": :"r"(mva));
+}
+
+
+void mmuCleanDcacheBySetWay(u32int setWay)
+{
+#ifdef MMU_DBG
+  printf("mmuCleanDcacheBySetWay: Clearing dcache by set/way %08x" EOL, setWay);
+#endif
+  asm("mcr p15, 0, %0, c7, c10, 2": :"r"(setWay));
+}
+
+
+void mmuDataSyncBarrier()
+{
+#ifdef MMU_DBG
+  printf("mmuDataSyncBarrier: synchronization barrier" EOL);
+#endif
+  asm ("mcr p15, 0, %0, c7, c10, 4": : "r"(0));
+}
+
+
+void mmuDataMemoryBarrier()
+{
+#ifdef MMU_DBG
+  printf("mmuDataMemoryBarrier" EOL);
+#endif
+  asm ("mcr p15, 0, %0, c7, c10, 5": : "r"(0));
+}
+
+
+void mmuCleanDCacheByMVAtoPOU(u32int mva)
+{
+#ifdef MMU_DBG
+  printf("mmuCleanDCacheByMVAtoPOU: clean dcache by MVA to PoU %08x" EOL, mva);
+#endif
+  asm("mcr p15, 0, %0, c7, c11, 1": :"r"(mva));
+}
+
+
+void mmuCleanInvDCacheByMVAtoPOC(u32int mva)
+{
+#ifdef MMU_DBG
+  printf("mmuCleanInvDCacheByMVAtoPOC: clean and invalidate dcache by MVA to PoU %08x" EOL, mva);
+#endif
+
+  asm("mcr p15, 0, %0, c7, c14, 1": :"r"(mva));
+}
+
+
+void mmuCleanInvDCacheBySetWay(u32int setWay)
+{
+#ifdef MMU_DBG
+  printf("mmuCleanInvDCacheBySetWay: clean and invalidate dcache by set/way %08x" EOL, setWay);
+#endif
+
+  asm("mcr p15, 0, %0, c7, c14, 2": :"r"(setWay));
+}
+
+/**
+ * invalidate instruction TLB all
+ **/
+void mmuInvalidateITLB()
+{
+#ifdef MMU_DBG
+  printf("mmuInvalidateITLB: invalidate iTLB" EOL);
+#endif
+  asm ("mcr p15, 0, r0, c8, c5, 0": :);
+}
+
+
+/**
+ * invalidate instruction tlb by mva
+ **/
+void mmuInvalidateITLBbyMVA(u32int mva)
+{
+#ifdef MMU_DBG
+  printf("mmuInvalidateITLBbyMVA: invalidate iTLB by MVA %08x" EOL, mva);
+#endif
+  asm ("mcr p15, 0, %0, c8, c5, 1": :"r"(mva));
+}
+
+
+void mmuInvalidateITLBbyASID(u32int asid)
+{
+#ifdef MMU_DBG
+  printf("mmuInvalidateITLBbyASID: invalidate iTLB by ASID %08x" EOL, asid);
+#endif
+  asm ("mcr p15, 0, %0, c8, c5, 2": :"r"(asid));
+}
+
+
+void mmuInvalidateDTLB(void)
+{
+#ifdef MMU_DBG
+  printf("mmuInvalidateDTLB: invalidate dTLB" EOL);
+#endif
+  asm ("mcr p15, 0, %0, c8, c6, 0": :"r"(0));
+}
+
+
+void mmuInvalidateDTLBbyMVA(u32int mva)
+{
+#ifdef MMU_DBG
+  printf("mmuInvalidateDTLBbyMVA: invalidate dTLB by MVA %08x" EOL, mva);
+#endif
+  asm ("mcr p15, 0, %0, c8, c6, 1": :"r"(mva));
+}
+
+
+void mmuInvalidateDTLBbyASID(u32int asid)
+{
+#ifdef MMU_DBG
+  printf("mmuInvalidateDTLBbyASID: invalidate dTLB by ASID %08x" EOL, asid);
+#endif
+  asm ("mcr p15, 0, %0, c8, c6, 2": :"r"(asid));
+}
+
+
+void mmuInvalidateUTLB()
+{
+#ifdef MMU_DBG
+  printf("mmuInvalidateUTLB: invalidate uTLB" EOL);
+#endif
+  asm ("mcr p15, 0, %0, c8, c7, 0": :"r"(0));
+}
+
+
+/**
+ * Clears any matching entries to <address> from the host TLB
+ **/
+void mmuInvalidateUTLBbyMVA(u32int mva)
+{
+#ifdef MMU_DBG
+  printf("mmuInvalidateUTLBbyMVA: Invalidate UTLB by MVA %08x" EOL, mva);
+#endif
+  asm ("mcr p15, 0, %0, c8, c7, 1": :"r"(mva));
+}
+
 
 /**
  * clear and invalidate host data cache
@@ -205,60 +396,14 @@ void mmuClearDataCache(void)
   /* invalidate L2 cache also */
   v7_flush_dcache_all(BOARD_DEVICE_TYPE);
 
-  /* mem barrier to sync up things */
+  // data sync
   asm("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
 
   l2_cache_enable();
 }
 
 
-/**
- * clear the entire physical TLB of the host
- **/
-void mmuClearTLB()
-{
-#ifdef MMU_DBG
-  printf("mmuClearTLB: clearing host TLB" EOL);
-#endif
-  // mcr coproc opc1 Rt CRn CRm opc2
-  //It doesn't matter which register it written/nor the value inside it
-  asm ("mcr p15, 0, r0, c8, c7, 0"
-  :
-  :
-  :"memory"
-      );
-}
 
-
-/**
- * Clears any matching entries to <address> from the host TLB
- **/
-void mmuClearTLBbyMVA(u32int address)
-{
-  address &= 0xFFFFF000;
-#ifdef MMU_DBG
-  printf("mmuClearTLBbyMVA: Clearing host TLB for MVA %08x" EOL, address);
-#endif
-  // mcr coproc opc1 Rt CRn CRm opc2
-  asm ("mcr p15, 0, %0, c8, c7, 1"
-  :
-  :"r"(address)
-      );
-}
-
-
-void mmuDataBarrier()
-{
-#ifdef MMU_DBG
-  printf("mmuDataBarrier" EOL);
-#endif
-    //It doesn't matter which register it written/nor the value inside it
-  asm ("mcr p15, 0, r0, c7, c10, 5"
-  :
-  :
-  :"memory"
-      );
-}
 
 void mmuSetDomain(u8int domain, access_type access)
 {
@@ -340,33 +485,14 @@ void mmuSetTexRemap(bool enable)
 #endif
 }
 
-
-void mmuInvalidateIcacheByMVA(u32int mva)
+void mmuSetContextID(u32int asid)
 {
 #ifdef MMU_DBG
-  printf("mmuInvalidateIcacheByMVA: invalidate Icache by MVA %08x" EOL, mva);
+//  printf("mmuSetContextID: %x" EOL, asid);
 #endif
-
-  asm("mcr p15, 0, %0, c7, c5, 1"
-      :
-      :"r"(mva)
-      :"memory"
-  );
+  asm volatile("mcr p15, 0, %0, c13, c0, 1": :"r"(asid));
 }
 
-
-void mmuCleanDcacheByMVA(u32int mva)
-{
-#ifdef MMU_DBG
-  printf("mmuClearDcacheByMVA: Clearing dcache by MVA %08x" EOL, mva);
-#endif
-
-  asm("mcr p15, 0, %0, c7, c11, 1"
-      :
-      :"r"(mva)
-      :"memory"
-  );
-}
 
 
 u32int getDFAR()
@@ -404,6 +530,18 @@ IFSR getIFSR()
      );
   return result;
 }
+
+
+void mmuPageTableEdit(u32int entryAddr, u32int pageAddr)
+{
+  mmuCleanDcacheByMVAtoPOC(entryAddr);
+  mmuDataSyncBarrier();
+  mmuInvalidateUTLBbyMVA(pageAddr);
+  mmuInvBranchPredictorArray();
+  mmuDataSyncBarrier();
+  mmuInstructionSync();
+}
+
 
 void printDataAbort()
 {

@@ -36,6 +36,7 @@ struct VirtualMachinePageTables
   simpleEntry* shadowPriv;
   simpleEntry* shadowUser;
   simpleEntry* shadowActive;
+  u32int contextID;
   ptInfo* sptInfo;
   ptInfo* gptInfo;
 };

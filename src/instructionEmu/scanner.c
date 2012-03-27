@@ -175,11 +175,13 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
   u32int *end;
   instructionHandler handler;
   u32int instruction;
+  instructionReplaceCode replaceCode;
   /*
    * Find the next sensitive instruction
    */
   end = start;
-  while ((handler = decodeArmInstruction(*end)) == NULL)
+
+  while ((replaceCode = decodeArmInstruction(*end, &handler)) == IRC_SAFE)
   {
     end++;
   }
@@ -241,8 +243,8 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
    * 2. invalidate instruction cache entry by address.
    * ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1
    */
-  mmuInvalidateIcacheByMVA((u32int)end);
-  mmuCleanDcacheByMVA((u32int)end);
+  mmuInvIcacheByMVAtoPOU((u32int)end);
+  mmuCleanDcacheByMVAtoPOC((u32int)end);
   guestWriteProtect((u32int)start, (u32int)end);
 }
 
@@ -253,6 +255,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 
   u16int *end;
   instructionHandler handler;
+  instructionReplaceCode replaceCode;
   u32int instruction;
   u32int blockType = BCENTRY_TYPE_THUMB;
   u32int endIs16Bit;
@@ -277,7 +280,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         break;
     }
 
-    if ((handler = decodeThumbInstruction(instruction)) != NULL)
+    if ((replaceCode = decodeThumbInstruction(instruction, &handler)) != IRC_SAFE)
     {
       if (itState != 0)
       {
