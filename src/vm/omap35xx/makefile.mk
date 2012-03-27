@@ -11,6 +11,7 @@ HYPARM_SRCS_C-y += vm/omap35xx/pm.c
 HYPARM_SRCS_C-y += vm/omap35xx/prm.c
 HYPARM_SRCS_C-y += vm/omap35xx/sdma.c
 HYPARM_SRCS_C-y += vm/omap35xx/sdram.c
+HYPARM_SRCS_C-y += vm/omap35xx/sms.c
 HYPARM_SRCS_C-y += vm/omap35xx/sramInternal.c
 HYPARM_SRCS_C-y += vm/omap35xx/sysControlModule.c
 HYPARM_SRCS_C-y += vm/omap35xx/timer32k.c

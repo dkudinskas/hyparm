@@ -418,6 +418,10 @@ config DEBUG_VP_OMAP_35XX_SDRAM
   bool "Debug SDRAM"
   depends on DEBUG_VIRTUAL_PLATFORM
 
+config DEBUG_VP_OMAP_35XX_SMS
+  bool "Debug SDRAM Memory Scheduler (SMS)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
 config DEBUG_VP_OMAP_35XX_SRAM
   bool "Debug SRAM"
   depends on DEBUG_VIRTUAL_PLATFORM

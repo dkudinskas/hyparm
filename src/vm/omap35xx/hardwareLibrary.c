@@ -15,6 +15,7 @@
 #include "vm/omap35xx/prm.h"
 #include "vm/omap35xx/sdma.h"
 #include "vm/omap35xx/sdram.h"
+#include "vm/omap35xx/sms.h"
 #include "vm/omap35xx/sramInternal.h"
 #include "vm/omap35xx/sysControlModule.h"
 #include "vm/omap35xx/timer32k.h"
@@ -134,6 +135,18 @@ device *initialiseHardwareLibrary()
   initialiseDevice(pmModule, "L3_PM", FALSE,
                    Q1_L3_PM, (u32int)(Q1_L3_PM + Q1_L3_PM_SIZE - 1),
                    l3Interconnect, &loadProtectionMechanism, &storeProtectionMechanism);
+
+  // L3INT: SDRAM Memory Scheduler
+  device *smsModule = (device *)malloc(sizeof(device));
+  if (smsModule == NULL)
+  {
+    DIE_NOW(NULL, "initialiseHardwareLibrary(): Failed to allocate SMS module.");
+  }
+  memset(smsModule, 0, sizeof(device));
+  initSms();
+  initialiseDevice(smsModule, "L3_SMS", FALSE,
+                   Q1_L3_SMS, (u32int)(Q1_L3_SMS + Q1_L3_SMS_SIZE - 1),
+                   l3Interconnect, &loadSms, &storeSms);
 
   // Q1: LEVEL4 INTERCONNECT (L4INT, parent Q1)
   device *l4Interconnect = (device *)malloc(sizeof(device));
