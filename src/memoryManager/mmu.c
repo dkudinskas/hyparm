@@ -7,7 +7,7 @@
 #include "cpuArch/cache.h"
 
 
-static const char* dataAbtFaultString[] =
+static const char *const dataAbtFaultString[] =
 {
   "INVALID ENTRY",
   "Alignment Fault",
@@ -27,7 +27,7 @@ static const char* dataAbtFaultString[] =
   "Permission Fault - Page",
 };
 
-static const char* prefetchAbtFaultString[] =
+static const char *const prefetchAbtFaultString[] =
 {
   "INVALID ENTRY",                            //  0 = 0b00000,
   "INVALID ENTRY",                            //  1 = 0b00001,
@@ -62,6 +62,7 @@ static const char* prefetchAbtFaultString[] =
   "Translation Table Walk 2nd Level parity",  // 1e = 0b11110,
   "INVALID ENTRY",                            // 1f = 0b11111,
 };
+
 
 void mmu_compile_time_check(void)
 {
@@ -551,7 +552,7 @@ void printDataAbort()
 
   printf("Data Abort Address: %08x" EOL, dfar);
   printf("Fault type: ");
-  printf("%s", (char*)dataAbtFaultString[dfsr.fs3_0]);
+  printf("%s", dataAbtFaultString[dfsr.fs3_0]);
   printf(" (%x), domain %x, Write not Read: %x, External: %x" EOL,  faultStatus, dfsr.domain, dfsr.WnR, dfsr.ExT);
 }
 
@@ -563,6 +564,6 @@ void printPrefetchAbort()
 
   printf("Prefetch Abort Address: %08x" EOL, ifar);
   printf("Fault type: ");
-  printf("%s", (char*)prefetchAbtFaultString[faultStatus]);
+  printf("%s", prefetchAbtFaultString[faultStatus]);
   printf(" (%x),  External: %x" EOL, faultStatus, ifsr.ExT);
 }
