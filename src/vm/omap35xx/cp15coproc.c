@@ -1,4 +1,6 @@
 #include "common/debug.h"
+#include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "memoryManager/addressing.h"
@@ -7,13 +9,36 @@
 #include "vm/omap35xx/cp15coproc.h"
 
 
-void initCRB(CREG *crb)
+static u32int crbIndex(u32int CRn, u32int opc1, u32int CRm, u32int opc2);
+
+
+static u32int crbIndex(u32int CRn, u32int opc1, u32int CRm, u32int opc2)
 {
+  u32int index = 0;
+  // value 0 to 7
+  u32int indexOpc2 = opc2;
+  // values 0, 8, 16... to 120 ( 16 increments of 8)
+  u32int indexCRm  = CRm  * MAX_OPC2_VALUES;
+  // values 0, 128, 256, 384... 894 (8 increments of 128)
+  u32int indexOpc1 = opc1 * MAX_CRM_VALUES * MAX_OPC2_VALUES;
+  // values 0, 1024, 2048, 3072, 4096... 15360 (16 increments of 1024)
+  u32int indexCRn  = CRn * MAX_OPC1_VALUES * MAX_CRM_VALUES * MAX_OPC2_VALUES;
+
+  index = indexCRn + indexOpc1 + indexCRm + indexOpc2;
+  return index;
+}
+
+CREG *createCRB()
+{
+  CREG *crb = (CREG *)calloc(MAX_CRB_SIZE, sizeof(CREG));
+  if (crb == NULL)
+  {
+    return NULL;
+  }
+
 #ifdef COPROC_DEBUG
   printf("Initializing coprocessor reg bank @ address %p" EOL, crb);
 #endif
-
-  memset(crb, 0, MAX_CRB_SIZE * sizeof(CREG));
 
   /* MIDR:
    * main ID register: CPU idenification including implementor code
@@ -277,6 +302,8 @@ void initCRB(CREG *crb)
   i = crbIndex(13, 0, 0, 4);
   crb[i].value = 0x0;
   crb[i].valid = TRUE;
+
+  return crb;
 }
 
 void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr, u32int val)
@@ -681,23 +708,6 @@ u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPt
   {
     printf("getCreg (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
            CRn, opc1, CRm, opc2, reg.value);
-    DIE_NOW(0, "Undefined CP15 register!");
-    return 0;
+    DIE_NOW(NULL, "Undefined CP15 register!");
   }
-}
-
-u32int crbIndex(u32int CRn, u32int opc1, u32int CRm, u32int opc2)
-{
-  u32int index = 0;
-  // value 0 to 7
-  u32int indexOpc2 = opc2;
-  // values 0, 8, 16... to 120 ( 16 increments of 8)
-  u32int indexCRm  = CRm  * MAX_OPC2_VALUES;
-  // values 0, 128, 256, 384... 894 (8 increments of 128)
-  u32int indexOpc1 = opc1 * MAX_CRM_VALUES * MAX_OPC2_VALUES;
-  // values 0, 1024, 2048, 3072, 4096... 15360 (16 increments of 1024)
-  u32int indexCRn  = CRn * MAX_OPC1_VALUES * MAX_CRM_VALUES * MAX_OPC2_VALUES;
-
-  index = indexCRn + indexOpc1 + indexCRm + indexOpc2;
-  return index;
 }

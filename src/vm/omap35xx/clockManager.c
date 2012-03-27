@@ -14,13 +14,14 @@ struct ClockManager * clockMan;
 void initClockManager()
 {
   // init function: setup device, reset register values to defaults!
-  clockMan = (struct ClockManager *)malloc(sizeof(struct ClockManager));
-  if (clockMan == 0)
+  clockMan = (struct ClockManager *)calloc(1, sizeof(struct ClockManager));
+  if (clockMan == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate clock manager.");
   }
-  memset(clockMan, 0x0, sizeof(struct ClockManager));
+
   DEBUG(VP_OMAP_35XX_CM, "Initializing Clock manager at %p" EOL, clockMan);
+
   // IVA2_CM registers
   clockMan->cmFClkEnIva2Reg      = 0x00000001; // IVA2_CLK is enabled
   clockMan->cmClkEnPllIva2Reg    = 0x00000037; // enable DPLL in lock mode, 0.75 MHz--1.0 MHz freq

@@ -28,16 +28,14 @@ void connectGpio(u32int gpioNumber, u32int physicalGpioNumber)
 void initGpio(u32int gpioNumber)
 {
   u32int index = gpioNumber - 1;
-  gpio[index] = (struct Gpio *)malloc(sizeof(struct Gpio));
-  if (!gpio[index])
+  gpio[index] = (struct Gpio *)calloc(1, sizeof(struct Gpio));
+  if (gpio[index] == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate Gpio.");
   }
 
-  memset(gpio[index], 0, sizeof(struct Gpio));
-  gpio[index]->physicalId = -1;
   DEBUG(VP_OMAP_35XX_GPIO, "initGpio: GPIO%x @ %p" EOL, gpioNumber, gpio[index]);
-
+  gpio[index]->physicalId = -1;
   reset(index);
 }
 

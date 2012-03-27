@@ -31,11 +31,11 @@ bool checkBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress);
 
 void clearBlockCache(BCENTRY *blockCache);
 
+BCENTRY *createBlockCache(void);
+
 void dumpBlockCacheEntry(BCENTRY *blockCache, u32int index);
 
 BCENTRY *getBlockCacheEntry(BCENTRY *blockCache, u32int index);
-
-void initialiseBlockCache(BCENTRY *blockCache);
 
 void validateCacheMultiPreChange(BCENTRY * bcache, u32int startAddress, u32int endAddress);
 

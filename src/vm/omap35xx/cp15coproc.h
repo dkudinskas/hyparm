@@ -13,7 +13,6 @@
 #define MAX_OPC2_VALUES   8
 #define MAX_CRB_SIZE      MAX_CRN_VALUES * MAX_OPC1_VALUES * MAX_CRM_VALUES * MAX_OPC2_VALUES
 
-
 #define SYS_CTRL_MMU_ENABLE          0x00000001
 #define SYS_CTRL_ALIGNMENT           0x00000002
 #define SYS_CTRL_CACHING             0x00000004
@@ -40,11 +39,9 @@ struct crbEntry
 
 typedef struct crbEntry CREG;
 
-void initCRB(CREG * crb);
 
+CREG *createCRB(void);
 u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr);
 void   setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr, u32int val);
-
-u32int crbIndex(u32int CRn, u32int opc1, u32int CRm, u32int opc2);
 
 #endif

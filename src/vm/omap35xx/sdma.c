@@ -14,16 +14,13 @@ struct Sdma * sdma;
 void initSdma()
 {
   // init function: setup device, reset register values to defaults!
-  sdma = (struct Sdma*)malloc(sizeof(struct Sdma));
-  if (sdma == 0)
+  sdma = (struct Sdma *)calloc(1, sizeof(struct Sdma));
+  if (sdma == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate sdma.");
   }
-  else
-  {
-    memset(sdma, 0, sizeof(struct Sdma));
-    DEBUG(VP_OMAP_35XX_SDMA, "Initializing Sdma at %p size %#x" EOL, sdma, sizeof(struct Sdma));
-  }
+
+  DEBUG(VP_OMAP_35XX_SDMA, "Initializing Sdma at %p size %#x" EOL, sdma, sizeof(struct Sdma));
   resetSdma();
 }
 

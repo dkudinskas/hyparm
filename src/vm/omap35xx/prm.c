@@ -13,16 +13,13 @@ struct PowerAndResetManager * prMan;
 void initPrm(void)
 {
   // init function: setup device, reset register values to defaults!
-  prMan = (struct PowerAndResetManager*)malloc(sizeof(struct PowerAndResetManager));
-  if (prMan == 0)
+  prMan = (struct PowerAndResetManager *)calloc(1, sizeof(struct PowerAndResetManager));
+  if (prMan == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate power and reset manager.");
   }
-  else
-  {
-    memset((void*)prMan, 0x0, sizeof(struct PowerAndResetManager));
-    DEBUG(VP_OMAP_35XX_PRM, "Initializing Power and reset manager at %.8x" EOL, (u32int)prMan);
-  }
+
+  DEBUG(VP_OMAP_35XX_PRM, "Initializing Power and reset manager at %p" EOL, prMan);
 
   // Clock Control registers
   prMan->prmClkSelReg = 0x3;

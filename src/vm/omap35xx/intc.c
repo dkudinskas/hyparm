@@ -14,12 +14,12 @@ struct InterruptController * irqController;
 
 void initIntc()
 {
-  irqController = (struct InterruptController *)malloc(sizeof(struct InterruptController));
-  if (irqController == 0)
+  irqController = (struct InterruptController *)calloc(1, sizeof(struct InterruptController));
+  if (irqController == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate INTC.");
   }
-  memset((void *)irqController, 0x0, sizeof(struct InterruptController));
+
   DEBUG(VP_OMAP_35XX_INTC, "Initializing Interrupt controller at %p" EOL, irqController);
   intcReset();
 }

@@ -17,17 +17,13 @@ static struct ClockManagerBE *clkManBE;
 
 void clkManBEInit()
 {
-  clkManBE = (struct ClockManagerBE*)malloc(sizeof(struct ClockManagerBE));
+  clkManBE = (struct ClockManagerBE *)calloc(1, sizeof(struct ClockManagerBE));
   if (clkManBE == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate CLK_MAN_BE.");
   }
-  else
-  {
-    memset(clkManBE, 0, sizeof(struct ClockManagerBE));
-    DEBUG(PP_OMAP_35XX_CM, "Initializing CLK_MAN_BE at %p" EOL, clkManBE);
-  }
 
+  DEBUG(PP_OMAP_35XX_CM, "Initializing CLK_MAN_BE at %p" EOL, clkManBE);
   clkManBE->initialized = TRUE;
 }
 

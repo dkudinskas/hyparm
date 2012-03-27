@@ -23,12 +23,12 @@ void initProtectionMechanism()
   /**
    * initialization of PM_RT
    */
-  pmrt = (struct PmRt *)malloc(sizeof(struct PmRt));
+  pmrt = (struct PmRt *)calloc(1, sizeof(struct PmRt));
   if (pmrt == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate PM_RT.");
   }
-  memset((void*)pmrt, 0x0, sizeof(struct PmRt));
+
   DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism: @ %p" EOL, pmrt);
 
   pmrt->pmControl            = 0x03000000;
@@ -46,12 +46,12 @@ void initProtectionMechanism()
   /**
    * initialization of PM_GPMC
    */
-  pmgpmc = (struct PmGpmc *)malloc(sizeof(struct PmGpmc));
+  pmgpmc = (struct PmGpmc *)calloc(1, sizeof(struct PmGpmc));
   if (pmgpmc == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate PM_GPMC.");
   }
-  memset((void*)pmgpmc, 0x0, sizeof(struct PmGpmc));
+
   DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism: @ %p" EOL, pmgpmc);
 
   pmgpmc->pmControl            = 0x03000000;
@@ -85,12 +85,12 @@ void initProtectionMechanism()
   /**
    * initialization of PM_OCM_RAM
    */
-  pmocmram = (struct PmOcmRam *)malloc(sizeof(struct PmOcmRam));
+  pmocmram = (struct PmOcmRam *)calloc(1, sizeof(struct PmOcmRam));
   if (pmocmram == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate PM_OCM_RAM.");
   }
-  memset(pmocmram, 0, sizeof(struct PmOcmRam));
+
   DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism: @ %p" EOL, pmocmram);
 
   pmocmram->pmControl            = 0x03000000;
@@ -126,12 +126,12 @@ void initProtectionMechanism()
   /**
    * initialization of PM_OCM_ROM
    */
-  pmocmrom = (struct PmOcmRom *)malloc(sizeof(struct PmOcmRom));
+  pmocmrom = (struct PmOcmRom *)calloc(1, sizeof(struct PmOcmRom));
   if (pmocmrom == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate PM_RT.");
   }
-  memset(pmocmrom, 0, sizeof(struct PmOcmRom));
+
   DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism: @ %p" EOL, pmocmrom);
 
   pmocmrom->pmControl            = 0x03000000;
@@ -146,12 +146,12 @@ void initProtectionMechanism()
   /**
    * initialization of PM_IVA
    */
-  pmiva = (struct PmIva *)malloc(sizeof(struct PmIva));
+  pmiva = (struct PmIva *)calloc(1, sizeof(struct PmIva));
   if (pmiva == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate PM_IVA.");
   }
-  memset(pmiva, 0, sizeof(struct PmIva));
+
   DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism: @ %p" EOL, pmiva);
 
   pmiva->pmControl            = 0x03000000;
@@ -172,7 +172,7 @@ void initProtectionMechanism()
 }
 
 /* top load function */
-u32int loadProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   if (size != WORD)
   {
