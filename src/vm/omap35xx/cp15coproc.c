@@ -9,9 +9,7 @@
 
 void initCRB(CREG *crb)
 {
-#ifdef COPROC_DEBUG
-  printf("Initializing coprocessor reg bank @ address %p" EOL, crb);
-#endif
+  DEBUG(INTERPRETER_ALL_COPROC, "Initializing coprocessor reg bank @ address %p" EOL, crb);
 
   memset(crb, 0, MAX_CRB_SIZE * sizeof(CREG));
 
@@ -295,7 +293,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   // if we are writting to this register, it's probably valid already!
   crbPtr[index].valid = TRUE;
 
-  DEBUG(INTERPRETER_ARM_COPROC, "setCregVal (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n" EOL, CRn, opc1, CRm, opc2, val);
+  DEBUG(INTERPRETER_ALL_COPROC, "setCregVal (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n" EOL, CRn, opc1, CRm, opc2, val);
 
   /* probably a better place to put these checks */
   if (CRn==0 && opc1==1 && CRm==0 && opc2==0)
@@ -346,32 +344,24 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // SCTRL: System control register
     if (((oldVal & SYS_CTRL_MMU_ENABLE) == 0) && ((val & SYS_CTRL_MMU_ENABLE) != 0))
     {
-#ifdef COPROC_DEBUG
-      printf("CP15: SysCtrl - MMU enable.\n");
-#endif
+      DEBUG(INTERPRETER_ALL_COPROC, "CP15: SysCtrl - MMU enable." EOL);
       guestEnableMMU();
     }
     else if (((oldVal & SYS_CTRL_MMU_ENABLE)!=0) && ((val & SYS_CTRL_MMU_ENABLE)==0))
     {
-#ifdef COPROC_DEBUG
-      printf("CP15: SysCtrl - MMU disable.\n");
-#endif
+      DEBUG(INTERPRETER_ALL_COPROC, "CP15: SysCtrl - MMU disable." EOL);
       guestDisableMMU();
     }
 
     //Interupt handler remap
     if (((oldVal & SYS_CTRL_HIGH_VECS) == 0) && ((val & SYS_CTRL_HIGH_VECS) != 0))
     {
-#ifdef COPROC_DEBUG
-      printf("CP15: SysCtrl - high interrupt vector set.\n");
-#endif
+      DEBUG(INTERPRETER_ALL_COPROC, "CP15: SysCtrl - high interrupt vector set." EOL);
       (getGuestContext())->guestHighVectorSet = TRUE;
     }
     else if (((oldVal & SYS_CTRL_HIGH_VECS) != 0) && ((val & SYS_CTRL_HIGH_VECS) == 0))
     {
-#ifdef COPROC_DEBUG
-      printf("CP15: SysCtrl - low interrupt vector set.\n");
-#endif
+      DEBUG(INTERPRETER_ALL_COPROC, "CP15: SysCtrl - low interrupt vector set." EOL);
       (getGuestContext())->guestHighVectorSet = FALSE;
     }
 
@@ -394,9 +384,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==0)
   {
-#ifdef COPROC_DEBUG
-    printf("setCregVal: TTBR0 write %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: TTBR0 write %x" EOL, val);
     // must calculate: bits 31 to (14-N) give TTBR value. N is [0:2] of TTBCR!
     u32int ttbcr = getCregVal(2, 0, 0, 1, crbPtr);
     u32int N = ttbcr & 0x7;
@@ -406,9 +394,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==1)
   {
-#ifdef COPROC_DEBUG
-    printf("setCregVal: WARN: TTBR1 write %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: WARN: TTBR1 write %x" EOL, val);
   }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==2)
   {
@@ -423,13 +409,11 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   {
     if (oldVal != val)
     {
-#ifdef COPROC_DEBUG
-      printf("CP15: DACR change val %x old DACR %x\n", val, oldVal);
-#endif
+      DEBUG(INTERPRETER_ALL_COPROC, "CP15: DACR change val %x old DACR %x" EOL, val, oldVal);
       changeGuestDACR(oldVal, val);
     }
   }
-#ifdef COPROC_DEBUG
+#ifdef CONFIG_INTERPRETER_ALL_COPROC
   else if (CRn==5 && opc1==0 && CRm==0 && opc2==0)
   {
     // DFSR: data fault status register
@@ -454,169 +438,127 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==7 && opc1==0 && CRm==5 && opc2==0)
   {
     // ICIALLU: invalidate all instruction caches to PoU
-#ifdef COPROC_DEBUG
-    printf("setCregVal: invalidate all iCaches to PoU\n");
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: invalidate all iCaches to PoU" EOL);
     mmuInvIcacheToPOU();
   }
   else if (CRn==7 && opc1==0 && CRm==5 && opc2==1)
   {
     // ICIMVAU: invalidate instruction caches by MVA to PoU
-#ifdef COPROC_DEBUG
-    printf("setCregVal: invalidate iCaches by MVA to PoU: %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: invalidate iCaches by MVA to PoU: %x" EOL, val);
     mmuInvIcacheByMVAtoPOU(val);
   }
   else if (CRn==7 && opc1==0 && CRm==5 && opc2==4)
   {
     // CP15DSB: Instruction Synchronization Barrier operation
-#ifdef COPROC_DEBUG
-    printf("setCregVal: Instruction Synchronization Barrier operation\n");
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: Instruction Synchronization Barrier operation" EOL);
     mmuInstructionSync();
   }
   else if (CRn==7 && opc1==0 && CRm==5 && opc2==6)
   {
     // BPIALL: invalidate entire branch predictor array
-#ifdef COPROC_DEBUG
-    printf("setCregVal: invalidate entire branch predictor array\n");
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: invalidate entire branch predictor array" EOL);
     mmuInvBranchPredictorArray();
   }
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==1)
   {
     // DCCMVAC: clean data cache line by MVA to PoC
-#ifdef COPROC_DEBUG
-    printf("setCregVal: clean Dcache line by MVA to PoC: %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: clean Dcache line by MVA to PoC: %x" EOL, val);
     mmuCleanDcacheByMVAtoPOC(val);
   }
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==2)
   {
     // DCCSW: clean data cache line by set/way
-#ifdef COPROC_DEBUG
-    printf("setCregVal: clean Dcache line, set/way: %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: clean Dcache line, set/way: %x" EOL, val);
     mmuCleanInvDCacheBySetWay(val);
   }
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==4)
   {
     // CP15DSB: Data Synchronization Barrier operation
-#ifdef COPROC_DEBUG
-    printf("setCregVal: Data Synchronization Barrier operation\n");
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: Data Synchronization Barrier operation" EOL);
     mmuDataSyncBarrier();
   }
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==5)
   {
     // CP15DSB: Data Memory Barrier operation
-#ifdef COPROC_DEBUG
-    printf("setCregVal: Data Memory Barrier operation\n");
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: Data Memory Barrier operation" EOL);
     mmuDataMemoryBarrier();
   }
   else if (CRn==7 && opc1==0 && CRm==11 && opc2==1)
   {
     // DCCMVAU: clean data cache line by MVA to PoU
-#ifdef COPROC_DEBUG
-    printf("setCregVal: clean dCache line by MVA to PoU: %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: clean dCache line by MVA to PoU: %x" EOL, val);
     mmuCleanDCacheByMVAtoPOU(val);
   }
   else if (CRn==7 && opc1==0 && CRm==14 && opc2==1)
   {
     // DCCIMVAC: clean and invalidate dCache by MVA to PoC
-#ifdef COPROC_DEBUG
-    printf("setCregVal: clean and invalidate dCache by MVA to PoC: %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: clean and invalidate dCache by MVA to PoC: %x" EOL, val);
     mmuCleanInvDCacheByMVAtoPOC(val);
   }
   else if (CRn==7 && opc1==0 && CRm==14 && opc2==2)
   {
     // DCCISW: clean and invalidate data cache line by set/way
-#ifdef COPROC_DEBUG
-    printf("setCregVal: clean and invalidate Dcache line, set/way: %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: clean and invalidate Dcache line, set/way: %x" EOL, val);
     mmuCleanInvDCacheBySetWay(val);
   }
   else if (CRn==8 && opc1==0 && CRm==5 && opc2==0)
   {
     // ITLBIALL: invalide instruction TLB (all)
-#ifdef COPROC_DEBUG
-    printf("setCregVal: invalidate instruction TLB (all)\n");
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: invalidate instruction TLB (all)" EOL);
     mmuInvalidateITLB();
   }
   else if (CRn==8 && opc1==0 && CRm==5 && opc2==1)
   {
     // ITLBIALL: invalide instruction TLB by MVA
-#ifdef COPROC_DEBUG
-    printf("setCregVal: invalidate instruction TLB by MVA: %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: invalidate instruction TLB by MVA: %x" EOL, val);
     mmuInvalidateITLBbyMVA(val);
   }
   else if (CRn==8 && opc1==0 && CRm==5 && opc2==2)
   {
     // ITLBIASID: invalide instruction TLB by ASID match
-#ifdef COPROC_DEBUG
-    printf("setCregVal: invalidate instruction TLB by ASID match: %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: invalidate instruction TLB by ASID match: %x" EOL, val);
     mmuInvalidateITLBbyASID(val);
   }
   else if (CRn==8 && opc1==0 && CRm==6 && opc2==0)
   {
     // DTLBIALL: invalide data TLB (all)
-#ifdef COPROC_DEBUG
-    printf("setCregVal: invalidate data TLB (all)\n");
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: invalidate data TLB (all)" EOL);
     mmuInvalidateDTLB();
   }
   else if (CRn==8 && opc1==0 && CRm==6 && opc2==1)
   {
     // DTLBIMVA: invalidate dTLB entry by MVA
-#ifdef COPROC_DEBUG
-    printf("setCregVal: invalidate data TLB by MVA: %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: invalidate data TLB by MVA: %x" EOL, val);
     mmuInvalidateDTLBbyMVA(val);
   }
   else if (CRn==8 && opc1==0 && CRm==6 && opc2==2)
   {
     // DTLBIASID: invalidate dTLB entry by MVA
-#ifdef COPROC_DEBUG
-    printf("setCregVal: invalidate data TLB by ASID match: %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: invalidate data TLB by ASID match: %x" EOL, val);
     mmuInvalidateDTLBbyASID(val);
   }
   else if (CRn==8 && opc1==0 && CRm==7 && opc2==0)
   {
     // TLBIALL: invalide unified TLB, write-only
-#ifdef COPROC_DEBUG
-    printf("setCregVal: invalidate unified TLB (all)\n");
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: invalidate unified TLB (all)" EOL);
     mmuInvalidateUTLB();
   }
   else if (CRn==8 && opc1==0 && CRm==7 && opc2==1)
   {
     // TLBIALL: invalide unified TLB by MVA, write-only
-#ifdef COPROC_DEBUG
-    printf("setCregVal: invalidate unified TLB by MVA\n");
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: invalidate unified TLB by MVA" EOL);
     mmuInvalidateUTLBbyMVA(val);
   }
   else if (CRn==10 && opc1==0 && CRm==2 && opc2==0)
   {
     // PRRR: primary region remap register
-#ifdef COPROC_DEBUG
-    printf("setCregVal: WARN: PRRR value %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: WARN: PRRR value %x" EOL, val);
     asm("mcr p15, 0, %0, c10, c2, 0": :"r"(val));
   }
   else if (CRn==10 && opc1==0 && CRm==2 && opc2==1)
   {
     // NMRR: normal memory remap register
-#ifdef COPROC_DEBUG
-    printf("setCregVal: WARN: NMRR value %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: WARN: NMRR value %x" EOL, val);
     asm("mcr p15, 0, %0, c10, c2, 1": :"r"(val));
   }
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==0)
@@ -627,12 +569,10 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==1)
   {
     // CONTEXTID: context ID register
-#ifdef COPROC_DEBUG
-    printf("setCregVal: WARN: CONTEXTID value %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: WARN: CONTEXTID value %x" EOL, val);
     guestSetContextID(val);
   }
-#ifdef COPROC_DEBUG
+#ifdef CONFIG_INTERPRETER_ALL_COPROC
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==2)
   {
     // TPIDRURW: software thread ID register, user mode read-write
@@ -647,12 +587,10 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // TPIDRURO: software thread ID register, user mode read-only
     // writes are caught by the hypervisor - they are privileged operations
     // but reads are not! must propagate TPIDRURO value to real CP15.
-#ifdef COPROC_DEBUG
-    printf("setCregVal: WARN: TPIDRURO value %x\n", val);
-#endif
+    DEBUG(INTERPRETER_ALL_COPROC, "setCregVal: WARN: TPIDRURO value %x" EOL, val);
     asm("mcr p15, 0, %0, c13, c0, 3": :"r"(val));
   }
-#ifdef COPROC_DEBUG
+#ifdef CONFIG_INTERPRETER_ALL_COPROC
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==4)
   {
     // TPIDRPRW: software thread ID register, user mode no access
@@ -664,14 +602,13 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
 #endif
 }
 
-
 u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr)
 {
   CREG reg;
   u32int index = crbIndex(CRn, opc1, CRm, opc2);
   reg = crbPtr[index];
 
-  DEBUG(INTERPRETER_ARM_COPROC, "getCreg (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n", CRn, opc1, CRm, opc2, reg.value);
+  DEBUG(INTERPRETER_ALL_COPROC, "getCreg (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n", CRn, opc1, CRm, opc2, reg.value);
 
   if (reg.valid)
   {
