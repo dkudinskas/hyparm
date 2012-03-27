@@ -18,12 +18,12 @@ struct GeneralPurposeTimer * gptimer;
 void initGPTimer()
 {
   // init function: setup device, reset register values to defaults!
-  gptimer = (struct GeneralPurposeTimer*)malloc(sizeof(struct GeneralPurposeTimer));
-  if (gptimer == 0)
+  gptimer = (struct GeneralPurposeTimer *)calloc(1, sizeof(struct GeneralPurposeTimer));
+  if (gptimer == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate general purpose timer.");
   }
-  memset((void*)gptimer, 0x0, sizeof(struct GeneralPurposeTimer));
+
   DEBUG(VP_OMAP_35XX_GPTIMER, "Initializing General Purpose timer at %p" EOL, gptimer);
 
   resetGPTimer();

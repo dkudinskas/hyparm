@@ -115,7 +115,7 @@ void setupHypervisorPageTable(simpleEntry *pageTablePtr)
 
 void setupShadowPageTable(simpleEntry* pageTablePtr)
 {
-  memset((void*)pageTablePtr, 0x0, PT1_SIZE);
+  memset(pageTablePtr, 0, PT1_SIZE);
 
   //map in the hypervisor
   mapHypervisorMemory(pageTablePtr);

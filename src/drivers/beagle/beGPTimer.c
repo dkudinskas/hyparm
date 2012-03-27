@@ -27,14 +27,13 @@ static inline void gptBEregWrite(u32int id, u32int reg, u32int val);
 void gptBEInit(u32int id)
 {
   struct GeneralPurposeTimerBE *gpt
-     = (struct GeneralPurposeTimerBE *)malloc(sizeof(struct GeneralPurposeTimerBE));
+     = (struct GeneralPurposeTimerBE *)calloc(1, sizeof(struct GeneralPurposeTimerBE));
 
-  if (!gpt)
+  if (gpt == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate GPT_BE.");
   }
 
-  memset(gpt, 0, sizeof(struct GeneralPurposeTimerBE));
   gpt->baseAddress = gptBEgetBaseAddr(id);
 
   gpts[id - 1] = gpt;

@@ -12,16 +12,13 @@ struct Gpmc * gpmc;
 
 void initGpmc()
 {
-  gpmc = (struct Gpmc*)malloc(sizeof(struct Gpmc));
-  if (gpmc == 0)
+  gpmc = (struct Gpmc *)calloc(1, sizeof(struct Gpmc));
+  if (gpmc == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate GPMC.");
   }
-  else
-  {
-    memset((void*)gpmc, 0x0, sizeof(struct Gpmc));
-    DEBUG(VP_OMAP_35XX_GPMC, "initGpmc: @ %p" EOL, gpmc);
-  }
+
+  DEBUG(VP_OMAP_35XX_GPMC, "initGpmc: @ %p" EOL, gpmc);
 
   // register default values
   gpmc->gpmcSysConfig = 0x00000010; // OMAP reference manual: 0x00000000

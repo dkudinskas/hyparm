@@ -1,4 +1,6 @@
 #include "common/debug.h"
+#include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "guestManager/blockCache.h"
@@ -112,6 +114,24 @@ static void clearExecBitMap(u32int address)
   execBitMap[index] = execBitMap[index] & ~(1 << bitNumber);
 }
 
+BCENTRY *createBlockCache()
+{
+  BCENTRY *blockCache = (BCENTRY *)calloc(BLOCK_CACHE_SIZE, sizeof(BCENTRY));
+  if (blockCache == NULL)
+  {
+    return NULL;
+  }
+
+  resetCollisionCounter();
+
+  DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, blockCache);
+
+  memset(blockCache, 0, sizeof(BCENTRY) * BLOCK_CACHE_SIZE);
+  memset(execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
+
+  return blockCache;
+}
+
 void dumpBlockCacheEntry(BCENTRY *blockCache, u32int index)
 {
   printf(
@@ -149,17 +169,6 @@ BCENTRY *getBlockCacheEntry(BCENTRY *blockCache, u32int index)
   DEBUG(BLOCK_CACHE, "getBlockCacheEntry: index = %#x" EOL, index);
   return &blockCache[index];
 }
-
-void initialiseBlockCache(BCENTRY *blockCache)
-{
-  resetCollisionCounter();
-
-  DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, blockCache);
-
-  memset(blockCache, 0, sizeof(BCENTRY) * BLOCK_CACHE_SIZE);
-  memset(execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
-}
-
 
 static bool isBitmapSetForAddress(u32int address)
 {

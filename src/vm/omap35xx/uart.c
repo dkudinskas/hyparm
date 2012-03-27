@@ -20,12 +20,12 @@ void initUart(u32int uartID)
 {
   u32int uID = uartID - 1;
   // init function: setup device, reset register values to defaults!
-  uart[uID] = (struct Uart *)malloc(sizeof(struct Uart));
-  if (uart[uID] == 0)
+  uart[uID] = (struct Uart *)calloc(1, sizeof(struct Uart));
+  if (uart[uID] == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate uart.");
   }
-  memset((void*)uart[uID], 0, sizeof(struct Uart));
+
   DEBUG(VP_OMAP_35XX_UART, "Initializing Uart%x at %p" EOL, uartID, uart[uID]);
   resetUart(uartID);
 }

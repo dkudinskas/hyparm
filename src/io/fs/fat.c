@@ -37,14 +37,10 @@ u32int fatBlockWrite(fatfs *fs, u32int start, u64int blkCount, const void *src)
 int fatMount(fatfs *fs, blockDevice *dev, int partNum)
 {
   DEBUG(FS_FAT, "fatMount: mount partition %#x" EOL, partNum);
-  buffer = (char*)malloc(0x1000);
-  if (buffer == 0)
+  buffer = (char *)calloc(0x1000, sizeof(char));
+  if (buffer == NULL)
   {
     DIE_NOW(NULL, "fatMount: failed to allocate block buffer");
-  }
-  else
-  {
-    memset((void*)buffer, 0x0, 0x1000);
   }
 
   //assume partitions have already been read
@@ -280,14 +276,10 @@ dentry *getPathDirEntry(fatfs *fs, const char *fname, int createNew)
 {
   DEBUG(FS_FAT, "getPathDirEntry: %s" EOL, fname);
   //root dir searching only, assume its a single file we're searching for
-  dentry *dirEntry = (dentry*)malloc(sizeof(dentry));
-  if (dirEntry == 0)
+  dentry *dirEntry = (dentry *)calloc(1, sizeof(dentry));
+  if (dirEntry == NULL)
   {
     DIE_NOW(NULL, "getPathDirEntry: failed to allocate dir entry struct");
-  }
-  else
-  {
-    memset((void*)dirEntry, 0x0, sizeof(dentry));
   }
 
   dirEntry->free = FALSE;
@@ -643,12 +635,11 @@ file* fopen(fatfs *fs, const char *fname)
   }
 
   // allocate space for file handle
-  file *f = (file *)malloc(sizeof(file));
-  if (f == 0)
+  file *f = (file *)calloc(1, sizeof(file));
+  if (f == NULL)
   {
     DIE_NOW(NULL, "fopen: failed to allocate file struct.");
   }
-  memset(f, 0, sizeof(file));
 
   f->dirEntry = getPathDirEntry(fs, fname, FALSE);
 
@@ -666,12 +657,11 @@ file* fopen(fatfs *fs, const char *fname)
   }
 
   // everything seems fine, allocate buffer space
-  f->lastCluster = (u8int *)malloc(fs->sectorsPerCluster * fs->bytesPerSector);
-  if (f->lastCluster == 0)
+  f->lastCluster = (u8int *)calloc(fs->sectorsPerCluster * fs->bytesPerSector, sizeof(u8int));
+  if (f->lastCluster == NULL)
   {
     DIE_NOW(NULL, "fopen: failed to allocate buffer for last cluster");
   }
-  memset(f->lastCluster, 0, fs->sectorsPerCluster * fs->bytesPerSector);
 
   // follow FAT chain to last cluster
   u32int currentCluster = f->dirEntry->firstCluster;
@@ -727,14 +717,10 @@ file *fnew(fatfs *fs, const char *fname)
     return 0;
   }
 
-  file *f = (file *)malloc(sizeof(file));
-  if (f == 0)
+  file *f = (file *)calloc(1, sizeof(file));
+  if (f == NULL)
   {
     DIE_NOW(NULL, "fnew: failed to allocate file struct");
-  }
-  else
-  {
-    memset(f, 0, sizeof(file));
   }
 
   dentry *dirEntry = getPathDirEntry(fs, fname, FALSE);
@@ -807,12 +793,11 @@ file *fnew(fatfs *fs, const char *fname)
   DEBUG(FS_FAT, "fnew: f->bytesInLastCluster %#x" EOL, f->bytesInLastCluster);
 
   // everything seems fine, allocate buffer space
-  f->lastCluster = (u8int *)malloc(fs->sectorsPerCluster * fs->bytesPerSector);
-  if (f->lastCluster == 0)
+  f->lastCluster = (u8int *)calloc(fs->sectorsPerCluster * fs->bytesPerSector, sizeof(u8int));
+  if (f->lastCluster == NULL)
   {
     DIE_NOW(NULL, "fnew: failed to allocate buffer for last cluster");
   }
-  memset(f->lastCluster, 0, fs->sectorsPerCluster * fs->bytesPerSector);
 
   return f;
 }

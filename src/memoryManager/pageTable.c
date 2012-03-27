@@ -1,6 +1,7 @@
 #include "common/assert.h"
 #include "common/debug.h"
 #include "common/markers.h"
+#include "common/stddef.h"
 #include "common/stdlib.h"
 #include "common/string.h"
 
@@ -28,19 +29,19 @@ u32int* newLevelOnePageTable()
   u32int pageTableAddress = (u32int)memalign(1 << PT1_ALIGN_BITS, PT1_SIZE);
   if (pageTableAddress == 0)
   {
-    DIE_NOW(0, "newLevelOnePageTable: Failed to allocate page table");
+    DIE_NOW(NULL, "newLevelOnePageTable: Failed to allocate page table");
   }
-  memset((void*)pageTableAddress, 0x0, PT1_SIZE);
+  memset((void *)pageTableAddress, 0, PT1_SIZE);
   
   // test if page table is correctly aligned
-  if((pageTableAddress & PT1_ALIGN_MASK) != pageTableAddress)
+  if ((pageTableAddress & PT1_ALIGN_MASK) != pageTableAddress)
   {
-    DIE_NOW(0, "newLevelOnePageTable: New 1st level page table is not correctly aligned.");
+    DIE_NOW(NULL, "newLevelOnePageTable: New 1st level page table is not correctly aligned.");
   }
 #ifdef PAGE_TABLE_DBG
   printf("newLevelOnePageTable: Page Table base addr: %08x\n", pageTableAddress);
 #endif
-  return (u32int*)pageTableAddress;
+  return (u32int *)pageTableAddress;
 }
 
 /**
@@ -52,19 +53,19 @@ u32int* newLevelTwoPageTable(void)
   u32int pageTableAddress = (u32int)memalign(1 << PT2_ALIGN_BITS, PT2_SIZE);
   if (pageTableAddress == 0)
   {
-    DIE_NOW(0, "newLevelTwoPageTable: Failed to allocate page table");
+    DIE_NOW(NULL, "newLevelTwoPageTable: Failed to allocate page table");
   }
-  memset((void*)pageTableAddress, 0x0, PT2_SIZE);
+  memset((void *)pageTableAddress, 0, PT2_SIZE);
   
   // test if page table is correctly aligned
   if((pageTableAddress & PT2_ALIGN_MASK) != pageTableAddress)
   {
-    DIE_NOW(0, "newLevelTwoPageTable: New 1st level page table is not correctly aligned.");
+    DIE_NOW(NULL, "newLevelTwoPageTable: New 1st level page table is not correctly aligned.");
   }
 #ifdef PAGE_TABLE_DBG
   printf("newLevelTwoPageTable: Page Table base addr: %08x\n", pageTableAddress);
 #endif
-  return (u32int*)pageTableAddress;
+  return (u32int *)pageTableAddress;
 }
 
 
@@ -562,7 +563,7 @@ void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u3
 #endif
   GCONTXT* context = getGuestContext();
   
-  ptInfo* newEntry = (ptInfo*)malloc(sizeof(ptInfo));
+  ptInfo *newEntry = (ptInfo *)malloc(sizeof(ptInfo));
 #ifdef PAGE_TABLE_DBG
   printf("addPageTableInfo: new entry @ %p\n", newEntry);
 #endif

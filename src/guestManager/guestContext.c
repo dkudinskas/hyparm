@@ -14,7 +14,7 @@
 GCONTXT *createGuestContext(void)
 {
   // Allocate guest context
-  GCONTXT *context = (GCONTXT *)malloc(sizeof(GCONTXT));
+  GCONTXT *context = (GCONTXT *)calloc(1, sizeof(GCONTXT));
   if (context == 0)
   {
     DIE_NOW(NULL, "Failed to allocate guest context.");
@@ -22,40 +22,35 @@ GCONTXT *createGuestContext(void)
   DEBUG(GUEST_CONTEXT, "createGuestContext: @ %p; initialising..." EOL, context);
   
   // Set initial values
-  memset(context, 0, sizeof(GCONTXT));
   context->CPSR = (PSR_F_BIT | PSR_I_BIT | PSR_SVC_MODE);
 
   // Initialise coprocessor register bank
-  context->coprocRegBank = (CREG *)malloc(MAX_CRB_SIZE * sizeof(CREG));
+  context->coprocRegBank = createCRB();
   if (context->coprocRegBank == NULL)
   {
     DIE_NOW(context, "Failed to allocate coprocessor register bank.");
   }
   DEBUG(GUEST_CONTEXT, "createGuestContext: coprocessor register bank @ %p" EOL,
       context->coprocRegBank);
-  initCRB(context->coprocRegBank);
 
   // Initialise block cache
-  context->blockCache = (BCENTRY *)malloc(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
+  context->blockCache = createBlockCache();
   if (context->blockCache == NULL)
   {
     DIE_NOW(context, "Failed to allocate basic block cache");
   }
   DEBUG(GUEST_CONTEXT, "createGuestContext: block cache @ %p" EOL, context->blockCache);
-  memset(context->blockCache, 0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
-  initialiseBlockCache(context->blockCache);
 
   // virtual machine page table structs
-  context->pageTables = (pageTablesVM*)malloc(sizeof(pageTablesVM));
+  context->pageTables = (pageTablesVM *)calloc(1, sizeof(pageTablesVM));
   if (context->pageTables == NULL)
   {
     DIE_NOW(context, "Failed to allocate page tables struct");
   }
   DEBUG(GUEST_CONTEXT, "allocateGuestContext: page tables @ %p" EOL, context->pageTables);
-  memset(context->pageTables, 0, sizeof(pageTablesVM));
 
   // Initialise virtual hardware devices
-  context->hardwareLibrary = initialiseHardwareLibrary();
+  context->hardwareLibrary = createHardwareLibrary();
   if (context->hardwareLibrary == NULL)
   {
     DIE_NOW(context, "Hardware library initialisation failed.");

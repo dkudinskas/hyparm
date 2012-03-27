@@ -428,7 +428,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
       {
         DIE_NOW(0, "shadowMapPageTable: Failed to allocate 2lvl shadow page table");
       }
-      memset((void*)sptVirtAddr, 0x0, PT2_SIZE);
+      memset((void *)sptVirtAddr, 0, PT2_SIZE);
 #ifdef SHADOWING_DEBUG
       printf("shadowMapPageTable: newPT2 @ %08x\n", sptVirtAddr);
 #endif
