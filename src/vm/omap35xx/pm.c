@@ -5,9 +5,6 @@
 
 #include "guestManager/guestContext.h"
 
-#include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
-#include "memoryManager/pageTable.h" // for getPhysicalAddress()
-
 #include "vm/omap35xx/pm.h"
 
 
@@ -29,7 +26,7 @@ void initProtectionMechanism()
     DIE_NOW(NULL, "Failed to allocate PM_RT.");
   }
   memset((void*)pmrt, 0x0, sizeof(struct PmRt));
-  DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism: @ %p" EOL, pmrt);
+  DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism @ %p" EOL, pmrt);
 
   pmrt->pmControl            = 0x03000000;
 
