@@ -94,7 +94,7 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T16_LOAD, context, instruction);
 
-  u32int nextPC = 0;
+  u32int nextPC;
   u32int regList = 0;
   u32int baseAddress = 0;
 
@@ -120,11 +120,8 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
   } // for ends
 
   // and now take care of the PC
-  if ((instruction & 0x0100))
-  {
-    nextPC = vmLoad(WORD, baseAddress);
-    baseAddress += 4;
-  }
+  nextPC = vmLoad(WORD, baseAddress);
+  baseAddress += 4;
 
   // thumb always updates the SP
   storeGuestGPR(GPR_SP, baseAddress, context);
