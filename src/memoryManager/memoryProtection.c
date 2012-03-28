@@ -76,10 +76,10 @@ void writeProtectRange(simpleEntry* pageTable, u32int start, u32int end)
       case RESERVED:
       {
         printf("writeProtectRange: startAddress %x; endAddress %x\n", start, end);
-        DIE_NOW(0, "writeProtectRange: reserved 1st level page table entry!");
+        DIE_NOW(NULL, "writeProtectRange: reserved 1st level page table entry!");
       }
       default:
-        DIE_NOW(0, "writeProtectRange: Unrecognized first level entry. Error.");
+        DIE_NOW(NULL, "writeProtectRange: Unrecognized first level entry. Error.");
     }
 
     simpleEntry* secondEntry = getEntrySecond((pageTableEntry*)firstEntry, pageStartAddress);
@@ -107,17 +107,17 @@ void writeProtectRange(simpleEntry* pageTable, u32int start, u32int end)
       }
       case LARGE_PAGE:
       {
-        DIE_NOW(0, "writeProtectRange: found large page, unimplemented.");
+        DIE_NOW(NULL, "writeProtectRange: found large page, unimplemented.");
       }
       default:
       {
-        DIE_NOW(0, "writeProtectRange: Unrecognized second level entry");
+        DIE_NOW(NULL, "writeProtectRange: Unrecognized second level entry");
       }
     }
 
     if(pageEndAddress == 0)
     {
-      DIE_NOW(0, "writeProtectRange: invalid page end address value.");
+      DIE_NOW(NULL, "writeProtectRange: invalid page end address value.");
     }
 #ifdef MEM_PROT_DBG
     printf("writeProtectRange: current pageEndAddress: %08x\n", pageEndAddress);

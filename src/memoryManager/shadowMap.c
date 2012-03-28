@@ -426,7 +426,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
       // need to allocate a new shadow page table!
       if ((sptVirtAddr = (u32int)memalign(1 << PT2_ALIGN_BITS, PT2_SIZE)) == 0)
       {
-        DIE_NOW(0, "shadowMapPageTable: Failed to allocate 2lvl shadow page table");
+        DIE_NOW(NULL, "shadowMapPageTable: Failed to allocate 2lvl shadow page table");
       }
       memset((void *)sptVirtAddr, 0, PT2_SIZE);
 #ifdef SHADOWING_DEBUG
@@ -504,7 +504,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
       ptInfo* metadata = getPageTableInfo(pageTablePtr);
       if (metadata == 0)
       {
-        DIE_NOW(0, "shadowMapPageTable: sPT2 metadata not found while checking AP\n");
+        DIE_NOW(NULL, "shadowMapPageTable: sPT2 metadata not found while checking AP\n");
       }
       simpleEntry* tempPageTable = (simpleEntry*)(metadata->virtAddr);
       u32int y = 0;
@@ -514,7 +514,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
         {
           if(tempPageTable[y].type == LARGE_PAGE)
           {
-            DIE_NOW(0, "shadowMapPageTable: found guest LARGE_PAGE entry, investigate.\n");
+            DIE_NOW(NULL, "shadowMapPageTable: found guest LARGE_PAGE entry, investigate.\n");
           }
           else
           {
@@ -559,7 +559,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
       ptInfo* metadata = getPageTableInfo(pageTablePtr);
       if (metadata == 0)
       {
-        DIE_NOW(0, "shadowMapPageTable: sPT2 metadata not found while checking AP\n");
+        DIE_NOW(NULL, "shadowMapPageTable: sPT2 metadata not found while checking AP\n");
       }
       simpleEntry* tempPageTable = (simpleEntry*)(metadata->virtAddr);
       u32int y = 0;
@@ -569,7 +569,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
         {
           if(tempPageTable[y].type == LARGE_PAGE)
           {
-            DIE_NOW(0, "shadowMapPageTable: found guest LARGE_PAGE entry, investigate.\n");
+            DIE_NOW(NULL, "shadowMapPageTable: found guest LARGE_PAGE entry, investigate.\n");
           }
           else
           {
@@ -990,7 +990,7 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
   ptInfo* metadata = getPageTableInfo(shadow);
   if (metadata == 0)
   {
-    DIE_NOW(0, "mapAPBitsPageTable: metadata not found.\n");
+    DIE_NOW(NULL, "mapAPBitsPageTable: metadata not found.\n");
   } 
   u32int shadowVA = metadata->virtAddr;
 #ifdef SHADOWING_DEBUG
@@ -1012,7 +1012,7 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
       }
       case LARGE_PAGE:
       {
-        DIE_NOW(0, "mapAPBitsPageTable hit large page!\n");
+        DIE_NOW(NULL, "mapAPBitsPageTable hit large page!\n");
         break;
       }
       case SMALL_PAGE:
@@ -1077,7 +1077,7 @@ void mapAPBitsSmallPage(u32int dom, smallPageEntry* guest, smallPageEntry* shado
   ptInfo* head = context->pageTables->gptInfo;
   if (head == 0)
   {
-    DIE_NOW(0, "mapAPBitsSmallPage: no PT meta data at all\n");
+    DIE_NOW(NULL, "mapAPBitsSmallPage: no PT meta data at all\n");
   }
   do
   {
@@ -1129,7 +1129,7 @@ u32int mapExecuteNeverBit(u32int guestDomain, u32int xn)
  **/
 u8int mapGuestDomain(u8int guestDomain)
 {
-  DIE_NOW(0, "mapGuestDomain unimplemented.\n");
+  DIE_NOW(NULL, "mapGuestDomain unimplemented.\n");
   // may do a lot of work here... change AP bits based on DACR
   return 0;
 }

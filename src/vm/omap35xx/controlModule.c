@@ -35,7 +35,7 @@ u32int loadControlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
     default:
     {
       printf("loadControlModule: reg offs %x\n", regOffs);
-      DIE_NOW(0, "loadControlModule: unimplemented.");
+      DIE_NOW(NULL, "loadControlModule: unimplemented.");
     }
   }
   printf("loadControlModule: regOffs %x value %08x\n", regOffs, value);
@@ -44,5 +44,5 @@ u32int loadControlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
 
 void storeControlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  DIE_NOW(0, "storeControlModule: control module is a read only device!");
+  DIE_NOW(NULL, "storeControlModule: control module is a read only device!");
 }

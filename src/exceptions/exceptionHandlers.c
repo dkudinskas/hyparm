@@ -420,7 +420,7 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 
 void prefetchAbortPrivileged(void)
 {
-  DIE_NOW(0, "prefetchAbortPrivileged: unimplemented");
+  DIE_NOW(NULL, "prefetchAbortPrivileged: unimplemented");
   IFSR ifsr = getIFSR();
   u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
   switch(faultStatus)
@@ -650,7 +650,7 @@ void dabtTranslationFault(GCONTXT * gc, DFSR dfsr, u32int dfar)
     }
     else
     {
-      DIE_NOW(0, "dabtTranslationFault: panic now!\n");
+      DIE_NOW(NULL, "dabtTranslationFault: panic now!\n");
     }
   }
 }
@@ -677,7 +677,7 @@ void iabtTranslationFault(GCONTXT * gc, IFSR ifsr, u32int ifar)
     }
     else
     {
-      DIE_NOW(0, "iabtTranslationFault: panic now!\n");
+      DIE_NOW(NULL, "iabtTranslationFault: panic now!\n");
     }
   }
 }

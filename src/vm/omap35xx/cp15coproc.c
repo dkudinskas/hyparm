@@ -315,7 +315,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // guest writing to a register that is not valid yet! investigate
     printf("setCregVal (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
            CRn, opc1, CRm, opc2, val);
-    DIE_NOW(0, "setCregVal: writing to uninitialized register. investigate.");
+    DIE_NOW(NULL, "setCregVal: writing to uninitialized register. investigate.");
   }
   u32int oldVal = crbPtr[index].value;
   crbPtr[index].value = val;
@@ -327,11 +327,11 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   /* probably a better place to put these checks */
   if (CRn==0 && opc1==1 && CRm==0 && opc2==0)
   {
-    DIE_NOW(0, "setCregVal: writing to CCSIDR - read-only");
+    DIE_NOW(NULL, "setCregVal: writing to CCSIDR - read-only");
   }
   else if (CRn==0 && opc1==1 && CRm==0 && opc2==1)
   {
-    DIE_NOW(0, "setCregVal: writing to CLIDR - read-only");
+    DIE_NOW(NULL, "setCregVal: writing to CLIDR - read-only");
   }
   else if (CRn==0 && opc1==2 && CRm==0 && opc2==0)
   {
@@ -362,7 +362,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
       {
         // no such cache exists on the beagleboard!
         printf("setCregVal: CSSELR = %x\n", val);
-        DIE_NOW(0, "setCregVal: CSSELR selects an unimplemented cache.");
+        DIE_NOW(NULL, "setCregVal: CSSELR selects an unimplemented cache.");
       }
     } // switch (value) ends
     // update CCSIDR with correct value
@@ -404,19 +404,19 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
 
     if ((val & SYS_CTRL_ACCESS_FLAG) != 0)
     {
-      DIE_NOW(0, "CP15: SysCtrl - set access flag, investigate.\n");
+      DIE_NOW(NULL, "CP15: SysCtrl - set access flag, investigate.\n");
     }
     if ((val & SYS_CTRL_HW_ACC_FLAG) != 0)
     {
-      DIE_NOW(0, "CP15: SysCtrl - set hw access flag, investigate.\n");
+      DIE_NOW(NULL, "CP15: SysCtrl - set hw access flag, investigate.\n");
     }
     if ((val & SYS_CTRL_TEX_REMAP) != 0)
     {
-//      DIE_NOW(0, "CP15: SysCtrl - set tex remap, investigate.\n");
+//      DIE_NOW(NULL, "CP15: SysCtrl - set tex remap, investigate.\n");
     }
     if ((val & SYS_CTRL_VECT_INTERRUPT) != 0)
     {
-      DIE_NOW(0, "CP15: SysCtrl - set interrupt vector, investigate.\n");
+      DIE_NOW(NULL, "CP15: SysCtrl - set interrupt vector, investigate.\n");
     }
   }
   else if (CRn==2 && opc1==0 && CRm==0 && opc2==0)
@@ -443,7 +443,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // 0b000 - always use TTBR0. !0 - depends...
     if ((val & 0x7) != 0)
     {
-      DIE_NOW(0, "setCregVal: TTBCR needs to select translation table base!");
+      DIE_NOW(NULL, "setCregVal: TTBCR needs to select translation table base!");
     }
   }
   else if (CRn == 3 && opc1 == 0 && CRm==0 && opc2==0)
@@ -649,7 +649,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==0)
   {
     // FCSEIDR: fast context switch extension process ID register
-    DIE_NOW(0, "setCregVal: writing FCSEIDR - investigate!");
+    DIE_NOW(NULL, "setCregVal: writing FCSEIDR - investigate!");
   }
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==1)
   {

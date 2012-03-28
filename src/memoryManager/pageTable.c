@@ -161,14 +161,14 @@ void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
     case PAGE_TABLE:
     {
       printf("mapSection error: VA: %08x, PA: %08x, oldEntry %08x @ %p\n", virtAddr, physical, *(u32int*)firstLevelEntry, firstLevelEntry);
-      DIE_NOW(0, "mapSection: adding section entry on top of existing page table entry");
+      DIE_NOW(NULL, "mapSection: adding section entry on top of existing page table entry");
       break;
     }
     case RESERVED:
     default:
     {
       printf("mapSection error: Virtual Addr: %08x, physical addr: %08x\n", virtAddr, physical);
-      DIE_NOW(0, "mapSection: adding section entry on top of existing reserved entry");
+      DIE_NOW(NULL, "mapSection: adding section entry on top of existing reserved entry");
     }
   }//switch
 }
@@ -224,13 +224,13 @@ void mapSmallPage(simpleEntry* pageTable, u32int virtAddr, u32int physical,
       printf("mapSmallPage: Virtual %08x, physical %08x, dom: %x, AP: %x, c: %x, b: %x, tex: %x, xn: %x\n",
              virtAddr, physical, domain, accessBits, c, b, tex, xn);
       printf("mapSmallPage: first entry %08x @ %p\n", *(u32int*)first, first);
-      DIE_NOW(0, "mapSmallPage: adding page table entry on top of existing section entry");
+      DIE_NOW(NULL, "mapSmallPage: adding page table entry on top of existing section entry");
       break;
     }
     case RESERVED:
     default:
     {
-      DIE_NOW(0, "mapSmallPage: adding page table entry on top of existing reserved entry");
+      DIE_NOW(NULL, "mapSmallPage: adding page table entry on top of existing reserved entry");
     }
   }//switch
 
@@ -253,7 +253,7 @@ void mapSmallPage(simpleEntry* pageTable, u32int virtAddr, u32int physical,
            virtAddr, physical, domain, accessBits, c, b, tex, xn);
     printf("mapSmallPage: first entry %08x @ %p\n", *(u32int*)first, first);
     printf("mapSmallPage: 2nd lvl entry @ %08x = %08x\n", (u32int)second, *(u32int*)second);
-    DIE_NOW(0, "mapSmallPage: adding over existing entry\n");
+    DIE_NOW(NULL, "mapSmallPage: adding over existing entry\n");
   }
 }
 
@@ -342,14 +342,14 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
     if (!shadowMap(virtAddr))
     {
       printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
-      DIE_NOW(0, "getPhysicalAddress: failed to shadow map\n");
+      DIE_NOW(NULL, "getPhysicalAddress: failed to shadow map\n");
     }
   }
   switch(entryFirst->type)
   {
     case FAULT: //fall through, no break!
     {
-      DIE_NOW(0, "getPhysicalAddress: fault entry in page table\n");
+      DIE_NOW(NULL, "getPhysicalAddress: fault entry in page table\n");
       break;
     }
     case SECTION:
@@ -359,7 +359,7 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
       {
         printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
         printf("getPhysicalAddress: PT1 entry %08x @ %p\n", *(u32int*)section, section);
-        DIE_NOW(0, "getPhysicalAddress: supersection case unimplemented\n");
+        DIE_NOW(NULL, "getPhysicalAddress: supersection case unimplemented\n");
       }
       else
       {
@@ -375,7 +375,7 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
       {
         case LARGE_PAGE:
         {
-          DIE_NOW(0, "getPhysicalAddress: Large page case unimplemented\n");
+          DIE_NOW(NULL, "getPhysicalAddress: Large page case unimplemented\n");
         }
         // may not be shadow mapped? try it.
         case FAULT:
@@ -383,7 +383,7 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
           if (!shadowMap(virtAddr))
           {
             printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
-            DIE_NOW(0, "getPhysicalAddress: failed to shadow map, lvl2\n");
+            DIE_NOW(NULL, "getPhysicalAddress: failed to shadow map, lvl2\n");
           }
         }
         case SMALL_PAGE: //fall through
@@ -395,7 +395,7 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
         default:
         {
           printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
-          DIE_NOW(0, "getPhysicalAddress: fault entry in page table\n");
+          DIE_NOW(NULL, "getPhysicalAddress: fault entry in page table\n");
         }
       }
       break;
@@ -403,7 +403,7 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
     case RESERVED: //fall through
     {
       printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
-      DIE_NOW(0, "getPhysicalAddress: reserved entry in page table\n");
+      DIE_NOW(NULL, "getPhysicalAddress: reserved entry in page table\n");
     }
   }
   // compiler happy
@@ -447,12 +447,12 @@ simpleEntry* getEntrySecond(pageTableEntry* firstLevelEntry, u32int virtAddr)
     printf("getEntrySecond: metadata not found. 1st lvl PTE %08x @ %p; VA %08x\n",
                             *(u32int*)firstLevelEntry, firstLevelEntry, virtAddr);
     dumpPageTableInfo();
-    DIE_NOW(0, "getEntrySecond: could not find PT2 metadta.\n");
+    DIE_NOW(NULL, "getEntrySecond: could not find PT2 metadta.\n");
   }
   // however if this entry is a guest PT2 info, then virtAddr will not be set!
   if (!metadata->host)
   {
-    DIE_NOW(0, "getEntrySecond: virtAddr not set in metadata on GPT2!\n");
+    DIE_NOW(NULL, "getEntrySecond: virtAddr not set in metadata on GPT2!\n");
   }
   u32int entryAddress = metadata->virtAddr | index;
 #ifdef PAGE_TABLE_DBG
@@ -936,7 +936,7 @@ void pageTableEdit(u32int address, u32int newVal)
     if ((oldGuestEntry->type != FAULT) && (newGuestEntry->type != FAULT))
     {
       // old entry fault, new !fault. changing page table entry type. mustn't ignore
-      DIE_NOW(0, "pageTableEdit: old entry !fault, new entry !fault. change type unimplemented.\n");
+      DIE_NOW(NULL, "pageTableEdit: old entry !fault, new entry !fault. change type unimplemented.\n");
     }
   }
   else
@@ -1117,7 +1117,7 @@ void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, s
 void editAttributesPageTable(pageTableEntry* oldTable, pageTableEntry* newTable, pageTableEntry* shadowTable, u32int virtual)
 {
   printf("editAttributesPageTable: for virtual address %08x; implement\n", virtual);
-  DIE_NOW(0, "editAttributesPageTable: unimplemented\n");
+  DIE_NOW(NULL, "editAttributesPageTable: unimplemented\n");
 }
 
 
