@@ -17,9 +17,6 @@
 #include "memoryManager/shadowMap.h"
 
 
-extern void v7_flush_dcache_all(u32int dev);
-
-
 /**
  * allocate space for a new level 1 base page table
  **/
