@@ -23,14 +23,13 @@ static inline void intcRegWriteBE(u32int regOffs, u32int value);
 
 void intcBEInit()
 {
-  intcBE = (struct InterruptControllerBE *)malloc(sizeof(struct InterruptControllerBE));
+  intcBE = (struct InterruptControllerBE *)calloc(1, sizeof(struct InterruptControllerBE));
   if (intcBE == 0)
   {
     DIE_NOW(NULL, "Failed to allocate INTC_BE.");
   }
 
   DEBUG(PP_OMAP_35XX_INTC, "Initializing INTC_BE at %p" EOL, intcBE);
-  memset(intcBE, 0, sizeof(struct InterruptControllerBE));
 
   intcBE->enabled = TRUE;
   intcBE->baseAddress = 0x48200000; // Section 10.4.1 p1200

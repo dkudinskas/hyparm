@@ -3,48 +3,48 @@
 <autodecoder name="arm">
 
 <category name="UNCONDITIONALS_CATEGORY" mask="0xf0000000" value="0xf0000000">
-  <instruction name="DMB" mask="0xfffffff0" value="0xf57ff050" effect="armDmbInstruction" />
-  <instruction name="DSB" mask="0xfffffff0" value="0xf57ff040" effect="armDsbInstruction" />
-  <instruction name="ISB" mask="0xfffffff0" value="0xf57ff060" effect="armIsbInstruction" />
-  <instruction name="CLREX" mask="0xffffffff" value="0xf57ff01f" effect="armClrexInstruction" />
-  <instruction name="CPSIE" mask="0xfffffe3f" value="0xf1080000" effect="armCpsInstruction" />
-  <instruction name="CPSIE" mask="0xfffffe20" value="0xf10a0000" effect="armCpsInstruction" />
-  <instruction name="CPSID" mask="0xfffffe3f" value="0xf10c0000" effect="armCpsInstruction" />
-  <instruction name="CPSID" mask="0xfffffe20" value="0xf10e0000" effect="armCpsInstruction" />
-  <instruction name="CPS" mask="0xfff1fe20" value="0xf1000000" effect="armCpsInstruction" />
-  <instruction name="RFE" mask="0xfe50ffff" value="0xf8100a00" effect="armRfeInstruction" />
-  <instruction name="SETEND" mask="0xfffffc00" value="0xf1010000" effect="armSetendInstruction" />
-  <instruction name="SRS" mask="0xfe5fffe0" value="0xf84d0500" effect="armSrsInstruction" />
-  <instruction name="BLX #imm24" mask="0xfe000000" value="0xfa000000" effect="armBlxImmediateInstruction" />
-  <instruction name="PLD immediate" mask="0xff30f000" value="0xf510f000" effect="armPldInstruction" />
-  <instruction name="PLD register" mask="0xff30f010" value="0xf710f000" effect="armPldInstruction" />
-  <instruction name="PLI immediate, literal" mask="0xff70f000" value="0xf450f000" effect="armPliInstruction" />
-  <instruction name="PLI register" mask="0xff70f010" value="0xf650f000" effect="armPliInstruction" />
+  <instruction name="DMB" mask="0xfffffff0" value="0xf57ff050" code="IRC_REPLACE" handler="armDmbInstruction" />
+  <instruction name="DSB" mask="0xfffffff0" value="0xf57ff040" code="IRC_REPLACE" handler="armDsbInstruction" />
+  <instruction name="ISB" mask="0xfffffff0" value="0xf57ff060" code="IRC_REPLACE" handler="armIsbInstruction" />
+  <instruction name="CLREX" mask="0xffffffff" value="0xf57ff01f" code="IRC_REPLACE" handler="armClrexInstruction" />
+  <instruction name="CPSIE" mask="0xfffffe3f" value="0xf1080000" code="IRC_REPLACE" handler="armCpsInstruction" />
+  <instruction name="CPSIE" mask="0xfffffe20" value="0xf10a0000" code="IRC_REPLACE" handler="armCpsInstruction" />
+  <instruction name="CPSID" mask="0xfffffe3f" value="0xf10c0000" code="IRC_REPLACE" handler="armCpsInstruction" />
+  <instruction name="CPSID" mask="0xfffffe20" value="0xf10e0000" code="IRC_REPLACE" handler="armCpsInstruction" />
+  <instruction name="CPS" mask="0xfff1fe20" value="0xf1000000" code="IRC_REPLACE" handler="armCpsInstruction" />
+  <instruction name="RFE" mask="0xfe50ffff" value="0xf8100a00" code="IRC_REPLACE" handler="armRfeInstruction" />
+  <instruction name="SETEND" mask="0xfffffc00" value="0xf1010000" code="IRC_REPLACE" handler="armSetendInstruction" />
+  <instruction name="SRS" mask="0xfe5fffe0" value="0xf84d0500" code="IRC_REPLACE" handler="armSrsInstruction" />
+  <instruction name="BLX #imm24" mask="0xfe000000" value="0xfa000000" code="IRC_REPLACE" handler="armBlxImmediateInstruction" />
+  <instruction name="PLD immediate" mask="0xff30f000" value="0xf510f000" code="IRC_REPLACE" handler="armPldInstruction" />
+  <instruction name="PLD register" mask="0xff30f010" value="0xf710f000" code="IRC_REPLACE" handler="armPldInstruction" />
+  <instruction name="PLI immediate, literal" mask="0xff70f000" value="0xf450f000" code="IRC_REPLACE" handler="armPliInstruction" />
+  <instruction name="PLI register" mask="0xff70f010" value="0xf650f000" code="IRC_REPLACE" handler="armPliInstruction" />
 </category>
 
 <category name="DATA_PROC_AND_MISC_CATEGORY" mask="0x0c000000" value="0x00000000">
   <instruction name="NOP" mask="0xffffffff" value="0xe1a00000" />
-  <instruction name="SWP" mask="0x0fb00ff0" value="0x01000090" effect="armSwpInstruction" />
-  <instruction name="STRHT instruction" mask="0x0f7000f0" value="0x006000b0" effect="armStrhtInstruction" />
-  <instruction name="LDRHT instruction" mask="0x0f3000f0" value="0x003000b0" effect="armLdrhtInstruction" />
-  <instruction name="LDREXB" mask="0x0ff00fff" value="0x01d00f9f" effect="armLdrexbInstruction" />
-  <instruction name="LDREXD" mask="0x0ff00fff" value="0x01b00f9f" effect="armLdrexdInstruction" />
-  <instruction name="LDREXH" mask="0x0ff00fff" value="0x01f00f9f" effect="armLdrexhInstruction" />
-  <instruction name="STREXB" mask="0x0ff00ff0" value="0x01c00f90" effect="armStrexbInstruction" />
-  <instruction name="STREXD" mask="0x0ff00ff0" value="0x01a00f90" effect="armStrexdInstruction" />
-  <instruction name="STREXH" mask="0x0ff00ff0" value="0x01e00f90" effect="armStrexhInstruction" />
-  <instruction name="LDREX" mask="0x0ff00fff" value="0x01900f9f" effect="armLdrexInstruction" />
-  <instruction name="STREX" mask="0x0ff00ff0" value="0x01800f90" effect="armStrexInstruction" />
+  <instruction name="SWP" mask="0x0fb00ff0" value="0x01000090" code="IRC_REPLACE" handler="armSwpInstruction" />
+  <instruction name="STRHT instruction" mask="0x0f7000f0" value="0x006000b0" code="IRC_REPLACE" handler="armStrhtInstruction" />
+  <instruction name="LDRHT instruction" mask="0x0f3000f0" value="0x003000b0" code="IRC_REPLACE" handler="armLdrhtInstruction" />
+  <instruction name="LDREXB" mask="0x0ff00fff" value="0x01d00f9f" code="IRC_REPLACE" handler="armLdrexbInstruction" />
+  <instruction name="LDREXD" mask="0x0ff00fff" value="0x01b00f9f" code="IRC_REPLACE" handler="armLdrexdInstruction" />
+  <instruction name="LDREXH" mask="0x0ff00fff" value="0x01f00f9f" code="IRC_REPLACE" handler="armLdrexhInstruction" />
+  <instruction name="STREXB" mask="0x0ff00ff0" value="0x01c00f90" code="IRC_REPLACE" handler="armStrexbInstruction" />
+  <instruction name="STREXD" mask="0x0ff00ff0" value="0x01a00f90" code="IRC_REPLACE" handler="armStrexdInstruction" />
+  <instruction name="STREXH" mask="0x0ff00ff0" value="0x01e00f90" code="IRC_REPLACE" handler="armStrexhInstruction" />
+  <instruction name="LDREX" mask="0x0ff00fff" value="0x01900f9f" code="IRC_REPLACE" handler="armLdrexInstruction" />
+  <instruction name="STREX" mask="0x0ff00ff0" value="0x01800f90" code="IRC_REPLACE" handler="armStrexInstruction" />
   <instruction name="SMULL" mask="0x0fa000f0" value="0x00800090" />
   <instruction name="SMLAL" mask="0x0fa000f0" value="0x00a00090" />
   <instruction name="MUL Rd, Rm, Rn" mask="0x0fe000f0" value="0x00000090" />
   <instruction name="MLA Rd, Rm, Rn, Ra" mask="0x0fe000f0" value="0x00200090" />
   <instruction name="MLS Rd, Rm, Rn, Ra" mask="0x0ff000f0" value="0x00600090" />
-  <instruction name="bx%c\t%0-3r" mask="0x0ffffff0" value="0x012fff10" effect="armBxInstruction" />
-  <instruction name="BXJ Rm" mask="0x0ffffff0" value="0x012fff20" effect="armBxjInstruction" />
-  <instruction name="BKPT #imm8" mask="0xfff000f0" value="0xe1200070" effect="armBkptInstruction" />
-  <instruction name="smc%c\t%e" mask="0x0ff000f0" value="0x01600070" effect="armSmcInstruction" />
-  <instruction name="BLX Rm" mask="0x0ffffff0" value="0x012fff30" effect="armBlxRegisterInstruction" />
+  <instruction name="bx%c\t%0-3r" mask="0x0ffffff0" value="0x012fff10" code="IRC_REPLACE" handler="armBxInstruction" />
+  <instruction name="BXJ Rm" mask="0x0ffffff0" value="0x012fff20" code="IRC_REPLACE" handler="armBxjInstruction" />
+  <instruction name="BKPT #imm8" mask="0xfff000f0" value="0xe1200070" code="IRC_REPLACE" handler="armBkptInstruction" />
+  <instruction name="smc%c\t%e" mask="0x0ff000f0" value="0x01600070" code="IRC_REPLACE" handler="armSmcInstruction" />
+  <instruction name="BLX Rm" mask="0x0ffffff0" value="0x012fff30" code="IRC_REPLACE" handler="armBlxRegisterInstruction" />
   <instruction name="CLZ Rd, Rm" mask="0x0fff0ff0" value="0x016f0f10" />
   <instruction name="qadd%c\t%12-15r, %0-3r, %16-19r" mask="0x0ff00ff0" value="0x01000050" />
   <instruction name="qdadd%c\t%12-15r, %0-3r, %16-19r" mask="0x0ff00ff0" value="0x01400050" />
@@ -74,40 +74,40 @@
   <instruction name="STRH Rt, [Rn], +-Rm" mask="0x0e500ff0" value="0x000000b0" />
   <instruction name="LDRH Rt, [Rn, +-imm8]" mask="0x0e500090" value="0x00500090" />
   <instruction name="LDRH Rt, [Rn], +-Rm" mask="0x0e500f90" value="0x00100090" />
-  <instruction name="AND PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0000f000" effect="armAndInstruction" />
-  <instruction name="AND PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0000f010" effect="armAndInstruction" />
+  <instruction name="AND PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0000f000" code="IRC_REPLACE" handler="armAndInstruction" />
+  <instruction name="AND PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0000f010" code="IRC_REPLACE" handler="armAndInstruction" />
   <instruction name="AND Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x00000000" />
   <instruction name="AND Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x00000010" />
-  <instruction name="EOR PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0020f000" effect="armEorInstruction" />
-  <instruction name="EOR PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0020f010" effect="armEorInstruction" />
+  <instruction name="EOR PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0020f000" code="IRC_REPLACE" handler="armEorInstruction" />
+  <instruction name="EOR PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0020f010" code="IRC_REPLACE" handler="armEorInstruction" />
   <instruction name="EOR Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x00200000" />
   <instruction name="EOR Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x00200010" />
-  <instruction name="SUB PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0040f000" effect="armSubInstruction" />
-  <instruction name="SUB PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0040f010" effect="armSubInstruction" />
+  <instruction name="SUB PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0040f000" code="IRC_REPLACE" handler="armSubInstruction" />
+  <instruction name="SUB PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0040f010" code="IRC_REPLACE" handler="armSubInstruction" />
   <instruction name="SUB Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x00400000" />
   <instruction name="SUB Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x00400010" />
-  <instruction name="RSB PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0060f000" effect="armRsbInstruction" />
-  <instruction name="RSB PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0060f010" effect="armRsbInstruction" />
+  <instruction name="RSB PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0060f000" code="IRC_REPLACE" handler="armRsbInstruction" />
+  <instruction name="RSB PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0060f010" code="IRC_REPLACE" handler="armRsbInstruction" />
   <instruction name="RSB Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x00600000" />
   <instruction name="RSB Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x00600010" />
-  <instruction name="ADD PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0080f000" effect="armAddInstruction" />
-  <instruction name="ADD PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0080f010" effect="armAddInstruction" />
+  <instruction name="ADD PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0080f000" code="IRC_REPLACE" handler="armAddInstruction" />
+  <instruction name="ADD PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0080f010" code="IRC_REPLACE" handler="armAddInstruction" />
   <instruction name="ADD Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x00800000" />
   <instruction name="ADD Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x00800010" />
-  <instruction name="ADC PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x00a0f000" effect="armAdcInstruction" />
-  <instruction name="ADC PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x00a0f010" effect="armAdcInstruction" />
+  <instruction name="ADC PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x00a0f000" code="IRC_REPLACE" handler="armAdcInstruction" />
+  <instruction name="ADC PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x00a0f010" code="IRC_REPLACE" handler="armAdcInstruction" />
   <instruction name="ADC Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x00a00000" />
   <instruction name="ADC Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x00a00010" />
-  <instruction name="SBC Rd, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x00c0f000" effect="armSbcInstruction" />
-  <instruction name="SBC Rd, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x00c0f010" effect="armSbcInstruction" />
+  <instruction name="SBC Rd, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x00c0f000" code="IRC_REPLACE" handler="armSbcInstruction" />
+  <instruction name="SBC Rd, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x00c0f010" code="IRC_REPLACE" handler="armSbcInstruction" />
   <instruction name="SBC Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x00c00000" />
   <instruction name="SBC Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x00c00010" />
-  <instruction name="RSC PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x00e0f000" effect="armRscInstruction" />
-  <instruction name="RSC PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x00e0f010" effect="armRscInstruction" />
+  <instruction name="RSC PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x00e0f000" code="IRC_REPLACE" handler="armRscInstruction" />
+  <instruction name="RSC PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x00e0f010" code="IRC_REPLACE" handler="armRscInstruction" />
   <instruction name="RSC Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x00e00000" />
   <instruction name="RSC Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x00e00010" />
-  <instruction name="MSR, s/cpsr, Rn" mask="0x0fb0fff0" value="0x0120f000" effect="armMsrInstruction" />
-  <instruction name="MRS, Rn, s/cpsr" mask="0x0fbf0fff" value="0x010f0000" effect="armMrsInstruction" />
+  <instruction name="MSR, s/cpsr, Rn" mask="0x0fb0fff0" value="0x0120f000" code="IRC_REPLACE" handler="armMsrInstruction" />
+  <instruction name="MRS, Rn, s/cpsr" mask="0x0fbf0fff" value="0x010f0000" code="IRC_REPLACE" handler="armMrsInstruction" />
   <instruction name="TST Rn, Rm, #shamt" mask="0x0fe00010" value="0x01000000" />
   <instruction name="TST Rn, Rm, Rshift" mask="0x0fe00090" value="0x01000010" />
   <instruction name="TEQ Rn, Rm, #shamt" mask="0x0fe00010" value="0x01200000" />
@@ -116,90 +116,98 @@
   <instruction name="CMP Rn, Rm, Rshamt" mask="0x0fe00090" value="0x01400010" />
   <instruction name="CMN Rn, Rm, #shamt" mask="0x0fe00010" value="0x01600000" />
   <instruction name="CMN Rn, Rm, Rshamt" mask="0x0fe00090" value="0x01600010" />
-  <instruction name="ORR PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0180f000" effect="armOrrInstruction" />
-  <instruction name="ORR PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0180f010" effect="armOrrInstruction" />
+  <instruction name="ORR PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x0180f000" code="IRC_REPLACE" handler="armOrrInstruction" />
+  <instruction name="ORR PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0180f010" code="IRC_REPLACE" handler="armOrrInstruction" />
   <instruction name="ORR Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x01800000" />
   <instruction name="ORR Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x01800010" />
-  <instruction name="MOV PC, Rm" mask="0x0deffff0" value="0x01a0f000" effect="armMovInstruction" />
+  <instruction name="MOV PC, Rm" mask="0x0deffff0" value="0x01a0f000" code="IRC_REPLACE" handler="armMovInstruction" />
   <instruction name="MOV Rn, Rm" mask="0x0def0ff0" value="0x01a00000" />
-  <instruction name="LSL Rd, Rm, #shamt" mask="0x0feff070" value="0x01a0f000" effect="armLslInstruction" />
-  <instruction name="LSL Rd, Rm, Rshamt" mask="0x0feff0f0" value="0x01a0f010" effect="armLslInstruction" />
+  <instruction name="LSL Rd, Rm, #shamt" mask="0x0feff070" value="0x01a0f000" code="IRC_REPLACE" handler="armLslInstruction" />
+  <instruction name="LSL Rd, Rm, Rshamt" mask="0x0feff0f0" value="0x01a0f010" code="IRC_REPLACE" handler="armLslInstruction" />
   <instruction name="LSL Rd, Rm, #shamt" mask="0x0fef0070" value="0x01a00000" />
   <instruction name="LSL Rd, Rm, Rshamt" mask="0x0fef00f0" value="0x01a00010" />
-  <instruction name="LSR Rd, Rm, #shamt" mask="0x0feff070" value="0x01a0f020" effect="armLsrInstruction" />
-  <instruction name="LSR Rd, Rm, Rshamt" mask="0x0feff0f0" value="0x01a0f030" effect="armLsrInstruction" />
+  <instruction name="LSR Rd, Rm, #shamt" mask="0x0feff070" value="0x01a0f020" code="IRC_REPLACE" handler="armLsrInstruction" />
+  <instruction name="LSR Rd, Rm, Rshamt" mask="0x0feff0f0" value="0x01a0f030" code="IRC_REPLACE" handler="armLsrInstruction" />
   <instruction name="LSR Rd, Rm, #shamt" mask="0x0fef0070" value="0x01a00020" />
   <instruction name="LSR Rd, Rm, Rshamt" mask="0x0fef00f0" value="0x01a00030" />
-  <instruction name="ASR Rd, Rm, #shamt" mask="0x0feff070" value="0x01a0f040" effect="armAsrInstruction" />
-  <instruction name="ASR Rd, Rm, Rshamt" mask="0x0feff0f0" value="0x01a0f050" effect="armAsrInstruction" />
+  <instruction name="ASR Rd, Rm, #shamt" mask="0x0feff070" value="0x01a0f040" code="IRC_REPLACE" handler="armAsrInstruction" />
+  <instruction name="ASR Rd, Rm, Rshamt" mask="0x0feff0f0" value="0x01a0f050" code="IRC_REPLACE" handler="armAsrInstruction" />
   <instruction name="ASR Rd, Rm, #shamt" mask="0x0fef0070" value="0x01a00040" />
   <instruction name="ASR Rd, Rm, Rshamt" mask="0x0fef00f0" value="0x01a00050" />
-  <instruction name="RRX PC, Rm" mask="0x0feffff0" value="0x01a0f060" effect="armRrxInstruction" />
+  <instruction name="RRX PC, Rm" mask="0x0feffff0" value="0x01a0f060" code="IRC_REPLACE" handler="armRrxInstruction" />
   <instruction name="RRX Rd, Rm" mask="0x0fef0ff0" value="0x01a00060" />
   <instruction name="ROR Rd, Rm, Rn" mask="0x0fef00f0" value="0x01a00070" />
-  <instruction name="ROR PC, Rm, #imm" mask="0x0feff070" value="0x01a0f060" effect="armRorInstruction" />
+  <instruction name="ROR PC, Rm, #imm" mask="0x0feff070" value="0x01a0f060" code="IRC_REPLACE" handler="armRorInstruction" />
   <instruction name="ROR Rd, Rm, #imm" mask="0x0fef0070" value="0x01a00060" />
-  <instruction name="BIC PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x01c0f000" effect="armBicInstruction" />
-  <instruction name="BIC PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x01c0f010" effect="armBicInstruction" />
+  <instruction name="BIC PC, Rn, Rm, #shamt" mask="0x0fe0f010" value="0x01c0f000" code="IRC_REPLACE" handler="armBicInstruction" />
+  <instruction name="BIC PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x01c0f010" code="IRC_REPLACE" handler="armBicInstruction" />
   <instruction name="BIC Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x01c00000" />
   <instruction name="BIC Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x01c00010" />
-  <instruction name="MVN Rd, Rm, #shamt" mask="0x0fe0f010" value="0x01e0f000" effect="armMvnInstruction" />
-  <instruction name="MVN Rd, Rm, Rshamt" mask="0x0fe0f090" value="0x01e0f010" effect="armMvnInstruction" />
+  <instruction name="MVN Rd, Rm, #shamt" mask="0x0fe0f010" value="0x01e0f000" code="IRC_REPLACE" handler="armMvnInstruction" />
+  <instruction name="MVN Rd, Rm, Rshamt" mask="0x0fe0f090" value="0x01e0f010" code="IRC_REPLACE" handler="armMvnInstruction" />
   <instruction name="MVN Rd, Rm, #shamt" mask="0x0fe00010" value="0x01e00000" />
   <instruction name="MVN Rd, Rm, Rshamt" mask="0x0fe00090" value="0x01e00010" />
-  <instruction name="yield%c" mask="0x0fffffff" value="0x0320f001" effect="armYieldInstruction" />
-  <instruction name="wfe%c" mask="0x0fffffff" value="0x0320f002" effect="armWfeInstruction" />
-  <instruction name="wfi%c" mask="0x0fffffff" value="0x0320f003" effect="armWfiInstruction" />
-  <instruction name="sev%c" mask="0x0fffffff" value="0x0320f004" effect="armSevInstruction" />
+  <instruction name="yield%c" mask="0x0fffffff" value="0x0320f001" code="IRC_REPLACE" handler="armYieldInstruction" />
+  <instruction name="wfe%c" mask="0x0fffffff" value="0x0320f002" code="IRC_REPLACE" handler="armWfeInstruction" />
+  <instruction name="wfi%c" mask="0x0fffffff" value="0x0320f003" code="IRC_REPLACE" handler="armWfiInstruction" />
+  <instruction name="sev%c" mask="0x0fffffff" value="0x0320f004" code="IRC_REPLACE" handler="armSevInstruction" />
   <instruction name="NOP" mask="0x0fff00ff" value="0x03200000" />
-  <instruction name="dbg%c\t#%0-3d" mask="0x0ffffff0" value="0x0320f0f0" effect="armDbgInstruction" />
+  <instruction name="dbg%c\t#%0-3d" mask="0x0ffffff0" value="0x0320f0f0" code="IRC_REPLACE" handler="armDbgInstruction" />
   <instruction name="MOVW Rd, Rn" mask="0x0ff00000" value="0x03000000" />
   <instruction name="MOVT" mask="0x0ff00000" value="0x03400000" />
-  <instruction name="AND PC, Rn, #imm" mask="0x0fe0f000" value="0x0200f000" effect="armAndInstruction" />
+  <instruction name="AND PC, Rn, #imm" mask="0x0fe0f000" value="0x0200f000" code="IRC_REPLACE" handler="armAndInstruction" />
   <instruction name="AND Rd, Rn, #imm" mask="0x0fe00000" value="0x02000000" />
-  <instruction name="EOR PC, Rn, Rm/#imm" mask="0x0fe0f000" value="0x0220f000" effect="armEorInstruction" />
+  <instruction name="EOR PC, Rn, Rm/#imm" mask="0x0fe0f000" value="0x0220f000" code="IRC_REPLACE" handler="armEorInstruction" />
   <instruction name="EOR Rd, Rn, #imm" mask="0x0fe00000" value="0x02200000" />
-  <instruction name="SUB PC, Rn, Rm/imm" mask="0x0fe0f000" value="0x0240f000" effect="armSubInstruction" />
+  <instruction name="SUB PC, Rn, Rm/imm" mask="0x0fe0f000" value="0x0240f000" code="IRC_REPLACE" handler="armSubInstruction" />
   <instruction name="SUB Rd, Rn, #imm" mask="0x0fe00000" value="0x02400000" />
-  <instruction name="RSB PC, Rn, Rm/imm" mask="0x0fe0f000" value="0x0260f000" effect="armRsbInstruction" />
+  <instruction name="RSB PC, Rn, Rm/imm" mask="0x0fe0f000" value="0x0260f000" code="IRC_REPLACE" handler="armRsbInstruction" />
   <instruction name="RSB Rd, Rn, #imm" mask="0x0fe00000" value="0x02600000" />
-  <instruction name="ADD PC, Rn, #imm" mask="0x0fe0f000" value="0x0280f000" effect="armAddInstruction" />
+  <instruction name="ADD PC, Rn, #imm" mask="0x0fe0f000" value="0x0280f000" code="IRC_REPLACE" handler="armAddInstruction" />
   <instruction name="ADD Rd, Rn, #imm" mask="0x0fe00000" value="0x02800000" />
-  <instruction name="ADC PC, Rn/#imm" mask="0x0fe0f000" value="0x02a0f000" effect="armAdcInstruction" />
+  <instruction name="ADC PC, Rn/#imm" mask="0x0fe0f000" value="0x02a0f000" code="IRC_REPLACE" handler="armAdcInstruction" />
   <instruction name="ADC Rd, Rn, #imm" mask="0x0fe00000" value="0x02a00000" />
-  <instruction name="SBC PC, Rn/#imm" mask="0x0fe0f000" value="0x02c0f000" effect="armSbcInstruction" />
+  <instruction name="SBC PC, Rn/#imm" mask="0x0fe0f000" value="0x02c0f000" code="IRC_REPLACE" handler="armSbcInstruction" />
   <instruction name="SBC Rd, Rn, #imm" mask="0x0fe00000" value="0x02c00000" />
-  <instruction name="RSC PC, Rn/#imm" mask="0x0fe0f000" value="0x02e0f000" effect="armRscInstruction" />
+  <instruction name="RSC PC, Rn/#imm" mask="0x0fe0f000" value="0x02e0f000" code="IRC_REPLACE" handler="armRscInstruction" />
   <instruction name="RSC Rd, Rn, #imm" mask="0x0fe00000" value="0x02e00000" />
-  <instruction name="MSR, s/cpsr, #imm" mask="0x0fb0f000" value="0x0320f000" effect="armMsrInstruction" />
+  <instruction name="MSR, s/cpsr, #imm" mask="0x0fb0f000" value="0x0320f000" code="IRC_REPLACE" handler="armMsrInstruction" />
   <instruction name="TST Rn, #imm" mask="0x0fe00000" value="0x03000000" />
   <instruction name="TEQ Rn, #imm" mask="0x0fe00000" value="0x03200000" />
   <instruction name="CMP Rn, #imm" mask="0x0fe00000" value="0x03400000" />
   <instruction name="CMN Rn, #imm" mask="0x0fe00000" value="0x03600000" />
-  <instruction name="ORR Rd, Rn, #imm" mask="0x0fe0f000" value="0x0380f000" effect="armOrrInstruction" />
+  <instruction name="ORR Rd, Rn, #imm" mask="0x0fe0f000" value="0x0380f000" code="IRC_REPLACE" handler="armOrrInstruction" />
   <instruction name="ORR Rd, Rn, #imm" mask="0x0fe00000" value="0x03800000" />
-  <instruction name="MOV PC, #imm" mask="0x0feff000" value="0x03a0f000" effect="armMovInstruction" />
+  <instruction name="MOV PC, #imm" mask="0x0feff000" value="0x03a0f000" code="IRC_REPLACE" handler="armMovInstruction" />
   <instruction name="MOV Rn, #imm" mask="0x0fef0000" value="0x03a00000" />
-  <instruction name="BIC PC, Rn, #imm" mask="0x0fe0f000" value="0x03c0f000" effect="armBicInstruction" />
+  <instruction name="BIC PC, Rn, #imm" mask="0x0fe0f000" value="0x03c0f000" code="IRC_REPLACE" handler="armBicInstruction" />
   <instruction name="BIC Rd, Rn, #imm" mask="0x0fe00000" value="0x03c00000" />
-  <instruction name="MVN PC, Rn, #imm" mask="0x0fe0f000" value="0x03e0f000" effect="armMvnInstruction" />
+  <instruction name="MVN PC, Rn, #imm" mask="0x0fe0f000" value="0x03e0f000" code="IRC_REPLACE" handler="armMvnInstruction" />
   <instruction name="MVN Rd, Rn, #imm" mask="0x0fe00000" value="0x03e00000" />
 </category>
 
 <category name="LOAD_STORE_WORD_BYTE_CATEGORY" mask="0x0e000000" value="0x04000000">
-  <instruction name="STR Rt, [Rn, +-imm12]" mask="0x0e100000" value="0x04000000" />
-  <instruction name="STR any? dont get this." mask="0x0c100010" value="0x04000000" />
+  <instruction name="STRT Rt, [Rn, +-imm12]" mask="0x0f700000" value="0x04200000" code="IRC_REPLACE" handler="armStrtInstruction" />
+  <instruction name="LDRT Rt, [Rn, +-imm12]" mask="0x0f700000" value="0x04300000" code="IRC_REPLACE" handler="armLdrtInstruction" />
+  <instruction name="STRBT Rt, [Rn, +-imm12]" mask="0x0f700000" value="0x04600000" code="IRC_REPLACE" handler="armStrbtInstruction" />
+  <instruction name="LDRBT Rt, [Rn, +-imm12]" mask="0x0f700000" value="0x04700000" code="IRC_REPLACE" handler="armLdrbtInstruction" />
+  <instruction name="STR Rt, [Rn, +-imm12]" mask="0x0e500000" value="0x04000000" />
+  <instruction name="LDR PC, [Rn], +-imm12" mask="0x0e50f000" value="0x0410f000" code="IRC_REPLACE" handler="armLdrInstruction" />
+  <instruction name="LDR Rd, [Rn], +-imm12" mask="0x0e500000" value="0x04100000" />
   <instruction name="STRB Rt, [Rn, +-imm12]" mask="0x0e500000" value="0x04400000" />
-  <instruction name="LDR PC, Rn/#imm12" mask="0x0c10f000" value="0x0410f000" effect="armLdrInstruction" />
-  <instruction name="LDR Rd, Rn/#imm12" mask="0x0c100000" value="0x04100000" />
+  <instruction name="LDRB Rt, [Rn, +-imm12]" mask="0x0e500000" value="0x04500000" />
 </category>
 
 <category name="LOAD_STORE_WORD_BYTE_CATEGORY" mask="0x0e000010" value="0x06000000">
-  <instruction name="STR Rt, [Rn], +-Rm" mask="0x0e100ff0" value="0x06000000" />
-  <instruction name="STR any? dont get this." mask="0x0c100010" value="0x04000000" />
-  <instruction name="STRB Rt, [Rn], +-Rm" mask="0x0e500010" value="0x06400000" />
-  <instruction name="LDR PC, Rn/#imm12" mask="0x0c10f000" value="0x0410f000" effect="armLdrInstruction" />
-  <instruction name="LDR Rd, Rn/#imm12" mask="0x0c100000" value="0x04100000" />
+  <instruction name="STRT Rt, [Rn], +-Rm" mask="0x0f700010" value="0x06200000" code="IRC_REPLACE" handler="armStrtInstruction" />
+  <instruction name="LDRT Rt, [Rn], +-Rm" mask="0x0f700010" value="0x06300000" code="IRC_REPLACE" handler="armLdrtInstruction" />
+  <instruction name="STRBT Rt, [Rn], +-Rm" mask="0x0f700010" value="0x06600000" code="IRC_REPLACE" handler="armStrbtInstruction" />
+  <instruction name="LDRBT Rt, [Rn], +-Rm" mask="0x0f700010" value="0x06700000" code="IRC_REPLACE" handler="armLdrbtInstruction" />
+  <instruction name="STR Rt, [Rn], +-[Rm]" mask="0x0e500010" value="0x06000000" />
+  <instruction name="LDR PC, [Rn], +-Rm" mask="0x0e50f010" value="0x0610f000" code="IRC_REPLACE" handler="armLdrInstruction" />
+  <instruction name="LDR Rd, [Rn], +-Rm" mask="0x0e500010" value="0x06100000" />
+  <instruction name="STRB Rt, [Rn], +-[Rm]" mask="0x0e500010" value="0x06400000" />
+  <instruction name="LDRB Rt, [Rn], +-[Rm]" mask="0x0e500010" value="0x06500000" />
 </category>
 
 <category name="MEDIA_CATEGORY" mask="0x0e000010" value="0x06000010">
@@ -319,22 +327,22 @@
 </category>
 
 <category name="BRANCH_BLOCK_TRANSFER_CATEGORY" mask="0x0c000000" value="0x08000000">
-  <instruction name="STM {regList}^" mask="0x0e500000" value="0x08400000" effect="armStmInstruction" />
+  <instruction name="STM {regList}^" mask="0x0e500000" value="0x08400000" code="IRC_REPLACE" handler="armStmInstruction" />
   <instruction name="STMIA {regList}" mask="0x0ff00000" value="0x08800000" />
   <instruction name="STM {regList}" mask="0x0e100000" value="0x08000000" />
-  <instruction name="LDM SP, {...r15}" mask="0x0fff8000" value="0x08bd8000" effect="armLdmInstruction" />
+  <instruction name="LDM SP, {...r15}" mask="0x0fff8000" value="0x08bd8000" code="IRC_REPLACE" handler="armLdmInstruction" />
   <instruction name="LDM SP, {reglist}" mask="0x0fff0000" value="0x08bd0000" />
-  <instruction name="LDM Rn, {regList}^" mask="0x0e500000" value="0x08500000" effect="armLdmInstruction" />
-  <instruction name="LDM Rn, {..r15}" mask="0x0e108000" value="0x08108000" effect="armLdmInstruction" />
+  <instruction name="LDM Rn, {regList}^" mask="0x0e500000" value="0x08500000" code="IRC_REPLACE" handler="armLdmInstruction" />
+  <instruction name="LDM Rn, {..r15}" mask="0x0e108000" value="0x08108000" code="IRC_REPLACE" handler="armLdmInstruction" />
   <instruction name="LDMIA Rn, {regList}" mask="0x0f900000" value="0x08900000" />
   <instruction name="LDM Rn, {regList}" mask="0x0e100000" value="0x08100000" />
-  <instruction name="BRANCH" mask="0x0e000000" value="0x0a000000" effect="armBInstruction" />
+  <instruction name="BRANCH" mask="0x0e000000" value="0x0a000000" code="IRC_REPLACE" handler="armBInstruction" />
 </category>
 
 <category name="SVC_COPROCESSOR_CATEGORY" mask="0x0c000000" value="0x0c000000">
-  <instruction name="SVC" mask="0x0f000000" value="0x0f000000" effect="svcInstruction" />
-  <instruction name="MRC" mask="0x0f100010" value="0x0e100010" effect="armMrcInstruction" />
-  <instruction name="MCR" mask="0x0f100010" value="0x0e000010" effect="armMcrInstruction" />
+  <instruction name="SVC" mask="0x0f000000" value="0x0f000000" code="IRC_REPLACE" handler="svcInstruction" />
+  <instruction name="MRC" mask="0x0f100010" value="0x0e100010" code="IRC_REPLACE" handler="armMrcInstruction" />
+  <instruction name="MCR" mask="0x0f100010" value="0x0e000010" code="IRC_REPLACE" handler="armMcrInstruction" />
 </category>
 
 </autodecoder>

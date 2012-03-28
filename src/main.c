@@ -40,10 +40,9 @@
 #include "guestBoot/linux.h"
 #include "guestBoot/image.h"
 
-#include "memoryManager/addressing.h" /* For virtual addressing initialisation */
-#include "memoryManager/cp15coproc.h"
-#include "memoryManager/frameAllocator.h"
+#include "memoryManager/addressing.h"
 
+#include "vm/omap35xx/cp15coproc.h"
 #include "vm/omap35xx/hardwareLibrary.h"
 
 
@@ -95,6 +94,11 @@ void main(s32int argc, char *argv[])
   struct runtimeConfiguration config;
   memset(&config, 0, sizeof(struct runtimeConfiguration));
   config.guestOS = GUEST_OS_LINUX;
+ 
+#ifdef CONFIG_MMC
+  mmcDevice = NULL;
+  debugStream = NULL;
+#endif
 
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
@@ -126,15 +130,12 @@ void main(s32int argc, char *argv[])
   processCommandLine(&config, argc - 1, argv + 1);
   dumpRuntimeConfiguration(&config);
 
-  /* create the frametable from which we can alloc memory */
-  initialiseFrameTable();
-
   /* initialize guest context */
   GCONTXT *context = createGuestContext();
   setGuestContext(context);
 
   /* Setup MMU for Hypervisor */
-  initialiseVirtualAddressing();
+  initVirtualAddressing();
 
 #ifdef CONFIG_CLI
   /*

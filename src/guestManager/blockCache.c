@@ -1,10 +1,13 @@
 #include "common/debug.h"
+#include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "guestManager/blockCache.h"
 
 #include "instructionEmu/scanner.h"
 
+#include "memoryManager/mmu.h"
 
 #ifdef CONFIG_BLOCK_CACHE_COLLISION_COUNTER
 
@@ -111,6 +114,24 @@ static void clearExecBitMap(u32int address)
   execBitMap[index] = execBitMap[index] & ~(1 << bitNumber);
 }
 
+BCENTRY *createBlockCache()
+{
+  BCENTRY *blockCache = (BCENTRY *)calloc(BLOCK_CACHE_SIZE, sizeof(BCENTRY));
+  if (blockCache == NULL)
+  {
+    return NULL;
+  }
+
+  resetCollisionCounter();
+
+  DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, blockCache);
+
+  memset(blockCache, 0, sizeof(BCENTRY) * BLOCK_CACHE_SIZE);
+  memset(execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
+
+  return blockCache;
+}
+
 void dumpBlockCacheEntry(BCENTRY *blockCache, u32int index)
 {
   printf(
@@ -148,17 +169,6 @@ BCENTRY *getBlockCacheEntry(BCENTRY *blockCache, u32int index)
   DEBUG(BLOCK_CACHE, "getBlockCacheEntry: index = %#x" EOL, index);
   return &blockCache[index];
 }
-
-void initialiseBlockCache(BCENTRY *blockCache)
-{
-  resetCollisionCounter();
-
-  DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, blockCache);
-
-  memset(blockCache, 0, sizeof(BCENTRY) * BLOCK_CACHE_SIZE);
-  memset(execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
-}
-
 
 static bool isBitmapSetForAddress(u32int address)
 {
@@ -229,14 +239,17 @@ static void resolveCacheConflict(BCENTRY *blockCache, u32int index)
         DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing ARM hypercall with %#.8x" EOL,
             hyperCall);
         *(u32int *)blockCache[index].endAddress = hyperCall;
+        mmuInvIcacheByMVAtoPOU(blockCache[index].endAddress);
+        mmuCleanDcacheByMVAtoPOC(blockCache[index].endAddress);
 #ifdef CONFIG_THUMB2
       }
       else
       {
         u16int hyperCall = (*(u16int *)blockCache[index].endAddress & 0x0000FF00) | (i + 1);
-        DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing T16 hypercall with %#.4x" EOL,
-            hyperCall);
+        DEBUG(BLOCK_CACHE, "resolveCacheConflict: replacing T16 hypercall with %#.4x" EOL, hyperCall);
         *(u16int *)blockCache[index].endAddress = hyperCall;
+        mmuInvIcacheByMVAtoPOU(blockCache[index].endAddress);
+        mmuCleanDcacheByMVAtoPOC(blockCache[index].endAddress);
       }
 #endif
       return;
@@ -258,6 +271,8 @@ static void restoreReplacedInstruction(BCENTRY *blockCache, u32int index)
       DEBUG(BLOCK_CACHE, "restoreReplacedInstruction: restoring ARM %#.8x @ %#.8x" EOL,
           blockCache[index].hyperedInstruction, blockCache[index].endAddress);
       *((u32int*)(blockCache[index].endAddress)) = blockCache[index].hyperedInstruction;
+      mmuInvIcacheByMVAtoPOU(blockCache[index].endAddress);
+      mmuCleanDcacheByMVAtoPOC(blockCache[index].endAddress);
       break;
 #ifdef CONFIG_THUMB2
     case BCENTRY_TYPE_THUMB:
@@ -267,7 +282,7 @@ static void restoreReplacedInstruction(BCENTRY *blockCache, u32int index)
          * Restore Thumb 32-bit instruction. Word-alignment is not guaranteed, so we must perform
          * two halfword-size stores!
          */
-        DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring T32 %#.8x @ %#.8x",
+        DEBUG(BLOCK_CACHE, "restoreReplacedInstruction: restoring T32 %#.8x @ %#.8x",
             blockCache[index].hyperedInstruction, blockCache[index].endAddress);
         u16int *bpointer = (u16int *)(blockCache[index].endAddress);
         *bpointer = (u16int)(blockCache[index].hyperedInstruction >> 16);
@@ -279,9 +294,11 @@ static void restoreReplacedInstruction(BCENTRY *blockCache, u32int index)
         /*
          * Restore Thumb 16-bit instruction.
          */
-        DEBUG(BLOCK_CACHE, "resolveCacheConflict: restoring T16 %#.4x @ %#.8x" EOL,
+        DEBUG(BLOCK_CACHE, "restoreReplacedInstruction: restoring T16 %#.4x @ %#.8x" EOL,
             blockCache[index].hyperedInstruction, blockCache[index].endAddress);
         *((u16int *)(blockCache[index].endAddress)) = (u16int)blockCache[index].hyperedInstruction;
+        mmuInvIcacheByMVAtoPOU(blockCache[index].endAddress);
+        mmuCleanDcacheByMVAtoPOC(blockCache[index].endAddress);
       }
       break;
 #endif

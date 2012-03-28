@@ -6,17 +6,19 @@
 
 #include "guestManager/blockCache.h"
 
-#include "vm/omap35xx/hardwareLibrary.h"
-
-#include "memoryManager/cp15coproc.h"
 #include "memoryManager/memoryProtection.h"
 
+#include "vm/omap35xx/cp15coproc.h"
+#include "vm/omap35xx/hardwareLibrary.h"
+
+
+struct VirtualMachinePageTables;
+typedef struct VirtualMachinePageTables pageTablesVM;
 
 struct guestContext;
 typedef struct guestContext GCONTXT;
 
 typedef u32int (*instructionHandler)(GCONTXT *context, u32int instruction);
-
 
 enum guestOSType
 {
@@ -25,6 +27,20 @@ enum guestOSType
   GUEST_OS_FREERTOS,
   GUEST_OS_TEST
 };
+
+struct VirtualMachinePageTables
+{
+  simpleEntry* hypervisor;
+  simpleEntry* guestVirtual;
+  simpleEntry* guestPhysical;
+  simpleEntry* shadowPriv;
+  simpleEntry* shadowUser;
+  simpleEntry* shadowActive;
+  u32int contextID;
+  ptInfo* sptInfo;
+  ptInfo* gptInfo;
+};
+
 
 struct guestContext
 {
@@ -78,13 +94,8 @@ struct guestContext
   s32int loopDetectorNextTreshold;
 #endif
   /* Virtual Addressing */
-  descriptor* PT_physical; // guest physical to real physical PT
-  descriptor* PT_os;       // guest OS to guest Physical PT
-  descriptor* PT_os_real;  // physical addr of PT_os for H/W
-  descriptor* PT_shadow;   // guest OS to real physical PT
+  pageTablesVM* pageTables;
   bool virtAddrEnabled;
-  /* Virtual Addressing end */
-  MEMPROT* memProt;
   /* vector address in vmem */
   bool guestHighVectorSet;
   /* exception vector */
@@ -125,14 +136,22 @@ __macro__ void traceBlock(GCONTXT *context, u32int startAddress)
 #endif /* CONFIG_GUEST_CONTEXT_BLOCK_TRACE */
 
 
-GCONTXT *createGuestContext(void);
-
-void dumpGuestContext(GCONTXT * gc);
-
 /*
  * Gets the guest context pointer.
  * Defined in startup.s!
  */
 extern GCONTXT *getGuestContext(void);
 
-#endif
+
+GCONTXT *createGuestContext(void);
+
+void dumpGuestContext(GCONTXT * gc);
+
+/* a function to evaluate if guest is in priviledge mode or user mode */
+bool isGuestInPrivMode(GCONTXT * context);
+/* a function to to switch the guest to user mode */
+void guestToUserMode(void);
+/* a function to to switch the guest to privileged mode */
+void guestToPrivMode(void);
+
+#endif /* __GUEST_MANAGER__GUEST_CONTEXT_H__ */

@@ -6,7 +6,6 @@
 
 #include "vm/omap35xx/intc.h"
 
-
 u32int armBkptInstruction(GCONTXT *context, u32int instruction)
 {
 #ifdef CONFIG_GUEST_TEST
@@ -133,7 +132,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
     {
       oldCpsr &= ~PSR_MODE;
       oldCpsr |= newMode;
-      DIE_NOW(context, "guest is changing execution modes. What?!");
+      DIE_NOW(context, "guest is changing execution modes. To What?");
     }
     context->CPSR = oldCpsr;
   }
@@ -318,9 +317,10 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
     // check for thumb toggle!
     if ((oldValue & PSR_T_BIT) != (value & PSR_T_BIT))
     {
-          DIE_NOW(context, "MSR toggle THUMB bit.");
+      DIE_NOW(context, "MSR toggle THUMB bit.");
     }
 #endif
+
     // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x000000FF);
     // clear old fields!
@@ -397,6 +397,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
     }
   }
+
   nextPC = context->R15 + 4;
   return nextPC;
 }

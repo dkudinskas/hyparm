@@ -157,9 +157,9 @@ void initUart(u32int uartID);
 
 void resetUart(u32int uartID);
 
-u32int loadUart(device *dev, ACCESS_SIZE size, u32int address);
+u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 
-void storeUart(device *dev, ACCESS_SIZE size, u32int address, u32int value);
+void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 void setUartMode(u32int uartID);
 

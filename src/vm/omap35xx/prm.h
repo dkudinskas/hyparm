@@ -144,14 +144,15 @@
 void initPrm(void);
 
 /* top load function */
-u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address);
+u32int loadPrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 /* per-module loads */
 u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr);
 u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr);
 u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr);
+u32int loadWakeUpPrm(device * dev, u32int address, u32int phyAddr);
 
 /* top store function */
-void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 /* per-module stores */
 void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value);
 void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value);
@@ -190,6 +191,11 @@ struct PowerAndResetManager
   u32int prmSysConfigOcp;
   u32int prmIrqStatusMpuOcp;
   u32int prmIrqEnableMpuOcp;
+  // Wakeup registers
+  u32int prmWkenWkup;
+  u32int prmMpugrpselWkup;
+  u32int prmIva2grpselWkup;
+  u32int prmWkstWkup;
 };
 
 

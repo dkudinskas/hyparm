@@ -7,25 +7,19 @@
 
 #include "vm/omap35xx/prm.h"
 
-#include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
-#include "memoryManager/pageTable.h" // for getPhysicalAddress()
-
 
 struct PowerAndResetManager * prMan;
 
 void initPrm(void)
 {
   // init function: setup device, reset register values to defaults!
-  prMan = (struct PowerAndResetManager*)malloc(sizeof(struct PowerAndResetManager));
-  if (prMan == 0)
+  prMan = (struct PowerAndResetManager *)calloc(1, sizeof(struct PowerAndResetManager));
+  if (prMan == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate power and reset manager.");
   }
-  else
-  {
-    memset((void*)prMan, 0x0, sizeof(struct PowerAndResetManager));
-    DEBUG(VP_OMAP_35XX_PRM, "Initializing Power and reset manager at %.8x" EOL, (u32int)prMan);
-  }
+
+  DEBUG(VP_OMAP_35XX_PRM, "Initializing Power and reset manager at %p" EOL, prMan);
 
   // Clock Control registers
   prMan->prmClkSelReg = 0x3;
@@ -56,22 +50,23 @@ void initPrm(void)
   prMan->prmSysConfigOcp    = 0x1;
   prMan->prmIrqStatusMpuOcp = 0x0;
   prMan->prmIrqEnableMpuOcp = 0x0;
+  // Wakeup registers
+  prMan->prmWkenWkup       = 0x3CB;
+  prMan->prmMpugrpselWkup  = 0x3CB;
+  prMan->prmIva2grpselWkup = 0;
+  prMan->prmWkstWkup       = 0;
+
 }
 
 /*************************************************************************
  *                           Load  Functions                             *
  *************************************************************************/
-u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address)
+u32int loadPrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   u32int val = 0;
 
-  //We care about the real physical address of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_PRM, "%s load from physical address: %.8x, vAddr %.8x, aSize %x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size);
 
   if (size != WORD)
   {
@@ -83,19 +78,21 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int address)
   switch (base)
   {
     case Clock_Control_Reg_PRM:
-      val = loadClockControlPrm(dev, address, phyAddr);
+      val = loadClockControlPrm(dev, virtAddr, phyAddr);
       break;
     case Global_Reg_PRM:
-      val = loadGlobalRegPrm(dev, address, phyAddr);
+      val = loadGlobalRegPrm(dev, virtAddr, phyAddr);
       break;
     case OCP_System_Reg_PRM:
-      val = loadOcpSystemPrm(dev, address, phyAddr);
+      val = loadOcpSystemPrm(dev, virtAddr, phyAddr);
+      break;
+    case WKUP_PRM:
+      val = loadWakeUpPrm(dev, virtAddr, phyAddr);
       break;
     case IVA2_PRM:
     case MPU_PRM:
     case CORE_PRM:
     case SGX_PRM:
-    case WKUP_PRM:
     case DSS_PRM:
     case CAM_PRM:
     case PER_PRM:
@@ -230,19 +227,39 @@ u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
   return val;
 }
 
+u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
+{
+  u32int val = 0;
+  u32int reg = phyAddr - WKUP_PRM;
+  switch (reg)
+  {
+    case PM_WKEN_WKUP:
+      val = prMan->prmWkenWkup;
+      break;
+    case PM_MPUGRPSEL_WKUP:
+      val = prMan->prmMpugrpselWkup;
+      break;
+    case PM_IVA2GRPSEL_WKUP:
+      val = prMan->prmIva2grpselWkup;
+      break;
+    case PM_WKST_WKUP:
+      val = prMan->prmWkstWkup;
+      break;
+    default:
+      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      DIE_NOW(NULL, "loadWakeUpPrm loading non existing register!");
+  }
+  DEBUG(VP_OMAP_35XX_PRM, "loadWakeUpPrm reg %x value %.8x" EOL, reg, val);
+  return val;
+}
 
 /*************************************************************************
  *                           Store Functions                             *
  *************************************************************************/
-void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
+void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  //We care about the real physical address of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_PRM, "%s store to pAddr: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size, value);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
   if (size != WORD)
   {
@@ -254,13 +271,13 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
   switch (base)
   {
     case Clock_Control_Reg_PRM:
-      storeClockControlPrm(dev, address, phyAddr, value);
+      storeClockControlPrm(dev, virtAddr, phyAddr, value);
       break;
     case Global_Reg_PRM:
-      storeGlobalRegPrm(dev, address, phyAddr, value);
+      storeGlobalRegPrm(dev, virtAddr, phyAddr, value);
       break;
     case OCP_System_Reg_PRM:
-      storeOcpSystemPrm(dev, address, phyAddr, value);
+      storeOcpSystemPrm(dev, virtAddr, phyAddr, value);
       break;
     case IVA2_PRM:
     case MPU_PRM:
@@ -273,7 +290,7 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case EMU_PRM:
     case NEON_PRM:
     case USBHOST_PRM:
-      printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
+      printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, virtAddr, value);
       DIE_NOW(NULL, " unimplemented.");
       break;
     default:

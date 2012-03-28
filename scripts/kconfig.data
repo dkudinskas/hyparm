@@ -237,7 +237,7 @@ config DEBUG_INTERPRETER_ALL_BRANCH
   select DEBUG_INTERPRETER_T16_BRANCH
   select DEBUG_INTERPRETER_T32_BRANCH
 
-config DEBUGINTERPRETER_ALL_COPROC
+config DEBUG_INTERPRETER_ALL_COPROC
   bool "Debug coprocessor operations"
   depends on DEBUG_INTERPRETER_ALL
   select DEBUG_INTERPRETER_ARM_COPROC
@@ -398,6 +398,10 @@ config DEBUG_VP_OMAP_35XX_GPMC
   bool "Debug memory controller (GPMC)"
   depends on DEBUG_VIRTUAL_PLATFORM
 
+config DEBUG_VP_OMAP_35XX_PM
+  bool "Debug L3 protection mechanism (PM)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+  
 config DEBUG_VP_OMAP_35XX_PRM
   bool "Debug power and reset manager (PRM)"
   depends on DEBUG_VIRTUAL_PLATFORM
@@ -412,6 +416,10 @@ config DEBUG_VP_OMAP_35XX_SDMA
 
 config DEBUG_VP_OMAP_35XX_SDRAM
   bool "Debug SDRAM"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_SMS
+  bool "Debug SDRAM Memory Scheduler (SMS)"
   depends on DEBUG_VIRTUAL_PLATFORM
 
 config DEBUG_VP_OMAP_35XX_SRAM

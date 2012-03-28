@@ -131,9 +131,8 @@ void initGPTimer(void);
 
 void resetGPTimer(void);
 
-u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address);
-
-void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 
 struct GeneralPurposeTimer

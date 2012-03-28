@@ -77,4 +77,5 @@ void setScanBlockCallSource(u8int source);
 
 #endif /* CONFIG_SCANNER_EXTRA_CHECKS */
 
+
 #endif /* __INSTRUCTION_EMU__SCANNER_H__ */

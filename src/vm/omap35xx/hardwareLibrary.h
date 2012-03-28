@@ -47,6 +47,8 @@
 #define L4_CORE_WAKEUP_INT_SIZE          0x00040FFF
 #define PRM                                0x48306000
 #define PRM_SIZE                           0x00004000
+#define CONTROL_MODULE_ID                  0x4830A000
+#define CONTROL_MODULE_ID_SIZE             0x00002000
 #define GPIO1                              0x48310000
 #define GPIO1_SIZE                         0x00002000
 #define WDTIMER2                           0x48314000
@@ -86,8 +88,12 @@
 #define Q1_RESERVED2_SIZE            0x08000000
 #define Q1_L3_INTERCONNECT           0x68000000
 #define Q1_L3_INTERCONNECT_SIZE      0x08000000
-#define Q1_L3_GPMC                     0x6E000000
-#define Q1_L3_GPMC_SIZE                0x01000000
+#define Q1_L3_GPMC                   0x6E000000
+#define Q1_L3_GPMC_SIZE              0x01000000
+#define Q1_L3_PM                     0x68010000
+#define Q1_L3_PM_SIZE                0x00004400
+#define Q1_L3_SMS                    0x6C000000
+#define Q1_L3_SMS_SIZE               0x01000000
 #define Q1_SDRC_SMS                  0x70000000
 #define Q1_SDRC_SMS_SIZE             0x10000000
 
@@ -102,51 +108,36 @@
 #define Q3_SDRC_SMS_SIZE             0x20000000
 
 
-
-
-#define MAX_NR_ATTACHED  20
-
-struct genericDevice;
-typedef struct genericDevice device;
-
-enum loadStoreAccessSize;
-typedef enum loadStoreAccessSize ACCESS_SIZE;
-
-typedef u32int(*LOAD_FUNCTION)(device*, ACCESS_SIZE, u32int);
-typedef void(*STORE_FUNCTION)(device*, ACCESS_SIZE, u32int, u32int);
-
-
-enum loadStoreAccessSize
+typedef enum loadStoreAccessSize
 {
   BYTE,
   HALFWORD,
   WORD,
-};
+} ACCESS_SIZE;
 
+typedef struct genericDevice device;
+
+typedef u32int (*LOAD_FUNCTION)(device *, ACCESS_SIZE, u32int, u32int);
+typedef void (*STORE_FUNCTION)(device *, ACCESS_SIZE, u32int, u32int, u32int);
+
+#define MAX_NR_ATTACHED  20
 
 struct genericDevice
 {
-  const char * deviceName;
+  const char *deviceName;
   bool isBus;
   u32int startAddressMapped;
   u32int endAddressMapped;
-  struct genericDevice * parentDevice;
+  device *parentDevice;
   u32int nrOfAttachedDevs;
-  struct genericDevice * attachedDevices[MAX_NR_ATTACHED];
+  device *attachedDevices[MAX_NR_ATTACHED];
   LOAD_FUNCTION loadFunction;
   STORE_FUNCTION storeFunction;
 };
 
-device * initialiseHardwareLibrary(void);
 
-void initialiseDevice(device * dev, const char * devName, bool isBus,
-                      u32int addrStart, u32int addrEnd,
-                      device * parent, LOAD_FUNCTION ldFn, STORE_FUNCTION stFn);
-
-bool isAddressInDevice(u32int address, device * dev);
-bool attachDevice(device * parent, device * child);
-
-u32int loadGeneric(device * dev, ACCESS_SIZE size, u32int address);
-void storeGeneric(device * dev, ACCESS_SIZE size, u32int address, u32int value);
+device *createHardwareLibrary(void);
+u32int vmLoad(ACCESS_SIZE size, u32int virtAddr);
+void vmStore(ACCESS_SIZE size, u32int virtAddr, u32int value);
 
 #endif

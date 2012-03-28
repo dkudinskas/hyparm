@@ -11,9 +11,6 @@
 #include "vm/omap35xx/clockManager.h"
 #include "vm/omap35xx/gptimer.h"
 
-#include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
-#include "memoryManager/pageTable.h" // for getPhysicalAddress()
-
 
 struct GeneralPurposeTimer * gptimer;
 
@@ -21,12 +18,12 @@ struct GeneralPurposeTimer * gptimer;
 void initGPTimer()
 {
   // init function: setup device, reset register values to defaults!
-  gptimer = (struct GeneralPurposeTimer*)malloc(sizeof(struct GeneralPurposeTimer));
-  if (gptimer == 0)
+  gptimer = (struct GeneralPurposeTimer *)calloc(1, sizeof(struct GeneralPurposeTimer));
+  if (gptimer == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate general purpose timer.");
   }
-  memset((void*)gptimer, 0x0, sizeof(struct GeneralPurposeTimer));
+
   DEBUG(VP_OMAP_35XX_GPTIMER, "Initializing General Purpose timer at %p" EOL, gptimer);
 
   resetGPTimer();
@@ -58,22 +55,15 @@ void resetGPTimer(void)
 }
 
 
-u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
+u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   if (size == BYTE)
   {
     DIE_NOW(NULL, "GPT: loadGPTimer invalid access size - byte");
   }
 
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   u32int val = 0;
-
   u32int regOffs = phyAddr - GPTIMER1;
-
   switch (regOffs)
   {
     case GPT_REG_TIOCP_CFG:
@@ -173,17 +163,13 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int address)
  return val;
 }
 
-void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
+
+void storeGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   if (size == BYTE)
   {
     DIE_NOW(NULL, "GPT: storeGPTimer invalid access size - byte");
   }
-
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
 
   u32int regOffs = phyAddr - GPTIMER1;
 
@@ -222,7 +208,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPT_REG_TCRR:
     {
       // make sure we dont throw irq's too often...
-      u32int adjustedValue = value << 14;
+      u32int adjustedValue = value << 12;
       storeToGPTimer(2, regOffs, adjustedValue);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to internal clock register value %#.8x" EOL,
           dev->deviceName, value);
@@ -231,7 +217,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case GPT_REG_TLDR:
     {
       // make sure we dont throw irq's too often...
-      u32int adjustedValue = value << 14;
+      u32int adjustedValue = value << 12;
       storeToGPTimer(2, regOffs, adjustedValue);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to counter reload value %#.8x" EOL, dev->deviceName,
           value);
@@ -249,7 +235,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
       break;
     case GPT_REG_TMAR:
 #ifdef CONFIG_GUEST_FREERTOS
-      if (gc->os == GUEST_OS_FREERTOS)
+      if (getGuestContext()->os == GUEST_OS_FREERTOS)
       {
         /*
          * FIXME: Use a higher TMAR value to make sure that Guest is ready to accept interrupts.
@@ -304,7 +290,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int address, u32int value)
           dev->deviceName, value);
       break;
     default:
-      DIE_NOW(gc, "GPT: store to undefined register.");
+      DIE_NOW(NULL, "GPT: store to undefined register.");
   } // switch ends
 }
 
