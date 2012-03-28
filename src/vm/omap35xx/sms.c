@@ -15,12 +15,12 @@ void initSms()
   /**
    * initialization of SMS
    */
-  sms = (struct Sms *)malloc(sizeof(struct Sms));
+  sms = (struct Sms *)calloc(1, sizeof(struct Sms));
   if (sms == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate SMS.");
   }
-  memset((void*)sms, 0x0, sizeof(struct Sms));
+
   DEBUG(VP_OMAP_35XX_SMS, "initSms @ %p" EOL, sms);
 
   sms->smsSysconfig = 0x1;
