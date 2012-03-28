@@ -17,23 +17,17 @@
 #include "memoryManager/shadowMap.h"
 
 
-void initVirtualAddressing()
+void initVirtualAddressing(GCONTXT *context)
 {
-  GCONTXT *gc = getGuestContext();
-  if (gc == NULL)
-  {
-    DIE_NOW(NULL, "initVirtualAddressing: called before allocateGuest() called!");
-  }
-
   //alloc some space for our 1st Level page table
-  gc->pageTables->hypervisor = (simpleEntry *)newLevelOnePageTable();
+  context->pageTables->hypervisor = (simpleEntry *)newLevelOnePageTable();
 
-  setupHypervisorPageTable(gc->pageTables->hypervisor);
+  setupHypervisorPageTable(context->pageTables->hypervisor);
 
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: new hypervisor page table %p" EOL, context->pageTables->hypervisor);
 
   mmuInit();
-  mmuSetTTBR0(gc->pageTables->hypervisor, 0);
+  mmuSetTTBR0(context->pageTables->hypervisor, 0);
   mmuEnableVirtAddr();
 
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: done" EOL);
@@ -161,13 +155,14 @@ void setupShadowPageTable(simpleEntry* pageTablePtr)
  **/
 void guestSetPageTableBase(u32int ttbr)
 {
-  GCONTXT* gc = getGuestContext();
+  GCONTXT *gc = getGuestContext();
+
   DEBUG(MM_ADDRESSING, "guestSetPageTableBase: ttbr %#.8x @ pc %#.8x" EOL, ttbr, gc->R15);
 
+  gc->pageTables->guestPhysical = (simpleEntry *)ttbr;
+  gc->pageTables->guestVirtual = NULL;
 
-  gc->pageTables->guestPhysical = (simpleEntry*)ttbr;
-  gc->pageTables->guestVirtual = 0;
-  if(gc->virtAddrEnabled)
+  if (gc->virtAddrEnabled)
   {
     initialiseShadowPageTables(gc);
   }
@@ -206,7 +201,7 @@ void guestEnableMMU()
  **/
 void guestDisableMMU()
 {
-  DIE_NOW(0, "guestDisableMMU: unimplemented.");
+  DIE_NOW(NULL, "guestDisableMMU: unimplemented.");
 }
 
 
@@ -355,8 +350,8 @@ void initialiseShadowPageTables(GCONTXT* gc)
  **/
 void changeGuestDACR(u32int oldVal, u32int newVal)
 {
-  GCONTXT* context = getGuestContext();
-  if(context->virtAddrEnabled)
+  GCONTXT *context = getGuestContext();
+  if (context->virtAddrEnabled)
   {
     u32int backupEntry = 0;
     bool backedUp = FALSE;

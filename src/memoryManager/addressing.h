@@ -6,10 +6,8 @@
 #include "guestManager/guestContext.h"
 
 
-//uncomment me to enable debugging: #define ADDRESSING_DEBUG
-
 /* Need to initialise the MMU and enable virtual addressing */
-void initVirtualAddressing(void);
+void initVirtualAddressing(GCONTXT *context);
 
 void setupHypervisorPageTable(simpleEntry *pageTablePtr);
 void setupShadowPageTable(simpleEntry *pageTablePtr);
@@ -29,4 +27,5 @@ void userToPrivAddressing(void);
 void initialiseShadowPageTables(GCONTXT *gc);
 
 void changeGuestDACR(u32int oldVal, u32int newVal);
-#endif
+
+#endif /* __MEMORY_MANAGER__ADDRESSING_H__ */

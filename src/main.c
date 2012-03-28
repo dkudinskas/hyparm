@@ -78,7 +78,7 @@ extern void setGuestContext(GCONTXT *gContext);
 fatfs mainFilesystem;
 partitionTable primaryPartitionTable;
 struct mmc *mmcDevice;
-file * debugStream;
+file *debugStream;
 #endif
 
 
@@ -135,7 +135,7 @@ void main(s32int argc, char *argv[])
   setGuestContext(context);
 
   /* Setup MMU for Hypervisor */
-  initVirtualAddressing();
+  initVirtualAddressing(context);
 
 #ifdef CONFIG_CLI
   /*
