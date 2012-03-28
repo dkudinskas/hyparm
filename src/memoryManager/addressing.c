@@ -29,24 +29,21 @@ void initVirtualAddressing()
   gc->pageTables->hypervisor = (simpleEntry *)newLevelOnePageTable();
 
   setupHypervisorPageTable(gc->pageTables->hypervisor);
-#ifdef ADDRESSING_DEBUG
-  printf("initVirtualAddressing: new hypervisor page table %p" EOL, gc->pageTables->hypervisor);
-#endif
+
+  DEBUG(MM_ADDRESSING, "initVirtualAddressing: new hypervisor page table %p" EOL, context->pageTables->hypervisor);
 
   mmuInit();
   mmuSetTTBR0(gc->pageTables->hypervisor, 0);
   mmuEnableVirtAddr();
-#ifdef ADDRESSING_DEBUG
-  printf("initVirtualAddressing: done" EOL);
-#endif
+
+  DEBUG(MM_ADDRESSING, "initVirtualAddressing: done" EOL);
 }
 
 
 void setupHypervisorPageTable(simpleEntry *pageTablePtr)
 {
-#ifdef ADDRESSING_DEBUG
-  printf("setupHypervisorPageTable: new PT at %08x" EOL, (u32int)pageTablePtr);
-#endif
+  DEBUG(MM_ADDRESSING, "setupHypervisorPageTable: new PT at %p" EOL, pageTablePtr);
+
   memset(pageTablePtr, 0, PT1_SIZE);
 
   //map in the hypervisor
@@ -107,9 +104,7 @@ void setupHypervisorPageTable(simpleEntry *pageTablePtr)
   mapSmallPage(pageTablePtr, excHdlrSramStart, excHdlrSramStart,
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 0);
 
-#ifdef ADDRESSING_DEBUG
-  printf("setupHypervisorPageTable: ... done" EOL);
-#endif
+  DEBUG(MM_ADDRESSING, "setupHypervisorPageTable: ... done" EOL);
 }
 
 
@@ -167,10 +162,8 @@ void setupShadowPageTable(simpleEntry* pageTablePtr)
 void guestSetPageTableBase(u32int ttbr)
 {
   GCONTXT* gc = getGuestContext();
+  DEBUG(MM_ADDRESSING, "guestSetPageTableBase: ttbr %#.8x @ pc %#.8x" EOL, ttbr, gc->R15);
 
-#ifdef ADDRESSING_DEBUG
-  printf("guestSetPageTableBase: ttbr %#.8x @ pc %#.8x" EOL, ttbr, gc->R15);
-#endif
 
   gc->pageTables->guestPhysical = (simpleEntry*)ttbr;
   gc->pageTables->guestVirtual = 0;
@@ -187,9 +180,7 @@ void guestSetPageTableBase(u32int ttbr)
  **/
 void guestEnableMMU()
 {
-#ifdef ADDRESSING_DEBUG
-  printf("guestEnableMMU: guest turning on virtual memory" EOL);
-#endif
+  DEBUG(MM_ADDRESSING, "guestEnableMMU: guest turning on virtual memory" EOL);
 
   GCONTXT *context = getGuestContext();
 
@@ -221,9 +212,8 @@ void guestDisableMMU()
 
 void guestSetContextID(u32int contextid)
 {
-#ifdef ADDRESSING_DEBUG
-  printf("guestSetContextID: value %x\n", contextid);
-#endif
+  DEBUG(MM_ADDRESSING, "guestSetContextID: value %x" EOL, contextid);
+
   GCONTXT* context = getGuestContext();
   context->pageTables->contextID = (contextid & 0xFF);
 }
@@ -234,9 +224,8 @@ void guestSetContextID(u32int contextid)
 void privToUserAddressing()
 {
   GCONTXT *gc = getGuestContext();
-#ifdef ADDRESSING_DEBUG
-  printf("privToUserAddressing: set shadowActive to %p" EOL, gc->pageTables->shadowUser);
-#endif
+
+  DEBUG(MM_ADDRESSING, "privToUserAddressing: set shadowActive to %p" EOL, gc->pageTables->shadowUser);
 
   // invalidate the whole block cache
   clearBlockCache(gc->blockCache);
@@ -277,9 +266,8 @@ void privToUserAddressing()
 void userToPrivAddressing()
 {
   GCONTXT* gc = getGuestContext();
-#ifdef ADDRESSING_DEBUG
-  printf("userToPrivAddressing: set shadowActive to %p" EOL, gc->pageTables->shadowPriv);
-#endif
+
+  DEBUG(MM_ADDRESSING, "userToPrivAddressing: set shadowActive to %p" EOL, gc->pageTables->shadowPriv);
 
   // invalidate the whole block cache
   clearBlockCache(gc->blockCache);
@@ -318,38 +306,30 @@ void userToPrivAddressing()
  **/
 void initialiseShadowPageTables(GCONTXT* gc)
 {
-#ifdef ADDRESSING_DEBUG
-  printf("initialiseShadowPageTables: create double-shadows!" EOL);
-#endif
+  DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: create double-shadows!" EOL);
   mmuClearDataCache();
   mmuDataMemoryBarrier();
 
   invalidatePageTableInfo();
-#ifdef ADDRESSING_DEBUG
-  printf("initialiseShadowPageTables: invalidatePageTableInfo() done." EOL);
-#endif
+  DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: invalidatePageTableInfo() done." EOL);
 
   // allocate two shadow page tables and prepare the minimum for operation
   gc->pageTables->shadowPriv = (simpleEntry*)newLevelOnePageTable();
   gc->pageTables->shadowUser = (simpleEntry*)newLevelOnePageTable();
   setupShadowPageTable(gc->pageTables->shadowPriv);
   setupShadowPageTable(gc->pageTables->shadowUser);
-#ifdef ADDRESSING_DEBUG
-  printf("initialiseShadowPageTables: allocated spt priv %p; spt usr %p" EOL,
-             gc->pageTables->shadowPriv, gc->pageTables->shadowUser);
-#endif
+  DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: allocated spt priv %p; spt usr %p" EOL,
+        gc->pageTables->shadowPriv, gc->pageTables->shadowUser);
 
   // which shadow PT will be in use depends on guest mode
-  gc->pageTables->shadowActive = isGuestInPrivMode(gc) ? 
+  gc->pageTables->shadowActive = isGuestInPrivMode(gc) ?
      gc->pageTables->shadowPriv : gc->pageTables->shadowUser;
 
   // mark guest virtual addressing as now enabled
   gc->virtAddrEnabled = TRUE;
 
-#ifdef ADDRESSING_DEBUG
-  printf("initialiseShadowPageTables: gPT phys %p virt %p" EOL,
+  DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: gPT phys %p virt %p" EOL,
             gc->pageTables->guestPhysical, gc->pageTables->guestVirtual);
-#endif
 
   // invalidate the whole block cache
   clearBlockCache(gc->blockCache);
@@ -384,23 +364,17 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
     simpleEntry* gpt = 0;
     if (context->pageTables->guestVirtual == 0)
     {
-#ifdef ADDRESSING_DEBUG
-      printf("changeGuestDACR: guestVirtual PT not set. hack a 1-2-1 of %p" EOL,
-                                          context->pageTables->guestPhysical);
-#endif
+      DEBUG(MM_ADDRESSING, "changeGuestDACR: guestVirtual PT not set. hack a 1-2-1 of %p" EOL,
+            context->pageTables->guestPhysical);
       tempFirst = getEntryFirst(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical);
       backupEntry = *(u32int*)tempFirst;
-#ifdef ADDRESSING_DEBUG
-      printf("changeGuestDACR: backed up entry %08x @ %p" EOL, backupEntry, tempFirst);
-#endif
+      DEBUG(MM_ADDRESSING, "changeGuestDACR: backed up entry %08x @ %p" EOL, backupEntry, tempFirst);
       mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
                 (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
                 HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
       mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
       gpt = context->pageTables->guestPhysical;
-#ifdef ADDRESSING_DEBUG
-      printf("changeGuestDACR: gpt now set to %p" EOL, gpt);
-#endif
+      DEBUG(MM_ADDRESSING, "changeGuestDACR: gpt now set to %p" EOL, gpt);
       backedUp = TRUE;
     }
     else
@@ -428,21 +402,15 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
         if ( ((oldVal >> (guest->domain*2)) & 0x3) != 
              ((newVal >> (guest->domain*2)) & 0x3) )
         {
-#ifdef ADDRESSING_DEBUG
-          printf("changeGuestDACR: %x: sPTE %08x gPTE %08x needs AP bits remapped" EOL, y, *(u32int *)shadowPriv, *(u32int *)guest);
-#endif
+          DEBUG(MM_ADDRESSING, "changeGuestDACR: %x: sPTE %08x gPTE %08x needs AP bits remapped" EOL, y, *(u32int *)shadowPriv, *(u32int *)guest);
           if (guest->type == SECTION)
           {
             mapAPBitsSection((sectionEntry*)guest, shadowPriv, (y << 20));
-#ifdef ADDRESSING_DEBUG
-            printf("changeGuestDACR: remapped to %08x" EOL, *(u32int*)shadowPriv);
-#endif
+            DEBUG(MM_ADDRESSING, "changeGuestDACR: remapped to %08x" EOL, *(u32int*)shadowPriv);
           }
           else if (guest->type == PAGE_TABLE)
           {
-#ifdef ADDRESSING_DEBUG
-            printf("changeGuestDACR: remap AP for page table entry" EOL);
-#endif
+            DEBUG(MM_ADDRESSING, "changeGuestDACR: remap AP for page table entry" EOL);
             mapAPBitsPageTable((pageTableEntry*)guest, (pageTableEntry*)shadowPriv);
           }
         } // if DACR for PT entry domain changed ends 
@@ -459,21 +427,15 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
         if ( ((oldVal >> (guest->domain*2)) & 0x3) != 
              ((newVal >> (guest->domain*2)) & 0x3) )
         {
-#ifdef ADDRESSING_DEBUG
-          printf("changeGuestDACR: %x: sPTE %08x gPTE %08x needs AP bits remapped" EOL, y, *(u32int*)shadowPriv, *(u32int*)guest);
-#endif
+          DEBUG(MM_ADDRESSING, "changeGuestDACR: %x: sPTE %08x gPTE %08x needs AP bits remapped" EOL, y, *(u32int*)shadowPriv, *(u32int*)guest);
           if (guest->type == SECTION)
           {
             mapAPBitsSection((sectionEntry*)guest, shadowUser, (y << 20));
-#ifdef ADDRESSING_DEBUG
-            printf("changeGuestDACR: remapped to %08x" EOL, *(u32int *)shadowUser);
-#endif
+            DEBUG(MM_ADDRESSING, "changeGuestDACR: remapped to %08x" EOL, *(u32int *)shadowUser);
           }
           else if (guest->type == PAGE_TABLE)
           {
-#ifdef ADDRESSING_DEBUG
-            printf("changeGuestDACR: remap AP for page table entry" EOL);
-#endif
+            DEBUG(MM_ADDRESSING, "changeGuestDACR: remap AP for page table entry" EOL);
             mapAPBitsPageTable((pageTableEntry*)guest, (pageTableEntry*)shadowUser);
           }
         } // if DACR for PT entry domain changed ends 
@@ -488,9 +450,7 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
       // if we dont have gPT1 VA we must have backed up the lvl1 entry. restore now
       *(u32int*)tempFirst = backupEntry;
       mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
-#ifdef ADDRESSING_DEBUG
-      printf("shadowMap: restore backed up entry %08x @ %p" EOL, backupEntry, tempFirst);
-#endif
+      DEBUG(MM_ADDRESSING, "shadowMap: restore backed up entry %08x @ %p" EOL, backupEntry, tempFirst);
     }
     mmuInvalidateUTLB();
   }
