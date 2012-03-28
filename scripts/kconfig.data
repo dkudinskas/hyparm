@@ -454,6 +454,16 @@ config DEBUG_FS_FAT
 
 menu "Hacks"
 
+config BKPT
+  bool "Implement software breakpoints for JTAG debugging (READ HELP)"
+  help
+    Adds software breakpoints to the crash handler (DIE_NOW) and the emergency
+    exception vector (if enabled).
+
+    WARNING: Without the presence of a hardware debugger software breakpoints, when
+    triggered, will cause prefetch aborts. Such aborts will cause the hypervisor to
+    crash, and trigger more software breakpoints.
+
 config CLI
   bool "Command-line interface"
 

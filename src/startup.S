@@ -174,7 +174,11 @@ exceptionVectorBase:
   .balign 0x20
   .global emergencyExceptionVectorBase
 emergencyExceptionVectorBase:
+#ifdef CONFIG_BKPT
+  BKPT    #0xDEAD
+#else
   B       emergencyExceptionVectorBase
+#endif
   B       emergencyExceptionVectorBase
   B       emergencyExceptionVectorBase
   B       emergencyExceptionVectorBase
