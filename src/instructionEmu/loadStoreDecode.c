@@ -1,4 +1,5 @@
 #include "common/debug.h"
+#include "common/stddef.h"
 
 #include "instructionEmu/interpreter.h"
 #include "instructionEmu/loadStoreDecode.h"

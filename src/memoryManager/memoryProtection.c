@@ -1,5 +1,6 @@
 #include "common/assert.h"
 #include "common/debug.h"
+#include "common/stddef.h"
 #include "common/string.h"
 
 #include "guestManager/guestContext.h"
