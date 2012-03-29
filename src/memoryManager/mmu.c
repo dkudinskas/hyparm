@@ -225,10 +225,17 @@ void mmuInstructionSync()
 
 void mmuInvBranchPredictorArray()
 {
+#ifdef CPU_CORTEX_A8
+#ifdef MMU_DBG
+  printf("mmuInvBranchPredictorArray: ignored" EOL);
+#endif
+  // ignore (see Cortex-A8 TRM)
+#else
 #ifdef MMU_DBG
   printf("mmuInvBranchPredictorArray" EOL);
 #endif
   asm ("mcr p15, 0, %0, c7, c5, 6": : "r"(0));
+#endif
 }
 
 
