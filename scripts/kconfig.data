@@ -462,7 +462,8 @@ config BKPT
 
     WARNING: Without the presence of a hardware debugger software breakpoints, when
     triggered, will cause prefetch aborts. Such aborts will cause the hypervisor to
-    crash, and trigger more software breakpoints.
+    crash, trigger more software breakpoints, ... resulting in an infinite loop of
+    prefetch aborts.
 
 config CLI
   bool "Command-line interface"
