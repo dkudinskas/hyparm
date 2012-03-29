@@ -84,7 +84,7 @@ void mmuSetTTBCR(u32int value)
 #ifdef MMU_DBG
   printf("MMU: set TTBCR to %x" EOL, value);
 #endif
-  asm("mcr p15, 0, %0, c2, c0, 2"
+  __asm__ __volatile__("mcr p15, 0, %0, c2, c0, 2"
   :
   :"r"(value)
      );
@@ -101,7 +101,7 @@ void mmuSetTTBR0(simpleEntry* addr, u32int asid)
   // instruction sync barrier
   mmuInstructionSync();
   
-  asm("mcr p15, 0, %0, c2, c0, 0": :"r"(addr));
+  __asm__ __volatile__("mcr p15, 0, %0, c2, c0, 0": :"r"(addr));
 
   // instruction sync barrier
   mmuInstructionSync();
@@ -124,7 +124,7 @@ void mmuSetTTBR1(simpleEntry* addr, u32int asid)
   // instruction sync barrier
   mmuInstructionSync();
   
-  asm("mcr p15, 0, %0, c2, c0, 1": :"r"(addr));
+  __asm__ __volatile__("mcr p15, 0, %0, c2, c0, 1": :"r"(addr));
 
   // instruction sync barrier
   mmuInstructionSync();
@@ -137,7 +137,7 @@ simpleEntry* mmuGetTTBR0()
 {
   u32int regVal = 0;
   //TODO: need to improve this to insert the correct bit masks
-  asm("mrc p15, 0, %0, c2, c0, 0":"=r"(regVal));
+  __asm__ __volatile__("mrc p15, 0, %0, c2, c0, 0":"=r"(regVal));
 #ifdef MMU_DBG
   printf("MMU: get translation table base register 0, val %08x" EOL, (u32int)regVal);
 #endif
@@ -149,7 +149,7 @@ void mmuEnableVirtAddr()
 {
   u32int tempReg;
   //This may need a bit of investigation/logic to ensure the bit masks we set are correct
-  asm volatile("mrc p15, 0, %0, c1, c0, 0\n\t"
+  __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0\n\t"
                "ORR %0, %0, #5\n\t" //enable MMU & Caching
                "mcr p15, 0, %0, c1, c0, 0\n\t"
                "mcr p15, 0, %0, c7, c5, 4\n\t" //ISB
@@ -163,7 +163,7 @@ void mmuDisableVirtAddr()
 {
   u32int tempReg = 0;
   //This may need a bit of investigation/logic to ensure the bit masks we set are correct
-  asm volatile("mrc p15, 0, %0, c1, c0, 0\n\t"
+  __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0\n\t"
                "BIC %0, %0, #5\n\t" //enable MMU & Caching
                "mcr p15, 0, %0, c1, c0, 0\n\t"
   :"=r"(tempReg)
@@ -176,7 +176,7 @@ bool isMmuEnabled()
 {
   u32int tempReg = 0;
   //This may need a bit of investigation/logic to ensure the bit masks we set are correct
-  asm volatile("mrc p15, 0, %0, c1, c0, 0\n\t" :"=r"(tempReg));
+  __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0\n\t" :"=r"(tempReg));
   
   return (tempReg & 0x1) ? TRUE : FALSE;
          
@@ -200,7 +200,7 @@ void mmuInvIcacheToPOU(void)
 #ifdef MMU_DBG
   printf("mmuInvIcacheByMVAtoPOU: inv all iCaches to PoU" EOL);
 #endif
-  asm("mcr p15, 0, %0, c7, c5, 0": :"r"(0));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 0": :"r"(0));
 }
 
 
@@ -210,7 +210,7 @@ void mmuInvIcacheByMVAtoPOU(u32int mva)
   printf("mmuInvIcacheByMVAtoPOU: inv iCache by MVA to PoU %08x" EOL, mva);
 #endif
 
-  asm("mcr p15, 0, %0, c7, c5, 1": :"r"(mva));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 1": :"r"(mva));
 }
 
 
@@ -244,7 +244,7 @@ void mmuCleanDcacheByMVAtoPOC(u32int mva)
 #ifdef MMU_DBG
   printf("mmuCleanDcacheByMVAtoPOC: Clearing dcache by MVA to POC %08x" EOL, mva);
 #endif
-  asm("mcr p15, 0, %0, c7, c10, 1": :"r"(mva));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 1": :"r"(mva));
 }
 
 
@@ -253,7 +253,7 @@ void mmuCleanDcacheBySetWay(u32int setWay)
 #ifdef MMU_DBG
   printf("mmuCleanDcacheBySetWay: Clearing dcache by set/way %08x" EOL, setWay);
 #endif
-  asm("mcr p15, 0, %0, c7, c10, 2": :"r"(setWay));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 2": :"r"(setWay));
 }
 
 
@@ -280,7 +280,7 @@ void mmuCleanDCacheByMVAtoPOU(u32int mva)
 #ifdef MMU_DBG
   printf("mmuCleanDCacheByMVAtoPOU: clean dcache by MVA to PoU %08x" EOL, mva);
 #endif
-  asm("mcr p15, 0, %0, c7, c11, 1": :"r"(mva));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c11, 1": :"r"(mva));
 }
 
 
@@ -290,7 +290,7 @@ void mmuCleanInvDCacheByMVAtoPOC(u32int mva)
   printf("mmuCleanInvDCacheByMVAtoPOC: clean and invalidate dcache by MVA to PoU %08x" EOL, mva);
 #endif
 
-  asm("mcr p15, 0, %0, c7, c14, 1": :"r"(mva));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c14, 1": :"r"(mva));
 }
 
 
@@ -300,7 +300,7 @@ void mmuCleanInvDCacheBySetWay(u32int setWay)
   printf("mmuCleanInvDCacheBySetWay: clean and invalidate dcache by set/way %08x" EOL, setWay);
 #endif
 
-  asm("mcr p15, 0, %0, c7, c14, 2": :"r"(setWay));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c14, 2": :"r"(setWay));
 }
 
 /**
@@ -399,7 +399,7 @@ void mmuClearDataCache(void)
   v7_flush_dcache_all(BOARD_DEVICE_TYPE);
 
   // data sync
-  asm("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
 
   l2_cache_enable();
 }
@@ -415,7 +415,7 @@ void mmuSetDomain(u8int domain, access_type access)
 #endif
 
   u32int value;
-  asm volatile("mrc p15, 0, %0, c3, c0, 0"
+  __asm__ __volatile__("mrc p15, 0, %0, c3, c0, 0"
   : "=r"(value)
   :
   : "memory"
@@ -428,14 +428,14 @@ void mmuSetDomain(u8int domain, access_type access)
   value = value & mask;
   //Set the domain
   value = value | (access << ((domain)*2));
-  asm volatile("mcr p15, 0, %0, c3, c0, 0"
+  __asm__ __volatile__("mcr p15, 0, %0, c3, c0, 0"
   :
   : "r"(value)
   : "memory"
      );
 
 #ifdef MMU_DBG
-  asm volatile("mrc p15, 0, %0, c3, c0, 0"
+  __asm__ __volatile__("mrc p15, 0, %0, c3, c0, 0"
   : "=r"(value)
   :
   : "memory"
@@ -452,7 +452,7 @@ void mmuSetTexRemap(bool enable)
 #endif
 
   u32int value;
-  asm volatile("mrc p15, 0, %0, c1, c0, 0"
+  __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0"
   : "=r"(value)
   :
   : "memory"
@@ -471,14 +471,14 @@ void mmuSetTexRemap(bool enable)
     value &= 0xEFFFFFFF;
   }
 
-  asm volatile("mcr p15, 0, %0, c1, c0, 0"
+  __asm__ __volatile__("mcr p15, 0, %0, c1, c0, 0"
   :
   : "r"(value)
   : "memory"
      );
 
 #ifdef MMU_DBG
-  asm volatile("mrc p15, 0, %0, c1, c0, 0"
+  __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0"
   : "=r"(value)
   :
   : "memory"
@@ -492,7 +492,7 @@ void mmuSetContextID(u32int asid)
 #ifdef MMU_DBG
 //  printf("mmuSetContextID: %x" EOL, asid);
 #endif
-  asm volatile("mcr p15, 0, %0, c13, c0, 1": :"r"(asid));
+  __asm__ __volatile__("mcr p15, 0, %0, c13, c0, 1": :"r"(asid));
 }
 
 
@@ -500,7 +500,7 @@ void mmuSetContextID(u32int asid)
 u32int getDFAR()
 {
   u32int result;
-  asm("mrc p15, 0, %0, c6, c0, 0"
+  __asm__ __volatile__("mrc p15, 0, %0, c6, c0, 0"
   :"=r"(result)
      );
   return result;
@@ -509,7 +509,7 @@ u32int getDFAR()
 DFSR getDFSR()
 {
   DFSR result;
-  asm("mrc p15, 0, %0, c5, c0, 0"
+  __asm__ __volatile__("mrc p15, 0, %0, c5, c0, 0"
   :"=r"(result)
      );
   return result;
@@ -518,7 +518,7 @@ DFSR getDFSR()
 u32int getIFAR()
 {
   u32int result;
-  asm("mrc p15, 0, %0, c6, c0, 2"
+  __asm__ __volatile__("mrc p15, 0, %0, c6, c0, 2"
   :"=r"(result)
      );
   return result;
@@ -527,7 +527,7 @@ u32int getIFAR()
 IFSR getIFSR()
 {
   IFSR result;
-  asm("mrc p15, 0, %0, c5, c0, 1"
+  __asm__ __volatile__("mrc p15, 0, %0, c5, c0, 1"
   :"=r"(result)
      );
   return result;
