@@ -15,6 +15,7 @@
 #include "vm/omap35xx/prm.h"
 #include "vm/omap35xx/sdma.h"
 #include "vm/omap35xx/sdram.h"
+#include "vm/omap35xx/sms.h"
 #include "vm/omap35xx/sramInternal.h"
 #include "vm/omap35xx/sysControlModule.h"
 #include "vm/omap35xx/timer32k.h"
@@ -179,6 +180,17 @@ device *createHardwareLibrary()
     goto pmModuleError;
   }
   initProtectionMechanism();
+
+  // L3INT: SDRAM Memory Scheduler
+  device *smsModule = createDevice("L3_SMS", FALSE,
+                                   Q1_L3_SMS, (u32int)(Q1_L3_SMS + Q1_L3_SMS_SIZE - 1),
+                                   l3Interconnect, &loadSms, &storeSms);
+  if (smsModule == NULL)
+  {
+    goto smsModuleError;
+  }
+  initSms();
+
 
   // Q1: LEVEL4 INTERCONNECT (L4INT, parent Q1)
   device *l4Interconnect = createDevice("L4_INTERCONNECT", TRUE, Q1_L4_INTERCONNECT,
@@ -465,6 +477,8 @@ sysCtrlModError:
 l4IntCoreError:
   free(l4Interconnect);
 l4InterconnectError:
+  free(smsModule);
+smsModuleError:
   free(pmModule);
 pmModuleError:
   free(gpmcModule);
