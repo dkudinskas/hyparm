@@ -254,8 +254,12 @@ config DEBUG_INTERPRETER_ALL_BRANCH
 config DEBUG_INTERPRETER_ALL_COPROC
   bool "Debug coprocessor operations"
   depends on DEBUG_INTERPRETER_ALL
+  select DEBUG_INTERPRETER_ANY_COPROC
   select DEBUG_INTERPRETER_ARM_COPROC
   select DEBUG_INTERPRETER_T32_COPROC
+
+config DEBUG_INTERPRETER_ANY_COPROC
+  bool
 
 config DEBUG_INTERPRETER_ALL_LOAD
   bool "Debug load operations"
@@ -274,7 +278,7 @@ config DEBUG_INTERPRETER_ALL_STORE
   select DEBUG_INTERPRETER_T32_STORE
 
 config DEBUG_INTERPRETER_ALL_SYNC
-  bool"Debug synchronization operations"
+  bool "Debug synchronization operations"
   depends on DEBUG_INTERPRETER_ALL
   select DEBUG_INTERPRETER_ARM_LOAD_SYNC
   select DEBUG_INTERPRETER_ARM_STORE_SYNC
@@ -291,6 +295,7 @@ config DEBUG_INTERPRETER_ARM_BRANCH
 config DEBUG_INTERPRETER_ARM_COPROC
   bool "Debug coprocessor operations"
   depends on DEBUG_INTERPRETER_ARM
+  select DEBUG_INTERPRETER_ANY_COPROC
 
 config DEBUG_INTERPRETER_ARM_LOAD
   bool "Debug load operations"
@@ -343,6 +348,7 @@ config DEBUG_INTERPRETER_T32_BRANCH
 config DEBUG_INTERPRETER_T32_COPROC
   bool "Debug coprocessor operations"
   depends on DEBUG_INTERPRETER_T32
+  select DEBUG_INTERPRETER_ANY_COPROC
 
 config DEBUG_INTERPRETER_T32_LOAD
   bool "Debug load operations"
