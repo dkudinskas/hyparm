@@ -481,8 +481,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   else if (CRn==7 && opc1==0 && CRm==5 && opc2==6)
   {
     // BPIALL: invalidate entire branch predictor array
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate entire branch predictor array" EOL);
-    mmuInvBranchPredictorArray();
+    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate entire branch predictor array (no effect)" EOL);
   }
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==1)
   {
