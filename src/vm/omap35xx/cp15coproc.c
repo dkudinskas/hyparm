@@ -577,13 +577,13 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   {
     // PRRR: primary region remap register
     DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: PRRR value %x" EOL, val);
-    asm("mcr p15, 0, %0, c10, c2, 0": :"r"(val));
+    __asm__ __volatile__("mcr p15, 0, %0, c10, c2, 0": :"r"(val));
   }
   else if (CRn==10 && opc1==0 && CRm==2 && opc2==1)
   {
     // NMRR: normal memory remap register
     DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: NMRR value %x" EOL, val);
-    asm("mcr p15, 0, %0, c10, c2, 1": :"r"(val));
+    __asm__ __volatile__("mcr p15, 0, %0, c10, c2, 1": :"r"(val));
   }
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==0)
   {
@@ -610,7 +610,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
     // writes are caught by the hypervisor - they are privileged operations
     // but reads are not! must propagate TPIDRURO value to real CP15.
     DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: TPIDRURO value %x" EOL, val);
-    asm("mcr p15, 0, %0, c13, c0, 3": :"r"(val));
+    __asm__ __volatile__("mcr p15, 0, %0, c13, c0, 3": :"r"(val));
   }
   else if (CRn==13 && opc1==0 && CRm==0 && opc2==4)
   {

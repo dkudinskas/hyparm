@@ -391,12 +391,12 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
    */
   if (endIs16Bit)
   {
-    asm("mcr p15, 0, %0, c7, c11, 1"
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c11, 1"
         :
         :"r"(end)
         :"memory"
     );
-    asm("mcr p15, 0, %0, c7, c5, 1"
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 1"
         :
         :"r"(end)
         :"memory"
@@ -404,23 +404,23 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
   }
   else
   {
-    asm("mcr p15, 0, %0, c7, c11, 1"
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c11, 1"
         :
         :"r"(end)
         :"memory"
     );
-    asm("mcr p15, 0, %0, c7, c5, 1"
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 1"
         :
         :"r"(end)
         :"memory"
     );
     end++;
-    asm("mcr p15, 0, %0, c7, c11, 1"
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c11, 1"
         :
         :"r"(end)
         :"memory"
     );
-    asm("mcr p15, 0, %0, c7, c5, 1"
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 1"
         :
         :"r"(end)
         :"memory"

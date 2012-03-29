@@ -517,7 +517,7 @@ GCONTXT *irq(GCONTXT *context)
    * that the preceding writes are done before enabling IRQs/FIQs,
    * a Data Synchronization Barrier is used. This operation ensure that
    * the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
-  asm volatile("MOV R0, #0\n\t"
+  __asm__ __volatile__("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
   return context;
@@ -572,7 +572,7 @@ void irqPrivileged()
    * that the preceding writes are done before enabling IRQs/FIQs,
    * a Data Synchronization Barrier is used. This operation ensure that
    * the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
-  asm volatile("MOV R0, #0\n\t"
+  __asm__ __volatile__("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
 }

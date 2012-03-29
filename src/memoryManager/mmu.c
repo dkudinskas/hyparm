@@ -191,7 +191,7 @@ void mmuClearInstructionCache()
 #ifdef MMU_DBG
   printf("mmuClearInstructionCache: clearing host iCache" EOL);
 #endif
-  asm ("mcr p15, 0, %0, c7, c5, 0": : "r"(0));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 0": : "r"(0));
 }
 
 
@@ -219,7 +219,7 @@ void mmuInstructionSync()
 #ifdef MMU_DBG
   printf("mmuInstructionSync" EOL);
 #endif
-  asm ("mcr p15, 0, %0, c7, c5, 4": : "r"(0));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 4": : "r"(0));
 }
 
 
@@ -234,7 +234,7 @@ void mmuInvBranchPredictorArray()
 #ifdef MMU_DBG
   printf("mmuInvBranchPredictorArray" EOL);
 #endif
-  asm ("mcr p15, 0, %0, c7, c5, 6": : "r"(0));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 6": : "r"(0));
 #endif
 }
 
@@ -262,7 +262,7 @@ void mmuDataSyncBarrier()
 #ifdef MMU_DBG
   printf("mmuDataSyncBarrier: synchronization barrier" EOL);
 #endif
-  asm ("mcr p15, 0, %0, c7, c10, 4": : "r"(0));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 4": : "r"(0));
 }
 
 
@@ -271,7 +271,7 @@ void mmuDataMemoryBarrier()
 #ifdef MMU_DBG
   printf("mmuDataMemoryBarrier" EOL);
 #endif
-  asm ("mcr p15, 0, %0, c7, c10, 5": : "r"(0));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 5": : "r"(0));
 }
 
 
@@ -311,7 +311,7 @@ void mmuInvalidateITLB()
 #ifdef MMU_DBG
   printf("mmuInvalidateITLB: invalidate iTLB" EOL);
 #endif
-  asm ("mcr p15, 0, r0, c8, c5, 0": :);
+  __asm__ __volatile__("mcr p15, 0, r0, c8, c5, 0": :);
 }
 
 
@@ -323,7 +323,7 @@ void mmuInvalidateITLBbyMVA(u32int mva)
 #ifdef MMU_DBG
   printf("mmuInvalidateITLBbyMVA: invalidate iTLB by MVA %08x" EOL, mva);
 #endif
-  asm ("mcr p15, 0, %0, c8, c5, 1": :"r"(mva));
+  __asm__ __volatile__("mcr p15, 0, %0, c8, c5, 1": :"r"(mva));
 }
 
 
@@ -332,7 +332,7 @@ void mmuInvalidateITLBbyASID(u32int asid)
 #ifdef MMU_DBG
   printf("mmuInvalidateITLBbyASID: invalidate iTLB by ASID %08x" EOL, asid);
 #endif
-  asm ("mcr p15, 0, %0, c8, c5, 2": :"r"(asid));
+  __asm__ __volatile__("mcr p15, 0, %0, c8, c5, 2": :"r"(asid));
 }
 
 
@@ -341,7 +341,7 @@ void mmuInvalidateDTLB(void)
 #ifdef MMU_DBG
   printf("mmuInvalidateDTLB: invalidate dTLB" EOL);
 #endif
-  asm ("mcr p15, 0, %0, c8, c6, 0": :"r"(0));
+  __asm__ __volatile__("mcr p15, 0, %0, c8, c6, 0": :"r"(0));
 }
 
 
@@ -350,7 +350,7 @@ void mmuInvalidateDTLBbyMVA(u32int mva)
 #ifdef MMU_DBG
   printf("mmuInvalidateDTLBbyMVA: invalidate dTLB by MVA %08x" EOL, mva);
 #endif
-  asm ("mcr p15, 0, %0, c8, c6, 1": :"r"(mva));
+  __asm__ __volatile__("mcr p15, 0, %0, c8, c6, 1": :"r"(mva));
 }
 
 
@@ -359,7 +359,7 @@ void mmuInvalidateDTLBbyASID(u32int asid)
 #ifdef MMU_DBG
   printf("mmuInvalidateDTLBbyASID: invalidate dTLB by ASID %08x" EOL, asid);
 #endif
-  asm ("mcr p15, 0, %0, c8, c6, 2": :"r"(asid));
+  __asm__ __volatile__("mcr p15, 0, %0, c8, c6, 2": :"r"(asid));
 }
 
 
@@ -368,7 +368,7 @@ void mmuInvalidateUTLB()
 #ifdef MMU_DBG
   printf("mmuInvalidateUTLB: invalidate uTLB" EOL);
 #endif
-  asm ("mcr p15, 0, %0, c8, c7, 0": :"r"(0));
+  __asm__ __volatile__("mcr p15, 0, %0, c8, c7, 0": :"r"(0));
 }
 
 
@@ -380,7 +380,7 @@ void mmuInvalidateUTLBbyMVA(u32int mva)
 #ifdef MMU_DBG
   printf("mmuInvalidateUTLBbyMVA: Invalidate UTLB by MVA %08x" EOL, mva);
 #endif
-  asm ("mcr p15, 0, %0, c8, c7, 1": :"r"(mva));
+  __asm__ __volatile__("mcr p15, 0, %0, c8, c7, 1": :"r"(mva));
 }
 
 
