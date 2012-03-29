@@ -30,6 +30,10 @@ config OLEVEL_3
 
 endchoice
 
+config BUILD_ANALYZE_FUNCTIONS
+  bool "Let the compiler suggest function attributes"
+  depends on OLEVEL_3
+
 config BUILD_SSP
   bool "Enable stack-smashing protector"
   depends on !PREDICTABLE_DEBUGGING

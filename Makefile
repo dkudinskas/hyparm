@@ -29,10 +29,12 @@ OBJDUMP       = $(CROSS_COMPILE)objdump
 AFLAGS       := --fatal-warnings
 CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
                 -ffreestanding -fno-common -fno-stack-protector \
-                -Wall -Wextra -Wcast-qual -Wformat=2 -Winline -Wlogical-op -Wredundant-decls \
-                -Wshadow -Wstrict-prototypes -Wwrite-strings -Wno-empty-body -Wno-unused-label \
-                -Wno-unused-parameter -Werror=implicit-function-declaration -Werror=init-self \
-                -Werror=uninitialized
+                -Wall -Wextra -Wcast-qual -Wformat=2 -Winit-self -Winline -Wlogical-op \
+                -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpacked \
+                -Wredundant-decls -Wshadow -Wstrict-prototypes -Wundef -Wvla -Wwrite-strings \
+                -Wno-empty-body -Wno-unused-label -Wno-unused-parameter \
+                -Werror=implicit-function-declaration -Werror=implicit-int \
+                -Werror=init-self -Werror=parentheses -Werror=return-type -Werror=uninitialized
 CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc
 LDDEPS       :=
 LDFLAGS      := --error-unresolved-symbols
@@ -133,6 +135,8 @@ $(KCONFIG_CONFIG):
   CFLAGS-$(CONFIG_OLEVEL_1) += -O1
   CFLAGS-$(CONFIG_OLEVEL_2) += -O2
   CFLAGS-$(CONFIG_OLEVEL_3) += -O3
+
+  CFLAGS-$(BUILD_ANALYZE_FUNCTIONS) += -Wsuggest-attribute=pure -Wsuggest-attribute=const -Wsuggest-attribute=noreturn
 
   CFLAGS-$(CONFIG_BUILD_SSP) += -fstack-protector-all -Wstack-protector
 

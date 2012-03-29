@@ -1,6 +1,7 @@
 #ifndef __COMMON__CTYPE_H__
 #define __COMMON__CTYPE_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 
@@ -43,30 +44,30 @@
 #define ASCII_PRINTABLE_END    ASCII('~')
 
 
-s32int isalnum(s32int c);
+s32int isalnum(s32int c) __constant__;
 
-s32int isalpha(s32int c);
+s32int isalpha(s32int c) __constant__;
 
-s32int iscntrl(s32int c);
+s32int iscntrl(s32int c) __constant__;
 
-s32int isdigit(s32int c);
+s32int isdigit(s32int c) __constant__;
 
-s32int isgraph(s32int c);
+s32int isgraph(s32int c) __constant__;
 
-s32int islower(s32int c);
+s32int islower(s32int c) __constant__;
 
-s32int isprint(s32int c);
+s32int isprint(s32int c) __constant__;
 
-s32int ispunct(s32int c);
+s32int ispunct(s32int c) __constant__;
 
-s32int isspace(s32int c);
+s32int isspace(s32int c) __constant__;
 
-s32int isupper(s32int c);
+s32int isupper(s32int c) __constant__;
 
-s32int isxdigit(s32int c);
+s32int isxdigit(s32int c) __constant__;
 
-s32int tolower(s32int c);
+s32int tolower(s32int c) __constant__;
 
-s32int toupper(s32int c);
+s32int toupper(s32int c) __constant__;
 
 #endif /* __COMMON__CTYPE_H__ */

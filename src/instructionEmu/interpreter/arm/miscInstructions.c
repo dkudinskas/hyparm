@@ -180,8 +180,6 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
   int readSpsr =  instruction & 0x00400000;
   int regDest  = (instruction & 0x0000F000) >> 12;
 
-  u32int value = 0;
-
 #ifdef ARM_INSTR_TRACE
   printf("MRS instr %08x @ %08x" EOL, instruction, context->R15);
 #endif
@@ -193,6 +191,8 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
 
   if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
+    u32int value;
+
     if ((context->CPSR & PSR_MODE) == PSR_USR_MODE)
     {
       if (readSpsr)

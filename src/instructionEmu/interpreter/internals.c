@@ -184,10 +184,8 @@ u32int decodeShift(u32int instrShiftType)
       return SHIFT_TYPE_LSR;
     case 2:
       return SHIFT_TYPE_ASR;
-    case 3:
-      return SHIFT_TYPE_ROR;
     default:
-      DIE_NOW(NULL, "voodoo dolls everywhere!");
+      return SHIFT_TYPE_ROR;
   } // switch ends
 }
 

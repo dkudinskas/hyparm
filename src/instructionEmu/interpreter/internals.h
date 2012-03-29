@@ -8,6 +8,7 @@
  */
 
 
+#include "common/compiler.h"
 #include "common/debug.h"
 
 #include "cpuArch/constants.h"
@@ -54,10 +55,10 @@ typedef enum
 u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *instrString);
 
 /* expand immediate12 field of instruction */
-u32int armExpandImm12(u32int imm12);
+u32int armExpandImm12(u32int imm12) __constant__;
 
 // take shift type field from instr, return shift type
-u32int decodeShift(u32int instrShiftType);
+u32int decodeShift(u32int instrShiftType) __constant__;
 
 // take the imm5 shift amount and shift type field from instr
 // returns shift type, and adjusts shift amount
@@ -73,7 +74,7 @@ void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *messa
 u32int loadGuestGPR(u32int regSrc, GCONTXT *context);
 
 // rotate right function
-u32int rorVal(u32int value, u32int ramt);
+u32int rorVal(u32int value, u32int ramt)  __constant__;
 
 // generic any type shift function, changes input_parameter(carryFlag) value
 u32int shiftVal(u32int imm32, u8int shiftType, u32int shamt, u8int *carryFlag);

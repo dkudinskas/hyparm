@@ -64,12 +64,6 @@ static const char *const prefetchAbtFaultString[] =
 };
 
 
-void mmu_compile_time_check(void)
-{
-  COMPILE_TIME_ASSERT((sizeof(IFSR) == sizeof(u32int)) , _IFSR_struct_not_32bit);
-  COMPILE_TIME_ASSERT((sizeof(DFSR) == sizeof(u32int)) , _DFSR_struct_not_32bit);
-}
-
 void mmuInit()
 {
 #ifdef MMU_DBG

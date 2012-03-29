@@ -1,6 +1,7 @@
 #ifndef __COMMON__STDLIB_H__
 #define __COMMON__STDLIB_H__
 
+#include "common/compiler.h"
 #include "common/stddef.h"
 #include "common/string.h"
 #include "common/types.h"
@@ -20,6 +21,8 @@
 
 
 void free(void *ptr);
+
+__macro__ void *calloc(u32int numberOfElements, u32int elementSize);
 
 void *malloc(u32int size);
 

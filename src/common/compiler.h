@@ -5,6 +5,9 @@
  * Header for overly compiler-specific things
  */
 
+#define __constant__  __attribute__((const))
+#define __pure__      __attribute__((pure))
+
 /*
  * __macro__
  * Make a function definition behave like a macro. The definition is used only for inlining. In no
