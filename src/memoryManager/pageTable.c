@@ -1,4 +1,5 @@
 #include "common/assert.h"
+#include "common/bit.h"
 #include "common/debug.h"
 #include "common/linker.h"
 #include "common/stddef.h"
@@ -20,48 +21,33 @@
 /**
  * allocate space for a new level 1 base page table
  **/
-u32int* newLevelOnePageTable()
+simpleEntry *newLevelOnePageTable()
 {
-  // alloc some some space for the 1stLevel table
-  u32int pageTableAddress = (u32int)memalign(1 << PT1_ALIGN_BITS, PT1_SIZE);
-  if (pageTableAddress == 0)
+  simpleEntry *pageTable = memalign(1 << PT1_ALIGN_BITS, PT1_SIZE);
+  if (pageTable == NULL)
   {
-    DIE_NOW(NULL, "newLevelOnePageTable: Failed to allocate page table");
+    DIE_NOW(NULL, "failed to allocate L1 page table");
   }
-  memset((void *)pageTableAddress, 0, PT1_SIZE);
-  
-  // test if page table is correctly aligned
-  if ((pageTableAddress & PT1_ALIGN_MASK) != pageTableAddress)
-  {
-    DIE_NOW(NULL, "newLevelOnePageTable: New 1st level page table is not correctly aligned.");
-  }
-  DEBUG(MM_PAGE_TABLES, "newLevelOnePageTable: Page Table base addr: %#.8x" EOL, pageTableAddress);
-  return (u32int *)pageTableAddress;
+  ASSERT(isAlignedToMask(pageTable, PT1_ALIGN_MASK), "new L1 page table is not correctly aligned");
+  memset(pageTable, 0, PT1_SIZE);
+  DEBUG(MM_PAGE_TABLES, "newLevelOnePageTable: Page Table base addr: %p" EOL, pageTable);
+  return pageTable;
 }
 
 /**
  * allocate space for a new level 2 base page table
  **/
-u32int* newLevelTwoPageTable(void)
+u32int *newLevelTwoPageTable()
 {
-  //alloc some some space for the 1stLevel table
-  u32int pageTableAddress = (u32int)memalign(1 << PT2_ALIGN_BITS, PT2_SIZE);
-  if (pageTableAddress == 0)
+  u32int *pageTable = memalign(1 << PT2_ALIGN_BITS, PT2_SIZE);
+  if (pageTable == NULL)
   {
-    DIE_NOW(NULL, "newLevelTwoPageTable: Failed to allocate page table");
+    DIE_NOW(NULL, "failed to allocate L2 page table");
   }
-  memset((void *)pageTableAddress, 0, PT2_SIZE);
-  
-  // test if page table is correctly aligned
-  if((pageTableAddress & PT2_ALIGN_MASK) != pageTableAddress)
-  {
-    DIE_NOW(NULL, "newLevelTwoPageTable: New 1st level page table is not correctly aligned.");
-  }
-#ifdef PAGE_TABLE_DBG
-  printf("newLevelTwoPageTable: Page Table base addr: %08x\n", pageTableAddress);
-#endif
-  DEBUG(MM_PAGE_TABLES, "newLevelTwoPageTable: Page Table base addr: %#.8x" EOL, pageTableAddress);
-  return (u32int *)pageTableAddress;
+  ASSERT(isAlignedToMask(pageTable, PT2_ALIGN_MASK), "new L2 page table is not correctly aligned");
+  memset(pageTable, 0, PT2_SIZE);
+  DEBUG(MM_PAGE_TABLES, "newLevelTwoPageTable: Page Table base addr: %p" EOL, pageTable);
+  return pageTable;
 }
 
 
