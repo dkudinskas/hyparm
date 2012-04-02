@@ -245,7 +245,7 @@ void privToUserAddressing()
   mmuDataMemoryBarrier();
 
   // set translation table base register in the physical MMU!
-  mmuSetTTBR0(gc->pageTables->shadowActive, (0x100 | gc->pageTables->contextID) );
+  mmuSetTTBR0(gc->pageTables->shadowActive, (0x100 | gc->pageTables->contextID));
 
   // clean out all TLB entries - may have conflicting entries
   mmuInvalidateUTLB();
