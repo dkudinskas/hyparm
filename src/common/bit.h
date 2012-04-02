@@ -12,6 +12,8 @@ __macro__ s32int countTrailingZeros(u32int x);
 __macro__ s32int countTrailingZeros64(u64int x);
 __macro__ u32int findFirstBitSet(u32int x);
 __macro__ u32int findLastBitSet(u32int x);
+__macro__ bool isAlignedToBits(void *pointer, u32int bits);
+__macro__ bool isAlignedToMask(void *pointer, u32int mask);
 __macro__ u32int maskedBitShift(u32int value, u32int mask);
 __macro__ u32int signExtend(u32int value, u32int bits);
 __macro__ bool testBitsEqual(u32int subject, u32int highBit, u32int lowBit);
@@ -99,6 +101,26 @@ __macro__ u32int findFirstBitSet(u32int x)
 __macro__ u32int findLastBitSet(u32int x)
 {
   return x ? (sizeof(u32int) << 3) - countLeadingZeros(x) : 0;
+}
+
+/*
+ * isAlignedToBits
+ * Returns whether the last n < 32 bits of the specified pointer are zero.
+ */
+__macro__ bool isAlignedToBits(void *pointer, u32int bits)
+{
+  return findFirstBitSet((u32int)pointer) < bits;
+  // Alternative:
+  // return (((u32int)pointer) & ((1 << bits) - 1)) == 0;
+}
+
+/*
+ * isAlignedToMask
+ * Returns whether the specified pointer has the same alignment as the specified mask.
+ */
+__macro__ bool isAlignedToMask(void *pointer, u32int mask)
+{
+  return (((u32int)pointer) & ~mask) == 0;
 }
 
 /*
