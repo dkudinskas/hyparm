@@ -45,6 +45,10 @@ config BUILD_LTO
 config BUILD_SAVE_TEMPS
   bool "Save intermediate files during build (requires GCC >= 4.5)"
 
+config ASSERT
+  bool "Enable run-time assertions"
+  default y
+
 choice
   prompt "Decoder"
   default DECODER_TABLE_SEARCH
