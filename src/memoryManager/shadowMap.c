@@ -1,6 +1,6 @@
 #include "common/assert.h"
 #include "common/debug.h"
-#include "common/markers.h"
+#include "common/linker.h"
 #include "common/stdlib.h"
 #include "common/string.h"
 
@@ -365,12 +365,11 @@ void shadowUnmapSection(simpleEntry* shadow, sectionEntry* guest, u32int virtual
 
   // would gladly remove this entry, but must check if the guest didnt decide
   // to remove pte that maps the for the hypervisor
-  u32int startAddr = HYPERVISOR_IMAGE_START_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
 #ifdef SHADOWING_DEBUG
   printf("shadowUnmapSection: VA %08x PA %08x\n", virtual, physAddr);
 #endif
-  if ((startAddr <= virtual) && (virtual <= endAddr))
+  if ((HYPERVISOR_BEGIN_ADDRESS <= virtual) && (virtual <= endAddr))
   {
     DIE_NOW(context, "shadowUnmapSection: Guest trying to unmap an address the hypervisor lives in\n");
   }
@@ -609,9 +608,8 @@ void shadowUnmapPageTable(pageTableEntry* shadow, pageTableEntry* guest, u32int 
 
   // would gladly remove this entry, but must check if the guest didnt decide
   // to remove pte that maps the for the hypervisor
-  u32int startAddr = HYPERVISOR_IMAGE_START_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
-  if ((startAddr <= virtual) && (virtual <= endAddr))
+  if ((HYPERVISOR_BEGIN_ADDRESS <= virtual) && (virtual <= endAddr))
   {
     DIE_NOW(context, "shadowUnmapPageTable: Guest trying to unmap an address the hypervisor lives in\n");
   }
@@ -768,9 +766,8 @@ void shadowUnmapSmallPage(smallPageEntry* shadow, smallPageEntry* guest, u32int 
 #endif
   // would gladly remove this entry, but must check if the guest didnt decide
   // to remove pte that maps the for the hypervisor
-  u32int startAddr = HYPERVISOR_IMAGE_START_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
-  if ((startAddr <= virtual) && (virtual <= endAddr))
+  if ((HYPERVISOR_BEGIN_ADDRESS <= virtual) && (virtual <= endAddr))
   {
     DIE_NOW(context, "shadowUnmapSmallPage: Guest trying to unmap an address the hypervisor lives in\n");
   }

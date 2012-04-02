@@ -1,5 +1,5 @@
 #include "common/debug.h"
-#include "common/markers.h"
+#include "common/linker.h"
 #include "common/stddef.h"
 #include "common/string.h"
 
@@ -44,7 +44,7 @@ void setupHypervisorPageTable(simpleEntry *pageTablePtr)
   mapHypervisorMemory(pageTablePtr);
 
   // 1:1 Map the entire of physical memory
-  u32int hypervisorStart = HYPERVISOR_IMAGE_START_ADDRESS;
+  u32int hypervisorStart = HYPERVISOR_BEGIN_ADDRESS;
   u32int memStart = MEMORY_START_ADDR;
   while (memStart < hypervisorStart) 
   {

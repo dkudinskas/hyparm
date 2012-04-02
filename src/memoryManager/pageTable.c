@@ -1,6 +1,6 @@
 #include "common/assert.h"
 #include "common/debug.h"
-#include "common/markers.h"
+#include "common/linker.h"
 #include "common/stddef.h"
 #include "common/stdlib.h"
 #include "common/string.h"
@@ -123,7 +123,7 @@ void mapHypervisorMemory(simpleEntry* pageTable)
 #ifdef PAGE_TABLE_DBG
   printf("mapHypervisorMemory in page table %08x\n", (u32int)pageTable);
 #endif
-  u32int startAddr = HYPERVISOR_IMAGE_START_ADDRESS;
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
 
   while (startAddr < endAddr)

@@ -4,7 +4,7 @@
 
 #include "common/commandLine.h"
 #include "common/debug.h"
-#include "common/markers.h"
+#include "common/linker.h"
 #include "common/stdarg.h"
 #include "common/stddef.h"
 #include "common/string.h"
@@ -45,9 +45,6 @@
 #include "vm/omap35xx/cp15coproc.h"
 #include "vm/omap35xx/hardwareLibrary.h"
 
-
-#define HIDDEN_RAM_START   0x8f000000
-#define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
 
 #define CL_OPTION_FAST_UART          1
 #define CL_OPTION_GUEST_OS           2
@@ -103,7 +100,7 @@ void main(s32int argc, char *argv[])
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
 
-  initialiseAllocator(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
+  initialiseAllocator(RAM_NX_POOL_BEGIN, RAM_NX_POOL_END - RAM_NX_POOL_BEGIN);
 
   /* initialise uart backend, important to be before any debug output. */
   /* init function initialises UARTs in disabled mode. */
@@ -121,7 +118,7 @@ void main(s32int argc, char *argv[])
   /*
    * Print the bounds of the hypervisor image in RAM.
    */
-  DEBUG(STARTUP, "Hypervisor @ %#.8x -- %#.8x" EOL, HYPERVISOR_IMAGE_START_ADDRESS, HYPERVISOR_IMAGE_END_ADDRESS);
+  DEBUG(STARTUP, "Hypervisor @ %#.8x -- %#.8x" EOL, HYPERVISOR_BEGIN_ADDRESS, HYPERVISOR_END_ADDRESS);
 
   /*
    * Use command line arguments passed by U-Boot to update the runtime configuration structure. The
