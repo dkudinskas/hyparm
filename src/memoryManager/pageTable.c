@@ -56,30 +56,30 @@ u32int *newLevelTwoPageTable()
  * meta data information from the list. only called for 2nd level SHADOW page
  * tables. we can't delete guest page tables, not our memory!
  **/
-void deleteLevelTwoPageTable(pageTableEntry* pageTable)
+void deleteLevelTwoPageTable(pageTableEntry *pageTable)
 {
-  GCONTXT* context = getGuestContext();
+  GCONTXT *context = getGuestContext();
   DEBUG(MM_PAGE_TABLES, "deleteLevelTwoPageTable: page table entry %#.8x @ %p" EOL,
         *(u32int *)pageTable, pageTable);
   // this can only be called on shadow second level page tables
-  ptInfo* head = context->pageTables->sptInfo;
-  ptInfo* prev = 0;
-  while (head != 0)
+  ptInfo *head = context->pageTables->sptInfo;
+  ptInfo *prev = 0;
+  while (head != NULL)
   {
-    if ((head->firstLevelEntry == pageTable) && (*(u32int*)head->firstLevelEntry == *(u32int*)pageTable))
+    if ((head->firstLevelEntry == pageTable) && (*(u32int *)head->firstLevelEntry == *(u32int *)pageTable))
     {
-      head->firstLevelEntry = 0;
+      head->firstLevelEntry = NULL;
       head->physAddr = 0;
-      free((void*)head->virtAddr);
+      free((void *)head->virtAddr);
       head->virtAddr = 0;
       
       // remember a pointer to this doomed entry
-      ptInfo* tempPtr = head;
+      ptInfo *tempPtr = head;
       head = head->nextEntry;
-      free((void*)tempPtr);
+      free(tempPtr);
       
       // all thats left is to link previous entry to next entry (if there was a previous entry!)
-      if (prev != 0)
+      if (prev != NULL)
       {
         prev->nextEntry = head;
       }
@@ -102,19 +102,18 @@ void deleteLevelTwoPageTable(pageTableEntry* pageTable)
 /**
  * Map hypervisor into given base page table in sections, 1-2-1 VA to PA
  **/
-void mapHypervisorMemory(simpleEntry* pageTable)
+void mapHypervisorMemory(simpleEntry *pageTable)
 {
   DEBUG(MM_PAGE_TABLES, "mapHypervisorMemory in page table %p" EOL, pageTable);
 
   u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
 
-  while (startAddr < endAddr)
+  for (; startAddr < endAddr; startAddr += SECTION_SIZE)
   {
     // @ hypervisor domain, all acces bits, cachable, not bufferable, tex 0
     mapSection(pageTable, startAddr, startAddr, HYPERVISOR_ACCESS_DOMAIN,
-                      HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
-    startAddr += SECTION_SIZE;
+               HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
   }
 }
 
@@ -123,20 +122,20 @@ void mapHypervisorMemory(simpleEntry* pageTable)
  * Add a section mapping of given virtual to physical address
  * into the given base page table 
  **/
-void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
+void mapSection(simpleEntry *pageTable, u32int virtAddr, u32int physical,
                 u8int domain, u8int accessBits, bool c, bool b, u8int tex)
 {
   DEBUG(MM_PAGE_TABLES, "mapSection: Virtual Addr: %#.8x, physical addr: %#.8x" EOL, virtAddr,
         physical);
 
   // check what is in the page table at the required index
-  simpleEntry* firstLevelEntry = getEntryFirst(pageTable, virtAddr);
+  simpleEntry *firstLevelEntry = getEntryFirst(pageTable, virtAddr);
   switch(firstLevelEntry->type)
   {
     case SECTION:
     case FAULT:
     {
-      addSectionEntry((sectionEntry*)firstLevelEntry, 
+      addSectionEntry((sectionEntry *)firstLevelEntry,
                       physical, domain, accessBits, c, b, tex);
       break;
     }
@@ -161,7 +160,7 @@ void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
  * Add a small page mapping of given virtual to physical address
  * into a second page table 
  **/
-void mapSmallPage(simpleEntry* pageTable, u32int virtAddr, u32int physical,
+void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
                 u8int domain, u8int accessBits, u8int c, u8int b, u8int tex, u8int xn)
 {
   DEBUG(MM_PAGE_TABLES, "mapSmallPage: Virtual %#.8x, physical %#.8x, dom: %x, AP: %x, c: %x, "
@@ -413,9 +412,9 @@ simpleEntry* getEntrySecond(pageTableEntry* firstLevelEntry, u32int virtAddr)
     DIE_NOW(NULL, "virtAddr not set in metadata on GPT2!");
   }
   u32int entryAddress = metadata->virtAddr | index;
-  return (simpleEntry*)entryAddress;
   DEBUG(MM_PAGE_TABLES, "getEntrySecond: found! base = %#.8x index %#.8x; -> %#.8x" EOL,
         metadata->virtAddr, index, entryAddress);
+  return (simpleEntry *)entryAddress;
 }
 
 
@@ -429,7 +428,7 @@ void splitSectionToSmallPages(simpleEntry* pageTable, u32int virtAddr)
         pageTable, virtAddr);
 
   // 1. get section entry
-  sectionEntry* sectionEntryPtr = (sectionEntry*)getEntryFirst(pageTable, virtAddr);
+  sectionEntry *sectionEntryPtr = (sectionEntry *)getEntryFirst(pageTable, virtAddr);
   DEBUG(MM_PAGE_TABLES, "splitSectionToSmallPages: section entry @ %p = %#.8x" EOL,
         sectionEntryPtr, *(u32int *)sectionEntryPtr);
   mmuInvalidateUTLBbyMVA(virtAddr);
@@ -464,7 +463,7 @@ void splitSectionToSmallPages(simpleEntry* pageTable, u32int virtAddr)
  **/
 bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr)
 {
-  GCONTXT* context = getGuestContext();
+  GCONTXT *context = getGuestContext();
   DEBUG(MM_PAGE_TABLES, "isAddrInPageTable: is physAddr %#.8x in PT %p" EOL, physAddr, pageTablePhys);
   if (pageTablePhys == NULL)
   {
@@ -481,8 +480,8 @@ bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr)
   }
 
   // maybe second level page tables live in this section?
-  ptInfo* head = context->pageTables->gptInfo;
-  while (head != 0)
+  ptInfo *head = context->pageTables->gptInfo;
+  while (head != NULL)
   {
     if ( (head->physAddr <= physAddr ) && ((head->physAddr+PT2_SIZE-1) >= physAddr) )
     {
@@ -499,9 +498,9 @@ bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr)
 
 void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u32int mapped, bool host)
 {
-  GCONTXT* context = getGuestContext();
   DEBUG(MM_PAGE_TABLES, "addPageTableInfo: entry %#.8x @ %p, PA %#.8x VA %#.8x, mapped %#.8x host %x" EOL,
         *(u32int *)entry, entry, physical, virtual, mapped, host);
+  GCONTXT *context = getGuestContext();
   
   ptInfo *newEntry = (ptInfo *)malloc(sizeof(ptInfo));
   DEBUG(MM_PAGE_TABLES, "addPageTableInfo: new entry @ %p" EOL, newEntry);
@@ -512,8 +511,8 @@ void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u3
   newEntry->mappedMegabyte = mapped;
   newEntry->nextEntry = 0;
 
-  ptInfo* head = (host) ? context->pageTables->sptInfo : context->pageTables->gptInfo;
-  if (head == 0)
+  ptInfo *head = (host) ? context->pageTables->sptInfo : context->pageTables->gptInfo;
+  if (head == NULL)
   {
     // first entry
     if (host)
@@ -531,7 +530,7 @@ void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u3
   {
     // loop to the end of the list
     DEBUG(MM_PAGE_TABLES, "addPageTableInfo: not the first entry. head %p" EOL, head);
-    while (head->nextEntry != 0)
+    while (head->nextEntry != NULL)
     {
       head = head->nextEntry;
     }
@@ -542,15 +541,15 @@ void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u3
 }
 
 
-ptInfo* getPageTableInfo(pageTableEntry* firstLevelEntry)
+ptInfo *getPageTableInfo(pageTableEntry *firstLevelEntry)
 {
   DEBUG(MM_PAGE_TABLES, "getPageTableInfo: first level entry ptr %p = %#.8x" EOL, firstLevelEntry,
         *(u32int *)firstLevelEntry);
   GCONTXT* context = getGuestContext();
 
   // spt first
-  ptInfo* head = context->pageTables->sptInfo;
-  while (head != 0)
+  ptInfo *head = context->pageTables->sptInfo;
+  while (head != NULL)
   {
     if (head->firstLevelEntry == firstLevelEntry)
     {
@@ -563,7 +562,7 @@ ptInfo* getPageTableInfo(pageTableEntry* firstLevelEntry)
 
   // its not spt, gpt then? 
   head = context->pageTables->gptInfo;
-  while (head != 0)
+  while (head != NULL)
   {
     if (head->firstLevelEntry == firstLevelEntry)
     {
@@ -581,22 +580,14 @@ ptInfo* getPageTableInfo(pageTableEntry* firstLevelEntry)
 
 void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host)
 {
-  GCONTXT* context = getGuestContext();
   DEBUG(MM_PAGE_TABLES, "removePageTableInfo: first level entry ptr %p = %#.8x" EOL,
         firstLevelEntry, *(u32int *)firstLevelEntry);
+  GCONTXT *context = getGuestContext();
 
-  ptInfo* head = 0;
-  ptInfo* prev = 0;
-  if (host)
-  {
-    head = context->pageTables->sptInfo;
-  }
-  else
-  {
-    head = context->pageTables->gptInfo;
-  }
+  ptInfo *head = (host) ? context->pageTables->sptInfo : context->pageTables->gptInfo;
+  ptInfo *prev = NULL;
 
-  while (head != 0)
+  while (head != NULL)
   {
     if (head->firstLevelEntry == firstLevelEntry)
     {
@@ -606,7 +597,7 @@ void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host)
       head = head->nextEntry;
       if (host)
       {
-        free((void*)tmp->virtAddr);
+        free((void *)tmp->virtAddr);
       }
 
       if (prev == 0)
@@ -626,7 +617,7 @@ void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host)
         // not the first entry in list
         prev->nextEntry = head;
       }
-      free((void*)tmp);
+      free((void *)tmp);
       return;
     }
     prev = head; 
@@ -938,9 +929,9 @@ void pageTableEdit(u32int address, u32int newVal)
 void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, simpleEntry* shadow, u32int virtual)
 {
   // WARNING: shadow descriptor type might not correspond to guest descriptor type!!! 
-  GCONTXT* context = getGuestContext();
   DEBUG(MM_PAGE_TABLES, "editAttributesSection: oldSection %#.8x, newSection %#.8x shadow %#.8x"
         EOL, *(u32int *)oldSection, *(u32int *)newSection, *(u32int *)shadow);
+  GCONTXT *context = getGuestContext();
 
   if (shadow->type == FAULT)
   {
@@ -1036,9 +1027,9 @@ void editAttributesPageTable(pageTableEntry* oldTable, pageTableEntry* newTable,
 
 void editAttributesSmallPage(smallPageEntry* oldPage, smallPageEntry* newPage, smallPageEntry* shadowPage, u32int virtual)
 {
-  GCONTXT* context = getGuestContext();
   DEBUG(MM_PAGE_TABLES, "editAttributesSmallPage: oldPage %#.8x, newPage %#.8x shadowPage %#.8x"
         EOL, *(u32int *)oldPage, *(u32int *)newPage, *(u32int *)shadowPage);
+  GCONTXT *context = getGuestContext();
 
   if (shadowPage->type == FAULT)
   {

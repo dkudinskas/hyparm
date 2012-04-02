@@ -79,14 +79,12 @@ void mmuInit()
  **/
 void mmuSetTTBCR(u32int value)
 {
-  __asm__ __volatile__("mcr p15, 0, %0, c2, c0, 2"
-  :
-  :"r"(value)
-     );
   DEBUG(MM_MMU, "MMU: set TTBCR to %#.8x" EOL, value);
+
+  __asm__ __volatile__("MCR p15, 0, %0, c2, c0, 2": :"r"(value));
 }
 
-void mmuSetTTBR0(simpleEntry* addr, u32int asid)
+void mmuSetTTBR0(simpleEntry *addr, u32int asid)
 {
   DEBUG(MM_MMU, "MMU: set translation table base register 0 to %p" EOL, addr);
 
@@ -108,7 +106,7 @@ void mmuSetTTBR0(simpleEntry* addr, u32int asid)
   mmuInstructionSync();
 }
 
-void mmuSetTTBR1(simpleEntry* addr, u32int asid)
+void mmuSetTTBR1(simpleEntry *addr, u32int asid)
 {
   DEBUG(MM_MMU, "MMU: set translation table base register 1 to %p" EOL, addr);
 
@@ -129,11 +127,11 @@ void mmuSetTTBR1(simpleEntry* addr, u32int asid)
 
 simpleEntry* mmuGetTTBR0()
 {
-  u32int regVal = 0;
+  simpleEntry *ttbr0;
   //TODO: need to improve this to insert the correct bit masks
-  __asm__ __volatile__("mrc p15, 0, %0, c2, c0, 0":"=r"(regVal));
-  DEBUG(MM_MMU, "MMU: get translation table base register 0, val %#.8x" EOL, regVal);
-  return (simpleEntry*)regVal;
+  __asm__ __volatile__("mrc p15, 0, %0, c2, c0, 0":"=r"(ttbr0));
+  DEBUG(MM_MMU, "MMU: get translation table base register 0, val %p" EOL, ttbr0);
+  return ttbr0;
 }
 
 

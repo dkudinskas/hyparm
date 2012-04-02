@@ -136,18 +136,18 @@ typedef struct smallPageDescriptor smallPageEntry;
 
 struct PageTableMetaData
 {
-  pageTableEntry* firstLevelEntry;
+  pageTableEntry *firstLevelEntry;
   u32int virtAddr;
   u32int physAddr;
   u32int mappedMegabyte;
   bool host;
-  struct PageTableMetaData* nextEntry;
+  struct PageTableMetaData *nextEntry;
 };
 typedef struct PageTableMetaData ptInfo;
 
 
 /*************** rewritten functions *********************/
-u32int* newLevelOnePageTable(void);
+simpleEntry *newLevelOnePageTable(void);
 u32int* newLevelTwoPageTable(void);
 void deleteLevelTwoPageTable(pageTableEntry* pageTable);
 

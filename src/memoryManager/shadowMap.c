@@ -24,11 +24,11 @@ bool shadowMap(u32int virtAddr)
   u32int tempEntry = 0;
   bool backedUp = FALSE;
   bool success = FALSE;
-  simpleEntry* tempFirst = 0;
+  simpleEntry* tempFirst = NULL;
   simpleEntry* spt = context->pageTables->shadowActive;
 
-  simpleEntry* gpt = 0;
-  if (context->pageTables->guestVirtual != 0)
+  simpleEntry* gpt = NULL;
+  if (context->pageTables->guestVirtual != NULL)
   {
     // cool. we have the VA already! use it. 
     DEBUG(MM_SHADOWING, "shadowMap: guestVirtual PT set, %p" EOL, context->pageTables->guestVirtual);
@@ -354,7 +354,7 @@ void shadowUnmapSection(simpleEntry* shadow, sectionEntry* guest, u32int virtual
   }
 
   // and finally, remove the shadow entry!
-  *(u32int*)shadow = 0;
+  *(u32int *)shadow = 0;
   mmuInvalidateUTLBbyMVA(virtual);
   mmuDataMemoryBarrier();
 }
@@ -367,11 +367,11 @@ void shadowUnmapSection(simpleEntry* shadow, sectionEntry* guest, u32int virtual
  **/
 void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTableEntry* shadow)
 {
-  GCONTXT* context = getGuestContext();
   DEBUG(MM_SHADOWING, "shadowMapPageTable guest %#.8x @ %p, shadow %#.8x @ %p" EOL,
         *(u32int *)guest, guest, *(u32int *)shadow, shadow);
   DEBUG(MM_SHADOWING, "shadowMapPageTable old guest %#.8x @ %p" EOL, *(u32int *)guestOld, guestOld);
 
+  GCONTXT *context = getGuestContext();
   u32int sptVirtAddr = 0;
   u32int sptPhysAddr = 0;
 
@@ -463,7 +463,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
       {
         if (tempPageTable[y].type != FAULT)
         {
-          if(tempPageTable[y].type == LARGE_PAGE)
+          if (tempPageTable[y].type == LARGE_PAGE)
           {
             DIE_NOW(context, "found guest LARGE_PAGE entry, investigate");
           }
@@ -484,11 +484,10 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
       } // for loop
     } // host PAGE_TABLE
 
-
     context->pageTables->shadowActive = shadowPriv;
     if (shadowPriv[i].type == SECTION)
     {
-      sectionEntry* sectionPtr = (sectionEntry*)&shadowPriv[i];
+      sectionEntry *sectionPtr = (sectionEntry *)&shadowPriv[i];
       u32int section = sectionPtr->addr << 20;
       if ((section <= gptPhysical) && ((section + SECTION_SIZE - 1) >= gptPhysical))
       {
@@ -522,7 +521,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
           else
           {
             // must calculate what VA guest is trying to map with this small page
-            smallPageEntry* smallPage = (smallPageEntry*)&tempPageTable[y];
+            smallPageEntry *smallPage = (smallPageEntry *)&tempPageTable[y];
             u32int phys = smallPage->addr << 12;
             u32int physPageTableMasked = gptPhysical & SMALL_PAGE_MASK;
             if (phys == physPageTableMasked)
@@ -540,10 +539,8 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
 }
 
 
-void shadowUnmapPageTable(pageTableEntry* shadow, pageTableEntry* guest, u32int virtual)
+void shadowUnmapPageTable(pageTableEntry *shadow, pageTableEntry *guest, u32int virtual)
 {
-
-  GCONTXT* context = getGuestContext();
   DEBUG(MM_SHADOWING, "shadowUnmapPageTable: shadow %#.8x @ %p, guest %#.8x @ %p, VA %#.8x" EOL,
         *(u32int *)shadow, shadow, *(u32int *)guest, guest, virtual);
 
@@ -564,7 +561,8 @@ void shadowUnmapPageTable(pageTableEntry* shadow, pageTableEntry* guest, u32int 
   // validate block cache...
   validateCacheMultiPreChange(context->blockCache, virtual, (virtual+SECTION_SIZE-1));
 
-  if (context->pageTables->guestVirtual != 0)
+  GCONTXT *context = getGuestContext();
+  if (context->pageTables->guestVirtual != NULL)
   {
     // if the current gPT1 base VA is in this section, lets 'forget' it in GC
     if ((virtual <= (u32int)context->pageTables->guestVirtual) && 
@@ -574,10 +572,10 @@ void shadowUnmapPageTable(pageTableEntry* shadow, pageTableEntry* guest, u32int 
     }
   }
 
-  deleteLevelTwoPageTable((pageTableEntry*)shadow);
+  deleteLevelTwoPageTable((pageTableEntry *)shadow);
 
   // and finally, remove the shadow entry!
-  *(u32int*)shadow = 0;
+  *(u32int *)shadow = 0;
   mmuInvalidateUTLBbyMVA(virtual);
   mmuDataMemoryBarrier();
 }
@@ -594,7 +592,6 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
   DEBUG(MM_SHADOWING, "shadowMapSmallPage: dom %x" EOL, dom);
 
   bool peripheral = FALSE;
-  GCONTXT* context = getGuestContext();
 
   // Address mapping: guest entry points to guest physical. Translate to host physical
   u32int guestPhysical = (guest->addr << 12) & SMALL_PAGE_MASK;
@@ -610,14 +607,15 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
     }
   }
 
-  simpleEntry* hostEntry = (simpleEntry*)getEntryFirst(context->pageTables->hypervisor, guestPhysical);
+  GCONTXT *context = getGuestContext();
+  simpleEntry* hostEntry = (simpleEntry *)getEntryFirst(context->pageTables->hypervisor, guestPhysical);
 
   u32int hostPhysical = 0;
   switch (hostEntry->type)
   {
     case SECTION:
     {
-      sectionEntry* hostSection = (sectionEntry*)hostEntry;
+      sectionEntry *hostSection = (sectionEntry *)hostEntry;
       hostPhysical = ((hostSection->addr << 20) & SECTION_MASK) |
                       (guestPhysical & (~(SECTION_MASK)));
       break;
@@ -630,7 +628,7 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
         case SMALL_PAGE:
         case SMALL_PAGE_3:
         {
-          smallPageEntry* hostSmallPage = (smallPageEntry*)hostPage;
+          smallPageEntry *hostSmallPage = (smallPageEntry *)hostPage;
           hostPhysical = (hostSmallPage->addr << 12) & SMALL_PAGE_MASK;
           break;
         }
@@ -680,7 +678,6 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
  **/
 void shadowUnmapSmallPage(smallPageEntry* shadow, smallPageEntry* guest, u32int virtual)
 {
-  GCONTXT* context = getGuestContext();
   DEBUG(MM_SHADOWING, "shadowUnmapSmallPage: guest entry %#.8x @ %p" EOL, *(u32int *)guest, guest);
   DEBUG(MM_SHADOWING, "shadowUnmapSmallPage: shadow entry %#.8x @ %p" EOL, *(u32int *)shadow, shadow);
   DEBUG(MM_SHADOWING, "shadowUnmapSmallPage: virtual address %#.8x" EOL, virtual);
@@ -710,9 +707,10 @@ void shadowUnmapSmallPage(smallPageEntry* shadow, smallPageEntry* guest, u32int 
   // Need to flush block cache at these addresses first
   // but which addresses to flush? shadow entries might have been fragmented to pages from a section...
   // so flush address range that the guest mapped originally.
+  GCONTXT *context = getGuestContext();
   validateCacheMultiPreChange(context->blockCache, virtual, (virtual+SMALL_PAGE_SIZE-1));
 
-  if (context->pageTables->guestVirtual != 0)
+  if (context->pageTables->guestVirtual != NULL)
   {
     // if the current gPT1 base VA is in this section, lets 'forget' it in GC
     if ((virtual & PT1_ALIGN_MASK) == (u32int)context->pageTables->guestVirtual)
@@ -722,7 +720,7 @@ void shadowUnmapSmallPage(smallPageEntry* shadow, smallPageEntry* guest, u32int 
   }
   
   // and finally, remove the shadow entry!
-  *(u32int*)shadow = 0;
+  *(u32int *)shadow = 0;
   mmuInvalidateUTLBbyMVA(virtual);
   mmuDataMemoryBarrier();
 }
@@ -734,7 +732,7 @@ void shadowUnmapSmallPage(smallPageEntry* shadow, smallPageEntry* guest, u32int 
  **/
 u32int mapAccessPermissionBits(u32int guestAP, u32int domain)
 {
-  GCONTXT* context = getGuestContext();
+  GCONTXT *context = getGuestContext();
   
   u32int dacr = getCregVal(3, 0, 0, 0, &context->coprocRegBank[0]);
   u32int domBits = (dacr >> (domain*2)) & 0x3;
@@ -801,14 +799,15 @@ u32int mapAccessPermissionBits(u32int guestAP, u32int domain)
  **/
 void mapAPBitsSection(sectionEntry* guest, simpleEntry* shadow, u32int virtual)
 {
-  GCONTXT* context = getGuestContext();
   DEBUG(MM_SHADOWING, "mapAPBitsSection: guest entry %#.8x @ %p" EOL, *(u32int *)guest, guest);
   DEBUG(MM_SHADOWING, "mapAPBitsSection: shadow entry %#.8x @ %p" EOL, *(u32int *)shadow, shadow);
   DEBUG(MM_SHADOWING, "mapAPBitsSection: virtual %#.8x" EOL, virtual);
 
+  GCONTXT *context = getGuestContext();
+
   // get new access permission bits, that take into account guest DACR
   u32int sysCtrlReg = getCregVal(1, 0, 0, 0, &context->coprocRegBank[0]);
-  if (sysCtrlReg & SYS_CTRL_ACCESS_FLAG)
+  if ((sysCtrlReg & SYS_CTRL_ACCESS_FLAG))
   {
     DIE_NOW(context, "mapAPBitsSection: access flag enabled set, unimplemented.\n");
   }
@@ -816,7 +815,7 @@ void mapAPBitsSection(sectionEntry* guest, simpleEntry* shadow, u32int virtual)
   u32int shadowAP = mapAccessPermissionBits(guestAP, guest->domain);
   DEBUG(MM_SHADOWING, "mapAPBitsSection: guestAP %x, shadowAP %x" EOL, guestAP, shadowAP);
 
-  switch(shadow->type)
+  switch (shadow->type)
   {
     case SECTION:
     {
@@ -828,19 +827,19 @@ void mapAPBitsSection(sectionEntry* guest, simpleEntry* shadow, u32int virtual)
     case PAGE_TABLE:
     {
       // loop through all second level entries adjusting mapping
-      pageTableEntry* shadowPT = (pageTableEntry*)shadow;
-      ptInfo* metadata = getPageTableInfo(shadowPT);
-      if (metadata == 0)
+      pageTableEntry *shadowPT = (pageTableEntry *)shadow;
+      ptInfo *metadata = getPageTableInfo(shadowPT);
+      if (metadata == NULL)
       {
         DIE_NOW(context, "mapAPBitsSection: could not find required metadata for PT2.\n");
       }
 
-      u32int i = 0;
+      u32int i;
       for (i = 0; i < PT2_ENTRIES; i++)
       {
-        smallPageEntry* shadowSmallPage = (smallPageEntry*)(metadata->virtAddr + i*PT_ENTRY_SIZE);
-        shadowSmallPage->ap2  = (shadowAP >> 2) & 0x1;
-        shadowSmallPage->ap10 =  shadowAP & 0x3;
+        smallPageEntry *shadowSmallPage = (smallPageEntry *)(metadata->virtAddr + i * PT_ENTRY_SIZE);
+        shadowSmallPage->ap2 = (shadowAP >> 2) & 0x1;
+        shadowSmallPage->ap10 = shadowAP & 0x3;
       }
       break;
     }
@@ -917,8 +916,8 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
   u32int i = 0;
   for (i = 0; i < PT2_ENTRIES; i++)
   {
-    simpleEntry* guestEntry  = (simpleEntry*)(guestVA + i*4);
-    simpleEntry* shadowEntry = (simpleEntry*)(shadowVA + i*4);
+    simpleEntry *guestEntry  = (simpleEntry *)(guestVA + i * 4);
+    simpleEntry *shadowEntry = (simpleEntry *)(shadowVA + i * 4);
 
     switch (guestEntry->type)
     {
@@ -935,8 +934,8 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
       case SMALL_PAGE_3:
       {
         // get domain, call mapAPBitsSmallPage
-        smallPageEntry* guestSmallPage  = (smallPageEntry*)guestEntry;
-        smallPageEntry* shadowSmallPage = (smallPageEntry*)shadowEntry;
+        smallPageEntry *guestSmallPage  = (smallPageEntry *)guestEntry;
+        smallPageEntry *shadowSmallPage = (smallPageEntry *)shadowEntry;
         // va now needs to be adjusted for each small page
         mapAPBitsSmallPage(guest->domain, guestSmallPage, shadowSmallPage);
         u32int pageAddress = metadata->mappedMegabyte + i * SMALL_PAGE_SIZE;
@@ -944,7 +943,7 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
       }
     } // switch ends
   } // for ends
-  *(u32int*)first = backupEntry;
+  *(u32int *)first = backupEntry;
   DEBUG(MM_SHADOWING, "mapAPBitsPageTable: restored entry %#.8x @ %p" EOL, backupEntry, first);
   mmuInvalidateUTLBbyMVA(gptPhysAddr);
   mmuDataMemoryBarrier();
@@ -960,7 +959,7 @@ void mapAPBitsSmallPage(u32int dom, smallPageEntry* guest, smallPageEntry* shado
   DEBUG(MM_SHADOWING, "mapAPBitsSmallPage: dom %#.8x, guest %#.8x @ %p, shadow %#.8x @ %p" EOL,
         dom, *(u32int *)guest, guest, *(u32int*)shadow, shadow);
 
-  GCONTXT* context = getGuestContext();
+  GCONTXT *context = getGuestContext();
 
   // get new access permission bits, that take into account guest DACR
   u32int sysCtrlReg = getCregVal(1, 0, 0, 0, &context->coprocRegBank[0]);
@@ -984,8 +983,8 @@ void mapAPBitsSmallPage(u32int dom, smallPageEntry* guest, smallPageEntry* shado
   }
 
   // maybe second level page tables live in this section?
-  ptInfo* head = context->pageTables->gptInfo;
-  if (head == 0)
+  ptInfo *head = context->pageTables->gptInfo;
+  if (head == NULL)
   {
     DIE_NOW(context, "mapAPBitsSmallPage: no PT meta data at all\n");
   }
@@ -1000,7 +999,7 @@ void mapAPBitsSmallPage(u32int dom, smallPageEntry* guest, smallPageEntry* shado
     }
     head = head->nextEntry;
   }
-  while (head != 0);
+  while (head != NULL);
 }
 
 
@@ -1009,7 +1008,7 @@ void mapAPBitsSmallPage(u32int dom, smallPageEntry* guest, smallPageEntry* shado
  **/
 u32int mapExecuteNeverBit(u32int guestDomain, u32int xn)
 {
-  GCONTXT* context = getGuestContext();
+  GCONTXT *context = getGuestContext();
   
   if (!xn)
   {
