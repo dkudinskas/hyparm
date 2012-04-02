@@ -5,7 +5,6 @@
 
 #include "drivers/beagle/memoryMap.h"
 
-//Uncomment to enable page table debugging: #define PAGE_TABLE_DBG
 
 #define PT1_ENTRIES        4096
 #define PT2_ENTRIES         256

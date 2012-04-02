@@ -35,9 +35,7 @@ u32int* newLevelOnePageTable()
   {
     DIE_NOW(NULL, "newLevelOnePageTable: New 1st level page table is not correctly aligned.");
   }
-#ifdef PAGE_TABLE_DBG
-  printf("newLevelOnePageTable: Page Table base addr: %08x\n", pageTableAddress);
-#endif
+  DEBUG(MM_PAGE_TABLES, "newLevelOnePageTable: Page Table base addr: %#.8x" EOL, pageTableAddress);
   return (u32int *)pageTableAddress;
 }
 
@@ -62,6 +60,7 @@ u32int* newLevelTwoPageTable(void)
 #ifdef PAGE_TABLE_DBG
   printf("newLevelTwoPageTable: Page Table base addr: %08x\n", pageTableAddress);
 #endif
+  DEBUG(MM_PAGE_TABLES, "newLevelTwoPageTable: Page Table base addr: %#.8x" EOL, pageTableAddress);
   return (u32int *)pageTableAddress;
 }
 
@@ -74,9 +73,8 @@ u32int* newLevelTwoPageTable(void)
 void deleteLevelTwoPageTable(pageTableEntry* pageTable)
 {
   GCONTXT* context = getGuestContext();
-#ifdef PAGE_TABLE_DBG
-  printf("deleteLevelTwoPageTable: page table entry %08x @ %08x\n", *(u32int*)pageTable, (u32int)pageTable);
-#endif
+  DEBUG(MM_PAGE_TABLES, "deleteLevelTwoPageTable: page table entry %#.8x @ %p" EOL,
+        *(u32int *)pageTable, pageTable);
   // this can only be called on shadow second level page tables
   ptInfo* head = context->pageTables->sptInfo;
   ptInfo* prev = 0;
@@ -120,9 +118,8 @@ void deleteLevelTwoPageTable(pageTableEntry* pageTable)
  **/
 void mapHypervisorMemory(simpleEntry* pageTable)
 {
-#ifdef PAGE_TABLE_DBG
-  printf("mapHypervisorMemory in page table %08x\n", (u32int)pageTable);
-#endif
+  DEBUG(MM_PAGE_TABLES, "mapHypervisorMemory in page table %p" EOL, pageTable);
+
   u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
 
@@ -143,9 +140,8 @@ void mapHypervisorMemory(simpleEntry* pageTable)
 void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
                 u8int domain, u8int accessBits, bool c, bool b, u8int tex)
 {
-#ifdef PAGE_TABLE_DBG
-  printf("mapSection: Virtual Addr: %08x, physical addr: %08x\n", virtAddr, physical);
-#endif
+  DEBUG(MM_PAGE_TABLES, "mapSection: Virtual Addr: %#.8x, physical addr: %#.8x" EOL, virtAddr,
+        physical);
 
   // check what is in the page table at the required index
   simpleEntry* firstLevelEntry = getEntryFirst(pageTable, virtAddr);
@@ -160,15 +156,16 @@ void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
     }
     case PAGE_TABLE:
     {
-      printf("mapSection error: VA: %08x, PA: %08x, oldEntry %08x @ %p\n", virtAddr, physical, *(u32int*)firstLevelEntry, firstLevelEntry);
-      DIE_NOW(NULL, "mapSection: adding section entry on top of existing page table entry");
+      printf("mapSection error: VA: %#.8x, PA: %#.8x, oldEntry %#.8x @ %p" EOL, virtAddr, physical,
+             *(u32int *)firstLevelEntry, firstLevelEntry);
+      DIE_NOW(NULL, "adding section entry on top of existing page table entry");
       break;
     }
     case RESERVED:
     default:
     {
-      printf("mapSection error: Virtual Addr: %08x, physical addr: %08x\n", virtAddr, physical);
-      DIE_NOW(NULL, "mapSection: adding section entry on top of existing reserved entry");
+      printf("mapSection error: Virtual Addr: %#.8x, physical addr: %#.8x" EOL, virtAddr, physical);
+      DIE_NOW(NULL, "adding section entry on top of existing reserved entry");
     }
   }//switch
 }
@@ -181,30 +178,22 @@ void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
 void mapSmallPage(simpleEntry* pageTable, u32int virtAddr, u32int physical,
                 u8int domain, u8int accessBits, u8int c, u8int b, u8int tex, u8int xn)
 {
-#ifdef PAGE_TABLE_DBG
-  printf("mapSmallPage: Virtual %08x, physical %08x, dom: %x, AP: %x, c: %x, b: %x, tex: %x, xn: %x\n",
-         virtAddr, physical, domain, accessBits, c, b, tex, xn);
-#endif
+  DEBUG(MM_PAGE_TABLES, "mapSmallPage: Virtual %#.8x, physical %#.8x, dom: %x, AP: %x, c: %x, "
+        "b: %x, tex: %x, xn: %x" EOL, virtAddr, physical, domain, accessBits, c, b, tex, xn);
 
   // First check 1st Level page table entry
   simpleEntry* first = getEntryFirst(pageTable, virtAddr);
-#ifdef PAGE_TABLE_DBG
-  printf("mapSmallPage: first entry %08x @ %p\n", *(u32int*)first, first);
-#endif
+  DEBUG(MM_PAGE_TABLES, "mapSmallPage: first entry %#.8x @ %p" EOL, *(u32int *)first, first);
   switch(first->type)
   {
     case FAULT:
     {
-#ifdef PAGE_TABLE_DBG
-      printf("mapSmallPage: entry for given VA is FAULT. Creating new.\n");
-#endif
+      DEBUG(MM_PAGE_TABLES, "mapSmallPage: entry for given VA is FAULT. Creating new" EOL);
       // we need a new second level page table. This gives a virtual address allocated
       u32int* vAddr = newLevelTwoPageTable();
       // need to get the physical address
       u32int pAddr = getPhysicalAddress(pageTable, (u32int)vAddr);
-#ifdef PAGE_TABLE_DBG
-      printf("mapSmallPage: PT VA %08x PA %08x\n", (u32int)vAddr, pAddr);
-#endif
+      DEBUG(MM_PAGE_TABLES, "mapSmallPage: PT VA %p PA %#.8x" EOL, vAddr, pAddr);
       // store metadata
       addPageTableEntry((pageTableEntry*)first, (u32int)pAddr, domain);
       u32int mapped = ((u32int)first - (u32int)pageTable) << 18;
@@ -214,46 +203,40 @@ void mapSmallPage(simpleEntry* pageTable, u32int virtAddr, u32int physical,
     case PAGE_TABLE:
     {
       // if existing mapping is pageTable type, we're ok already
-#ifdef PAGE_TABLE_DBG
-      printf("mapSmallPage: entry for given VA is pageTable. Correct, first time.\n");
-#endif
+      DEBUG(MM_PAGE_TABLES, "mapSmallPage: entry for given VA is pageTable. Correct, first time" EOL);
       break;
     }
     case SECTION:
     {
-      printf("mapSmallPage: Virtual %08x, physical %08x, dom: %x, AP: %x, c: %x, b: %x, tex: %x, xn: %x\n",
+      printf("mapSmallPage: Virtual %#.8x, physical %#.8x, dom: %x, AP: %x, c: %x, b: %x, tex: %x, xn: %x" EOL,
              virtAddr, physical, domain, accessBits, c, b, tex, xn);
-      printf("mapSmallPage: first entry %08x @ %p\n", *(u32int*)first, first);
-      DIE_NOW(NULL, "mapSmallPage: adding page table entry on top of existing section entry");
+      printf("mapSmallPage: first entry %#.8x @ %p" EOL, *(u32int*)first, first);
+      DIE_NOW(NULL, "adding page table entry on top of existing section entry");
       break;
     }
     case RESERVED:
     default:
     {
-      DIE_NOW(NULL, "mapSmallPage: adding page table entry on top of existing reserved entry");
+      DIE_NOW(NULL, "adding page table entry on top of existing reserved entry");
     }
   }//switch
 
   // At this point we know its a 2nd level page table entry 
-  simpleEntry* second = getEntrySecond((pageTableEntry*)first, virtAddr);
-#ifdef PAGE_TABLE_DBG
-  printf("mapSmallPage: 2nd lvl entry @ %08x = %08x\n", (u32int)second, *(u32int*)second);
-#endif
+  simpleEntry *second = getEntrySecond((pageTableEntry *)first, virtAddr);
+  DEBUG(MM_PAGE_TABLES, "mapSmallPage: 2nd lvl entry @ %p = %#.8x" EOL, second, *(u32int *)second);
   // Again, we need to check the existing entry
-  if(second->type == FAULT)
+  if (second->type == FAULT)
   {
-#ifdef PAGE_TABLE_DBG
-    printf("mapSmallPage: 2nd Level FAULT. Creating new small entry\n");
-#endif
+    DEBUG(MM_PAGE_TABLES, "mapSmallPage: 2nd Level FAULT. Creating new small entry" EOL);
     addSmallPageEntry((smallPageEntry*)second, physical, accessBits, c, b, tex, xn);
   }
   else //Existing small or large page
   {
-    printf("mapSmallPage: Virtual %08x, physical %08x, dom: %x, AP: %x, c: %x, b: %x, tex: %x, xn: %x\n",
+    printf("mapSmallPage: Virtual %#.8x, physical %#.8x, dom: %x, AP: %x, c: %x, b: %x, tex: %x, xn: %x" EOL,
            virtAddr, physical, domain, accessBits, c, b, tex, xn);
-    printf("mapSmallPage: first entry %08x @ %p\n", *(u32int*)first, first);
-    printf("mapSmallPage: 2nd lvl entry @ %08x = %08x\n", (u32int)second, *(u32int*)second);
-    DIE_NOW(NULL, "mapSmallPage: adding over existing entry\n");
+    printf("mapSmallPage: first entry %#.8x @ %p" EOL, *(u32int*)first, first);
+    printf("mapSmallPage: 2nd lvl entry @ %#.8x = %#.8x" EOL, (u32int)second, *(u32int*)second);
+    DIE_NOW(NULL, "adding over existing entry");
   }
 }
 
@@ -278,9 +261,8 @@ void addSectionEntry(sectionEntry* sectionEntryPtr, u32int physAddr,
   sectionEntryPtr->nG = 0;
   sectionEntryPtr->superSection = 0; // 0 for normal section (1 for supersection)
   sectionEntryPtr->ns = 1; // non secure memory?
-#ifdef PAGE_TABLE_DBG
-  printf("addSectionEntry: Section entry written: %08x @ %08x\n", *(u32int*)sectionEntryPtr, (u32int)sectionEntryPtr);
-#endif
+  DEBUG(MM_PAGE_TABLES, "addSectionEntry: Section entry written: %#.8x @ %p" EOL,
+        *(u32int *)sectionEntryPtr, sectionEntryPtr);
 }
 
 
@@ -300,10 +282,8 @@ void addSmallPageEntry(smallPageEntry* smallPageEntryPtr, u32int physical,
   smallPageEntryPtr->b = bufferable ? 1:0;
   smallPageEntryPtr->type = 1;
   smallPageEntryPtr->xn = xn;
-#ifdef PAGE_TABLE_DBG
-  printf("addSmallPageEntry: Small descriptor written: %08x @ %08X\n", 
-        *(u32int*)smallPageEntryPtr, (u32int)smallPageEntryPtr);
-#endif
+  DEBUG(MM_PAGE_TABLES, "addSmallPageEntry: Small descriptor written: %#.8x @ %p" EOL,
+        *(u32int *)smallPageEntryPtr, smallPageEntryPtr);
 }
 
 
@@ -320,10 +300,8 @@ void addPageTableEntry(pageTableEntry* pageTableEntryPtr, u32int physical, u8int
   pageTableEntryPtr->domain = domain;
   pageTableEntryPtr->imp = 0;
   pageTableEntryPtr->addr = (physical >> 10);
-#ifdef PAGE_TABLE_DBG
-  printf("addPageTableEntry: Written entry at %08x value %08x\n",
-         (u32int)pageTableEntryPtr, *(u32int*)pageTableEntryPtr);
-#endif
+  DEBUG(MM_PAGE_TABLES, "addPageTableEntry: Written entry at %p value %#.8x" EOL,
+        pageTableEntryPtr, *(u32int *)pageTableEntryPtr);
 }
 
 
@@ -332,24 +310,22 @@ void addPageTableEntry(pageTableEntry* pageTableEntryPtr, u32int physical, u8int
  **/
 u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
 {
-#ifdef PAGE_TABLE_DBG
-//  printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
-#endif
+  DEBUG(MM_PAGE_TABLES, "getPhysicalAddress for VA %#.8x in PT @ %p" EOL, virtAddr, pageTable);
   simpleEntry* entryFirst = getEntryFirst(pageTable, virtAddr);
   if (entryFirst->type == FAULT)
   {
     // may not be shadow mapped? try it.
     if (!shadowMap(virtAddr))
     {
-      printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
-      DIE_NOW(NULL, "getPhysicalAddress: failed to shadow map\n");
+      printf("getPhysicalAddress for VA %#.8x in PT @ %#.8x" EOL, virtAddr, (u32int)pageTable);
+      DIE_NOW(NULL, "failed to shadow map");
     }
   }
   switch(entryFirst->type)
   {
     case FAULT: //fall through, no break!
     {
-      DIE_NOW(NULL, "getPhysicalAddress: fault entry in page table\n");
+      DIE_NOW(NULL, "fault entry in page table");
       break;
     }
     case SECTION:
@@ -357,9 +333,9 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
       sectionEntry* section = (sectionEntry*)entryFirst;
       if(section->superSection)
       {
-        printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
-        printf("getPhysicalAddress: PT1 entry %08x @ %p\n", *(u32int*)section, section);
-        DIE_NOW(NULL, "getPhysicalAddress: supersection case unimplemented\n");
+        printf("getPhysicalAddress for VA %#.8x in PT @ %#.8x" EOL, virtAddr, (u32int)pageTable);
+        printf("getPhysicalAddress: PT1 entry %#.8x @ %p" EOL, *(u32int*)section, section);
+        DIE_NOW(NULL, "supersection case unimplemented");
       }
       else
       {
@@ -375,15 +351,15 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
       {
         case LARGE_PAGE:
         {
-          DIE_NOW(NULL, "getPhysicalAddress: Large page case unimplemented\n");
+          DIE_NOW(NULL, "Large page case unimplemented");
         }
         // may not be shadow mapped? try it.
         case FAULT:
         {
           if (!shadowMap(virtAddr))
           {
-            printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
-            DIE_NOW(NULL, "getPhysicalAddress: failed to shadow map, lvl2\n");
+            printf("getPhysicalAddress for VA %#.8x in PT @ %#.8x" EOL, virtAddr, (u32int)pageTable);
+            DIE_NOW(NULL, "failed to shadow map, lvl2");
           }
         }
         case SMALL_PAGE: //fall through
@@ -394,16 +370,16 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
         }
         default:
         {
-          printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
-          DIE_NOW(NULL, "getPhysicalAddress: fault entry in page table\n");
+          printf("getPhysicalAddress for VA %#.8x in PT @ %#.8x" EOL, virtAddr, (u32int)pageTable);
+          DIE_NOW(NULL, "fault entry in page table");
         }
       }
       break;
     }
     case RESERVED: //fall through
     {
-      printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
-      DIE_NOW(NULL, "getPhysicalAddress: reserved entry in page table\n");
+      printf("getPhysicalAddress for VA %#.8x in PT @ %#.8x" EOL, virtAddr, (u32int)pageTable);
+      DIE_NOW(NULL, "reserved entry in page table");
     }
   }
   // compiler happy
@@ -416,9 +392,7 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
  **/
 simpleEntry* getEntryFirst(simpleEntry* pageTable, u32int virtAddr)
 {
-#ifdef PAGE_TABLE_DBG
-//  printf("getEntryFirst: virtual address %08x\n", virtAddr);
-#endif
+  DEBUG(MM_PAGE_TABLES, "getEntryFirst: virtual address %#.8x" EOL, virtAddr);
   // 1st level page table index is the top 12 bits of the virtual address
   u32int tableIndex = (virtAddr & 0xFFF00000) >> 18;
   // 1st level page table must be aligned to 16kb (bottom 14 bits)
@@ -433,10 +407,8 @@ simpleEntry* getEntryFirst(simpleEntry* pageTable, u32int virtAddr)
  **/
 simpleEntry* getEntrySecond(pageTableEntry* firstLevelEntry, u32int virtAddr)
 {
-#ifdef PAGE_TABLE_DBG
-  printf("getEntrySecond: 1st lvl PTE %08x @ %p; VA %08x\n",
-        *(u32int*)firstLevelEntry, firstLevelEntry, virtAddr);
-#endif
+  DEBUG(MM_PAGE_TABLES, "getEntrySecond: 1st lvl PTE %#.8x @ %p; VA %#.8x" EOL,
+        *(u32int *)firstLevelEntry, firstLevelEntry, virtAddr);
 
   u32int index = (virtAddr & 0x000FF000) >> 10;
   // to look through the 2nd lvl page table, we need to access it using VA
@@ -444,22 +416,20 @@ simpleEntry* getEntrySecond(pageTableEntry* firstLevelEntry, u32int virtAddr)
   ptInfo* metadata = getPageTableInfo(firstLevelEntry);
   if (metadata == 0)
   {
-    printf("getEntrySecond: metadata not found. 1st lvl PTE %08x @ %p; VA %08x\n",
+    printf("getEntrySecond: metadata not found. 1st lvl PTE %#.8x @ %p; VA %#.8x" EOL,
                             *(u32int*)firstLevelEntry, firstLevelEntry, virtAddr);
     dumpPageTableInfo();
-    DIE_NOW(NULL, "getEntrySecond: could not find PT2 metadta.\n");
+    DIE_NOW(NULL, "could not find PT2 metadta");
   }
   // however if this entry is a guest PT2 info, then virtAddr will not be set!
   if (!metadata->host)
   {
-    DIE_NOW(NULL, "getEntrySecond: virtAddr not set in metadata on GPT2!\n");
+    DIE_NOW(NULL, "virtAddr not set in metadata on GPT2!");
   }
   u32int entryAddress = metadata->virtAddr | index;
-#ifdef PAGE_TABLE_DBG
-  printf("getEntrySecond: found! base = %08x index %08x; -> %08x\n",
-          metadata->virtAddr, index, entryAddress);
-#endif
   return (simpleEntry*)entryAddress;
+  DEBUG(MM_PAGE_TABLES, "getEntrySecond: found! base = %#.8x index %#.8x; -> %#.8x" EOL,
+        metadata->virtAddr, index, entryAddress);
 }
 
 
@@ -469,16 +439,13 @@ simpleEntry* getEntrySecond(pageTableEntry* firstLevelEntry, u32int virtAddr)
  **/
 void splitSectionToSmallPages(simpleEntry* pageTable, u32int virtAddr)
 {
-#ifdef PAGE_TABLE_DBG
-  printf("splitSectionToSmallPages: 1st level PT @ %08x vAddr %08x\n", (u32int)pageTable, virtAddr);
-#endif
+  DEBUG(MM_PAGE_TABLES, "splitSectionToSmallPages: 1st level PT @ %p vAddr %#.8x" EOL,
+        pageTable, virtAddr);
 
   // 1. get section entry
   sectionEntry* sectionEntryPtr = (sectionEntry*)getEntryFirst(pageTable, virtAddr);
-#ifdef PAGE_TABLE_DBG
-  printf("splitSectionToSmallPages: section entry @ %08x = %08x\n",
-        (u32int)sectionEntryPtr, *(u32int*)sectionEntryPtr);
-#endif
+  DEBUG(MM_PAGE_TABLES, "splitSectionToSmallPages: section entry @ %p = %#.8x" EOL,
+        sectionEntryPtr, *(u32int *)sectionEntryPtr);
   mmuInvalidateUTLBbyMVA(virtAddr);
 
   // 2. invalidate entry.
@@ -493,9 +460,7 @@ void splitSectionToSmallPages(simpleEntry* pageTable, u32int virtAddr)
   virtAddr = virtAddr & 0xFFF00000;
   u32int physAddr = (sectionEntryPtr->addr) << 20;
   
-#ifdef PAGE_TABLE_DBG
-  printf("splitSectionToSmallPages: vaddr %08x, pAddr %08x\n", virtAddr, physAddr);
-#endif
+  DEBUG(MM_PAGE_TABLES, "splitSectionToSmallPages: vaddr %#.8x, pAddr %#.8x" EOL, virtAddr, physAddr);
 
   u32int protectionBits = sectionEntryPtr->ap10 | (sectionEntryPtr->ap2 << 2);
   u32int index = 0;
@@ -514,10 +479,8 @@ void splitSectionToSmallPages(simpleEntry* pageTable, u32int virtAddr)
 bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr)
 {
   GCONTXT* context = getGuestContext();
-#ifdef PAGE_TABLE_DBG
-  printf("isAddrInPageTable: is physAddr %08x in PT %08x\n", physAddr, (u32int)pageTablePhys);
-#endif
-  if (pageTablePhys == 0)
+  DEBUG(MM_PAGE_TABLES, "isAddrInPageTable: is physAddr %#.8x in PT %p" EOL, physAddr, pageTablePhys);
+  if (pageTablePhys == NULL)
   {
     // no guest page table yet.
     return FALSE;
@@ -527,9 +490,7 @@ bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr)
   if((physAddr >= (u32int)pageTablePhys) && 
      (physAddr <= ((u32int)pageTablePhys + PT1_SIZE - 1)) )
   {
-#ifdef PAGE_TABLE_DBG
-    printf("isAddrInPageTable: phys address points to a 1nd lvl page table entry\n");
-#endif
+    DEBUG(MM_PAGE_TABLES, "isAddrInPageTable: phys address points to a 1st lvl page table entry" EOL);
     return TRUE;
   }
 
@@ -539,9 +500,7 @@ bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr)
   {
     if ( (head->physAddr <= physAddr ) && ((head->physAddr+PT2_SIZE-1) >= physAddr) )
     {
-#ifdef PAGE_TABLE_DBG
-      printf("isAddrInPageTable: phys addr points to a 2nd lvl page table entry\n");
-#endif
+      DEBUG(MM_PAGE_TABLES, "isAddrInPageTable: phys addr points to a 2nd lvl page table entry" EOL);
       return TRUE;
     }
     head = head->nextEntry;
@@ -554,16 +513,12 @@ bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr)
 
 void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u32int mapped, bool host)
 {
-#ifdef PAGE_TABLE_DBG
-  printf("addPageTableInfo: entry %08x @ %p, PA %08x VA %08x, mapped %08x host %x\n",
-        *(u32int*)entry, entry, physical, virtual, mapped, host);
-#endif
   GCONTXT* context = getGuestContext();
+  DEBUG(MM_PAGE_TABLES, "addPageTableInfo: entry %#.8x @ %p, PA %#.8x VA %#.8x, mapped %#.8x host %x" EOL,
+        *(u32int *)entry, entry, physical, virtual, mapped, host);
   
   ptInfo *newEntry = (ptInfo *)malloc(sizeof(ptInfo));
-#ifdef PAGE_TABLE_DBG
-  printf("addPageTableInfo: new entry @ %p\n", newEntry);
-#endif
+  DEBUG(MM_PAGE_TABLES, "addPageTableInfo: new entry @ %p" EOL, newEntry);
   newEntry->firstLevelEntry = entry;
   newEntry->physAddr = physical;
   newEntry->virtAddr = virtual;
@@ -577,25 +532,19 @@ void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u3
     // first entry
     if (host)
     {
-#ifdef PAGE_TABLE_DBG
-      printf("addPageTableInfo: first entry, sptInfo now %p\n", newEntry);
-#endif
+      DEBUG(MM_PAGE_TABLES, "addPageTableInfo: first entry, sptInfo now %p" EOL, newEntry);
       context->pageTables->sptInfo = newEntry;
     }
     else
     {
-#ifdef PAGE_TABLE_DBG
-      printf("addPageTableInfo: first entry, gptInfo now %p\n", newEntry);
-#endif
+      DEBUG(MM_PAGE_TABLES, "addPageTableInfo: first entry, gptInfo now %p" EOL, newEntry);
       context->pageTables->gptInfo = newEntry;
     }
   }
   else
   {
     // loop to the end of the list
-#ifdef PAGE_TABLE_DBG
-    printf("addPageTableInfo: not the first entry. head %p\n", head);
-#endif
+    DEBUG(MM_PAGE_TABLES, "addPageTableInfo: not the first entry. head %p" EOL, head);
     while (head->nextEntry != 0)
     {
       head = head->nextEntry;
@@ -609,9 +558,8 @@ void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u3
 
 ptInfo* getPageTableInfo(pageTableEntry* firstLevelEntry)
 {
-#ifdef PAGE_TABLE_DBG
-  printf("getPageTableInfo: first level entry ptr %p = %08x\n", firstLevelEntry, *(u32int*)firstLevelEntry);
-#endif
+  DEBUG(MM_PAGE_TABLES, "getPageTableInfo: first level entry ptr %p = %#.8x" EOL, firstLevelEntry,
+        *(u32int *)firstLevelEntry);
   GCONTXT* context = getGuestContext();
 
   // spt first
@@ -620,9 +568,8 @@ ptInfo* getPageTableInfo(pageTableEntry* firstLevelEntry)
   {
     if (head->firstLevelEntry == firstLevelEntry)
     {
-#ifdef PAGE_TABLE_DBG
-      printf("getPageTableInfo: found spt; entry %p = %08x\n", head->firstLevelEntry, *(u32int*)head->firstLevelEntry);
-#endif
+      DEBUG(MM_PAGE_TABLES, "getPageTableInfo: found spt; entry %p = %#.8x" EOL,
+            head->firstLevelEntry, *(u32int *)head->firstLevelEntry);
       return head;
     }
     head = head->nextEntry;
@@ -634,9 +581,8 @@ ptInfo* getPageTableInfo(pageTableEntry* firstLevelEntry)
   {
     if (head->firstLevelEntry == firstLevelEntry)
     {
-#ifdef PAGE_TABLE_DBG
-      printf("getPageTableInfo: found gpt; entry %p = %08x\n", head->firstLevelEntry, *(u32int*)head->firstLevelEntry);
-#endif
+      DEBUG(MM_PAGE_TABLES, "getPageTableInfo: found gpt; entry %p = %#.8x" EOL,
+            head->firstLevelEntry, *(u32int *)head->firstLevelEntry);
       return head;
     }
     head = head->nextEntry;
@@ -649,10 +595,9 @@ ptInfo* getPageTableInfo(pageTableEntry* firstLevelEntry)
 
 void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host)
 {
-#ifdef PAGE_TABLE_DBG
-  printf("removePageTableInfo: first level entry ptr %p = %08x\n", firstLevelEntry, *(u32int*)firstLevelEntry);
-#endif
   GCONTXT* context = getGuestContext();
+  DEBUG(MM_PAGE_TABLES, "removePageTableInfo: first level entry ptr %p = %#.8x" EOL,
+        firstLevelEntry, *(u32int *)firstLevelEntry);
 
   ptInfo* head = 0;
   ptInfo* prev = 0;
@@ -669,9 +614,8 @@ void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host)
   {
     if (head->firstLevelEntry == firstLevelEntry)
     {
-#ifdef PAGE_TABLE_DBG
-      printf("removePageTableInfo: found entry %p = %08x\n", head->firstLevelEntry, *(u32int*)head->firstLevelEntry);
-#endif
+      DEBUG(MM_PAGE_TABLES, "removePageTableInfo: found entry %p = %#.8x" EOL,
+            head->firstLevelEntry, *(u32int *)head->firstLevelEntry);
       ptInfo* tmp = head;
       head = head->nextEntry;
       if (host)
@@ -707,25 +651,25 @@ void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host)
 
 void dumpPageTableInfo()
 {
-#ifdef PAGE_TABLE_DBG
-  printf("dumpPageTableInfo:\n");
+#if CONFIG_DEBUG_MM_PAGE_TABLES
+  printf("dumpPageTableInfo:" EOL);
   
   GCONTXT* context = getGuestContext();
   // spt first
   ptInfo* head = context->pageTables->sptInfo;
-  printf("sptInfo:\n");
+  printf("sptInfo:" EOL);
   while (head != 0)
   {
-    printf("%p: ptEntry %p; PA %08x VA %08x host %x\n", head, head->firstLevelEntry, head->physAddr, head->virtAddr, head->host);
+    printf("%p: ptEntry %p; PA %#.8x VA %#.8x host %x" EOL, head, head->firstLevelEntry, head->physAddr, head->virtAddr, head->host);
     head = head->nextEntry;
   }
 
   // gpt then 
   head = context->pageTables->gptInfo;
-  printf("gptInfo:\n");
+  printf("gptInfo:" EOL);
   while (head != 0)
   {
-    printf("%p: ptEntry %p; PA %08x VA %08x host %x\n", head, head->firstLevelEntry, head->physAddr, head->virtAddr, head->host);
+    printf("%p: ptEntry %p; PA %#.8x VA %#.8x host %x" EOL, head, head->firstLevelEntry, head->physAddr, head->virtAddr, head->host);
     head = head->nextEntry;
   }
 #endif
@@ -734,9 +678,7 @@ void dumpPageTableInfo()
 
 void invalidatePageTableInfo()
 {
-#ifdef PAGE_TABLE_DBG
-  printf("invalidatePageTableInfo:\n");
-#endif  
+  DEBUG(MM_PAGE_TABLES, "invalidatePageTableInfo:" EOL);
   GCONTXT* context = getGuestContext();
   // spt first
   while (context->pageTables->sptInfo != 0)
@@ -767,9 +709,7 @@ void invalidatePageTableInfo()
     free((void*)tempPtr);
   }
   context->pageTables->gptInfo = 0;
-#ifdef PAGE_TABLE_DBG
-  printf("invalidatePageTableInfo: ...done\n");
-#endif
+  DEBUG(MM_PAGE_TABLES, "invalidatePageTableInfo: ...done" EOL);
 }
 
 
@@ -797,11 +737,9 @@ void pageTableEdit(u32int address, u32int newVal)
     DIE_NOW(context, "guest virtual not set.");
   }
   u32int physicalAddress = getPhysicalAddress(context->pageTables->guestVirtual, address);
-#ifdef PAGE_TABLE_DBG
-  printf("PageTableEdit: address %08x newval: %08x\n", address, newVal);
-  printf("PageTableEdit: physical address of edit %08x, phys gPT %p\n", 
+  DEBUG(MM_PAGE_TABLES, "PageTableEdit: address %#.8x newval: %#.8x" EOL, address, newVal);
+  DEBUG(MM_PAGE_TABLES, "PageTableEdit: physical address of edit %#.8x, phys gPT %p" EOL,
         physicalAddress, context->pageTables->guestPhysical);
-#endif
 
   // Step 1: Get the virtual fault address
 
@@ -817,9 +755,7 @@ void pageTableEdit(u32int address, u32int newVal)
     // write to an existing 2nd Level table, which we now need to find
     // to get the full virtual address
     u32int editAddr = physicalAddress & PT2_ALIGN_MASK; 
-#ifdef PAGE_TABLE_DBG
-    printf("pageTableEdit: PT2 case: editAddr masked to PT2 size %08x\n", editAddr);
-#endif
+    DEBUG(MM_PAGE_TABLES, "pageTableEdit: PT2 case: editAddr masked to PT2 size %#.8x" EOL, editAddr);
     firstLevelEntry = FALSE;
 
     ptInfo* head = context->pageTables->gptInfo;
@@ -834,35 +770,30 @@ void pageTableEdit(u32int address, u32int newVal)
     }
     if (head == 0)
     {
-      DIE_NOW(context, "pageTableEdit: guest editing second lvl PT, couldn't find metadata.\n");
+      DIE_NOW(context, "pageTableEdit: guest editing second lvl PT, couldn't find metadata." EOL);
     }
-#ifdef PAGE_TABLE_DBG
-    printf("pageTableEdit: FOUND virt %08x phys %08x entry %08x @ %08x\n", 
-          head->virtAddr, head->physAddr, *(u32int*)head->firstLevelEntry, (u32int)head->firstLevelEntry);
-#endif
-    if (context->pageTables->guestVirtual == 0)
+    DEBUG(MM_PAGE_TABLES, "pageTableEdit: FOUND virt %#.8x phys %#.8x entry %#.8x @ %p" EOL,
+          head->virtAddr, head->physAddr, *(u32int *)head->firstLevelEntry, head->firstLevelEntry);
+    if (context->pageTables->guestVirtual == NULL)
     {
-      DIE_NOW(context, "pageTableEdit: guestVirtual not set\n");
+      DIE_NOW(context, "pageTableEdit: guestVirtual not set" EOL);
     }
     virtualAddress = ((u32int)head->firstLevelEntry - (u32int)context->pageTables->guestVirtual) << 18;
     virtualAddress |= ((address & 0x3FC) << 10);
-#ifdef PAGE_TABLE_DBG
-    printf("pageTableEdit: PT2 case: pt edit corresponds to VA %08x\n", virtualAddress);
-#endif
+    DEBUG(MM_PAGE_TABLES, "pageTableEdit: PT2 case: pt edit corresponds to VA %#.8x" EOL,
+          virtualAddress);
   }
 
 
-#ifdef PAGE_TABLE_DBG
-  printf("pageTableEdit: virtualAddr %08x oldguestEntry %08x newGuestEntry %08x\n",
-          virtualAddress, *(u32int*)oldGuestEntry, *(u32int*)newGuestEntry);
-#endif
+  DEBUG(MM_PAGE_TABLES, "pageTableEdit: virtualAddr %#.8x oldguestEntry %#.8x newGuestEntry %#.8x"
+        EOL, virtualAddress, *(u32int*)oldGuestEntry, *(u32int*)newGuestEntry);
 
   if (firstLevelEntry && (oldGuestEntry->type == RESERVED))
   {
-    printf("pageTableEdit: addr %08x newVal %08x vAddr %08x\n", address, newVal, virtualAddress);
-    printf("pageTableEdit: oldGuestEntry %08x newGuestEntry %08x\n",
+    printf("pageTableEdit: addr %#.8x newVal %#.8x vAddr %#.8x" EOL, address, newVal, virtualAddress);
+    printf("pageTableEdit: oldGuestEntry %#.8x newGuestEntry %#.8x" EOL,
            *(u32int*)oldGuestEntry, *(u32int*)newGuestEntry);
-    DIE_NOW(context, "pageTableEdit: old entry RESERVED type");
+    DIE_NOW(context, "old entry RESERVED type");
   }
 
   simpleEntry* shadowUser = getEntryFirst(context->pageTables->shadowUser, virtualAddress);
@@ -910,16 +841,16 @@ void pageTableEdit(u32int address, u32int newVal)
         }
         else
         {
-          printf("pageTableEdit: addr %08x newVal %08x\n", address, newVal);
-          printf("pageTableEdit: virtualAddr %08x oldguestEntry %08x newGuestEntry %08x\n",
+          printf("pageTableEdit: addr %#.8x newVal %#.8x" EOL, address, newVal);
+          printf("pageTableEdit: virtualAddr %#.8x oldguestEntry %#.8x newGuestEntry %#.8x" EOL,
                           virtualAddress, *(u32int*)oldGuestEntry, *(u32int*)newGuestEntry);
-          printf("pageTableEdit: shadowUser %08x @ %p shadowPriv %08x @ %p\n",
+          printf("pageTableEdit: shadowUser %#.8x @ %p shadowPriv %#.8x @ %p" EOL,
             *(u32int*)shadowUser, shadowUser, *(u32int*)shadowPriv, shadowPriv);
           shadowUser = getEntrySecond((pageTableEntry*)shadowUser, virtualAddress);
           shadowPriv = getEntrySecond((pageTableEntry*)shadowPriv, virtualAddress);
-          printf("pageTableEdit: 2nd lvl shadowUser %08x @ %p shadowPriv %08x @ %p\n",
+          printf("pageTableEdit: 2nd lvl shadowUser %#.8x @ %p shadowPriv %#.8x @ %p" EOL,
             *(u32int*)shadowUser, shadowUser, *(u32int*)shadowPriv, shadowPriv);
-          DIE_NOW(context, "pageTableEdit: remove/change type 2nd lvl entry unimplemented.\n");
+          DIE_NOW(context, "remove/change type 2nd lvl entry unimplemented." EOL);
         }
       }
     }
@@ -927,25 +858,23 @@ void pageTableEdit(u32int address, u32int newVal)
     if ((oldGuestEntry->type == FAULT) && (newGuestEntry->type != FAULT))
     {
       // old entry fault, new !fault. add entry case ignore.
-#ifdef PAGE_TABLE_DBG
-      printf("pageTableEdit: old entry fault, new entry !fault. ignore ADD.\n");
-#endif 
+      DEBUG(MM_PAGE_TABLES, "pageTableEdit: old entry fault, new entry !fault. ignore ADD" EOL);
       return;
     }
 
     if ((oldGuestEntry->type != FAULT) && (newGuestEntry->type != FAULT))
     {
       // old entry fault, new !fault. changing page table entry type. mustn't ignore
-      DIE_NOW(NULL, "pageTableEdit: old entry !fault, new entry !fault. change type unimplemented.\n");
+      DIE_NOW(NULL, "old entry !fault, new entry !fault. change type unimplemented." EOL);
     }
   }
   else
   {
     // type of old entry is the same as new one. just changing attributes!
-#ifdef PAGE_TABLE_DBG
-    printf("pageTableEdit: attributes @ %08x, oldValue %08x, newValue %08x\n", address, *(u32int*)address, newVal);
-    printf("pageTableEdit: shadowPriv %08x shadowUser %08x\n", *(u32int*)shadowPriv, *(u32int*)shadowUser); 
-#endif
+    DEBUG(MM_PAGE_TABLES, "pageTableEdit: attributes @ %#.8x, oldValue %#.8x, newValue %#.8x" EOL,
+          address, *(u32int *)address, newVal);
+    DEBUG(MM_PAGE_TABLES, "pageTableEdit: shadowPriv %#.8x shadowUser %#.8x" EOL,
+          *(u32int *)shadowPriv, *(u32int *)shadowUser);
     // guest may be changing access permissions.
     // this requires us to force the guest into an appropriate mode
     u32int cpsrPriv = PSR_SVC_MODE;
@@ -1003,11 +932,11 @@ void pageTableEdit(u32int address, u32int newVal)
         }
         case LARGE_PAGE:
         {
-          DIE_NOW(context, "pageTableEdit: editing attributes LARGE_PAGE: unimplemented.\n");
+          DIE_NOW(context, "editing attributes LARGE_PAGE: unimplemented");
         }
         case FAULT:
         {
-          DIE_NOW(context, "pageTableEdit: editing attributes FAULT type?.\n");
+          DIE_NOW(context, "editing attributes FAULT type?");
         }
       }
     } // else second-level entry ends 
@@ -1023,11 +952,9 @@ void pageTableEdit(u32int address, u32int newVal)
 void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, simpleEntry* shadow, u32int virtual)
 {
   // WARNING: shadow descriptor type might not correspond to guest descriptor type!!! 
-#ifdef PAGE_TABLE_DBG
-  printf("editAttributesSection: oldSection %08x, newSection %08x shadow %08x\n",
-         *(u32int*)oldSection, *(u32int*)newSection, *(u32int*)shadow);
-#endif
   GCONTXT* context = getGuestContext();
+  DEBUG(MM_PAGE_TABLES, "editAttributesSection: oldSection %#.8x, newSection %#.8x shadow %#.8x"
+        EOL, *(u32int *)oldSection, *(u32int *)newSection, *(u32int *)shadow);
 
   if (shadow->type == FAULT)
   {
@@ -1043,34 +970,34 @@ void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, s
     // check if shadow entry isn't split up to pages...
     if (shadow->type != SECTION)
     {
-      DIE_NOW(context, "editAttributesSection: shadow entry SPLIT.\n");
+      DIE_NOW(context, "shadow entry SPLIT");
     }
     else
     {
-      DIE_NOW(context, "editAttributesSection: remap address or supersection\n");
+      DIE_NOW(context, "remap address or supersection");
       // must shadow unmap and shadow re-map section.
     }
   }
 
   if (oldSection->b != newSection->b)
   {
-    DIE_NOW(context, "editAttributesSection: edit bufferable bit\n");
+    DIE_NOW(context, "edit bufferable bit");
   }
 
   if (oldSection->c != newSection->c)
   {
-    DIE_NOW(context, "editAttributesSection: edit cacheable bit\n");
+    DIE_NOW(context, "edit cacheable bit");
   }
 
   if (oldSection->xn != newSection->xn)
   {
     if (shadow->type != SECTION)
     {
-      DIE_NOW(context, "editAttributesSection: map XN, shadow entry SPLIT.");
+      DIE_NOW(context, "map XN, shadow entry SPLIT");
     }
     else
     {
-      DIE_NOW(context, "editAttributesSection: edit XN bit\n");
+      DIE_NOW(context, "edit XN bit");
       ((sectionEntry*)shadow)->xn = newSection->xn;
     }
   }
@@ -1084,12 +1011,12 @@ void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, s
   //Carefull of this one, field is used by the hypervisor
   if (oldSection->imp != newSection->imp)
   {
-    DIE_NOW(context, "editAttributesSection: imp-dep bit set");
+    DIE_NOW(context, "imp-dep bit set");
   }
 
   if (oldSection->tex != newSection->tex)
   {
-    DIE_NOW(context, "editAttributesSection:, edit TEX bits\n");
+    DIE_NOW(context, "edit TEX bits");
   }
 
   if ((oldSection->ap10 != newSection->ap10) || (oldSection->ap2 != newSection->ap2))
@@ -1099,84 +1026,82 @@ void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, s
 
   if (oldSection->s != newSection->s)
   {
-    DIE_NOW(context, "editAttributesSection: edit details, edit Shareable bit\n");
+    DIE_NOW(context, "edit details, edit Shareable bit");
   }
 
   if (oldSection->nG != newSection->nG)
   {
-    DIE_NOW(context, "editAttributesSection: edit details, edit non-Global bit\n");
+    DIE_NOW(context, "edit details, edit non-Global bit");
   }
 
   if (oldSection->ns != newSection->ns)
   {
-    DIE_NOW(context, "pageTableEdit: edit details, edit non-secure bit\n");
+    DIE_NOW(context, "edit details, edit non-secure bit");
   }
 }
 
 
 void editAttributesPageTable(pageTableEntry* oldTable, pageTableEntry* newTable, pageTableEntry* shadowTable, u32int virtual)
 {
-  printf("editAttributesPageTable: for virtual address %08x; implement\n", virtual);
-  DIE_NOW(NULL, "editAttributesPageTable: unimplemented\n");
+  printf("editAttributesPageTable: for virtual address %#.8x; implement" EOL, virtual);
+  DIE_NOW(NULL, "unimplemented");
 }
 
 
 void editAttributesSmallPage(smallPageEntry* oldPage, smallPageEntry* newPage, smallPageEntry* shadowPage, u32int virtual)
 {
-#ifdef PAGE_TABLE_DBG
-  printf("editAttributesSmallPage: oldPage %08x, newPage %08x shadowPage %08x\n",
-         *(u32int*)oldPage, *(u32int*)newPage, *(u32int*)shadowPage);
-#endif
   GCONTXT* context = getGuestContext();
+  DEBUG(MM_PAGE_TABLES, "editAttributesSmallPage: oldPage %#.8x, newPage %#.8x shadowPage %#.8x"
+        EOL, *(u32int *)oldPage, *(u32int *)newPage, *(u32int *)shadowPage);
 
   if (shadowPage->type == FAULT)
   {
     // quick exit if not shadow mapped yet
     return;
   }
-  printf("editAttributesSmallPage: oldPage %08x, newPage %08x shadowPage %08x\n",
-         *(u32int*)oldPage, *(u32int*)newPage, *(u32int*)shadowPage);
+  printf("editAttributesSmallPage: oldPage %#.8x, newPage %#.8x shadowPage %#.8x" EOL,
+         *(u32int *)oldPage, *(u32int *)newPage, *(u32int *)shadowPage);
 
   if (oldPage->addr != newPage->addr)
   {
     // changing base address of entry, remove then add operation.
     // must shadow unmap and shadow re-map section.
-    DIE_NOW(context, "editAttributesSmallPage: remap address\n");
+    DIE_NOW(context, "remap address");
   }
 
   if (oldPage->b != newPage->b)
   {
-    DIE_NOW(context, "editAttributesSmallPage: edit bufferable bit\n");
+    DIE_NOW(context, "edit bufferable bit");
   }
 
   if (oldPage->c != newPage->c)
   {
-    DIE_NOW(context, "editAttributesSmallPage: edit cacheable bit\n");
+    DIE_NOW(context, "edit cacheable bit");
   }
 
   if (oldPage->xn != newPage->xn)
   {
-    DIE_NOW(context, "editAttributesSmallPage: edit XN bit\n");
+    DIE_NOW(context, "edit XN bit");
   }
 
   if ((oldPage->ap10 != newPage->ap10) || (oldPage->ap2 != newPage->ap2))
   {
-    DIE_NOW(context, "editAttributesSmallPage: edit AP bits\n");
+    DIE_NOW(context, "edit AP bits");
 //    mapAPBitsSection(newSection, (simpleEntry*)shadow, virtual);
   }
 
   if (oldPage->tex != newPage->tex)
   {
-    DIE_NOW(context, "editAttributesSmallPage:, edit TEX bits\n");
+    DIE_NOW(context, "edit TEX bits");
   }
 
   if (oldPage->s != newPage->s)
   {
-    DIE_NOW(context, "editAttributesSmallPage: edit details, edit Shareable bit\n");
+    DIE_NOW(context, "edit details, edit Shareable bit");
   }
 
   if (oldPage->nG != newPage->nG)
   {
-    DIE_NOW(context, "editAttributesSmallPage: edit details, edit non-Global bit\n");
+    DIE_NOW(context, "edit details, edit non-Global bit");
   }
 }

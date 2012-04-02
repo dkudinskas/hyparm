@@ -5,7 +5,6 @@
 
 #include "memoryManager/pageTable.h"
 
-// uncomment me to enable shadow page table debug: #define SHADOWING_DEBUG
 
 bool shadowMap(u32int virtAddr);
 
@@ -27,6 +26,4 @@ u32int mapExecuteNeverBit(u32int guestDomain, u32int xn);
 
 u8int mapGuestDomain(u8int guestDomain);
 
-
-
-#endif
+#endif /* __MEMORY_MANAGER__SHADOW_MAP_H__ */

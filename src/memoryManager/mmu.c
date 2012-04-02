@@ -66,9 +66,7 @@ static const char *const prefetchAbtFaultString[] =
 
 void mmuInit()
 {
-#ifdef MMU_DBG
-  printf("MMU init" EOL);
-#endif
+  DEBUG(MM_MMU, "MMU init" EOL);
 
   mmuDataMemoryBarrier();
   mmuInvalidateUTLB();
@@ -81,20 +79,17 @@ void mmuInit()
  **/
 void mmuSetTTBCR(u32int value)
 {
-#ifdef MMU_DBG
-  printf("MMU: set TTBCR to %x" EOL, value);
-#endif
   __asm__ __volatile__("mcr p15, 0, %0, c2, c0, 2"
   :
   :"r"(value)
      );
+  DEBUG(MM_MMU, "MMU: set TTBCR to %#.8x" EOL, value);
 }
 
 void mmuSetTTBR0(simpleEntry* addr, u32int asid)
 {
-#ifdef MMU_DBG
-  printf("MMU: set TTBR0 to %08x" EOL, (u32int)addr);
-#endif
+  DEBUG(MM_MMU, "MMU: set translation table base register 0 to %p" EOL, addr);
+
   // set context id to reserved value
   mmuSetContextID(0);
 
@@ -115,9 +110,8 @@ void mmuSetTTBR0(simpleEntry* addr, u32int asid)
 
 void mmuSetTTBR1(simpleEntry* addr, u32int asid)
 {
-#ifdef MMU_DBG
-  printf("MMU: set translation table base register 1 to %08x" EOL, (u32int)addr);
-#endif
+  DEBUG(MM_MMU, "MMU: set translation table base register 1 to %p" EOL, addr);
+
   // set context id to reserved value
   mmuSetContextID(0);
 
@@ -138,9 +132,7 @@ simpleEntry* mmuGetTTBR0()
   u32int regVal = 0;
   //TODO: need to improve this to insert the correct bit masks
   __asm__ __volatile__("mrc p15, 0, %0, c2, c0, 0":"=r"(regVal));
-#ifdef MMU_DBG
-  printf("MMU: get translation table base register 0, val %08x" EOL, (u32int)regVal);
-#endif
+  DEBUG(MM_MMU, "MMU: get translation table base register 0, val %#.8x" EOL, regVal);
   return (simpleEntry*)regVal;
 }
 
@@ -188,37 +180,28 @@ bool isMmuEnabled()
  **/
 void mmuClearInstructionCache()
 {
-#ifdef MMU_DBG
-  printf("mmuClearInstructionCache: clearing host iCache" EOL);
-#endif
+  DEBUG(MM_MMU, "mmuClearInstructionCache: clearing host iCache" EOL);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 0": : "r"(0));
 }
 
 
 void mmuInvIcacheToPOU(void)
 {
-#ifdef MMU_DBG
-  printf("mmuInvIcacheByMVAtoPOU: inv all iCaches to PoU" EOL);
-#endif
+  DEBUG(MM_MMU, "mmuInvIcacheByMVAtoPOU: inv all iCaches to PoU" EOL);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 0": :"r"(0));
 }
 
 
 void mmuInvIcacheByMVAtoPOU(u32int mva)
 {
-#ifdef MMU_DBG
-  printf("mmuInvIcacheByMVAtoPOU: inv iCache by MVA to PoU %08x" EOL, mva);
-#endif
-
+  DEBUG(MM_MMU, "mmuInvIcacheByMVAtoPOU: inv iCache by MVA to PoU %08x" EOL, mva);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 1": :"r"(mva));
 }
 
 
 void mmuInstructionSync()
 {
-#ifdef MMU_DBG
-  printf("mmuInstructionSync" EOL);
-#endif
+  DEBUG(MM_MMU, "mmuInstructionSync" EOL);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 4": : "r"(0));
 }
 
@@ -226,14 +209,10 @@ void mmuInstructionSync()
 void mmuInvBranchPredictorArray()
 {
 #ifdef CPU_CORTEX_A8
-#ifdef MMU_DBG
-  printf("mmuInvBranchPredictorArray: ignored" EOL);
-#endif
+  DEBUG(MM_MMU, "mmuInvBranchPredictorArray: ignored" EOL);
   // ignore (see Cortex-A8 TRM)
 #else
-#ifdef MMU_DBG
-  printf("mmuInvBranchPredictorArray" EOL);
-#endif
+  DEBUG(MM_MMU, "mmuInvBranchPredictorArray" EOL);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 6": : "r"(0));
 #endif
 }
@@ -241,65 +220,49 @@ void mmuInvBranchPredictorArray()
 
 void mmuCleanDcacheByMVAtoPOC(u32int mva)
 {
-#ifdef MMU_DBG
-  printf("mmuCleanDcacheByMVAtoPOC: Clearing dcache by MVA to POC %08x" EOL, mva);
-#endif
+  DEBUG(MM_MMU, "mmuCleanDcacheByMVAtoPOC: Clearing dcache by MVA to POC %08x" EOL, mva);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 1": :"r"(mva));
 }
 
 
 void mmuCleanDcacheBySetWay(u32int setWay)
 {
-#ifdef MMU_DBG
-  printf("mmuCleanDcacheBySetWay: Clearing dcache by set/way %08x" EOL, setWay);
-#endif
+  DEBUG(MM_MMU, "mmuCleanDcacheBySetWay: Clearing dcache by set/way %08x" EOL, setWay);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 2": :"r"(setWay));
 }
 
 
 void mmuDataSyncBarrier()
 {
-#ifdef MMU_DBG
-  printf("mmuDataSyncBarrier: synchronization barrier" EOL);
-#endif
+  DEBUG(MM_MMU, "mmuDataSyncBarrier: synchronization barrier" EOL);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 4": : "r"(0));
 }
 
 
 void mmuDataMemoryBarrier()
 {
-#ifdef MMU_DBG
-  printf("mmuDataMemoryBarrier" EOL);
-#endif
+  DEBUG(MM_MMU, "mmuDataMemoryBarrier" EOL);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 5": : "r"(0));
 }
 
 
 void mmuCleanDCacheByMVAtoPOU(u32int mva)
 {
-#ifdef MMU_DBG
-  printf("mmuCleanDCacheByMVAtoPOU: clean dcache by MVA to PoU %08x" EOL, mva);
-#endif
+  DEBUG(MM_MMU, "mmuCleanDCacheByMVAtoPOU: clean dcache by MVA to PoU %08x" EOL, mva);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c11, 1": :"r"(mva));
 }
 
 
 void mmuCleanInvDCacheByMVAtoPOC(u32int mva)
 {
-#ifdef MMU_DBG
-  printf("mmuCleanInvDCacheByMVAtoPOC: clean and invalidate dcache by MVA to PoU %08x" EOL, mva);
-#endif
-
+  DEBUG(MM_MMU, "mmuCleanInvDCacheByMVAtoPOC: clean and invalidate dcache by MVA to PoU %08x" EOL, mva);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c14, 1": :"r"(mva));
 }
 
 
 void mmuCleanInvDCacheBySetWay(u32int setWay)
 {
-#ifdef MMU_DBG
-  printf("mmuCleanInvDCacheBySetWay: clean and invalidate dcache by set/way %08x" EOL, setWay);
-#endif
-
+  DEBUG(MM_MMU, "mmuCleanInvDCacheBySetWay: clean and invalidate dcache by set/way %08x" EOL, setWay);
   __asm__ __volatile__("mcr p15, 0, %0, c7, c14, 2": :"r"(setWay));
 }
 
@@ -308,9 +271,7 @@ void mmuCleanInvDCacheBySetWay(u32int setWay)
  **/
 void mmuInvalidateITLB()
 {
-#ifdef MMU_DBG
-  printf("mmuInvalidateITLB: invalidate iTLB" EOL);
-#endif
+  DEBUG(MM_MMU, "mmuInvalidateITLB: invalidate iTLB" EOL);
   __asm__ __volatile__("mcr p15, 0, r0, c8, c5, 0": :);
 }
 
@@ -320,54 +281,42 @@ void mmuInvalidateITLB()
  **/
 void mmuInvalidateITLBbyMVA(u32int mva)
 {
-#ifdef MMU_DBG
-  printf("mmuInvalidateITLBbyMVA: invalidate iTLB by MVA %08x" EOL, mva);
-#endif
+  DEBUG(MM_MMU, "mmuInvalidateITLBbyMVA: invalidate iTLB by MVA %08x" EOL, mva);
   __asm__ __volatile__("mcr p15, 0, %0, c8, c5, 1": :"r"(mva));
 }
 
 
 void mmuInvalidateITLBbyASID(u32int asid)
 {
-#ifdef MMU_DBG
-  printf("mmuInvalidateITLBbyASID: invalidate iTLB by ASID %08x" EOL, asid);
-#endif
+  DEBUG(MM_MMU, "mmuInvalidateITLBbyASID: invalidate iTLB by ASID %08x" EOL, asid);
   __asm__ __volatile__("mcr p15, 0, %0, c8, c5, 2": :"r"(asid));
 }
 
 
 void mmuInvalidateDTLB(void)
 {
-#ifdef MMU_DBG
-  printf("mmuInvalidateDTLB: invalidate dTLB" EOL);
-#endif
+  DEBUG(MM_MMU, "mmuInvalidateDTLB: invalidate dTLB" EOL);
   __asm__ __volatile__("mcr p15, 0, %0, c8, c6, 0": :"r"(0));
 }
 
 
 void mmuInvalidateDTLBbyMVA(u32int mva)
 {
-#ifdef MMU_DBG
-  printf("mmuInvalidateDTLBbyMVA: invalidate dTLB by MVA %08x" EOL, mva);
-#endif
+  DEBUG(MM_MMU, "mmuInvalidateDTLBbyMVA: invalidate dTLB by MVA %08x" EOL, mva);
   __asm__ __volatile__("mcr p15, 0, %0, c8, c6, 1": :"r"(mva));
 }
 
 
 void mmuInvalidateDTLBbyASID(u32int asid)
 {
-#ifdef MMU_DBG
-  printf("mmuInvalidateDTLBbyASID: invalidate dTLB by ASID %08x" EOL, asid);
-#endif
+  DEBUG(MM_MMU, "mmuInvalidateDTLBbyASID: invalidate dTLB by ASID %08x" EOL, asid);
   __asm__ __volatile__("mcr p15, 0, %0, c8, c6, 2": :"r"(asid));
 }
 
 
 void mmuInvalidateUTLB()
 {
-#ifdef MMU_DBG
-  printf("mmuInvalidateUTLB: invalidate uTLB" EOL);
-#endif
+  DEBUG(MM_MMU, "mmuInvalidateUTLB: invalidate uTLB" EOL);
   __asm__ __volatile__("mcr p15, 0, %0, c8, c7, 0": :"r"(0));
 }
 
@@ -377,9 +326,7 @@ void mmuInvalidateUTLB()
  **/
 void mmuInvalidateUTLBbyMVA(u32int mva)
 {
-#ifdef MMU_DBG
-  printf("mmuInvalidateUTLBbyMVA: Invalidate UTLB by MVA %08x" EOL, mva);
-#endif
+  DEBUG(MM_MMU, "mmuInvalidateUTLBbyMVA: Invalidate UTLB by MVA %08x" EOL, mva);
   __asm__ __volatile__("mcr p15, 0, %0, c8, c7, 1": :"r"(mva));
 }
 
@@ -389,9 +336,7 @@ void mmuInvalidateUTLBbyMVA(u32int mva)
  **/
 void mmuClearDataCache(void)
 {
-#ifdef MMU_DBG
-  printf("mmuClearDataCache: clearing host dCache" EOL);
-#endif
+  DEBUG(MM_MMU, "mmuClearDataCache: clearing host dCache" EOL);
 
   /* turn off L2 cache */
   l2_cache_disable();
@@ -410,9 +355,7 @@ void mmuClearDataCache(void)
 void mmuSetDomain(u8int domain, access_type access)
 {
   //access is a two bit field 00 = no access, 01=client, 10=reserved, 11=manager
-#ifdef MMU_DBG
-  printf("mmuSetDomain: Setting domain: %x, with access bits %x" EOL, domain, (u8int)access);
-#endif
+  DEBUG(MM_MMU, "mmuSetDomain: Setting domain: %x, with access bits %x" EOL, domain, (u8int)access);
 
   u32int value;
   __asm__ __volatile__("mrc p15, 0, %0, c3, c0, 0"
@@ -420,9 +363,7 @@ void mmuSetDomain(u8int domain, access_type access)
   :
   : "memory"
      );
-#ifdef MMU_DBG
-  printf("mmuSetDomain: Domain Register before update: %x" EOL, value);
-#endif
+  DEBUG(MM_MMU, "mmuSetDomain: Domain Register before update: %x" EOL, value);
   //clear the current domain
   u32int mask = ~(0b11 << (domain*2));
   value = value & mask;
@@ -434,22 +375,20 @@ void mmuSetDomain(u8int domain, access_type access)
   : "memory"
      );
 
-#ifdef MMU_DBG
+#if CONFIG_DEBUG_MM_MMU
   __asm__ __volatile__("mrc p15, 0, %0, c3, c0, 0"
   : "=r"(value)
   :
   : "memory"
               );
-  printf("mmuSetDomain: Domain Register after update: %x" EOL, value);
+  DEBUG(MM_MMU, "mmuSetDomain: Domain Register after update: %x" EOL, value);
 #endif
 }
 
 
 void mmuSetTexRemap(bool enable)
 {
-#ifdef MMU_DBG
-  printf("mmuSetTexRemap: %x" EOL, enable);
-#endif
+  DEBUG(MM_MMU, "mmuSetTexRemap: %x" EOL, enable);
 
   u32int value;
   __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0"
@@ -457,10 +396,9 @@ void mmuSetTexRemap(bool enable)
   :
   : "memory"
      );
-#ifdef MMU_DBG
+
   u32int treEnabled = ((value & 0x10000000) == 0x10000000) ? TRUE : FALSE; 
-  printf("mmuSetTexRemap: currently SCTRL.TRE = %x" EOL, treEnabled);
-#endif
+  DEBUG(MM_MMU, "mmuSetTexRemap: currently SCTRL.TRE = %x" EOL, treEnabled);
 
   if (enable)
   {
@@ -477,21 +415,19 @@ void mmuSetTexRemap(bool enable)
   : "memory"
      );
 
-#ifdef MMU_DBG
+#if CONFIG_DEBUG_MM_MMU
   __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0"
   : "=r"(value)
   :
   : "memory"
               );
-  printf("mmuSetTexRemap: SCTRL after update %x" EOL, value);
+  DEBUG(MM_MMU, "mmuSetTexRemap: SCTRL after update %x" EOL, value);
 #endif
 }
 
 void mmuSetContextID(u32int asid)
 {
-#ifdef MMU_DBG
-//  printf("mmuSetContextID: %x" EOL, asid);
-#endif
+  DEBUG(MM_MMU, "mmuSetContextID: %x" EOL, asid);
   __asm__ __volatile__("mcr p15, 0, %0, c13, c0, 1": :"r"(asid));
 }
 
