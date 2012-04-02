@@ -180,7 +180,7 @@ config DEBUG_GUEST_CONTEXT
   default y
   depends on DEBUG
 
-menuconfig DEBUG_MEMORY_MANAGER
+config DEBUG_MEMORY_MANAGER
   bool "Debug memory manager"
   default n
   depends on DEBUG
@@ -257,9 +257,6 @@ config DEBUG_INTERPRETER_ALL_COPROC
   select DEBUG_INTERPRETER_ANY_COPROC
   select DEBUG_INTERPRETER_ARM_COPROC
   select DEBUG_INTERPRETER_T32_COPROC
-
-config DEBUG_INTERPRETER_ANY_COPROC
-  bool
 
 config DEBUG_INTERPRETER_ALL_LOAD
   bool "Debug load operations"
@@ -465,6 +462,9 @@ config DEBUG_PARTITIONS
 config DEBUG_FS_FAT
   bool "Debug FAT file system"
   depends on MMC
+
+config DEBUG_INTERPRETER_ANY_COPROC
+  bool
 
 menu "Hacks"
 
