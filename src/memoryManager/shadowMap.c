@@ -45,7 +45,7 @@ bool shadowMap(u32int virtAddr)
     DEBUG(MM_SHADOWING, "shadowMap: VA %#.8x backed up entry %#.8x @ %p" EOL, virtAddr, backupEntry, tempFirst);
     mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical,
               (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
     mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
     gpt = context->pageTables->guestPhysical;
     tempEntry = *(u32int*)tempFirst;
@@ -124,7 +124,7 @@ bool shadowMap(u32int virtAddr)
       u32int backup = *(u32int*)shadow;
       DEBUG(MM_SHADOWING, "shadowMap: backed up PT2 entry %#.8x @ %p" EOL, backup, shadow);
       mapSection(context->pageTables->shadowActive, gptPhysAddr, gptPhysAddr,
-           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
       mmuInvalidateUTLBbyMVA(gptPhysAddr);
 
       u32int index = (virtAddr & 0x000FF000) >> 10;
@@ -246,12 +246,12 @@ void shadowMapSection(sectionEntry* guest, sectionEntry* shadow, u32int virtual)
     if (peripheral)
     {
       addSectionEntry((sectionEntry*)host, sectionAddr,
-                    GUEST_ACCESS_DOMAIN, PRIV_RW_USR_NO, 0, 0, 0b000);
+                    GUEST_ACCESS_DOMAIN, PRIV_RW_USR_NO, 0, 0, 0b000, FALSE);
     }
     else
     {
       addSectionEntry((sectionEntry*)host, sectionAddr,
-                    GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000);
+                    GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000, FALSE);
     }
     host = (sectionEntry*)getEntryFirst(context->pageTables->hypervisor, guestPhysAddr);
   }
@@ -899,7 +899,7 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
   u32int backupEntry = *(u32int*)first;
   DEBUG(MM_SHADOWING, "mapAPBitsPageTable: backed up entry %08x @ %p" EOL, backupEntry, first);
   mapSection(context->pageTables->shadowActive, gptPhysAddr, gptPhysAddr,
-       HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+       HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
   mmuInvalidateUTLBbyMVA(gptPhysAddr);
   mmuDataMemoryBarrier();
 

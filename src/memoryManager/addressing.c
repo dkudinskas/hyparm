@@ -49,7 +49,7 @@ void setupHypervisorPageTable(simpleEntry *pageTablePtr)
   while (memStart < hypervisorStart) 
   {
     mapSection(pageTablePtr, memStart, memStart, 
-               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000);
+               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000, FALSE);
     memStart += SECTION_SIZE;
   }
 
@@ -366,7 +366,7 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
       DEBUG(MM_ADDRESSING, "changeGuestDACR: backed up entry %08x @ %p" EOL, backupEntry, tempFirst);
       mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
                 (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-                HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+                HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
       mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
       gpt = context->pageTables->guestPhysical;
       DEBUG(MM_ADDRESSING, "changeGuestDACR: gpt now set to %p" EOL, gpt);

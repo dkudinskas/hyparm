@@ -153,12 +153,12 @@ void deleteLevelTwoPageTable(pageTableEntry* pageTable);
 
 void mapHypervisorMemory(simpleEntry* ptd);
 void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
-                u8int domain, u8int accessBits, bool c, bool b, u8int tex);
+                u8int domain, u8int accessBits, bool c, bool b, u8int tex, bool executeNever);
 void mapSmallPage(simpleEntry* pageTable, u32int virtAddr, u32int physical,
                 u8int domain, u8int accessBits, u8int c, u8int b, u8int tex, u8int xn);
 
-void addSectionEntry(sectionEntry* sectionEntryPtr, u32int physAddr,
-        u8int domain, u8int accessBits, bool cacheable, bool bufferable, u8int tex);
+void addSectionEntry(sectionEntry *sectionEntryPtr, u32int physAddr, u8int domain,
+                     u8int accessBits, bool cacheable, bool bufferable, u8int tex, bool executeNever);
 void addSmallPageEntry(smallPageEntry* smallPageEntryPtr, u32int physical,
         u8int accessBits, u8int cacheable, u8int bufferable, u8int tex, u8int xn);
 void addPageTableEntry(pageTableEntry* pageTableEntryPtr, u32int physical, u8int domain);

@@ -113,7 +113,7 @@ void mapHypervisorMemory(simpleEntry *pageTable)
   {
     // @ hypervisor domain, all acces bits, cachable, not bufferable, tex 0
     mapSection(pageTable, startAddr, startAddr, HYPERVISOR_ACCESS_DOMAIN,
-               HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+               HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
   }
 }
 
@@ -122,8 +122,8 @@ void mapHypervisorMemory(simpleEntry *pageTable)
  * Add a section mapping of given virtual to physical address
  * into the given base page table 
  **/
-void mapSection(simpleEntry *pageTable, u32int virtAddr, u32int physical,
-                u8int domain, u8int accessBits, bool c, bool b, u8int tex)
+void mapSection(simpleEntry *pageTable, u32int virtAddr, u32int physical, u8int domain,
+                u8int accessBits, bool c, bool b, u8int tex, bool executeNever)
 {
   DEBUG(MM_PAGE_TABLES, "mapSection: Virtual Addr: %#.8x, physical addr: %#.8x" EOL, virtAddr,
         physical);
@@ -136,7 +136,7 @@ void mapSection(simpleEntry *pageTable, u32int virtAddr, u32int physical,
     case FAULT:
     {
       addSectionEntry((sectionEntry *)firstLevelEntry,
-                      physical, domain, accessBits, c, b, tex);
+                      physical, domain, accessBits, c, b, tex, executeNever);
       break;
     }
     case PAGE_TABLE:
@@ -229,14 +229,14 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
 /**
  * adds a section entry at a given place in the first level page table
  **/
-void addSectionEntry(sectionEntry* sectionEntryPtr, u32int physAddr, 
-     u8int domain, u8int accessBits, bool cacheable, bool bufferable, u8int tex)
+void addSectionEntry(sectionEntry *sectionEntryPtr, u32int physAddr, u8int domain,
+                     u8int accessBits, bool cacheable, bool bufferable, u8int tex, bool executeNever)
 {
   sectionEntryPtr->addr = (physAddr >> 20);
   sectionEntryPtr->type = SECTION;
   sectionEntryPtr->c = cacheable  ? 1:0;
   sectionEntryPtr->b = bufferable ? 1:0;
-  sectionEntryPtr->xn = 0; //execute of memory allowed
+  sectionEntryPtr->xn = executeNever ? 1 : 0;
   sectionEntryPtr->domain = domain;
   sectionEntryPtr->imp = 0; //currently unused
   sectionEntryPtr->ap10 = accessBits & 0x3;
