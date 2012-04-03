@@ -13,7 +13,9 @@ __macro__ s32int countTrailingZeros64(u64int x);
 __macro__ u32int findFirstBitSet(u32int x);
 __macro__ u32int findLastBitSet(u32int x);
 __macro__ bool isAlignedToBits(void *pointer, u32int bits);
+__macro__ bool isAlignedToBitsN(u32int value, u32int bits);
 __macro__ bool isAlignedToMask(void *pointer, u32int mask);
+__macro__ bool isAlignedToMaskN(u32int value, u32int mask);
 __macro__ u32int maskedBitShift(u32int value, u32int mask);
 __macro__ u32int signExtend(u32int value, u32int bits);
 __macro__ bool testBitsEqual(u32int subject, u32int highBit, u32int lowBit);
@@ -109,7 +111,12 @@ __macro__ u32int findLastBitSet(u32int x)
  */
 __macro__ bool isAlignedToBits(void *pointer, u32int bits)
 {
-  return findFirstBitSet((u32int)pointer) < bits;
+  return isAlignedToBitsN((u32int)pointer, bits);
+}
+
+__macro__ bool isAlignedToBitsN(u32int value, u32int bits)
+{
+  return findFirstBitSet(value) < bits;
   // Alternative:
   // return (((u32int)pointer) & ((1 << bits) - 1)) == 0;
 }
@@ -120,7 +127,12 @@ __macro__ bool isAlignedToBits(void *pointer, u32int bits)
  */
 __macro__ bool isAlignedToMask(void *pointer, u32int mask)
 {
-  return (((u32int)pointer) & ~mask) == 0;
+  return isAlignedToMaskN((u32int)pointer, mask);
+}
+
+__macro__ bool isAlignedToMaskN(u32int value, u32int mask)
+{
+  return (value & ~mask) == 0;
 }
 
 /*
