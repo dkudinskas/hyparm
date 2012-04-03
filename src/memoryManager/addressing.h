@@ -9,9 +9,6 @@
 /* Need to initialise the MMU and enable virtual addressing */
 void initVirtualAddressing(GCONTXT *context);
 
-void setupHypervisorPageTable(simpleEntry *pageTablePtr);
-void setupShadowPageTable(simpleEntry *pageTablePtr);
-
 u32int setProtection(u32int startAddr, u32int endAddr, u8int accessBits);
 
 /* intercept new process page table creation & create shadow PT */

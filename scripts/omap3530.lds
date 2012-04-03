@@ -32,7 +32,9 @@ SECTIONS
 		__RODATA_END__ = ABSOLUTE(.);
 	} > RAM
 
-	.data :
+	. = ALIGN(4096);
+
+	.data . :
 	{
 		__DATA_BEGIN__ = ABSOLUTE(.);
 		*(.data)
@@ -48,7 +50,7 @@ SECTIONS
 
 	__HYPERVISOR_END__ = .;
 
-	__RAM_NX_POOL_BEGIN__ = ALIGN(4096);
-	__RAM_NX_POOL_END__ = 0x90000000;
+	__RAM_XN_POOL_BEGIN__ = ALIGN(4096);
+	__RAM_XN_POOL_END__ = 0x90000000;
 }
 

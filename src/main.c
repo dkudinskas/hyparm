@@ -100,7 +100,7 @@ void main(s32int argc, char *argv[])
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
 
-  initialiseAllocator(RAM_NX_POOL_BEGIN, RAM_NX_POOL_END - RAM_NX_POOL_BEGIN);
+  initialiseAllocator(RAM_XN_POOL_BEGIN, RAM_XN_POOL_END - RAM_XN_POOL_BEGIN);
 
   /* initialise uart backend, important to be before any debug output. */
   /* init function initialises UARTs in disabled mode. */

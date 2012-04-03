@@ -17,6 +17,9 @@
 #include "memoryManager/shadowMap.h"
 
 
+static void setupHypervisorPageTable(simpleEntry *pageTablePtr);
+static void setupShadowPageTable(simpleEntry *pageTablePtr);
+
 void initVirtualAddressing(GCONTXT *context)
 {
   //alloc some space for our 1st Level page table
@@ -33,25 +36,16 @@ void initVirtualAddressing(GCONTXT *context)
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: done" EOL);
 }
 
-
-void setupHypervisorPageTable(simpleEntry *pageTablePtr)
+static void setupHypervisorPageTable(simpleEntry *pageTablePtr)
 {
   DEBUG(MM_ADDRESSING, "setupHypervisorPageTable: new PT at %p" EOL, pageTablePtr);
-
-  memset(pageTablePtr, 0, PT1_SIZE);
 
   //map in the hypervisor
   mapHypervisorMemory(pageTablePtr);
 
   // 1:1 Map the entire of physical memory
-  u32int hypervisorStart = HYPERVISOR_BEGIN_ADDRESS;
-  u32int memStart = MEMORY_START_ADDR;
-  while (memStart < hypervisorStart) 
-  {
-    mapSection(pageTablePtr, memStart, memStart, 
-               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000, FALSE);
-    memStart += SECTION_SIZE;
-  }
+  mapRange(pageTablePtr, MEMORY_START_ADDR, MEMORY_START_ADDR, HYPERVISOR_BEGIN_ADDRESS,
+           GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
 
   //set the domain access control for the hypervisor and guest domains
   mmuSetDomain(HYPERVISOR_ACCESS_DOMAIN, client);
@@ -102,7 +96,7 @@ void setupHypervisorPageTable(simpleEntry *pageTablePtr)
 }
 
 
-void setupShadowPageTable(simpleEntry* pageTablePtr)
+static void setupShadowPageTable(simpleEntry* pageTablePtr)
 {
   memset(pageTablePtr, 0, PT1_SIZE);
 
