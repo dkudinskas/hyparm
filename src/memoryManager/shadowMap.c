@@ -559,9 +559,9 @@ void shadowUnmapPageTable(pageTableEntry *shadow, pageTableEntry *guest, u32int 
   }
 
   // validate block cache...
+  GCONTXT *context = getGuestContext();
   validateCacheMultiPreChange(context->blockCache, virtual, (virtual+SECTION_SIZE-1));
 
-  GCONTXT *context = getGuestContext();
   if (context->pageTables->guestVirtual != NULL)
   {
     // if the current gPT1 base VA is in this section, lets 'forget' it in GC
