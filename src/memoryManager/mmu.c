@@ -189,7 +189,7 @@ void mmuInvIcacheByMVAtoPOU(u32int mva)
 void mmuInstructionSync()
 {
   DEBUG(MM_MMU, "mmuInstructionSync" EOL);
-  __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 4": : "r"(0));
+  __asm__ __volatile__("ISB");
 }
 
 
@@ -222,14 +222,14 @@ void mmuCleanDcacheBySetWay(u32int setWay)
 void mmuDataSyncBarrier()
 {
   DEBUG(MM_MMU, "mmuDataSyncBarrier: synchronization barrier" EOL);
-  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 4": : "r"(0));
+  __asm__ __volatile__("DSB");
 }
 
 
 void mmuDataMemoryBarrier()
 {
   DEBUG(MM_MMU, "mmuDataMemoryBarrier" EOL);
-  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 5": : "r"(0));
+  __asm__ __volatile__("DMB");
 }
 
 
