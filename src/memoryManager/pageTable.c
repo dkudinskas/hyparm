@@ -208,9 +208,9 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
     {
       DEBUG(MM_PAGE_TABLES, "mapSmallPage: entry for given VA is FAULT. Creating new" EOL);
       // we need a new second level page table. This gives a virtual address allocated
-      u32int* vAddr = newLevelTwoPageTable();
-      // need to get the physical address
-      u32int pAddr = getPhysicalAddress(pageTable, (u32int)vAddr);
+      u32int *vAddr = newLevelTwoPageTable();
+      // need to get the physical address (assume 1:1 mapping will follow in case MMU is disabled)
+      u32int pAddr = isMmuEnabled() ? getPhysicalAddress(pageTable, (u32int)vAddr) : (u32int)vAddr;
       DEBUG(MM_PAGE_TABLES, "mapSmallPage: PT VA %p PA %#.8x" EOL, vAddr, pAddr);
       // store metadata
       addPageTableEntry((pageTableEntry*)first, (u32int)pAddr, domain);
