@@ -28,6 +28,7 @@ OBJDUMP       = $(CROSS_COMPILE)objdump
 
 AFLAGS       := --fatal-warnings
 CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
+                -std=gnu99 \
                 -ffreestanding -fno-common -fno-stack-protector \
                 -Wall -Wextra -Wcast-qual -Wformat=2 -Winit-self -Winline -Wlogical-op \
                 -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpacked \
