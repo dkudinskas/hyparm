@@ -33,6 +33,7 @@ CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
                 -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpacked \
                 -Wredundant-decls -Wshadow -Wstrict-prototypes -Wundef -Wvla -Wwrite-strings \
                 -Wno-empty-body -Wno-unused-label -Wno-unused-parameter \
+                -Werror=format-extra-args \
                 -Werror=implicit-function-declaration -Werror=implicit-int \
                 -Werror=init-self -Werror=parentheses -Werror=return-type -Werror=uninitialized
 CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc

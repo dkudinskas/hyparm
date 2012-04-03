@@ -6,8 +6,6 @@
 #include "memoryManager/pageTable.h"
 
 
-//uncomment to enable debug #define MMU_DBG
-
 struct abort_dfsr
 {
   u16int fs3_0:4; //0-3 FS[3:0]

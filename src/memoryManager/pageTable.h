@@ -5,7 +5,6 @@
 
 #include "drivers/beagle/memoryMap.h"
 
-//Uncomment to enable page table debugging: #define PAGE_TABLE_DBG
 
 #define PT1_ENTRIES        4096
 #define PT2_ENTRIES         256
@@ -137,29 +136,34 @@ typedef struct smallPageDescriptor smallPageEntry;
 
 struct PageTableMetaData
 {
-  pageTableEntry* firstLevelEntry;
+  pageTableEntry *firstLevelEntry;
   u32int virtAddr;
   u32int physAddr;
   u32int mappedMegabyte;
   bool host;
-  struct PageTableMetaData* nextEntry;
+  struct PageTableMetaData *nextEntry;
 };
 typedef struct PageTableMetaData ptInfo;
 
 
 /*************** rewritten functions *********************/
-u32int* newLevelOnePageTable(void);
+simpleEntry *newLevelOnePageTable(void);
 u32int* newLevelTwoPageTable(void);
 void deleteLevelTwoPageTable(pageTableEntry* pageTable);
 
 void mapHypervisorMemory(simpleEntry* ptd);
+
+u32int mapRange(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
+                u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,
+                bool bufferable, u8int regionAttributes, bool executeNever);
+
 void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
-                u8int domain, u8int accessBits, bool c, bool b, u8int tex);
+                u8int domain, u8int accessBits, bool c, bool b, u8int tex, bool executeNever);
 void mapSmallPage(simpleEntry* pageTable, u32int virtAddr, u32int physical,
                 u8int domain, u8int accessBits, u8int c, u8int b, u8int tex, u8int xn);
 
-void addSectionEntry(sectionEntry* sectionEntryPtr, u32int physAddr,
-        u8int domain, u8int accessBits, bool cacheable, bool bufferable, u8int tex);
+void addSectionEntry(sectionEntry *sectionEntryPtr, u32int physAddr, u8int domain,
+                     u8int accessBits, bool cacheable, bool bufferable, u8int tex, bool executeNever);
 void addSmallPageEntry(smallPageEntry* smallPageEntryPtr, u32int physical,
         u8int accessBits, u8int cacheable, u8int bufferable, u8int tex, u8int xn);
 void addPageTableEntry(pageTableEntry* pageTableEntryPtr, u32int physical, u8int domain);

@@ -1,5 +1,5 @@
 #include "common/debug.h"
-#include "common/markers.h"
+#include "common/linker.h"
 #include "common/stddef.h"
 #include "common/string.h"
 
@@ -17,6 +17,9 @@
 #include "memoryManager/shadowMap.h"
 
 
+static void setupHypervisorPageTable(simpleEntry *pageTablePtr);
+static void setupShadowPageTable(simpleEntry *pageTablePtr);
+
 void initVirtualAddressing(GCONTXT *context)
 {
   //alloc some space for our 1st Level page table
@@ -33,25 +36,16 @@ void initVirtualAddressing(GCONTXT *context)
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: done" EOL);
 }
 
-
-void setupHypervisorPageTable(simpleEntry *pageTablePtr)
+static void setupHypervisorPageTable(simpleEntry *pageTablePtr)
 {
   DEBUG(MM_ADDRESSING, "setupHypervisorPageTable: new PT at %p" EOL, pageTablePtr);
-
-  memset(pageTablePtr, 0, PT1_SIZE);
 
   //map in the hypervisor
   mapHypervisorMemory(pageTablePtr);
 
   // 1:1 Map the entire of physical memory
-  u32int hypervisorStart = HYPERVISOR_IMAGE_START_ADDRESS;
-  u32int memStart = MEMORY_START_ADDR;
-  while (memStart < hypervisorStart) 
-  {
-    mapSection(pageTablePtr, memStart, memStart, 
-               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000);
-    memStart += SECTION_SIZE;
-  }
+  mapRange(pageTablePtr, MEMORY_START_ADDR, MEMORY_START_ADDR, HYPERVISOR_BEGIN_ADDRESS,
+           GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
 
   //set the domain access control for the hypervisor and guest domains
   mmuSetDomain(HYPERVISOR_ACCESS_DOMAIN, client);
@@ -102,7 +96,7 @@ void setupHypervisorPageTable(simpleEntry *pageTablePtr)
 }
 
 
-void setupShadowPageTable(simpleEntry* pageTablePtr)
+static void setupShadowPageTable(simpleEntry* pageTablePtr)
 {
   memset(pageTablePtr, 0, PT1_SIZE);
 
@@ -245,7 +239,7 @@ void privToUserAddressing()
   mmuDataMemoryBarrier();
 
   // set translation table base register in the physical MMU!
-  mmuSetTTBR0(gc->pageTables->shadowActive, (0x100 | gc->pageTables->contextID) );
+  mmuSetTTBR0(gc->pageTables->shadowActive, (0x100 | gc->pageTables->contextID));
 
   // clean out all TLB entries - may have conflicting entries
   mmuInvalidateUTLB();
@@ -366,7 +360,7 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
       DEBUG(MM_ADDRESSING, "changeGuestDACR: backed up entry %08x @ %p" EOL, backupEntry, tempFirst);
       mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
                 (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-                HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+                HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
       mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
       gpt = context->pageTables->guestPhysical;
       DEBUG(MM_ADDRESSING, "changeGuestDACR: gpt now set to %p" EOL, gpt);

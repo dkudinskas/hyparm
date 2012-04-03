@@ -122,7 +122,7 @@ void dumpGuestContext(GCONTXT *context)
       *(r8 + 4), r13 ? *r13 : 0, r13 ? *(r13 + 1) : 0, context->R15
       );
 
-  printf("Mode: %-36s CPSR: 0x%.8x     SPSR: ", modeString, context->CPSR);
+  printf("Mode: %-35s CPSR: 0x%.8x     SPSR: ", modeString, context->CPSR);
   spsr = 0;
   if (spsr)
   {
