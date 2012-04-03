@@ -5,29 +5,20 @@
 
 #include "guestManager/guestContext.h"
 
-struct TopLevelCategory
-{
-  u32int mask;             /* Recognise if (instr & mask) == value.  */
-  u32int value;
-  struct instruction32bit *table;
-};
 
-struct instruction32bit
+typedef enum
 {
-  s16int replace;
-  instructionHandler handler;
-  u32int value;            /* If arch == 0 then value is a sentinel.  */
-  u32int mask;             /* Recognise inst if (op & mask) == value.  */
-  const char *instructionString; /* How to disassemble this insn.  */
-};
-typedef struct instruction32bit armInstruction; 
+  IRC_SAFE = 0,
+  IRC_REPLACE = 1
+} instructionReplaceCode;
 
-armInstruction* decodeArmInstruction(u32int instruction);
+
+instructionReplaceCode decodeArmInstruction(u32int instruction, instructionHandler *handler);
 
 
 #ifdef CONFIG_THUMB2
 
-instructionHandler decodeThumbInstruction(u32int instruction);
+instructionReplaceCode decodeThumbInstruction(u32int instruction, instructionHandler *handler);
 
 #endif /* CONFIG_THUMB2 */
 

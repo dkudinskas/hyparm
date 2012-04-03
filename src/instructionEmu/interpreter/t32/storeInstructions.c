@@ -1,4 +1,4 @@
-#include "memoryManager/globalMemoryMapper.h"
+#include "instructionEmu/loadStoreDecode.h"
 
 #include "instructionEmu/interpreter/internals.h"
 
@@ -63,7 +63,7 @@ u32int t32StrbInstruction(GCONTXT * context, u32int instruction)
       "%#.8x, P=%x, U=%x, W=%x" EOL, regSrc, regDst, address, valueToStore, preOrPost, incOrDec,
       writeBack);
 
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, BYTE, address, (valueToStore & 0xFF));
+  vmStore(BYTE, address, valueToStore & 0xFF);
 
   if (writeBack)
   {
@@ -85,8 +85,8 @@ u32int t32StrhImmediateInstruction(GCONTXT *context, u32int instruction)
   u32int baseAddress = loadGuestGPR(regDst, context);
   u32int offsetAddress = baseAddress + imm12;
   u32int valueToStore = loadGuestGPR(regSrc, context);
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, offsetAddress, valueToStore);
 
+  vmStore(HALFWORD, offsetAddress, valueToStore & 0xFFFF);
   return context->R15 + T32_INSTRUCTION_SIZE;
 }
 
@@ -102,9 +102,8 @@ u32int t32StrhRegisterInstruction(GCONTXT *context, u32int instruction)
   u32int baseAddress = loadGuestGPR(regDst, context);
   u32int offsetAddress = loadGuestGPR(regDst2, context);
   offsetAddress = baseAddress + (offsetAddress << shift);
-  u32int valueToStore = loadGuestGPR(regSrc, context);
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, HALFWORD, offsetAddress, valueToStore);
 
+  vmStore(HALFWORD, offsetAddress, loadGuestGPR(regSrc, context) & 0xFFFF);
   return context->R15 + T32_INSTRUCTION_SIZE;
 }
 
@@ -143,8 +142,8 @@ u32int t32StrdImmediateInstruction(GCONTXT *context, u32int instruction)
   DEBUG(INTERPRETER_T32_STORE, "t32StrdImmediateInstruction: store val1 = %x@%#.8x store val2 = "
       "%x@%#.8x" EOL, valueToStore, address, valueToStore2, address + 4);
 
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address, valueToStore);
-  context->hardwareLibrary->storeFunction(context->hardwareLibrary, WORD, address + 4, valueToStore2);
+  vmStore(WORD, address, valueToStore);
+  vmStore(WORD, address + 4, valueToStore2);
 
   if (writeback)
   {

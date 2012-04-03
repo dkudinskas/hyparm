@@ -8,29 +8,26 @@
 #include "instructionEmu/interpreter.h"
 
 
-instructionHandler decodeArmInstruction(u32int instruction)
+instructionReplaceCode decodeArmInstruction(u32int instruction, instructionHandler *handler)
 {
 #include "instructionEmu/decoder/arm/graph.inc.c"
-  DIE_NOW(NULL, "control fell through");
 }
 
 #ifdef CONFIG_THUMB2
 
 static inline __attribute__((always_inline))
-  instructionHandler decodeT16Instruction(u32int instruction)
+  instructionReplaceCode decodeT16Instruction(u32int instruction, instructionHandler *handler)
 {
 #include "instructionEmu/decoder/t16/graph.inc.c"
-  DIE_NOW(NULL, "control fell through");
 }
 
 static inline __attribute__((always_inline))
-  instructionHandler decodeT32Instruction(u32int instruction)
+  instructionReplaceCode decodeT32Instruction(u32int instruction, instructionHandler *handler)
 {
 #include "instructionEmu/decoder/t32/graph.inc.c"
-  DIE_NOW(NULL, "control fell through");
 }
 
-instructionHandler __attribute__((flatten)) decodeThumbInstruction(u32int instruction)
+instructionReplaceCode __attribute__((flatten)) decodeThumbInstruction(u32int instruction, instructionHandler *handler)
 {
   /*
    * For Thumb, we still need to determine which table of top-level categories to use
@@ -40,10 +37,10 @@ instructionHandler __attribute__((flatten)) decodeThumbInstruction(u32int instru
     case THUMB32_1 << 16:
     case THUMB32_2 << 16:
     case THUMB32_3 << 16:
-      return decodeT32Instruction(instruction);
+      return decodeT32Instruction(instruction, handler);
     default:
       instruction &= 0x0000FFFF;
-      return decodeT16Instruction(instruction);
+      return decodeT16Instruction(instruction, handler);
   }
 }
 
