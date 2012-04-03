@@ -162,17 +162,6 @@ void mmuDisableVirtAddr()
      );
 }
 
-bool isMmuEnabled()
-{
-  u32int tempReg = 0;
-  //This may need a bit of investigation/logic to ensure the bit masks we set are correct
-  __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0\n\t" :"=r"(tempReg));
-  
-  return (tempReg & 0x1) ? TRUE : FALSE;
-         
-}
-
-
 /**
  * clear and invalidate host instruction cache
  **/
