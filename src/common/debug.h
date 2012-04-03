@@ -18,7 +18,7 @@
     if (!(cond))                                                                                   \
     {                                                                                              \
       dieNow(NULL, __FILE__, EXPAND_TO_STRING(__LINE__), __func__,                                 \
-             "assertion (" #cond ") failed: " msg);                                                \
+             "assertion (" #cond ") failed:" EOL msg);                                             \
     }                                                                                              \
   }
 #else

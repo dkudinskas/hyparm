@@ -83,7 +83,8 @@ void dieNow(GCONTXT *context, const char *file, const char *line, const char *ca
 #endif
 
   banner("ERROR");
-  printf("%s:%s:%s: %s" EOL, file, line, caller, msg);
+  printf("%s:%s: in %s:" EOL, file, line, caller);
+  printf("%s" EOL, msg);
   if (context == NULL)
   {
     context = getGuestContext();
