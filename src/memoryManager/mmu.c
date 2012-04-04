@@ -142,7 +142,7 @@ void mmuEnableVirtAddr()
   __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0\n\t"
                "ORR %0, %0, #5\n\t" //enable MMU & Caching
                "mcr p15, 0, %0, c1, c0, 0\n\t"
-               "mcr p15, 0, %0, c7, c5, 4\n\t" //ISB
+               "ISB\n\t" //ISB
   :"=r"(tempReg)
   :
   : "memory"
