@@ -6,6 +6,24 @@
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/interpreter.h"
 
+
+struct TopLevelCategory
+{
+  u32int mask;             /* Recognise if (instr & mask) == value.  */
+  u32int value;
+  struct instruction32bit *table;
+};
+
+struct instruction32bit
+{
+  instructionReplaceCode replace;
+  instructionHandler handler;
+  u32int value;            /* If arch == 0 then value is a sentinel.  */
+  u32int mask;             /* Recognise inst if (op & mask) == value.  */
+  const char *instructionString; /* How to disassemble this insn.  */
+};
+
+
 #include "instructionEmu/decoder/arm/tables.inc.c"
 
 #ifdef CONFIG_THUMB2
@@ -14,7 +32,10 @@
 #endif
 
 
-static armInstruction* decode(struct TopLevelCategory *categories, u32int instruction)
+static instructionReplaceCode decode(struct TopLevelCategory *categories, u32int instruction, instructionHandler *handler);
+
+
+static instructionReplaceCode decode(struct TopLevelCategory *categories, u32int instruction, instructionHandler *handler)
 {
   /*
    * Find the top level category for this instruction
@@ -26,7 +47,7 @@ static armInstruction* decode(struct TopLevelCategory *categories, u32int instru
   /*
    * Get the decoding table for this category and decode the instruction
    */
-  armInstruction *table = categories->table;
+  struct instruction32bit *table = categories->table;
   if (!table)
   {
     printf("decode: cannot classify instruction %#.8x", instruction);
@@ -36,7 +57,7 @@ static armInstruction* decode(struct TopLevelCategory *categories, u32int instru
   {
     table++;
   }
-  DEBUG(DECODER, "decode: instruction = %#.8x, replace = %x, handler = %p" EOL, instruction, table->replace, table->handler);
+  DEBUG(DECODER, "decode: instruction = %#.8x, replace = %x, handler = %p, instr = %s" EOL, instruction, table->replace, table->handler, table->instructionString);
   /*
    * If the mask is zero at this point, we have hit the end of the decoding table. This means we
    * do not know what to do with this instruction; dump it...
@@ -47,18 +68,19 @@ static armInstruction* decode(struct TopLevelCategory *categories, u32int instru
         table->instructionString);
     DIE_NOW(NULL, "undefined instruction");
   }
-  return table;
+  *handler = table->handler;
+  return table->replace;
 }
 
-armInstruction* decodeArmInstruction(u32int instruction)
+instructionReplaceCode decodeArmInstruction(u32int instruction, instructionHandler *handler)
 {
-  return decode(armCategories, instruction);
+  return decode(armCategories, instruction, handler);
 }
 
 
 #ifdef CONFIG_THUMB2
 
-instructionHandler decodeThumbInstruction(u32int instruction)
+instructionReplaceCode decodeThumbInstruction(u32int instruction, instructionHandler *handler)
 {
   /*
    * For Thumb, we still need to determine which table of top-level categories to use
@@ -76,7 +98,7 @@ instructionHandler decodeThumbInstruction(u32int instruction)
       categories = t16Categories;
       break;
   }
-  return decode(categories, instruction);
+  return decode(categories, instruction, handler);
 }
 
 #endif /* CONFIG_THUMB2 */

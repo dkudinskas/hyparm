@@ -143,14 +143,15 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 {
   u32int *end;
-  armInstruction *instr;
+  instructionHandler handler;
   u32int instruction;
+  instructionReplaceCode replaceCode;
   /*
    * Find the next sensitive instruction
    */
   end = start;
 
-  while ((instr = decodeArmInstruction(*end))->replace == 0x0)
+  while ((replaceCode = decodeArmInstruction(*end, &handler)) == IRC_SAFE)
   {
     end++;
   }
@@ -180,7 +181,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
     else //Handle guest SVC
     {
       context->endOfBlockInstr = instruction;
-      context->hdlFunct = instr->handler;
+      context->hdlFunct = handler;
     }
   }
   /* If the instruction is not a SWI placed by the hypervisor OR
@@ -190,7 +191,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
   {
     // save end of block instruction and handler function pointer close to us...
     context->endOfBlockInstr = instruction;
-    context->hdlFunct = instr->handler;
+    context->hdlFunct = handler;
     // Thumb compatibility
     // replace end of block instruction with hypercall of the appropriate code
     *end = INSTR_SWI | ((cacheIndex + 1) << 8);
@@ -223,6 +224,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 {
   u16int *end;
   instructionHandler handler;
+  instructionReplaceCode replaceCode;
   u32int instruction;
   u32int blockType = BCENTRY_TYPE_THUMB;
   u32int endIs16Bit;
@@ -244,7 +246,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         break;
     }
 
-    if ((handler = decodeThumbInstruction(instruction)) != NULL)
+    if ((replaceCode = decodeThumbInstruction(instruction, &handler)) != IRC_SAFE)
     {
       break;
     }

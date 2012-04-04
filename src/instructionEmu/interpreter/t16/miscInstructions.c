@@ -17,3 +17,8 @@ u32int t16UxthInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, "not implemented");
 }
+
+u32int t16BkptInstruction(GCONTXT *context, u32int instruction)
+{
+  DIE_NOW(context, "not implemented");
+}

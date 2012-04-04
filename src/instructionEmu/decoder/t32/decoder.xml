@@ -9,10 +9,11 @@
 </category>
 
 <category name="t32BranchMiscInstructions" mask="0xf8008000" value="0xf0008000">
-  <instruction name="B imm17" mask="0xf800d000" value="0xf0008000" effect="t32BImmediate17Instruction" />
-  <instruction name="B imm21" mask="0xf800d000" value="0xf0009000" effect="t32BImmediate21Instruction" />
-  <instruction name="BL, #imm21" mask="0xf800d000" value="0xf000d000" effect="t32BlInstruction" />
-  <instruction name="BLX, #imm21" mask="0xf800d000" value="0xf000c000" effect="t32BlxImmediateInstruction" />
+  <instruction name="MRS Rd, s/cpsr" mask="0xffe0a000" value="0xf3e08000" code="IRC_REPLACE" handler="t32MrsInstruction" />
+  <instruction name="B imm17" mask="0xf800d000" value="0xf0008000" code="IRC_REPLACE" handler="t32BImmediate17Instruction" />
+  <instruction name="B imm21" mask="0xf800d000" value="0xf0009000" code="IRC_REPLACE" handler="t32BImmediate21Instruction" />
+  <instruction name="BL, #imm21" mask="0xf800d000" value="0xf000d000" code="IRC_REPLACE" handler="t32BlInstruction" />
+  <instruction name="BLX, #imm21" mask="0xf800d000" value="0xf000c000" code="IRC_REPLACE" handler="t32BlxImmediateInstruction" />
 </category>
 
 <category name="t32DataProcInstructions1" mask="0xfe000000" value="0xea000000">
@@ -32,12 +33,12 @@
   <instruction name="MOVW Rd, #imm16" mask="0xfbf08000" value="0xf2400000" />
   <instruction name="MOVTc Rd, #imm16" mask="0xfbf08000" value="0xf2c00000" />
   <instruction name="ORR{S} Rd, Rn,#imm12" mask="0xfbe08000" value="0xf0400000" />
-  <instruction name="AND{S}c PC, Rm, #imm12" mask="0xfbe08f00" value="0xf0000f00" effect="t32AndInstruction" />
+  <instruction name="AND{S}c PC, Rm, #imm12" mask="0xfbe08f00" value="0xf0000f00" code="IRC_REPLACE" handler="t32AndInstruction" />
   <instruction name="AND{S}c Rd, Rm, #imm12" mask="0xfbe08000" value="0xf0000000" />
   <instruction name="ADD{S}.W Rd, Rn, #imm8" mask="0xfbe08000" value="0xf1000000" />
-  <instruction name="ADD{S}.W PC, Rn, #imm8" mask="0xfbe08f00" value="0xf1000f00" effect="t32AddInstruction" />
+  <instruction name="ADD{S}.W PC, Rn, #imm8" mask="0xfbe08f00" value="0xf1000f00" code="IRC_REPLACE" handler="t32AddInstruction" />
   <instruction name="ADDW Rd, Rn, #imm12" mask="0xf2008000" value="0xf2000000" />
-  <instruction name="DDW PC, Rn, #imm12" mask="0xf20f8000" value="0xf20f0000" effect="t32AddInstruction" />
+  <instruction name="DDW PC, Rn, #imm12" mask="0xf20f8000" value="0xf20f0000" code="IRC_REPLACE" handler="t32AddInstruction" />
   <instruction name="ADDW Rd, SP, #imm8" mask="0xf20f8000" value="0xf20d0000" />
   <instruction name="BIC{S} Rd, Rn, #imm12" mask="0xfbe08000" value="0xf0200000" />
   <instruction name="RSB Rd, Rn, #imm12" mask="0xfbe08000" value="0xf1c00000" />
@@ -54,7 +55,7 @@
 </category>
 
 <category name="t32LoadByteInstructions" mask="0xfe700000" value="0xf8100000">
-  <instruction name="LDRBc PC ,#label" mask="0xfeffffc0" value="0xf81ff000" effect="t32LdrbInstruction" />
+  <instruction name="LDRBc PC ,#label" mask="0xfeffffc0" value="0xf81ff000" code="IRC_REPLACE" handler="t32LdrbInstruction" />
   <instruction name="LDRBc Rt, [Rn{,#imm12}]" mask="0xfff00000" value="0xf8900000" />
   <instruction name="LDRBc Rt, [Rn,{#imm12}]" mask="0xfff00900" value="0xf8100900" />
   <instruction name="LDRBc Rt, [Rn,{#imm12}]" mask="0xfff00e00" value="0xf8100c00" />
@@ -71,12 +72,12 @@
 </category>
 
 <category name="UNDEFINED" mask="0xf8700000" value="0xf8700000">
-  <instruction name="UNDEFINED" mask="0xf8700000" value="0xf8700000" effect="undefinedInstruction" />
+  <instruction name="UNDEFINED" mask="0xf8700000" value="0xf8700000" code="IRC_REPLACE" handler="undefinedInstruction" />
 </category>
 
 <category name="t32DataProcInstructions3" mask="0xff000000" value="0xfa000000">
   <instruction name="ADDW Rd, Rn, #imm12" mask="0xf2008000" value="0xf2000000" />
-<instruction name="DDW PC, Rn, #imm12" mask="0xf20f8000" value="0xf20f0000" effect="t32AddInstruction" />
+<instruction name="DDW PC, Rn, #imm12" mask="0xf20f8000" value="0xf20f0000" code="IRC_REPLACE" handler="t32AddInstruction" />
   <instruction name="ADDW Rd, SP, #imm8" mask="0xf20f8000" value="0xf20d0000" />
 </category>
 

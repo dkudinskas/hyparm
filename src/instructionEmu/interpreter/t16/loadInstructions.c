@@ -1,8 +1,8 @@
+#include "instructionEmu/loadStoreDecode.h"
+
 #include "instructionEmu/interpreter/internals.h"
 
 #include "instructionEmu/interpreter/t16/loadInstructions.h"
-
-#include "memoryManager/globalMemoryMapper.h"
 
 
 u32int t16LdrInstruction(GCONTXT *context, u32int instruction)
@@ -52,9 +52,7 @@ u32int t16LdrInstruction(GCONTXT *context, u32int instruction)
     DIE_NOW(context, "Unimplemented thumb16 LDR instr");
   }
 
-  u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD,
-      offsetAddress);
-  storeGuestGPR(regDst, valueLoaded, context);
+  storeGuestGPR(regDst, vmLoad(WORD, offsetAddress), context);
   return context->R15 + T16_INSTRUCTION_SIZE;
 }
 
@@ -82,8 +80,7 @@ u32int t16LdrbInstruction(GCONTXT *context, u32int instruction)
 
   u32int baseAddress = loadGuestGPR(regSrc, context);
   u32int offsetAddress = baseAddress + offset;
-  u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, BYTE, offsetAddress) & 0xFF;
-  storeGuestGPR(regDst, valueLoaded, context);
+  storeGuestGPR(regDst, vmLoad(BYTE, offsetAddress) & 0xFF, context);
   return context->R15 + T16_INSTRUCTION_SIZE;
 }
 
@@ -118,7 +115,7 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
     // if current register set
     if ( ((regList >> i) & 0x1) == 0x1)
     {
-      valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
+      valueLoaded = vmLoad(WORD, baseAddress);
       storeGuestGPR(i, valueLoaded, context);
       baseAddress = baseAddress + 4;
     }
@@ -127,7 +124,7 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
   //thumb always update the SP
   if( ( instruction & 0x0100))
   {
-    valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
+    valueLoaded = vmLoad(WORD, baseAddress);
     storeGuestGPR(0xF, valueLoaded, context);
     baseAddress += 4;
   }
