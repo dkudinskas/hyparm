@@ -706,19 +706,19 @@ void invalidatePageTableInfo()
   context->pageTables->sptInfo = 0;
   
   // gpt then 
-  while (context->pageTables->gptInfo != 0)
+  while (context->pageTables->gptInfo != NULL)
   {
     // zero fields
-    context->pageTables->gptInfo->firstLevelEntry = 0;
+    context->pageTables->gptInfo->firstLevelEntry = NULL;
     context->pageTables->gptInfo->physAddr = 0;
     context->pageTables->gptInfo->virtAddr = 0;
     context->pageTables->gptInfo->host = FALSE;
     
-    ptInfo* tempPtr = context->pageTables->gptInfo;
+    ptInfo *tempPtr = context->pageTables->gptInfo;
     context->pageTables->gptInfo = context->pageTables->gptInfo->nextEntry;
-    free((void*)tempPtr);
+    free((void *)tempPtr);
   }
-  context->pageTables->gptInfo = 0;
+  context->pageTables->gptInfo = NULL;
   DEBUG(MM_PAGE_TABLES, "invalidatePageTableInfo: ...done" EOL);
 }
 

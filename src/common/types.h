@@ -8,7 +8,7 @@
 #define TRUE     1
 #define FALSE    0
 
-typedef unsigned int        bool;
+typedef _Bool               bool;
 
 typedef signed char         schar;
 typedef unsigned char       uchar;
@@ -30,8 +30,6 @@ typedef unsigned long long  u64int;
 COMPILE_TIME_ASSERT(CHAR_BIT == 8, __char_not_8bit);
 
 COMPILE_TIME_ASSERT(sizeof(void *) == 4, __pointers_not_32bit);
-
-COMPILE_TIME_ASSERT(sizeof(bool)   == 4, __bool_not_32bit);
 
 COMPILE_TIME_ASSERT(sizeof(s8int)  == 1, __s8int_not_8bit);
 COMPILE_TIME_ASSERT(sizeof(s16int) == 2, __s16int_not_16bit);

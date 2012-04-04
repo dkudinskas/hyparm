@@ -277,7 +277,7 @@ void shadowMapSection(sectionEntry* guest, sectionEntry* shadow, u32int virtual)
     DEBUG(MM_SHADOWING, "shadowMapSection: shadow xn bit %x" EOL, shadow->xn);
   }
 
-  if(guest->imp)
+  if (guest->imp)
   {
     DEBUG(MM_SHADOWING, "shadowMapSection: guest OS PT using the imp bit, investigate" EOL);
   }
@@ -434,7 +434,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
   for (i=0; i < PT1_ENTRIES; i++)
   {
     context->pageTables->shadowActive = shadowUser;
-    if (shadowUser[i].type == SECTION)
+    if (shadowUser[i].type == SECTION && shadowUser[i].domain != HYPERVISOR_ACCESS_DOMAIN)
     {
       sectionEntry* sectionPtr = (sectionEntry*)&shadowUser[i];
       u32int section = sectionPtr->addr << 20;
@@ -449,7 +449,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
         guestWriteProtect(virtualAddress, virtualAddress + PT2_SIZE - 1);
       }
     }
-    else if (shadowUser[i].type == PAGE_TABLE)
+    else if (shadowUser[i].type == PAGE_TABLE && shadowUser[i].domain != HYPERVISOR_ACCESS_DOMAIN)
     {
       pageTableEntry* pageTablePtr = (pageTableEntry*)&shadowUser[i];
       ptInfo* metadata = getPageTableInfo(pageTablePtr);

@@ -382,9 +382,10 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
     for (y = 0; y < PT1_ENTRIES; y++)
     {
       context->CPSR = cpsrPriv;
-      simpleEntry* shadowPriv = (simpleEntry*)&context->pageTables->shadowPriv[y];
+      simpleEntry *shadowPriv = (simpleEntry *)&context->pageTables->shadowPriv[y];
       // only check guest domain if the entry is shadow mapped.
-      if ((shadowPriv->type != FAULT) && (shadowPriv->type != RESERVED))
+      if ((shadowPriv->type != FAULT) && (shadowPriv->type != RESERVED)
+          && (shadowPriv->domain != HYPERVISOR_ACCESS_DOMAIN))
       {
         simpleEntry* guest = &(gpt[y]);
         // look for domains that had their configuration changed.
@@ -409,7 +410,8 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
       context->CPSR = cpsrUser;
       simpleEntry* shadowUser = (simpleEntry*)&context->pageTables->shadowUser[y];
       // only check guest domain if the entry is shadow mapped.
-      if ((shadowUser->type != FAULT) && (shadowUser->type != RESERVED))
+      if ((shadowUser->type != FAULT) && (shadowUser->type != RESERVED)
+          && (shadowPriv->domain != HYPERVISOR_ACCESS_DOMAIN))
       {
         simpleEntry* guest = &(gpt[y]);
         // look for domains that had their configuration changed.

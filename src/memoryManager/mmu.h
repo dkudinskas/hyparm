@@ -6,31 +6,66 @@
 #include "memoryManager/pageTable.h"
 
 
-struct abort_dfsr
+struct dfsr
 {
-  u16int fs3_0:4; //0-3 FS[3:0]
-  u16int domain:4; //4-7
-  u16int:2; //8-9 zero bits!
-  u16int fs4:1;//10
-  u16int WnR:1;//11
-  u16int ExT:1;//12
-  u32int:19;//12-31 more zero bits
+  unsigned fs3_0:4; //0-3 FS[3:0]
+  unsigned domain:4; //4-7
+  unsigned : 2; //8-9 zero bits!
+  unsigned fs4:1;//10
+  unsigned WnR:1;//11
+  unsigned ExT:1;//12
+  unsigned : 19;//12-31 more zero bits
 };
-typedef struct abort_dfsr DFSR;
 
-struct abort_ifsr
+struct ifsr
 {
-  u16int fs3_0:4; //0-3 FS[3:0]
-  u16int:6; //4-9 zero bits
-  u16int fs4:1;//10
-  u16int:1;//11 zero bit
-  u16int ExT:1;//12
-  u32int:19;//13-31 more zero bits
+  unsigned fs3_0 : 4; //0-3 FS[3:0]
+  unsigned : 6; //4-9 zero bits
+  unsigned fs4 : 1;//10
+  unsigned : 1;//11 zero bit
+  unsigned ExT : 1;//12
+  unsigned : 19;//13-31 more zero bits
 };
-typedef struct abort_ifsr IFSR;
 
-COMPILE_TIME_ASSERT((sizeof(DFSR) == sizeof(u32int)) , _DFSR_struct_not_32bit);
-COMPILE_TIME_ASSERT((sizeof(IFSR) == sizeof(u32int)) , _IFSR_struct_not_32bit);
+struct sctlr
+{
+  unsigned mmuEnable : 1;
+  unsigned alignmentCheckingEnable : 1;
+  unsigned cacheEnable : 1;
+  unsigned : 7;
+  unsigned swapEnable : 1;
+  unsigned branchPredictionEnable : 1;
+  unsigned instructionCacheEnable : 1;
+  unsigned highVectors : 1;
+  unsigned roundRobin : 1;
+  unsigned : 2;
+  unsigned hardwareAccessFlagEnable : 1;
+  unsigned : 3;
+  unsigned fiLowLatencyEnable : 1;
+  unsigned : 2;
+  unsigned interruptVectorsEnable : 1;
+  unsigned exceptionEndianness : 1;
+  unsigned : 1;
+  unsigned nonMaskableFastInterrupts : 1;
+  unsigned texRemapEnable : 1;
+  unsigned accessFlagEnable : 1;
+  unsigned thumbExceptionEnable : 1;
+  unsigned : 1;
+};
+
+COMPILE_TIME_ASSERT((sizeof(struct dfsr) == sizeof(u32int)), _DFSR_struct_not_32bit);
+COMPILE_TIME_ASSERT((sizeof(struct ifsr) == sizeof(u32int)), _IFSR_struct_not_32bit);
+COMPILE_TIME_ASSERT((sizeof(struct sctlr) == sizeof(u32int)), _SCTLR_struct_not_32bit);
+
+typedef struct dfsr DFSR;
+
+typedef struct ifsr IFSR;
+
+typedef union
+{
+  struct sctlr bits;
+  u32int value;
+} SCTLR;
 
 
 enum DataAbortFaultStatus
@@ -89,6 +124,9 @@ enum enum_access_type
 };
 typedef enum enum_access_type access_type;
 
+
+__macro__ bool isMmuEnabled(void);
+
 void mmuInit(void);
 void mmuSetTTBCR(u32int value);
 void mmuSetTTBR0(simpleEntry* addr, u32int asid);
@@ -97,8 +135,6 @@ simpleEntry* mmuGetTTBR0(void);
 
 void mmuEnableVirtAddr(void);
 void mmuDisableVirtAddr(void);
-bool isMmuEnabled(void);
-
 
 void mmuInvIcacheToPOU(void);
 void mmuInvIcacheByMVAtoPOU(u32int mva);
@@ -146,4 +182,14 @@ void mmuPageTableEdit(u32int entryAddr, u32int pageAddr);
 
 void printDataAbort(void); //gets & prints the dfsr & dfar
 void printPrefetchAbort(void); //gets & prints the ifsr & ifar
+
+
+__macro__ bool isMmuEnabled()
+{
+  SCTLR sctlr;
+  __asm__ __volatile__("MRC p15, 0, %0, c1, c0, 0":"=r"(sctlr));
+  return sctlr.bits.mmuEnable;
+}
+
+
 #endif

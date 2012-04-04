@@ -162,17 +162,6 @@ void mmuDisableVirtAddr()
      );
 }
 
-bool isMmuEnabled()
-{
-  u32int tempReg = 0;
-  //This may need a bit of investigation/logic to ensure the bit masks we set are correct
-  __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0\n\t" :"=r"(tempReg));
-  
-  return (tempReg & 0x1) ? TRUE : FALSE;
-         
-}
-
-
 /**
  * clear and invalidate host instruction cache
  **/
@@ -200,7 +189,7 @@ void mmuInvIcacheByMVAtoPOU(u32int mva)
 void mmuInstructionSync()
 {
   DEBUG(MM_MMU, "mmuInstructionSync" EOL);
-  __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 4": : "r"(0));
+  __asm__ __volatile__("ISB");
 }
 
 
@@ -233,14 +222,14 @@ void mmuCleanDcacheBySetWay(u32int setWay)
 void mmuDataSyncBarrier()
 {
   DEBUG(MM_MMU, "mmuDataSyncBarrier: synchronization barrier" EOL);
-  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 4": : "r"(0));
+  __asm__ __volatile__("DSB");
 }
 
 
 void mmuDataMemoryBarrier()
 {
   DEBUG(MM_MMU, "mmuDataMemoryBarrier" EOL);
-  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 5": : "r"(0));
+  __asm__ __volatile__("DMB");
 }
 
 
