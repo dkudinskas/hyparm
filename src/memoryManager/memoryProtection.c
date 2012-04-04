@@ -438,7 +438,6 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
     mmuInvalidateUTLBbyMVA(gpt2);
     mmuDataMemoryBarrier();
   }
-//  mmuInvalidateUTLB();
   return returnValue;
 }
 

@@ -23,11 +23,10 @@ struct blockCacheEntry
 
 typedef struct blockCacheEntry BCENTRY;
 
+bool checkBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress);
 
 void addToBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress, u32int endAddress,
     u32int hypInstruction, u32int type, void *hdlFunct);
-
-bool checkBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress);
 
 void clearBlockCache(BCENTRY *blockCache);
 

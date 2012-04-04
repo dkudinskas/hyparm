@@ -5,12 +5,12 @@ ENTRY("_start")
 
 MEMORY
 {
-	RAM (rwx) : ORIGIN = 0x8c000000 LENGTH = 16777216
+	RAM (rwx) : ORIGIN = 0x8f000000 LENGTH = 1048576
 }
 
 SECTIONS
 {
-	. = 0x8c000000;
+	. = 0x8f000000;
 	. = ALIGN(4);
 	_start_marker = .;
 	.text :

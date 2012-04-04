@@ -336,7 +336,7 @@ void addPageTableEntry(pageTableEntry* pageTableEntryPtr, u32int physical, u8int
 u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
 {
 #ifdef PAGE_TABLE_DBG
-//  printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
+  printf("getPhysicalAddress for VA %08x in PT @ %08x\n", virtAddr, (u32int)pageTable);
 #endif
   simpleEntry* entryFirst = getEntryFirst(pageTable, virtAddr);
   if (entryFirst->type == FAULT)

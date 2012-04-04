@@ -3,6 +3,9 @@
 #include "common/stddef.h"
 
 
+extern u32int _start_marker;
+extern u32int _end_marker;
+
 u32int heapStart;
 u32int heapSize;
 u32int heapEnd;
@@ -25,9 +28,11 @@ void free(void *pointer)
 
 void mallocInit()
 {
-  u32int startAddr = HIDDEN_RAM_START;
-  u32int size = HIDDEN_RAM_SIZE;
+  u32int hypervisorSize = (u32int)&_end_marker - (u32int)&_start_marker;
+  u32int startAddr = HIDDEN_RAM_START + hypervisorSize;
+  u32int size = HIDDEN_RAM_SIZE - hypervisorSize;
 
+  DEBUG(MALLOC, "mallocInit: hypervisor start %#.8x end %#.8x, size %08x" EOL, (u32int)&_start_marker, (u32int)&_end_marker, hypervisorSize);
   DEBUG(MALLOC, "mallocInit(%#.8x, %x);" EOL, startAddr, size);
 
   heapStart = startAddr;

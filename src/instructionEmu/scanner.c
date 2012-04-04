@@ -24,8 +24,6 @@
 #define INSTR_SWI_THUMB_MIX  ((INSTR_SWI_THUMB << 16) | INSTR_NOP_THUMB)
 
 
-static inline u32int getHash(u32int key);
-
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex);
 
 #ifdef CONFIG_THUMB2
@@ -77,26 +75,15 @@ void setScanBlockCallSource(u8int source)
 #define MARK_MASK  (0U)
 #endif /* CONFIG_DEBUG_SCANNER_MARK_INTERVAL */
 
-
-// http://www.concentric.net/~Ttwang/tech/inthash.htm
-// 32bit mix function
-static inline u32int getHash(u32int key)
-{
-  key = ~key + (key << 15); // key = (key << 15) - key - 1;
-  key = key ^ (key >> 12);
-  key = key + (key << 2);
-  key = key ^ (key >> 4);
-  key = key * 2057; // key = (key + (key << 3)) + (key << 11);
-  key = key ^ (key >> 16);
-  return key >> 2;
-}
-
 void scanBlock(GCONTXT *context, u32int startAddress)
 {
   /*
    * WARNING: startAddress is not checked! Data aborts may follow and hide bugs elsewhere.
    */
+
+#ifdef CONFIG_SCANNER_COUNT_BLOCKS
   incrementScanBlockCounter();
+#endif
 
 #ifdef CONFIG_SCANNER_EXTRA_CHECKS
   if (getScanBlockCallSource() == SCANNER_CALL_SOURCE_NOT_SET)
@@ -116,14 +103,17 @@ void scanBlock(GCONTXT *context, u32int startAddress)
   }
 #endif /* CONFIG_SCANNER_EXTRA_CHECKS */
 
+#ifdef CONFIG_SCANNER_COUNT_BLOCKS
   if ((getScanBlockCounter() & MARK_MASK) == 1)
   {
     DEBUG(SCANNER_MARK, "scanBlock: #B = %#.16Lx; #DABT = %#.16Lx; #IRQ = %#.16Lx; startAddress = "
         "%#.8x" EOL, getScanBlockCounter(), getDataAbortCounter(), getIrqCounter(), startAddress);
   }
+#endif
 
-  u32int cacheIndex = (getHash(startAddress) & (BLOCK_CACHE_SIZE-1));// 0x1FF mask for 512 entry cache
-  bool cached = checkBlockCache(context->blockCache, cacheIndex, startAddress);
+  u32int cacheIndex = (startAddress >> 2) & (BLOCK_CACHE_SIZE-1);
+  bool cached = ((context->blockCache[cacheIndex].type != BCENTRY_TYPE_INVALID)
+              && (context->blockCache[cacheIndex].startAddress == startAddress));
 
   DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: @%.8x, source = %#x, count = %#Lx; %s" EOL, startAddress,
       getScanBlockCallSource(), getScanBlockCounter(), (cached ? "HIT" : "MISS"));
