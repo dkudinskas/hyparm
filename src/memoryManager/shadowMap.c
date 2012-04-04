@@ -277,7 +277,7 @@ void shadowMapSection(sectionEntry* guest, sectionEntry* shadow, u32int virtual)
     DEBUG(MM_SHADOWING, "shadowMapSection: shadow xn bit %x" EOL, shadow->xn);
   }
 
-  if(guest->imp)
+  if (guest->imp)
   {
     DEBUG(MM_SHADOWING, "shadowMapSection: guest OS PT using the imp bit, investigate" EOL);
   }
