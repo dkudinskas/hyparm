@@ -296,6 +296,10 @@ void userToPrivAddressing()
 void initialiseShadowPageTables(GCONTXT* gc)
 {
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: create double-shadows!" EOL);
+
+  // invalidate the whole block cache
+  clearBlockCache(gc->blockCache);
+
   mmuClearDataCache();
   mmuDataMemoryBarrier();
 
@@ -319,9 +323,6 @@ void initialiseShadowPageTables(GCONTXT* gc)
 
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: gPT phys %p virt %p" EOL,
             gc->pageTables->guestPhysical, gc->pageTables->guestVirtual);
-
-  // invalidate the whole block cache
-  clearBlockCache(gc->blockCache);
 
   //anything in caches needs to be written back now
   mmuDataMemoryBarrier();
