@@ -81,51 +81,7 @@ _start:
     LDR     R2, =exceptionVectorBase
     MCR     P15, 0, R2, C12, C0, 0
 #else
-# ifdef CONFIG_SOC_TI_OMAP_35XX
-      /*
-       * On the TI OMAP 35xx, U-Boot overwrites the default RAM exception vectors, which can normally be used as they are.
-       * Restore them.
-       */
-      LDR     R2, [PC, #0x20]
-      LDR     R3, [PC, #0x20]
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      ADD     PC, PC, #4
-      /*
-       * The next two lines are data; they contain:
-       * - the start address of the RAM exception vectors;
-       * - the default instruction to be executed for all exceptions as defined in the TI OMAP 35xx TRM.
-       */
-      .word   0x4020FFC8
-      LDR     PC, [PC, #0x14]
-# else
-    /*
-     * Batch install exception handler addresses.
-     * Set R2 to the first exception handler address to be written.
-     * On the TI OMAP 35xx R2 is already correct.
-     */
-    LDR     R2, =exception_vector
-    LDR     R2, [R2]
-# endif /* CONFIG_SOC_TI_OMAP_35XX */
-    LDR     R3, =undHandler
-    STR     R3, [R2], #4
-    LDR     R3, =svcHandler
-    STR     R3, [R2], #4
-    LDR     R3, =pabthandler
-    STR     R3, [R2], #4
-    LDR     R3, =dabtHandler
-    STR     R3, [R2], #4
-    LDR     R3, =monHandler
-    STR     R3, [R2], #4
-    LDR     R3, =irqHandler
-    STR     R3, [R2], #4
-    LDR     R3, =fiqHandler
-    STR     R3, [R2], #4
+  .err @ Architectures without the security extensions are not supported
 #endif /* CONFIG_ARCH_EXT_SECURITY */
   /*
    * Set up SSP if enabled before we use any stacks...
@@ -695,11 +651,6 @@ fiqHandler:
 
 
 .data
-
-#ifndef CONFIG_SOC_TI_OMAP_35XX
-exception_vector:
-  .err @ Unknown target
-#endif
 
 /*
  * 32-bit space for the guest context pointer.
