@@ -2,6 +2,7 @@
 #define __COMMON__STDLIB_H__
 
 #include "common/compiler.h"
+#include "common/debug.h"
 #include "common/stddef.h"
 #include "common/string.h"
 #include "common/types.h"
@@ -20,25 +21,57 @@
 #endif /* TEST */
 
 
-void free(void *ptr);
+#ifndef CONFIG_MEMORY_ALLOCATOR_BOOKKEEPING
 
-__macro__ void *calloc(u32int numberOfElements, u32int elementSize);
+#define calloc(numberOfElements, elementSize)  uncheckedCalloc(numberOfElements, elementSize)
+#define free(ptr)                              uncheckedFree(ptr)
+#define malloc(size)                           uncheckedMalloc(size)
+#define memalign(alignment, size)              uncheckedMemalign(alignment, size)
+#define realloc(ptr, size)                     uncheckedRealloc(ptr, size)
 
-void *malloc(u32int size);
+#else
 
-void *memalign(u32int alignment, u32int size);
+__macro__ void *checkedCalloc(const char *file, const char *line, const char *function,
+                              u32int numberOfElements, u32int elementSize);
+void checkedFree(const char *file, const char *line, const char *function, void *ptr);
+void *checkedMalloc(const char *file, const char *line, const char *function, u32int size);
+void *checkedMemalign(const char *file, const char *line, const char *function, u32int alignment,
+                      u32int size);
+void *checkedRealloc(const char *file, const char *line, const char *function, void *ptr,
+                     u32int size);
 
-void *realloc(void *ptr, u32int size);
+#define calloc(numberOfElements, elementSize)                                                     \
+  checkedCalloc(__FILE__, EXPAND_TO_STRING(__LINE__), __func__, numberOfElements, elementSize)
+#define free(ptr)                                                                                 \
+  checkedFree(__FILE__, EXPAND_TO_STRING(__LINE__), __func__, ptr)
+#define malloc(size)                                                                              \
+  checkedMalloc(__FILE__, EXPAND_TO_STRING(__LINE__), __func__, size)
+#define memalign(alignment, size)                                                                 \
+  checkedMemalign(__FILE__, EXPAND_TO_STRING(__LINE__), __func__, alignment, size)
+#define realloc(ptr, size)                                                                        \
+  checkedRealloc(__FILE__, EXPAND_TO_STRING(__LINE__), __func__, ptr, size)
+
+#endif /* !CONFIG_MEMORY_ALLOCATOR_BOOKKEEPING */
 
 
 /*
- * calloc
+ * WARNING: do NOT invoke the following functions directly!
+ */
+__macro__ void *uncheckedCalloc(u32int numberOfElements, u32int elementSize);
+void uncheckedFree(void *ptr);
+void *uncheckedMalloc(u32int size);
+void *uncheckedMemalign(u32int alignment, u32int size);
+void *uncheckedRealloc(void *ptr, u32int size);
+
+
+/*
+ * uncheckedCalloc
  * Allocate and initialize to zero. Parameters are in accordance with the standard, with separate
  * parameters for the number of elements and the element size. Since malloc and memset both act on
  * total size, we need a multiplication here. By using a macro-like function to implement calloc,
  * this multiplication can be optimized away by the compiler in most cases.
  */
-__macro__ void *calloc(u32int numberOfElements, u32int elementSize)
+__macro__ void *uncheckedCalloc(u32int numberOfElements, u32int elementSize)
 {
   u32int size = numberOfElements * elementSize;
   void *ptr = malloc(size);
@@ -49,5 +82,21 @@ __macro__ void *calloc(u32int numberOfElements, u32int elementSize)
   return ptr;
 }
 
+
+#ifdef CONFIG_MEMORY_ALLOCATOR_BOOKKEEPING
+
+__macro__ void *checkedCalloc(const char *file, const char *line, const char *function,
+                             u32int numberOfElements, u32int elementSize)
+{
+  u32int size = numberOfElements * elementSize;
+  void *ptr = checkedMalloc(file, line, function, size);
+  if (ptr != NULL)
+  {
+    memset(ptr, 0, size);
+  }
+  return ptr;
+}
+
+#endif /* CONFIG_MEMORY_ALLOCATOR_BOOKKEEPING */
 
 #endif /* __COMMON__STDLIB_H__ */

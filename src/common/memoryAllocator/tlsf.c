@@ -196,11 +196,6 @@ void dumpAllocatorInternals()
   tlsfWalkHeap(staticPool, defaultHeapWalker, NULL);
 }
 
-void free(void *ptr)
-{
-  tlsfFree(staticPool, ptr);
-}
-
 static inline struct blockHeader *getBlockFromPointer(void *pointer)
 {
   return (struct blockHeader *)((u32int)pointer - BLOCK_START_OFFSET);
@@ -325,11 +320,6 @@ static struct blockHeader *locateFreeBlock(struct pool *pool, u32int size)
   return block;
 }
 
-void *malloc(u32int size)
-{
-  return tlsfAllocate(staticPool, size);
-}
-
 static void markBlockFree(struct blockHeader *block)
 {
   /* Link the block to the next block, first. */
@@ -343,11 +333,6 @@ static void markBlockUsed(struct blockHeader *block)
   struct blockHeader *next = getNextBlock(block);
   next->size &= ~BLOCK_HEADER_PREV_FREE_BIT;
   block->size &= ~BLOCK_HEADER_FREE_BIT;
-}
-
-void *memalign(u32int alignment, u32int size)
-{
-  return tlsfAlign(staticPool, alignment, size);
 }
 
 /* Merge a just-freed block with an adjacent previous free block. */
@@ -391,11 +376,6 @@ static void *prepareBlockForUse(struct pool *pool, struct blockHeader *block, u3
     pointer = getPointerFromBlock(block);
   }
   return pointer;
-}
-
-void *realloc(void *ptr, u32int size)
-{
-  return tlsfReallocate(staticPool, ptr, size);
 }
 
 /* Remove a given block from the free list. */
@@ -746,4 +726,24 @@ static void trimUsedBlock(struct pool *pool, struct blockHeader *block, u32int s
     remainingBlock = mergeBlockWithNext(pool, remainingBlock);
     insertBlock(pool, remainingBlock);
   }
+}
+
+void uncheckedFree(void *ptr)
+{
+  tlsfFree(staticPool, ptr);
+}
+
+void *uncheckedMalloc(u32int size)
+{
+  return tlsfAllocate(staticPool, size);
+}
+
+void *uncheckedMemalign(u32int alignment, u32int size)
+{
+  return tlsfAlign(staticPool, alignment, size);
+}
+
+void *uncheckedRealloc(void *ptr, u32int size)
+{
+  return tlsfReallocate(staticPool, ptr, size);
 }

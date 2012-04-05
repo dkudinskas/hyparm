@@ -47,14 +47,30 @@
  */
 .global _start
 _start:
-
   /*
    * The hypervisor is started through U-Boot, and any command line arguments are passed as following:
    * - R0 contains the number of arguments;
    * - R1 is a pointer to an array of null-terminated C strings.
    * These arguments will be used by main and will be preserved if we don't touch R0 and R1.
    *
-   * Set up stack pointer for all modes (SVC,FIQ,IRQ,ABT,UND,SYS/USR) and switch back to SVC mode.
+   * Zero-fill BSS section. Since the BSS section is on its own page, we can safely store 32 bytes
+   * at once.
+   */
+  LDR     r2, =__BSS_BEGIN__
+  LDR     r3, =__BSS_END__
+  MOV     r4, #0
+  MOV     r5, #0
+  MOV     r6, #0
+  MOV     r7, #0
+  MOV     r8, #0
+  MOV     r9, #0
+  MOV     r10, #0
+  MOV     r11, #0
+zeroFillBSS$:
+  STM     r2!, {r4-r11}
+  CMP     r2, r3
+  BCC     zeroFillBSS$
+  /* Set up stack pointer for all modes (SVC,FIQ,IRQ,ABT,UND,SYS/USR) and switch back to SVC mode.
    * We do not make use of secure modes, so we do not set up a stack pointer for MON mode.
    * Hence, the hypervisor and its guests must never execute the SMC instruction.
    */
@@ -81,51 +97,7 @@ _start:
     LDR     R2, =exceptionVectorBase
     MCR     P15, 0, R2, C12, C0, 0
 #else
-# ifdef CONFIG_SOC_TI_OMAP_35XX
-      /*
-       * On the TI OMAP 35xx, U-Boot overwrites the default RAM exception vectors, which can normally be used as they are.
-       * Restore them.
-       */
-      LDR     R2, [PC, #0x20]
-      LDR     R3, [PC, #0x20]
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      ADD     PC, PC, #4
-      /*
-       * The next two lines are data; they contain:
-       * - the start address of the RAM exception vectors;
-       * - the default instruction to be executed for all exceptions as defined in the TI OMAP 35xx TRM.
-       */
-      .word   0x4020FFC8
-      LDR     PC, [PC, #0x14]
-# else
-    /*
-     * Batch install exception handler addresses.
-     * Set R2 to the first exception handler address to be written.
-     * On the TI OMAP 35xx R2 is already correct.
-     */
-    LDR     R2, =exception_vector
-    LDR     R2, [R2]
-# endif /* CONFIG_SOC_TI_OMAP_35XX */
-    LDR     R3, =undHandler
-    STR     R3, [R2], #4
-    LDR     R3, =svcHandler
-    STR     R3, [R2], #4
-    LDR     R3, =pabthandler
-    STR     R3, [R2], #4
-    LDR     R3, =dabtHandler
-    STR     R3, [R2], #4
-    LDR     R3, =monHandler
-    STR     R3, [R2], #4
-    LDR     R3, =irqHandler
-    STR     R3, [R2], #4
-    LDR     R3, =fiqHandler
-    STR     R3, [R2], #4
+  .err @ Architectures without the security extensions are not supported
 #endif /* CONFIG_ARCH_EXT_SECURITY */
   /*
    * Set up SSP if enabled before we use any stacks...
@@ -191,7 +163,7 @@ emergencyExceptionVectorBase:
 setEmergencyExceptionVector:
   LDR     R0, =emergencyExceptionVectorBase
   MCR     P15, 0, R0, C12, C0, 0
-  MOV     PC, LR
+  BX      LR
 
 #endif /* CONFIG_EMERGENCY_EXCEPTION_VECTOR */
 
@@ -200,14 +172,14 @@ setEmergencyExceptionVector:
 getGuestContext:
   LDR     R0, =guestContextSpace
   LDR     R0, [R0]
-  MOV     PC, LR
+  BX      LR
 
 
 .global setGuestContext
 setGuestContext:
   LDR     R1, =guestContextSpace
   STR     R0, [R1]
-  MOV     PC, LR
+  BX      LR
 
 
 /*
@@ -694,21 +666,6 @@ fiqHandler:
   LDMFD SP!, {PC}^
 
 
-.data
-
-#ifndef CONFIG_SOC_TI_OMAP_35XX
-exception_vector:
-  .err @ Unknown target
-#endif
-
-/*
- * 32-bit space for the guest context pointer.
- * This space must be in a .data section to make sure it is initialized to zero.
- */
-guestContextSpace:
-  .space 4
-
-
 /*
  * Space allocated in the BSS section is *not* initialized to zero.
  */
@@ -748,6 +705,12 @@ fiqStackEnd:
   .space 1024 /* FIQ */
 fiqStack:
 stackSpaceBegin:
+
+/*
+ * 32-bit space for the guest context pointer. Must be initialized to zero at start!
+ */
+guestContextSpace:
+  .space 4
 
 /*
  * Guard value for GCC stack-smashing protection (SSP).
