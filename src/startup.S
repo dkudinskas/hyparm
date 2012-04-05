@@ -147,7 +147,7 @@ emergencyExceptionVectorBase:
 setEmergencyExceptionVector:
   LDR     R0, =emergencyExceptionVectorBase
   MCR     P15, 0, R0, C12, C0, 0
-  MOV     PC, LR
+  BX      LR
 
 #endif /* CONFIG_EMERGENCY_EXCEPTION_VECTOR */
 
@@ -156,14 +156,14 @@ setEmergencyExceptionVector:
 getGuestContext:
   LDR     R0, =guestContextSpace
   LDR     R0, [R0]
-  MOV     PC, LR
+  BX      LR
 
 
 .global setGuestContext
 setGuestContext:
   LDR     R1, =guestContextSpace
   STR     R0, [R1]
-  MOV     PC, LR
+  BX      LR
 
 
 /*
