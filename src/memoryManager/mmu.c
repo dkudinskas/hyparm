@@ -331,7 +331,7 @@ void mmuClearDataCache(void)
   v7_flush_dcache_all(BOARD_DEVICE_TYPE);
 
   // data sync
-  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
+  __asm__ __volatile__("DSB");
 
   l2_cache_enable();
 }
