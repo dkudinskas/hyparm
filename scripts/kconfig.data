@@ -65,6 +65,9 @@ choice
   prompt "Memory allocator"
   default MEMORY_ALLOCATOR_TLSF
 
+config MEMORY_ALLOCATOR_NAIVE
+  bool "Naive (no free)"
+
 config MEMORY_ALLOCATOR_TLSF
   bool "TLSF"
 
@@ -183,6 +186,14 @@ config DEBUG_GUEST_CONTEXT
   bool "Debug guest context routines"
   default y
   depends on DEBUG
+
+config DEBUG_MEMORY_ALLOCATOR
+  bool "Debug memory allocator"
+  depends on DEBUG
+
+config DEBUG_MEMORY_ALLOCATOR_BOOKKEEPING
+  bool "Debug memory allocator bookkeeping"
+  depends on DEBUG && MEMORY_ALLOCATOR_BOOKKEEPING
 
 config DEBUG_MEMORY_MANAGER
   bool "Debug memory manager"
@@ -553,6 +564,9 @@ config LOOP_DETECTOR_DIE_TRESHOLD
 
 config BLOCK_CACHE_COLLISION_COUNTER
   bool "Count number of collisions in block cache"
+
+config MEMORY_ALLOCATOR_BOOKKEEPING
+  bool "Extensive memory allocator bookkeeping"
 
 config KERNEL_ANDROID
   bool "Small hacks for linux kernel 2.6.37 (Android)"

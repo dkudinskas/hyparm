@@ -183,6 +183,10 @@ void dumpStackFromParameters(u32int snapshotOrigin, u32int psr, u32int *stack)
   }
 }
 
+/*
+ * WARNING: this function or any functions called from here must *NEVER* call the memory allocator
+ * because it may be used to debug the allocator itself.
+ */
 u32int printf(const char *fmt, ...)
 {
   va_list args;
