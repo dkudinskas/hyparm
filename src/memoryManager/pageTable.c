@@ -691,10 +691,10 @@ void invalidatePageTableInfo()
   DEBUG(MM_PAGE_TABLES, "invalidatePageTableInfo:" EOL);
   GCONTXT* context = getGuestContext();
   // spt first
-  while (context->pageTables->sptInfo != 0)
+  while (context->pageTables->sptInfo != NULL)
   {
     // zero fields
-    context->pageTables->sptInfo->firstLevelEntry = 0;
+    context->pageTables->sptInfo->firstLevelEntry = NULL;
     context->pageTables->sptInfo->physAddr = 0;
     free((void*)context->pageTables->sptInfo->virtAddr);
     context->pageTables->sptInfo->virtAddr = 0;
@@ -703,7 +703,7 @@ void invalidatePageTableInfo()
     context->pageTables->sptInfo = context->pageTables->sptInfo->nextEntry;
     free((void*)tempPtr);
   }
-  context->pageTables->sptInfo = 0;
+  context->pageTables->sptInfo = NULL;
   
   // gpt then 
   while (context->pageTables->gptInfo != NULL)
