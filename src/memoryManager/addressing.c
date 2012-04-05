@@ -184,7 +184,7 @@ void guestEnableMMU()
   
   // initialise double-shadow page tables now
   initialiseShadowPageTables(context);
-  // if initializing vmem, realy must clean and invalidate the TLB!
+  // if initializing vmem, really must clean and invalidate the TLB!
   mmuInvalidateUTLB();
 }
 

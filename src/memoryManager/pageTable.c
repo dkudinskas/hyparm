@@ -437,7 +437,7 @@ simpleEntry* getEntrySecond(pageTableEntry* firstLevelEntry, u32int virtAddr)
     printf("getEntrySecond: metadata not found. 1st lvl PTE %#.8x @ %p; VA %#.8x" EOL,
                             *(u32int*)firstLevelEntry, firstLevelEntry, virtAddr);
     dumpPageTableInfo();
-    DIE_NOW(NULL, "could not find PT2 metadta");
+    DIE_NOW(NULL, "could not find PT2 metadata");
   }
   // however if this entry is a guest PT2 info, then virtAddr will not be set!
   if (!metadata->host)
