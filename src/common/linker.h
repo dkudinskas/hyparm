@@ -21,18 +21,18 @@
 /*
  * Do NOT use the following symbols directly; use the macros above!
  */
-extern void *__HYPERVISOR_BEGIN__;
-extern void *__TEXT_BEGIN__;
-extern void *__TEXT_END__;
-extern void *__RODATA_BEGIN__;
-extern void *__RODATA_END__;
-extern void *__DATA_BEGIN__;
-extern void *__DATA_END__;
-extern void *__BSS_BEGIN__;
-extern void *__BSS_END__;
-extern void *__HYPERVISOR_END__;
+extern const u32int __HYPERVISOR_BEGIN__;
+extern const u32int __TEXT_BEGIN__;
+extern const u32int __TEXT_END__;
+extern const u32int __RODATA_BEGIN__;
+extern const u32int __RODATA_END__;
+extern const u32int __DATA_BEGIN__;
+extern const u32int __DATA_END__;
+extern const u32int __BSS_BEGIN__;
+extern const u32int __BSS_END__;
+extern const u32int __HYPERVISOR_END__;
 
-extern void *__RAM_XN_POOL_BEGIN__;
-extern void *__RAM_XN_POOL_END__;
+extern const u32int __RAM_XN_POOL_BEGIN__;
+extern const u32int __RAM_XN_POOL_END__;
 
 #endif /* __COMMON_LINKER_H__ */
