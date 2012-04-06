@@ -146,6 +146,8 @@ struct PageTableMetaData
 typedef struct PageTableMetaData ptInfo;
 
 
+void dumpTranslationTable(simpleEntry *table);
+
 /*************** rewritten functions *********************/
 simpleEntry *newLevelOnePageTable(void);
 u32int* newLevelTwoPageTable(void);
