@@ -1,10 +1,19 @@
 #ifndef __MEMORY_MANAGER__MMU_H__
 #define __MEMORY_MANAGER__MMU_H__
 
+#include "common/stddef.h"
 #include "common/types.h"
 
 #include "memoryManager/pageTable.h"
 
+
+typedef enum
+{
+  TTP_PRIVILEGED_READ,
+  TTP_PRIVILEGED_WRITE,
+  TTP_UNPRIVILEGED_READ,
+  TTP_UNPRIVILEGED_WRITE
+} TryTranslatePurpose;
 
 struct dfsr
 {
@@ -27,7 +36,28 @@ struct ifsr
   unsigned : 19;//13-31 more zero bits
 };
 
-struct sctlr
+struct physicalAddressRegisterFault
+{
+  unsigned fault : 1;
+  unsigned faultStatus : 6;
+  unsigned : 25;
+};
+
+struct physicalAddressRegisterSuccess
+{
+  unsigned fault : 1;
+  unsigned superSection : 1;
+  unsigned outerAttributes : 2;
+  unsigned innerAttributes : 3;
+  unsigned shareable : 1;
+  unsigned : 1;
+  unsigned nonSecure : 1;
+  unsigned notOuterShareable : 1;
+  unsigned : 1;
+  unsigned physicalAddress_31_20 : 20;
+};
+
+struct systemControlRegister
 {
   unsigned mmuEnable : 1;
   unsigned alignmentCheckingEnable : 1;
@@ -55,7 +85,9 @@ struct sctlr
 
 COMPILE_TIME_ASSERT((sizeof(struct dfsr) == sizeof(u32int)), _DFSR_struct_not_32bit);
 COMPILE_TIME_ASSERT((sizeof(struct ifsr) == sizeof(u32int)), _IFSR_struct_not_32bit);
-COMPILE_TIME_ASSERT((sizeof(struct sctlr) == sizeof(u32int)), _SCTLR_struct_not_32bit);
+COMPILE_TIME_ASSERT((sizeof(struct physicalAddressRegisterFault) == sizeof(u32int)), _PAR_fault_struct_not_32bit);
+COMPILE_TIME_ASSERT((sizeof(struct physicalAddressRegisterSuccess) == sizeof(u32int)), _PAR_success_struct_not_32bit);
+COMPILE_TIME_ASSERT((sizeof(struct systemControlRegister) == sizeof(u32int)), _SCTLR_struct_not_32bit);
 
 typedef struct dfsr DFSR;
 
@@ -63,9 +95,16 @@ typedef struct ifsr IFSR;
 
 typedef union
 {
-  struct sctlr bits;
+  struct physicalAddressRegisterFault fault;
+  struct physicalAddressRegisterSuccess success;
   u32int value;
-} SCTLR;
+} PhysicalAddressRegister;
+
+typedef union
+{
+  struct systemControlRegister bits;
+  u32int value;
+} SystemControlRegister;
 
 
 enum DataAbortFaultStatus
@@ -180,15 +219,45 @@ IFSR getIFSR(void);
 
 void mmuPageTableEdit(u32int entryAddr, u32int pageAddr);
 
+__macro__ PhysicalAddressRegister mmuTryTranslate(u32int virtualAddress, TryTranslatePurpose purpose);
+
 void printDataAbort(void); //gets & prints the dfsr & dfar
 void printPrefetchAbort(void); //gets & prints the ifsr & ifar
 
 
 __macro__ bool isMmuEnabled()
 {
-  SCTLR sctlr;
+  SystemControlRegister sctlr;
   __asm__ __volatile__("MRC p15, 0, %0, c1, c0, 0":"=r"(sctlr));
   return sctlr.bits.mmuEnable;
+}
+
+/*
+ * mmuTryTranslate
+ * Attempts to translate a given virtual address to a physical address and only generates an abort
+ * if the translation fails because an external abort occurred on a translation table walk request.
+ */
+__macro__ PhysicalAddressRegister mmuTryTranslate(u32int virtualAddress, TryTranslatePurpose purpose)
+{
+  PhysicalAddressRegister par;
+  switch (purpose)
+  {
+    case TTP_PRIVILEGED_READ:
+      __asm__ __volatile__("MCR p15, 0, %0, c7, c8, 0"::"r"(virtualAddress));
+      break;
+    case TTP_PRIVILEGED_WRITE:
+      __asm__ __volatile__("MCR p15, 0, %0, c7, c8, 1"::"r"(virtualAddress));
+      break;
+    case TTP_UNPRIVILEGED_READ:
+      __asm__ __volatile__("MCR p15, 0, %0, c7, c8, 2"::"r"(virtualAddress));
+      break;
+    case TTP_UNPRIVILEGED_WRITE:
+    default:
+      __asm__ __volatile__("MCR p15, 0, %0, c7, c8, 3"::"r"(virtualAddress));
+      break;
+  }
+  __asm__ __volatile__("ISB; MRC p15, 0, %0, c7, c4, 0":"=r"(par));
+  return par;
 }
 
 
