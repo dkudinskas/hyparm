@@ -20,29 +20,29 @@ SECTIONS
 		__TEXT_BEGIN__ = ABSOLUTE(.);
 		src/startup.S.o (.text)
 		*(.text)
-		__TEXT_END__ = ABSOLUTE(.);
 	} > RAM
 
 	. = ALIGN(4096);
 
 	.rodata . :
 	{
+		__TEXT_END__ = ABSOLUTE(.);
 		__RODATA_BEGIN__ = ABSOLUTE(.);
 		*(.rodata)
-		__RODATA_END__ = ABSOLUTE(.);
 	} > RAM
 
 	. = ALIGN(4096);
 
 	.data . :
 	{
+		__RODATA_END__ = ABSOLUTE(.);
 		__DATA_BEGIN__ = ABSOLUTE(.);
 		*(.data)
-		__DATA_END__ = ABSOLUTE(.);
 	} > RAM
 
 	.bss :
 	{
+		__DATA_END__ = ABSOLUTE(.);
 		__BSS_BEGIN__ = ABSOLUTE(.);
 		*(.bss)
 		__BSS_END__ = ABSOLUTE(.);

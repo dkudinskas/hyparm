@@ -676,35 +676,58 @@ fiqHandler:
  * every POP increases the value of SP. Hence, labels have to be put after the reserved space.
  *
  * WARNING: EABI requires 8-byte aligned stacks (on public interfaces)!
+ * WARNING: all stacks aligned on 4k boundaries for memory protection!
  */
-  .balign 8
-stackSpaceEnd:
-.global svcStackEnd
+.balign 4096
 .global svcStack
-svcStackEnd:
-  .space 1024 /* SVC */
-svcStack:
-.global abtStackEnd
+.global svcStackEnd
+.global svcStackGap
 .global abtStack
-abtStackEnd:
-  .space 1024 /* ABT */
-abtStack:
-.global undStackEnd
+.global abtStackEnd
+.global abtStackGap
 .global undStack
-undStackEnd:
-  .space 1024 /* UND */
-undStack:
-.global irqStackEnd
+.global undStackEnd
+.global undStackGap
 .global irqStack
-irqStackEnd:
-  .space 1024 /* IRQ */
-irqStack:
-.global fiqStackEnd
+.global irqStackEnd
+.global irqStackGap
 .global fiqStack
+.global fiqStackEnd
+.global fiqStackGap
+.global topStackGap
+
+svcStackGap:
+  .space 4096 /* SVC gap */
+svcStackEnd:
+  .space 4096 /* SVC stack */
+svcStack:
+
+abtStackGap:
+  .space 4096 /* ABT gap */
+abtStackEnd:
+  .space 4096 /* ABT stack */
+abtStack:
+
+undStackGap:
+  .space 4096 /* UND gap */
+undStackEnd:
+  .space 4096 /* UND stack */
+undStack:
+
+irqStackGap:
+  .space 4096 /* IRQ gap */
+irqStackEnd:
+  .space 4096 /* IRQ */
+irqStack:
+
+fiqStackGap:
+  .space 4096
 fiqStackEnd:
-  .space 1024 /* FIQ */
+  .space 4096 /* FIQ */
 fiqStack:
-stackSpaceBegin:
+
+topStackGap:
+  .space 4096
 
 /*
  * 32-bit space for the guest context pointer. Must be initialized to zero at start!
