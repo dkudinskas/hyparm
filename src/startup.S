@@ -403,8 +403,8 @@ setGuestContext:
   /*
    * Save guest PC on stack, then perform exception return (pop PC and restore SPSR to CPSR)
    */
-  STM     SP, {LR}
-  LDM     SP, {PC}^
+  STMDB   SP, {LR}
+  LDMDB   SP, {PC}^
 .endm
 
 
@@ -440,8 +440,8 @@ setGuestContext:
   /*
    * Save guest PC on stack, then perform exception return (pop PC and restore SPSR to CPSR)
    */
-  STM     SP, {LR}
-  LDM     SP, {PC}^
+  STMDB   SP, {LR}
+  LDMDB   SP, {PC}^
 .endm
 
 
