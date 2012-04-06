@@ -667,7 +667,7 @@ fiqHandler:
 
 
 /*
- * Space allocated in the BSS section is *not* initialized to zero.
+ * Space allocated in the BSS section is initialized to zero in _start.
  */
 .bss
 
