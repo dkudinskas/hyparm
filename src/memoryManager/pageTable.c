@@ -313,7 +313,7 @@ void addPageTableEntry(pageTableEntry* pageTableEntryPtr, u32int physical, u8int
 {
   pageTableEntryPtr->type = PAGE_TABLE;
   pageTableEntryPtr->sbz2 = 0;
-  pageTableEntryPtr->ns = 0;
+  pageTableEntryPtr->ns = 1;
   pageTableEntryPtr->sbz = 0;
   pageTableEntryPtr->domain = domain;
   pageTableEntryPtr->imp = 0;
