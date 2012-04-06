@@ -528,7 +528,7 @@ simpleEntry* getEntrySecond(pageTableEntry* firstLevelEntry, u32int virtAddr)
     printf("getEntrySecond: metadata not found. 1st lvl PTE %#.8x @ %p; VA %#.8x" EOL,
                             *(u32int*)firstLevelEntry, firstLevelEntry, virtAddr);
     dumpPageTableInfo();
-    DIE_NOW(NULL, "could not find PT2 metadta");
+    DIE_NOW(NULL, "could not find PT2 metadata");
   }
   // however if this entry is a guest PT2 info, then virtAddr will not be set!
   if (!metadata->host)
@@ -782,10 +782,10 @@ void invalidatePageTableInfo()
   DEBUG(MM_PAGE_TABLES, "invalidatePageTableInfo:" EOL);
   GCONTXT* context = getGuestContext();
   // spt first
-  while (context->pageTables->sptInfo != 0)
+  while (context->pageTables->sptInfo != NULL)
   {
     // zero fields
-    context->pageTables->sptInfo->firstLevelEntry = 0;
+    context->pageTables->sptInfo->firstLevelEntry = NULL;
     context->pageTables->sptInfo->physAddr = 0;
     free((void*)context->pageTables->sptInfo->virtAddr);
     context->pageTables->sptInfo->virtAddr = 0;
@@ -794,7 +794,7 @@ void invalidatePageTableInfo()
     context->pageTables->sptInfo = context->pageTables->sptInfo->nextEntry;
     free((void*)tempPtr);
   }
-  context->pageTables->sptInfo = 0;
+  context->pageTables->sptInfo = NULL;
   
   // gpt then 
   while (context->pageTables->gptInfo != NULL)

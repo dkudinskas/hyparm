@@ -413,7 +413,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   {
     DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: TTBR0 write %x" EOL, val);
     // must calculate: bits 31 to (14-N) give TTBR value. N is [0:2] of TTBCR!
-    u32int ttbcr = getCregVal(2, 0, 0, 1, crbPtr);
+    u32int ttbcr = getCregVal(2, 0, 0, 2, crbPtr);
     u32int N = ttbcr & 0x7;
     u32int bottomBitNumber = 14 - N;
     u32int mask = ~((1 << bottomBitNumber)-1);

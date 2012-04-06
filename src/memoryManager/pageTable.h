@@ -67,7 +67,7 @@ struct simpleDescriptor
   u32int imp:1; // 9 imp use to indicate memory protection is active
   u32int:8; // 17-10 Ignored
   u32int superSection:1; //18
-  u32int:12; //31-19 Ignored
+  u32int:13; //31-19 Ignored
 };
 typedef struct simpleDescriptor simpleEntry;
 

@@ -56,7 +56,7 @@ bool shadowMap(u32int virtAddr)
 
   simpleEntry* guestFirst = getEntryFirst(gpt, virtAddr);
   DEBUG(MM_SHADOWING, "shadowMap: VA %08x first entry %08x @ %p" EOL, virtAddr, *(u32int*)guestFirst, guestFirst);
-  
+
   switch(guestFirst->type)
   {
     case SECTION:
@@ -79,6 +79,7 @@ bool shadowMap(u32int virtAddr)
       {
         case FAULT:
         {
+          // PT2 is not shadowmapped yet
           DEBUG(MM_SHADOWING, "shadowMap: shadow 1st lvl entry fault. need to shadowmap PT2" EOL);
           pageTableEntry* shadowPageTable  = (pageTableEntry*)shadowFirst;
           pageTableEntry* guestPageTable = (pageTableEntry*)guestFirst;
@@ -734,7 +735,7 @@ u32int mapAccessPermissionBits(u32int guestAP, u32int domain)
 {
   GCONTXT *context = getGuestContext();
   
-  u32int dacr = getCregVal(3, 0, 0, 0, &context->coprocRegBank[0]);
+  u32int dacr = getCregVal(3, 0, 0, 0, context->coprocRegBank);
   u32int domBits = (dacr >> (domain*2)) & 0x3;
   u32int shadowAP = 0;
   bool guestPriv = isGuestInPrivMode(context);
@@ -806,7 +807,7 @@ void mapAPBitsSection(sectionEntry* guest, simpleEntry* shadow, u32int virtual)
   GCONTXT *context = getGuestContext();
 
   // get new access permission bits, that take into account guest DACR
-  u32int sysCtrlReg = getCregVal(1, 0, 0, 0, &context->coprocRegBank[0]);
+  u32int sysCtrlReg = getCregVal(1, 0, 0, 0, context->coprocRegBank);
   if ((sysCtrlReg & SYS_CTRL_ACCESS_FLAG))
   {
     DIE_NOW(context, "mapAPBitsSection: access flag enabled set, unimplemented.\n");
@@ -962,7 +963,7 @@ void mapAPBitsSmallPage(u32int dom, smallPageEntry* guest, smallPageEntry* shado
   GCONTXT *context = getGuestContext();
 
   // get new access permission bits, that take into account guest DACR
-  u32int sysCtrlReg = getCregVal(1, 0, 0, 0, &context->coprocRegBank[0]);
+  u32int sysCtrlReg = getCregVal(1, 0, 0, 0, context->coprocRegBank);
   if (sysCtrlReg & SYS_CTRL_ACCESS_FLAG)
   {
     DIE_NOW(context, "mapAPBitsSmallPage: access flag enabled set, unimplemented.\n");
@@ -1017,7 +1018,7 @@ u32int mapExecuteNeverBit(u32int guestDomain, u32int xn)
   }
   else
   {
-    u32int dacr = getCregVal(3, 0, 0, 0, &context->coprocRegBank[0]);
+    u32int dacr = getCregVal(3, 0, 0, 0, context->coprocRegBank);
     u32int domBits = (dacr >> (guestDomain*2)) & 0x3;
     if (domBits == DACR_MANAGER)
     {

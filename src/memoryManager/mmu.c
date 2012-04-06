@@ -142,7 +142,7 @@ void mmuEnableVirtAddr()
   __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0\n\t"
                "ORR %0, %0, #5\n\t" //enable MMU & Caching
                "mcr p15, 0, %0, c1, c0, 0\n\t"
-               "mcr p15, 0, %0, c7, c5, 4\n\t" //ISB
+               "ISB\n\t" //ISB
   :"=r"(tempReg)
   :
   : "memory"
@@ -331,7 +331,7 @@ void mmuClearDataCache(void)
   v7_flush_dcache_all(BOARD_DEVICE_TYPE);
 
   // data sync
-  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
+  __asm__ __volatile__("DSB");
 
   l2_cache_enable();
 }
