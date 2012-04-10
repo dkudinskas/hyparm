@@ -266,6 +266,12 @@ CREG *createCRB()
   crb[i].value = 0x44E048E0;
   crb[i].valid = TRUE;
 
+  /* VBAR:
+   * vector base address register */
+  i = crbIndex(12, 0, 0, 0);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
   /* FCSEIDR:
    * fast context switch extension process ID register
    * initialize to 0 */
