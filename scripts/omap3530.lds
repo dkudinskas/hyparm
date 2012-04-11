@@ -40,7 +40,9 @@ SECTIONS
 		*(.data)
 	} > RAM
 
-	.bss :
+	. = ALIGN(32);
+
+	.bss . :
 	{
 		__DATA_END__ = ABSOLUTE(.);
 		__BSS_BEGIN__ = ABSOLUTE(.);

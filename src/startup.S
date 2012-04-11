@@ -53,8 +53,8 @@ _start:
    * - R1 is a pointer to an array of null-terminated C strings.
    * These arguments will be used by main and will be preserved if we don't touch R0 and R1.
    *
-   * Zero-fill BSS section. Since the BSS section is on its own page, we can safely store 32 bytes
-   * at once.
+   * Zero-fill BSS section. Since the BSS section is aligned to a 32-byte boundary, we can safely
+   * store 32 bytes at once.
    */
   LDR     r2, =__BSS_BEGIN__
   LDR     r3, =__BSS_END__
@@ -67,7 +67,7 @@ _start:
   MOV     r10, #0
   MOV     r11, #0
 zeroFillBSS$:
-  STM     r2!, {r4-r11}
+  STMIA   r2!, {r4-r11}
   CMP     r2, r3
   BCC     zeroFillBSS$
   /* Set up stack pointer for all modes (SVC,FIQ,IRQ,ABT,UND,SYS/USR) and switch back to SVC mode.
@@ -403,8 +403,8 @@ setGuestContext:
   /*
    * Save guest PC on stack, then perform exception return (pop PC and restore SPSR to CPSR)
    */
-  STM     SP, {LR}
-  LDM     SP, {PC}^
+  STMDB   SP, {LR}
+  LDMDB   SP, {PC}^
 .endm
 
 
@@ -440,8 +440,8 @@ setGuestContext:
   /*
    * Save guest PC on stack, then perform exception return (pop PC and restore SPSR to CPSR)
    */
-  STM     SP, {LR}
-  LDM     SP, {PC}^
+  STMDB   SP, {LR}
+  LDMDB   SP, {PC}^
 .endm
 
 
@@ -667,7 +667,7 @@ fiqHandler:
 
 
 /*
- * Space allocated in the BSS section is *not* initialized to zero.
+ * Space allocated in the BSS section is initialized to zero in _start.
  */
 .bss
 
