@@ -28,7 +28,7 @@ OBJDUMP       = $(CROSS_COMPILE)objdump
 
 AFLAGS       := --fatal-warnings
 CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
-                -std=gnu99 \
+                -ggdb3 -std=gnu99 \
                 -ffreestanding -fno-common -fno-stack-protector \
                 -Wall -Wextra -Wcast-qual -Wformat=2 -Winit-self -Winline -Wlogical-op \
                 -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpacked \
@@ -39,8 +39,8 @@ CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
                 -Werror=init-self -Werror=parentheses -Werror=return-type -Werror=uninitialized
 CPPFLAGS     := -iquote $(SOURCE_PATH) -nostdinc
 LDDEPS       :=
-LDFLAGS      := --error-unresolved-symbols
-OBJDUMPFLAGS := -M reg-names-std
+LDFLAGS      := --cref --error-unresolved-symbols -Map $(OUTPUT_PATH)/$(APP_NAME).map
+OBJDUMPFLAGS := -lS -M reg-names-std
 ADFLAGS      := --decoder-stages 1 --decoder-type g --exhaustive-test
 
 
@@ -161,12 +161,6 @@ $(KCONFIG_CONFIG):
   LDFLAGS-$(CONFIG_SOC_TI_OMAP_3530) += -T $(SCRIPT_PATH)/omap3530.lds
 
 
-  CFLAGS-$(CONFIG_DEBUG)  += -ggdb3
-  #-fstack-usage -Wframe-larger-than=256
-  LDFLAGS-$(CONFIG_DEBUG) += -Map $(OUTPUT_PATH)/$(APP_NAME).map --cref
-  OBJDUMPFLAGS-$(CONFIG_DEBUG) += -lS
-
-
   AFLAGS       += $(AFLAGS-y)
   CFLAGS       += $(CFLAGS-y)
   CPPFLAGS     += $(CPPFLAGS-y)
@@ -208,7 +202,7 @@ HYPARM_DIRS-$(CONFIG_CLI) += cli
 
 HYPARM_SRCS_C-y  := main.c
 HYPARM_SRCS_S-y  :=
-HYPARM_SRCS_SX-y := startup.S
+HYPARM_SRCS_SX-y := startup.S debug.S
 
 
 # Include all makefile.mk files from HYPARM_DIRS-y

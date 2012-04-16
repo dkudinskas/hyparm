@@ -1,10 +1,5 @@
 menu "General setup"
 
-config PREDICTABLE_DEBUGGING
-  bool "Maximize predictability for debugging"
-  select EMERGENCY_EXCEPTION_VECTOR if ARCH_EXT_SECURITY
-  select SCANNER_EXTRA_CHECKS
-
 choice
   prompt "Compiler optimization level"
   default OLEVEL_3
@@ -174,9 +169,107 @@ config GUEST_TEST
 
 endmenu
 
-menuconfig DEBUG
-  bool "Debugging"
+menuconfig DEBUGGING_HACKS
+  bool "Debugging hacks"
   default y
+
+config PREDICTABLE_DEBUGGING
+  bool "Maximize predictability for debugging"
+  depends on DEBUGGING_HACKS
+  select EMERGENCY_EXCEPTION_VECTOR if ARCH_EXT_SECURITY
+  select SCANNER_EXTRA_CHECKS
+
+config OCD_ROUTINES
+  bool "Extra routines for JTAG debugging"
+  default y
+  depends on DEBUGGING_HACKS
+  help
+    Adds routines that can be used from within OpenOCD to safely dump hypervisor
+    internals and alter processor state after a crash.
+
+config BKPT
+  bool "Software breakpoints for JTAG debugging (READ HELP)"
+  depends on DEBUGGING_HACKS
+  help
+    Adds software breakpoints to the crash handler (DIE_NOW) and the emergency
+    exception vector (if enabled).
+
+    WARNING: Without the presence of a hardware debugger software breakpoints, when
+    triggered, will cause prefetch aborts. Such aborts will cause the hypervisor to
+    crash, trigger more software breakpoints, ... resulting in an infinite loop of
+    prefetch aborts.
+
+config DUMP_STACK
+  bool "Dump stack on crash"
+  depends on DEBUGGING_HACKS
+
+config EMERGENCY_EXCEPTION_VECTOR
+  bool "Emergency exception vector"
+  default y
+  depends on ARCH_EXT_SECURITY && DEBUGGING_HACKS
+
+config EXCEPTION_HANDLERS_COUNT_DATA_ABORT
+  bool "Count number of data aborts"
+  depends on DEBUGGING_HACKS
+
+config EXCEPTION_HANDLERS_COUNT_IRQ
+  bool "Count number of interrupts (IRQs)"
+  depends on DEBUGGING_HACKS
+
+config EXCEPTION_HANDLERS_COUNT_SVC
+  bool "Count number of software interrupts"
+  depends on DEBUGGING_HACKS
+
+config SCANNER_COUNT_BLOCKS
+  bool "Count number of scanned blocks"
+  depends on DEBUGGING_HACKS
+
+config SCANNER_EXTRA_CHECKS
+  bool "Track call source and check for null pointers in scanner"
+  depends on DEBUGGING_HACKS
+
+config GUEST_CONTEXT_BLOCK_TRACE
+  bool "Store block trace in guest context"
+  default y
+  depends on DEBUGGING_HACKS
+
+config GUEST_CONTEXT_BLOCK_TRACE_SIZE
+  int "Number of blocks"
+  default 6
+  range 1 100 if !LOOP_DETECTOR
+  range 4 100 if LOOP_DETECTOR
+  depends on DEBUGGING_HACKS && GUEST_CONTEXT_BLOCK_TRACE
+
+config LOOP_DETECTOR
+  bool "Detect single block loops in privileged guest code"
+  depends on DEBUGGING_HACKS && GUEST_CONTEXT_BLOCK_TRACE
+
+config LOOP_DETECTOR_WARN_TRESHOLD
+  int "Minimum number of iterations that causes a warning"
+  default 262144
+  range 2 134217728
+  depends on DEBUGGING_HACKS && LOOP_DETECTOR
+
+config LOOP_DETECTOR_DIE_TRESHOLD
+  int "Number of iterations that causes the hypervisor to die"
+  default 524288
+  range 2 134217728
+  depends on DEBUGGING_HACKS && LOOP_DETECTOR
+
+config BLOCK_CACHE_COLLISION_COUNTER
+  bool "Count number of collisions in block cache"
+  depends on DEBUGGING_HACKS
+
+config MEMORY_ALLOCATOR_BOOKKEEPING
+  bool "Extensive memory allocator bookkeeping"
+  depends on DEBUGGING_HACKS
+
+menuconfig DEBUG
+  bool "Debug output"
+  default y
+  help
+    Disabling this option does not prevent generation of debug symbols and dump.
+    It merely disables all the individual debug output options at once.
 
 config DEBUG_STARTUP
   bool "Debug startup"
@@ -496,77 +589,10 @@ config DEBUG_FS_FAT
 config DEBUG_INTERPRETER_ANY_COPROC
   bool
 
-menu "Hacks"
-
-config BKPT
-  bool "Implement software breakpoints for JTAG debugging (READ HELP)"
-  help
-    Adds software breakpoints to the crash handler (DIE_NOW) and the emergency
-    exception vector (if enabled).
-
-    WARNING: Without the presence of a hardware debugger software breakpoints, when
-    triggered, will cause prefetch aborts. Such aborts will cause the hypervisor to
-    crash, trigger more software breakpoints, ... resulting in an infinite loop of
-    prefetch aborts.
+menu "Miscellaneous hacks"
 
 config CLI
   bool "Command-line interface"
-
-config DUMP_STACK
-  bool "Dump stack on crash"
-
-config EMERGENCY_EXCEPTION_VECTOR
-  bool "Emergency exception vector"
-  default y
-  depends on ARCH_EXT_SECURITY
-
-config EXCEPTION_HANDLERS_COUNT_DATA_ABORT
-  bool "Count number of data aborts"
-
-config EXCEPTION_HANDLERS_COUNT_IRQ
-  bool "Count number of interrupts (IRQs)"
-
-config EXCEPTION_HANDLERS_COUNT_SVC
-  bool "Count number of software interrupts"
-
-config SCANNER_COUNT_BLOCKS
-  bool "Count number of scanned blocks"
-
-config SCANNER_EXTRA_CHECKS
-  bool "Track call source and check for null pointers in scanner"
-
-config GUEST_CONTEXT_BLOCK_TRACE
-  bool "Store block trace in guest context"
-  default y
-
-config GUEST_CONTEXT_BLOCK_TRACE_SIZE
-  int "Number of blocks"
-  default 6
-  range 1 100 if !LOOP_DETECTOR
-  range 4 100 if LOOP_DETECTOR
-  depends on GUEST_CONTEXT_BLOCK_TRACE
-
-config LOOP_DETECTOR
-  bool "Detect single block loops in privileged guest code"
-  depends on GUEST_CONTEXT_BLOCK_TRACE
-
-config LOOP_DETECTOR_WARN_TRESHOLD
-  int "Minimum number of iterations that causes a warning"
-  default 262144
-  range 2 134217728
-  depends on LOOP_DETECTOR
-
-config LOOP_DETECTOR_DIE_TRESHOLD
-  int "Number of iterations that causes the hypervisor to die"
-  default 524288
-  range 2 134217728
-  depends on LOOP_DETECTOR
-
-config BLOCK_CACHE_COLLISION_COUNTER
-  bool "Count number of collisions in block cache"
-
-config MEMORY_ALLOCATOR_BOOKKEEPING
-  bool "Extensive memory allocator bookkeeping"
 
 config KERNEL_ANDROID
   bool "Small hacks for linux kernel 2.6.37 (Android)"

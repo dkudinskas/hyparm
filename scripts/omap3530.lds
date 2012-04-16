@@ -19,6 +19,7 @@ SECTIONS
 	{
 		__TEXT_BEGIN__ = ABSOLUTE(.);
 		src/startup.S.o (.text)
+		src/debug.S.o (.text)
 		*(.text)
 	} > RAM
 
