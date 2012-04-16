@@ -17,131 +17,89 @@
 #include "memoryManager/shadowMap.h"
 
 
-static void setupHypervisorPageTable(simpleEntry *pageTablePtr);
-static void setupShadowPageTable(simpleEntry *pageTablePtr);
+static void setupPageTable(simpleEntry *pageTablePtr, bool hypervisor);
+
 
 void initVirtualAddressing(GCONTXT *context)
 {
   //alloc some space for our 1st Level page table
   context->pageTables->hypervisor = (simpleEntry *)newLevelOnePageTable();
 
-  setupHypervisorPageTable(context->pageTables->hypervisor);
+  setupPageTable(context->pageTables->hypervisor, TRUE);
 
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: new hypervisor page table %p" EOL, context->pageTables->hypervisor);
 
   mmuInit();
+  mmuSetDomain(HYPERVISOR_ACCESS_DOMAIN, client);
+  mmuSetDomain(GUEST_ACCESS_DOMAIN, client);
   mmuSetTTBR0(context->pageTables->hypervisor, 0);
   mmuEnableVirtAddr();
 
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: done" EOL);
 }
 
-static void setupHypervisorPageTable(simpleEntry *pageTablePtr)
+static void setupPageTable(simpleEntry *pageTablePtr, bool hypervisor)
 {
-  DEBUG(MM_ADDRESSING, "setupHypervisorPageTable: new PT at %p" EOL, pageTablePtr);
-
   //map in the hypervisor
   mapHypervisorMemory(pageTablePtr);
 
-  // 1:1 Map the entire of physical memory
-  mapRange(pageTablePtr, MEMORY_START_ADDR, MEMORY_START_ADDR, HYPERVISOR_BEGIN_ADDRESS,
-           GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+  if (hypervisor)
+  {
+    // 1:1 Map the entire of physical memory
+    mapRange(pageTablePtr, MEMORY_START_ADDR, MEMORY_START_ADDR, HYPERVISOR_BEGIN_ADDRESS,
+             GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
 
-  //set the domain access control for the hypervisor and guest domains
-  mmuSetDomain(HYPERVISOR_ACCESS_DOMAIN, client);
-  mmuSetDomain(GUEST_ACCESS_DOMAIN, client);
+    // clock manager
+    mapSmallPage(pageTablePtr, BE_CLOCK_MANAGER, BE_CLOCK_MANAGER,
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
+    mapSmallPage(pageTablePtr, BE_CLOCK_MANAGER + SMALL_PAGE_SIZE, BE_CLOCK_MANAGER + SMALL_PAGE_SIZE,
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
 
-  //serial (UART3)
-  mapSmallPage(pageTablePtr, BE_UART3, BE_UART3,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
+    // 32kHz synchronized timer
+    mapSmallPage(pageTablePtr, BE_TIMER32K, BE_TIMER32K,
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
+  }
+  else
+  {
+    // no need to add other mappings for RAM addresses: if guest needs any,
+    // we will on-demand shadow map them.
 
-  // clock manager
-  mapSmallPage(pageTablePtr, BE_CLOCK_MANAGER, BE_CLOCK_MANAGER,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
-  mapSmallPage(pageTablePtr, BE_CLOCK_MANAGER + SMALL_PAGE_SIZE, BE_CLOCK_MANAGER + SMALL_PAGE_SIZE,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
-
-  // interrupt controller
-  mapSmallPage(pageTablePtr, BE_IRQ_CONTROLLER, BE_IRQ_CONTROLLER,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
-
-  // gptimer1
-  mapSmallPage(pageTablePtr, BE_GPTIMER1, BE_GPTIMER1,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
-
-  // gptimer2
-  mapSmallPage(pageTablePtr, BE_GPTIMER2, BE_GPTIMER2,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
-
-  // 32kHz synchronized timer
-  mapSmallPage(pageTablePtr, BE_TIMER32K, BE_TIMER32K,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
-
-  // MMC1 interface
-  mapSmallPage(pageTablePtr, BE_MMCHS1, BE_MMCHS1,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
+    // All connected GPIOs must be mapped here!
+    mapSmallPage(pageTablePtr, BE_GPIO5, BE_GPIO5,
+                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
+  }
 
   //add section mapping for 0x14000 (base exception vectors)
   const u32int exceptionHandlerAddr = 0x14000;
   mapSmallPage(pageTablePtr, exceptionHandlerAddr, exceptionHandlerAddr,
-                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 0);
+               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 0);
 
   // We will want to use the exception handler remap feature
   // to put the page tables in the 0xffff0000 address space later
   const u32int excHdlrSramStart = 0x4020ffd0;
   mapSmallPage(pageTablePtr, excHdlrSramStart, excHdlrSramStart,
-                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 0);
-
-  DEBUG(MM_ADDRESSING, "setupHypervisorPageTable: ... done" EOL);
-}
-
-
-static void setupShadowPageTable(simpleEntry* pageTablePtr)
-{
-  memset(pageTablePtr, 0, PT1_SIZE);
-
-  //map in the hypervisor
-  mapHypervisorMemory(pageTablePtr);
-
-  // no need to add other mappings for RAM addresses: if guest needs any,
-  // we will on-demand shadow map them.
-
-  //serial (UART3)
-  mapSmallPage(pageTablePtr, BE_UART3, BE_UART3,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
-
-  //add section mapping for 0x14000 (base exception vectors)
-  const u32int exceptionHandlerAddr = 0x14000;
-  mapSmallPage(pageTablePtr, exceptionHandlerAddr, exceptionHandlerAddr,
-                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 0);
-
-  // We will want to use the exception handler remap feature
-  // to put the page tables in the 0xffff0000 address space later
-  const u32int excHdlrSramStart = 0x4020ffd0;
-  mapSmallPage(pageTablePtr, excHdlrSramStart, excHdlrSramStart,
-                 HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 0);
+               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 0);
 
   // interrupt controller
   mapSmallPage(pageTablePtr, BE_IRQ_CONTROLLER, BE_IRQ_CONTROLLER,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
+               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
 
   // gptimer1
   mapSmallPage(pageTablePtr, BE_GPTIMER1, BE_GPTIMER1,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
+               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
 
   // gptimer2
   mapSmallPage(pageTablePtr, BE_GPTIMER2, BE_GPTIMER2,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
+               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
 
   // MMC1 interface
   mapSmallPage(pageTablePtr, BE_MMCHS1, BE_MMCHS1,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
+               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
 
-  // All connected GPIOs must be mapped here!
-  mapSmallPage(pageTablePtr, BE_GPIO5, BE_GPIO5,
+  //serial (UART3)
+  mapSmallPage(pageTablePtr, BE_UART3, BE_UART3,
                HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
 }
-
 
 /**
  * we intercept the guest setting Translation Table Base Register
@@ -161,7 +119,6 @@ void guestSetPageTableBase(u32int ttbr)
     initialiseShadowPageTables(gc);
   }
 }
-
 
 /**
  * guest is turning on the MMU. this means, virtual memory is being turned on!
@@ -188,7 +145,6 @@ void guestEnableMMU()
   mmuInvalidateUTLB();
 }
 
-
 /**
  * guest is turning OFF the MMU.
  * what?
@@ -197,7 +153,6 @@ void guestDisableMMU()
 {
   DIE_NOW(NULL, "guestDisableMMU: unimplemented.");
 }
-
 
 void guestSetContextID(u32int contextid)
 {
@@ -248,7 +203,6 @@ void privToUserAddressing()
   mmuInstructionSync();
 }
 
-
 /**
  * switching guest addressing from user to privileged mode
  **/
@@ -289,7 +243,6 @@ void userToPrivAddressing()
   mmuInstructionSync();
 }
 
-
 /**
  * allocate and set up double shadow page tables for the guest
  **/
@@ -307,10 +260,10 @@ void initialiseShadowPageTables(GCONTXT* gc)
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: invalidatePageTableInfo() done." EOL);
 
   // allocate two shadow page tables and prepare the minimum for operation
-  gc->pageTables->shadowPriv = (simpleEntry*)newLevelOnePageTable();
-  gc->pageTables->shadowUser = (simpleEntry*)newLevelOnePageTable();
-  setupShadowPageTable(gc->pageTables->shadowPriv);
-  setupShadowPageTable(gc->pageTables->shadowUser);
+  gc->pageTables->shadowPriv = (simpleEntry *)newLevelOnePageTable();
+  gc->pageTables->shadowUser = (simpleEntry *)newLevelOnePageTable();
+  setupPageTable(gc->pageTables->shadowPriv, FALSE);
+  setupPageTable(gc->pageTables->shadowUser, FALSE);
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: allocated spt priv %p; spt usr %p" EOL,
         gc->pageTables->shadowPriv, gc->pageTables->shadowUser);
 
@@ -337,7 +290,6 @@ void initialiseShadowPageTables(GCONTXT* gc)
   //just to make sure
   mmuInstructionSync();
 }
-
 
 /**
  * guest has modified domain access control register.
@@ -447,4 +399,3 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
     mmuInvalidateUTLB();
   }
 }
-
