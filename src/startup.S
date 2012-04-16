@@ -268,7 +268,7 @@ setGuestContext:
   MRS     R2, CPSR
   CPS     PSR_SYS_MODE
   STMIA   R4, {R13, R14}
-  MSR     CPSR, R2
+  MSR     CPSR_cxsf, R2
   /*
    * Store R8--R12; the location depends on whether we were emulating FIQ mode
    */
@@ -338,7 +338,7 @@ setGuestContext:
   CPS     PSR_SYS_MODE
   LDR     SP, [R4]
   LDR     LR, [R4, #4]
-  MSR     CPSR, R1
+  MSR     CPSR_cxsf, R1
   /*
    * Move some things out of the way:
    * - R8: pointer to guest context

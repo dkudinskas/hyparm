@@ -266,6 +266,12 @@ CREG *createCRB()
   crb[i].value = 0x44E048E0;
   crb[i].valid = TRUE;
 
+  /* VBAR:
+   * vector base address register */
+  i = crbIndex(12, 0, 0, 0);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
   /* FCSEIDR:
    * fast context switch extension process ID register
    * initialize to 0 */
@@ -503,7 +509,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==7 && opc1==0 && CRm==10 && opc2==5)
   {
-    // CP15DSB: Data Memory Barrier operation
+    // CP15DMB: Data Memory Barrier operation
     DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: Data Memory Barrier operation" EOL);
     mmuDataMemoryBarrier();
   }
