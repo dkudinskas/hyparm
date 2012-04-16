@@ -74,9 +74,11 @@
 #define PM_MPUGRPSEL_WKUP        0x000000A4 // select group of modules that wakeup MPU, RW
 #define PM_IVA2GRPSEL_WKUP       0x000000A8 // select group of modules that wakeup IVA, RW
 #define PM_WKST_WKUP             0x000000B0 // wakeup events status, RW
+#define PM_PWSTST_WKUP           0x000000E4 // invalid register!
 // Clock_Control_Reg registers
 #define PRM_CLKSEL               0x00000040 // select system clock frequency, RW
 #define PRM_CLKOUT_CTRL          0x00000070 // SYS_CLKOUT1 pin control, RW
+#define PM_PWSTST_CLK            0x000000E4 // invalid register!
 // DSS registers
 #define RM_RSTST_DSS             0x00000058 // reset status, RW
 #define PM_WKEN_DSS              0x000000A0 // wakeup events enable, RW
@@ -148,8 +150,18 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 /* per-module loads */
 u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr);
 u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr);
+u32int loadIva2Prm(device * dev, u32int address, u32int phyAddr);
 u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr);
+u32int loadMpuPrm(device * dev, u32int address, u32int phyAddr);
+u32int loadCorePrm(device * dev, u32int address, u32int phyAddr);
+u32int loadSgxPrm(device * dev, u32int address, u32int phyAddr);
 u32int loadWakeUpPrm(device * dev, u32int address, u32int phyAddr);
+u32int loadDssPrm(device * dev, u32int address, u32int phyAddr);
+u32int loadCamPrm(device * dev, u32int address, u32int phyAddr);
+u32int loadPerPrm(device * dev, u32int address, u32int phyAddr);
+u32int loadEmuPrm(device * dev, u32int address, u32int phyAddr);
+u32int loadNeonPrm(device * dev, u32int address, u32int phyAddr);
+u32int loadUsbhostPrm(device * dev, u32int address, u32int phyAddr);
 
 /* top store function */
 void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
@@ -186,16 +198,36 @@ struct PowerAndResetManager
   u32int prmClkSetup;
   u32int prmPolCtrl;
   u32int prmVoltSetup2;
+  // IVA2 registers
+  u32int prmPwststIva2;
   // OCP_system_reg REGISTERS
   u32int prmRevisionOcp;
   u32int prmSysConfigOcp;
   u32int prmIrqStatusMpuOcp;
   u32int prmIrqEnableMpuOcp;
+  // MPU registers
+  u32int prmPwststMpu;
+  // CORE registers
+  u32int prmPwststCore;
+  // CORE registers
+  u32int prmPwststSgx;
   // Wakeup registers
   u32int prmWkenWkup;
   u32int prmMpugrpselWkup;
   u32int prmIva2grpselWkup;
   u32int prmWkstWkup;
+  // DSS registers
+  u32int prmPwststDss;
+  // CAM registers
+  u32int prmPwststCam;
+  // PER registers
+  u32int prmPwststPer;
+  // EMU registers
+  u32int prmPwststEmu;
+  // NEON registers
+  u32int prmPwststNeon;
+  // USBHOST registers
+  u32int prmPwststUsbhost;
 };
 
 
