@@ -75,6 +75,7 @@
 #define PM_IVA2GRPSEL_WKUP       0x000000A8 // select group of modules that wakeup IVA, RW
 #define PM_WKST_WKUP             0x000000B0 // wakeup events status, RW
 #define PM_PWSTST_WKUP           0x000000E4 // invalid register!
+#define PM_PWSTCTRL_WKUP         0x000000E0 // invalid register!
 // Clock_Control_Reg registers
 #define PRM_CLKSEL               0x00000040 // select system clock frequency, RW
 #define PRM_CLKOUT_CTRL          0x00000070 // SYS_CLKOUT1 pin control, RW
@@ -168,7 +169,18 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u
 /* per-module stores */
 void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value);
 void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value);
 void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeCorePrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeSgxPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeWakeUpPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeDssPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeCamPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storePerPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeEmuPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeNeonPrm(device * dev, u32int address, u32int phyAddr, u32int value);
+void storeUsbhostPrm(device * dev, u32int address, u32int phyAddr, u32int value);
 
 
 struct PowerAndResetManager
@@ -199,6 +211,7 @@ struct PowerAndResetManager
   u32int prmPolCtrl;
   u32int prmVoltSetup2;
   // IVA2 registers
+  u32int prmPwstctrlIva2;
   u32int prmPwststIva2;
   // OCP_system_reg REGISTERS
   u32int prmRevisionOcp;
@@ -206,10 +219,13 @@ struct PowerAndResetManager
   u32int prmIrqStatusMpuOcp;
   u32int prmIrqEnableMpuOcp;
   // MPU registers
+  u32int prmPwstctrlMpu;
   u32int prmPwststMpu;
   // CORE registers
+  u32int prmPwstctrlCore;
   u32int prmPwststCore;
-  // CORE registers
+  // SGX registers
+  u32int prmPwstctrlSgx;
   u32int prmPwststSgx;
   // Wakeup registers
   u32int prmWkenWkup;
@@ -217,16 +233,21 @@ struct PowerAndResetManager
   u32int prmIva2grpselWkup;
   u32int prmWkstWkup;
   // DSS registers
+  u32int prmPwstctrlDss;
   u32int prmPwststDss;
   // CAM registers
+  u32int prmPwstctrlCam;
   u32int prmPwststCam;
   // PER registers
+  u32int prmPwstctrlPer;
   u32int prmPwststPer;
   // EMU registers
   u32int prmPwststEmu;
   // NEON registers
+  u32int prmPwstctrlNeon;
   u32int prmPwststNeon;
   // USBHOST registers
+  u32int prmPwstctrlUsbhost;
   u32int prmPwststUsbhost;
 };
 

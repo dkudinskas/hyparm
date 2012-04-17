@@ -46,35 +46,44 @@ void initPrm(void)
   prMan->prmPolCtrl = 0xA;
   prMan->prmVoltSetup2 = 0;
   // IVA2 registers
-  prMan->prmPwststIva2 = 0xFF7;
+  prMan->prmPwstctrlIva2 = 0xFF0F07;
+  prMan->prmPwststIva2   = 0xFF7;
   // OCP_system_reg REGISTERS
   prMan->prmRevisionOcp     = 0x10;
   prMan->prmSysConfigOcp    = 0x1;
   prMan->prmIrqStatusMpuOcp = 0x0;
   prMan->prmIrqEnableMpuOcp = 0x0;
   // MPU registers
-  prMan->prmPwststMpu = 0xC7;
+  prMan->prmPwstctrlMpu = 0x30107;
+  prMan->prmPwststMpu   = 0xC7;
   // CORE registers
-  prMan->prmPwststCore = 0xF7;
+  prMan->prmPwstctrlCore = 0xF0307;
+  prMan->prmPwststCore   = 0xF7;
   // SGX registers
-  prMan->prmPwststSgx = 0x3;
+  prMan->prmPwstctrlSgx = 0x30107;
+  prMan->prmPwststSgx   = 0x3;
   // Wakeup registers
   prMan->prmWkenWkup       = 0x3CB;
   prMan->prmMpugrpselWkup  = 0x3CB;
   prMan->prmIva2grpselWkup = 0;
   prMan->prmWkstWkup       = 0;
   // DSS registers
-  prMan->prmPwststDss = 0x3;
+  prMan->prmPwstctrlDss = 0x30107;
+  prMan->prmPwststDss   = 0x3;
   // CAM registers
-  prMan->prmPwststCam = 0x3;
+  prMan->prmPwstctrlCam = 0x30107;
+  prMan->prmPwststCam   = 0x3;
   // PER registers
-  prMan->prmPwststPer = 0x7;
+  prMan->prmPwstctrlPer = 0x30107;
+  prMan->prmPwststPer   = 0x7;
   // EMU registers
   prMan->prmPwststEmu = 0xC3;
   // NEON registers
-  prMan->prmPwststNeon = 0x3;
+  prMan->prmPwstctrlNeon = 0x7;
+  prMan->prmPwststNeon   = 0x3;
   // USBHOST registers
-  prMan->prmPwststUsbhost = 0x3;
+  prMan->prmPwstctrlUsbhost = 0x30107;
+  prMan->prmPwststUsbhost   = 0x3;
 
 }
 
@@ -330,6 +339,11 @@ u32int loadIva2Prm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - IVA2_PRM;
   switch (reg)
   {
+    case PM_PWSTCTRL_IVA2:
+    {
+      val = prMan->prmPwstctrlIva2;
+      break;
+    }
     case PM_PWSTST_IVA2:
     {
       val = prMan->prmPwststIva2;
@@ -386,6 +400,11 @@ u32int loadMpuPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - MPU_PRM;
   switch (reg)
   {
+    case PM_PWSTCTRL_MPU:
+    {
+      val = prMan->prmPwstctrlMpu;
+      break;
+    }
     case PM_PWSTST_MPU:
     {
       val = prMan->prmPwststMpu;
@@ -408,6 +427,11 @@ u32int loadCorePrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - CORE_PRM;
   switch (reg)
   {
+    case PM_PWSTCTRL_CORE:
+    {
+      val = prMan->prmPwstctrlCore;
+      break;
+    }
     case PM_PWSTST_CORE:
     {
       val = prMan->prmPwststCore;
@@ -430,6 +454,11 @@ u32int loadSgxPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - SGX_PRM;
   switch (reg)
   {
+    case PM_PWSTCTRL_SGX:
+    {
+      val = prMan->prmPwstctrlSgx;
+      break;
+    }
     case PM_PWSTST_SGX:
     {
       val = prMan->prmPwststSgx;
@@ -472,9 +501,10 @@ u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
       val = prMan->prmWkstWkup;
       break;
     }
+    case PM_PWSTCTRL_WKUP:
     case PM_PWSTST_WKUP:
     {
-      printf("Loading invalid register (PM_PWSTST_WKUP). Kernel 3.3 bug?" EOL);
+      printf("loadWakeUpPrm: Loading invalid register. Kernel 3.3 bug?" EOL);
       val = 0;
       break;
     }
@@ -495,6 +525,11 @@ u32int loadDssPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - DSS_PRM;
   switch (reg)
   {
+    case PM_PWSTCTRL_DSS:
+    {
+      val = prMan->prmPwstctrlDss;
+      break;
+    }
     case PM_PWSTST_DSS:
     {
       val = prMan->prmPwststDss;
@@ -517,6 +552,11 @@ u32int loadCamPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - CAM_PRM;
   switch (reg)
   {
+    case PM_PWSTCTRL_CAM:
+    {
+      val = prMan->prmPwstctrlCam;
+      break;
+    }
     case PM_PWSTST_CAM:
     {
       val = prMan->prmPwststCam;
@@ -539,6 +579,11 @@ u32int loadPerPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - PER_PRM;
   switch (reg)
   {
+    case PM_PWSTCTRL_PER:
+    {
+      val = prMan->prmPwstctrlPer;
+      break;
+    }
     case PM_PWSTST_PER:
     {
       val = prMan->prmPwststPer;
@@ -583,6 +628,11 @@ u32int loadNeonPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - NEON_PRM;
   switch (reg)
   {
+    case PM_PWSTCTRL_NEON:
+    {
+      val = prMan->prmPwstctrlNeon;
+      break;
+    }
     case PM_PWSTST_NEON:
     {
       val = prMan->prmPwststNeon;
@@ -605,6 +655,11 @@ u32int loadUsbhostPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - USBHOST_PRM;
   switch (reg)
   {
+    case PM_PWSTCTRL_USBHOST:
+    {
+      val = prMan->prmPwstctrlUsbhost;
+      break;
+    }
     case PM_PWSTST_USBHOST:
     {
       val = prMan->prmPwststUsbhost;
@@ -647,25 +702,64 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u
       storeGlobalRegPrm(dev, virtAddr, phyAddr, value);
       break;
     }
+    case IVA2_PRM:
+    {
+      storeIva2Prm(dev, virtAddr, phyAddr, value);
+      break;
+    }
     case OCP_System_Reg_PRM:
     {
       storeOcpSystemPrm(dev, virtAddr, phyAddr, value);
       break;
     }
-    case IVA2_PRM:
     case MPU_PRM:
+    {
+      storeMpuPrm(dev, virtAddr, phyAddr, value);
+      break;
+    }
     case CORE_PRM:
+    {
+      storeCorePrm(dev, virtAddr, phyAddr, value);
+      break;
+    }
     case SGX_PRM:
+    {
+      storeSgxPrm(dev, virtAddr, phyAddr, value);
+      break;
+    }
     case WKUP_PRM:
+    {
+      storeWakeUpPrm(dev, virtAddr, phyAddr, value);
+      break;
+    }
     case DSS_PRM:
+    {
+      storeDssPrm(dev, virtAddr, phyAddr, value);
+      break;
+    }
     case CAM_PRM:
+    {
+      storeCamPrm(dev, virtAddr, phyAddr, value);
+      break;
+    }
     case PER_PRM:
+    {
+      storePerPrm(dev, virtAddr, phyAddr, value);
+      break;
+    }
     case EMU_PRM:
+    {
+      storeEmuPrm(dev, virtAddr, phyAddr, value);
+      break;
+    }
     case NEON_PRM:
+    {
+      storeNeonPrm(dev, virtAddr, phyAddr, value);
+      break;
+    }
     case USBHOST_PRM:
     {
-      printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, virtAddr, value);
-      DIE_NOW(NULL, " unimplemented.");
+      storeUsbhostPrm(dev, virtAddr, phyAddr, value);
       break;
     }
     default:
@@ -673,17 +767,38 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u
   }
 }
 
+
 void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
   DIE_NOW(NULL, " storeClockControlPrm unimplemented.");
 }
 
+
 void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
   DIE_NOW(NULL, " storeGlobalRegPrm unimplemented.");
 }
+
+
+void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  u32int reg = phyAddr - IVA2_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeIva2Prm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_PWSTCTRL_IVA2:
+    {
+      prMan->prmPwstctrlIva2 = value;
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storeIva2Prm store to non existing register!");
+  }
+}
+
 
 void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -715,5 +830,174 @@ void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int valu
     default:
       DIE_NOW(NULL, "storeOcpSystemPrm store to non existing register!");
   } // switch ends
+}
+
+
+void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  u32int reg = phyAddr - MPU_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeMpuPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_PWSTCTRL_MPU:
+    {
+      prMan->prmPwstctrlMpu = value;
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storeMpuPrm store to non existing register!");
+  }
+}
+
+
+void storeCorePrm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  u32int reg = phyAddr - CORE_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeCorePrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_PWSTCTRL_CORE:
+    {
+      prMan->prmPwstctrlCore = value;
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storeCorePrm store to non existing register!");
+  }
+}
+
+
+void storeSgxPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  u32int reg = phyAddr - SGX_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeSgxPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_PWSTCTRL_SGX:
+    {
+      prMan->prmPwstctrlSgx = value;
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storeSgxPrm store to non existing register!");
+  }
+}
+
+
+void storeWakeUpPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  u32int reg = phyAddr - WKUP_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeWakeUpPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_PWSTCTRL_WKUP:
+    {
+      printf("storeWakeUpPrm: storing to invalid register (kernel bug?)" EOL);
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storeWakeUpPrm store to non existing register!");
+  }
+}
+
+
+void storeDssPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  u32int reg = phyAddr - DSS_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeDssPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_PWSTCTRL_DSS:
+    {
+      prMan->prmPwstctrlDss = value;
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storeDssPrm store to non existing register!");
+  }
+}
+
+
+void storeCamPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  u32int reg = phyAddr - CAM_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeCamPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_PWSTCTRL_CAM:
+    {
+      prMan->prmPwstctrlCam = value;
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storeCamPrm store to non existing register!");
+  }
+}
+
+
+void storePerPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  u32int reg = phyAddr - PER_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storePerPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_PWSTCTRL_PER:
+    {
+      prMan->prmPwstctrlPer = value;
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storePerPrm store to non existing register!");
+  }
+}
+
+
+void storeEmuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
+  DIE_NOW(NULL, "storeEmuPrm unimplemented.");
+}
+
+
+void storeNeonPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  u32int reg = phyAddr - NEON_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeNeonPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_PWSTCTRL_NEON:
+    {
+      prMan->prmPwstctrlNeon = value;
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storeNeonPrm store to non existing register!");
+  }
+}
+
+
+void storeUsbhostPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+{
+  u32int reg = phyAddr - USBHOST_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeUsbhostPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_PWSTCTRL_USBHOST:
+    {
+      prMan->prmPwstctrlUsbhost = value;
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storeUsbhostPrm store to non existing register!");
+  }
 }
 
