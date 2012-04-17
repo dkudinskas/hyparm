@@ -638,14 +638,20 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u
   switch (base)
   {
     case Clock_Control_Reg_PRM:
+    {
       storeClockControlPrm(dev, virtAddr, phyAddr, value);
       break;
+    }
     case Global_Reg_PRM:
+    {
       storeGlobalRegPrm(dev, virtAddr, phyAddr, value);
       break;
+    }
     case OCP_System_Reg_PRM:
+    {
       storeOcpSystemPrm(dev, virtAddr, phyAddr, value);
       break;
+    }
     case IVA2_PRM:
     case MPU_PRM:
     case CORE_PRM:
@@ -657,9 +663,11 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u
     case EMU_PRM:
     case NEON_PRM:
     case USBHOST_PRM:
+    {
       printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, virtAddr, value);
       DIE_NOW(NULL, " unimplemented.");
       break;
+    }
     default:
       DIE_NOW(NULL, "PRM: store to invalid base module.");
   }
@@ -685,17 +693,25 @@ void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int valu
   switch (reg)
   {
     case PRM_REVISION_OCP:
+    {
       DIE_NOW(NULL, "storeOcpSystemPrm: storing to R/O register (revision).");
       break;
+    }
     case PRM_SYSCONFIG_OCP:
+    {
       prMan->prmSysConfigOcp = value & PRM_SYSCONFIG_OCP_AUTOIDLE; // all other bits are reserved
       break;
+    }
     case PRM_IRQSTATUS_MPU_OCP:
+    {
       DIE_NOW(NULL, "storeOcpSystemPrm store to IRQSTATUS. investigate.");
       break;
+    }
     case PRM_IRQENABLE_MPU_OCP:
+    {
       DIE_NOW(NULL, "storeOcpSystemPrm store to IRQENABLE. investigate.");
       break;
+    }
     default:
       DIE_NOW(NULL, "storeOcpSystemPrm store to non existing register!");
   } // switch ends
