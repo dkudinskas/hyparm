@@ -204,7 +204,7 @@ u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
     }
     case PM_PWSTST_CLK:
     {
-      printf("Loading invalid register (PM_PWSTST_CLK). Kernel 3.3 bug?" EOL);
+      printf("loadClockControlPrm: Loading invalid register. Kernel 3.3 bug?" EOL);
       val = 0;
       break;
     }
@@ -896,7 +896,7 @@ void storeWakeUpPrm(device * dev, u32int address, u32int phyAddr, u32int value)
   {
     case PM_PWSTCTRL_WKUP:
     {
-      printf("storeWakeUpPrm: storing to invalid register (kernel bug?)" EOL);
+      printf("storeWakeUpPrm: storing to invalid register. Kernel 3.3 bug?" EOL);
       break;
     }
     default:
