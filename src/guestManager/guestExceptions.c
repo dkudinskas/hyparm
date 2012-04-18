@@ -40,8 +40,12 @@ void deliverServiceCall(GCONTXT *context)
     context->R14_SVC = context->R15 + ARM_INSTRUCTION_SIZE;
 #ifdef CONFIG_THUMB2
   }
-  // 5. Clear Thumb bit if SCTLR.TE bit is not set
-  if (~(getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE))
+  // 5. Clear or set Thumb bit according to SCTLR.TE
+  if (getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE)
+  {
+    context->CPSR |= PSR_T_BIT;
+  }
+  else
   {
     context->CPSR &= ~PSR_T_BIT;
   }
@@ -143,8 +147,12 @@ void deliverInterrupt(GCONTXT *context)
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_IRQ_MODE;
 
 #ifdef CONFIG_THUMB2
-  // 4. Clear Thumb bit if SCTLR.TE bit is not set
-  if (~(getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE))
+  // 4. Clear or set Thumb bit according to SCTLR.TE
+  if (getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE)
+  {
+    context->CPSR |= PSR_T_BIT;
+  }
+  else
   {
     context->CPSR &= ~PSR_T_BIT;
   }
@@ -190,9 +198,20 @@ void deliverDataAbort(GCONTXT *context)
   context->SPSR_ABT = context->CPSR;
   // 3. put guest CPSR in ABT mode
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
-  // 4. set LR to PC+8
+#ifdef CONFIG_THUMB2
+  // 4. Clear or set Thumb bit according to SCTLR.TE
+  if (getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE)
+  {
+    context->CPSR |= PSR_T_BIT;
+  }
+  else
+  {
+    context->CPSR &= ~PSR_T_BIT;
+  }
+#endif
+  // 5. set LR to PC+8
   context->R14_ABT = context->R15 + LR_OFFSET_DATA_ABT;
-  // 5. set PC to guest irq handler address
+  // 6. set PC to guest irq handler address
   if (context->virtAddrEnabled)
   {
     if (context->guestHighVectorSet)
@@ -243,9 +262,20 @@ void deliverPrefetchAbort(GCONTXT *context)
   context->SPSR_ABT = context->CPSR;
   // 3. put guest CPSR in ABT mode
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
-  // 4. set LR to PC+8
+#ifdef CONFIG_THUMB2
+  // 4. Clear or set Thumb bit according to SCTLR.TE
+  if (getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE)
+  {
+    context->CPSR |= PSR_T_BIT;
+  }
+  else
+  {
+    context->CPSR &= ~PSR_T_BIT;
+  }
+#endif
+  // 5. set LR to PC+4
   context->R14_ABT = context->R15 + LR_OFFSET_PREFETCH_ABT;
-  // 5. set PC to guest irq handler address
+  // 6. set PC to guest irq handler address
   if (context->virtAddrEnabled)
   {
     if (context->guestHighVectorSet)

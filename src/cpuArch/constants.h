@@ -96,7 +96,7 @@
 
 #define LR_OFFSET_IRQ             4
 #define LR_OFFSET_DATA_ABT        8
-#define LR_OFFSET_PREFETCH_ABT    8
+#define LR_OFFSET_PREFETCH_ABT    4
 
 
 #endif
