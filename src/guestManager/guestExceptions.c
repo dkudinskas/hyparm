@@ -273,7 +273,7 @@ void deliverPrefetchAbort(GCONTXT *context)
     context->CPSR &= ~PSR_T_BIT;
   }
 #endif
-  // 5. set LR to PC+8
+  // 5. set LR to PC+4
   context->R14_ABT = context->R15 + LR_OFFSET_PREFETCH_ABT;
   // 6. set PC to guest irq handler address
   if (context->virtAddrEnabled)
