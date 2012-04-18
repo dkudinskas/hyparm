@@ -7,13 +7,13 @@
 
 /**
  * IMPORTANT:
- * Linux kernel arch/arm/mach_omap2/id.c
+ * Linux kernel arch/arm/mach-omap2/id.c
  * really misidentifies more current OMAP revisions, thus linux register definitions
  * are completely wrong.
  **/
 
 #define CONTROL_MOD_IDCODE            0x204
-#define CONTROL_MOD_IDCODE_VALUE      0x3b7ae02f
+#define CONTROL_MOD_IDCODE_VALUE      0x4B7AE02F
 #define CONTROL_MOD_RESERVED          0x208
 #define CONTROL_MOD_RESERVED_VALUE    0x00000000
 #define CONTROL_MOD_PROD_ID           0x20c

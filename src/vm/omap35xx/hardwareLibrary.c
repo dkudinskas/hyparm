@@ -285,7 +285,7 @@ device *createHardwareLibrary()
   }
   initPrm();
 
-  // L4_CORE_WAKEUP: power and reset manager
+  // L4_CORE_CONTROL: control module ID
   device * ctrlModID = createDevice("CONTROL_MODULE_ID", FALSE, CONTROL_MODULE_ID,
                                     (u32int)(CONTROL_MODULE_ID - 1 + CONTROL_MODULE_ID_SIZE),
                                     l4CoreWakeupInt, &loadControlModule, &storeControlModule);
