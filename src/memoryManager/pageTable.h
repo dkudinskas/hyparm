@@ -18,8 +18,8 @@
 #define GUEST_ACCESS_DOMAIN       1
 #define GUEST_ACCESS_BITS         PRIV_RW_USR_RW //Priv R/W, USR R/W
 
-#define PT1_ALIGN_MASK     0xFFFF8000
-#define PT1_ALIGN_BITS     15
+#define PT1_ALIGN_MASK     0xFFFFC000
+#define PT1_ALIGN_BITS     14
 #define PT2_ALIGN_MASK     0xFFFFFC00
 #define PT2_ALIGN_BITS     10
 #define SECTION_SIZE           0x00100000
