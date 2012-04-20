@@ -170,7 +170,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 {
-  DEBUG(SCANNER, "scanArmBlock @ %#.8x" EOL, context->R15);
+  DEBUG(SCANNER, "scanArmBlock @ %p (R15 = %#.8x)" EOL, start, context->R15);
 
   u32int *end;
   instructionHandler handler;
