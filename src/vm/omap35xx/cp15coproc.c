@@ -251,6 +251,11 @@ CREG *createCRB()
   crb[i].value = 0;
   crb[i].valid = TRUE;
 
+  /* TLBIMVA: invalidate unified TLB by MVA, write-only */
+  i = crbIndex(8, 0, 7, 1);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
   /* PRRR:
    * primary region remap register: does lots of weird things with
    * C, B, and TEX attributes of memory regions, init to 0x98AA4 */
@@ -575,7 +580,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==8 && opc1==0 && CRm==7 && opc2==1)
   {
-    // TLBIALL: invalide unified TLB by MVA, write-only
+    // TLBIMVA: invalidate unified TLB by MVA, write-only
     DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate unified TLB by MVA" EOL);
     mmuInvalidateUTLBbyMVA(val);
   }
