@@ -43,16 +43,14 @@ bool shadowMap(u32int virtAddr)
     tempFirst = getEntryFirst(spt, (u32int)context->pageTables->guestPhysical);
     backupEntry = *(u32int*)tempFirst;
     DEBUG(MM_SHADOWING, "shadowMap: VA %#.8x backed up entry %#.8x @ %p" EOL, virtAddr, backupEntry, tempFirst);
-    mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical,
-              (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+    addSectionEntry((sectionEntry *)tempFirst, (u32int)context->pageTables->guestPhysical,
+                    HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
     mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
     gpt = context->pageTables->guestPhysical;
     tempEntry = *(u32int*)tempFirst;
     DEBUG(MM_SHADOWING, "shadowMap: gpt now set to %p" EOL, gpt);
     backedUp = TRUE;
   }
-
 
   simpleEntry* guestFirst = getEntryFirst(gpt, virtAddr);
   DEBUG(MM_SHADOWING, "shadowMap: VA %08x first entry %08x @ %p" EOL, virtAddr, *(u32int*)guestFirst, guestFirst);
@@ -124,8 +122,8 @@ bool shadowMap(u32int virtAddr)
       simpleEntry* shadow = getEntryFirst(context->pageTables->shadowActive, gptPhysAddr);
       u32int backup = *(u32int*)shadow;
       DEBUG(MM_SHADOWING, "shadowMap: backed up PT2 entry %#.8x @ %p" EOL, backup, shadow);
-      mapSection(context->pageTables->shadowActive, gptPhysAddr, gptPhysAddr,
-           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+      addSectionEntry((sectionEntry *)shadow, gptPhysAddr, HYPERVISOR_ACCESS_DOMAIN,
+                      HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
       mmuInvalidateUTLBbyMVA(gptPhysAddr);
 
       u32int index = (virtAddr & 0x000FF000) >> 10;
@@ -195,7 +193,7 @@ bool shadowMap(u32int virtAddr)
             tempEntry, *(u32int*)tempFirst);
     }
   }
-  
+
   return success;
 }
 
