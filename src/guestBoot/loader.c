@@ -80,7 +80,7 @@ extern void callKernel(s32int, s32int, struct tag *tagList, u32int entryPoint) _
 
 void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
 {
-#ifdef CONFIG_GUEST_TEST
+#if defined(CONFIG_GUEST_TEST) && defined(CONFIG_THUMB2)
   /*
    * If LSB of entryPoint is 1 switch to thumb mode and make LSB 0
    */
@@ -115,7 +115,7 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
 
   cleanupBeforeBoot();
 
-#ifdef CONFIG_GUEST_TEST
+#if defined(CONFIG_GUEST_TEST) && defined(CONFIG_THUMB2)
   /*
    * When thumb mode set LSB of entryPoint to 1.
    * In callKernel the SPSR thumb bit will be set.
