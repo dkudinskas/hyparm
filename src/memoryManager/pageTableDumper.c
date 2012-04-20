@@ -98,7 +98,7 @@ static void dumpL1Table(l1Descriptor *l1Table)
   }
   if (!isAlignedToMask(l1Table, PT1_ALIGN_MASK))
   {
-    printf("Error: L1 page table base pointer unaligned; cannot dump!");
+    printf("Error: L1 page table base pointer unaligned; cannot dump!" EOL);
     return;
   }
   struct state s =
