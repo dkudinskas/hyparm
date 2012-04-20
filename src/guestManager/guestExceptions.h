@@ -28,7 +28,7 @@ void deliverInterrupt(GCONTXT *context);
 void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isWrite, u32int domain);
 void deliverDataAbort(GCONTXT *context);
 
-void throwPrefetchAbort(u32int address, u32int faultType);
+void throwPrefetchAbort(GCONTXT *context, u32int address, u32int faultType);
 void deliverPrefetchAbort(GCONTXT *context);
 
 #endif

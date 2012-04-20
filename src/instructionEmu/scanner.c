@@ -22,6 +22,7 @@
 #define INSTR_SWI            0xEF000000U
 #define INSTR_SWI_THUMB      0x0000DF00U
 #define INSTR_NOP_THUMB      0x0000BF00U
+#define INSTR_SWI_THUMB_MASK 0x0000FF00U
 #define INSTR_SWI_THUMB_MIX  ((INSTR_SWI_THUMB << 16) | INSTR_NOP_THUMB)
 
 
@@ -33,16 +34,18 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex);
 static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex);
 #endif
 
-static void protectScannedBlock(void *start, void *end);
+#ifdef CONFIG_BLOCK_COPY
 
 static void scanAndCopyArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex);
-
+static u32int allSrcRegNonPC(u32int instruction);
+#endif
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
 
 u64int scanBlockCounter;
 
 static inline u64int getScanBlockCounter(void);
+
 static inline void incrementScanBlockCounter(void);
 
 static inline u64int getScanBlockCounter()
@@ -92,13 +95,9 @@ void setScanBlockCallSource(u8int source)
 
 
 #ifdef CONFIG_DEBUG_SCANNER_MARK_INTERVAL
-
 #define MARK_MASK  ((1 << CONFIG_DEBUG_SCANNER_MARK_INTERVAL) - 1)
-
 #else
-
 #define MARK_MASK  (0U)
-
 #endif /* CONFIG_DEBUG_SCANNER_MARK_INTERVAL */
 
 
@@ -196,16 +195,18 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 {
-  DEBUG(SCANNER, "scanArmBlock @ %#.8x" EOL, context->R15);
+  DEBUG(SCANNER, "scanArmBlock @ %p (R15 = %#.8x)" EOL, start, context->R15);
 
   u32int *end;
   instructionHandler handler;
   u32int instruction;
+  instructionReplaceCode replaceCode;
   /*
    * Find the next sensitive instruction
    */
   end = start;
-  while ((handler = decodeArmInstruction(*end)) == NULL)
+
+  while ((replaceCode = decodeArmInstruction(*end, &handler)) == IRC_SAFE)
   {
     end++;
   }
@@ -267,27 +268,19 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
    * 2. invalidate instruction cache entry by address.
    * ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1
    */
-  asm("mcr p15, 0, %0, c7, c11, 1"
-      :
-      :"r"(end)
-      :"memory"
-  );
-  asm("mcr p15, 0, %0, c7, c5, 1"
-      :
-      :"r"(end)
-      :"memory"
-  );
-  protectScannedBlock(start, end);
+  mmuInvIcacheByMVAtoPOU((u32int)end);
+  mmuCleanDCacheByMVAtoPOU((u32int)end);
+  guestWriteProtect((u32int)start, (u32int)end);
 }
 
 #ifdef CONFIG_THUMB2
-
 static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 {
   DEBUG(SCANNER, "scanThumbBlock @ %#.8x" EOL, context->R15);
 
   u16int *end;
   instructionHandler handler;
+  instructionReplaceCode replaceCode;
   u32int instruction;
   u32int blockType = BCENTRY_TYPE_THUMB;
   u32int endIs16Bit;
@@ -312,7 +305,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
         break;
     }
 
-    if ((handler = decodeThumbInstruction(instruction)) != NULL)
+    if ((replaceCode = decodeThumbInstruction(instruction, &handler)) != IRC_SAFE)
     {
       if (itState != 0)
       {
@@ -344,20 +337,20 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
     }
   }
 
-  if ((instruction & INSTR_SWI_THUMB) == INSTR_SWI_THUMB && !((instruction >> 16) & THUMB32))
+  if (!txxIsThumb32(instruction) && ((instruction & INSTR_SWI_THUMB_MASK) == INSTR_SWI_THUMB))
   {
     u32int svcCode = instruction & 0xFF;
     if (svcCode > 0)
     {
       // we hit a SVC that we placed ourselves as EOB. retrieve the real EOB...
-      u32int cacheIndex = svcCode - 1;
-      if (cacheIndex >= BLOCK_CACHE_SIZE)
+      u32int svcCacheIndex = svcCode - 1;
+      if (svcCacheIndex >= BLOCK_CACHE_SIZE)
       {
         printf("scanThumbBlock: instruction %#.8x @ %p", instruction, end);
         DIE_NOW(context, "scanThumbBlock: block cache index in SVC out of range");
       }
-      DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB instruction is SVC @ %p code %#x" EOL, end, cacheIndex);
-      BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, cacheIndex);
+      DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB instruction is SVC @ %p code %#x" EOL, end, svcCacheIndex);
+      BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, svcCacheIndex);
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = bcEntry->hyperedInstruction;
       blockType = bcEntry->type;
@@ -387,31 +380,21 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
      * Thumb-32 compatible encoding.
      */
     end = currtmpAddress; // restore starting pointer and do what we did before
-    instruction = *end;
-    switch (instruction & THUMB32)
+    if(txxIsThumb32(instruction))
     {
-      case THUMB32_1:
-      case THUMB32_2:
-      case THUMB32_3:
-      {
-        end++;
-        instruction = (instruction << 16) | *end;
-        context->endOfBlockInstr = instruction;
-        endIs16Bit = FALSE;
-        // Replace instruction with SVC and NOP, both 16 bit instructions
-        end--;
-        *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
-        end++;
-        *end = INSTR_NOP_THUMB;
-        break;
-      }
-      default:
-      {
-        context->endOfBlockInstr = instruction;
-        endIs16Bit = TRUE;
-        *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
-        break;
-      }
+      context->endOfBlockInstr = instruction;
+      endIs16Bit = FALSE;
+      // Replace instruction with SVC and NOP, both 16 bit instructions
+      *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
+      end++;
+      *end = INSTR_NOP_THUMB;
+      end--;
+    }
+    else
+    {
+      context->endOfBlockInstr = instruction;
+      endIs16Bit = TRUE;
+      *end = INSTR_SWI_THUMB | ((cacheIndex+1) & 0xFF);
     }
     DEBUG(SCANNER_EXTRA, "scanThumbBlock: SVC on %#.8x" EOL, (u32int)end);
 
@@ -433,12 +416,12 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
    */
   if (endIs16Bit)
   {
-    asm("mcr p15, 0, %0, c7, c11, 1"
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c11, 1"
         :
         :"r"(end)
         :"memory"
     );
-    asm("mcr p15, 0, %0, c7, c5, 1"
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 1"
         :
         :"r"(end)
         :"memory"
@@ -446,31 +429,31 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
   }
   else
   {
-    asm("mcr p15, 0, %0, c7, c11, 1"
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c11, 1"
         :
         :"r"(end)
         :"memory"
     );
-    asm("mcr p15, 0, %0, c7, c5, 1"
-        :
-        :"r"(end)
-        :"memory"
-    );
-    end--;
-    asm("mcr p15, 0, %0, c7, c11, 1"
-        :
-        :"r"(end)
-        :"memory"
-    );
-    asm("mcr p15, 0, %0, c7, c5, 1"
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 1"
         :
         :"r"(end)
         :"memory"
     );
     end++;
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c11, 1"
+        :
+        :"r"(end)
+        :"memory"
+    );
+    __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 1"
+        :
+        :"r"(end)
+        :"memory"
+    );
+    end--;
   }
 
-  protectScannedBlock(start, end);
+  guestWriteProtect((u32int)start, (u32int)end);
 }
 
 #endif /* CONFIG_THUMB2 */
@@ -598,7 +581,7 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
         context->endOfBlockInstr, context->hdlFunct, blockCopyCacheSize,
         (u32int)blockCopyCacheStartAddress);
       blockCopyCacheStartAddress= (u32int *)(((u32int)blockCopyCacheStartAddress) & 0xFFFFFFFE);
-      protectScannedBlock(startAddress, currAddress);
+      guestWriteProtect((u32int)startAddress, (u32int)currAddress);
       //update blockCopyCacheLastUsedLine (blockCopyCacheLastUsedLine is u32int -> add nrOfInstructions*4
       /* It doesn't matter if it points to the word before the blockCopyCache. (Guestcontext was even initialized this way) */
       context->blockCopyCacheLastUsedLine = blockCopyCacheCurrAddress - 1;
@@ -701,72 +684,10 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int cacheInd
 #endif /* CONFIG_BLOCK_COPY */
 
 
-static void protectScannedBlock(void *start, void *end)
-{
-  u32int startAddress = (u32int)start;
-  u32int endAddress = (u32int)end;
-  // 1. get page table entry for this address
-  descriptor* ptBase = mmuGetPt0();
-  descriptor* ptEntryAddr = get1stLevelPtDescriptorAddr(ptBase, startAddress);
-
-  switch(ptEntryAddr->type)
-  {
-    case SECTION:
-    {
-      if ((startAddress & 0xFFF00000) != (endAddress & 0xFFF00000))
-      {
-        u32int mbStart = startAddress & 0xFFF00000;
-        u32int mbEnd   = endAddress & 0xFFF00000;
-        if (mbStart != (mbEnd - 0x00100000))
-        {
-          printf("startAddress %#.8x, endAddress %#.8x" EOL, startAddress, endAddress);
-          DIE_NOW(NULL, "protectScannedBlock: Basic block crosses non-sequential section boundary!");
-        }
-      }
-      addProtection(startAddress, endAddress, 0, PRIV_RW_USR_RO);
-      break;
-    }
-    case PAGE_TABLE:
-    {
-      u32int ptEntryLvl2 = *(u32int*)(get2ndLevelPtDescriptor((pageTableDescriptor*)ptEntryAddr, endAddress));
-      switch(ptEntryLvl2 & 0x3)
-      {
-        case LARGE_PAGE:
-          printf("Page size: 64KB (large), %#.8x" EOL, ptEntryLvl2);
-          DIE_NOW(NULL, "Unimplemented.");
-          break;
-        case SMALL_PAGE:
-          if ((ptEntryLvl2 & 0x30) != 0x20)
-          {
-            addProtection(startAddress, endAddress, 0, PRIV_RW_USR_RO);
-          }
-          break;
-        case FAULT:
-          printf("Page invalid, %#.8x" EOL, ptEntryLvl2);
-          DIE_NOW(NULL, "Unimplemented.");
-          break;
-        default:
-          DIE_NOW(NULL, "Unrecognized second level entry");
-          break;
-      }
-      break;
-    }
-    case FAULT:
-      printf("Entry for basic block: invalid, %p" EOL, ptEntryAddr);
-      DIE_NOW(NULL, "Unimplemented.");
-      break;
-    case RESERVED:
-      DIE_NOW(NULL, "Entry for basic block: reserved. Error.");
-      break;
-    default:
-      DIE_NOW(NULL, "Unrecognized second level entry. Error.");
-  }
-}
-
 #ifdef CONFIG_BLOCK_COPY
 
 /* allSrcRegNonPC will return true if all source registers of an instruction are zero  */
-u32int allSrcRegNonPC(u32int instruction)
+static u32int allSrcRegNonPC(u32int instruction)
 {
   /*Source registers correspond with the bits [0..3],[8..11] or [16..19],  STMDB and PUSH may not write PC to mem :
    * STM   1000|10?0

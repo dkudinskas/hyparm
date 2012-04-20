@@ -1,13 +1,15 @@
-#include "common/debug.h"
-#include "common/types.h"
-#include "common/memFunctions.h"
 #include "common/byteOrder.h"
+#include "common/debug.h"
+#include "common/string.h"
+#include "common/types.h"
+
+#include "cpuArch/armv7.h"
+
+#include "drivers/beagle/be32kTimer.h"
+#include "drivers/beagle/beMMC.h"
 
 #include "io/mmc.h"
 
-#include "drivers/beagle/be32kTimer.h"
-
-#include "cpuArch/armv7.h"
 
 extern struct mmc *mmcDevice;
 
@@ -489,8 +491,7 @@ int mmcStartup(struct mmc *mmc)
     u32int csize = ((mmc->csd[1] & 0x3ff) << 2) | ((mmc->csd[2] & 0xc0000000) >> 30);
     u32int cmult = (mmc->csd[2] & 0x00038000) >> 15;
 
-    u32int mult = 1 << (cmult + 2);
-    u32int blockNumber = (csize + 1) * mult;
+    u32int blockNumber = (csize + 1) * (1 << (cmult + 2));
 
     u32int blockLength = 1 << ((mmc->csd[1] & 0x000f0000) >> 16);
     mmc->capacity = blockNumber * blockLength;

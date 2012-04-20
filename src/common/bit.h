@@ -5,6 +5,23 @@
 #include "common/types.h"
 
 
+__macro__ u32int countBitsSet(u32int word)  __constant__;
+__macro__ s32int countLeadingZeros(u32int x);
+__macro__ s32int countLeadingZeros64(u64int x);
+__macro__ s32int countTrailingZeros(u32int x);
+__macro__ s32int countTrailingZeros64(u64int x);
+__macro__ u32int findFirstBitSet(u32int x);
+__macro__ u32int findLastBitSet(u32int x);
+__macro__ bool isAlignedToBits(void *pointer, u32int bits);
+__macro__ bool isAlignedToBitsN(u32int value, u32int bits);
+__macro__ bool isAlignedToMask(void *pointer, u32int mask);
+__macro__ bool isAlignedToMaskN(u32int value, u32int mask);
+__macro__ u32int maskedBitShift(u32int value, u32int mask);
+__macro__ u32int signExtend(u32int value, u32int bits);
+__macro__ bool testBitsEqual(u32int subject, u32int highBit, u32int lowBit);
+__macro__ bool testBitsNotEqual(u32int subject, u32int highBit, u32int lowBit);
+
+
 /*
  * countBitsSet
  * Counting bits set, Brian Kernighan's way
@@ -86,6 +103,36 @@ __macro__ u32int findFirstBitSet(u32int x)
 __macro__ u32int findLastBitSet(u32int x)
 {
   return x ? (sizeof(u32int) << 3) - countLeadingZeros(x) : 0;
+}
+
+/*
+ * isAlignedToBits
+ * Returns whether the last n < 32 bits of the specified pointer are zero.
+ */
+__macro__ bool isAlignedToBits(void *pointer, u32int bits)
+{
+  return isAlignedToBitsN((u32int)pointer, bits);
+}
+
+__macro__ bool isAlignedToBitsN(u32int value, u32int bits)
+{
+  return findFirstBitSet(value) < bits;
+  // Alternative:
+  // return (((u32int)pointer) & ((1 << bits) - 1)) == 0;
+}
+
+/*
+ * isAlignedToMask
+ * Returns whether the specified pointer has the same alignment as the specified mask.
+ */
+__macro__ bool isAlignedToMask(void *pointer, u32int mask)
+{
+  return isAlignedToMaskN((u32int)pointer, mask);
+}
+
+__macro__ bool isAlignedToMaskN(u32int value, u32int mask)
+{
+  return (value & ~mask) == 0;
 }
 
 /*

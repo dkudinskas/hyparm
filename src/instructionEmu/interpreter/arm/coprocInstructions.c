@@ -2,7 +2,7 @@
 
 #include "instructionEmu/interpreter/arm/coprocInstructions.h"
 
-#include "memoryManager/cp15coproc.h"
+#include "vm/omap35xx/cp15coproc.h"
 
 
 u32int armCdpInstruction(GCONTXT *context, u32int instruction)

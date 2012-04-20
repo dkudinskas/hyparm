@@ -45,6 +45,12 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
 #endif
           break;
         case SUB:
+          // if S bit is set, this is return from exception!
+	  // FIXME: Niels: do we ever get here for exception return; aren't there valid cases where a SUBS does NOT perform exception return?
+          if (setFlags != 0)
+          {
+            DIE_NOW(context, "SUBS return from exception case unimplemented.\n");
+          }
           nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
           if (regSrc == 0xF)
           {
@@ -181,10 +187,8 @@ u32int decodeShift(u32int instrShiftType)
       return SHIFT_TYPE_LSR;
     case 2:
       return SHIFT_TYPE_ASR;
-    case 3:
-      return SHIFT_TYPE_ROR;
     default:
-      DIE_NOW(NULL, "voodoo dolls everywhere!");
+      return SHIFT_TYPE_ROR;
   } // switch ends
 }
 
@@ -466,18 +470,22 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT *context)
 }
 
 #ifdef CONFIG_GUEST_TEST
+
 /*
  * This function is used in unit tests. It evaluates the value passed to the BKPT instruction.
  * Current values:
  * 0      pass
  * other  fail
  */
-void evalBkptVal(GCONTXT *context, u32int value) {
-  switch(value) {
+void evalBkptVal(GCONTXT *context, u32int value)
+{
+  switch (value)
+  {
     case 0:
       DIE_NOW(context, "test passed");
     default:
       DIE_NOW(context, "test failed");
   }
 }
-#endif
+
+#endif /* CONFIG_GUEST_TEST */

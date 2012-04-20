@@ -1,35 +1,111 @@
 #ifndef __MEMORY_MANAGER__MMU_H__
 #define __MEMORY_MANAGER__MMU_H__
 
+#include "common/stddef.h"
 #include "common/types.h"
 
 #include "memoryManager/pageTable.h"
 
 
-//uncomment to enable debug #define MMU_DBG
-
-struct abort_dfsr
+typedef enum
 {
-  u16int fs3_0:4; //0-3 FS[3:0]
-  u16int domain:4; //4-7
-  u16int:2; //8-9 zero bits!
-  u16int fs4:1;//10
-  u16int WnR:1;//11
-  u16int ExT:1;//12
-  u32int:19;//12-31 more zero bits
-};
-typedef struct abort_dfsr DFSR;
+  TTP_PRIVILEGED_READ,
+  TTP_PRIVILEGED_WRITE,
+  TTP_UNPRIVILEGED_READ,
+  TTP_UNPRIVILEGED_WRITE
+} TryTranslatePurpose;
 
-struct abort_ifsr
+struct dfsr
 {
-  u16int fs3_0:4; //0-3 FS[3:0]
-  u16int:6; //4-9 zero bits
-  u16int fs4:1;//10
-  u16int:1;//11 zero bit
-  u16int ExT:1;//12
-  u32int:19;//13-31 more zero bits
+  unsigned fs3_0:4; //0-3 FS[3:0]
+  unsigned domain:4; //4-7
+  unsigned : 2; //8-9 zero bits!
+  unsigned fs4:1;//10
+  unsigned WnR:1;//11
+  unsigned ExT:1;//12
+  unsigned : 19;//12-31 more zero bits
 };
-typedef struct abort_ifsr IFSR;
+
+struct ifsr
+{
+  unsigned fs3_0 : 4; //0-3 FS[3:0]
+  unsigned : 6; //4-9 zero bits
+  unsigned fs4 : 1;//10
+  unsigned : 1;//11 zero bit
+  unsigned ExT : 1;//12
+  unsigned : 19;//13-31 more zero bits
+};
+
+struct physicalAddressRegisterFault
+{
+  unsigned fault : 1;
+  unsigned faultStatus : 6;
+  unsigned : 25;
+};
+
+struct physicalAddressRegisterSuccess
+{
+  unsigned fault : 1;
+  unsigned superSection : 1;
+  unsigned outerAttributes : 2;
+  unsigned innerAttributes : 3;
+  unsigned shareable : 1;
+  unsigned : 1;
+  unsigned nonSecure : 1;
+  unsigned notOuterShareable : 1;
+  unsigned : 1;
+  unsigned physicalAddress_31_20 : 20;
+};
+
+struct systemControlRegister
+{
+  unsigned mmuEnable : 1;
+  unsigned alignmentCheckingEnable : 1;
+  unsigned cacheEnable : 1;
+  unsigned : 7;
+  unsigned swapEnable : 1;
+  unsigned branchPredictionEnable : 1;
+  unsigned instructionCacheEnable : 1;
+  unsigned highVectors : 1;
+  unsigned roundRobin : 1;
+  unsigned : 2;
+  unsigned hardwareAccessFlagEnable : 1;
+  unsigned : 3;
+  unsigned fiLowLatencyEnable : 1;
+  unsigned : 2;
+  unsigned interruptVectorsEnable : 1;
+  unsigned exceptionEndianness : 1;
+  unsigned : 1;
+  unsigned nonMaskableFastInterrupts : 1;
+  unsigned texRemapEnable : 1;
+  unsigned accessFlagEnable : 1;
+  unsigned thumbExceptionEnable : 1;
+  unsigned : 1;
+};
+
+COMPILE_TIME_ASSERT((sizeof(struct dfsr) == sizeof(u32int)), _DFSR_struct_not_32bit);
+COMPILE_TIME_ASSERT((sizeof(struct ifsr) == sizeof(u32int)), _IFSR_struct_not_32bit);
+COMPILE_TIME_ASSERT((sizeof(struct physicalAddressRegisterFault) == sizeof(u32int)), _PAR_fault_struct_not_32bit);
+COMPILE_TIME_ASSERT((sizeof(struct physicalAddressRegisterSuccess) == sizeof(u32int)), _PAR_success_struct_not_32bit);
+COMPILE_TIME_ASSERT((sizeof(struct systemControlRegister) == sizeof(u32int)), _SCTLR_struct_not_32bit);
+
+typedef struct dfsr DFSR;
+
+typedef struct ifsr IFSR;
+
+typedef union
+{
+  struct physicalAddressRegisterFault fault;
+  struct physicalAddressRegisterSuccess success;
+  u32int value;
+} PhysicalAddressRegister;
+
+typedef union
+{
+  struct systemControlRegister bits;
+  u32int value;
+} SystemControlRegister;
+
 
 enum DataAbortFaultStatus
 {
@@ -87,28 +163,102 @@ enum enum_access_type
 };
 typedef enum enum_access_type access_type;
 
+
+__macro__ bool isMmuEnabled(void);
+
 void mmuInit(void);
-void mmuInsertPt0(descriptor* addr);
-void mmuInsertPt1(descriptor* addr);
-descriptor* mmuGetPt0(void);
+void mmuSetTTBCR(u32int value);
+void mmuSetTTBR0(simpleEntry* addr, u32int asid);
+void mmuSetTTBR1(simpleEntry* addr, u32int asid);
+simpleEntry* mmuGetTTBR0(void);
+
 void mmuEnableVirtAddr(void);
 void mmuDisableVirtAddr(void);
-bool isMmuEnabled(void);
 
-void clearInstructionCache(void);
-void clearDataCache(void);
-void clearTLB(void);
-void clearTLBbyMVA(u32int address);
-void dataBarrier(void);
-void setTTBCR(u32int value);
-void setDomain(u8int domain, access_type access);
-void setTexRemap(bool enable);
+void mmuInvIcacheToPOU(void);
+void mmuInvIcacheByMVAtoPOU(u32int mva);
+
+void mmuInstructionSync(void);
+
+void mmuInvBranchPredictorArray(void);
+
+void mmuCleanDcacheByMVAtoPOC(u32int mva);
+void mmuCleanDcacheBySetWay(u32int mva);
+
+void mmuCleanDCacheByMVAtoPOU(u32int mva);
+void mmuCleanInvDCacheByMVAtoPOC(u32int mva);
+void mmuCleanInvDCacheBySetWay(u32int setWay);
+
+void mmuDataSyncBarrier(void);
+void mmuDataMemoryBarrier(void);
+
+void mmuClearInstructionCache(void);
+void mmuClearDataCache(void);
+
+void mmuInvalidateITLB(void);
+void mmuInvalidateITLBbyMVA(u32int mva);
+void mmuInvalidateITLBbyASID(u32int asid);
+
+void mmuInvalidateDTLB(void);
+void mmuInvalidateDTLBbyMVA(u32int mva);
+void mmuInvalidateDTLBbyASID(u32int asid);
+
+void mmuInvalidateUTLB(void);
+void mmuInvalidateUTLBbyMVA(u32int mva);
+
+void mmuClearTLBbyMVA(u32int address);
+void mmuSetDomain(u8int domain, access_type access);
+void mmuSetTexRemap(bool enable);
+void mmuSetContextID(u32int asid);
+
 
 u32int getDFAR(void);
 DFSR getDFSR(void);
 u32int getIFAR(void);
 IFSR getIFSR(void);
 
+void mmuPageTableEdit(u32int entryAddr, u32int pageAddr);
+
+__macro__ PhysicalAddressRegister mmuTryTranslate(u32int virtualAddress, TryTranslatePurpose purpose);
+
 void printDataAbort(void); //gets & prints the dfsr & dfar
 void printPrefetchAbort(void); //gets & prints the ifsr & ifar
+
+
+__macro__ bool isMmuEnabled()
+{
+  SystemControlRegister sctlr;
+  __asm__ __volatile__("MRC p15, 0, %0, c1, c0, 0":"=r"(sctlr));
+  return sctlr.bits.mmuEnable;
+}
+
+/*
+ * mmuTryTranslate
+ * Attempts to translate a given virtual address to a physical address and only generates an abort
+ * if the translation fails because an external abort occurred on a translation table walk request.
+ */
+__macro__ PhysicalAddressRegister mmuTryTranslate(u32int virtualAddress, TryTranslatePurpose purpose)
+{
+  PhysicalAddressRegister par;
+  switch (purpose)
+  {
+    case TTP_PRIVILEGED_READ:
+      __asm__ __volatile__("MCR p15, 0, %0, c7, c8, 0"::"r"(virtualAddress));
+      break;
+    case TTP_PRIVILEGED_WRITE:
+      __asm__ __volatile__("MCR p15, 0, %0, c7, c8, 1"::"r"(virtualAddress));
+      break;
+    case TTP_UNPRIVILEGED_READ:
+      __asm__ __volatile__("MCR p15, 0, %0, c7, c8, 2"::"r"(virtualAddress));
+      break;
+    case TTP_UNPRIVILEGED_WRITE:
+    default:
+      __asm__ __volatile__("MCR p15, 0, %0, c7, c8, 3"::"r"(virtualAddress));
+      break;
+  }
+  __asm__ __volatile__("ISB; MRC p15, 0, %0, c7, c4, 0":"=r"(par));
+  return par;
+}
+
+
 #endif

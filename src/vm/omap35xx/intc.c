@@ -9,32 +9,24 @@
 
 #include "vm/omap35xx/intc.h"
 
-#include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
-#include "memoryManager/pageTable.h" // for getPhysicalAddress()
-
 
 struct InterruptController * irqController;
 
 void initIntc()
 {
-  irqController = (struct InterruptController *)malloc(sizeof(struct InterruptController));
-  if (irqController == 0)
+  irqController = (struct InterruptController *)calloc(1, sizeof(struct InterruptController));
+  if (irqController == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate INTC.");
   }
-  memset((void *)irqController, 0x0, sizeof(struct InterruptController));
+
   DEBUG(VP_OMAP_35XX_INTC, "Initializing Interrupt controller at %p" EOL, irqController);
   intcReset();
 }
 
 /* top load function */
-u32int loadIntc(device *dev, ACCESS_SIZE size, u32int address)
+u32int loadIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   if (size != WORD)
   {
     // only word access allowed in these modules
@@ -221,30 +213,25 @@ u32int loadIntc(device *dev, ACCESS_SIZE size, u32int address)
     case REG_INTCPS_ILR95:
     {
       printf("Intc: Unimplemted regsiter load reg nr %#x" EOL, regOffset);
-      DIE_NOW(gc, "PANIC");
+      DIE_NOW(NULL, "PANIC");
       break;
     }
     default:
-      DIE_NOW(gc, "Intc: load on invalid register.");
+      DIE_NOW(NULL, "Intc: load on invalid register.");
   }
 
   DEBUG(VP_OMAP_35XX_INTC, "%s load from pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size, val);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size, val);
 
   return val;
 }
 
 
 /* top store function */
-void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
+void storeIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  //We care about the real pAddr of the entry, not its vAddr
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_INTC, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size, value);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
   if (size != WORD)
   {
@@ -506,11 +493,11 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int address, u32int value)
     case REG_INTCPS_ILR95:
     {
       printf("Intc: Unimplemted regsiter store reg nr %#x" EOL, regOffset);
-      DIE_NOW(gc, "PANIC");
+      DIE_NOW(NULL, "PANIC");
       break;
     }
     default:
-      DIE_NOW(gc, "Intc: store on invalid register.");
+      DIE_NOW(NULL, "Intc: store on invalid register.");
   }
 }
 

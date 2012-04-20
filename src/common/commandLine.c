@@ -38,23 +38,21 @@ struct commandLineOption *addCommandLineOption(struct commandLineOption *options
 
 static struct commandLine *createCommandLine()
 {
-  struct commandLine *p = malloc(sizeof(struct commandLine));
+  struct commandLine *p = calloc(1, sizeof(struct commandLine));
   if (p == NULL)
   {
     DIE_NOW(NULL, "malloc failed");
   }
-  memset(p, 0, sizeof(struct commandLine));
   return p;
 }
 
 static struct commandLineOption *createCommandLineOption()
 {
-  struct commandLineOption *p = malloc(sizeof(struct commandLineOption));
+  struct commandLineOption *p = calloc(1, sizeof(struct commandLineOption));
   if (p == NULL)
   {
     DIE_NOW(NULL, "malloc failed");
   }
-  memset(p, 0, sizeof(struct commandLineOption));
   return p;
 }
 

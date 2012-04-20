@@ -3,12 +3,12 @@
 <autodecoder name="t16">
 
 <category name="t16UnconditionalInstructions" mask="0x0000f800" value="0x0000e000">
-  <instruction name="B" mask="0x0000f800" value="0x0000e000" effect="t16BImmediate11Instruction" />
+  <instruction name="B" mask="0x0000f800" value="0x0000e000" code="IRC_REPLACE" handler="t16BImmediate11Instruction" />
 </category>
 
 <category name="t16ConditionalBranchSvcInstructions" mask="0x0000f000" value="0x0000d000">
-  <instruction name="SVC" mask="0x0000ff00" value="0x0000df00" effect="svcInstruction" />
-  <instruction name="Bc [PC,#imm8]" mask="0x0000f000" value="0x0000d000" effect="t16BImmediate8Instruction" />
+  <instruction name="SVC" mask="0x0000ff00" value="0x0000df00" code="IRC_REPLACE" handler="svcInstruction" />
+  <instruction name="Bc [PC,#imm8]" mask="0x0000f000" value="0x0000d000" code="IRC_REPLACE" handler="t16BImmediate8Instruction" />
 </category>
 
 <category name="t16MiscInstructions" mask="0x0000f000" value="0x0000b000">
@@ -18,10 +18,10 @@
   <instruction name="UXTB Rd, Rm" mask="0x0000ffc0" value="0x0000b2c0" />
   <instruction name="UXTH Rd, Rm" mask="0x0000ffc0" value="0x0000b280" />
   <instruction name="ADD SP, SP, #imm" mask="0x0000ff80" value="0x0000b000" />
-  <instruction name="POP reglist+PC" mask="0x0000ff00" value="0x0000bd00" effect="t16LdmInstruction" />
+  <instruction name="POP reglist+PC" mask="0x0000ff00" value="0x0000bd00" code="IRC_REPLACE" handler="t16LdmInstruction" />
   <instruction name="POP reglist" mask="0x0000fe00" value="0x0000bc00" />
-  <!-- ADD effect="t16ItInstruction" to make this trap (it should... while we have no support for it) -->
-  <instruction name="IT" mask="0x0000ff00" value="0x0000bf00" />
+  <instruction name="IT" mask="0x0000ff00" value="0x0000bf00" code="IRC_REPLACE" handler="t16ItInstruction" />
+  <instruction name="BKPT" mask="0x0000ff00" value="0x0000be00" code="IRC_REPLACE" handler="t16BkptInstruction" />
 </category>
 
 <category name="t16SPInstructions" mask="0x0000f800" value="0x0000a800">
@@ -51,9 +51,9 @@
 </category>
 
 <category name="t16SpecialBranchInstructions" mask="0x0000fc00" value="0x00004400">
-  <instruction name="BX" mask="0x0000ff80" value="0x00004700" effect="t16BxInstruction" />
-  <instruction name="BLX Rm" mask="0x0000ff80" value="0x00004780" effect="t16BlxRegisterInstruction" />
-  <instruction name="MOV PC, Rm" mask="0x0000ff07" value="0x00004607" effect="t16MovInstruction" />
+  <instruction name="BX" mask="0x0000ff80" value="0x00004700" code="IRC_REPLACE" handler="t16BxInstruction" />
+  <instruction name="BLX Rm" mask="0x0000ff80" value="0x00004780" code="IRC_REPLACE" handler="t16BlxRegisterInstruction" />
+  <instruction name="MOV PC, Rm" mask="0x0000ff07" value="0x00004607" code="IRC_REPLACE" handler="t16MovInstruction" />
   <instruction name="MOV Rd, Rm" mask="0x0000ff00" value="0x00004600" />
   <instruction name="ADD Rdn,Rm" mask="0x0000ff00" value="0x00004400" />
 </category>

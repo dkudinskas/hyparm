@@ -1,10 +1,5 @@
 menu "General setup"
 
-config PREDICTABLE_DEBUGGING
-  bool "Maximize predictability for debugging"
-  select EMERGENCY_EXCEPTION_VECTOR if ARCH_EXT_SECURITY
-  select SCANNER_EXTRA_CHECKS
-
 choice
   prompt "Compiler optimization level"
   default OLEVEL_3
@@ -30,6 +25,10 @@ config OLEVEL_3
 
 endchoice
 
+config BUILD_ANALYZE_FUNCTIONS
+  bool "Let the compiler suggest function attributes"
+  depends on OLEVEL_3
+
 config BUILD_SSP
   bool "Enable stack-smashing protector"
   depends on !PREDICTABLE_DEBUGGING
@@ -40,6 +39,10 @@ config BUILD_LTO
 
 config BUILD_SAVE_TEMPS
   bool "Save intermediate files during build (requires GCC >= 4.5)"
+
+config ASSERT
+  bool "Enable run-time assertions"
+  default y
 
 choice
   prompt "Decoder"
@@ -60,6 +63,9 @@ config BLOCK_COPY
 choice
   prompt "Memory allocator"
   default MEMORY_ALLOCATOR_TLSF
+
+config MEMORY_ALLOCATOR_NAIVE
+  bool "Naive (no free)"
 
 config MEMORY_ALLOCATOR_TLSF
   bool "TLSF"
@@ -167,9 +173,107 @@ config GUEST_TEST
 
 endmenu
 
-menuconfig DEBUG
-  bool "Debugging"
+menuconfig DEBUGGING_HACKS
+  bool "Debugging hacks"
   default y
+
+config PREDICTABLE_DEBUGGING
+  bool "Maximize predictability for debugging"
+  depends on DEBUGGING_HACKS
+  select EMERGENCY_EXCEPTION_VECTOR if ARCH_EXT_SECURITY
+  select SCANNER_EXTRA_CHECKS
+
+config OCD_ROUTINES
+  bool "Extra routines for JTAG debugging"
+  default y
+  depends on DEBUGGING_HACKS
+  help
+    Adds routines that can be used from within OpenOCD to safely dump hypervisor
+    internals and alter processor state after a crash.
+
+config BKPT
+  bool "Software breakpoints for JTAG debugging (READ HELP)"
+  depends on DEBUGGING_HACKS
+  help
+    Adds software breakpoints to the crash handler (DIE_NOW) and the emergency
+    exception vector (if enabled).
+
+    WARNING: Without the presence of a hardware debugger software breakpoints, when
+    triggered, will cause prefetch aborts. Such aborts will cause the hypervisor to
+    crash, trigger more software breakpoints, ... resulting in an infinite loop of
+    prefetch aborts.
+
+config DUMP_STACK
+  bool "Dump stack on crash"
+  depends on DEBUGGING_HACKS
+
+config EMERGENCY_EXCEPTION_VECTOR
+  bool "Emergency exception vector"
+  default y
+  depends on ARCH_EXT_SECURITY && DEBUGGING_HACKS
+
+config EXCEPTION_HANDLERS_COUNT_DATA_ABORT
+  bool "Count number of data aborts"
+  depends on DEBUGGING_HACKS
+
+config EXCEPTION_HANDLERS_COUNT_IRQ
+  bool "Count number of interrupts (IRQs)"
+  depends on DEBUGGING_HACKS
+
+config EXCEPTION_HANDLERS_COUNT_SVC
+  bool "Count number of software interrupts"
+  depends on DEBUGGING_HACKS
+
+config SCANNER_COUNT_BLOCKS
+  bool "Count number of scanned blocks"
+  depends on DEBUGGING_HACKS
+
+config SCANNER_EXTRA_CHECKS
+  bool "Track call source and check for null pointers in scanner"
+  depends on DEBUGGING_HACKS
+
+config GUEST_CONTEXT_BLOCK_TRACE
+  bool "Store block trace in guest context"
+  default y
+  depends on DEBUGGING_HACKS
+
+config GUEST_CONTEXT_BLOCK_TRACE_SIZE
+  int "Number of blocks"
+  default 6
+  range 1 100 if !LOOP_DETECTOR
+  range 4 100 if LOOP_DETECTOR
+  depends on DEBUGGING_HACKS && GUEST_CONTEXT_BLOCK_TRACE
+
+config LOOP_DETECTOR
+  bool "Detect single block loops in privileged guest code"
+  depends on DEBUGGING_HACKS && GUEST_CONTEXT_BLOCK_TRACE
+
+config LOOP_DETECTOR_WARN_TRESHOLD
+  int "Minimum number of iterations that causes a warning"
+  default 262144
+  range 2 134217728
+  depends on DEBUGGING_HACKS && LOOP_DETECTOR
+
+config LOOP_DETECTOR_DIE_TRESHOLD
+  int "Number of iterations that causes the hypervisor to die"
+  default 524288
+  range 2 134217728
+  depends on DEBUGGING_HACKS && LOOP_DETECTOR
+
+config BLOCK_CACHE_COLLISION_COUNTER
+  bool "Count number of collisions in block cache"
+  depends on DEBUGGING_HACKS
+
+config MEMORY_ALLOCATOR_BOOKKEEPING
+  bool "Extensive memory allocator bookkeeping"
+  depends on DEBUGGING_HACKS
+
+menuconfig DEBUG
+  bool "Debug output"
+  default y
+  help
+    Disabling this option does not prevent generation of debug symbols and dump.
+    It merely disables all the individual debug output options at once.
 
 config DEBUG_STARTUP
   bool "Debug startup"
@@ -179,6 +283,39 @@ config DEBUG_GUEST_CONTEXT
   bool "Debug guest context routines"
   default y
   depends on DEBUG
+
+config DEBUG_MEMORY_ALLOCATOR
+  bool "Debug memory allocator"
+  depends on DEBUG
+
+config DEBUG_MEMORY_ALLOCATOR_BOOKKEEPING
+  bool "Debug memory allocator bookkeeping"
+  depends on DEBUG && MEMORY_ALLOCATOR_BOOKKEEPING
+
+config DEBUG_MEMORY_MANAGER
+  bool "Debug memory manager"
+  default n
+  depends on DEBUG
+
+config DEBUG_MM_ADDRESSING
+  bool "Debug addressing"
+  default n
+  depends on DEBUG_MEMORY_MANAGER
+
+config DEBUG_MM_MMU
+  bool "Debug MMU operations"
+  default n
+  depends on DEBUG_MEMORY_MANAGER
+
+config DEBUG_MM_PAGE_TABLES
+  bool "Debug low-level page table operations"
+  default n
+  depends on DEBUG_MEMORY_MANAGER
+
+config DEBUG_MM_SHADOWING
+  bool "Debug shadow mapping"
+  default n
+  depends on DEBUG_MEMORY_MANAGER
 
 config DEBUG_EXCEPTION_HANDLERS
   bool "Debug exception handlers"
@@ -241,9 +378,10 @@ config DEBUG_INTERPRETER_ALL_BRANCH
   select DEBUG_INTERPRETER_T16_BRANCH
   select DEBUG_INTERPRETER_T32_BRANCH
 
-config DEBUGINTERPRETER_ALL_COPROC
+config DEBUG_INTERPRETER_ALL_COPROC
   bool "Debug coprocessor operations"
   depends on DEBUG_INTERPRETER_ALL
+  select DEBUG_INTERPRETER_ANY_COPROC
   select DEBUG_INTERPRETER_ARM_COPROC
   select DEBUG_INTERPRETER_T32_COPROC
 
@@ -264,7 +402,7 @@ config DEBUG_INTERPRETER_ALL_STORE
   select DEBUG_INTERPRETER_T32_STORE
 
 config DEBUG_INTERPRETER_ALL_SYNC
-  bool"Debug synchronization operations"
+  bool "Debug synchronization operations"
   depends on DEBUG_INTERPRETER_ALL
   select DEBUG_INTERPRETER_ARM_LOAD_SYNC
   select DEBUG_INTERPRETER_ARM_STORE_SYNC
@@ -281,6 +419,7 @@ config DEBUG_INTERPRETER_ARM_BRANCH
 config DEBUG_INTERPRETER_ARM_COPROC
   bool "Debug coprocessor operations"
   depends on DEBUG_INTERPRETER_ARM
+  select DEBUG_INTERPRETER_ANY_COPROC
 
 config DEBUG_INTERPRETER_ARM_LOAD
   bool "Debug load operations"
@@ -333,6 +472,7 @@ config DEBUG_INTERPRETER_T32_BRANCH
 config DEBUG_INTERPRETER_T32_COPROC
   bool "Debug coprocessor operations"
   depends on DEBUG_INTERPRETER_T32
+  select DEBUG_INTERPRETER_ANY_COPROC
 
 config DEBUG_INTERPRETER_T32_LOAD
   bool "Debug load operations"
@@ -402,6 +542,10 @@ config DEBUG_VP_OMAP_35XX_GPMC
   bool "Debug memory controller (GPMC)"
   depends on DEBUG_VIRTUAL_PLATFORM
 
+config DEBUG_VP_OMAP_35XX_PM
+  bool "Debug L3 protection mechanism (PM)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+  
 config DEBUG_VP_OMAP_35XX_PRM
   bool "Debug power and reset manager (PRM)"
   depends on DEBUG_VIRTUAL_PLATFORM
@@ -416,6 +560,10 @@ config DEBUG_VP_OMAP_35XX_SDMA
 
 config DEBUG_VP_OMAP_35XX_SDRAM
   bool "Debug SDRAM"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_SMS
+  bool "Debug SDRAM Memory Scheduler (SMS)"
   depends on DEBUG_VIRTUAL_PLATFORM
 
 config DEBUG_VP_OMAP_35XX_SRAM
@@ -442,63 +590,13 @@ config DEBUG_FS_FAT
   bool "Debug FAT file system"
   depends on MMC
 
-menu "Hacks"
+config DEBUG_INTERPRETER_ANY_COPROC
+  bool
+
+menu "Miscellaneous hacks"
 
 config CLI
   bool "Command-line interface"
-
-config DUMP_STACK
-  bool "Dump stack on crash"
-
-config EMERGENCY_EXCEPTION_VECTOR
-  bool "Emergency exception vector"
-  default y
-  depends on ARCH_EXT_SECURITY
-
-config EXCEPTION_HANDLERS_COUNT_DATA_ABORT
-  bool "Count number of data aborts"
-
-config EXCEPTION_HANDLERS_COUNT_IRQ
-  bool "Count number of interrupts (IRQs)"
-
-config EXCEPTION_HANDLERS_COUNT_SVC
-  bool "Count number of software interrupts"
-
-config SCANNER_COUNT_BLOCKS
-  bool "Count number of scanned blocks"
-
-config SCANNER_EXTRA_CHECKS
-  bool "Track call source and check for null pointers in scanner"
-
-config GUEST_CONTEXT_BLOCK_TRACE
-  bool "Store block trace in guest context"
-  default y
-
-config GUEST_CONTEXT_BLOCK_TRACE_SIZE
-  int "Number of blocks"
-  default 6
-  range 1 100 if !LOOP_DETECTOR
-  range 4 100 if LOOP_DETECTOR
-  depends on GUEST_CONTEXT_BLOCK_TRACE
-
-config LOOP_DETECTOR
-  bool "Detect single block loops in privileged guest code"
-  depends on GUEST_CONTEXT_BLOCK_TRACE
-
-config LOOP_DETECTOR_WARN_TRESHOLD
-  int "Minimum number of iterations that causes a warning"
-  default 262144
-  range 2 134217728
-  depends on LOOP_DETECTOR
-
-config LOOP_DETECTOR_DIE_TRESHOLD
-  int "Number of iterations that causes the hypervisor to die"
-  default 524288
-  range 2 134217728
-  depends on LOOP_DETECTOR
-
-config BLOCK_CACHE_COLLISION_COUNTER
-  bool "Count number of collisions in block cache"
 
 config KERNEL_ANDROID
   bool "Small hacks for linux kernel 2.6.37 (Android)"

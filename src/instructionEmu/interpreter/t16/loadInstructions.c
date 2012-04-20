@@ -1,8 +1,8 @@
+#include "instructionEmu/loadStoreDecode.h"
+
 #include "instructionEmu/interpreter/internals.h"
 
 #include "instructionEmu/interpreter/t16/loadInstructions.h"
-
-#include "memoryManager/globalMemoryMapper.h"
 
 
 u32int t16LdrInstruction(GCONTXT *context, u32int instruction)
@@ -52,9 +52,7 @@ u32int t16LdrInstruction(GCONTXT *context, u32int instruction)
     DIE_NOW(context, "Unimplemented thumb16 LDR instr");
   }
 
-  u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD,
-      offsetAddress);
-  storeGuestGPR(regDst, valueLoaded, context);
+  storeGuestGPR(regDst, vmLoad(WORD, offsetAddress), context);
   return context->R15 + T16_INSTRUCTION_SIZE;
 }
 
@@ -82,8 +80,7 @@ u32int t16LdrbInstruction(GCONTXT *context, u32int instruction)
 
   u32int baseAddress = loadGuestGPR(regSrc, context);
   u32int offsetAddress = baseAddress + offset;
-  u32int valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, BYTE, offsetAddress) & 0xFF;
-  storeGuestGPR(regDst, valueLoaded, context);
+  storeGuestGPR(regDst, vmLoad(BYTE, offsetAddress) & 0xFF, context);
   return context->R15 + T16_INSTRUCTION_SIZE;
 }
 
@@ -101,15 +98,13 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
   u32int regList = 0;
   u32int baseAddress = 0;
 
-  u32int valueLoaded = 0;
-
   int i;
   // we trapped from Thumb mode. I assume the PC reg is in the list
   if ((instruction & 0x100) == 0)
   {
     DIE_NOW(context, "trapped but PC is not on the list...");
   }
-  regList = ( ((instruction & 0x0100)>>8) << 15 ) | (instruction & 0x00FF);
+  regList = (((instruction & 0x0100) >> 8) << 15) | (instruction & 0x00FF);
 
   // Get baseAddress from SP
   baseAddress = loadGuestGPR(GPR_SP, context);
@@ -119,18 +114,14 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
     // if current register set
     if (((regList >> i) & 0x1) == 0x1)
     {
-      valueLoaded = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
-      storeGuestGPR(i, valueLoaded, context);
+      storeGuestGPR(i, vmLoad(WORD, baseAddress), context);
       baseAddress = baseAddress + 4;
     }
   } // for ends
 
   // and now take care of the PC
-  if ((instruction & 0x0100))
-  {
-    nextPC = context->hardwareLibrary->loadFunction(context->hardwareLibrary, WORD, baseAddress);
-    baseAddress += 4;
-  }
+  nextPC = vmLoad(WORD, baseAddress);
+  baseAddress += 4;
 
   // thumb always updates the SP
   storeGuestGPR(GPR_SP, baseAddress, context);

@@ -3,9 +3,6 @@
 
 #include "guestManager/guestContext.h"
 
-#include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
-#include "memoryManager/pageTable.h" // for getPhysicalAddress()
-
 #include "vm/omap35xx/timer32k.h"
 
 
@@ -13,17 +10,12 @@ static u32int timer32SysconfReg = 0;
 static u32int counterVal = 0;
 
 
-u32int loadTimer32k(device *dev, ACCESS_SIZE size, u32int address)
+u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   u32int val = 0;
 
-  //We care about the real physical address of the entry, not its virtual address
-  GCONTXT* gc = getGuestContext();
-  descriptor* ptd = gc->virtAddrEnabled ? gc->PT_shadow : gc->PT_physical;
-  u32int phyAddr = getPhysicalAddress(ptd, address);
-
   DEBUG(VP_OMAP_35XX_TIMER32K, "%s load from physical address: %#.8x, vAddr %#.8x, aSize %#x" EOL,
-      dev->deviceName, phyAddr, address, (u32int)size);
+      dev->deviceName, phyAddr, virtAddr, (u32int)size);
 
   if (size == WORD)
   {
@@ -36,7 +28,7 @@ u32int loadTimer32k(device *dev, ACCESS_SIZE size, u32int address)
     else if (regAddr == REG_TIMER_32K_COUNTER)
     {
       // for now, just load the real counter value.
-      volatile u32int * memPtr = (u32int*)address;
+      volatile u32int * memPtr = (u32int*)virtAddr;
       val = *memPtr;
       val = val >> 5;
       DEBUG(VP_OMAP_35XX_TIMER32K, "%s load counter value %#x" EOL, dev->deviceName, val);
@@ -44,20 +36,20 @@ u32int loadTimer32k(device *dev, ACCESS_SIZE size, u32int address)
     else
     {
       printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr,
-          address);
-      DIE_NOW(gc, "Invalid register!");
+          virtAddr);
+      DIE_NOW(NULL, "Invalid register!");
     }
   }
   else
   {
     printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr,
-        address);
-    DIE_NOW(gc, "Invalid register access size (non32bit)");
+        virtAddr);
+    DIE_NOW(NULL, "Invalid register access size (non32bit)");
   }
   return val;
 }
 
-void storeTimer32k(device * dev, ACCESS_SIZE size, u32int address, u32int value)
+void storeTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DIE_NOW(NULL, "32k timer store unimplemented.");
 }

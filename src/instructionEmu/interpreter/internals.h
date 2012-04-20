@@ -52,23 +52,13 @@ typedef enum
 } OPTYPE;
 
 
-__macro__ u32int getRealPC(GCONTXT *context)
-{
-#ifdef CONFIG_BLOCK_COPY
-  return context->PCOfLastInstruction;
-#else
-  return context->R15;
-#endif
-}
-
-
 u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *instrString);
 
 /* expand immediate12 field of instruction */
-u32int armExpandImm12(u32int imm12);
+u32int armExpandImm12(u32int imm12) __constant__;
 
 // take shift type field from instr, return shift type
-u32int decodeShift(u32int instrShiftType);
+u32int decodeShift(u32int instrShiftType) __constant__;
 
 // take the imm5 shift amount and shift type field from instr
 // returns shift type, and adjusts shift amount
@@ -77,6 +67,8 @@ u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int *shamt);
 /* a function to evaluate if a condition value is satisfied */
 bool evaluateConditionCode(GCONTXT *context, u32int conditionCode);
 
+__macro__ u32int getRealPC(GCONTXT *context);
+
 void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
   __attribute__((noinline,noreturn));
 
@@ -84,7 +76,7 @@ void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *messa
 u32int loadGuestGPR(u32int regSrc, GCONTXT *context);
 
 // rotate right function
-u32int rorVal(u32int value, u32int ramt);
+u32int rorVal(u32int value, u32int ramt)  __constant__;
 
 // generic any type shift function, changes input_parameter(carryFlag) value
 u32int shiftVal(u32int imm32, u8int shiftType, u32int shamt, u8int *carryFlag);
@@ -94,7 +86,17 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT *context);
 
 #ifdef CONFIG_GUEST_TEST
 // function to evaluate breakpoint value in unittests
-void evalBkptVal(GCONTXT *context, u32int value);
+void evalBkptVal(GCONTXT *context, u32int value) __attribute__((noreturn));
 #endif
+
+
+__macro__ u32int getRealPC(GCONTXT *context)
+{
+#ifdef CONFIG_BLOCK_COPY
+  return context->PCOfLastInstruction;
+#else
+  return context->R15;
+#endif
+}
 
 #endif

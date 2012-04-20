@@ -15,7 +15,7 @@
 
 #else
 
-#define BLOCK_CACHE_SIZE    96
+#define BLOCK_CACHE_SIZE    256
 
 #endif /* CONFIG_BLOCK_COPY */
 
@@ -70,11 +70,11 @@ bool checkBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress);
 
 void clearBlockCache(BCENTRY *blockCache);
 
+BCENTRY *createBlockCache(void);
+
 void dumpBlockCacheEntry(BCENTRY *blockCache, u32int index);
 
 BCENTRY *getBlockCacheEntry(BCENTRY *blockCache, u32int index);
-
-void initialiseBlockCache(BCENTRY *blockCache);
 
 void validateCacheMultiPreChange(BCENTRY * bcache, u32int startAddress, u32int endAddress);
 

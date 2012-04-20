@@ -9,45 +9,38 @@
 
 #include "vm/omap35xx/sdram.h"
 
+#include "memoryManager/addressing.h"
 
 GCONTXT *createGuestContext(void)
 {
-  /*
-   * Allocate guest context
-   */
-  GCONTXT *context = (GCONTXT *)malloc(sizeof(GCONTXT));
+  // Allocate guest context
+  GCONTXT *context = (GCONTXT *)calloc(1, sizeof(GCONTXT));
   if (context == 0)
   {
-    DIE_NOW(NULL, "allocateGuest: Failed to allocate guest context.");
+    DIE_NOW(NULL, "Failed to allocate guest context.");
   }
-  DEBUG(GUEST_CONTEXT, "allocateGuestContext: @ %p; initialising..." EOL, context);
-  /*
-   * Set initial values
-   */
-  memset(context, 0, sizeof(GCONTXT));
+  DEBUG(GUEST_CONTEXT, "createGuestContext: @ %p; initialising..." EOL, context);
+  
+  // Set initial values
   context->CPSR = (PSR_F_BIT | PSR_I_BIT | PSR_SVC_MODE);
-  /*
-   * Initialise coprocessor register bank
-   */
-  context->coprocRegBank = (CREG *)malloc(MAX_CRB_SIZE * sizeof(CREG));
+
+  // Initialise coprocessor register bank
+  context->coprocRegBank = createCRB();
   if (context->coprocRegBank == NULL)
   {
     DIE_NOW(context, "Failed to allocate coprocessor register bank.");
   }
-  DEBUG(GUEST_CONTEXT, "allocateGuestContext: coprocessor register bank @ %p" EOL,
+  DEBUG(GUEST_CONTEXT, "createGuestContext: coprocessor register bank @ %p" EOL,
       context->coprocRegBank);
-  initCRB(context->coprocRegBank);
-  /*
-   * Initialise block cache
-   */
-  context->blockCache = (BCENTRY *)malloc(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
+
+  // Initialise block cache
+  context->blockCache = createBlockCache();
   if (context->blockCache == NULL)
   {
     DIE_NOW(context, "Failed to allocate block cache");
   }
-  DEBUG(GUEST_CONTEXT, "allocateGuestContext: block cache @ %p" EOL, context->blockCache);
-  memset(context->blockCache, 0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
-  initialiseBlockCache(context->blockCache);
+  DEBUG(GUEST_CONTEXT, "createGuestContext: block cache @ %p" EOL, context->blockCache);
+
   /*
    * Initialise block copy cache
    */
@@ -57,7 +50,7 @@ GCONTXT *createGuestContext(void)
   {
     DIE_NOW(context, "Failed to allocate block copy cache");
   }
-  DEBUG(GUEST_CONTEXT, "allocateGuestContext: block copy cache @ %p" EOL, context->blockCopyCache);
+  DEBUG(GUEST_CONTEXT, "createGuestContext: block copy cache @ %p" EOL, context->blockCopyCache);
   memset(context->blockCopyCache, 0, BLOCK_COPY_CACHE_SIZE * sizeof(u32int));
   context->blockCopyCacheEnd = context->blockCopyCache + BLOCK_COPY_CACHE_SIZE - 1;
   context->blockCopyCacheLastUsedLine = context->blockCopyCache - 1;
@@ -72,22 +65,24 @@ GCONTXT *createGuestContext(void)
   s32int branchOffset = - (s32int)(BLOCK_COPY_CACHE_SIZE + 1);
   *(context->blockCopyCacheEnd) = (CC_AL << 28) | (0b1010 << 24) | (*(u32int *)&branchOffset & 0xFFFFFF);
 #endif
-  /*
-   * Initialise virtual hardware devices
-   */
-  context->hardwareLibrary = initialiseHardwareLibrary();
+
+  // virtual machine page table structs
+  context->pageTables = (pageTablesVM *)calloc(1, sizeof(pageTablesVM));
+  if (context->pageTables == NULL)
+  {
+    DIE_NOW(context, "Failed to allocate page tables struct");
+  }
+  DEBUG(GUEST_CONTEXT, "allocateGuestContext: page tables @ %p" EOL, context->pageTables);
+
+  // Initialise virtual hardware devices
+  context->hardwareLibrary = createHardwareLibrary();
   if (context->hardwareLibrary == NULL)
   {
     DIE_NOW(context, "Hardware library initialisation failed.");
   }
-  /*
-   * Setup guest memory protection
-   */
-  context->memProt = initialiseMemoryProtection();
-  /*
-   * Print the address of the block trace, it may come in handy when debugging...
-   */
+
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
+  // Print the address of the block trace, it may come in handy when debugging...
   DEBUG(GUEST_CONTEXT, "allocateGuestContext: block trace @ %p" EOL, &(context->blockTrace));
 #endif
   return context;
@@ -95,7 +90,7 @@ GCONTXT *createGuestContext(void)
 
 void dumpGuestContext(GCONTXT *context)
 {
-  printf("============== DUMP GUEST CONTEXT ===============" EOL);
+  printf("====== DUMP GUEST CONTEXT @ %p ==============" EOL, context);
 
   const char *modeString;
   u32int *r8 = &(context->R8);
@@ -152,7 +147,7 @@ void dumpGuestContext(GCONTXT *context)
       *(r8 + 4), r13 ? *r13 : 0, r13 ? *(r13 + 1) : 0, context->R15
       );
 
-  printf("Mode: %-36s CPSR: 0x%.8x     SPSR: ", modeString, context->CPSR);
+  printf("Mode: %-35s CPSR: 0x%.8x     SPSR: ", modeString, context->CPSR);
   spsr = 0;
   if (spsr)
   {
@@ -163,15 +158,19 @@ void dumpGuestContext(GCONTXT *context)
     printf("----------" EOL);
   }
 
-  printf("endOfBlockInstr: %#.8x" EOL, context->endOfBlockInstr);
+  printf("endOfBlockInstr: %#.8x @ %p" EOL, context->endOfBlockInstr, &context->endOfBlockInstr);
   printf("handler function addr: %#.8x" EOL, (u32int)context->hdlFunct);
 
   /* Virtual Memory */
+  pageTablesVM *ptVM = context->pageTables;
+  printf("virtual machine page table struct at %p" EOL, ptVM);
   printf("guest OS virtual addressing enabled: %x" EOL, context->virtAddrEnabled);
-  printf("guest OS Page Table: %#.8x" EOL, (u32int)context->PT_os);
-  printf("guest OS Page Table (real): %#.8x" EOL, (u32int)context->PT_os_real);
-  printf("guest OS shadow Page Table: %#.8x" EOL, (u32int)context->PT_shadow);
-  printf("guest physical Page Table: %#.8x" EOL, (u32int)context->PT_physical);
+  printf("guest OS Page Table (VA): %p" EOL, ptVM->guestVirtual);
+  printf("guest OS Page Table (PA): %p" EOL, ptVM->guestPhysical);
+  printf("Shadow Page Table Priv: %p, User %p" EOL, ptVM->shadowPriv, ptVM->shadowUser);
+  printf("Current active shadow PT: %p" EOL, ptVM->shadowActive);
+  /* .. thats it with virtual memory stuff */
+  printf("Hypervisor page table: %p" EOL, ptVM->hypervisor);
   printf("high exception vector flag: %x" EOL, context->guestHighVectorSet);
   printf("registered exception vector:" EOL);
   printf("Und: %#.8x" EOL, context->guestUndefinedHandler);
@@ -215,6 +214,30 @@ void dumpGuestContext(GCONTXT *context)
   printf("gc blockCopyCacheLastUsedLine: %p" EOL, context->blockCopyCacheLastUsedLine);
   printf("gc PCOfLastInstruction: %#.8x" EOL, context->PCOfLastInstruction);
 #endif
-
   dumpSdramStats();
+}
+
+
+bool isGuestInPrivMode(GCONTXT * context)
+{
+  u32int modeField = context->CPSR & PSR_MODE;
+  return (modeField == PSR_USR_MODE) ? FALSE : TRUE;
+}
+
+
+/**
+ * switching from privileged to user mode
+ **/
+void guestToUserMode()
+{
+  privToUserAddressing();
+}
+
+
+/**
+ * switching from user to privileged mode
+ **/
+void guestToPrivMode()
+{
+  userToPrivAddressing();
 }

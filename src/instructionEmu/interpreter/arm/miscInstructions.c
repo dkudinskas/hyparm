@@ -6,7 +6,6 @@
 
 #include "vm/omap35xx/intc.h"
 
-
 u32int armBkptInstruction(GCONTXT *context, u32int instruction)
 {
 #ifdef CONFIG_GUEST_TEST
@@ -133,7 +132,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
     {
       oldCpsr &= ~PSR_MODE;
       oldCpsr |= newMode;
-      DIE_NOW(context, "guest is changing execution modes. What?!");
+      DIE_NOW(context, "guest is changing execution modes. To What?");
     }
     context->CPSR = oldCpsr;
   }
@@ -181,8 +180,6 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
   int readSpsr =  instruction & 0x00400000;
   int regDest  = (instruction & 0x0000F000) >> 12;
 
-  u32int value = 0;
-
 #ifdef ARM_INSTR_TRACE
   printf("MRS instr %08x @ %08x" EOL, instruction, getRealPC(context));
 #endif
@@ -194,6 +191,8 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
 
   if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
+    u32int value;
+
     if ((context->CPSR & PSR_MODE) == PSR_USR_MODE)
     {
       if (readSpsr)
@@ -316,9 +315,10 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
     // check for thumb toggle!
     if ((oldValue & PSR_T_BIT) != (value & PSR_T_BIT))
     {
-          DIE_NOW(context, "MSR toggle THUMB bit.");
+      DIE_NOW(context, "MSR toggle THUMB bit.");
     }
 #endif
+
     // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x000000FF);
     // clear old fields!

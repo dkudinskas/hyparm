@@ -47,14 +47,30 @@
  */
 .global _start
 _start:
-
   /*
    * The hypervisor is started through U-Boot, and any command line arguments are passed as following:
    * - R0 contains the number of arguments;
    * - R1 is a pointer to an array of null-terminated C strings.
    * These arguments will be used by main and will be preserved if we don't touch R0 and R1.
    *
-   * Set up stack pointer for all modes (SVC,FIQ,IRQ,ABT,UND,SYS/USR) and switch back to SVC mode.
+   * Zero-fill BSS section. Since the BSS section is aligned to a 32-byte boundary, we can safely
+   * store 32 bytes at once.
+   */
+  LDR     r2, =__BSS_BEGIN__
+  LDR     r3, =__BSS_END__
+  MOV     r4, #0
+  MOV     r5, #0
+  MOV     r6, #0
+  MOV     r7, #0
+  MOV     r8, #0
+  MOV     r9, #0
+  MOV     r10, #0
+  MOV     r11, #0
+zeroFillBSS$:
+  STMIA   r2!, {r4-r11}
+  CMP     r2, r3
+  BCC     zeroFillBSS$
+  /* Set up stack pointer for all modes (SVC,FIQ,IRQ,ABT,UND,SYS/USR) and switch back to SVC mode.
    * We do not make use of secure modes, so we do not set up a stack pointer for MON mode.
    * Hence, the hypervisor and its guests must never execute the SMC instruction.
    */
@@ -81,51 +97,7 @@ _start:
     LDR     R2, =exceptionVectorBase
     MCR     P15, 0, R2, C12, C0, 0
 #else
-# ifdef CONFIG_SOC_TI_OMAP_35XX
-      /*
-       * On the TI OMAP 35xx, U-Boot overwrites the default RAM exception vectors, which can normally be used as they are.
-       * Restore them.
-       */
-      LDR     R2, [PC, #0x20]
-      LDR     R3, [PC, #0x20]
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      STR     R3, [R2], #4
-      ADD     PC, PC, #4
-      /*
-       * The next two lines are data; they contain:
-       * - the start address of the RAM exception vectors;
-       * - the default instruction to be executed for all exceptions as defined in the TI OMAP 35xx TRM.
-       */
-      .word   0x4020FFC8
-      LDR     PC, [PC, #0x14]
-# else
-    /*
-     * Batch install exception handler addresses.
-     * Set R2 to the first exception handler address to be written.
-     * On the TI OMAP 35xx R2 is already correct.
-     */
-    LDR     R2, =exception_vector
-    LDR     R2, [R2]
-# endif /* CONFIG_SOC_TI_OMAP_35XX */
-    LDR     R3, =undHandler
-    STR     R3, [R2], #4
-    LDR     R3, =svcHandler
-    STR     R3, [R2], #4
-    LDR     R3, =pabthandler
-    STR     R3, [R2], #4
-    LDR     R3, =dabtHandler
-    STR     R3, [R2], #4
-    LDR     R3, =monHandler
-    STR     R3, [R2], #4
-    LDR     R3, =irqHandler
-    STR     R3, [R2], #4
-    LDR     R3, =fiqHandler
-    STR     R3, [R2], #4
+  .err @ Architectures without the security extensions are not supported
 #endif /* CONFIG_ARCH_EXT_SECURITY */
   /*
    * Set up SSP if enabled before we use any stacks...
@@ -174,7 +146,11 @@ exceptionVectorBase:
   .balign 0x20
   .global emergencyExceptionVectorBase
 emergencyExceptionVectorBase:
+#ifdef CONFIG_BKPT
+  BKPT    #0xDEAD
+#else
   B       emergencyExceptionVectorBase
+#endif
   B       emergencyExceptionVectorBase
   B       emergencyExceptionVectorBase
   B       emergencyExceptionVectorBase
@@ -187,7 +163,7 @@ emergencyExceptionVectorBase:
 setEmergencyExceptionVector:
   LDR     R0, =emergencyExceptionVectorBase
   MCR     P15, 0, R0, C12, C0, 0
-  MOV     PC, LR
+  BX      LR
 
 #endif /* CONFIG_EMERGENCY_EXCEPTION_VECTOR */
 
@@ -196,14 +172,14 @@ setEmergencyExceptionVector:
 getGuestContext:
   LDR     R0, =guestContextSpace
   LDR     R0, [R0]
-  MOV     PC, LR
+  BX      LR
 
 
 .global setGuestContext
 setGuestContext:
   LDR     R1, =guestContextSpace
   STR     R0, [R1]
-  MOV     PC, LR
+  BX      LR
 
 
 /*
@@ -292,7 +268,7 @@ setGuestContext:
   MRS     R2, CPSR
   CPS     PSR_SYS_MODE
   STMIA   R4, {R13, R14}
-  MSR     CPSR, R2
+  MSR     CPSR_cxsf, R2
   /*
    * Store R8--R12; the location depends on whether we were emulating FIQ mode
    */
@@ -362,7 +338,7 @@ setGuestContext:
   CPS     PSR_SYS_MODE
   LDR     SP, [R4]
   LDR     LR, [R4, #4]
-  MSR     CPSR, R1
+  MSR     CPSR_cxsf, R1
   /*
    * Move some things out of the way:
    * - R8: pointer to guest context
@@ -427,8 +403,8 @@ setGuestContext:
   /*
    * Save guest PC on stack, then perform exception return (pop PC and restore SPSR to CPSR)
    */
-  STM     SP, {LR}
-  LDM     SP, {PC}^
+  STMDB   SP, {LR}
+  LDMDB   SP, {PC}^
 .endm
 
 
@@ -464,8 +440,8 @@ setGuestContext:
   /*
    * Save guest PC on stack, then perform exception return (pop PC and restore SPSR to CPSR)
    */
-  STM     SP, {LR}
-  LDM     SP, {PC}^
+  STMDB   SP, {LR}
+  LDMDB   SP, {PC}^
 .endm
 
 
@@ -525,15 +501,19 @@ dabtHandler:
     restore_r0_r14
     restore_cpsr_pc_usr_mode
 
+
 .global dabtHandlerPriv
 dabtHandlerPriv:
   POP    {LR}
-  /* SEGFAULT in the hypervisor */
-  PUSH   {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
+  SUB    LR, LR, #8
+  STMFD  SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R14}
   /* PC of the aborting instruction in @param1 of C handler */
-  SUB    R0, LR, #8
+  MOV    R0, LR
   BL     dataAbortPrivileged
-  /* SEGFAULT in hypervisor: should never return from that handler */
+  /* LR is adjusted on the top of the stack, pop it into PC (exc return)*/
+  LDMFD    SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, PC}^
+
+  /* should never hit this */
 dabtPrivLoop:
   B      dabtPrivLoop
 
@@ -582,7 +562,7 @@ pabthandler:
   /* We were in USR mode, we must have been running guest code */
   save_cc_r0_to_r14 /* pops LR */
   /* Get the instr that aborted, after we fix up we probably want to re-try it */
-  save_pc_abort
+  save_pc
 
   /*
    * Pointer to guest context is already in R0!
@@ -686,23 +666,8 @@ fiqHandler:
   LDMFD SP!, {PC}^
 
 
-.data
-
-#ifndef CONFIG_SOC_TI_OMAP_35XX
-exception_vector:
-  .err @ Unknown target
-#endif
-
 /*
- * 32-bit space for the guest context pointer.
- * This space must be in a .data section to make sure it is initialized to zero.
- */
-guestContextSpace:
-  .space 4
-
-
-/*
- * Space allocated in the BSS section is *not* initialized to zero.
+ * Space allocated in the BSS section is initialized to zero in _start.
  */
 .bss
 
@@ -711,35 +676,64 @@ guestContextSpace:
  * every POP increases the value of SP. Hence, labels have to be put after the reserved space.
  *
  * WARNING: EABI requires 8-byte aligned stacks (on public interfaces)!
+ * WARNING: all stacks aligned on 4k boundaries for memory protection!
  */
-  .balign 8
-stackSpaceEnd:
-.global svcStackEnd
+.balign 4096
 .global svcStack
-svcStackEnd:
-  .space 1024 /* SVC */
-svcStack:
-.global abtStackEnd
+.global svcStackEnd
+.global svcStackGap
 .global abtStack
-abtStackEnd:
-  .space 1024 /* ABT */
-abtStack:
-.global undStackEnd
+.global abtStackEnd
+.global abtStackGap
 .global undStack
-undStackEnd:
-  .space 1024 /* UND */
-undStack:
-.global irqStackEnd
+.global undStackEnd
+.global undStackGap
 .global irqStack
-irqStackEnd:
-  .space 1024 /* IRQ */
-irqStack:
-.global fiqStackEnd
+.global irqStackEnd
+.global irqStackGap
 .global fiqStack
+.global fiqStackEnd
+.global fiqStackGap
+.global topStackGap
+
+svcStackGap:
+  .space 4096 /* SVC gap */
+svcStackEnd:
+  .space 4096 /* SVC stack */
+svcStack:
+
+abtStackGap:
+  .space 4096 /* ABT gap */
+abtStackEnd:
+  .space 4096 /* ABT stack */
+abtStack:
+
+undStackGap:
+  .space 4096 /* UND gap */
+undStackEnd:
+  .space 4096 /* UND stack */
+undStack:
+
+irqStackGap:
+  .space 4096 /* IRQ gap */
+irqStackEnd:
+  .space 4096 /* IRQ */
+irqStack:
+
+fiqStackGap:
+  .space 4096
 fiqStackEnd:
-  .space 1024 /* FIQ */
+  .space 4096 /* FIQ */
 fiqStack:
-stackSpaceBegin:
+
+topStackGap:
+  .space 4096
+
+/*
+ * 32-bit space for the guest context pointer. Must be initialized to zero at start!
+ */
+guestContextSpace:
+  .space 4
 
 /*
  * Guard value for GCC stack-smashing protection (SSP).

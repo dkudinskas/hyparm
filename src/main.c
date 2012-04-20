@@ -4,7 +4,7 @@
 
 #include "common/commandLine.h"
 #include "common/debug.h"
-#include "common/markers.h"
+#include "common/linker.h"
 #include "common/stdarg.h"
 #include "common/stddef.h"
 #include "common/string.h"
@@ -42,17 +42,11 @@
 #include "guestBoot/linux.h"
 #include "guestBoot/image.h"
 
-#include "memoryManager/addressing.h" /* For virtual addressing initialisation */
-#include "memoryManager/cp15coproc.h"
-#include "memoryManager/frameAllocator.h"
+#include "memoryManager/addressing.h"
 
+#include "vm/omap35xx/cp15coproc.h"
 #include "vm/omap35xx/hardwareLibrary.h"
 
-
-//uncomment me to enable block copy cache debug (installation of backpointer): #define BLOCK_COPY_DEBUG
-
-#define HIDDEN_RAM_START   0x8f000000
-#define HIDDEN_RAM_SIZE    0x01000000 // 16 MB
 
 #define CL_OPTION_FAST_UART          1
 #define CL_OPTION_GUEST_OS           2
@@ -83,7 +77,7 @@ extern void setGuestContext(GCONTXT *gContext);
 fatfs mainFilesystem;
 partitionTable primaryPartitionTable;
 struct mmc *mmcDevice;
-file * debugStream;
+file *debugStream;
 #endif
 
 
@@ -99,11 +93,16 @@ void main(s32int argc, char *argv[])
   struct runtimeConfiguration config;
   memset(&config, 0, sizeof(struct runtimeConfiguration));
   config.guestOS = GUEST_OS_LINUX;
+ 
+#ifdef CONFIG_MMC
+  mmcDevice = NULL;
+  debugStream = NULL;
+#endif
 
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
 
-  initialiseAllocator(HIDDEN_RAM_START, HIDDEN_RAM_SIZE);
+  initialiseAllocator(RAM_XN_POOL_BEGIN, RAM_XN_POOL_END - RAM_XN_POOL_BEGIN);
 
   /* initialise uart backend, important to be before any debug output. */
   /* init function initialises UARTs in disabled mode. */
@@ -121,7 +120,7 @@ void main(s32int argc, char *argv[])
   /*
    * Print the bounds of the hypervisor image in RAM.
    */
-  DEBUG(STARTUP, "Hypervisor @ %#.8x -- %#.8x" EOL, HYPERVISOR_IMAGE_START_ADDRESS, HYPERVISOR_IMAGE_END_ADDRESS);
+  DEBUG(STARTUP, "Hypervisor @ %#.8x -- %#.8x" EOL, HYPERVISOR_BEGIN_ADDRESS, HYPERVISOR_END_ADDRESS);
 
   /*
    * Use command line arguments passed by U-Boot to update the runtime configuration structure. The
@@ -130,15 +129,12 @@ void main(s32int argc, char *argv[])
   processCommandLine(&config, argc - 1, argv + 1);
   dumpRuntimeConfiguration(&config);
 
-  /* create the frametable from which we can alloc memory */
-  initialiseFrameTable();
-
   /* initialize guest context */
   GCONTXT *context = createGuestContext();
   setGuestContext(context);
 
   /* Setup MMU for Hypervisor */
-  initialiseVirtualAddressing();
+  initVirtualAddressing(context);
 
 #ifdef CONFIG_CLI
   /*

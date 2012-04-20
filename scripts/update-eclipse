@@ -1,0 +1,76 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+use Cwd 'abs_path';
+use File::Basename;
+
+
+
+sub readFile($)
+{
+  my $fileName = shift;
+  my $fileSize = -s $fileName;
+  my $fileHandle;
+  my $buffer;
+  open $fileHandle, "<$fileName";
+  my $read = read $fileHandle, $buffer, $fileSize;
+  close $fileHandle;
+  die "Error: failed to read $fileName" if $read != $fileSize;
+  return $buffer;
+}
+
+sub writeFile($$)
+{
+  my $fileName = shift;
+  my $buffer = shift;
+  my $fileHandle;
+  open $fileHandle, ">$fileName";
+  print $fileHandle $buffer;
+  close $fileHandle;
+}
+
+sub main
+{
+  # Where are we? Determine path to hypervisor tree as default value.
+  my ($fileName, $path) = fileparse(__FILE__);
+  my $cdtProject = abs_path("$path/../.cproject");
+  my $configFile = abs_path("$path/../build/config.h");
+
+  my $f = readFile($cdtProject);
+  if ($f =~ /\Q<option id="gnu.c.compiler.option.preprocessor.def.symbols.\E([0-9]+)\Q" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">\E/)
+  {
+    my $listStart = $+[0];
+    my $rem = substr $f, $listStart;
+    if ($rem =~ /<\/option>/)
+    {
+      my $listEnd = $-[0];
+
+      #go
+      my $beforeList = substr $f, 0, $listStart;
+      my $afterList = substr $f, $listStart + $listEnd;
+      my $list = '';
+
+      my $config = readFile($configFile);
+      while ($config =~ /^#define (CONFIG_[A-Z0-9_]+)( .*)?$/gm)
+      {
+        my $key = $1;
+        my $value = $2;
+	$value =~ s/^\s+//;
+	$value =~ s/"/&quot;/g;
+        $list .= "<listOptionValue builtIn=\"false\" value=\"$key=$value\"/>";
+      }
+
+      writeFile($cdtProject, "$beforeList$list$afterList");
+
+      print "OK\n";
+      return 0;
+    }
+  }
+
+  print "Failed\n";
+  return 1;
+}
+
+exit main;

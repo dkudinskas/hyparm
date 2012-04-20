@@ -22,7 +22,7 @@ loopCache1:
   blt     skip
   mcr     p15, 2, sl, cr0, cr0, 0
   isb     sy
-  mrc     p15, 1,   r1, cr0, cr0, 0
+  mrc     p15, 1, r1, cr0, cr0, 0
   and     r2, r1, #7
   add     r2, r2, #4
   ldr     r4, [pc, #92]

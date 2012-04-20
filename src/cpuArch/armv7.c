@@ -1,4 +1,5 @@
 #include "cpuArch/armv7.h"
+#include "cpuArch/cache.h"
 
 
 static inline unsigned int get_cr(void);
@@ -6,9 +7,7 @@ static inline void set_cr(unsigned int val);
 static void cp_delay(void);
 static void cache_enable(u32int cache_bit);
 static void cache_disable(u32int cache_bit);
-static void cache_flush(void);
 
-extern void v7_flush_dcache_all(u32int dev);
 
 /***
  * CACHE functions
@@ -17,13 +16,13 @@ extern void v7_flush_dcache_all(u32int dev);
 static inline unsigned int get_cr(void)
 {
   unsigned int val;
-  asm("mrc p15, 0, %0, c1, c0, 0  @ get CR" : "=r" (val) : : "cc");
+  __asm__ __volatile__("mrc p15, 0, %0, c1, c0, 0  @ get CR" : "=r" (val) : : "cc");
   return val;
 }
 
 static inline void set_cr(u32int val)
 {
-  asm volatile("mcr p15, 0, %0, c1, c0, 0  @ set CR"
+  __asm__ __volatile__("mcr p15, 0, %0, c1, c0, 0  @ set CR"
     : : "r" (val) : "cc");
   isb();
 }
@@ -56,9 +55,9 @@ static void cache_disable(u32int cache_bit)
   set_cr(reg & ~cache_bit);
 }
 
-static void cache_flush()
+void cache_flush()
 {
-  asm ("mcr p15, 0, %0, c7, c5, 0": :"r" (0));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c5, 0": :"r" (0));
 }
 
 void icache_enable()
@@ -121,7 +120,7 @@ int cleanupBeforeBoot()
   v7_flush_dcache_all(BOARD_DEVICE_TYPE);
 
   /* mem barrier to sync up things */
-  asm("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
+  __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
 
   l2_cache_enable();
   enableInterrupts();
