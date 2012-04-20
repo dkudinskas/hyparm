@@ -897,8 +897,8 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
   simpleEntry* first = getEntryFirst(context->pageTables->shadowActive, gptPhysAddr);
   u32int backupEntry = *(u32int*)first;
   DEBUG(MM_SHADOWING, "mapAPBitsPageTable: backed up entry %08x @ %p" EOL, backupEntry, first);
-  mapSection(context->pageTables->shadowActive, gptPhysAddr, gptPhysAddr,
-       HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+  addSectionEntry((sectionEntry *)first, gptPhysAddr, HYPERVISOR_ACCESS_DOMAIN,
+                  HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
   mmuInvalidateUTLBbyMVA(gptPhysAddr);
   mmuDataMemoryBarrier();
 

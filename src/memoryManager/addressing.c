@@ -359,9 +359,8 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
       tempFirst = getEntryFirst(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical);
       backupEntry = *(u32int*)tempFirst;
       DEBUG(MM_ADDRESSING, "changeGuestDACR: backed up entry %08x @ %p" EOL, backupEntry, tempFirst);
-      mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
-                (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-                HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+      addSectionEntry((sectionEntry *)tempFirst, (u32int)context->pageTables->guestPhysical,
+                      HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
       mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
       gpt = context->pageTables->guestPhysical;
       DEBUG(MM_ADDRESSING, "changeGuestDACR: gpt now set to %p" EOL, gpt);
