@@ -165,11 +165,9 @@ config GUEST_ANDROID
 
 config GUEST_FREERTOS
   bool "FreeRTOS"
-  depends on THUMB2
 
 config GUEST_TEST
   bool "Unit testing"
-  depends on THUMB2
 
 endmenu
 
