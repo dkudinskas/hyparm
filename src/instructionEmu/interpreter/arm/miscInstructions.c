@@ -14,6 +14,7 @@ u32int armBkptInstruction(GCONTXT *context, u32int instruction)
   u32int val = imm12 | imm4;
 
   evalBkptVal(context, val);
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 #else
   DIE_NOW(context, "not implemented");
 #endif

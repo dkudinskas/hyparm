@@ -457,6 +457,7 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT *context)
  * This function is used in unit tests. It evaluates the value passed to the BKPT instruction.
  * Current values:
  * 0      pass
+ * 0xFFFF print active shadow pagetable
  * other  fail
  */
 void evalBkptVal(GCONTXT *context, u32int value)
@@ -465,9 +466,18 @@ void evalBkptVal(GCONTXT *context, u32int value)
   {
     case 0:
       DIE_NOW(context, "test passed");
+    case 0xFFFF:
+    {
+      dumpTranslationTable(context->pageTables->shadowActive);
+      break;
+    }
     default:
+    {
+      printf("Breakpoint value %#.8x" EOL, value);
       DIE_NOW(context, "test failed");
+    }
   }
+  return;
 }
 
 #endif /* CONFIG_GUEST_TEST */

@@ -63,6 +63,7 @@ u32int t16BkptInstruction(GCONTXT *context, u32int instruction)
   u32int val = instruction & 0x00FF;
 
   evalBkptVal(context, val);
+  return context->R15 + T16_INSTRUCTION_SIZE;
 #else
   DIE_NOW(context, "not implemented");
 #endif
