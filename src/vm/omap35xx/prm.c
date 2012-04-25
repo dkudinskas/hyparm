@@ -46,6 +46,7 @@ void initPrm(void)
   prMan->prmPolCtrl = 0xA;
   prMan->prmVoltSetup2 = 0;
   // IVA2 registers
+  prMan->prmWkdepIva2    = 0xB3;
   prMan->prmPwstctrlIva2 = 0xFF0F07;
   prMan->prmPwststIva2   = 0xFF7;
   // OCP_system_reg REGISTERS
@@ -54,6 +55,7 @@ void initPrm(void)
   prMan->prmIrqStatusMpuOcp = 0x0;
   prMan->prmIrqEnableMpuOcp = 0x0;
   // MPU registers
+  prMan->prmWkdepMpu    = 0xA5;
   prMan->prmPwstctrlMpu = 0x30107;
   prMan->prmPwststMpu   = 0xC7;
   // CORE registers
@@ -341,6 +343,11 @@ u32int loadIva2Prm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - IVA2_PRM;
   switch (reg)
   {
+    case PM_WKDEP_IVA2:
+    {
+      val = prMan->prmWkdepIva2;
+      break;
+    }
     case PM_PWSTCTRL_IVA2:
     {
       val = prMan->prmPwstctrlIva2;
@@ -417,6 +424,11 @@ u32int loadMpuPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - MPU_PRM;
   switch (reg)
   {
+    case PM_WKDEP_MPU:
+    {
+      val = prMan->prmWkdepMpu;
+      break;
+    }
     case PM_PWSTCTRL_MPU:
     {
       val = prMan->prmPwstctrlMpu;
@@ -833,6 +845,11 @@ void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
+    case PM_WKDEP_IVA2:
+    {
+      prMan->prmWkdepIva2 = value;
+      break;
+    }
     case PM_PWSTCTRL_IVA2:
     {
       prMan->prmPwstctrlIva2 = value;
@@ -889,6 +906,11 @@ void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
+    case PM_WKDEP_MPU:
+    {
+      prMan->prmWkdepMpu = value;
+      break;
+    }
     case PM_PWSTCTRL_MPU:
     {
       prMan->prmPwstctrlMpu = value;
