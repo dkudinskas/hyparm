@@ -202,9 +202,11 @@ u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
       val = prMan->prmClkoutCtrlReg;
       break;
     }
-    case PM_PWSTST_CLK:
+    case PM_WKDEP:
+    case PM_PWSTST:
+    case PM_UNKNOWN:
     {
-      printf("loadClockControlPrm: Loading invalid register. Kernel 3.3 bug?" EOL);
+      printf("loadClockControlPrm: Loading invalid register." EOL);
       val = 0;
       break;
     }
@@ -501,10 +503,10 @@ u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
       val = prMan->prmWkstWkup;
       break;
     }
-    case PM_PWSTCTRL_WKUP:
-    case PM_PWSTST_WKUP:
+    case PM_PWSTCTRL:
+    case PM_PWSTST:
     {
-      printf("loadWakeUpPrm: Loading invalid register. Kernel 3.3 bug?" EOL);
+      printf("loadWakeUpPrm: Loading invalid register." EOL);
       val = 0;
       break;
     }
@@ -770,8 +772,20 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u
 
 void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, " storeClockControlPrm unimplemented.");
+  u32int reg = phyAddr - Clock_Control_Reg_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeClockControlPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("storeClockControlPrm: storing to invalid register." EOL);
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storeClockControlPrm store to non existing register!");
+  }
 }
 
 
@@ -894,9 +908,9 @@ void storeWakeUpPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_WKUP:
+    case PM_PWSTCTRL:
     {
-      printf("storeWakeUpPrm: storing to invalid register. Kernel 3.3 bug?" EOL);
+      printf("storeWakeUpPrm: storing to invalid register." EOL);
       break;
     }
     default:
