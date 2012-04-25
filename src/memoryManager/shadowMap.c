@@ -82,7 +82,8 @@ bool shadowMap(u32int virtAddr)
           pageTableEntry* shadowPageTable  = (pageTableEntry*)shadowFirst;
           pageTableEntry* guestPageTable = (pageTableEntry*)guestFirst;
           shadowMapPageTable(guestPageTable, guestPageTable, shadowPageTable);
-          mmuPageTableEdit((u32int)shadowPageTable, (virtAddr & PT2_ALIGN_MASK));
+          //FIXME: Henri: This TLB flush should not be necessary
+          mmuPageTableEdit((u32int)shadowPageTable, (virtAddr & SECTION_MASK));
           break;
         }
         case PAGE_TABLE:
