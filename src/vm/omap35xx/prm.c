@@ -206,7 +206,7 @@ u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
     case PM_PWSTST:
     case PM_UNKNOWN:
     {
-      printf("loadClockControlPrm: Loading invalid register." EOL);
+      printf("loadClockControlPrm: loading invalid register." EOL);
       val = 0;
       break;
     }
@@ -351,10 +351,25 @@ u32int loadIva2Prm(device *dev, u32int address, u32int phyAddr)
       val = prMan->prmPwststIva2;
       break;
     }
+    case PM_UNKNOWN:
+    {
+      printf("loadIva2Prm: loading invalid register." EOL);
+      val = 0;
+      break;
+    }
+    case RM_RSTCTRL_IVA2:
+    case RM_RSTST_IVA2:
+    case PM_PREPWSTST_IVA2:
+    case PRM_IRQSTATUS_IVA2:
+    case PRM_IRQENABLE_IVA2:
+    {
+      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      DIE_NOW(NULL, "loadIva2Prm: loading unimplemented register!");
+    }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadIva2Prm loading non existing register!");
+      DIE_NOW(NULL, "loadIva2Prm: loading non existing register!");
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadIva2Prm reg %x value %.8x" EOL, reg, val);
@@ -412,10 +427,25 @@ u32int loadMpuPrm(device *dev, u32int address, u32int phyAddr)
       val = prMan->prmPwststMpu;
       break;
     }
+    case PM_UNKNOWN:
+    {
+      printf("loadMpuPrm: loading invalid register." EOL);
+      val = 0;
+      break;
+    }
+    case RM_RSTST_MPU:
+    case PM_EVGENCTRL_MPU:
+    case PM_EVGENONTIM_MPU:
+    case PM_EVGENOFFTIM_MPU:
+    case PM_PREPWSTST_MPU:
+    {
+      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      DIE_NOW(NULL, "loadMpuPrm: loading unimplemented register!");
+    }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadMpuPrm loading non existing register!");
+      DIE_NOW(NULL, "loadMpuPrm: loading non existing register!");
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadMpuPrm reg %x value %.8x" EOL, reg, val);
@@ -506,7 +536,7 @@ u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
     case PM_PWSTCTRL:
     case PM_PWSTST:
     {
-      printf("loadWakeUpPrm: Loading invalid register." EOL);
+      printf("loadWakeUpPrm: loading invalid register." EOL);
       val = 0;
       break;
     }
@@ -808,8 +838,13 @@ void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
       prMan->prmPwstctrlIva2 = value;
       break;
     }
+    case PM_UNKNOWN:
+    {
+      printf("storeIva2Prm: storing to invalid register." EOL);
+      break;
+    }
     default:
-      DIE_NOW(NULL, "storeIva2Prm store to non existing register!");
+      DIE_NOW(NULL, "storeIva2Prm: store to non existing register!");
   }
 }
 
@@ -857,6 +892,11 @@ void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
     case PM_PWSTCTRL_MPU:
     {
       prMan->prmPwstctrlMpu = value;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("storeMpuPrm: storing to invalid register." EOL);
       break;
     }
     default:
