@@ -970,9 +970,19 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeEmuCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeEmuCm unimplemented.");
-  return;
+  DEBUG(VP_OMAP_35XX_CM, "storeEmuCm: store to address %#.8x val %#.8x" EOL, address, value);
+  u32int reg = phyAddr - EMU_CM;
+  switch (reg)
+  {
+    case CM_CLKSTCTRL_EMU:
+      if (clockMan->cmClkStCtrlEmu != value)
+      {
+        DIE_NOW(NULL, "storeEmuCm unimplemented store to reg cmFclkEnPer");
+      }
+      break;
+    default:
+      DIE_NOW(NULL, "storeEmuCm storing non existing register!");
+  }
 }
 
 void storeGlobalRegCm(device * dev, u32int address, u32int phyAddr, u32int value)
