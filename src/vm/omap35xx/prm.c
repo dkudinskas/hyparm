@@ -343,17 +343,17 @@ u32int loadIva2Prm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - IVA2_PRM;
   switch (reg)
   {
-    case PM_WKDEP_IVA2:
+    case PM_WKDEP:
     {
       val = prMan->prmWkdepIva2;
       break;
     }
-    case PM_PWSTCTRL_IVA2:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlIva2;
       break;
     }
-    case PM_PWSTST_IVA2:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststIva2;
       break;
@@ -364,9 +364,9 @@ u32int loadIva2Prm(device *dev, u32int address, u32int phyAddr)
       val = 0;
       break;
     }
-    case RM_RSTCTRL_IVA2:
-    case RM_RSTST_IVA2:
-    case PM_PREPWSTST_IVA2:
+    case RM_RSTCTRL:
+    case RM_RSTST:
+    case PM_PREPWSTST:
     case PRM_IRQSTATUS_IVA2:
     case PRM_IRQENABLE_IVA2:
     {
@@ -424,17 +424,17 @@ u32int loadMpuPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - MPU_PRM;
   switch (reg)
   {
-    case PM_WKDEP_MPU:
+    case PM_WKDEP:
     {
       val = prMan->prmWkdepMpu;
       break;
     }
-    case PM_PWSTCTRL_MPU:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlMpu;
       break;
     }
-    case PM_PWSTST_MPU:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststMpu;
       break;
@@ -445,11 +445,11 @@ u32int loadMpuPrm(device *dev, u32int address, u32int phyAddr)
       val = 0;
       break;
     }
-    case RM_RSTST_MPU:
+    case RM_RSTST:
     case PM_EVGENCTRL_MPU:
     case PM_EVGENONTIM_MPU:
     case PM_EVGENOFFTIM_MPU:
-    case PM_PREPWSTST_MPU:
+    case PM_PREPWSTST:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
       DIE_NOW(NULL, "loadMpuPrm: loading unimplemented register!");
@@ -471,12 +471,12 @@ u32int loadCorePrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - CORE_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_CORE:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlCore;
       break;
     }
-    case PM_PWSTST_CORE:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststCore;
       break;
@@ -498,12 +498,12 @@ u32int loadSgxPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - SGX_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_SGX:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlSgx;
       break;
     }
-    case PM_PWSTST_SGX:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststSgx;
       break;
@@ -525,22 +525,22 @@ u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - WKUP_PRM;
   switch (reg)
   {
-    case PM_WKEN_WKUP:
+    case PM_WKEN:
     {
       val = prMan->prmWkenWkup;
       break;
     }
-    case PM_MPUGRPSEL_WKUP:
+    case PM_MPUGRPSEL:
     {
       val = prMan->prmMpugrpselWkup;
       break;
     }
-    case PM_IVA2GRPSEL_WKUP:
+    case PM_IVA2GRPSEL:
     {
       val = prMan->prmIva2grpselWkup;
       break;
     }
-    case PM_WKST_WKUP:
+    case PM_WKST:
     {
       val = prMan->prmWkstWkup;
       break;
@@ -569,12 +569,12 @@ u32int loadDssPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - DSS_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_DSS:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlDss;
       break;
     }
-    case PM_PWSTST_DSS:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststDss;
       break;
@@ -596,12 +596,12 @@ u32int loadCamPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - CAM_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_CAM:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlCam;
       break;
     }
-    case PM_PWSTST_CAM:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststCam;
       break;
@@ -623,12 +623,12 @@ u32int loadPerPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - PER_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_PER:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlPer;
       break;
     }
-    case PM_PWSTST_PER:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststPer;
       break;
@@ -650,7 +650,7 @@ u32int loadEmuPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - EMU_PRM;
   switch (reg)
   {
-    case PM_PWSTST_EMU:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststEmu;
       break;
@@ -679,12 +679,12 @@ u32int loadNeonPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - NEON_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_NEON:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlNeon;
       break;
     }
-    case PM_PWSTST_NEON:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststNeon;
       break;
@@ -706,12 +706,12 @@ u32int loadUsbhostPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - USBHOST_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_USBHOST:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlUsbhost;
       break;
     }
-    case PM_PWSTST_USBHOST:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststUsbhost;
       break;
@@ -852,12 +852,12 @@ void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_WKDEP_IVA2:
+    case PM_WKDEP:
     {
       prMan->prmWkdepIva2 = value;
       break;
     }
-    case PM_PWSTCTRL_IVA2:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlIva2 = value;
       break;
@@ -913,12 +913,12 @@ void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_WKDEP_MPU:
+    case PM_WKDEP:
     {
       prMan->prmWkdepMpu = value;
       break;
     }
-    case PM_PWSTCTRL_MPU:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlMpu = value;
       break;
@@ -941,7 +941,7 @@ void storeCorePrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_CORE:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlCore = value;
       break;
@@ -959,7 +959,7 @@ void storeSgxPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_SGX:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlSgx = value;
       break;
@@ -995,7 +995,7 @@ void storeDssPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_DSS:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlDss = value;
       break;
@@ -1013,7 +1013,7 @@ void storeCamPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_CAM:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlCam = value;
       break;
@@ -1031,7 +1031,7 @@ void storePerPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_PER:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlPer = value;
       break;
@@ -1068,7 +1068,7 @@ void storeNeonPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_NEON:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlNeon = value;
       break;
@@ -1086,7 +1086,7 @@ void storeUsbhostPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_USBHOST:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlUsbhost = value;
       break;
