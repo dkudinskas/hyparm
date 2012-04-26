@@ -117,7 +117,7 @@ u32int t16PushInstruction(GCONTXT *context, u32int instruction)
   if (instruction & 0x0100) //LR is on the list
   {
     valueLoaded = loadGuestGPR(GPR_LR, context);
-    validateCachePreChange(context->blockCache, address);
+    clearTranslationCacheByAddress(&context->translationCache, address);
     vmStore(WORD, address, valueLoaded);
     address -= 4;
   }
@@ -131,7 +131,7 @@ u32int t16PushInstruction(GCONTXT *context, u32int instruction)
     {
       valueLoaded = loadGuestGPR(i, context);
       // emulating store. Validate cache if needed
-      validateCachePreChange(context->blockCache, address);
+      clearTranslationCacheByAddress(&context->translationCache, address);
       vmStore(WORD, address, valueLoaded);
       address -= 4;
     }

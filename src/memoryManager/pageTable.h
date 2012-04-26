@@ -153,7 +153,7 @@ simpleEntry *newLevelOnePageTable(void);
 u32int* newLevelTwoPageTable(void);
 void deleteLevelTwoPageTable(pageTableEntry* pageTable);
 
-void mapHypervisorMemory(simpleEntry* ptd);
+void mapHypervisorMemory(simpleEntry* ptd, bool hypervisor);
 
 u32int mapRange(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
                 u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,

@@ -7,9 +7,10 @@
 
 #include "guestManager/guestContext.h"
 
+#include "memoryManager/addressing.h"
+
 #include "vm/omap35xx/sdram.h"
 
-#include "memoryManager/addressing.h"
 
 GCONTXT *createGuestContext(void)
 {
@@ -33,37 +34,23 @@ GCONTXT *createGuestContext(void)
   DEBUG(GUEST_CONTEXT, "createGuestContext: coprocessor register bank @ %p" EOL,
       context->coprocRegBank);
 
-  // Initialise block cache
+  /* Initialise block cache
   context->blockCache = createBlockCache();
   if (context->blockCache == NULL)
   {
     DIE_NOW(context, "Failed to allocate block cache");
   }
   DEBUG(GUEST_CONTEXT, "createGuestContext: block cache @ %p" EOL, context->blockCache);
+  */
+
+  // TODO port createBlockCache to TT
 
   /*
    * Initialise block copy cache
    */
 #ifdef CONFIG_BLOCK_COPY
-  context->blockCopyCache = (u32int *)malloc(BLOCK_COPY_CACHE_SIZE * sizeof(u32int));
-  if (context->blockCopyCache == NULL)
-  {
-    DIE_NOW(context, "Failed to allocate block copy cache");
-  }
-  DEBUG(GUEST_CONTEXT, "createGuestContext: block copy cache @ %p" EOL, context->blockCopyCache);
-  memset(context->blockCopyCache, 0, BLOCK_COPY_CACHE_SIZE * sizeof(u32int));
-  context->blockCopyCacheEnd = context->blockCopyCache + BLOCK_COPY_CACHE_SIZE - 1;
-  context->blockCopyCacheLastUsedLine = context->blockCopyCache - 1;
-  /*
-   * Install unconditional branch to the beginning at the end of the block copy cache. The offset
-   * given in the branch instruction determines is a number of words, not bytes. Since the value of
-   * the PC -- in ARM mode -- at a given address is always (address + 8), and the instruction will
-   * be put at (BLOCK_COPY_CACHE_SIZE - 1), the offset to the beginning of the block copy cache is:
-   *
-   * branchOffset = (BLOCK_COPY_CACHE_SIZE - 1) + 2
-   */
-  s32int branchOffset = - (s32int)(BLOCK_COPY_CACHE_SIZE + 1);
-  *(context->blockCopyCacheEnd) = (CC_AL << 28) | (0b1010 << 24) | (*(u32int *)&branchOffset & 0xFFFFFF);
+  initialiseTranslationCache(&context->translationCache);
+  DEBUG(GUEST_CONTEXT, "createGuestContext: block copy cache @ %p" EOL, context->translationCache.codeCache);
 #endif
 
   // virtual machine page table structs
@@ -185,7 +172,7 @@ void dumpGuestContext(GCONTXT *context)
   printf("Data abort pending: %x" EOL, context->guestDataAbtPending);
   printf("Prefetch abort pending: %x" EOL, context->guestPrefetchAbtPending);
   printf("Guest idle: %x" EOL, context->guestIdle);
-  printf("Block cache at: %#.8x" EOL, (u32int)context->blockCache);
+  printf("Block cache at: %#.8x" EOL, (u32int)context->translationCache.metaCache);
 
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
   printf("Block trace:" EOL);
@@ -209,9 +196,9 @@ void dumpGuestContext(GCONTXT *context)
 
 #ifdef CONFIG_BLOCK_COPY
   /* BlockCache with copied code */
-  printf("gc blockCopyCache: %p" EOL, context->blockCopyCache);
-  printf("gc blockCopyCacheEnd: %p" EOL, context->blockCopyCacheEnd);
-  printf("gc blockCopyCacheLastUsedLine: %p" EOL, context->blockCopyCacheLastUsedLine);
+  printf("gc blockCopyCache: %p" EOL, context->translationCache.codeCache);
+  printf("gc blockCopyCache next: %p" EOL, context->translationCache.codeCacheNextEntry);
+  printf("gc blockCopyCacheEnd: %p" EOL, context->translationCache.codeCacheLastEntry);
   printf("gc PCOfLastInstruction: %#.8x" EOL, context->PCOfLastInstruction);
 #endif
   dumpSdramStats();

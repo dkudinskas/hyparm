@@ -412,6 +412,7 @@ GCONTXT *prefetchAbort(GCONTXT *context)
     case ifsTranslationTableWalk2ndLvlSynchParityError:
     default:
       printPrefetchAbort();
+      dumpTranslationTable(mmuGetTTBR0());
       DIE_NOW(context, "Unimplemented guest prefetch abort.");
   }
   enableInterrupts();

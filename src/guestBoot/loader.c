@@ -119,7 +119,7 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
   //execution shouldn't be started at hdrEntryPoint any more!
   //The code from the blockCache should be executed  :  getGuestContext()->blockCopyCache
   //But first entry in blockCopyCache is backpointer -> next entry (blockCopyCache is u32int => +4)
-  entryPoint = (u32int)context->blockCopyCache + 4;
+  entryPoint = (u32int)(context->translationCache.codeCache + 1);
 #endif
 
 #if defined(CONFIG_GUEST_TEST) && defined(CONFIG_THUMB2)

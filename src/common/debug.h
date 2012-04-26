@@ -5,8 +5,6 @@
 #include "common/stdio.h"
 #include "common/types.h"
 
-#include "guestManager/guestContext.h"
-
 
 #define EXPAND_TO_STRING(s)    TO_STRING(s)
 #define TO_STRING(s)           #s
@@ -44,7 +42,10 @@
 #define DIE_NOW(context, msg)  dieNow(context, __FILE__, EXPAND_TO_STRING(__LINE__), __func__, msg)
 
 
-void dieNow(GCONTXT *context, const char *file, const char *line, const char *caller,
+struct guestContext;
+
+
+void dieNow(struct guestContext *context, const char *file, const char *line, const char *caller,
             const char *msg) __attribute__((noreturn));
 
 void dumpStack(void) __attribute__((naked));

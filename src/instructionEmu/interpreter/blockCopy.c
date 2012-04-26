@@ -1,4 +1,3 @@
-#include "common/bit.h"
 #include "common/stddef.h"
 
 #include "cpuArch/constants.h"
@@ -7,32 +6,8 @@
 #include "instructionEmu/interpreter/internals.h"
 
 
-u32int zeroBits(u32int instruction, u32int startbit)
-{
-  switch (startbit)
-  {
-    case 0:
-      return (instruction & 0xFFFFFFF0);
-    case 12:
-      return (instruction & 0xFFFF0FFF);
-    case 16:
-      return (instruction & 0xFFF0FFFF);
-    default:
-      /*
-       * TODO:
-       *
-       * This should be in bit.h and perhaps use asm for BFC, but GCC is probably smart enough to do that by itself.
-       *
-       * Generic equivalent:
-       *
-       * return instruction & ~(0xF << startbit);
-       */
-      DIE_NOW(NULL, "zeroBits not implemented for this startbitvalue");
-  }
-}
-
 /* This will save the PC corresponding to instructionAddress in reg. instructionAddress is the original address of the instruction */
-u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * currBlockCopyCacheAddr, u32int reg)
+u32int* savePCInReg(TranslationCache *tc, u32int * instructionAddress, u32int * currBlockCopyCacheAddr, u32int reg)
 {
   //First we will calculate the PCValue (PC is 2 behind)
   u32int instructionAddr2 = (u32int) (instructionAddress + 2);
@@ -46,7 +21,7 @@ u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * cur
   instr2Copy = instr2Copy | (reg << 12);
   instr2Copy = instr2Copy | ((u32int) instructionAddr2 & 0xFFF); //set imm12 correct
 
-  currBlockCopyCacheAddr = checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr, context->blockCache, (u32int*) context->blockCopyCache, (u32int*) context->blockCopyCacheEnd);
+  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
   *(currBlockCopyCacheAddr++) = instr2Copy;
 
   //MOVT -> ARM ARM A8.6.99 p512
@@ -59,7 +34,7 @@ u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * cur
   instr2Copy = instr2Copy | (reg << 12);
   instr2Copy = instr2Copy | (((u32int) instructionAddr2 >> 16) & 0xFFF); //set imm12 correct
 
-  currBlockCopyCacheAddr = checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr, context->blockCache, (u32int*) context->blockCopyCache, (u32int*) context->blockCopyCacheEnd);
+  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
   *(currBlockCopyCacheAddr++) = instr2Copy;
   //Return the current BlockCopyCacheAddr so that the PCfunct that called this function knows where to continue.
   return currBlockCopyCacheAddr;
@@ -79,54 +54,25 @@ u32int* savePCInReg(GCONTXT * context, u32int * instructionAddress, u32int * cur
  *     MVN is a special case because one of the source register is set to 0000 -> only a small
  *     inconvenience when destReg = R0 but it can be taken care of.
  */
-u32int* standardImmRegRSR(GCONTXT * context, u32int * instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+u32int* standardImmRegRSR(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
 {
   //target register is not PC
   u32int instruction = *instructionAddr;
   bool immediate = (instruction >> 25 & 0b1) == 0b1;
-  bool registerShifted = (((instruction >> 4) & 0b1) == 0b1) && (((instruction >> 7) & 0b1) == 0b0);
   u32int srcReg1 = instruction >> 16 & 0xF;
   u32int srcReg2 = instruction & 0xF;
   u32int destReg = instruction >> 12 & 0xF;
   bool replaceReg1 = FALSE;
   bool replaceReg2 = FALSE;
   u32int instr2Copy = instruction;
-  bool conditionAlways = (instruction >> 28 & 0xF) == 0xE;
-  if (conditionAlways)
+  if (ARM_EXTRACT_CONDITION_CODE(instruction) == CC_AL)
   {
-    if (immediate)
-    {
-      /* Immediate -> only check regSrc1 */
-      if (srcReg1 == 0xF)
-      {
-        replaceReg1 = TRUE;
-      }
-
-    }
-    else
-    {
-      /* Not the immediate flavor => RSR of ordinary register flavor */
-      if (registerShifted)
-      {
-        DIE_NOW(context, "standardImmRegRSR (register-shifted register) with PC is UNPREDICTABLE!");
-      }
-      else
-      {
-        /* ordinary register flavor-> check regSrc1 & regSrc2 */
-        if (srcReg1 == 0xF)
-        {
-          replaceReg1 = TRUE;
-        }
-        if (srcReg2 == 0xF)
-        {
-          replaceReg2 = TRUE;
-        }
-      }
-    }
+    replaceReg1 = srcReg1 == GPR_PC;
+    replaceReg2 = !immediate && srcReg2 == GPR_PC;
     if (replaceReg1 || replaceReg2)
     {
       /* Rd should not be used as input.  srcReg2 is part of the immediate value if it is a immediate flavor */
-      if (srcReg1 == destReg || ((!immediate) && srcReg2 == destReg))
+      if (srcReg1 == destReg || (!immediate && srcReg2 == destReg))
       {
         /* Some information before crashing that can be useful to determine if this is indeed the way to go.*/
         printf("instruction = %08x\n", instruction);
@@ -134,7 +80,7 @@ u32int* standardImmRegRSR(GCONTXT * context, u32int * instructionAddr, u32int * 
         printf("srcReg1 = %08x\n", srcReg1);
         printf("srcReg2 = %08x\n", srcReg2);
         printf("destReg = %08x\n", destReg);
-        DIE_NOW(context, "standardImmRegRSR special care should be taken it is not possible to use destReg");
+        DIE_NOW(NULL, "standardImmRegRSR special care should be taken it is not possible to use destReg");
         /*
          *  Not sure if this can occur.  If it occurs our usual trick won't work.
          *  It can still be solved using a scratch register.
@@ -143,11 +89,9 @@ u32int* standardImmRegRSR(GCONTXT * context, u32int * instructionAddr, u32int * 
          *  place restore-scratch-register-instruction
          *  THIS SHOULD BE DONE Inside this if-statement and this if-clause should return
          */
-
-        return 0; /* Inpossible to flow through because last instruction is restore sratch-register*/
       }
 
-      currBlockCopyCacheAddr = savePCInReg(context, instructionAddr, currBlockCopyCacheAddr, destReg);
+      currBlockCopyCacheAddr = savePCInReg(tc, instructionAddr, currBlockCopyCacheAddr, destReg);
 
       if (replaceReg1)
       {
@@ -161,7 +105,7 @@ u32int* standardImmRegRSR(GCONTXT * context, u32int * instructionAddr, u32int * 
         instr2Copy = instr2Copy | (destReg);
       }
     }
-    currBlockCopyCacheAddr = checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr, context->blockCache, (u32int*) context->blockCopyCache, (u32int*) context->blockCopyCacheEnd);
+    currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
     *(currBlockCopyCacheAddr++) = instr2Copy;
 
     return currBlockCopyCacheAddr;
@@ -172,10 +116,8 @@ u32int* standardImmRegRSR(GCONTXT * context, u32int * instructionAddr, u32int * 
      * the program counter
      * We can use standardImmRegRSRNoDest for this.
      */
-    return standardImmRegRSRNoDest(context, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-
+    return standardImmRegRSRNoDest(tc, instructionAddr, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
   }
-
 }
 
 /*
@@ -183,7 +125,7 @@ u32int* standardImmRegRSR(GCONTXT * context, u32int * instructionAddr, u32int * 
  * impossible to use the same trick.  A scratch register is needed.
  * List of instructions: CMN, CMP, TEQ, TST
  */
-u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int * instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+u32int* standardImmRegRSRNoDest(TranslationCache *tc, u32int * instructionAddr, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
   u32int instruction = *instructionAddr;
   bool immediate = ((instruction >> 25) & 0b1) == 0b1;
@@ -203,7 +145,7 @@ u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int * instructionAddr, u32
   {
     if (registerShifted) /* register-shifted register */
     {
-      DIE_NOW(context, "tstPCFunct: tst(register-shifted register) cannot have PC as source -> UNPREDICTABLE ");
+      DIE_NOW(NULL, "tstPCFunct: tst(register-shifted register) cannot have PC as source -> UNPREDICTABLE ");
     }
     /* if ordinary register flavor than rnIsPC & rmIsPC are already set correctly */
   }
@@ -211,32 +153,30 @@ u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int * instructionAddr, u32
   if (rnIsPC || rmIsPC)
   { /*Instruction has to be changed to a PC safe instructionstream. */
     printf("instruction = %08x\n", instruction);
-    DIE_NOW(context, "standardImmRegRSRNoDest: this part is not tested.");
+    DIE_NOW(NULL, "standardImmRegRSRNoDest: this part is not tested.");
     /* No destination register so only source registers have to be checked*/
-    scratchReg = findUnusedRegister(regSrc1, regSrc2, -1);
+    scratchReg = getOtherRegisterOf2(regSrc1, regSrc2);
     /* place 'Backup scratchReg' instruction */
-    currBlockCopyCacheAddr = backupRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-    currBlockCopyCacheAddr = savePCInReg(context, instructionAddr, currBlockCopyCacheAddr, scratchReg);
+    currBlockCopyCacheAddr = backupRegister(tc, scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+    currBlockCopyCacheAddr = savePCInReg(tc, instructionAddr, currBlockCopyCacheAddr, scratchReg);
 
     if (rnIsPC)
     {
-      instr2Copy = zeroBits(instr2Copy, 16);
-      instr2Copy = instr2Copy | scratchReg << 16;
+      instr2Copy = (instr2Copy & ~(0xF << 16)) | scratchReg << 16;
     }
     if (rmIsPC)
     {
-      instr2Copy = zeroBits(instr2Copy, 0);
-      instr2Copy = instr2Copy | scratchReg;
+      instr2Copy = (instr2Copy & ~0xF) | scratchReg;
     }
   }
 
-  currBlockCopyCacheAddr = checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr, context->blockCache, (u32int*) context->blockCopyCache, (u32int*) context->blockCopyCacheEnd);
+  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
   *(currBlockCopyCacheAddr++) = instr2Copy;
 
   if (rnIsPC || rmIsPC)
   {
     /* place 'restore scratchReg' instruction */
-    currBlockCopyCacheAddr = restoreRegister(scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
+    currBlockCopyCacheAddr = restoreRegister(tc, scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
     /* Make sure scanner sees that we need a word to store the register*/
     currBlockCopyCacheAddr = (u32int*) (((u32int) currBlockCopyCacheAddr) | 0b1);
   }
@@ -244,9 +184,8 @@ u32int* standardImmRegRSRNoDest(GCONTXT * context, u32int * instructionAddr, u32
   return currBlockCopyCacheAddr;
 }
 
-u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+u32int * backupRegister(TranslationCache *tc, u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  GCONTXT * context = getGuestContext();
   u32int targetAddr = (((u32int) blockCopyCacheStartAddress) & 0xFFFFFFFE) + 4;
   u32int offset = 0;
   //STR(immediate) -> ARM ARM A8.6.194 p696
@@ -264,7 +203,7 @@ u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32i
   {
     /* No free word make one */
     /* First check if the current word is free (and free it up if not)*/
-    currBlockCopyCacheAddr = checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr, context->blockCache, (u32int*) context->blockCopyCache, (u32int*) context->blockCopyCacheEnd);
+    currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
     /*Then go to next word*/
     currBlockCopyCacheAddr++;
     /* As there needs to be taken maximum 1 backup per instruction no further actions need to be taken.  Scanner will change blockCopyCacheStartAddress if necessary
@@ -281,14 +220,13 @@ u32int * backupRegister(u32int reg2Backup, u32int * currBlockCopyCacheAddr, u32i
     offset = 0;
   }
   instr2Copy = instr2Copy | (offset);
-  currBlockCopyCacheAddr = checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr, context->blockCache, (u32int*) context->blockCopyCache, (u32int*) context->blockCopyCacheEnd);
+  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
   *(currBlockCopyCacheAddr++) = instr2Copy;
   return currBlockCopyCacheAddr;
 }
 
-u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
+u32int *restoreRegister(TranslationCache *tc, u32int reg2Restore, u32int * currBlockCopyCacheAddr, u32int * blockCopyCacheStartAddress)
 {
-  GCONTXT * context = getGuestContext();
   u32int targetAddr = (((u32int) blockCopyCacheStartAddress) & 0xFFFFFFFE) + 4;
   u32int offset = 0;
 
@@ -314,20 +252,7 @@ u32int * restoreRegister(u32int reg2Restore, u32int * currBlockCopyCacheAddr, u3
     offset = 0; /*  */
   }
   instr2Copy = instr2Copy | (offset);
-  currBlockCopyCacheAddr = checkAndClearBlockCopyCacheAddress(currBlockCopyCacheAddr, context->blockCache, (u32int*) context->blockCopyCache, (u32int*) context->blockCopyCacheEnd);
+  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
   *(currBlockCopyCacheAddr++) = instr2Copy;
   return currBlockCopyCacheAddr;
 }
-
-/* Function will return a register that is different from regSrc1,regSrc2 and regSrc3*/
-u32int findUnusedRegister(u32int regSrc1, u32int regSrc2, u32int regDest)
-{
-  u32int i;
-  for (i = 0; i < 15; i++)
-  {
-    if ((i != regSrc1) && (i != regSrc2) && (i != regDest))
-      return i;
-  }DIE_NOW(NULL, "No unusedRegister, this cannot be happening!");
-  return -1;
-}
-

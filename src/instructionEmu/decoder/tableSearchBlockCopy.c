@@ -13,7 +13,7 @@ struct decodingTable
 };
 
 
-#include "instructionEmu/decoder/arm/tablesBlockCopy.inc.c"
+#include "instructionEmu/decoder/arm/tables.inc.c"
 
 
 static struct decodingTableEntry *decode(struct decodingTable *categories, u32int instruction);

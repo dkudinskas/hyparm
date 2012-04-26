@@ -4,7 +4,9 @@
 #include "common/compiler.h"
 #include "common/types.h"
 
-#include "guestManager/blockCache.h"
+#include "guestManager/translationCache.h"
+
+#include "instructionEmu/decoder.h"
 
 #include "memoryManager/memoryProtection.h"
 
@@ -14,14 +16,6 @@
 
 struct VirtualMachinePageTables;
 typedef struct VirtualMachinePageTables pageTablesVM;
-
-struct guestContext;
-typedef struct guestContext GCONTXT;
-
-typedef u32int (*instructionHandler)(GCONTXT *context, u32int instruction);
-
-typedef u32int *(*pcInstructionHandler)(GCONTXT *context, u32int *instructionAddr,
-  u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
 
 
 enum guestOSType
@@ -46,7 +40,7 @@ struct VirtualMachinePageTables
 };
 
 
-struct guestContext
+typedef struct guestContext
 {
   u32int R0;
   u32int R1;
@@ -86,9 +80,8 @@ struct guestContext
   u32int R14_UND;
   u32int SPSR_UND;
   u32int endOfBlockInstr;
-  instructionHandler hdlFunct;
+  InstructionHandler hdlFunct;
   CREG * coprocRegBank;
-  BCENTRY * blockCache;
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
   u32int blockTrace[CONFIG_GUEST_CONTEXT_BLOCK_TRACE_SIZE];
   u32int blockTraceIndex;
@@ -118,16 +111,14 @@ struct guestContext
   bool guestIdle;
   /* for OS-specific quirks */
   enum guestOSType os;
+
+  TranslationCache translationCache;
+
 #ifdef CONFIG_BLOCK_COPY
-  /* This is the blokCache with copied instructions we use u32int because the content of the address cannot be typed*/
-  u32int *blockCopyCache;
-  u32int *blockCopyCacheLastUsedLine; /* This points to the last used line of the block cache.  This is for knowing where to place*/
-                                       /*the next entry. this will be on blockCopyCacheLastUsedLine+1;*/
-  u32int *blockCopyCacheEnd; /* This points to the end of the blockCache. This address is the last address off blockCopyCache!*/
-                              /* This will contain an unconditional branch to begin ofblockCopyCache*/
+
   u32int PCOfLastInstruction;/*This will contain the value the program counter should have when the last instruction is executing*/
 #endif
-};
+} GCONTXT;
 
 
 /*

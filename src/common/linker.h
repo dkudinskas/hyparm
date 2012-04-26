@@ -17,6 +17,11 @@
 #define RAM_XN_POOL_BEGIN               ((u32int)&(__RAM_XN_POOL_BEGIN__))
 #define RAM_XN_POOL_END                 ((u32int)&(__RAM_XN_POOL_END__))
 
+#ifdef CONFIG_BLOCK_COPY
+#define RAM_X_POOL_BEGIN                ((u32int)&(__RAM_X_POOL_BEGIN__))
+#define RAM_X_POOL_END                  ((u32int)&(__RAM_X_POOL_END__))
+#endif
+
 
 /*
  * Do NOT use the following symbols directly; use the macros above!
@@ -34,5 +39,10 @@ extern const u32int __HYPERVISOR_END__;
 
 extern const u32int __RAM_XN_POOL_BEGIN__;
 extern const u32int __RAM_XN_POOL_END__;
+
+#ifdef CONFIG_BLOCK_COPY
+extern const u32int __RAM_X_POOL_BEGIN__;
+extern const u32int __RAM_X_POOL_END__;
+#endif
 
 #endif /* __COMMON_LINKER_H__ */

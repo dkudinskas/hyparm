@@ -116,7 +116,7 @@ __macro__ bool isAlignedToBits(void *pointer, u32int bits)
 
 __macro__ bool isAlignedToBitsN(u32int value, u32int bits)
 {
-  return findFirstBitSet(value) < bits;
+  return findFirstBitSet(value) > bits;
   // Alternative:
   // return (((u32int)pointer) & ((1 << bits) - 1)) == 0;
 }

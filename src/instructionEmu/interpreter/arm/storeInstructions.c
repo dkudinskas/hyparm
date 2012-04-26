@@ -547,7 +547,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
       DEBUG(INTERPRETER_ARM_STORE, "armStmInstruction: *(%#.8x) = R[%x] = %#.8x" EOL, address, i,
           valueLoaded);
       // emulating store. Validate cache if needed
-      validateCachePreChange(context->blockCache, address);
+      clearTranslationCacheByAddress(&context->translationCache, address);
       // *(address)= R[i];
       vmStore(WORD, address, valueLoaded);
       address = address + 4;
@@ -557,7 +557,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
   if ((regList >> 15) & 0x1)
   {
     // emulating store. Validate cache if needed
-    validateCachePreChange(context->blockCache, address);
+    clearTranslationCacheByAddress(&context->translationCache, address);
     // *(address)= PC+8 - architectural feature due to pipeline..
     vmStore(WORD, address, (loadGuestGPR(15, context) + 8));
   }

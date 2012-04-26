@@ -7,6 +7,8 @@
 
 #include "drivers/beagle/beUart.h"
 
+#include "guestManager/guestContext.h"
+
 #ifdef CONFIG_MMC
 #include "io/fs/fat.h"
 #endif
@@ -72,7 +74,7 @@ static void banner(const char *msg)
   printf(EOL EOL "%s[%s]%s%s" EOL EOL, padding, msg, ((msgLength & 1) ? "" : "="), padding);
 }
 
-void dieNow(GCONTXT *context, const char *file, const char *line, const char *caller, const char *msg)
+void dieNow(struct guestContext *context, const char *file, const char *line, const char *caller, const char *msg)
 {
 #ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
   setEmergencyExceptionVector();

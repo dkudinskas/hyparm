@@ -17,7 +17,7 @@ struct decodingTable
 struct decodingTableEntry
 {
   instructionReplaceCode replace;
-  instructionHandler handler;
+  InstructionHandler handler;
   u32int value;            /* If arch == 0 then value is a sentinel.  */
   u32int mask;             /* Recognise inst if (op & mask) == value.  */
   const char *instructionString; /* How to disassemble this insn.  */
@@ -32,10 +32,10 @@ struct decodingTableEntry
 #endif
 
 
-static instructionReplaceCode decode(struct TopLevelCategory *categories, u32int instruction, instructionHandler *handler);
+static instructionReplaceCode decode(struct decodingTable *categories, u32int instruction, InstructionHandler *handler);
 
 
-static instructionReplaceCode decode(struct TopLevelCategory *categories, u32int instruction, instructionHandler *handler)
+static instructionReplaceCode decode(struct decodingTable *categories, u32int instruction, InstructionHandler *handler)
 {
   /*
    * Find the top level category for this instruction
@@ -72,7 +72,7 @@ static instructionReplaceCode decode(struct TopLevelCategory *categories, u32int
   return entry->replace;
 }
 
-instructionReplaceCode decodeArmInstruction(u32int instruction, instructionHandler *handler)
+instructionReplaceCode decodeArmInstruction(u32int instruction, InstructionHandler *handler)
 {
   return decode(armCategories, instruction, handler);
 }
@@ -80,7 +80,7 @@ instructionReplaceCode decodeArmInstruction(u32int instruction, instructionHandl
 
 #ifdef CONFIG_THUMB2
 
-instructionReplaceCode decodeThumbInstruction(u32int instruction, instructionHandler *handler)
+instructionReplaceCode decodeThumbInstruction(u32int instruction, InstructionHandler *handler)
 {
   /*
    * For Thumb, we still need to determine which table of top-level categories to use

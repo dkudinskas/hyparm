@@ -1,4 +1,5 @@
 #include "common/assert.h"
+#include "common/compiler.h"
 #include "common/debug.h"
 
 #include "memoryManager/mmu.h"
@@ -487,6 +488,7 @@ void printPrefetchAbort()
   u32int faultStatus = ifsr.fs3_0 | (ifsr.fs4 << 4);
 
   printf("Prefetch Abort Address: %08x" EOL, ifar);
+  printf("Fault statuc register: %#.8x" EOL, *(u32int *)&ifsr);
   printf("Fault type: ");
   printf("%s", prefetchAbtFaultString[faultStatus]);
   printf(" (%x),  External: %x" EOL, faultStatus, ifsr.ExT);

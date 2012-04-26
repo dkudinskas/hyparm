@@ -1,0 +1,3 @@
+define BLOCK_COPY_DEBUG
+
+check code cache block size (sometimes bytes, sometimes words, wtf)

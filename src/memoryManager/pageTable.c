@@ -162,7 +162,7 @@ u32int mapRange(simpleEntry *pageTable, u32int virtualStartAddress, u32int physi
 /**
  * Map hypervisor into given base page table in sections, 1-2-1 VA to PA
  **/
-void mapHypervisorMemory(simpleEntry *pageTable)
+void mapHypervisorMemory(simpleEntry *pageTable, bool hypervisor)
 {
   DEBUG(MM_PAGE_TABLES, "mapHypervisorMemory in page table %p" EOL, pageTable);
   /*
@@ -186,6 +186,11 @@ void mapHypervisorMemory(simpleEntry *pageTable)
   ASSERT(HYPERVISOR_RW_XN_END_ADDRESS <= RAM_XN_POOL_BEGIN, "bad linker symbols");
   ASSERT(RAM_XN_POOL_BEGIN < RAM_XN_POOL_END, "bad linker symbols");
   ASSERT(RAM_XN_POOL_END <= MEMORY_END_ADDR, "bad linker symbols");
+#ifdef CONFIG_BLOCK_COPY
+  ASSERT(RAM_XN_POOL_END < RAM_X_POOL_BEGIN, "bad linker symbols");
+  ASSERT(RAM_X_POOL_BEGIN < RAM_X_POOL_END, "bad linker symbols");
+  ASSERT(RAM_X_POOL_END <= MEMORY_END_ADDR, "bad linker symbols");
+#endif
   /*
    * Now make sure the linker followed our alignment constraints:
    */
@@ -197,6 +202,14 @@ void mapHypervisorMemory(simpleEntry *pageTable)
            "non-executable read-write sections not aligned on small page boundary");
   ASSERT(isAlignedToMaskN(RAM_XN_POOL_BEGIN, SMALL_PAGE_MASK),
          "non-executable RAM pool not aligned on small page boundary");
+  ASSERT(isAlignedToMaskN(RAM_XN_POOL_END, SMALL_PAGE_MASK),
+         "non-executable RAM pool not aligned on small page boundary");
+#ifdef CONFIG_BLOCK_COPY
+  ASSERT(isAlignedToMaskN(RAM_X_POOL_BEGIN, SMALL_PAGE_MASK),
+         "executable RAM pool not aligned on small page boundary");
+  ASSERT(isAlignedToMaskN(RAM_X_POOL_END, SMALL_PAGE_MASK),
+         "executable RAM pool not aligned on small page boundary");
+#endif
   /*
    * Stacks must be non-executable, and should be protected against overflow by leaving gaps (fault
    * entries) in the translation table. Stacks and gaps must reside in one of the data sections and
@@ -263,13 +276,20 @@ void mapHypervisorMemory(simpleEntry *pageTable)
   mapRange(pageTable, TOP_STACK_GAP + SMALL_PAGE_SIZE, TOP_STACK_GAP + SMALL_PAGE_SIZE,
            HYPERVISOR_RW_XN_END_ADDRESS, HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0,
            TRUE);
-  bool ramXN = TRUE;
-#ifdef CONFIG_BLOCK_COPY
-  ramXN = FALSE;
-  printf("WARNING: making malloc pool EXECUTABLE for BLOCK COPY" EOL);
-#endif
   mapRange(pageTable, RAM_XN_POOL_BEGIN, RAM_XN_POOL_BEGIN, RAM_XN_POOL_END,
-           HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0, ramXN);
+           HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+#ifdef CONFIG_BLOCK_COPY
+  if (hypervisor)
+  {
+    printf("WARNING: allocating NON-CACHEABLE, GUEST-READABLE, EXECUTABLE pool for block copy" EOL);
+    mapRange(pageTable, RAM_X_POOL_BEGIN, RAM_X_POOL_BEGIN, RAM_X_POOL_END,
+             HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_RO, FALSE, FALSE, 0, FALSE);
+  }
+  else
+  {
+    printf("WARNING: unimplemented X-pool allocation in SPT");
+  }
+#endif
 }
 
 /**

@@ -18,17 +18,11 @@
 
 #ifdef CONFIG_BLOCK_COPY
 
-#include "instructionEmu/interpreter/arm/branchPCInstructions.h"
-#include "instructionEmu/interpreter/arm/coprocPCInstructions.h"
+#include "instructionEmu/interpreter/blockCopy.h"
+
 #include "instructionEmu/interpreter/arm/dataProcessPCInstructions.h"
 #include "instructionEmu/interpreter/arm/loadPCInstructions.h"
-#include "instructionEmu/interpreter/arm/miscPCInstructions.h"
-#include "instructionEmu/interpreter/arm/miscMediaPCInstructions.h"
-#include "instructionEmu/interpreter/arm/multiplyPCInstructions.h"
-#include "instructionEmu/interpreter/arm/parallelAddSubPCInstructions.h"
-#include "instructionEmu/interpreter/arm/saturatingAddSubPCInstructions.h"
 #include "instructionEmu/interpreter/arm/storePCInstructions.h"
-#include "instructionEmu/interpreter/arm/syncPCInstructions.h"
 
 #endif /* CONFIG_BLOCK_COPY */
 
