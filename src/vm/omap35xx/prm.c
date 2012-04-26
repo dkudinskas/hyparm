@@ -655,6 +655,13 @@ u32int loadEmuPrm(device *dev, u32int address, u32int phyAddr)
       val = prMan->prmPwststEmu;
       break;
     }
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("loadEmuPrm: loading invalid register." EOL);
+      val = 0;
+      break;
+    }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
@@ -1037,8 +1044,20 @@ void storePerPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeEmuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeEmuPrm unimplemented.");
+  u32int reg = phyAddr - EMU_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeEmuPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_UNKNOWN:
+    case PM_WKDEP:
+    {
+      printf("storeEmuPrm: storing to invalid register." EOL);
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "storeEmuPrm store to non existing register!");
+  }
 }
 
 
