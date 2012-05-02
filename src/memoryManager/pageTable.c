@@ -127,14 +127,30 @@ void mapHypervisorMemory(simpleEntry* pageTable)
   printf("mapHypervisorMemory in page table %08x\n", (u32int)pageTable);
 #endif
   u32int startAddr = (u32int)&_start_marker;
-  u32int endAddr = MEMORY_END_ADDR;
+  u32int endAddr = (u32int)&_end_marker;
+#ifdef PAGE_TABLE_DBG
+  printf("mapHypervisorMemory start %08x end %08x\n", startAddr, endAddr);
+#endif
 
   while (startAddr < endAddr)
   {
     // @ hypervisor domain, all acces bits, cachable, not bufferable, tex 0
     mapSection(pageTable, startAddr, startAddr, HYPERVISOR_ACCESS_DOMAIN,
-                      HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+                      HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
     startAddr += SECTION_SIZE;
+  }
+
+  u32int mallocStart = (endAddr & 0xFFF00000) + SECTION_SIZE;
+  u32int mallocEnd = MEMORY_END_ADDR;
+#ifdef PAGE_TABLE_DBG
+  printf("mapHypervisorMemory malloc start %08x end %08x\n", mallocStart, mallocEnd);
+#endif
+  while (mallocStart < mallocEnd)
+  {
+    // @ hypervisor domain, all acces bits, cachable, not bufferable, tex 0
+    mapSection(pageTable, mallocStart, mallocStart, HYPERVISOR_ACCESS_DOMAIN,
+                      HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 1);
+    mallocStart += SECTION_SIZE;
   }
 }
 
@@ -144,7 +160,7 @@ void mapHypervisorMemory(simpleEntry* pageTable)
  * into the given base page table 
  **/
 void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
-                u8int domain, u8int accessBits, bool c, bool b, u8int tex)
+                u8int domain, u8int accessBits, bool c, bool b, u8int tex, u8int xn)
 {
 #ifdef PAGE_TABLE_DBG
   printf("mapSection: Virtual Addr: %08x, physical addr: %08x\n", virtAddr, physical);
@@ -158,7 +174,7 @@ void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
     case FAULT:
     {
       addSectionEntry((sectionEntry*)firstLevelEntry, 
-                      physical, domain, accessBits, c, b, tex);
+                      physical, domain, accessBits, c, b, tex, xn);
       break;
     }
     case PAGE_TABLE:
@@ -265,13 +281,13 @@ void mapSmallPage(simpleEntry* pageTable, u32int virtAddr, u32int physical,
  * adds a section entry at a given place in the first level page table
  **/
 void addSectionEntry(sectionEntry* sectionEntryPtr, u32int physAddr, 
-     u8int domain, u8int accessBits, bool cacheable, bool bufferable, u8int tex)
+     u8int domain, u8int accessBits, bool cacheable, bool bufferable, u8int tex, u8int xn)
 {
   sectionEntryPtr->addr = (physAddr >> 20);
   sectionEntryPtr->type = SECTION;
   sectionEntryPtr->c = cacheable  ? 1:0;
   sectionEntryPtr->b = bufferable ? 1:0;
-  sectionEntryPtr->xn = 0; //execute of memory allowed
+  sectionEntryPtr->xn = xn;
   sectionEntryPtr->domain = domain;
   sectionEntryPtr->imp = 0; //currently unused
   sectionEntryPtr->ap10 = accessBits & 0x3;

@@ -56,10 +56,10 @@
 #define PSR_FIQ_MODE                0x11
 #define PSR_IRQ_MODE                0x12
 #define PSR_SVC_MODE                0x13
+#define PSR_MON_MODE                0X16
 #define PSR_ABT_MODE                0x17
 #define PSR_UND_MODE                0x1b
 #define PSR_SYS_MODE                0x1f
-
 #define PSR_APSR         (PSR_CC_FLAGS_NZCV | PSR_Q_BIT | PSR_SIMD_FLAGS_GE)
 #define PSR_EXEC_BITS    (PSR_ITSTATE_1_0 | PSR_ITSTATE_7_2 | PSR_J_BIT | PSR_T_BIT)
 

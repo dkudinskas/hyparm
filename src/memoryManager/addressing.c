@@ -17,6 +17,12 @@
 
 extern const void* _start_marker;
 
+extern const u32int exceptionVectorBase;
+extern const u32int abortVector;
+extern const u32int svcVector;
+extern const u32int irqVector;
+extern const u32int usrVector;
+
 void initVirtualAddressing()
 {
   GCONTXT * gc = getGuestContext();
@@ -58,7 +64,7 @@ void setupHypervisorPageTable(simpleEntry* pageTablePtr)
   while (memStart < hypervisorStart) 
   {
     mapSection(pageTablePtr, memStart, memStart, 
-               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000);
+               GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, TRUE, FALSE, 0b000, 0);
     memStart += SECTION_SIZE;
   }
 
@@ -384,12 +390,16 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
 #endif
       tempFirst = getEntryFirst(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical);
       backupEntry = *(u32int*)tempFirst;
+      if (backupEntry != 0)
+      {
+        printf("changeGuestDACR: before %08x\n", *(u32int*)tempFirst);
+      }
 #ifdef ADDRESSING_DEBUG
       printf("changeGuestDACR: backed up entry %08x @ %p\n", backupEntry, tempFirst);
 #endif
       mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
                 (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-                HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+                HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
       mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
       gpt = context->pageTables->guestPhysical;
 #ifdef ADDRESSING_DEBUG
@@ -481,6 +491,10 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
     {
       // if we dont have gPT1 VA we must have backed up the lvl1 entry. restore now
       *(u32int*)tempFirst = backupEntry;
+      if (backupEntry != 0)
+      {
+        printf("changeGuestDACR: after %08x\n", *(u32int*)tempFirst);
+      }
       mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
 #ifdef ADDRESSING_DEBUG
       printf("shadowMap: restore backed up entry %08x @ %p\n", backupEntry, tempFirst);
@@ -488,5 +502,63 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
     }
     mmuInvalidateUTLB();
   }
+}
+
+
+void setExceptionVector(u32int guestMode)
+{
+#ifdef ADDRESSING_DEBUG
+  printf("setExceptionVector: mode %02x\n", guestMode);
+#endif
+  switch (guestMode)
+  {
+    case PSR_USR_MODE:
+    {
+#ifdef ADDRESSING_DEBUG
+      printf("setExceptionVector: USR, vector %08x\n", (u32int)&usrVector);
+#endif
+      mmuSetExceptionVector((u32int)&usrVector);
+      break;
+    }
+    case PSR_IRQ_MODE:
+    {
+#ifdef ADDRESSING_DEBUG
+      printf("setExceptionVector: IRQ, vector %08x\n", (u32int)&svcVector);
+#endif
+      mmuSetExceptionVector((u32int)&irqVector);
+      break;
+    }
+    case PSR_SVC_MODE:
+    {
+#ifdef ADDRESSING_DEBUG
+      printf("setExceptionVector: SVC, vector %08x\n", (u32int)&svcVector);
+#endif
+      mmuSetExceptionVector((u32int)&svcVector);
+      break;
+    }
+    case PSR_ABT_MODE:
+    {
+#ifdef ADDRESSING_DEBUG
+      printf("setExceptionVector: ABORT, vector %08x\n", (u32int)&abortVector);
+#endif
+      mmuSetExceptionVector((u32int)&abortVector);
+      break;
+    }
+//    case PSR_USR_MODE:
+    case PSR_FIQ_MODE:
+//    case PSR_IRQ_MODE:
+//    case PSR_SVC_MODE:
+    case PSR_MON_MODE:
+//    case PSR_ABT_MODE:
+    case PSR_UND_MODE:
+    case PSR_SYS_MODE:
+    default:
+    {
+#ifdef ADDRESSING_DEBUG
+      printf("setExceptionVector: default, vector %08x\n", (u32int)&exceptionVectorBase);
+#endif
+      mmuSetExceptionVector((u32int)&exceptionVectorBase);
+    }
+  } // switch end
 }
 

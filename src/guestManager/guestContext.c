@@ -213,3 +213,13 @@ void guestToPrivMode()
 {
   userToPrivAddressing();
 }
+
+
+/**
+ * guest is switching modes.
+ **/
+void guestChangeMode(u32int guestMode)
+{
+  // we must make sure the correct exception vector is set.
+  setExceptionVector(guestMode);
+}

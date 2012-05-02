@@ -30,6 +30,12 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
     u32int regOrImm = instr & 0x02000000; // 1 = imm, 0 = reg
     if (regOrImm != 0)
     {
+      // if S bit is set, this is return from exception!
+      if (setFlags != 0)
+      {
+        DIE_NOW(context, "arithmetic: imm case return from exception case unimplemented.\n");
+      }
+
       // source operand2 immediate: pc = regSrc +/- ror(immediate)
       u32int imm12 = instr & 0x00000FFF;
       switch (opType)
@@ -45,11 +51,6 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
         }
         case SUB:
         {
-          // if S bit is set, this is return from exception!
-          if (setFlags != 0)
-          {
-            DIE_NOW(context, "SUBS return from exception case unimplemented.\n");
-          }
           nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
           if (regSrc == 0xF)
           {
@@ -76,20 +77,35 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
         switch (opType)
         {
           case ADD:
+          {
+            // if S bit is set, this is return from exception!
+            if (setFlags != 0)
+            {
+              DIE_NOW(context, "arithmetic: reg case return from exception case unimplemented.\n");
+            }
             nextPC = loadGuestGPR(regSrc, context) + shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
             if (regSrc == GPR_PC)
             {
               nextPC += 8;
             }
             break;
+          }
           case SUB:
+          {
+            // if S bit is set, this is return from exception!
+            if (setFlags != 0)
+            {
+              DIE_NOW(context, "arithmetic: reg case return from exception case unimplemented.\n");
+            }
             nextPC = loadGuestGPR(regSrc, context) - shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
             if (regSrc == GPR_PC)
             {
               nextPC += 8;
             }
             break;
+          }
           case MOV:
+          {
             // cant be shifted - mov shifted reg is a pseudo instr
             if (shamt != 0)
             {
@@ -97,6 +113,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
             }
             nextPC = loadGuestGPR(regSrc2, context);
             break;
+          }
           default:
             DIE_NOW(context, "invalid arithLogicOp opType");
         }
@@ -113,27 +130,43 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
     {
       if (regDest == GPR_PC)
       {
+        u32int modeToCopy = 0;
         // copy SPSR to CPSR
         switch (context->CPSR & PSR_MODE)
         {
           case PSR_FIQ_MODE:
-            context->CPSR = context->SPSR_FIQ;
+          {
+            modeToCopy = context->SPSR_FIQ;
             break;
+          }
           case PSR_IRQ_MODE:
-            context->CPSR = context->SPSR_IRQ;
+          {
+            modeToCopy = context->SPSR_IRQ;
             break;
+          }
           case PSR_SVC_MODE:
-            context->CPSR = context->SPSR_SVC;
+          {
+            modeToCopy = context->SPSR_SVC;
             break;
+          }
           case PSR_ABT_MODE:
-            context->CPSR = context->SPSR_ABT;
+          {
+            modeToCopy = context->SPSR_ABT;
             break;
+          }
           case PSR_UND_MODE:
-            context->CPSR = context->SPSR_UND;
+          {
+            modeToCopy = context->SPSR_UND;
             break;
+          }
           default:
             DIE_NOW(context, "arithLogicOp: no SPSR for current guest mode");
+        } // switch ends
+        if ((context->CPSR & PSR_MODE) != (modeToCopy & PSR_MODE))
+        {
+          guestChangeMode(modeToCopy & PSR_MODE);
         }
+        context->CPSR = modeToCopy;
       }
       else
       {

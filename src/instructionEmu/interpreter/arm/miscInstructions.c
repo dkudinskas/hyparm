@@ -125,6 +125,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
       oldCpsr &= ~PSR_MODE;
       oldCpsr |= newMode;
       DIE_NOW(context, "guest is changing execution modes. To What?");
+      guestChangeMode(oldCpsr & PSR_MODE);
     }
     context->CPSR = oldCpsr;
   }
@@ -232,7 +233,8 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
 
   u32int value = 0;
   u32int nextPC = 0;
-
+  bool changedMode = FALSE;
+  
   if (!evaluateConditionCode(context, instrCC))
   {
     nextPC = context->R15 + 4;
@@ -304,6 +306,10 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
     }
 #endif
 
+    if ((value & PSR_MODE) != (oldValue & PSR_MODE))
+    {
+      changedMode = TRUE;
+    }
     // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x000000FF);
     // clear old fields!
@@ -355,6 +361,10 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   {
     // CPSR!
     context->CPSR = oldValue;
+    if (changedMode)
+    {
+      guestChangeMode(context->CPSR & PSR_MODE);
+    }
   }
   else
   {

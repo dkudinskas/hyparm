@@ -495,6 +495,15 @@ void mmuSetContextID(u32int asid)
 }
 
 
+void mmuSetExceptionVector(u32int vectorBase)
+{
+#ifdef MMU_DBG
+  printf("mmuSetExceptionVector: %08x" EOL, vectorBase);
+#endif
+  asm volatile("mcr p15, 0, %0, c12, c0, 0": :"r"(vectorBase));
+  mmuInstructionSync();
+}
+
 
 u32int getDFAR()
 {
@@ -549,10 +558,10 @@ void printDataAbort()
   DFSR dfsr = getDFSR();
   u32int dfar = getDFAR();
   u32int faultStatus = dfsr.fs4 << 4 | dfsr.fs3_0;
-
+  const char *str = dataAbtFaultString[dfsr.fs3_0];
   printf("Data Abort Address: %08x" EOL, dfar);
   printf("Fault type: ");
-  printf("%s", (char*)dataAbtFaultString[dfsr.fs3_0]);
+  printf("%s", str);
   printf(" (%x), domain %x, Write not Read: %x, External: %x" EOL,  faultStatus, dfsr.domain, dfsr.WnR, dfsr.ExT);
 }
 
@@ -561,9 +570,10 @@ void printPrefetchAbort()
   IFSR ifsr = getIFSR();
   u32int ifar = getIFAR();
   u32int faultStatus = ifsr.fs3_0 | (ifsr.fs4 << 4);
-
+  const char *str = prefetchAbtFaultString[faultStatus];
   printf("Prefetch Abort Address: %08x" EOL, ifar);
   printf("Fault type: ");
-  printf("%s", (char*)prefetchAbtFaultString[faultStatus]);
+  printf("%s", str);
   printf(" (%x),  External: %x" EOL, faultStatus, ifsr.ExT);
 }
+

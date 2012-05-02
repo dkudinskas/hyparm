@@ -627,27 +627,42 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
       switch (context->CPSR & PSR_MODE)
       {
         case PSR_FIQ_MODE:
+        {
           modeSpsr = context->SPSR_FIQ;
           break;
+        }
         case PSR_IRQ_MODE:
+        {
           modeSpsr = context->SPSR_IRQ;
           break;
+        }
         case PSR_SVC_MODE:
+        {
           modeSpsr = context->SPSR_SVC;
           break;
+        }
         case PSR_ABT_MODE:
+        {
           modeSpsr = context->SPSR_ABT;
           break;
+        }
         case PSR_UND_MODE:
+        {
           modeSpsr = context->SPSR_UND;
           break;
+        }
         default:
           DIE_NOW(context, "exception return from sys/usr mode!");
+      }
+      if ((context->CPSR & PSR_MODE) != (modeSpsr & PSR_MODE))
+      {
+        guestChangeMode(modeSpsr & PSR_MODE);
       }
       context->CPSR = modeSpsr;
     }
     else
     {
+      // we made CPSR user mode to force 'ldm user'. restore CPSR
       context->CPSR = savedCPSR;
     }
   }

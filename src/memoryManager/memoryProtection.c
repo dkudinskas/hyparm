@@ -182,7 +182,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 #endif
     mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
               (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
     mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
     gpt = context->pageTables->guestPhysical;
 #ifdef MEM_PROT_DBG
@@ -230,7 +230,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
       printf("shouldDataAbort: backed up PT2 entry %08x @ %p\n", backupSecond, shadowSecond);
 #endif
       mapSection(context->pageTables->shadowActive, gpt2, gpt2,
-           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
       mmuInvalidateUTLBbyMVA(gpt2);
 
       // now PT2 is shadow mapped 1-2-1 VA/PA. can extract second level entry.
@@ -492,7 +492,7 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
     backupFirst = *(u32int*)shadowFirst;
     mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
               (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
     mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
     gpt = context->pageTables->guestPhysical;
 #ifdef MEM_PROT_DBG
@@ -540,7 +540,7 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
       printf("shouldPrefetchAbort: backed up PT2 entry %08x @ %p\n", backupSecond, shadowSecond);
 #endif
       mapSection(context->pageTables->shadowActive, gpt2, gpt2,
-           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
       mmuInvalidateUTLBbyMVA(gpt2);
 
       // now PT2 is shadow mapped 1-2-1 VA/PA. can extract second level entry.

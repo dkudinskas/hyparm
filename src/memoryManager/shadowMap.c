@@ -19,9 +19,9 @@ extern u32int _end_marker;
 bool shadowMap(u32int virtAddr)
 {
   GCONTXT* context = getGuestContext();
-#ifdef SHADOWING_DEBUG
+//#ifdef SHADOWING_DEBUG
   printf("shadowMap: virtual address %08x\n", virtAddr);
-#endif
+//#endif
 
   u32int backupEntry = 0;
   u32int tempEntry = 0;
@@ -49,12 +49,16 @@ bool shadowMap(u32int virtAddr)
     // hack a 1-2-1 mapping for now.
     tempFirst = getEntryFirst(spt, (u32int)context->pageTables->guestPhysical);
     backupEntry = *(u32int*)tempFirst;
+    if (backupEntry != 0)
+    {
+      printf("shadowMap: before %08x\n", *(u32int*)tempFirst);
+    }
 #ifdef SHADOWING_DEBUG
     printf("shadowMap: VA %08x backed up entry %08x @ %p\n", virtAddr, backupEntry, tempFirst);
 #endif
     mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
               (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
     mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
     gpt = context->pageTables->guestPhysical;
     tempEntry = *(u32int*)tempFirst;
@@ -102,7 +106,7 @@ bool shadowMap(u32int virtAddr)
           pageTableEntry* shadowPageTable  = (pageTableEntry*)shadowFirst;
           pageTableEntry* guestPageTable = (pageTableEntry*)guestFirst;
           shadowMapPageTable(guestPageTable, guestPageTable, shadowPageTable);
-          mmuPageTableEdit((u32int)shadowPageTable, (virtAddr & SECTION_MASK));
+          mmuPageTableEdit((u32int)shadowPageTable, (virtAddr & SMALL_PAGE_MASK));
           break;
         }
         case PAGE_TABLE:
@@ -146,8 +150,12 @@ bool shadowMap(u32int virtAddr)
 #ifdef SHADOWING_DEBUG
       printf("shadowMap: backed up PT2 entry %08x @ %p\n", backup, shadow);
 #endif
+      if (backup != 0)
+      {
+        printf("shadowMap2: before %08x\n", *(u32int*)shadow);
+      }
       mapSection(context->pageTables->shadowActive, gptPhysAddr, gptPhysAddr,
-           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
       mmuInvalidateUTLBbyMVA(gptPhysAddr);
 
       u32int index = (virtAddr & 0x000FF000) >> 10;
@@ -183,6 +191,10 @@ bool shadowMap(u32int virtAddr)
       }
       // restore backed up entry
       *(u32int*)shadow = backup;
+      if (backup != 0)
+      {
+        printf("shadowMap2: after %08x\n", *(u32int*)shadow);
+      }
 #ifdef SHADOWING_DEBUG
       printf("shadowMap: restored 2nd lvl backed up entry %08x @ %p\n", backup, shadow);
 #endif
@@ -215,11 +227,16 @@ bool shadowMap(u32int virtAddr)
 #ifdef SHADOWING_DEBUG
       printf("shadowMap: restore backed up entry %08x @ %p\n", backupEntry, tempFirst);
 #endif
+      if (backupEntry != 0)
+      {
+        printf("shadowMap: after %08x\n", *(u32int*)tempFirst);
+      }
     }
 #ifdef SHADOWING_DEBUG
     else
     {
-      printf("shadowMap: tempEntry %08x, guestFirst %08x. DONT RESTORE\n", tempEntry, *(u32int*)tempFirst);
+//      printf("shadowMap: tempEntry %08x, guestFirst %08x. DONT RESTORE\n", tempEntry, *(u32int*)tempFirst);
+      printf("shadowMap: no restore %08x\n", *(u32int*)tempFirst);
     }
 #endif
   }
@@ -284,12 +301,12 @@ void shadowMapSection(sectionEntry* guest, sectionEntry* shadow, u32int virtual)
     if (peripheral)
     {
       addSectionEntry((sectionEntry*)host, sectionAddr,
-                    GUEST_ACCESS_DOMAIN, PRIV_RW_USR_NO, 0, 0, 0b000);
+                    GUEST_ACCESS_DOMAIN, PRIV_RW_USR_NO, 0, 0, 0b000, 0);
     }
     else
     {
       addSectionEntry((sectionEntry*)host, sectionAddr,
-                    GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000);
+                    GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000, 0);
     }
     host = (sectionEntry*)getEntryFirst(context->pageTables->hypervisor, guestPhysAddr);
   }
@@ -1019,8 +1036,12 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
 #ifdef SHADOWING_DEBUG
   printf("mapAPBitsPageTable: backed up entry %08x @ %p\n", backupEntry, first);
 #endif
+  if (backupEntry != 0)
+  {
+    printf("mapAPBitsPageTable: before %08x\n", *(u32int*)first);
+  }
   mapSection(context->pageTables->shadowActive, gptPhysAddr, gptPhysAddr,
-       HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0);
+       HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
   mmuInvalidateUTLBbyMVA(gptPhysAddr);
   mmuDataMemoryBarrier();
 
@@ -1070,6 +1091,10 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
   printf("mapAPBitsPageTable: restored entry %08x @ %p\n", backupEntry, first);
 #endif
   *(u32int*)first = backupEntry;
+  if (backupEntry != 0)
+  {
+    printf("mapAPBitsPageTable: after %08x\n", *(u32int*)first);
+  }
   mmuInvalidateUTLBbyMVA(gptPhysAddr);
   mmuDataMemoryBarrier();
 }
