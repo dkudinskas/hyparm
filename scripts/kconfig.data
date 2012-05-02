@@ -119,6 +119,9 @@ endmenu
 menuconfig DEBUG
   bool "Debugging"
   default y
+  help
+    Disabling this option does not prevent generation of debug symbols and dump.
+    It merely disables all the individual debug options at once.
 
 config DEBUG_STARTUP
   bool "Debug startup"
