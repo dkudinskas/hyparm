@@ -51,8 +51,10 @@
 #define CONTROL_MODULE_ID_SIZE             0x00002000
 #define GPIO1                              0x48310000
 #define GPIO1_SIZE                         0x00002000
-#define WDTIMER2                           0x48314000
+#define WDTIMER2                           0x48314000 // MPU watchdog timer
 #define WDTIMER2_SIZE                      0x00002000
+#define WDTIMER3                           0x49030000 // IVA2 watchdog timer
+#define WDTIMER3_SIZE                      0x00002000
 #define GPTIMER1                           0x48318000
 #define GPTIMER1_SIZE                      0x00002000
 #define TIMER_32K                          0x48320000
