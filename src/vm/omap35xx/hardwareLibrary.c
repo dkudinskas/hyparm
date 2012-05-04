@@ -13,6 +13,7 @@
 #include "vm/omap35xx/intc.h"
 #include "vm/omap35xx/pm.h"
 #include "vm/omap35xx/prm.h"
+#include "vm/omap35xx/sdrc.h"
 #include "vm/omap35xx/sdma.h"
 #include "vm/omap35xx/sdram.h"
 #include "vm/omap35xx/sms.h"
@@ -191,6 +192,16 @@ device *createHardwareLibrary()
     goto smsModuleError;
   }
   initSms();
+
+  // L3INT: SDRAM Controller subsystem
+  device *sdrcModule = createDevice("L3_SDRC", FALSE,
+                                   Q1_L3_SDRC, (u32int)(Q1_L3_SDRC + Q1_L3_SDRC_SIZE - 1),
+                                   l3Interconnect, &loadSdrc, &storeSdrc);
+  if (sdrcModule == NULL)
+  {
+    goto sdrcModuleError;
+  }
+  initSdrc();
 
 
   // Q1: LEVEL4 INTERCONNECT (L4INT, parent Q1)
@@ -481,6 +492,8 @@ l4IntCoreError:
 l4InterconnectError:
   free(smsModule);
 smsModuleError:
+  free(sdrcModule);
+sdrcModuleError:
   free(pmModule);
 pmModuleError:
   free(gpmcModule);
