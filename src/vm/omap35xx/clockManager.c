@@ -1067,7 +1067,8 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_SLEEPDEP_PER:
       if (clockMan->cmSleepDepPer != value)
       {
-        DIE_NOW(NULL, "storePerCm unimplemented store to reg cmSleepDepPer");
+        printf("%s: unimplemented store to reg cmSleepDepPer. Value: %x" EOL, __func__, value);
+        //DIE_NOW(NULL, "storePerCm unimplemented store to reg cmSleepDepPer");
       }
       break;
     case CM_CLKSTCTRL_PER:
