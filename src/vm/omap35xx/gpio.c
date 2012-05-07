@@ -11,54 +11,58 @@
 #include "vm/omap35xx/gpio.h"
 
 
-struct Gpio * gpio[6];
-
 void initGpio(u32int gpioNumber)
 {
-  gpio[gpioNumber - 1] = (struct Gpio *)mallocBytes(sizeof(struct Gpio));
-  if (!gpio[gpioNumber - 1])
+  GCONTXT* context = getGuestContext();
+
+  context->vm->gpio[gpioNumber - 1] = (struct Gpio *)mallocBytes(sizeof(struct Gpio));
+  if (!context->vm->gpio[gpioNumber - 1])
   {
     DIE_NOW(NULL, "Failed to allocate Gpio.");
   }
 
-  memset(gpio[gpioNumber - 1], 0, sizeof(struct Gpio));
-  DEBUG(VP_OMAP_35XX_GPIO, "initGpio: GPIO%x @ %p" EOL, gpioNumber, gpio[gpioNumber - 1]);
+  memset(context->vm->gpio[gpioNumber - 1], 0, sizeof(struct Gpio));
+  DEBUG(VP_OMAP_35XX_GPIO, "initGpio: GPIO%x @ %p" EOL, 
+        gpioNumber, context->vm->gpio[gpioNumber - 1]);
 
   resetGpio(gpioNumber);
 }
 
 void resetGpio(u32int num)
 {
+  GCONTXT* context = getGuestContext();
+  struct Gpio* gpio = context->vm->gpio[num-1];
+  
   // reset registers to default values
-  gpio[num-1]->gpioRevision        = 0x00000025;
-  gpio[num-1]->gpioSysConfig       = 0x00000000;
-  gpio[num-1]->gpioSysStatus       = 0x00000001;
-  gpio[num-1]->gpioIrqStatus1      = 0x00000000;
-  gpio[num-1]->gpioIrqEnable1      = 0x00000000;
-  gpio[num-1]->gpioWakeupEnable    = 0x00000000;
-  gpio[num-1]->gpioIrqStatus2      = 0x00000000;
-  gpio[num-1]->gpioIrqEnable2      = 0x00000000;
-  gpio[num-1]->gpioCtrl            = 0x00000002;
-  gpio[num-1]->gpioOE              = 0x00000000;
-  gpio[num-1]->gpioDataIn          = 0x00000000;
-  gpio[num-1]->gpioDataOut         = 0x00000000;
-  gpio[num-1]->gpioLvlDetect0      = 0x00000000;
-  gpio[num-1]->gpioLvlDetect1      = 0x00000000;
-  gpio[num-1]->gpioRisingDetect    = 0x00000000;
-  gpio[num-1]->gpioFallingDetect   = 0x00000000;
-  gpio[num-1]->gpioDebounceEnable  = 0x00000000;
-  gpio[num-1]->gpioDebouncingTime  = 0x00000000;
-  gpio[num-1]->gpioClearIrqEnable1 = 0x00000000;
-  gpio[num-1]->gpioSetIrqEnable1   = 0x00000000;
-  gpio[num-1]->gpioClearIrqEnable2 = 0x00000000;
-  gpio[num-1]->gpioSetIrqEnable2   = 0x00000000;
-  gpio[num-1]->gpioClearWkuEnable  = 0x00000000;
-  gpio[num-1]->gpioSetWkuEnable    = 0x00000000;
-  gpio[num-1]->gpioClearDataOut    = 0x00000000;
-  gpio[num-1]->gpioSetDataOut      = 0x00000000;
+  gpio->gpioRevision        = 0x00000025;
+  gpio->gpioSysConfig       = 0x00000000;
+  gpio->gpioSysStatus       = 0x00000001;
+  gpio->gpioIrqStatus1      = 0x00000000;
+  gpio->gpioIrqEnable1      = 0x00000000;
+  gpio->gpioWakeupEnable    = 0x00000000;
+  gpio->gpioIrqStatus2      = 0x00000000;
+  gpio->gpioIrqEnable2      = 0x00000000;
+  gpio->gpioCtrl            = 0x00000002;
+  gpio->gpioOE              = 0x00000000;
+  gpio->gpioDataIn          = 0x00000000;
+  gpio->gpioDataOut         = 0x00000000;
+  gpio->gpioLvlDetect0      = 0x00000000;
+  gpio->gpioLvlDetect1      = 0x00000000;
+  gpio->gpioRisingDetect    = 0x00000000;
+  gpio->gpioFallingDetect   = 0x00000000;
+  gpio->gpioDebounceEnable  = 0x00000000;
+  gpio->gpioDebouncingTime  = 0x00000000;
+  gpio->gpioClearIrqEnable1 = 0x00000000;
+  gpio->gpioSetIrqEnable1   = 0x00000000;
+  gpio->gpioClearIrqEnable2 = 0x00000000;
+  gpio->gpioSetIrqEnable2   = 0x00000000;
+  gpio->gpioClearWkuEnable  = 0x00000000;
+  gpio->gpioSetWkuEnable    = 0x00000000;
+  gpio->gpioClearDataOut    = 0x00000000;
+  gpio->gpioSetDataOut      = 0x00000000;
 
   // set reset complete bit
-  gpio[num-1]->gpioSysStatus = GPIO_SYSSTATUS_RESETDONE;
+  gpio->gpioSysStatus = GPIO_SYSSTATUS_RESETDONE;
 }
 
 
@@ -70,90 +74,126 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
   switch (phyAddr & 0xFFFFF000)
   {
     case GPIO1:
+    {
       gpioNum = 0;
       regOffset = phyAddr - GPIO1;
       break;
+    }
     case GPIO2:
+    {
       gpioNum = 1;
       regOffset = phyAddr - GPIO2;
       break;
+    }
     case GPIO3:
+    {
       gpioNum = 2;
       regOffset = phyAddr - GPIO3;
       break;
+    }
     case GPIO4:
+    {
       gpioNum = 3;
       regOffset = phyAddr - GPIO4;
       break;
+    }
     case GPIO5:
+    {
       gpioNum = 4;
       regOffset = phyAddr - GPIO5;
       break;
+    }
     case GPIO6:
+    {
       gpioNum = 5;
       regOffset = phyAddr - GPIO6;
       break;
+    }
     default:
       DIE_NOW(NULL, "GPIO: loadGpio - invalid gpio number for base address");
   }
 
+  GCONTXT* context = getGuestContext();
+  struct Gpio* gpio = context->vm->gpio[gpioNum];
   u32int val = 0;
   switch (regOffset)
   {
     case GPIO_REVISION:
-      val = gpio[gpioNum]->gpioRevision;
+    {
+      val = gpio->gpioRevision;
       break;
+    }
     case GPIO_SYSCONFIG:
-      val = gpio[gpioNum]->gpioSysConfig;
+    {
+      val = gpio->gpioSysConfig;
       break;
+    }
     case GPIO_SYSSTATUS:
-      val = gpio[gpioNum]->gpioSysStatus;
+    {
+      val = gpio->gpioSysStatus;
       break;
+    }
     case GPIO_IRQSTATUS1:
-      val = gpio[gpioNum]->gpioIrqStatus1;
+    {
+      val = gpio->gpioIrqStatus1;
       break;
+    }
     case GPIO_IRQENABLE1:
-      val = gpio[gpioNum]->gpioIrqEnable1;
+    {
+      val = gpio->gpioIrqEnable1;
       break;
+    }
     case GPIO_IRQSTATUS2:
-      val = gpio[gpioNum]->gpioIrqStatus2;
+    {
+      val = gpio->gpioIrqStatus2;
       break;
+    }
     case GPIO_IRQENABLE2:
-      val = gpio[gpioNum]->gpioIrqEnable2;
+    {
+      val = gpio->gpioIrqEnable2;
       break;
+    }
     case GPIO_CTRL:
-      val = gpio[gpioNum]->gpioCtrl;
+    {
+      val = gpio->gpioCtrl;
       break;
+    }
     case GPIO_WAKEUPENABLE:
     case GPIO_OE:
     case GPIO_DATAIN:
     case GPIO_DATAOUT:
 #ifdef CONFIG_GUEST_FREERTOS
+    {
       /* FreeRTOS GPIO status */
-      val = gpio[gpioNum]->gpioDataOut;
+      val = gpio->gpioDataOut;
       if (gpioNum == 4 || gpioNum == 5)
       {
-        val = beGetGPIO (regOffset, gpioNum);
+        val = beGetGPIO(regOffset, gpioNum);
       }
       break;
+    }
 #endif
     case GPIO_CLEARDATAOUT:
 #ifdef CONFIG_GUEST_FREERTOS
-      val = gpio[gpioNum]->gpioClearDataOut;
+    {
+      val = gpio->gpioClearDataOut;
       if (gpioNum == 4 || gpioNum == 5)
       {
         val = beGetGPIO(regOffset, gpioNum);
       }
       break;
+    }
 #endif
     case GPIO_SETDATAOUT:
 #ifdef CONFIG_GUEST_FREERTOS
-      val = gpio[gpioNum]->gpioSetDataOut;
+    {
+      val = gpio->gpioSetDataOut;
       if (gpioNum == 4 || gpioNum == 5)
       {
         val = beGetGPIO(regOffset, gpioNum);
       }
       break;
+    }
 #endif
     case GPIO_LEVELDETECT0:
     case GPIO_LEVELDETECT1:
@@ -167,8 +207,10 @@ u32int loadGpio(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     case GPIO_SETIRQENABLE2:
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
+    {
       printf("GPIO: load from unimplemented register %x" EOL, regOffset);
       DIE_NOW(NULL, "panic.");
+    }
     default:
       DIE_NOW(NULL, "Gpio: load on invalid register.");
   }
@@ -189,39 +231,56 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
   switch (phyAddr & 0xFFFFF000)
   {
     case GPIO1:
+    {
       gpioNum = 0;
       regOffset = phyAddr - GPIO1;
       break;
+    }
     case GPIO2:
+    {
       gpioNum = 1;
       regOffset = phyAddr - GPIO2;
       break;
+    }
     case GPIO3:
+    {
       gpioNum = 2;
       regOffset = phyAddr - GPIO3;
       break;
+    }
     case GPIO4:
+    {
       gpioNum = 3;
       regOffset = phyAddr - GPIO4;
       break;
+    }
     case GPIO5:
+    {
       gpioNum = 4;
       regOffset = phyAddr - GPIO5;
       break;
+    }
     case GPIO6:
+    {
       gpioNum = 5;
       regOffset = phyAddr - GPIO6;
       break;
+    }
     default:
       DIE_NOW(NULL, "GPIO: storeGpio - invalid gpio number for base address");
   }
 
+  GCONTXT* context = getGuestContext();
+  struct Gpio* gpio = context->vm->gpio[gpioNum];
   switch (regOffset)
   {
     case GPIO_REVISION:
+    {
       DIE_NOW(NULL, "GPIO: storing to a R/O reg (revision)");
       break;
+    }
     case GPIO_SYSCONFIG:
+    {
       if ((value & GPIO_SYSCONFIG_SOFTRESET) == GPIO_SYSCONFIG_SOFTRESET)
       {
         DEBUG(VP_OMAP_35XX_GPIO, "GPIO: soft reset" EOL);
@@ -229,81 +288,100 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       }
       else
       {
-        gpio[gpioNum]->gpioSysConfig = (value & ~GPIO_SYSCONFIG_RESERVED);
+        gpio->gpioSysConfig = (value & ~GPIO_SYSCONFIG_RESERVED);
       }
       break;
+    }
     case GPIO_SYSSTATUS:
+    {
       DIE_NOW(NULL, "GPIO: storing to a R/O reg (sysStatus)");
       break;
+    }
     case GPIO_IRQSTATUS1:
+    {
       if (value != 0xffffffff)
       {
         DIE_NOW(NULL, "GPIO: clearing random interrupts. have a look!...");
       }
-      gpio[gpioNum]->gpioIrqStatus1 = gpio[gpioNum]->gpioIrqStatus1 & ~value;
+      gpio->gpioIrqStatus1 = gpio->gpioIrqStatus1 & ~value;
       break;
+    }
     case GPIO_IRQENABLE1:
+    {
       if (value != 0)
       {
         DIE_NOW(NULL, "GPIO: enabling interrupt! have a look at this...");
       }
-      gpio[gpioNum]->gpioIrqEnable1 = value;
+      gpio->gpioIrqEnable1 = value;
       break;
+    }
     case GPIO_IRQSTATUS2:
+    {
       if (value != 0xffffffff)
       {
         DIE_NOW(NULL, "GPIO: clearing random interrupts. have a look!...");
       }
-      gpio[gpioNum]->gpioIrqStatus2 = gpio[gpioNum]->gpioIrqStatus2 & ~value;
+      gpio->gpioIrqStatus2 = gpio->gpioIrqStatus2 & ~value;
       break;
+    }
     case GPIO_IRQENABLE2:
+    {
       if (value != 0)
       {
         DIE_NOW(NULL, "GPIO: enabling interrupt! have a look at this...");
       }
-      gpio[gpioNum]->gpioIrqEnable2 = value;
+      gpio->gpioIrqEnable2 = value;
       break;
+    }
     case GPIO_CTRL:
+    {
       if ((value & GPIO_CTRL_DISABLEMOD) == GPIO_CTRL_DISABLEMOD)
       {
         DIE_NOW(NULL, "GPIO: disabling module! investigate.");
       }
-      gpio[gpioNum]->gpioCtrl = value & ~GPIO_CTRL_RESERVED;
+      gpio->gpioCtrl = value & ~GPIO_CTRL_RESERVED;
       break;
+    }
     case GPIO_OE:
 #ifdef CONFIG_GUEST_FREERTOS
+    {
       /* value can be any 32-bit number */
-      gpio[gpioNum]->gpioOE = value;
+      gpio->gpioOE = value;
       /* FreeRTOS initialization */
       if (gpioNum == 4 || gpioNum == 5)
       {
         beStoreGPIO(regOffset, value, gpioNum);
       }
       break;
+    }
 #endif
     case GPIO_CLEARDATAOUT:
 #ifdef CONFIG_GUEST_FREERTOS
+    {
       /* value can be any 32-bit number */
-      gpio[gpioNum]->gpioClearDataOut = value;
-      gpio[gpioNum]->gpioDataOut = ~(value);
+      gpio->gpioClearDataOut = value;
+      gpio->gpioDataOut = ~(value);
       /* FreeRTOS initialization */
       if (gpioNum == 4 || gpioNum == 5)
       {
         beStoreGPIO(regOffset, value, gpioNum);
       }
       break;
+    }
 #endif
     case GPIO_SETDATAOUT:
 #ifdef CONFIG_GUEST_FREERTOS
+    {
       /* value can be any 32-bit number */
-      gpio[gpioNum]->gpioSetDataOut = value;
-      gpio[gpioNum]->gpioDataOut = value;
+      gpio->gpioSetDataOut = value;
+      gpio->gpioDataOut = value;
       /* FreeRTOS initialization */
       if (gpioNum == 4 || gpioNum == 5)
       {
         beStoreGPIO(regOffset, value, gpioNum);
       }
       break;
+    }
 #endif
     case GPIO_WAKEUPENABLE:
     case GPIO_DATAIN:
@@ -320,8 +398,10 @@ void storeGpio(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
     case GPIO_SETIRQENABLE2:
     case GPIO_CLEARWKUENA:
     case GPIO_SETWKUENA:
+    {
       printf("GPIO: store to unimplemented register %x" EOL, regOffset);
       DIE_NOW(NULL, "panic.");
+    }
     default:
       DIE_NOW(NULL, "Gpio: store to invalid register.");
   }

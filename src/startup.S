@@ -171,11 +171,23 @@ usrVector:
   B       usrIrq
   B       usrFiq
 
+  .balign 0x20
+  .global undVector
+undVector:
+  B       undReset
+  B       undUndefined
+  B       undSvc
+  B       undPrefetch
+  B       undDataAbort
+  B       undMonitor
+  B       undIrq
+  B       undFiq
 
 #include "exceptions/abortVector.S.inc"
 #include "exceptions/svcVector.S.inc"
 #include "exceptions/irqVector.S.inc"
 #include "exceptions/usrVector.S.inc"
+#include "exceptions/undVector.S.inc"
 
 
   .ltorg

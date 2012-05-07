@@ -489,7 +489,7 @@ void mmuSetTexRemap(bool enable)
 void mmuSetContextID(u32int asid)
 {
 #ifdef MMU_DBG
-//  printf("mmuSetContextID: %x" EOL, asid);
+  printf("mmuSetContextID: %x" EOL, asid);
 #endif
   asm volatile("mcr p15, 0, %0, c13, c0, 1": :"r"(asid));
 }
@@ -544,6 +544,9 @@ IFSR getIFSR()
 
 void mmuPageTableEdit(u32int entryAddr, u32int pageAddr)
 {
+#ifdef MMU_DBG
+  printf("mmuPageTableEdit: entry address %08x page address %08x" EOL, entryAddr, pageAddr);
+#endif
   mmuCleanDcacheByMVAtoPOC(entryAddr);
   mmuDataSyncBarrier();
   mmuInvalidateUTLBbyMVA(pageAddr);

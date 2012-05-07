@@ -7,12 +7,12 @@
 #include "vm/omap35xx/prm.h"
 
 
-struct PowerAndResetManager * prMan;
-
 void initPrm(void)
 {
+  GCONTXT* context = getGuestContext();
+
   // init function: setup device, reset register values to defaults!
-  prMan = (struct PowerAndResetManager*)mallocBytes(sizeof(struct PowerAndResetManager));
+  struct PowerAndResetManager* prMan = (struct PowerAndResetManager*)mallocBytes(sizeof(struct PowerAndResetManager));
   if (prMan == 0)
   {
     DIE_NOW(NULL, "Failed to allocate power and reset manager.");
@@ -52,6 +52,8 @@ void initPrm(void)
   prMan->prmSysConfigOcp    = 0x1;
   prMan->prmIrqStatusMpuOcp = 0x0;
   prMan->prmIrqEnableMpuOcp = 0x0;
+  
+  context->vm->prMan = prMan;
 }
 
 /*************************************************************************
@@ -104,6 +106,9 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 
 u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm->prMan;
+
   u32int reg = phyAddr - Clock_Control_Reg_PRM;
   if (reg == PRM_CLKSEL)
   {
@@ -124,8 +129,12 @@ u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm->prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - Global_Reg_PRM;
+
   switch (reg)
   {
     case PRM_VC_SMPS_SA:
@@ -198,8 +207,12 @@ u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm->prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - OCP_System_Reg_PRM;
+
   switch (reg)
   {
     case PRM_REVISION_OCP:
@@ -281,9 +294,13 @@ void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int valu
 
 void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm->prMan;
+
   u32int reg = phyAddr - OCP_System_Reg_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storeOcpSystemPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
       value);
+
   switch (reg)
   {
     case PRM_REVISION_OCP:

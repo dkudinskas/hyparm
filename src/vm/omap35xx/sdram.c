@@ -7,11 +7,10 @@
 #include "vm/omap35xx/sdram.h"
 
 
-struct SdramController * sdram;
-
 void initSdram(void)
 {
-  sdram = (struct SdramController *)mallocBytes(sizeof(struct SdramController));
+  GCONTXT* context = getGuestContext();
+  struct SdramController* sdram = (struct SdramController *)mallocBytes(sizeof(struct SdramController));
   if (sdram == 0)
   {
     DIE_NOW(NULL, "Failed to allocate SDRAM instance");
@@ -23,6 +22,8 @@ void initSdram(void)
   }
 
   sdram->enabled = 1;
+
+  context->vm->sdram = sdram;
 
 #ifdef SDRAM_STORE_COUNTER
   u32int * storeTrace = (u32int*)mallocBytes(MEGABYTE_COUNT * sizeof(u32int));
@@ -45,8 +46,10 @@ void initSdram(void)
 #endif
 }
 
+
 void dumpSdramStats()
 {
+  struct SdramController* sdram = getGuestContext()->vm->sdram;
 #ifdef SDRAM_STORE_COUNTER
   printf("Store trace:" EOL);
 
@@ -100,10 +103,11 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr
 
 void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct SdramController* sdram = context->vm->sdram;
+
   DEBUG(VP_OMAP_35XX_SDRAM, "%s store to physical address: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x"
       EOL, dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
-//  fprintf("%s store to physical address: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x\n",
-//         dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
 #ifdef SDRAM_STORE_COUNTER
   u32int index = (virtAddr >> 20) & 0xFFF;
@@ -115,9 +119,12 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr,
     case WORD:
     {
       // I presume page table edits only happen in full word accesses... dont they?
-      if (isAddrInPageTable(getGuestContext()->pageTables->guestPhysical, phyAddr))
+      if (context->virtAddrEnabled)
       {
-        pageTableEdit(virtAddr, value);
+        if (isAddrInPageTable(context->pageTables->guestPhysical, phyAddr))
+        {
+          pageTableEdit(virtAddr, value);
+        }
       }
       // store the value...
       u32int * memPtr = (u32int*)virtAddr;
@@ -141,6 +148,6 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr,
     default:
       printf("%s store to physical address: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL,
           dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
-      DIE_NOW(NULL, "Invalid access size.");
+      DIE_NOW(context, "Invalid access size.");
   }
 }

@@ -436,7 +436,7 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
 simpleEntry* getEntryFirst(simpleEntry* pageTable, u32int virtAddr)
 {
 #ifdef PAGE_TABLE_DBG
-//  printf("getEntryFirst: virtual address %08x\n", virtAddr);
+  printf("getEntryFirst: virtual address %08x\n", virtAddr);
 #endif
   // 1st level page table index is the top 12 bits of the virtual address
   u32int tableIndex = (virtAddr & 0xFFF00000) >> 18;

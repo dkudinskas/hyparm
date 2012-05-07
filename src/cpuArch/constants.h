@@ -91,6 +91,4 @@
 #define SHIFT_TYPE_RRX    0x3
 #define SHIFT_TYPE_ROR    0x4
 
-
-
 #endif

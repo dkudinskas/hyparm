@@ -275,7 +275,7 @@ GCONTXT *dataAbort(GCONTXT *context)
 
 void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 {
-  printf("dataAbortPrivileged @ %08x addr %08x sp %08x spsr %03x\n", pc, getDFAR(), sp, spsr);
+  GCONTXT* context = getGuestContext();
   incrementDataAbortCounter();
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
   switch(faultStatus)
@@ -283,7 +283,7 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
     case dfsTranslationSection:
     case dfsTranslationPage:
     {
-      dabtTranslationFault(getGuestContext(), getDFSR(), getDFAR());
+      dabtTranslationFault(context, getDFSR(), getDFAR());
       break;
     }
     case dfsAlignmentFault:
@@ -605,8 +605,6 @@ void dabtTranslationFault(GCONTXT * gc, DFSR dfsr, u32int dfar)
      see if translation fault should be forwarded to the guest!
      if THAT fails, then really panic.
    */
-//  printf("dabtTranslationFault: dfar %08x, priv %x, write %x\n",
-//         dfar, isGuestInPrivMode(gc), dfsr.WnR);
   if (!shadowMap(dfar))
   {
     // failed to shadow map!
@@ -633,7 +631,6 @@ void iabtTranslationFault(GCONTXT * gc, IFSR ifsr, u32int ifar)
      see if translation fault should be forwarded to the guest!
      if THAT fails, then really panic.
    */
-//  printf("iabtTranslationFault: ifar %08x, priv %x\n", ifar, isGuestInPrivMode(gc));
   if (!shadowMap(ifar))
   {
     // failed to shadow map!

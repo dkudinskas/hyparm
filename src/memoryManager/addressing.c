@@ -22,6 +22,7 @@ extern const u32int abortVector;
 extern const u32int svcVector;
 extern const u32int irqVector;
 extern const u32int usrVector;
+extern const u32int undVector;
 
 void initVirtualAddressing()
 {
@@ -378,39 +379,10 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
   GCONTXT* context = getGuestContext();
   if(context->virtAddrEnabled)
   {
-    u32int backupEntry = 0;
-    bool backedUp = FALSE;
-    simpleEntry* tempFirst = 0;
-    simpleEntry* gpt = 0;
-    if (context->pageTables->guestVirtual == 0)
-    {
-#ifdef ADDRESSING_DEBUG
-      printf("changeGuestDACR: guestVirtual PT not set. hack a 1-2-1 of %p\n",
-                                          context->pageTables->guestPhysical);
-#endif
-      tempFirst = getEntryFirst(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical);
-      backupEntry = *(u32int*)tempFirst;
-      if (backupEntry != 0)
-      {
-        printf("changeGuestDACR: before %08x\n", *(u32int*)tempFirst);
-      }
-#ifdef ADDRESSING_DEBUG
-      printf("changeGuestDACR: backed up entry %08x @ %p\n", backupEntry, tempFirst);
-#endif
-      mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
-                (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-                HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
-      mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
-      gpt = context->pageTables->guestPhysical;
-#ifdef ADDRESSING_DEBUG
-      printf("changeGuestDACR: gpt now set to %p\n", gpt);
-#endif
-      backedUp = TRUE;
-    }
-    else
-    {
-      gpt = context->pageTables->guestVirtual;
-    }
+    simpleEntry* ttbrBackup = mmuGetTTBR0();
+    mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
+
+    simpleEntry* gpt = context->pageTables->guestPhysical;
 
     // if changing DACR, may have to change access permission bits of shadowed entries
     // this requires us to force the guest into an appropriate mode
@@ -418,14 +390,15 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
     u32int cpsrUser = PSR_USR_MODE;
     u32int cpsrBackup = context->CPSR; 
 
-    // for every entry changed, loop through all page table entries
+    // loop through all page table entries
     u32int y = 0;
     for (y = 0; y < PT1_ENTRIES; y++)
     {
       context->CPSR = cpsrPriv;
       simpleEntry* shadowPriv = (simpleEntry*)&context->pageTables->shadowPriv[y];
       // only check guest domain if the entry is shadow mapped.
-      if ((shadowPriv->type != FAULT) && (shadowPriv->type != RESERVED) && (shadowPriv->domain != HYPERVISOR_ACCESS_DOMAIN))
+      if ((shadowPriv->type != FAULT) && (shadowPriv->type != RESERVED) 
+                   && (shadowPriv->domain != HYPERVISOR_ACCESS_DOMAIN))
       {
         simpleEntry* guest = &(gpt[y]);
         // look for domains that had their configuration changed.
@@ -456,7 +429,8 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
       context->CPSR = cpsrUser;
       simpleEntry* shadowUser = (simpleEntry*)&context->pageTables->shadowUser[y];
       // only check guest domain if the entry is shadow mapped.
-      if ((shadowUser->type != FAULT) && (shadowUser->type != RESERVED) && (shadowUser->domain != HYPERVISOR_ACCESS_DOMAIN))
+      if ((shadowUser->type != FAULT) && (shadowUser->type != RESERVED)
+                   && (shadowUser->domain != HYPERVISOR_ACCESS_DOMAIN))
       {
         simpleEntry* guest = &(gpt[y]);
         // look for domains that had their configuration changed.
@@ -485,22 +459,7 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
     } // loop all PT1 entries
     context->CPSR = cpsrBackup; 
 
-    // exception case: we backed up the entry, but shadowed that exact entry. 
-    // dont want to restore old entry then!!
-    if (backedUp)
-    {
-      // if we dont have gPT1 VA we must have backed up the lvl1 entry. restore now
-      *(u32int*)tempFirst = backupEntry;
-      if (backupEntry != 0)
-      {
-        printf("changeGuestDACR: after %08x\n", *(u32int*)tempFirst);
-      }
-      mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
-#ifdef ADDRESSING_DEBUG
-      printf("shadowMap: restore backed up entry %08x @ %p\n", backupEntry, tempFirst);
-#endif
-    }
-    mmuInvalidateUTLB();
+    mmuSetTTBR0(ttbrBackup, 0x100 | context->pageTables->contextID);
   }
 }
 
@@ -523,7 +482,7 @@ void setExceptionVector(u32int guestMode)
     case PSR_IRQ_MODE:
     {
 #ifdef ADDRESSING_DEBUG
-      printf("setExceptionVector: IRQ, vector %08x\n", (u32int)&svcVector);
+      printf("setExceptionVector: IRQ, vector %08x\n", (u32int)&irqVector);
 #endif
       mmuSetExceptionVector((u32int)&irqVector);
       break;
@@ -544,21 +503,32 @@ void setExceptionVector(u32int guestMode)
       mmuSetExceptionVector((u32int)&abortVector);
       break;
     }
+    case PSR_UND_MODE:
+    {
+#ifdef ADDRESSING_DEBUG
+      printf("setExceptionVector: UNDEFINED, vector %08x\n", (u32int)&undVector);
+#endif
+      mmuSetExceptionVector((u32int)&undVector);
+      break;
+    }
 //    case PSR_USR_MODE:
     case PSR_FIQ_MODE:
 //    case PSR_IRQ_MODE:
 //    case PSR_SVC_MODE:
     case PSR_MON_MODE:
 //    case PSR_ABT_MODE:
-    case PSR_UND_MODE:
+//    case PSR_UND_MODE:
     case PSR_SYS_MODE:
     default:
     {
+      printf("setExceptionVector: guestMode %03x\n", guestMode);
+      DIE_NOW(0, "setExceptionVector: unimplemented\n");
+    }
+/*    {
 #ifdef ADDRESSING_DEBUG
       printf("setExceptionVector: default, vector %08x\n", (u32int)&exceptionVectorBase);
 #endif
       mmuSetExceptionVector((u32int)&exceptionVectorBase);
-    }
+    }*/
   } // switch end
 }
-

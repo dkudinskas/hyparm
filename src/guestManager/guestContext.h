@@ -3,11 +3,13 @@
 
 #include "common/compiler.h"
 #include "common/types.h"
+#include "common/memFunctions.h"
 
 #include "guestManager/blockCache.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/cp15coproc.h"
+#include "vm/omap35xx/omap35xx.h"
 
 #include "memoryManager/memoryProtection.h"
 
@@ -123,6 +125,8 @@ struct guestContext
   instructionHandler hdlFunct;
   CREG * coprocRegBank;
   BCENTRY * blockCache;
+  u32int * execBitMap;
+  
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
   u32int blockTrace[CONFIG_GUEST_CONTEXT_BLOCK_TRACE_SIZE];
   u32int blockTraceIndex;
@@ -134,6 +138,7 @@ struct guestContext
   /* Virtual Addressing */
   pageTablesVM* pageTables;
   bool virtAddrEnabled;
+  virtualMachine* vm;
   /* vector address in vmem */
   bool guestHighVectorSet;
   /* exception vector */
@@ -174,13 +179,13 @@ __macro__ void traceBlock(GCONTXT *context, u32int startAddress)
  */
 extern GCONTXT *getGuestContext(void);
 
+GCONTXT *allocateGuestContext(void);
+void initGuestContext(GCONTXT* context);
 
-GCONTXT *createGuestContext(void);
-
-void dumpGuestContext(GCONTXT * gc);
+void dumpGuestContext(GCONTXT* gc);
 
 /* a function to evaluate if guest is in priviledge mode or user mode */
-bool isGuestInPrivMode(GCONTXT * context);
+bool isGuestInPrivMode(GCONTXT* context);
 
 /* a function to to switch the guest to user mode */
 void guestToUserMode(void);

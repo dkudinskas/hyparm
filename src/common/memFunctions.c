@@ -22,7 +22,6 @@ void free(void *pointer)
   /*
    * TODO: implement free
    */
-//  printf("free: pointer = %p (TODO)" EOL, pointer);
 }
 
 

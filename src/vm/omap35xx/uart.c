@@ -12,65 +12,68 @@
 static inline u32int getUartNumber(u32int phyAddr);
 static inline u32int getUartBaseAddr(u32int id);
 
-struct Uart * uart[3];
-
 
 void initUart(u32int uartID)
 {
+  GCONTXT* context = getGuestContext();
+
   u32int uID = uartID - 1;
   // init function: setup device, reset register values to defaults!
-  uart[uID] = (struct Uart *)mallocBytes(sizeof(struct Uart));
-  if (uart[uID] == 0)
+  context->vm->uart[uID] = (struct Uart *)mallocBytes(sizeof(struct Uart));
+  if (context->vm->uart[uID] == 0)
   {
     DIE_NOW(NULL, "Failed to allocate uart.");
   }
-  memset((void*)uart[uID], 0, sizeof(struct Uart));
-  DEBUG(VP_OMAP_35XX_UART, "Initializing Uart%x at %p" EOL, uartID, uart[uID]);
+  memset((void*)context->vm->uart[uID], 0, sizeof(struct Uart));
+  DEBUG(VP_OMAP_35XX_UART, "Initializing Uart%x at %p" EOL, uartID, context->vm->uart[uID]);
   resetUart(uartID);
 }
 
 void resetUart(u32int uartID)
 {
+  GCONTXT* context = getGuestContext();
   u32int uID = uartID - 1;
+  struct Uart* uart = context->vm->uart[uID];
+
   // reset to default register values
-  uart[uID]->loopback = FALSE;
+  uart->loopback = FALSE;
   int i;
   for (i = 0; i < RX_FIFO_SIZE; i++)
   {
-    uart[uID]->rxFifo[i] = 0;
+    uart->rxFifo[i] = 0;
   }
-  uart[uID]->rxFifoPtr = 0;
+  uart->rxFifoPtr = 0;
 
-  uart[uID]->dll         = 0x00000000;
-  uart[uID]->rhr         = 0x00000000;
-  uart[uID]->thr         = 0x00000000;
-  uart[uID]->dlh         = 0x00000000;
-  uart[uID]->ier         = 0x00000000;
-  uart[uID]->iir         = 0x00000001; // no interrupt is pending bit set
-  uart[uID]->fcr         = 0x00000000;
-  uart[uID]->efr         = 0x00000000;
-  uart[uID]->lcr         = 0x00000000;
+  uart->dll         = 0x00000000;
+  uart->rhr         = 0x00000000;
+  uart->thr         = 0x00000000;
+  uart->dlh         = 0x00000000;
+  uart->ier         = 0x00000000;
+  uart->iir         = 0x00000001; // no interrupt is pending bit set
+  uart->fcr         = 0x00000000;
+  uart->efr         = 0x00000000;
+  uart->lcr         = 0x00000000;
   setUartMode(uartID);
-  uart[uID]->mcr         = 0x00000000;
-  uart[uID]->xon1        = 0x00000000;
-  uart[uID]->lsr         = 0x00000060; // THR and shift register is empty
-  uart[uID]->icr         = 0x00000000;
-  uart[uID]->xon2        = 0x00000000;
-  uart[uID]->msr         = 0x00000000;
-  uart[uID]->tcr         = 0x0000000F;
-  uart[uID]->xoff1       = 0x00000000;
-  uart[uID]->spr         = 0x00000000;
-  uart[uID]->tlr         = 0x00000000;
-  uart[uID]->xoff2       = 0x00000000;
-  uart[uID]->mdr1        = 0x00000007; // mode select: disable
-  uart[uID]->mdr2        = 0x00000000;
-  uart[uID]->uasr        = 0x00000000;
-  uart[uID]->scr         = 0x00000000;
-  uart[uID]->ssr         = 0x00000000;
-  uart[uID]->mvr         = 0x00000047;
-  uart[uID]->sysc        = 0x00000000;
-  uart[uID]->syss        = 0x00000000;
-  uart[uID]->wer         = 0x0000005F;
+  uart->mcr         = 0x00000000;
+  uart->xon1        = 0x00000000;
+  uart->lsr         = 0x00000060; // THR and shift register is empty
+  uart->icr         = 0x00000000;
+  uart->xon2        = 0x00000000;
+  uart->msr         = 0x00000000;
+  uart->tcr         = 0x0000000F;
+  uart->xoff1       = 0x00000000;
+  uart->spr         = 0x00000000;
+  uart->tlr         = 0x00000000;
+  uart->xoff2       = 0x00000000;
+  uart->mdr1        = 0x00000007; // mode select: disable
+  uart->mdr2        = 0x00000000;
+  uart->uasr        = 0x00000000;
+  uart->scr         = 0x00000000;
+  uart->ssr         = 0x00000000;
+  uart->mvr         = 0x00000047;
+  uart->sysc        = 0x00000000;
+  uart->syss        = 0x00000000;
+  uart->wer         = 0x0000005F;
 }
 
 
@@ -81,14 +84,18 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     DIE_NOW(NULL, "UART: loadUart invalid access size - byte");
   }
 
+  GCONTXT* context = getGuestContext();
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)
   {
     DIE_NOW(NULL, "loadUart: invalid UART id.");
   }
+
   u32int value = 0;
   u32int regOffs = phyAddr - getUartBaseAddr(uID);
+
   uID--; // array starts at 0
+  struct Uart* uart = context->vm->uart[uID];
 
   switch (regOffs)
   {
@@ -102,49 +109,56 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       else
       {
         // load DLL
-        DEBUG(VP_OMAP_35XX_UART, "%s: load DLL value %#.8x" EOL, dev->deviceName, uart[uID]->dll);
-        value = uart[uID]->dll;
+        DEBUG(VP_OMAP_35XX_UART, "%s: load DLL value %#.8x" EOL, dev->deviceName, uart->dll);
+        value = uart->dll;
       }
       break;
     }
     case UART_DLH_REG:
+    {
       if (getUartMode(uID+1) == operational)
       {
         // load IER
         DEBUG(VP_OMAP_35XX_UART, "%s: load IRQ enable register %#.8x" EOL, dev->deviceName,
-            uart[uID]->ier);
-        value = uart[uID]->ier;
+            uart->ier);
+        value = uart->ier;
       }
       else
       {
         // load DLH
         DEBUG(VP_OMAP_35XX_UART, "%s: load DLH register %#.8x" EOL, dev->deviceName,
-            uart[uID]->ier);
-        value = uart[uID]->dlh;
+            uart->ier);
+        value = uart->dlh;
       }
       break;
+    }
     case UART_IIR_REG:
+    {
       if (getUartMode(uID+1) == configB)
       {
         // load EFR
         DEBUG(VP_OMAP_35XX_UART, "%s: load enhanced feature register %#.8x" EOL, dev->deviceName,
-            uart[uID]->efr);
-        value = uart[uID]->efr;
+            uart->efr);
+        value = uart->efr;
       }
       else
       {
         // load IIR
         DEBUG(VP_OMAP_35XX_UART, "%s: load IRQ identification register %#.8x" EOL, dev->deviceName,
-            uart[uID]->iir);
-        value = uart[uID]->iir;
+            uart->iir);
+        value = uart->iir;
       }
       break;
+    }
     case UART_LCR_REG:
+    {
       DEBUG(VP_OMAP_35XX_UART, "%s: load line control reg %#.8x" EOL, dev->deviceName,
-          uart[uID]->iir);
-      value = uart[uID]->lcr;
+          uart->iir);
+      value = uart->lcr;
       break;
+    }
     case UART_MCR_REG:
+    {
       if (getUartMode(uID+1) == configB)
       {
         // load XON1_ADDR1
@@ -154,11 +168,13 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       {
         // load MCR
         DEBUG(VP_OMAP_35XX_UART, "%s: load modem control reg %#.8x" EOL, dev->deviceName,
-            uart[uID]->mcr);
-        value = uart[uID]->mcr;
+            uart->mcr);
+        value = uart->mcr;
       }
       break;
+    }
     case UART_LSR_REG:
+    {
       if (getUartMode(uID+1) == configB)
       {
         // load XON2_ADDR2
@@ -167,11 +183,13 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       else
       {
         // load LSR
-        DEBUG(VP_OMAP_35XX_UART, "%s: load line status %#.8x" EOL, dev->deviceName, uart[uID]->lsr);
-        value = uart[uID]->lsr;
+        DEBUG(VP_OMAP_35XX_UART, "%s: load line status %#.8x" EOL, dev->deviceName, uart->lsr);
+        value = uart->lsr;
       }
       break;
+    }
     case UART_MSR_REG:
+    {
       if (getUartMode(uID+1) == configB)
       {
         // load TCR/XOFF1
@@ -180,11 +198,11 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       else
       {
         // load MSR/TCR
-        if ( ((uart[uID]->efr & UART_EFR_ENHANCED_EN) == 0) ||
-             ((uart[uID]->mcr & UART_MCR_TCR_TLR) == 0) )
+        if ( ((uart->efr & UART_EFR_ENHANCED_EN) == 0) ||
+             ((uart->mcr & UART_MCR_TCR_TLR) == 0) )
         {
           // sub-operational/sub-configA MSR_SPR mode, load modem status
-          value = uart[uID]->msr;
+          value = uart->msr;
         }
         else
         {
@@ -193,7 +211,9 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
         }
       }
       break;
+    }
     case UART_SPR_REG:
+    {
       if (getUartMode(uID+1) == configB)
       {
         // store TLR/XOFF2
@@ -202,11 +222,11 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       else
       {
         // store SPR/TLR
-        if ( ((uart[uID]->efr & UART_EFR_ENHANCED_EN) == 0) ||
-             ((uart[uID]->mcr & UART_MCR_TCR_TLR) == 0) )
+        if ( ((uart->efr & UART_EFR_ENHANCED_EN) == 0) ||
+             ((uart->mcr & UART_MCR_TCR_TLR) == 0) )
         {
           // sub-operational/sub-configA MSR_SPR mode, load scratchpad reg
-          value = uart[uID]->spr;
+          value = uart->spr;
         }
         else
         {
@@ -215,9 +235,12 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
         }
       }
       break;
+    }
     case UART_MDR1_REG:
-      value = uart[uID]->mdr1;
+    {
+      value = uart->mdr1;
       break;
+    }
     case UART_MDR2_REG:
     case UART_SFLSR_REG:
     case UART_RESUME_REG:
@@ -250,14 +273,18 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
   {
     DIE_NOW(NULL, "UART: storeUart invalid access size - byte");
   }
+  GCONTXT* context = getGuestContext();
 
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)
   {
     DIE_NOW(NULL, "storeUart: invalid UART id.");
   }
+
+  u32int regOffs = phyAddr - getUartBaseAddr(uID);
+
   uID--; // array starts at 0
-  u32int regOffs = phyAddr - getUartBaseAddr(uID+1);
+  struct Uart* uart = context->vm->uart[uID];
 
   DEBUG(VP_OMAP_35XX_UART, "%s: store to address %#.8x reg %#x value %#.8x" EOL, dev->deviceName,
       virtAddr, regOffs, value);
@@ -274,7 +301,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       {
         // store DLL
         // can only be written before sleep mode is enabled
-        if ((uart[uID]->ier & UART_IER_SLEEP_MODE) != 0)
+        if ((uart->ier & UART_IER_SLEEP_MODE) != 0)
         {
           DIE_NOW(NULL, "UART writing DLL with sleep mode enabled!");
         }
@@ -282,12 +309,13 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
         {
           DEBUG(VP_OMAP_35XX_UART, "%s: storing DLL reg, 8bit LSB divisor value %#.8x" EOL,
               dev->deviceName, value);
-          uart[uID]->dll = value;
+          uart->dll = value;
         }
       }
       break;
     }
     case UART_DLH_REG:
+    {
       if (getUartMode(uID+1) == operational)
       {
         // store IER
@@ -297,7 +325,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       {
         // store DLH
         // can only be written before sleep mode is enabled
-        if ((uart[uID]->ier & UART_IER_SLEEP_MODE) != 0)
+        if ((uart->ier & UART_IER_SLEEP_MODE) != 0)
         {
           DIE_NOW(NULL, "UART writing DLH with sleep mode enabled!");
         }
@@ -305,26 +333,28 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
         {
           DEBUG(VP_OMAP_35XX_UART, "%s: store DLH MSB divisor value: %#.8x" EOL, dev->deviceName,
               value);
-          uart[uID]->dlh = value;
+          uart->dlh = value;
         }
       }
       break;
+    }
     case UART_FCR_REG:
+    {
       if (getUartMode(uID+1) == configB)
       {
         // store EFR
-        uart[uID]->efr = value;
+        uart->efr = value;
       }
       else
       {
         // store FCR
         if ( ((value & UART_FCR_FIFO_EN) == UART_FCR_FIFO_EN) &&
-             ((uart[uID]->fcr & UART_FCR_FIFO_EN) == 0) )
+             ((uart->fcr & UART_FCR_FIFO_EN) == 0) )
         {
           // turning OFF RX/TX fifos.
           DEBUG(VP_OMAP_35XX_UART, "UART: warning: rx/tx fifos on!" EOL);
         }
-        else if ( ((uart[uID]->fcr & UART_FCR_FIFO_EN) == UART_FCR_FIFO_EN) &&
+        else if ( ((uart->fcr & UART_FCR_FIFO_EN) == UART_FCR_FIFO_EN) &&
                   ((value & UART_FCR_FIFO_EN) == 0) )
         {
           // turning ON RX/TX fifos.
@@ -336,29 +366,33 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
           int i = 0;
           for (i = 0; i < RX_FIFO_SIZE; i++)
           {
-            uart[uID]->rxFifo[i] = 0;
-            uart[uID]->rxFifoPtr = 0;
-            uart[uID]->rhr = 0;
-            uart[uID]->lsr &= ~UART_LSR_RX_BI;
-            uart[uID]->lsr &= ~UART_LSR_RX_FE;
-            uart[uID]->lsr &= ~UART_LSR_RX_PE;
-            uart[uID]->lsr &= ~UART_LSR_RX_OE;
-            uart[uID]->lsr &= ~UART_LSR_RX_FIFO_E;
+            uart->rxFifo[i] = 0;
+            uart->rxFifoPtr = 0;
+            uart->rhr = 0;
+            uart->lsr &= ~UART_LSR_RX_BI;
+            uart->lsr &= ~UART_LSR_RX_FE;
+            uart->lsr &= ~UART_LSR_RX_PE;
+            uart->lsr &= ~UART_LSR_RX_OE;
+            uart->lsr &= ~UART_LSR_RX_FIFO_E;
           }
         }
         // set new FCR value
-        uart[uID]->fcr = value;
+        uart->fcr = value;
         // set 2 bits in IIR...
-        u32int iirFcrMirrorBits = ((uart[uID]->fcr & UART_FCR_FIFO_EN) == 0)
+        u32int iirFcrMirrorBits = ((uart->fcr & UART_FCR_FIFO_EN) == 0)
                                                   ? 0 : UART_IIR_FCR_MIRROR;
-        uart[uID]->iir = (uart[uID]->iir & ~UART_IIR_FCR_MIRROR) | iirFcrMirrorBits;
+        uart->iir = (uart->iir & ~UART_IIR_FCR_MIRROR) | iirFcrMirrorBits;
       }
       break;
+    }
     case UART_LCR_REG:
-      uart[uID]->lcr = value;
+    {
+      uart->lcr = value;
       setUartMode(uID+1);
       break;
+    }
     case UART_MCR_REG:
+    {
       if (getUartMode(uID+1) == configB)
       {
         // store XON1_ADDR1
@@ -370,36 +404,38 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
 
         // must check if UART is being put to loopback mode
         if ( ((value & UART_MCR_LOOPBACK_EN) == UART_MCR_LOOPBACK_EN) &&
-             ((uart[uID]->mcr & UART_MCR_LOOPBACK_EN) == 0) )
+             ((uart->mcr & UART_MCR_LOOPBACK_EN) == 0) )
         {
           // putting UART in loopback mode!
-          uart[uID]->loopback = TRUE;
+          uart->loopback = TRUE;
           // adjust MSR register
           DEBUG(VP_OMAP_35XX_UART, "UART%x loopback mode hack, magic number to MSR" EOL, uID+1);
-          uart[uID]->msr = 0x96;
+          uart->msr = 0x96;
         }
-        else if ( ((uart[uID]->mcr & UART_MCR_LOOPBACK_EN) == UART_MCR_LOOPBACK_EN) &&
+        else if ( ((uart->mcr & UART_MCR_LOOPBACK_EN) == UART_MCR_LOOPBACK_EN) &&
                   ((value & UART_MCR_LOOPBACK_EN) == 0) )
         {
           // switching off loopback mode!
           DEBUG(VP_OMAP_35XX_UART, "UART%x  loopback mode off." EOL, uID+1);
-          uart[uID]->loopback = FALSE;
+          uart->loopback = FALSE;
         }
 
         // bits [4:7] Can be written only when EFR_REG[4] = 1
-        if (!(uart[uID]->efr & UART_EFR_ENHANCED_EN))
+        if (!(uart->efr & UART_EFR_ENHANCED_EN))
         {
           // enchaned features disabled. only write bottom four bits
-          uart[uID]->mcr = (uart[uID]->mcr & 0xFFFFFFE0) | (value & 0x1F);
+          uart->mcr = (uart->mcr & 0xFFFFFFE0) | (value & 0x1F);
         }
         else
         {
           // enchaned features enabled. write all 8 bits
-          uart[uID]->mcr = (uart[uID]->mcr & 0xFFFFFFC0) | (value & 0x3F);
+          uart->mcr = (uart->mcr & 0xFFFFFFC0) | (value & 0x3F);
         }
       }
       break;
+    }
     case UART_LSR_REG:
+    {
       if (getUartMode(uID+1) == configB)
       {
         // store XON2_ADDR2
@@ -410,13 +446,17 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
         /* OK, LINUX thinks there is some register here, but undocumented in SPRUF!
          * #define UART_ICR        0x05     Index Control Register
          * http://lxr.linux.no/linux+v2.6.28.1/include/linux/serial_reg.h#L233 */
-        uart[uID]->icr = value;
+        uart->icr = value;
       }
       break;
+    }
     case UART_MSR_REG:
+    {
       DIE_NOW(NULL, "UART store MSR/TCR/XOFF1 unimplemented");
       break;
+    }
     case UART_SPR_REG:
+    {
       if (getUartMode(uID+1) == configB)
       {
         // store TLR/XOFF2
@@ -425,11 +465,11 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       else
       {
         // store SPR/TLR
-        if ( ((uart[uID]->efr & UART_EFR_ENHANCED_EN) == 0) ||
-             ((uart[uID]->mcr & UART_MCR_TCR_TLR) == 0) )
+        if ( ((uart->efr & UART_EFR_ENHANCED_EN) == 0) ||
+             ((uart->mcr & UART_MCR_TCR_TLR) == 0) )
         {
           // sub-operational/sub-configA MSR_SPR mode, store scratchpad reg
-          uart[uID]->spr = value;
+          uart->spr = value;
         }
         else
         {
@@ -438,6 +478,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
         }
       }
       break;
+    }
     case UART_MDR1_REG:
     {
       DEBUG(VP_OMAP_35XX_UART, "%s", dev->deviceName);
@@ -468,36 +509,48 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
           DEBUG(VP_OMAP_35XX_UART, ": warning - putting in disabled state!" EOL);
           break;
       }
-      uart[uID]->mdr1 = value;
+      uart->mdr1 = value;
       break;
     }
     case UART_SCR_REG:
-      uart[uID]->scr = value;
+    {
+      uart->scr = value;
       break;
+    }
     case UART_SYSC_REG:
+    {
       if ((value & UART_SYSC_REG_RESET) == UART_SYSC_REG_RESET)
       {
         printf("%s: soft reset" EOL, dev->deviceName);
         resetUart(uID+1);
       }
-      uart[uID]->sysc = value;
+      uart->sysc = value;
       break;
+    }
     case UART_SYSS_REG:
+    {
       printf("%s", dev->deviceName);
       DIE_NOW(NULL, " storing to R/O register (SYSS_REG)");
       break;
+    }
     case UART_UASR_REG:
+    {
       printf("%s", dev->deviceName);
       DIE_NOW(NULL, " storing to R/O register (autobaud status)");
       break;
+    }
     case UART_SSR_REG:
+    {
       printf("%s", dev->deviceName);
       DIE_NOW(NULL, " storing to R/O register (SSR)");
       break;
+    }
     case UART_MVR_REG:
+    {
       printf("%s", dev->deviceName);
       DIE_NOW(NULL, " storing to R/O register (MVR)");
       break;
+    }
     case UART_MDR2_REG:
     case UART_SFLSR_REG:
     case UART_RESUME_REG:
@@ -551,30 +604,34 @@ static inline u32int getUartBaseAddr(u32int id)
 
 void setUartMode(u32int uartID)
 {
+  GCONTXT* context = getGuestContext();
   u32int uID = uartID-1;
-  if ((uart[uID]->lcr & UART_LCR_DIV_EN) == UART_LCR_DIV_EN)
+  struct Uart* uart = context->vm->uart[uID];
+
+  if ((uart->lcr & UART_LCR_DIV_EN) == UART_LCR_DIV_EN)
   {
-    if ((uart[uID]->lcr & 0xBF) != 0xBF)
+    if ((uart->lcr & 0xBF) != 0xBF)
     {
-      uart[uID]->mode = configA;
+      uart->mode = configA;
       DEBUG(VP_OMAP_35XX_UART, "UART%x: set mode to configA" EOL, uartID);
     }
     else
     {
-      uart[uID]->mode = configB;
+      uart->mode = configB;
       DEBUG(VP_OMAP_35XX_UART, "UART%x: set mode to configB" EOL, uartID);
     }
   }
   else
   {
-    uart[uID]->mode = operational;
+    uart->mode = operational;
     DEBUG(VP_OMAP_35XX_UART, "UART%x: set mode to operational" EOL, uartID);
   }
 }
 
 uartMode getUartMode(u32int uartID)
 {
-  return uart[uartID-1]->mode;
+  GCONTXT* context = getGuestContext();
+  return context->vm->uart[uartID-1]->mode;
 }
 
 
@@ -585,31 +642,34 @@ uartMode getUartMode(u32int uartID)
  */
 void uartTxByte(u8int byte, u32int uartID)
 {
+  GCONTXT* context = getGuestContext();
   u32int uID = uartID - 1;
-    DEBUG(VP_OMAP_35XX_UART, "uartTxByte: send ASCII %#x" EOL, byte);
+  struct Uart* uart = context->vm->uart[uID];
 
-  if (uart[uID]->loopback)
+  DEBUG(VP_OMAP_35XX_UART, "uartTxByte: send ASCII %#x" EOL, byte);
+
+  if (uart->loopback)
   {
     DEBUG(VP_OMAP_35XX_UART, "uartTxByte: in loopback mode - byte goes to RX FIFO." EOL);
     // do we have space in RX FIFO?
-    if (uart[uID]->rxFifoPtr >= RX_FIFO_SIZE)
+    if (uart->rxFifoPtr >= RX_FIFO_SIZE)
     {
       // can't receive anymore. drop value, set overrun LSR status bit
-      uart[uID]->lsr |= UART_LSR_RX_OE;
+      uart->lsr |= UART_LSR_RX_OE;
     }
     else
     {
       // character goes straight back into RX
-      if (uart[uID]->rxFifoPtr == 0)
+      if (uart->rxFifoPtr == 0)
       {
         // first char in FIFO, is also RHR
-        uart[uID]->rhr = (u8int)(byte & 0xFF);
+        uart->rhr = (u8int)(byte & 0xFF);
       }
-      uart[uID]->rxFifo[uart[uID]->rxFifoPtr] = (u8int)(byte & 0xFF);
+      uart->rxFifo[uart->rxFifoPtr] = (u8int)(byte & 0xFF);
       // set LSR rx status bit to indicate RX data
-      uart[uID]->lsr |= UART_LSR_RX_FIFO_E;
+      uart->lsr |= UART_LSR_RX_FIFO_E;
       // increment FIFO pointer
-      uart[uID]->rxFifoPtr++;
+      uart->rxFifoPtr++;
     }
   }
   else
@@ -628,47 +688,49 @@ void uartTxByte(u8int byte, u32int uartID)
  */
 u8int uartRxByte(u32int uartID)
 {
+  GCONTXT* context = getGuestContext();
   u32int uID = uartID - 1;
+  struct Uart* uart = context->vm->uart[uID];
   u8int value = 0;
 
   // check LSR RX bit. if zero, return nil.
-  if ((uart[uID]->lsr & UART_LSR_RX_FIFO_E) == 0)
+  if ((uart->lsr & UART_LSR_RX_FIFO_E) == 0)
   {
     DEBUG(VP_OMAP_35XX_UART, "UART%x: load RHR, but RX FIFO is empty! return 0" EOL, uartID);
     value = 0;
   }
   else
   {
-    DEBUG(VP_OMAP_35XX_UART, "UART%x: load RHR value %#.8x" EOL, uartID, uart[uID]->rhr);
+    DEBUG(VP_OMAP_35XX_UART, "UART%x: load RHR value %#.8x" EOL, uartID, uart->rhr);
     // there's stuff in the FIFO! get char from RHR
-    value = uart[uID]->rhr;
+    value = uart->rhr;
     // adjust our fifo: all RX elements shift one position left
     int i = 0;
     for (i = 0; i < RX_FIFO_SIZE-1; i++)
     {
-      uart[uID]->rxFifo[i] = uart[uID]->rxFifo[i+1];
+      uart->rxFifo[i] = uart->rxFifo[i+1];
     }
     // adjust FIFO ptr
-    uart[uID]->rxFifoPtr--;
+    uart->rxFifoPtr--;
     // if we had previously overrun, clear LSR overrun bit
-    uart[uID]->lsr &= ~UART_LSR_RX_OE;
+    uart->lsr &= ~UART_LSR_RX_OE;
     // set new RHR: if FIFO now empty, RHR zero and lsr bit cleared.
     // otherwise, FIFO char 0 is new RHR
-    if (uart[uID]->rxFifoPtr == 0)
+    if (uart->rxFifoPtr == 0)
     {
-      uart[uID]->rhr = 0;
-      uart[uID]->lsr &= ~UART_LSR_RX_FIFO_E;
-      if ( (uart[uID]->ier & UART_IER_RHR) == UART_IER_RHR )
+      uart->rhr = 0;
+      uart->lsr &= ~UART_LSR_RX_FIFO_E;
+      if ( (uart->ier & UART_IER_RHR) == UART_IER_RHR )
       {
         // RX IRQ was enabled. probably need to clear it.
-        uart[uID]->iir = uart[uID]->iir | UART_IIR_IT_PENDING;
-        uart[uID]->iir &= ~UART_IIR_IT_TYPE;
-        if ( (uart[uID]->ier & UART_IER_THR) == UART_IER_THR )
+        uart->iir = uart->iir | UART_IIR_IT_PENDING;
+        uart->iir &= ~UART_IIR_IT_TYPE;
+        if ( (uart->ier & UART_IER_THR) == UART_IER_THR )
         {
           // TX fifo is always empty, set new IRQ type
-          uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
-          uart[uID]->iir &= ~UART_IIR_IT_TYPE;
-          uart[uID]->iir = uart[uID]->iir | (UART_IIR_IT_TYPE_THR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+          uart->iir = uart->iir & ~UART_IIR_IT_PENDING;
+          uart->iir &= ~UART_IIR_IT_TYPE;
+          uart->iir = uart->iir | (UART_IIR_IT_TYPE_THR_IRQ << UART_IIR_IT_TYPE_SHAMT);
           switch (uID)
           {
             case 0:
@@ -688,7 +750,7 @@ u8int uartRxByte(u32int uartID)
     }
     else
     {
-      uart[uID]->rhr = uart[uID]->rxFifo[0];
+      uart->rhr = uart->rxFifo[0];
     }
   } // RX FIFO turned on
   return value;
@@ -703,25 +765,27 @@ u8int uartRxByte(u32int uartID)
  */
 void uartPutRxByte(u8int byte, u32int uartID)
 {
+  GCONTXT* context = getGuestContext();
   u32int uID = uartID - 1;
+  struct Uart* uart = context->vm->uart[uID];
 
   DEBUG(VP_OMAP_35XX_UART, "UART%x: uartPutRxByte: %c" EOL, uartID, byte);
 
-  if ((uart[uID]->fcr & UART_FCR_FIFO_EN) == 0)
+  if ((uart->fcr & UART_FCR_FIFO_EN) == 0)
   {
     // FIFO's are disabled!
     // just receive to RHR
-    uart[uID]->rhr = (u8int)(byte & 0xFF);
+    uart->rhr = (u8int)(byte & 0xFF);
     // set LSR rx status bit to indicate RX data
-    uart[uID]->lsr |= UART_LSR_RX_FIFO_E;
+    uart->lsr |= UART_LSR_RX_FIFO_E;
 
     // set RX IRQ
-    if ((uart[uID]->ier & UART_IER_RHR) == UART_IER_RHR)
+    if ((uart->ier & UART_IER_RHR) == UART_IER_RHR)
     {
       DEBUG(VP_OMAP_35XX_UART, "uartPutRxByte: RX IRQ unmasked. Raise with INTC!" EOL);
-      uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
-      uart[uID]->iir &= ~UART_IIR_IT_TYPE;
-      uart[uID]->iir |= (UART_IIR_IT_TYPE_RHR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+      uart->iir = uart->iir & ~UART_IIR_IT_PENDING;
+      uart->iir &= ~UART_IIR_IT_TYPE;
+      uart->iir |= (UART_IIR_IT_TYPE_RHR_IRQ << UART_IIR_IT_TYPE_SHAMT);
       switch (uID)
       {
         case 0:
@@ -741,18 +805,18 @@ void uartPutRxByte(u8int byte, u32int uartID)
   else
   {
     // do we have space in RX FIFO?
-    if (uart[uID]->rxFifoPtr >= RX_FIFO_SIZE)
+    if (uart->rxFifoPtr >= RX_FIFO_SIZE)
     {
       // can't receive anymore. drop value, set overrun LSR status bit
-      uart[uID]->lsr |= UART_LSR_RX_OE;
+      uart->lsr |= UART_LSR_RX_OE;
       DEBUG(VP_OMAP_35XX_UART, "uartPutRxByte: no space in RX fifo!" EOL);
 
       // set RX line status error
-      if ((uart[uID]->ier & UART_IER_LINE_ST) == UART_IER_LINE_ST)
+      if ((uart->ier & UART_IER_LINE_ST) == UART_IER_LINE_ST)
       {
-        uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
-        uart[uID]->iir &= ~UART_IIR_IT_TYPE;
-        uart[uID]->iir |= (UART_IIR_IT_TYPE_RX_LS_ERR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+        uart->iir = uart->iir & ~UART_IIR_IT_PENDING;
+        uart->iir &= ~UART_IIR_IT_TYPE;
+        uart->iir |= (UART_IIR_IT_TYPE_RX_LS_ERR_IRQ << UART_IIR_IT_TYPE_SHAMT);
         DEBUG(VP_OMAP_35XX_UART, "uartPutRxByte: RX line error IRQ unmasked. Raise with INTC!" EOL);
         switch (uID)
         {
@@ -773,24 +837,24 @@ void uartPutRxByte(u8int byte, u32int uartID)
     else
     {
       // character goes into RX path
-      if (uart[uID]->rxFifoPtr == 0)
+      if (uart->rxFifoPtr == 0)
       {
         // first char in FIFO, is also RHR
-        uart[uID]->rhr = (u8int)(byte & 0xFF);
+        uart->rhr = (u8int)(byte & 0xFF);
       }
-      uart[uID]->rxFifo[uart[uID]->rxFifoPtr] = (u8int)(byte & 0xFF);
+      uart->rxFifo[uart->rxFifoPtr] = (u8int)(byte & 0xFF);
       // set LSR rx status bit to indicate RX data
-      uart[uID]->lsr |= UART_LSR_RX_FIFO_E;
+      uart->lsr |= UART_LSR_RX_FIFO_E;
       // increment FIFO pointer
-      uart[uID]->rxFifoPtr++;
+      uart->rxFifoPtr++;
 
       // set RX IRQ
-      if ((uart[uID]->ier & UART_IER_RHR) == UART_IER_RHR)
+      if ((uart->ier & UART_IER_RHR) == UART_IER_RHR)
       {
         DEBUG(VP_OMAP_35XX_UART, "uartPutRxByte: RX IRQ unmasked. Raise with INTC!" EOL);
-        uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
-        uart[uID]->iir &= ~UART_IIR_IT_TYPE;
-        uart[uID]->iir |= (UART_IIR_IT_TYPE_RHR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+        uart->iir = uart->iir & ~UART_IIR_IT_PENDING;
+        uart->iir &= ~UART_IIR_IT_TYPE;
+        uart->iir |= (UART_IIR_IT_TYPE_RHR_IRQ << UART_IIR_IT_TYPE_SHAMT);
         switch (uID)
         {
           case 0:
@@ -813,17 +877,19 @@ void uartPutRxByte(u8int byte, u32int uartID)
 
 void setIrqFlags(u32int flags, u32int uartID)
 {
-  u32int uID = uartID-1;
+  GCONTXT* context = getGuestContext();
+  u32int uID = uartID - 1;
+  struct Uart* uart = context->vm->uart[uID];
 
-  if (((uart[uID]->ier & UART_IER_THR) == 0) &&
+  if (((uart->ier & UART_IER_THR) == 0) &&
       ((flags & UART_IER_THR) == UART_IER_THR))
   {
     // enabling TX IRQ!
     // TX fifo is always empty. raise IRQ
-    uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
-    uart[uID]->iir &= ~UART_IIR_IT_TYPE;
-    uart[uID]->iir = uart[uID]->iir | (UART_IIR_IT_TYPE_THR_IRQ << UART_IIR_IT_TYPE_SHAMT);
-    DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: enabling THR irq, set IIR to %#x" EOL, uart[uID]->iir);
+    uart->iir = uart->iir & ~UART_IIR_IT_PENDING;
+    uart->iir &= ~UART_IIR_IT_TYPE;
+    uart->iir = uart->iir | (UART_IIR_IT_TYPE_THR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+    DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: enabling THR irq, set IIR to %#x" EOL, uart->iir);
     switch (uID)
     {
       case 0:
@@ -841,25 +907,25 @@ void setIrqFlags(u32int flags, u32int uartID)
   }
 
 
-  if (((uart[uID]->ier & UART_IER_THR) == UART_IER_THR) &&
+  if (((uart->ier & UART_IER_THR) == UART_IER_THR) &&
           ((flags & UART_IER_THR) == 0))
   {
     // THR irq was enabled, clear irq
-    uart[uID]->iir = uart[uID]->iir | UART_IIR_IT_PENDING;
-    uart[uID]->iir = uart[uID]->iir &~ UART_IIR_IT_TYPE;
-    DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: disabling THR irq, set IIR to %#x" EOL, uart[uID]->iir);
+    uart->iir = uart->iir | UART_IIR_IT_PENDING;
+    uart->iir = uart->iir &~ UART_IIR_IT_TYPE;
+    DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: disabling THR irq, set IIR to %#x" EOL, uart->iir);
   }
 
 
-  if (!(uart[uID]->ier & UART_IER_RHR) && (flags & UART_IER_RHR))
+  if (!(uart->ier & UART_IER_RHR) && (flags & UART_IER_RHR))
   {
     // Enabling RX interrupt!
     // if LSR has RX_FIFO_E bit set, set RX irq flag in IIR
-    if ((uart[uID]->lsr & UART_LSR_RX_FIFO_E) == UART_LSR_RX_FIFO_E)
+    if ((uart->lsr & UART_LSR_RX_FIFO_E) == UART_LSR_RX_FIFO_E)
     {
-      uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
-      uart[uID]->iir &= ~UART_IIR_IT_TYPE;
-      uart[uID]->iir = uart[uID]->iir | (UART_IIR_IT_TYPE_RHR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+      uart->iir = uart->iir & ~UART_IIR_IT_PENDING;
+      uart->iir &= ~UART_IIR_IT_TYPE;
+      uart->iir = uart->iir | (UART_IIR_IT_TYPE_RHR_IRQ << UART_IIR_IT_TYPE_SHAMT);
       switch (uID)
       {
         case 0:
@@ -875,22 +941,22 @@ void setIrqFlags(u32int flags, u32int uartID)
           DIE_NOW(NULL, "store to uart: invalid uID.");
       }
     }
-    DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: enabling RX irq, set IIR to %#x" EOL, uart[uID]->iir);
+    DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: enabling RX irq, set IIR to %#x" EOL, uart->iir);
   }
 
-  if (((uart[uID]->ier & UART_IER_RHR) == UART_IER_RHR) &&
+  if (((uart->ier & UART_IER_RHR) == UART_IER_RHR) &&
      ((flags & UART_IER_RHR) == 0))
   {
     // disabling RX IRQ! clear the flag
-    uart[uID]->iir = uart[uID]->iir | UART_IIR_IT_PENDING;
-    uart[uID]->iir = uart[uID]->iir &~ UART_IIR_IT_TYPE;
+    uart->iir = uart->iir | UART_IIR_IT_PENDING;
+    uart->iir = uart->iir &~ UART_IIR_IT_TYPE;
 
     if ( (flags & UART_IER_THR) == UART_IER_THR )
     {
       // TX fifo is always empty, set new IRQ type
-      uart[uID]->iir = uart[uID]->iir & ~UART_IIR_IT_PENDING;
-      uart[uID]->iir &= ~UART_IIR_IT_TYPE;
-      uart[uID]->iir = uart[uID]->iir | (UART_IIR_IT_TYPE_THR_IRQ << UART_IIR_IT_TYPE_SHAMT);
+      uart->iir = uart->iir & ~UART_IIR_IT_PENDING;
+      uart->iir &= ~UART_IIR_IT_TYPE;
+      uart->iir = uart->iir | (UART_IIR_IT_TYPE_THR_IRQ << UART_IIR_IT_TYPE_SHAMT);
       switch (uID)
       {
         case 0:
@@ -906,26 +972,26 @@ void setIrqFlags(u32int flags, u32int uartID)
           DIE_NOW(NULL, "store to uart: invalid uID.");
       }
     }
-    DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: disabling RHR irq, set IIR to %#x" EOL, uart[uID]->iir);
+    DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: disabling RHR irq, set IIR to %#x" EOL, uart->iir);
   }
 
 
   // bits [4:7] Can be written only when EFR_REG[4] = 1
   u32int writenValue = flags;
-  if (!(uart[uID]->efr & UART_EFR_ENHANCED_EN))
+  if (!(uart->efr & UART_EFR_ENHANCED_EN))
   {
     // enchaned features disabled. only write bottom four bits
     writenValue &= 0xF;
-    uart[uID]->ier &= 0xFFFFFFF0;
+    uart->ier &= 0xFFFFFFF0;
   }
   else
   {
     // enchaned features enabled. write all 8 bits
     writenValue &= 0xFF;
-    uart[uID]->ier &= 0xFFFFFF00;
+    uart->ier &= 0xFFFFFF00;
   }
-  uart[uID]->ier = writenValue;
-  DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: storing IRQ enable register: %#x" EOL, uart[uID]->ier);
+  uart->ier = writenValue;
+  DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: storing IRQ enable register: %#x" EOL, uart->ier);
 
   if ((flags & UART_IER_SLEEP_MODE) != 0)
   {
@@ -933,7 +999,7 @@ void setIrqFlags(u32int flags, u32int uartID)
   }
 
   // if now all irq are clear/disabled, make sure INTC line is clear
-  if ((uart[uID]->iir & UART_IIR_IT_PENDING) == UART_IIR_IT_PENDING)
+  if ((uart->iir & UART_IIR_IT_PENDING) == UART_IIR_IT_PENDING)
   {
     // no IRQ pending!
     switch (uID)
