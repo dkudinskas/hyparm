@@ -1,6 +1,7 @@
 HYPARM_SRCS_C-y += vm/omap35xx/clockManager.c
 HYPARM_SRCS_C-y += vm/omap35xx/controlModule.c
 HYPARM_SRCS_C-y += vm/omap35xx/cp15coproc.c
+HYPARM_SRCS_C-y += vm/omap35xx/dmtimer.c
 HYPARM_SRCS_C-y += vm/omap35xx/gpio.c
 HYPARM_SRCS_C-y += vm/omap35xx/gpmc.c
 HYPARM_SRCS_C-y += vm/omap35xx/gptimer.c
