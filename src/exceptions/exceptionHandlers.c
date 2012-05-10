@@ -420,7 +420,6 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 
 void prefetchAbortPrivileged(void)
 {
-  DIE_NOW(NULL, "prefetchAbortPrivileged: unimplemented");
   IFSR ifsr = getIFSR();
   u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
   switch(faultStatus)
