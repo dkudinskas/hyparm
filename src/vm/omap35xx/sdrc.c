@@ -29,8 +29,8 @@ void initSdrc()
   sdrc->sharing =     0;
   sdrc->errAddr =     0;
   sdrc->errType =     0x4;
-  sdrc->dllaCtrl =    0;
-  sdrc->dllaStatus =  0;
+  sdrc->dllaCtrl =    0xA;
+  sdrc->dllaStatus =  0x4;
   sdrc->powerReg =    0x85;
 
   sdrc->mcfg0 =       0;
@@ -63,6 +63,36 @@ u32int loadSdrc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 
   switch (regOffset)
   {
+    case SDRC_SYSCONFIG:
+    {
+      value = sdrc->sysConfig;
+      break;
+    }
+    case SDRC_DLLA_CTRL:
+    {
+      value = sdrc->dllaCtrl;
+      break;
+    }
+    case SDRC_DLLA_STATUS:
+    {
+      value = sdrc->dllaStatus;
+      break;
+    }
+    case SDRC_POWER_REG:
+    {
+      value = sdrc->powerReg;
+      break;
+    }
+    case SDRC_RFR_CTRL(0):
+    {
+      value = sdrc->rfrCtrl0;
+      break;
+    }
+    case SDRC_RFR_CTRL(1):
+    {
+      value = sdrc->rfrCtrl1;
+      break;
+    }
     default:
     {
       printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
@@ -87,10 +117,50 @@ void storeSdrc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
 
   switch (regOffset)
   {
+    case SDRC_SYSCONFIG:
+    {
+      if (sdrc->sysConfig != value)
+      {
+        printf("%s: unimplemented store to reg sysConfig" EOL, __func__);
+      }
+      break;
+    }
+    case SDRC_DLLA_CTRL:
+    {
+      if (sdrc->dllaCtrl != value)
+      {
+        printf("%s: unimplemented store to reg dllaCtrl" EOL, __func__);
+      }
+      break;
+    }
+    case SDRC_POWER_REG:
+    {
+      if (sdrc->powerReg != value)
+      {
+        printf("%s: unimplemented store to reg powerReg" EOL, __func__);
+      }
+      break;
+    }
+    case SDRC_RFR_CTRL(0):
+    {
+      if (sdrc->rfrCtrl0 != value)
+      {
+        printf("%s: unimplemented store to reg rfrCtrl0" EOL, __func__);
+      }
+      break;
+    }
+    case SDRC_RFR_CTRL(1):
+    {
+      if (sdrc->rfrCtrl1 != value)
+      {
+        printf("%s: unimplemented store to reg rfrCtrl1" EOL, __func__);
+      }
+      break;
+    }
     default:
     {
-      printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
-          virtAddr, (u32int)size);
+      printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %x" EOL, dev->deviceName, phyAddr,
+          virtAddr, (u32int)size, value);
       DIE_NOW(NULL, "Store to invalid/unimplemented register.");
     }
   }
