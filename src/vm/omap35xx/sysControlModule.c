@@ -287,7 +287,7 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
   }
 
   /*
-   * Registers are 8-, 16-, 32-bit accessible with little endianess.
+   * Registers are 8-, 16-, 32-bit accessible with little endianness.
    */
   val = (val >> ((phyAddr & 0x3) * 8));
   switch (size)
