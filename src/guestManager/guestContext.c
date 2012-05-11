@@ -49,7 +49,7 @@ GCONTXT *createGuestContext(void)
    * Initialise block copy cache
    */
 #ifdef CONFIG_BLOCK_COPY
-  initialiseTranslationCache(&context->translationCache);
+  initialiseTranslationCache(context);
   DEBUG(GUEST_CONTEXT, "createGuestContext: block copy cache @ %p" EOL, context->translationCache.codeCache);
 #endif
 

@@ -3,6 +3,8 @@
 
 #include "common/types.h"
 
+#include "guestManager/guestContext.h"
+
 #include "memoryManager/pageTable.h"
 
 
@@ -10,7 +12,7 @@
 #define CODE_CACHE_MAX_SIZE  SMALL_PAGE_SIZE
 
 
-u32int *allocateCodeCache(void);
-void freeCodeCache(u32int *translationCache);
+bool allocateCodeCache(GCONTXT *context);
+void freeCodeCache(GCONTXT *context);
 
 #endif /* __GUEST_MANAGER__TRANSLATION_CACHE_ALLOCATOR_H__ */

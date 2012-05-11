@@ -187,9 +187,9 @@ void mapHypervisorMemory(simpleEntry *pageTable, bool hypervisor)
   ASSERT(RAM_XN_POOL_BEGIN < RAM_XN_POOL_END, "bad linker symbols");
   ASSERT(RAM_XN_POOL_END <= MEMORY_END_ADDR, "bad linker symbols");
 #ifdef CONFIG_BLOCK_COPY
-  ASSERT(RAM_XN_POOL_END < RAM_X_POOL_BEGIN, "bad linker symbols");
-  ASSERT(RAM_X_POOL_BEGIN < RAM_X_POOL_END, "bad linker symbols");
-  ASSERT(RAM_X_POOL_END <= MEMORY_END_ADDR, "bad linker symbols");
+  ASSERT(RAM_XN_POOL_END < RAM_CODE_CACHE_POOL_BEGIN, "bad linker symbols");
+  ASSERT(RAM_CODE_CACHE_POOL_BEGIN < RAM_CODE_CACHE_POOL_END, "bad linker symbols");
+  ASSERT(RAM_CODE_CACHE_POOL_END <= MEMORY_END_ADDR, "bad linker symbols");
 #endif
   /*
    * Now make sure the linker followed our alignment constraints:
@@ -205,9 +205,9 @@ void mapHypervisorMemory(simpleEntry *pageTable, bool hypervisor)
   ASSERT(isAlignedToMaskN(RAM_XN_POOL_END, SMALL_PAGE_MASK),
          "non-executable RAM pool not aligned on small page boundary");
 #ifdef CONFIG_BLOCK_COPY
-  ASSERT(isAlignedToMaskN(RAM_X_POOL_BEGIN, SMALL_PAGE_MASK),
+  ASSERT(isAlignedToMaskN(RAM_CODE_CACHE_POOL_BEGIN, SMALL_PAGE_MASK),
          "executable RAM pool not aligned on small page boundary");
-  ASSERT(isAlignedToMaskN(RAM_X_POOL_END, SMALL_PAGE_MASK),
+  ASSERT(isAlignedToMaskN(RAM_CODE_CACHE_POOL_END, SMALL_PAGE_MASK),
          "executable RAM pool not aligned on small page boundary");
 #endif
   /*
@@ -281,13 +281,10 @@ void mapHypervisorMemory(simpleEntry *pageTable, bool hypervisor)
 #ifdef CONFIG_BLOCK_COPY
   if (hypervisor)
   {
-    printf("WARNING: allocating NON-CACHEABLE, GUEST-READABLE, EXECUTABLE pool for block copy" EOL);
-    mapRange(pageTable, RAM_X_POOL_BEGIN, RAM_X_POOL_BEGIN, RAM_X_POOL_END,
-             HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_RO, FALSE, FALSE, 0, FALSE);
-  }
-  else
-  {
-    printf("WARNING: unimplemented X-pool allocation in SPT");
+    printf("WARNING: allocating NON-CACHEABLE pool for block copy" EOL);
+    mapRange(pageTable, RAM_CODE_CACHE_POOL_BEGIN, RAM_CODE_CACHE_POOL_BEGIN,
+             RAM_CODE_CACHE_POOL_END, HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, FALSE, FALSE, 0,
+             TRUE);
   }
 #endif
 }

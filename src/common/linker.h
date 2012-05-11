@@ -18,8 +18,8 @@
 #define RAM_XN_POOL_END                 ((u32int)&(__RAM_XN_POOL_END__))
 
 #ifdef CONFIG_BLOCK_COPY
-#define RAM_X_POOL_BEGIN                ((u32int)&(__RAM_X_POOL_BEGIN__))
-#define RAM_X_POOL_END                  ((u32int)&(__RAM_X_POOL_END__))
+#define RAM_CODE_CACHE_POOL_BEGIN       ((u32int)&(__RAM_CODE_CACHE_POOL_BEGIN__))
+#define RAM_CODE_CACHE_POOL_END         ((u32int)&(__RAM_CODE_CACHE_POOL_END__))
 #endif
 
 
@@ -41,8 +41,8 @@ extern const u32int __RAM_XN_POOL_BEGIN__;
 extern const u32int __RAM_XN_POOL_END__;
 
 #ifdef CONFIG_BLOCK_COPY
-extern const u32int __RAM_X_POOL_BEGIN__;
-extern const u32int __RAM_X_POOL_END__;
+extern const u32int __RAM_CODE_CACHE_POOL_BEGIN__;
+extern const u32int __RAM_CODE_CACHE_POOL_END__;
 #endif
 
 #endif /* __COMMON_LINKER_H__ */

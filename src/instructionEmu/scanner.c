@@ -143,8 +143,8 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     context->hdlFunct = meta->hdlFunct;
     context->endOfBlockInstr = meta->hyperedInstruction;
 #ifdef CONFIG_BLOCK_COPY
-    /* First word is a backpointer, second may be reserved */
-    u32int *addressInBlockCopyCache = meta->code + (meta->reservedWord ? 2 : 1);
+    /* First word is a backpointer */
+    u32int *addressInBlockCopyCache = &meta->code->codeStart;
     // The programcounter of the code that is executing should be set to the code in the blockCache
     if (addressInBlockCopyCache >= context->translationCache.codeCacheLastEntry)
     {
@@ -446,107 +446,61 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 #else /* CONFIG_BLOCK_COPY */
 
 
+/*
+ * reserved words are painful here... we actually only need one spill location per C$
+ * however...
+ * for C$ size <= 4088 bytes we can use ONE spill location, at start of C$ (because of PC +8 offset)
+ * for C$ size <= 4096 we can use ONE spill location at end of C$
+ * for C$ size <= 8192 we use one at start and end
+ * for any bigger C$ size ... embed in the middle
+ * ....given that LDR literal can address any offset -4095..+4095 from the PC (in both arm &thumb2)
+ * in thumb PC is always aligned to a 4 byte boundary when used in LDR
+ * we will DABT on spill location store
+ * to make sure no guest has an abs addr into the spill location we need to verify that
+ * LR points to a hypervisor-placed spill store, if not its a store hardcoded into guest
+ * this may require a bitmap
+ */
 void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaIndex)
 {
   /*
    * Check if there is room on blockCopyCacheCurrAddres and if not make it
    */
-  u32int *codeCacheStart = context->translationCache.codeCacheNextEntry;
-  u32int *codeCacheCurrent = updateCodeCachePointer(&context->translationCache, codeCacheStart);
+  MetaCacheEntry metaEntry = {
+                               .startAddress = (u32int)startAddress,
+                               .type = MCE_TYPE_ARM,
+                               .code = context->translationCache.codeCacheNextEntry,
+                             };
+  u32int *code = updateCodeCachePointer(&context->translationCache, (u32int *)metaEntry.code);
   /*
    * Install backpointer in C$
-   * TODO: seriously, the full address? lol.
+   * TODO: seriously, the full address? lol. and this is only used in the weird freeing-mechanism
    */
-  *(codeCacheCurrent++) = (u32int)(&context->translationCache.metaCache[metaIndex]);
+  ((CodeCacheEntry *)code)->meta = &context->translationCache.metaCache[metaIndex];
   /*
    * Instructions follow, so next R15 is here.
    */
-  context->R15 = (u32int)updateCodeCachePointer(&context->translationCache, codeCacheCurrent);
+  context->R15 = (u32int)updateCodeCachePointer(&context->translationCache, ++code);
   /*
    * Scan and copy
    */
-  u32int *guestCurrent = startAddress;
-  u32int instruction = *guestCurrent;
-  u32int blockCopyCacheSize  =0;
-  bool reservedWord = FALSE;
+  u32int *instruction = startAddress;
   struct decodingTableEntry *decodedInstruction;
-  for (; (decodedInstruction = decodeArmInstruction(instruction))->replace == IRC_SAFE; instruction = *++guestCurrent)
+  for (; (decodedInstruction = decodeArmInstruction(*instruction))->replace == IRC_SAFE; ++instruction)
   {
     /*
      * Safe instruction; but does it use PC?
      */
-    if (!isPCSensitiveInstruction(instruction) || (decodedInstruction->pcHandler == NULL))
+    if (!isPCSensitiveInstruction(*instruction) || (decodedInstruction->pcHandler == NULL))
     {
-      codeCacheCurrent = updateCodeCachePointer(&context->translationCache, codeCacheCurrent);
-      *(codeCacheCurrent++) = instruction;
+      *code = *instruction;
+      code = updateCodeCachePointer(&context->translationCache, ++code);
       continue;
     }
     /*
      * PC used as source register; call InstructionPCHandler. We abuse endOfBlockInstr...
      */
-    context->endOfBlockInstr = instruction;
-    codeCacheCurrent = decodedInstruction->pcHandler(&context->translationCache, guestCurrent, codeCacheCurrent, codeCacheStart);
-    if (((u32int)codeCacheCurrent & 0b1) == 0b1)
-    {
-      /* Last bit of returnAddress is used to indicate that a reserved word is necessary
-       * -> we can assume 2 byte alignment (even in worst case scenario (thumb))*/
-      if (reservedWord)
-      {
-        /* Place has already been made -> just restore blockCopyCacheCurrAddress */
-        codeCacheCurrent=(u32int*)((u32int)codeCacheCurrent & ~1);/*Set last bit back to zero*/
-      }
-      else
-      {
-        /* Entry in blockCopyCache will have to look like:
-         * |-------------------|
-         * |  backpointer      |  = indicated by blockCopyCacheStartAddress
-         * |  emptyWord        |  = resevedWord for storing backup registers
-         * |      ...          |  = Here starts the translated block
-         *
-         * blockCopyCacheStartAddress**/
-        u32int *emptyWordPointer;
-        u32int *destEmptyWord = codeCacheStart + 1;
-        u32int *tempWordPointer;
-        codeCacheCurrent = (u32int *)((u32int)codeCacheCurrent & ~1);/*Set last bit back to zero*/
-        /* destEmptyWord can be set incorrectly if blockCopyCacheStartAddress is blockCopyCacheEnd -4
-         * Because then destEmptyWord will be blockCopyCacheEnd but blockCopyCacheEnd contains a static branch
-         * to start of blockCopyCache*/
-        if (destEmptyWord == context->translationCache.codeCacheLastEntry)
-        {
-          destEmptyWord = context->translationCache.codeCache; //Reserved word will be at start of blockCopyCache
-        }
-
-        /*Set place for the reserved word correct now it is right before the instructions for the last instruction*/
-        /*set pointer to the empty word.*/
-        emptyWordPointer = codeCacheCurrent - 6;
-        if (emptyWordPointer < context->translationCache.codeCache)
-        {
-          /* If we are before the start of the Block Copy Cache than we need to go to the corresponding place near the end*/
-          emptyWordPointer = context->translationCache.codeCacheLastEntry - (context->translationCache.codeCache - emptyWordPointer);
-        }
-        /* emptyWordPointer now points to the empty word*/
-
-        DEBUG(SCANNER, "emptyWordPointer : %p" EOL, emptyWordPointer);
-        DEBUG(SCANNER, "destEmptyWord : %p" EOL, destEmptyWord);
-
-        while (emptyWordPointer != destEmptyWord)
-        {
-          /* As long as the empty word isn't at its place keep on moving instructions */
-          tempWordPointer = emptyWordPointer - 1; /* previous word */
-          if(tempWordPointer == (context->translationCache.codeCache - 1))
-          {
-            /* Be careful when exceeding start of blockCopyCache */
-            tempWordPointer = context->translationCache.codeCacheLastEntry - 1;
-          }
-          *((u32int *)emptyWordPointer) = *((u32int *)tempWordPointer);
-          emptyWordPointer=tempWordPointer;
-        }
-        *emptyWordPointer= 0;/*Clear it so it cannot be a cause for confusion while debugging*/
-        reservedWord = 1;/*From now on there is a reserved word to save backups*/
-        /* Indicate that a free word is available at start of blockCopyCache */
-        codeCacheStart= (u32int*) ( ((u32int)codeCacheStart) |0b1);
-      }
-    }
+    context->endOfBlockInstr = *instruction;
+    code = updateCodeCachePointer(&context->translationCache, decodedInstruction->pcHandler(&context->translationCache, instruction, code, (u32int *)metaEntry.code));
   } /* for safe */
   /*
    * Critical instruction!
@@ -555,84 +509,40 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
   /*Non of the source registers is the ProgramCounter -> Just End Of Block
    *Finish block by installing SVC
    *Save end of block instruction and handler function pointer close to us... */
-  context->endOfBlockInstr = instruction;
+  context->endOfBlockInstr = *instruction;
   context->hdlFunct = decodedInstruction->handler;
-  context->PCOfLastInstruction = (u32int)guestCurrent;
+  context->PCOfLastInstruction = (u32int)instruction;
   /* replace end of block instruction with hypercall of the appropriate code
    *Check if there is room on blockCopyCacheCurrAddress and if not make it */
-  codeCacheCurrent = updateCodeCachePointer(&context->translationCache, codeCacheCurrent);
-  *(codeCacheCurrent++) = INSTR_SWI | ((metaIndex + 1) << 8);
+  *(code++) = INSTR_SWI | ((metaIndex + 1) << 8);
 
-  DEBUG(SCANNER, "EOB %p instr %#.8x SWIcode %#.2x hdlrFuncPtr %p" EOL, guestCurrent,
+  DEBUG(SCANNER, "EOB %p instr %#.8x SWIcode %#.2x hdlrFuncPtr %p" EOL, instruction,
       context->endOfBlockInstr, metaIndex, context->hdlFunct);
   /*
-   * We have to determine the size of the BlockCopyCache & If necessary patch the code
-   * Patching of code is necessary when block is split up and a reserved word is used!
+   * We have to determine the size of the BlockCopyCache
    */
-  if (codeCacheCurrent < codeCacheStart)
+  if (code < (u32int *)metaEntry.code)
   {
-    if (reservedWord)
-    {
-      DEBUG(SCANNER, "Reserved WORD" EOL);
-
-      u32int* blockCopyLast = mergeCodeBlockAsNeeded(&context->translationCache, codeCacheStart, codeCacheCurrent);
-
-      /*
-       * Make sure that block is safed correctly in blockCopyCache
-       */
-      //UPDATE blockCopyCacheStartAddress
-      if (blockCopyLast != codeCacheCurrent)
-      {
-        codeCacheCurrent = blockCopyLast;
-        codeCacheStart = context->translationCache.codeCache;
-        //Set blockCopyCacheSize
-        blockCopyCacheSize = blockCopyLast - codeCacheStart;
-        /* Indicate that a free word is available at start of blockCopyCache */
-        codeCacheStart = (u32int*)(((u32int)codeCacheStart) |0b1);
-        /* Block is merged and moved to start of blockCopyCache.  We have to execute instructions from there!
-         * But first word is backpointer and 2nd word is reserved word*/
-        context->R15 = (u32int)(context->translationCache.codeCache + 2);
-
-        DEBUG(SCANNER, "Block Merged.  New size = %#.8x" EOL, blockCopyCacheSize);
-      }
-      else
-      {
-        /* No patching needs to be done just set blockCopyCacheSize */
-        blockCopyCacheSize = (u32int)context->translationCache.codeCacheLastEntry - (((u32int)codeCacheStart) & 0xFFFFFFFE);
-        blockCopyCacheSize += (u32int)(codeCacheCurrent - context->translationCache.codeCache);
-        blockCopyCacheSize = blockCopyCacheSize >> 2; //we have casted pointers to u32int thus divide by 4 to get size in words
-      }
-    }//end of reserved word case
-    else
-    {
-        blockCopyCacheSize = (u32int)context->translationCache.codeCacheLastEntry - (((u32int)codeCacheStart) & 0xFFFFFFFE);
-        blockCopyCacheSize += (u32int)(codeCacheCurrent - context->translationCache.codeCache);
-        blockCopyCacheSize = blockCopyCacheSize >> 2;//we have casted pointers to u32int thus divide by 4 to get size in words
-
-        DEBUG(SCANNER, "Block exceeding end: blockCopyCacheSize=%#.8x" EOL, blockCopyCacheSize);
-    }
+    metaEntry.codeSize = (u32int)context->translationCache.codeCacheLastEntry
+                       - (u32int)metaEntry.code + (u32int)code
+                       - (u32int)context->translationCache.codeCache;
+    DEBUG(SCANNER, "Block exceeding end: blockCopyCacheSize=%#.8x" EOL, metaEntry.codeSize);
   }
   else
   {
-    blockCopyCacheSize = codeCacheCurrent - (u32int *)(((u32int)codeCacheStart) & 0xFFFFFFFE);
+    metaEntry.codeSize = (u32int)code - (u32int)metaEntry.code;
   }
-  /* This check is probably not necessary in production code but this can catch errors early on */
-  if (blockCopyCacheSize > 0xFFFF)
-  {
-    printf("blockCache: ADD[%08x] start@%08x end@%08x hdlPtr %08x eobInstr %08x "
-      "blockCopyCacheSize %08x blockCopyCache@%08x\n", metaIndex, (u32int)startAddress,
-      (u32int)guestCurrent, (u32int)context->hdlFunct, context->endOfBlockInstr,
-      blockCopyCacheSize, (u32int)codeCacheStart);
-  }
-  /* add the block we just scanned to block cache */
-  addMetaCacheEntry(&context->translationCache, metaIndex, startAddress, guestCurrent,
-    context->endOfBlockInstr, context->hdlFunct, blockCopyCacheSize,
-    codeCacheStart);
-  codeCacheStart = (u32int *)(((u32int)codeCacheStart) & 0xFFFFFFFE);
-  guestWriteProtect((u32int)startAddress, (u32int)guestCurrent);
-  context->translationCache.codeCacheNextEntry = codeCacheCurrent;
-
-  DEBUG(SCANNER, "Block added with size of %#.8x words" EOL, codeCacheCurrent - codeCacheStart);
+  /*
+   * Now add metadata to cache
+   */
+  metaEntry.endAddress = (u32int)instruction;
+  metaEntry.hyperedInstruction = context->endOfBlockInstr,
+  metaEntry.hdlFunct = context->hdlFunct;
+  addMetaCacheEntry(&context->translationCache, metaIndex, &metaEntry);
+  /*
+   * Round up
+   */
+  guestWriteProtect((u32int)startAddress, (u32int)instruction);
 }
 
 

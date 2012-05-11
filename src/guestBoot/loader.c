@@ -116,10 +116,8 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
   cleanupBeforeBoot();
 
 #ifdef CONFIG_BLOCK_COPY
-  //execution shouldn't be started at hdrEntryPoint any more!
-  //The code from the blockCache should be executed  :  getGuestContext()->blockCopyCache
-  //But first entry in blockCopyCache is backpointer -> next entry (blockCopyCache is u32int => +4)
-  entryPoint = (u32int)(context->translationCache.codeCache + 1);
+  entryPoint = (u32int)&((CodeCacheEntry *)(context->translationCache.codeCache))->codeStart;
+  DEBUG(STARTUP, "bootGuest: entry point adjusted to first instruction in C$ @ %#.8x" EOL, entryPoint);
 #endif
 
 #if defined(CONFIG_GUEST_TEST) && defined(CONFIG_THUMB2)

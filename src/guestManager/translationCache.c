@@ -3,9 +3,15 @@
 
 #include "cpuArch/constants.h"
 
+#include "guestManager/codeCacheAllocator.h"
 #include "guestManager/translationCache.h"
 
 #include "memoryManager/mmu.h"
+
+
+COMPILE_TIME_ASSERT((TRANSLATION_CACHE_CODE_SIZE_B & 0b11) == 0, __code_cache_size_must_be_multiple_of_4);
+COMPILE_TIME_ASSERT(CODE_CACHE_MIN_SIZE <= TRANSLATION_CACHE_CODE_SIZE_B, __code_cache_size_below_minimum);
+COMPILE_TIME_ASSERT(TRANSLATION_CACHE_CODE_SIZE_B <= CODE_CACHE_MAX_SIZE, __code_cache_size_exceeds_maximum);
 
 
 #ifdef CONFIG_BLOCK_CACHE_COLLISION_COUNTER
@@ -35,9 +41,8 @@ static void clearExecBitMap(TranslationCache *tc, u32int address);
 static void clearMetaCache(TranslationCache *tc);
 static u32int findMetaCacheEntry(const TranslationCache *tc, u32int address);
 static bool isBitmapSetForAddress(const TranslationCache *tc, u32int address);
-static u32int *mergeCodeBlock(TranslationCache *tc, u32int *startOfBlock1, u32int *endOfBlock2);
 static void removeCacheEntry(TranslationCache *tc, MetaCacheEntry *entry);
-static void removeCodeCacheEntry(const TranslationCache *tc, u32int *code, u32int codeSize);
+static void removeCodeCacheEntry(const TranslationCache *tc, const MetaCacheEntry *metaEntry);
 static void resolveCacheConflict(TranslationCache *tc, u32int metaIndex);
 static void restoreReplacedInstruction(MetaCacheEntry *entry);
 static void setExecBitMap(TranslationCache *tc, u32int address);
@@ -45,31 +50,22 @@ static void setExecBitMap(TranslationCache *tc, u32int address);
 
 #ifdef CONFIG_BLOCK_COPY
 
-void addMetaCacheEntry(TranslationCache *tc, u32int index, u32int *start, u32int *end,
-    u32int hypInstruction, InstructionHandler hdlFunct, u32int codeSize, u32int *code)
+void addMetaCacheEntry(TranslationCache *tc, u32int index, MetaCacheEntry *entry)
 {
-  DEBUG(BLOCK_CACHE, "addToBlockCache: index = %#.2x @ %p--%p, handler = %p, eobInstr = "
-      "%#.8x, codeSize = %#.8x, code @ %p" EOL, index, start,
-      end, hdlFunct, hypInstruction, codeSize, code);
+  DEBUG(BLOCK_CACHE, "addToBlockCache: index = %#.2x @ %#.8x--%#.8x, handler = %p, eobInstr = "
+      "%#.8x, codeSize = %#.8x, code @ %p" EOL, index, entry->startAddress,
+      entry->endAddress, entry->hdlFunct, entry->hyperedInstruction, entry->codeSize, entry->code);
 
   if (tc->metaCache[index].type != MCE_TYPE_INVALID)
   {
     // somebody has been sleeping in our cache location!
     resolveCacheConflict(tc, index);
   }
-  //store the new entry data...
-  //Last bit of blkStartAddr is used to indicate that a reserved word is present in blockCopyCache (see scanner.c)
-  tc->metaCache[index].startAddress = (u32int)start;
-  tc->metaCache[index].endAddress = (u32int)end;
-  tc->metaCache[index].hyperedInstruction = hypInstruction;
-  tc->metaCache[index].hdlFunct = hdlFunct;
-  tc->metaCache[index].type = MCE_TYPE_ARM;
-  tc->metaCache[index].code = (u32int *)((u32int)code & ~1);
-  tc->metaCache[index].codeSize = codeSize;
-  tc->metaCache[index].reservedWord = (u32int)code & 1;
+  tc->metaCache[index] = *entry;
+  tc->codeCacheNextEntry = (CodeCacheEntry *)((u32int)entry->code + (u32int)entry->codeSize);
 
   // set bitmap entry to executed
-  setExecBitMap(tc, (u32int)end);
+  setExecBitMap(tc, entry->endAddress);
 }
 
 #else
@@ -197,8 +193,9 @@ static u32int findMetaCacheEntry(const TranslationCache *tc, u32int address)
   return (u32int)-1;
 }
 
-void initialiseTranslationCache(TranslationCache *tc)
+void initialiseTranslationCache(GCONTXT *context)
 {
+  TranslationCache *const tc = &context->translationCache;
   /*
    * We could memset zero the entire M$ here but it's useless since we ALWAYS allocate with calloc.
    */
@@ -207,8 +204,7 @@ void initialiseTranslationCache(TranslationCache *tc)
   /*
    * Allocate the code cache from the executable pool through a dedicated allocator.
    */
-  tc->codeCache = tc->codeCacheNextEntry = allocateCodeCache();
-  if (tc->codeCache == NULL)
+  if (!allocateCodeCache(context))
   {
     DIE_NOW(NULL, "failed to allocate C$");
   }
@@ -218,8 +214,9 @@ void initialiseTranslationCache(TranslationCache *tc)
    */
   memset(tc->codeCache, 0, CODE_CACHE_MAX_SIZE);
   /*
-   * Configure the pointer to the last entry to reflect the requested size.
+   * Configure the pointer to next/last entries to reflect the requested size.
    */
+  tc->codeCacheNextEntry = (CodeCacheEntry *)tc->codeCache;
   tc->codeCacheLastEntry = (u32int *)((u32int)tc->codeCache + TRANSLATION_CACHE_CODE_SIZE_B) - 1;
   /*
    * Install unconditional branch to the beginning at the end of the block copy cache.
@@ -245,7 +242,7 @@ static void removeCacheEntry(TranslationCache *tc, MetaCacheEntry *entry)
    */
   DEBUG(BLOCK_CACHE, "removeCacheEntry: entry @ %p, block copy cache entry @ %p size %#.8x" EOL,
     entry, entry->code, entry->codeSize);
-  removeCodeCacheEntry(tc, entry->code, entry->codeSize);
+  removeCodeCacheEntry(tc, entry);
 #else
   /*
    * Restore and invalidate a single cache entry
@@ -276,7 +273,7 @@ static void resolveCacheConflict(TranslationCache *tc, u32int metaIndex)
   incrementCollisionCounter();
 
 #ifdef CONFIG_BLOCK_COPY
-  removeCodeCacheEntry(tc, tc->metaCache[metaIndex].code, tc->metaCache[metaIndex].codeSize);
+  removeCodeCacheEntry(tc, &tc->metaCache[metaIndex]);
 #endif
 
   for (u32int i = 0; i < TRANSLATION_CACHE_META_SIZE_N; i++)
@@ -387,123 +384,18 @@ static void setExecBitMap(TranslationCache *tc, u32int address)
 
 #ifdef CONFIG_BLOCK_COPY
 
-static u32int *mergeCodeBlock(TranslationCache *tc, u32int *startOfBlock1, u32int *endOfBlock2)
-{
-  printf("WARNING: magic numbers in checkAndMergeBlock do not match mergeCodeBlock" EOL);
-  printf("TODO: clean up mergeCodeBlock both strategy and implementation look horribly inefficient and unreadable" EOL);
- /*
-  * 1)First we have to make sure that there is enough place freed up to place the new block
-  * 2)Then we can copy all instructions (from last instruction to first instruction (not the other way around because than we overwrite instructions
-  * 3)Clear the instructions that were placed at the end of the blockCopyCache!!
-  * 4)Make sure that block is safed correctly in blockCopyCache
-  */
-  /*
-   * Step 1 make room for new block.  The instructions that are at the end of the blockCopyCache will be placed at the start so we need
-   * room for the number of instructions that are at the end
-   */
-  /* These are the instructions that are currently at end of blockCopyCache */
-  u32int nrInstructions2Move = ((u32int)tc->codeCacheLastEntry - ((u32int)startOfBlock1 & ~1)) >> 2;
-  DEBUG(BLOCK_CACHE, "nrInstructions2Move = %#.8x" EOL, nrInstructions2Move);
-  /* These are the instructions that are alread at start of blockCopyCache */
-  u32int nrInstructions2Shift = endOfBlock2 - tc->codeCache;
-  DEBUG(BLOCK_CACHE, "nrInstructions2Shift = %#.8x" EOL, nrInstructions2Shift);
-  /**
-   * Make place for the instructions that have to be moved
-   */
-  u32int *destination = endOfBlock2;
-  for (u32int k = nrInstructions2Move; k > 0; destination++, k--)
-  {
-    /* We can use startOfBlock2 instead of gc->blockCopyCache & endOfBlock1 instead of gc->blockCopyCacheEnd*/
-    destination = updateCodeCachePointer(tc, destination);
-  }
-  u32int* blockCopyLast = destination;
-#ifdef BLOCK_COPY_CACHE_DEBUG
-  printf("Blockcache cleared till the end = %p", blockCopyLast);
-#endif
-  /*
-   * Copy The instructions first the one that are at the start of the blockCopyCache (there the str and ldr instructions need to be rewritten)
-   * Than the one at the end of the blockCopyCache (including the reserved Word & backpointer) -> no rewrites needed
-   */
-  for (u32int k = nrInstructions2Shift; k > 0; k--)
-  {
-    u32int instruction = *--endOfBlock2;
-    destination--;
-    if ((instruction & 0xffef0000) == 0xe50f0000)
-    {
-      /* Offset of instruction needs to be changed + 2 because PC is 2 behind
-       * gc->blockCopyCache is address of SVC
-       * startOfBlock2 +1 is address of reserved Word */
-      u32int offset = (destination - (tc->codeCache + 1) + 2) << 2;
-      if (offset > 0xFFFF)
-      {
-        DIE_NOW(NULL, "Offset is to big -> instruction will get corrupted");
-      }
-      instruction = (instruction & 0xFFFF0000) | offset;
-    }
-    *destination = instruction;
-  }
-  DEBUG(BLOCK_CACHE, "Instructions block2 shifted" EOL);
-  /* Copy other block of instructions*/
-  u32int *endOfBlock1 = tc->codeCacheLastEntry;
-  for (u32int k = nrInstructions2Move; k > 0; k--)
-  {
-    *(--destination) = *(--endOfBlock1); /* Offsets are still correct, as reserved Word takes the same translation*/
-    /* And Clear the memory*/
-    *endOfBlock1 = 0;
-  }
-  DEBUG(BLOCK_CACHE, "Instructions block1 Copied" EOL);
-  /*
-   * Make sure that block is safed correctly in blockCopyCache
-   */
-  return blockCopyLast;
-}
-
-/*
- * This code will check if a block that is split (splitting occurs due to 1 part being at the end of the blockCopyCache and another at the
- * begin of the block.)  When a block is split up the code will also check if the second part wants to make use of a reserved word.  If that is
- * the case the block will result in erroneous behavior and should be merged. This code will perform the merge and will return a pointer indicating
- * the end of the merged block (the word just after the block, this is similar to blockCopyCurrCacheAddress). After the merge the merged block
- * will be completely at the start of the blockCopyCache.
- */
-u32int *mergeCodeBlockAsNeeded(TranslationCache *tc, u32int *startOfBlock1, u32int *endOfBlock2)
-{
-  DEBUG(BLOCK_CACHE, "checkAndMergeBlock with endOfBlock2 = %p & startOfBlock1 = %p" EOL, endOfBlock2, startOfBlock1);
-
-  printf("WARNING: magic numbers in checkAndMergeBlock do not match mergeCodeBlock" EOL);
-
-  for (u32int *p = endOfBlock2 - 1; p > (tc->codeCache - 1); p--)
-  {
-    /*
-     * If there is a ldr instruction that reads from PC + offset than that will be a load that we installed that wants to read
-     * the reserved word.  This is not possible since the reserved word will be somewhere near the end of the blockCopyCache
-     * Therefore we need to patch the code.  If no such ldr instruction is present than there won't be a problem.
-     * We are sure that we need to patch the code because the code is already translated and cannot read from PC if it was an original instruction
-     * Instruction will be a load literal 0xe51f????
-     */
-    if ((*p & 0xffff0000) == 0xe51f0000)
-    {
-      /* We have found a problem*/
-      /* patching needs to be done: set codeSize -> must be done in scanBlock (caller of this function) */
-      return mergeCodeBlock(tc, startOfBlock1, endOfBlock2);
-    }
-  }
-  /* No patching needs to be done just set codeSize -> must be done in scanBlock (caller of this function) */
-  return endOfBlock2;
-}
-
-// WARNING: code size MUST BE IN BYTES
-static void removeCodeCacheEntry(const TranslationCache *tc, u32int *code, u32int codeSize)
+static void removeCodeCacheEntry(const TranslationCache *tc, const MetaCacheEntry *metaEntry)
 {
   /*
    * Is the block contiguous or split?
    */
-  const u32int codeEndAddress = (u32int)code + codeSize;
+  const u32int codeEndAddress = (u32int)metaEntry->code + metaEntry->codeSize;
   if (codeEndAddress < (u32int)tc->codeCacheLastEntry)
   {
     /*
      * Contiguous. Zero-fill the whole block at once.
      */
-    memset(code, 0, codeSize);
+    memset(metaEntry->code, 0, metaEntry->codeSize);
   }
   else
   {
@@ -511,8 +403,8 @@ static void removeCodeCacheEntry(const TranslationCache *tc, u32int *code, u32in
      * Split block!
      */
     u32int firstChunkSize = (u32int)tc->codeCacheLastEntry - codeEndAddress;
-    memset(code, 0, firstChunkSize);
-    memset(tc->codeCache, 0, codeSize - firstChunkSize);
+    memset(metaEntry->code, 0, firstChunkSize);
+    memset(tc->codeCache, 0, metaEntry->codeSize - firstChunkSize);
   }
 }
 
@@ -544,7 +436,7 @@ u32int *updateCodeCachePointer(TranslationCache *tc, u32int *pointer)
     return pointer;
   }
   DEBUG(BLOCK_CACHE, "C$ not clean @ %p" EOL, pointer);
-  MetaCacheEntry *entry = (MetaCacheEntry *)(*pointer);
+  MetaCacheEntry *entry = ((CodeCacheEntry *)pointer)->meta;
   ASSERT(entry >= tc->metaCache && entry < (tc->metaCache + TRANSLATION_CACHE_META_SIZE_N),
          "invalid backpointer");
   DEBUG(BLOCK_CACHE, "cleaning block with meta index %#.3x" EOL, entry - tc->metaCache);

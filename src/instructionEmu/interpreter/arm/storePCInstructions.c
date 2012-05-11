@@ -1,6 +1,9 @@
 #include "common/debug.h"
 
+#include "cpuArch/constants.h"
+
 #include "instructionEmu/interpreter/blockCopy.h"
+#include "instructionEmu/interpreter/internals.h"
 
 #include "instructionEmu/interpreter/arm/storePCInstructions.h"
 
@@ -11,35 +14,27 @@ u32int *armStrPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32in
   const u32int srcPCRegLoc = 16; //This is where the PC is in the instruction (if immediate always at bit 16 if not can be at bit 0)
   u32int destReg = (instruction >> 12) & 0xF;
   u32int instr2Copy = instruction;
-  bool conditionAlways = (instruction >> 28 & 0xF) == 0xE;
+  u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
 
   if (((instruction >> 25 & 0b1) == 0b1) & ((instruction & 0xF) == 0xF))
   { //bit 25 is 1 when there are 2 source registers
     DIE_NOW(NULL, "str PCFunct: str (register) cannot have Rm as PC -> UNPREDICTABLE");
   }
 
-  if (conditionAlways)
+  if ((instruction >> srcPCRegLoc & 0xF) == 0xF) //There only have to be taken measures if Rn is PC
   {
-    if ((instruction >> srcPCRegLoc & 0xF) == 0xF) //There only have to be taken measures if Rn is PC
-    {
-      //step 1 Copy PC (=instructionAddr2) to desReg
-      currBlockCopyCacheAddr = savePCInReg(tc, instructionAddr, currBlockCopyCacheAddr, destReg);
+    //step 1 Copy PC (=instructionAddr2) to desReg
+    currBlockCopyCacheAddr = armWritePCToRegister(tc, currBlockCopyCacheAddr, conditionCode, destReg, (u32int)instructionAddr);
 
-      //Step 2 modify strInstruction
-      //Clear PC source Register
-      instr2Copy = (instruction & ~(0xF << srcPCRegLoc)) | (destReg << srcPCRegLoc);
-    }
-
-    currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
-    *(currBlockCopyCacheAddr++) = instr2Copy;
-
-    return currBlockCopyCacheAddr;
+    //Step 2 modify strInstruction
+    //Clear PC source Register
+    instr2Copy = (instruction & ~(0xF << srcPCRegLoc)) | (destReg << srcPCRegLoc);
   }
-  else
-  {
-    /* condition might be false */
-    DIE_NOW(NULL, "conditional strPCFunct not yet implemented");
-  }
+
+  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
+  *(currBlockCopyCacheAddr++) = instr2Copy;
+
+  return currBlockCopyCacheAddr;
 }
 
 u32int *armStrbPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)

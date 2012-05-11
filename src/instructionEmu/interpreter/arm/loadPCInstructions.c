@@ -33,39 +33,20 @@ u32int *armLdrPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32in
     *(currBlockCopyCacheAddr++) = instr2Copy;
     return currBlockCopyCacheAddr;
   }
-  if (ARM_EXTRACT_CONDITION_CODE(instruction) != CC_AL)
-  {
-    //Here starts the general procedure.  For this srcPCRegLoc must be set correctly
-    //step 1 Copy PC (=instructionAddr2) to desReg
-    currBlockCopyCacheAddr = savePCInReg(tc, instructionAddr, currBlockCopyCacheAddr, destReg);
 
-    //Step 2 modify ldrInstruction
-    //Clear PC source Register
-    instr2Copy = (instruction & ~(0xF << RS_PC_INDEX)) | (destReg << RS_PC_INDEX);
+  u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
 
-    currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
-    *(currBlockCopyCacheAddr++) = instr2Copy;
-    return currBlockCopyCacheAddr;
-  }
+  //Here starts the general procedure.  For this srcPCRegLoc must be set correctly
+  //step 1 Copy PC (=instructionAddr2) to desReg
+  currBlockCopyCacheAddr = armWritePCToRegister(tc, currBlockCopyCacheAddr, conditionCode, destReg, (u32int)instructionAddr);
 
-  /* conditional instruction thus sometimes not executed */
-  /*Instruction has to be changed to a PC safe instructionstream withouth using destReg. */
-  u32int scratchReg = getOtherRegisterOf2(srcReg1, destReg);
-  /* place 'Backup scratchReg' instruction */
-  currBlockCopyCacheAddr = backupRegister(tc, scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-  currBlockCopyCacheAddr = savePCInReg(tc, instructionAddr, currBlockCopyCacheAddr, scratchReg);
-
-  instr2Copy = (instruction & ~(0xF << RS_PC_INDEX)) | (scratchReg << RS_PC_INDEX);
+  //Step 2 modify ldrInstruction
+  //Clear PC source Register
+  instr2Copy = (instruction & ~(0xF << RS_PC_INDEX)) | (destReg << RS_PC_INDEX);
 
   currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
-  *(currBlockCopyCacheAddr++) = instr2Copy;
-
-  /* place 'restore scratchReg' instruction */
-  currBlockCopyCacheAddr = restoreRegister(tc, scratchReg, currBlockCopyCacheAddr, blockCopyCacheStartAddress);
-  /* Make sure scanner sees that we need a word to store the register*/
-  currBlockCopyCacheAddr = (u32int*) (((u32int) currBlockCopyCacheAddr) | 0b1);
-
-  return currBlockCopyCacheAddr;
+  *currBlockCopyCacheAddr = instr2Copy;
+  return ++currBlockCopyCacheAddr;
 }
 
 u32int *armLdrbPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)

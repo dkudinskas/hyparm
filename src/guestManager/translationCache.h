@@ -7,8 +7,6 @@
 #include "common/stddef.h"
 #include "common/types.h"
 
-#include "guestManager/codeCacheAllocator.h"
-
 #include "instructionEmu/decoder.h"
 
 
@@ -16,10 +14,6 @@
 
 #define TRANSLATION_CACHE_CODE_SIZE_B  4096
 #define TRANSLATION_CACHE_META_SIZE_N   128
-
-COMPILE_TIME_ASSERT((TRANSLATION_CACHE_CODE_SIZE_B & 0b11) == 0, __code_cache_size_must_be_multiple_of_4);
-COMPILE_TIME_ASSERT(CODE_CACHE_MIN_SIZE <= TRANSLATION_CACHE_CODE_SIZE_B, __code_cache_size_below_minimum);
-COMPILE_TIME_ASSERT(TRANSLATION_CACHE_CODE_SIZE_B <= CODE_CACHE_MAX_SIZE, __code_cache_size_exceeds_maximum);
 
 #else
 
@@ -48,7 +42,6 @@ struct metaCacheEntry2
   {
     unsigned codeCacheIndex : 12; // based on halfword offset
     unsigned type : 2;
-    unsigned reservedWord : 1;
     unsigned codeCacheSize : 9;
     unsigned originalSize : 8;
   } bits;
@@ -58,7 +51,17 @@ struct metaCacheEntry2
 
 COMPILE_TIME_ASSERT(sizeof(struct metaCacheEntry2) == 2*sizeof(u64int), __epic_fail);*/
 
+struct guestContext;
+struct metaCacheEntry;
 
+// this looks useless but its not:
+// now we can search for usage of the backpointer
+// currently it is only used for clearing the cache when running out of space in C$
+typedef struct codeCacheEntry
+{
+  struct metaCacheEntry *meta;
+  u32int codeStart;
+} CodeCacheEntry;
 
 typedef struct metaCacheEntry
 {
@@ -67,13 +70,8 @@ typedef struct metaCacheEntry
   u32int hyperedInstruction;
   u8int type;
 #ifdef CONFIG_BLOCK_COPY
-  /*
-   * reservedWord is a flag that indicates that after the backpointer there will be 1 word that is reserved for saving
-   * a temporary value of a PC. This means code execution will start @ startAddress+8 (skip backpointer & reserved word)
-   */
-  bool reservedWord;
   u16int codeSize;
-  u32int *code; // pointer to code cache entry
+  CodeCacheEntry *code; // pointer to code cache entry
 #endif
   void *hdlFunct;
 } MetaCacheEntry;
@@ -82,8 +80,9 @@ typedef struct metaCacheEntry
 typedef struct translationCache
 {
   u32int *codeCache;
-  u32int *codeCacheNextEntry;
+  CodeCacheEntry *codeCacheNextEntry;
   u32int *codeCacheLastEntry;
+  u32int *spillPage;
   MetaCacheEntry metaCache[TRANSLATION_CACHE_META_SIZE_N];
   u32int execBitMap[TRANSLATION_CACHE_NUMBER_OF_BITMAPS];
 #ifdef CONFIG_BLOCK_CACHE_COLLISION_COUNTER
@@ -102,16 +101,12 @@ void dumpMetaCacheEntryByIndex(TranslationCache *tc, u32int metaIndex);
 __macro__ MetaCacheEntry *getMetaCacheEntry(TranslationCache *tc, u32int metaIndex, u32int startAddress);
 __macro__ u32int getMetaCacheIndex(u32int startAddress);
 
-void initialiseTranslationCache(TranslationCache *translationCacheInfo);
+void initialiseTranslationCache(struct guestContext *context);
 
 
 #ifdef CONFIG_BLOCK_COPY
 
-void addMetaCacheEntry(TranslationCache *tc, u32int index, u32int *start, u32int *end,
-                       u32int hypInstruction, InstructionHandler hdlFunct, u32int codeSize,
-                       u32int *code);
-
-u32int *mergeCodeBlockAsNeeded(TranslationCache *tc, u32int *startOfBlock1, u32int *endOfBlock2);
+void addMetaCacheEntry(TranslationCache *tc, u32int index, MetaCacheEntry *entry);
 
 /*
  * updateCodeCachePointer
