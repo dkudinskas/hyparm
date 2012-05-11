@@ -144,7 +144,102 @@ void initSysControlModule()
   // SYS_CTRL_MOD_MEM_WKUP       0x48002600 base, 1024 bytes length
   // this is just a memory blob of 1k
   // SYS_CTRL_MOD_PADCONFS_WKUP  0x48002A00 base, 80 bytes length
-  // TODO
+  sysCtrlModule->ctrlPadConfSdrcD0   = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD2   = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD4   = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD6   = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD8   = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD10  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD12  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD14  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD16  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD18  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD20  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD22  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD24  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD26  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD28  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcD30  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcClk  = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcCke1 = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcDqs1 = 0x01000100;
+  sysCtrlModule->ctrlPadConfSdrcDqs3 = 0x00000100;
+
+  sysCtrlModule->ctrlPadConfGpmcA2    = 0;
+  sysCtrlModule->ctrlPadConfGpmcA4    = 0;
+  sysCtrlModule->ctrlPadConfGpmcA6    = 0;
+  sysCtrlModule->ctrlPadConfGpmcA8    = 0;
+  sysCtrlModule->ctrlPadConfGpmcA10   = 0x01000000;
+  sysCtrlModule->ctrlPadConfGpmcD1    = 0x01000100;
+  sysCtrlModule->ctrlPadConfGpmcD3    = 0x01000100;
+  sysCtrlModule->ctrlPadConfGpmcD5    = 0x01000100;
+  sysCtrlModule->ctrlPadConfGpmcD7    = 0x01000100;
+  sysCtrlModule->ctrlPadConfGpmcD9    = 0x01000100;
+  sysCtrlModule->ctrlPadConfGpmcD11   = 0x01000100;
+  sysCtrlModule->ctrlPadConfGpmcD13   = 0x01000100;
+  sysCtrlModule->ctrlPadConfGpmcD15   = 0x01000100;
+  sysCtrlModule->ctrlPadConfGpmcNcs1  = 0x00180018;
+  sysCtrlModule->ctrlPadConfGpmcNcs3  = 0x00180018;
+  sysCtrlModule->ctrlPadConfGpmcNcs5  = 0x01010000;
+  sysCtrlModule->ctrlPadConfGpmcNcs7  = 0x00000119;
+  sysCtrlModule->ctrlPadConfGpmcAle   = 0x01000100;
+  sysCtrlModule->ctrlPadConfGpmcNwe   = 0x00000100;
+  sysCtrlModule->ctrlPadConfGpmcNbe1  = 0x01000100;
+  sysCtrlModule->ctrlPadConfGpmcWait0 = 0x01180118;
+  sysCtrlModule->ctrlPadConfGpmcWait2 = 0x01180118;
+
+  sysCtrlModule->ctrlPadConfDssPclk   = 0;
+  sysCtrlModule->ctrlPadConfDssVsync  = 0;
+  sysCtrlModule->ctrlPadConfDssData0  = 0;
+  sysCtrlModule->ctrlPadConfDssData2  = 0;
+  sysCtrlModule->ctrlPadConfDssData4  = 0;
+  sysCtrlModule->ctrlPadConfDssData6  = 0;
+  sysCtrlModule->ctrlPadConfDssData8  = 0;
+  sysCtrlModule->ctrlPadConfDssData10 = 0;
+  sysCtrlModule->ctrlPadConfDssData12 = 0;
+  sysCtrlModule->ctrlPadConfDssData14 = 0;
+  sysCtrlModule->ctrlPadConfDssData16 = 0;
+  sysCtrlModule->ctrlPadConfDssData18 = 0;
+  sysCtrlModule->ctrlPadConfDssData20 = 0;
+  sysCtrlModule->ctrlPadConfDssData22 = 0;
+
+  sysCtrlModule->ctrlPadConfCamHs    = 0x01180118;
+  sysCtrlModule->ctrlPadConfCamXclka = 0x01180000;
+  sysCtrlModule->ctrlPadConfCamFld   = 0x01000004;
+  sysCtrlModule->ctrlPadConfCamD1    = 0x01000100;
+  sysCtrlModule->ctrlPadConfCamD3    = 0x01000100;
+  sysCtrlModule->ctrlPadConfCamD5    = 0x01000100;
+  sysCtrlModule->ctrlPadConfCamD7    = 0x01000100;
+  sysCtrlModule->ctrlPadConfCamD9    = 0x01000100;
+  sysCtrlModule->ctrlPadConfCamD11   = 0x00000100;
+  sysCtrlModule->ctrlPadConfCamWen   = 0x00000104;
+
+  sysCtrlModule->ctrlPadConfCsi2Dx0  = 0x01000100;
+  sysCtrlModule->ctrlPadConfCsi2Dx1  = 0x01000100;
+
+  sysCtrlModule->ctrlPadConfUart3RtsSd  = 0x01000000;
+  sysCtrlModule->ctrlPadConfUart3TxIrtx = 0x01000000;
+
+  sysCtrlModule->ctrlPadConfHsusb0Stp   = 0x01000018;
+  sysCtrlModule->ctrlPadConfHsusb0Nxt   = 0x01000100;
+  sysCtrlModule->ctrlPadConfHsusb0Data1 = 0x01000100;
+  sysCtrlModule->ctrlPadConfHsusb0Data3 = 0x01000100;
+  sysCtrlModule->ctrlPadConfHsusb0Data5 = 0x01000100;
+  sysCtrlModule->ctrlPadConfHsusb0Data7 = 0x01180100;
+
+  sysCtrlModule->ctrlPadConfI2c1Sda = 0x011c0118;
+  sysCtrlModule->ctrlPadConfI2c2Sda = 0x0118011c;
+  sysCtrlModule->ctrlPadConfI2c3Sda = 0x001c0118;
+
+  sysCtrlModule->ctrlPadConfEtkClk = 0x0013001b;
+  sysCtrlModule->ctrlPadConfEtkD0  = 0x01130113;
+  sysCtrlModule->ctrlPadConfEtkD2  = 0x01130113;
+  sysCtrlModule->ctrlPadConfEtkD4  = 0x01130113;
+  sysCtrlModule->ctrlPadConfEtkD6  = 0x01130113;
+  sysCtrlModule->ctrlPadConfEtkD8  = 0x01130113;
+  sysCtrlModule->ctrlPadConfEtkD10 = 0x00130013;
+  sysCtrlModule->ctrlPadConfEtkD12 = 0x01130113;
+  sysCtrlModule->ctrlPadConfEtkD14 = 0x01130113;
   // SYS_CTRL_MOD_GENERAL_WKUP   0x48002A60 base, 31 bytes length
   // TODO
 }
@@ -181,6 +276,10 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
   {
     val = loadGeneralWkupScm(dev, virtAddr, phyAddr);
   }
+  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS_ETK) && (phyAddr <= (SYS_CTRL_MOD_PADCONFS_ETK+SYS_CTRL_MOD_PADCONFS_ETK_SIZE+4)))
+  {
+    val = loadPadconfsScm(dev, size, virtAddr, phyAddr);
+  }
   else
   {
     printf("%s: load from PA: %#.8x, VA: %#.8x" EOL, __func__, phyAddr, virtAddr);
@@ -198,11 +297,479 @@ u32int loadInterfaceScm(device *dev, u32int address, u32int phyAddr)
 }
 
 
-u32int loadPadconfsScm(device *dev, u32int address, u32int phyAddr)
+u32int loadPadconfsScm(device *dev, ACCESS_SIZE size, u32int address, u32int phyAddr)
 {
-  printf("%s load from pAddr: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, "loadPadconfsScm unimplemented.");
-  return 0;
+  u32int val = 0;
+  u32int reg = phyAddr - SYS_CTRL_MOD_PADCONFS;
+
+  switch (reg & ~0x3)
+  {
+    case CONTROL_PADCONF_SDRC_D0:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD0;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D2:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD2;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D4:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD4;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D6:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD6;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D8:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD8;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D10:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD10;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D12:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD12;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D14:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD14;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D16:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD16;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D18:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD18;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D20:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD20;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D22:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD22;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D24:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD24;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D26:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD26;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D28:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD28;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D30:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcD30;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_CLK:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcClk;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_CKE1:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcCke1;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_DQS1:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcDqs1;
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_DQS3:
+    {
+      val = sysCtrlModule->ctrlPadConfSdrcDqs3;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_A2:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcA2;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_A4:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcA4;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_A6:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcA6;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_A8:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcA8;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_A10:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcA10;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D1:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcD1;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D3:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcD3;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D5:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcD5;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D7:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcD7;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D9:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcD9;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D11:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcD11;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D13:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcD13;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D15:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcD15;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NCS1:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcNcs1;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NCS3:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcNcs3;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NCS5:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcNcs5;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NCS7:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcNcs7;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NADV_ALE:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcAle;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NWE:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcNwe;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NBE1:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcNbe1;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_WAIT0:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcWait0;
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_WAIT2:
+    {
+      val = sysCtrlModule->ctrlPadConfGpmcWait2;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_PCLK:
+    {
+      val = sysCtrlModule->ctrlPadConfDssPclk;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_VSYNC:
+    {
+      val = sysCtrlModule->ctrlPadConfDssVsync;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA0:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData0;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA2:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData2;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA4:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData4;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA6:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData6;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA8:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData8;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA10:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData10;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA12:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData12;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA14:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData14;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA16:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData16;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA18:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData18;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA20:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData20;
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA22:
+    {
+      val = sysCtrlModule->ctrlPadConfDssData22;
+      break;
+    }
+    case CONTROL_PADCONF_CAM_HS:
+    {
+      val = sysCtrlModule->ctrlPadConfCamHs;
+      break;
+    }
+    case CONTROL_PADCONF_CAM_XCLKA:
+    {
+      val = sysCtrlModule->ctrlPadConfCamXclka;
+      break;
+    }
+    case CONTROL_PADCONF_CAM_FLD:
+    {
+      val = sysCtrlModule->ctrlPadConfCamFld;
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D1:
+    {
+      val = sysCtrlModule->ctrlPadConfCamD1;
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D3:
+    {
+      val = sysCtrlModule->ctrlPadConfCamD3;
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D5:
+    {
+      val = sysCtrlModule->ctrlPadConfCamD5;
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D7:
+    {
+      val = sysCtrlModule->ctrlPadConfCamD7;
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D9:
+    {
+      val = sysCtrlModule->ctrlPadConfCamD9;
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D11:
+    {
+      val = sysCtrlModule->ctrlPadConfCamD11;
+      break;
+    }
+    case CONTROL_PADCONF_CAM_WEN:
+    {
+      val = sysCtrlModule->ctrlPadConfCamWen;
+      break;
+    }
+    case CONTROL_PADCONF_CSI2_DX0:
+    {
+      val = sysCtrlModule->ctrlPadConfCsi2Dx0;
+      break;
+    }
+    case CONTROL_PADCONF_UART3_RTS_SD:
+    {
+      val = sysCtrlModule->ctrlPadConfUart3RtsSd;
+      break;
+    }
+    case CONTROL_PADCONF_UART3_TX_IRTX:
+    {
+      val = sysCtrlModule->ctrlPadConfUart3TxIrtx;
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_STP:
+    {
+      val = sysCtrlModule->ctrlPadConfHsusb0Stp;
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_NXT:
+    {
+      val = sysCtrlModule->ctrlPadConfHsusb0Nxt;
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_DATA1:
+    {
+      val = sysCtrlModule->ctrlPadConfHsusb0Data1;
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_DATA3:
+    {
+      val = sysCtrlModule->ctrlPadConfHsusb0Data3;
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_DATA5:
+    {
+      val = sysCtrlModule->ctrlPadConfHsusb0Data5;
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_DATA7:
+    {
+      val = sysCtrlModule->ctrlPadConfHsusb0Data7;
+      break;
+    }
+    case CONTROL_PADCONF_I2C1_SDA:
+    {
+      val = sysCtrlModule->ctrlPadConfI2c1Sda;
+      break;
+    }
+    case CONTROL_PADCONF_I2C2_SDA:
+    {
+      val = sysCtrlModule->ctrlPadConfI2c2Sda;
+      break;
+    }
+    case CONTROL_PADCONF_I2C3_SDA:
+    {
+      val = sysCtrlModule->ctrlPadConfI2c3Sda;
+      break;
+    }
+    case CONTROL_PADCONF_CSI2_DX1:
+    {
+      val = sysCtrlModule->ctrlPadConfCsi2Dx1;
+      break;
+    }
+    case CONTROL_PADCONF_ETK_CLK:
+    {
+      val = sysCtrlModule->ctrlPadConfEtkClk;
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D0:
+    {
+      val = sysCtrlModule->ctrlPadConfEtkD0;
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D2:
+    {
+      val = sysCtrlModule->ctrlPadConfEtkD2;
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D4:
+    {
+      val = sysCtrlModule->ctrlPadConfEtkD4;
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D6:
+    {
+      val = sysCtrlModule->ctrlPadConfEtkD6;
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D8:
+    {
+      val = sysCtrlModule->ctrlPadConfEtkD8;
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D10:
+    {
+      val = sysCtrlModule->ctrlPadConfEtkD10;
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D12:
+    {
+      val = sysCtrlModule->ctrlPadConfEtkD12;
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D14:
+    {
+      val = sysCtrlModule->ctrlPadConfEtkD14;
+      break;
+    }
+    default:
+    {
+      printf("%s: unimplemented reg addr %#.8x" EOL, __func__, phyAddr);
+      DIE_NOW(NULL, "loading non existing/unimplemented register!");
+      break;
+    }
+  }
+
+  val = (val >> ((reg & 0x3) * 8));
+  switch (size)
+  {
+    case BYTE:
+    {
+      val &= 0xFF;
+      break;
+    }
+    case HALFWORD:
+    {
+      val &= 0xFFFF;
+      break;
+    }
+    default:
+      break;
+  }
+  DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, reg, val);
+  return val;
 }
 
 

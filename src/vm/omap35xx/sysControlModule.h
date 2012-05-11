@@ -19,6 +19,8 @@
 #define SYS_CTRL_MOD_PADCONFS_WKUP_SIZE    0x50 // 80 bytes
 #define SYS_CTRL_MOD_GENERAL_WKUP     0x48002A60
 #define SYS_CTRL_MOD_GENERAL_WKUP_SIZE     0x1F // 31 bytes
+#define SYS_CTRL_MOD_PADCONFS_ETK       0x480025D8
+#define SYS_CTRL_MOD_PADCONFS_ETK_SIZE        0x20
 
 
 /************************
@@ -140,15 +142,15 @@
 #define CONTROL_PADCONF_MCSPI2_SIMO                    0x000001A8
 #define CONTROL_PADCONF_MCSPI2_CS0                     0x000001AC
 #define CONTROL_PADCONF_SYS_NIRQ                       0x000001B0
-#define CONTROL_PADCONF_ETK_CLK                        0x000005D8
-#define CONTROL_PADCONF_ETK_D0                         0x000005DC
-#define CONTROL_PADCONF_ETK_D2                         0x000005E0
-#define CONTROL_PADCONF_ETK_D4                         0x000005E4
-#define CONTROL_PADCONF_ETK_D6                         0x000005E8
-#define CONTROL_PADCONF_ETK_D8                         0x000005EC
-#define CONTROL_PADCONF_ETK_D10                        0x000005F0
-#define CONTROL_PADCONF_ETK_D12                        0x000005F4
-#define CONTROL_PADCONF_ETK_D14                        0x000005F8
+#define CONTROL_PADCONF_ETK_CLK                        0x000005A8
+#define CONTROL_PADCONF_ETK_D0                         0x000005AC
+#define CONTROL_PADCONF_ETK_D2                         0x000005B0
+#define CONTROL_PADCONF_ETK_D4                         0x000005B4
+#define CONTROL_PADCONF_ETK_D6                         0x000005B8
+#define CONTROL_PADCONF_ETK_D8                         0x000005BC
+#define CONTROL_PADCONF_ETK_D10                        0x000005C0
+#define CONTROL_PADCONF_ETK_D12                        0x000005C4
+#define CONTROL_PADCONF_ETK_D14                        0x000005C8
 #define CONTROL_PADCONF_SAD2D_MCAD0                    0x000001B4
 #define CONTROL_PADCONF_SAD2D_MCAD2                    0x000001B8
 #define CONTROL_PADCONF_SAD2D_MCAD4                    0x000001BC
@@ -323,7 +325,7 @@ void initSysControlModule(void);
 u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 
 u32int loadInterfaceScm(device * dev, u32int address, u32int phyAddr);
-u32int loadPadconfsScm(device * dev, u32int address, u32int phyAddr);
+u32int loadPadconfsScm(device * dev, ACCESS_SIZE size, u32int address, u32int phyAddr);
 u32int loadGeneralScm(device * dev, u32int address, u32int phyAddr);
 u32int loadMemWkupScm(device * dev, u32int address, u32int phyAddr);
 u32int loadPadconfsWkupScm(device * dev, u32int address, u32int phyAddr);
@@ -462,7 +464,102 @@ struct SystemControlModule
   u32int ctrlIdCode; // offs 0x00307F94, phys 0x4830A204 out of range// SYS_CTRL_MOD_MEM_WKUP       0x48002600 base, 1024 bytes length
   // this is just a memory blob of 1k
   // SYS_CTRL_MOD_PADCONFS_WKUP  0x48002A00 base, 80 bytes length
-  // TODO
+  u32int ctrlPadConfSdrcD0;
+  u32int ctrlPadConfSdrcD2;
+  u32int ctrlPadConfSdrcD4;
+  u32int ctrlPadConfSdrcD6;
+  u32int ctrlPadConfSdrcD8;
+  u32int ctrlPadConfSdrcD10;
+  u32int ctrlPadConfSdrcD12;
+  u32int ctrlPadConfSdrcD14;
+  u32int ctrlPadConfSdrcD16;
+  u32int ctrlPadConfSdrcD18;
+  u32int ctrlPadConfSdrcD20;
+  u32int ctrlPadConfSdrcD22;
+  u32int ctrlPadConfSdrcD24;
+  u32int ctrlPadConfSdrcD26;
+  u32int ctrlPadConfSdrcD28;
+  u32int ctrlPadConfSdrcD30;
+  u32int ctrlPadConfSdrcClk;
+  u32int ctrlPadConfSdrcCke1;
+  u32int ctrlPadConfSdrcDqs1;
+  u32int ctrlPadConfSdrcDqs3;
+
+  u32int ctrlPadConfGpmcA2;
+  u32int ctrlPadConfGpmcA4;
+  u32int ctrlPadConfGpmcA6;
+  u32int ctrlPadConfGpmcA8;
+  u32int ctrlPadConfGpmcA10;
+  u32int ctrlPadConfGpmcD1;
+  u32int ctrlPadConfGpmcD3;
+  u32int ctrlPadConfGpmcD5;
+  u32int ctrlPadConfGpmcD7;
+  u32int ctrlPadConfGpmcD9;
+  u32int ctrlPadConfGpmcD11;
+  u32int ctrlPadConfGpmcD13;
+  u32int ctrlPadConfGpmcD15;
+  u32int ctrlPadConfGpmcNcs1;
+  u32int ctrlPadConfGpmcNcs3;
+  u32int ctrlPadConfGpmcNcs5;
+  u32int ctrlPadConfGpmcNcs7;
+  u32int ctrlPadConfGpmcAle;
+  u32int ctrlPadConfGpmcNwe;
+  u32int ctrlPadConfGpmcNbe1;
+  u32int ctrlPadConfGpmcWait0;
+  u32int ctrlPadConfGpmcWait2;
+
+  u32int ctrlPadConfDssPclk;
+  u32int ctrlPadConfDssVsync;
+  u32int ctrlPadConfDssData0;
+  u32int ctrlPadConfDssData2;
+  u32int ctrlPadConfDssData4;
+  u32int ctrlPadConfDssData6;
+  u32int ctrlPadConfDssData8;
+  u32int ctrlPadConfDssData10;
+  u32int ctrlPadConfDssData12;
+  u32int ctrlPadConfDssData14;
+  u32int ctrlPadConfDssData16;
+  u32int ctrlPadConfDssData18;
+  u32int ctrlPadConfDssData20;
+  u32int ctrlPadConfDssData22;
+
+  u32int ctrlPadConfCamHs;
+  u32int ctrlPadConfCamXclka;
+  u32int ctrlPadConfCamFld;
+  u32int ctrlPadConfCamD1;
+  u32int ctrlPadConfCamD3;
+  u32int ctrlPadConfCamD5;
+  u32int ctrlPadConfCamD7;
+  u32int ctrlPadConfCamD9;
+  u32int ctrlPadConfCamD11;
+  u32int ctrlPadConfCamWen;
+
+  u32int ctrlPadConfCsi2Dx0;
+  u32int ctrlPadConfCsi2Dx1;
+
+  u32int ctrlPadConfUart3RtsSd;
+  u32int ctrlPadConfUart3TxIrtx;
+
+  u32int ctrlPadConfHsusb0Stp;
+  u32int ctrlPadConfHsusb0Nxt;
+  u32int ctrlPadConfHsusb0Data1;
+  u32int ctrlPadConfHsusb0Data3;
+  u32int ctrlPadConfHsusb0Data5;
+  u32int ctrlPadConfHsusb0Data7;
+
+  u32int ctrlPadConfI2c1Sda;
+  u32int ctrlPadConfI2c2Sda;
+  u32int ctrlPadConfI2c3Sda;
+
+  u32int ctrlPadConfEtkClk;
+  u32int ctrlPadConfEtkD0;
+  u32int ctrlPadConfEtkD2;
+  u32int ctrlPadConfEtkD4;
+  u32int ctrlPadConfEtkD6;
+  u32int ctrlPadConfEtkD8;
+  u32int ctrlPadConfEtkD10;
+  u32int ctrlPadConfEtkD12;
+  u32int ctrlPadConfEtkD14;
   // SYS_CTRL_MOD_GENERAL_WKUP   0x48002A60 base, 31 bytes length
   // TODO
 };
