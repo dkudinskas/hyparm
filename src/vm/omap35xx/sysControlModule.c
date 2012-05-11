@@ -155,12 +155,6 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
   DEBUG(VP_OMAP_35XX_SCM, "%s load from pAddr: %#.8x, vAddr %#.8x, aSize %x" EOL, dev->deviceName,
       phyAddr, virtAddr, (u32int)size);
 
-  if (size != WORD)
-  {
-    // only word access allowed in these modules
-    DIE_NOW(NULL, "SysControlModule: invalid access size.");
-  }
-
   u32int val = 0;
 
   if ((phyAddr >= SYS_CTRL_MOD_INTERFACE) && (phyAddr < (SYS_CTRL_MOD_INTERFACE + 36)))
