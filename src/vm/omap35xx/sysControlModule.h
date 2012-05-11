@@ -325,7 +325,7 @@ void initSysControlModule(void);
 u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 
 u32int loadInterfaceScm(device * dev, u32int address, u32int phyAddr);
-u32int loadPadconfsScm(device * dev, ACCESS_SIZE size, u32int address, u32int phyAddr);
+u32int loadPadconfsScm(device * dev, u32int address, u32int phyAddr);
 u32int loadGeneralScm(device * dev, u32int address, u32int phyAddr);
 u32int loadMemWkupScm(device * dev, u32int address, u32int phyAddr);
 u32int loadPadconfsWkupScm(device * dev, u32int address, u32int phyAddr);

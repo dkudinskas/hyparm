@@ -258,7 +258,7 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
   }
   else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS) && (phyAddr < (SYS_CTRL_MOD_PADCONFS + 564)))
   {
-    val = loadPadconfsScm(dev, size, virtAddr, phyAddr);
+    val = loadPadconfsScm(dev, virtAddr, phyAddr);
   }
   else if ((phyAddr >= SYS_CTRL_MOD_GENERAL) && (phyAddr < (SYS_CTRL_MOD_GENERAL + 767)))
   {
@@ -278,7 +278,7 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
   }
   else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS_ETK) && (phyAddr <= (SYS_CTRL_MOD_PADCONFS_ETK+SYS_CTRL_MOD_PADCONFS_ETK_SIZE+4)))
   {
-    val = loadPadconfsScm(dev, size, virtAddr, phyAddr);
+    val = loadPadconfsScm(dev, virtAddr, phyAddr);
   }
   else
   {
@@ -286,6 +286,25 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
     DIE_NOW(NULL, "SysControlModule: invalid base module.");
   }
 
+  /*
+   * Registers are 8-, 16-, 32-bit accessible with little endianess.
+   */
+  val = (val >> ((phyAddr & 0x3) * 8));
+  switch (size)
+  {
+    case BYTE:
+    {
+      val &= 0xFF;
+      break;
+    }
+    case HALFWORD:
+    {
+      val &= 0xFFFF;
+      break;
+    }
+    default:
+      break;
+  }
   return val;
 }
 
@@ -297,7 +316,7 @@ u32int loadInterfaceScm(device *dev, u32int address, u32int phyAddr)
 }
 
 
-u32int loadPadconfsScm(device *dev, ACCESS_SIZE size, u32int address, u32int phyAddr)
+u32int loadPadconfsScm(device *dev, u32int address, u32int phyAddr)
 {
   u32int val = 0;
   u32int reg = phyAddr - SYS_CTRL_MOD_PADCONFS;
@@ -752,22 +771,6 @@ u32int loadPadconfsScm(device *dev, ACCESS_SIZE size, u32int address, u32int phy
     }
   }
 
-  val = (val >> ((reg & 0x3) * 8));
-  switch (size)
-  {
-    case BYTE:
-    {
-      val &= 0xFF;
-      break;
-    }
-    case HALFWORD:
-    {
-      val &= 0xFFFF;
-      break;
-    }
-    default:
-      break;
-  }
   DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, reg, val);
   return val;
 }
