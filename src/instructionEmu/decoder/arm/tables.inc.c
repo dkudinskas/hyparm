@@ -217,7 +217,7 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   // MVN with Rd = PC end block, other are fine.
   ENTRY(IRC_REPLACE, armMvnInstruction,         NULL,                   0x01e0f000, 0x0fe0f010, "MVN Rd, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armMvnInstruction,         NULL,                   0x01e0f010, 0x0fe0f090, "MVN Rd, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armMvnInstruction,         armMvnPCInstruction,    0x01e00000, 0x0fe00010, "MVN Rd, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armMvnInstruction,         armShiftPCInstruction,  0x01e00000, 0x0fe00010, "MVN Rd, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armMvnInstruction,         NULL,                   0x01e00010, 0x0fe00090, "MVN Rd, Rm, Rshamt"),
 
   ENTRY(IRC_REPLACE, undefinedInstruction,      NULL,                   0x00000000, 0x00000000, "dataProcMiscInstructions_op0")
@@ -284,8 +284,8 @@ static struct decodingTableEntry armDataProcMiscInstructions_op1[] =
   ENTRY(IRC_REPLACE, armBicInstruction,         NULL,                   0x03c0f000, 0x0fe0f000, "BIC PC, Rn, #imm"),
   ENTRY(IRC_SAFE,    armBicInstruction,         standardImmRegRSR,      0x03c00000, 0x0fe00000, "BIC Rd, Rn, #imm"),
   // MVN with Rd = PC end block, other are fine.
-  ENTRY(IRC_REPLACE, armMvnInstruction,         NULL,                   0x03e0f000, 0x0fe0f000, "MVN PC, Rn, #imm"),
-  ENTRY(IRC_SAFE,    armMvnInstruction,         armMvnPCInstruction,    0x03e00000, 0x0fe00000, "MVN Rd, Rn, #imm"),
+  ENTRY(IRC_REPLACE, armMvnInstruction,         NULL,                   0x03e0f000, 0x0fe0f000, "MVN PC, #imm"),
+  ENTRY(IRC_SAFE,    armMvnInstruction,         NULL,                   0x03e00000, 0x0fe00000, "MVN Rd, #imm"),
 
   ENTRY(IRC_REPLACE, undefinedInstruction,      NULL,                   0x00000000, 0x00000000, "armDataProcMiscInstructions_op1")
 };
