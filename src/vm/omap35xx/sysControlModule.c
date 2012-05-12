@@ -252,31 +252,38 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
 
   u32int val = 0;
 
-  if ((phyAddr >= SYS_CTRL_MOD_INTERFACE) && (phyAddr < (SYS_CTRL_MOD_INTERFACE + 36)))
+  if ((phyAddr >= SYS_CTRL_MOD_INTERFACE)
+      && (phyAddr <= (SYS_CTRL_MOD_INTERFACE + SYS_CTRL_MOD_INTERFACE_SIZE+4)))
   {
     val = loadInterfaceScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS) && (phyAddr < (SYS_CTRL_MOD_PADCONFS + 564)))
+  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS)
+        && (phyAddr <= (SYS_CTRL_MOD_PADCONFS + SYS_CTRL_MOD_PADCONFS_SIZE+4)))
   {
     val = loadPadconfsScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_GENERAL) && (phyAddr < (SYS_CTRL_MOD_GENERAL + 767)))
+  else if ((phyAddr >= SYS_CTRL_MOD_GENERAL)
+        && (phyAddr <= (SYS_CTRL_MOD_GENERAL + SYS_CTRL_MOD_GENERAL_SIZE+4)))
   {
     val = loadGeneralScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_MEM_WKUP) && (phyAddr < (SYS_CTRL_MOD_MEM_WKUP + 1024)))
+  else if ((phyAddr >= SYS_CTRL_MOD_MEM_WKUP)
+        && (phyAddr <= (SYS_CTRL_MOD_MEM_WKUP + SYS_CTRL_MOD_MEM_WKUP_SIZE+4)))
   {
     val = loadMemWkupScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS_WKUP) && (phyAddr < (SYS_CTRL_MOD_PADCONFS_WKUP + 80)))
+  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS_WKUP)
+        && (phyAddr <= (SYS_CTRL_MOD_PADCONFS_WKUP + SYS_CTRL_MOD_PADCONFS_WKUP_SIZE+4)))
   {
     val = loadPadconfsWkupScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_GENERAL_WKUP) && (phyAddr < (SYS_CTRL_MOD_GENERAL_WKUP + 31)))
+  else if ((phyAddr >= SYS_CTRL_MOD_GENERAL_WKUP)
+        && (phyAddr <= (SYS_CTRL_MOD_GENERAL_WKUP + SYS_CTRL_MOD_GENERAL_WKUP_SIZE+4)))
   {
     val = loadGeneralWkupScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS_ETK) && (phyAddr <= (SYS_CTRL_MOD_PADCONFS_ETK+SYS_CTRL_MOD_PADCONFS_ETK_SIZE+4)))
+  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS_ETK)
+        && (phyAddr <= (SYS_CTRL_MOD_PADCONFS_ETK + SYS_CTRL_MOD_PADCONFS_ETK_SIZE+4)))
   {
     val = loadPadconfsScm(dev, virtAddr, phyAddr);
   }
