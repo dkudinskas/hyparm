@@ -279,7 +279,7 @@ static struct decodingTableEntry armDataProcMiscInstructions_op1[] =
   ENTRY(IRC_SAFE,    armOrrInstruction,         standardImmRegRSR,      0x03800000, 0x0fe00000, "ORR Rd, Rn, #imm"),
   // MOV with Rd = PC end block. MOV <shifted reg> is a pseudo instr..
   ENTRY(IRC_REPLACE, armMovInstruction,         NULL,                   0x03a0f000, 0x0feff000, "MOV PC, #imm"),
-  ENTRY(IRC_SAFE,    armMovInstruction,         armMovPCInstruction,    0x03a00000, 0x0fef0000, "MOV Rn, #imm"),
+  ENTRY(IRC_SAFE,    armMovInstruction,         NULL,                   0x03a00000, 0x0fef0000, "MOV Rn, #imm"),
   // BIC with Rd = PC end block, other are fine.
   ENTRY(IRC_REPLACE, armBicInstruction,         NULL,                   0x03c0f000, 0x0fe0f000, "BIC PC, Rn, #imm"),
   ENTRY(IRC_SAFE,    armBicInstruction,         standardImmRegRSR,      0x03c00000, 0x0fe00000, "BIC Rd, Rn, #imm"),

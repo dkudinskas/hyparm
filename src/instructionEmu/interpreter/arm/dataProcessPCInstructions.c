@@ -4,6 +4,13 @@
 #include "instructionEmu/interpreter/arm/dataProcessPCInstructions.h"
 
 
+enum
+{
+  MOV_RD_INDEX = 12,
+  MOV_RM_INDEX = 0
+};
+
+
 u32int *armAsrPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
 {
   u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(*instructionAddr);
@@ -51,32 +58,22 @@ u32int *armLslrPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32i
 
 u32int *armMovPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
 {
-  //Destination is surely not PC
   u32int instruction = *instructionAddr;
-  u32int destReg = (instruction >> 12) & 0xF;
-  u32int instr2Copy = instruction;
-  u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(*instructionAddr);
+  const u32int pc = (u32int)instructionAddr;
+  const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, MOV_RD_INDEX);
+  const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, MOV_RM_INDEX);
 
-  if (((instruction >> 25) & 0b1) != 1)
+  ASSERT(destinationRegister != GPR_PC, "MOV PC must trap");
+
+  if (sourceRegister == GPR_PC)
   {
-    //bit 25 != 1 -> there can be registers, PC can possibly be read
-    if ((instruction & 0xF) != 0xF)
-    {
-      DIE_NOW(NULL, "mov PCFunct: movPCFunct can only be called if last 4 bits are 1111\n");
-    }
-    else
-    {
-      //step 1 Copy PC (=instructionAddr2) to desReg
-      currBlockCopyCacheAddr = armWritePCToRegister(tc, currBlockCopyCacheAddr, conditionCode, destReg, (u32int)instructionAddr);
-      //Step 2 modify ldrInstruction
-      //Clear PC source Register
-      instr2Copy = (instruction & ~0xF) | destReg; //set last 4 bits so correct register is used
-    }
+    currBlockCopyCacheAddr = armWritePCToRegister(tc, currBlockCopyCacheAddr, ARM_EXTRACT_CONDITION_CODE(*instructionAddr), destinationRegister, pc);
   }
-
-  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
-  *(currBlockCopyCacheAddr++) = instr2Copy;
-
+  else
+  {
+    currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
+    *(currBlockCopyCacheAddr++) = instruction;
+  }
   return currBlockCopyCacheAddr;
 }
 
