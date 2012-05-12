@@ -34,7 +34,7 @@ static struct decodingTableEntry armBranchBlockTransferInstructions[] =
   ENTRY(IRC_SAFE,    armStmInstruction,         armStmPCInstruction,    0x08000000, 0x0e100000, "STM {regList}"),
   // POP LDM syntax, only care if PC in reglist
   ENTRY(IRC_REPLACE, armLdmInstruction,         NULL,                   0x08bd8000, 0x0fff8000, "LDM SP, {...r15}"),
-  ENTRY(IRC_SAFE,    armLdmInstruction,         armPopLdmPCInstruction, 0x08bd0000, 0x0fff0000, "LDM SP, {reglist}"),
+  ENTRY(IRC_SAFE,    armLdmInstruction,         NULL,                   0x08bd0000, 0x0fff0000, "LDM SP, {reglist}"),
   // LDM traps if ^ postfix and/or PC is in register list, otherwise pass through
   ENTRY(IRC_REPLACE, armLdmInstruction,         NULL,                   0x08500000, 0x0e500000, "LDM Rn, {regList}^"),
   ENTRY(IRC_REPLACE, armLdmInstruction,         NULL,                   0x08108000, 0x0e108000, "LDM Rn, {..r15}"),

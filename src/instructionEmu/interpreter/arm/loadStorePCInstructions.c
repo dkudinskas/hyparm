@@ -67,11 +67,6 @@ u32int *armLdrStrPCInstruction(TranslationCache *tc, u32int *instructionAddr, u3
   return ++currBlockCopyCacheAddr;
 }
 
-u32int *armPopLdmPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
-{
-  DIE_NOW(NULL, "popLdm PCFunct unfinished\n");
-}
-
 u32int* armStmPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
 {
   u32int instruction = *instructionAddr;
