@@ -17,8 +17,7 @@ HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/syncInstructions.c
 HYPARM_SRCS_C-$(CONFIG_BLOCK_COPY) += instructionEmu/interpreter/blockCopy.c
 
 HYPARM_SRCS_C-$(CONFIG_BLOCK_COPY) += instructionEmu/interpreter/arm/dataProcessPCInstructions.c
-HYPARM_SRCS_C-$(CONFIG_BLOCK_COPY) += instructionEmu/interpreter/arm/loadPCInstructions.c
-HYPARM_SRCS_C-$(CONFIG_BLOCK_COPY) += instructionEmu/interpreter/arm/storePCInstructions.c
+HYPARM_SRCS_C-$(CONFIG_BLOCK_COPY) += instructionEmu/interpreter/arm/loadStorePCInstructions.c
 
 
 HYPARM_SRCS_C-$(CONFIG_THUMB2) += instructionEmu/interpreter/t16/branchInstructions.c

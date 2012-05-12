@@ -21,8 +21,7 @@
 #include "instructionEmu/interpreter/blockCopy.h"
 
 #include "instructionEmu/interpreter/arm/dataProcessPCInstructions.h"
-#include "instructionEmu/interpreter/arm/loadPCInstructions.h"
-#include "instructionEmu/interpreter/arm/storePCInstructions.h"
+#include "instructionEmu/interpreter/arm/loadStorePCInstructions.h"
 
 #endif /* CONFIG_BLOCK_COPY */
 

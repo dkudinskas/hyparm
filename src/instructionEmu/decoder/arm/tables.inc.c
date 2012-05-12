@@ -92,11 +92,11 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   ENTRY(IRC_SAFE,    armQsubInstruction,        NULL,                   0x01200050, 0x0ff00ff0, "qsub%c\t%12-15r, %0-3r, %16-19r"),
   ENTRY(IRC_SAFE,    armQdsubInstruction,       NULL,                   0x01600050, 0x0ff00ff0, "qdsub%c\t%12-15r, %0-3r, %16-19r"),
   // LDRD: Rt1 must be even numbered and NOT 14, thus Rt2 cannot be PC. pass. (Rn,#imm can be Rn=PC, this is the literal variant)
-  ENTRY(IRC_SAFE,    armLdrdInstruction,        armLdrdPCInstruction,   0x004000d0, 0x0e5000f0, "LDRD Rt, [Rn, #imm]"),
-  ENTRY(IRC_SAFE,    armLdrdInstruction,        armLdrdPCInstruction,   0x000000d0, 0x0e500ff0, "LDRD Rt, [Rn, Rm]"),
+  ENTRY(IRC_SAFE,    armLdrdInstruction,        armLdrStrPCInstruction, 0x004000d0, 0x0e5000f0, "LDRD Rt, [Rn, #imm]"),
+  ENTRY(IRC_SAFE,    armLdrdInstruction,        armLdrStrPCInstruction, 0x000000d0, 0x0e500ff0, "LDRD Rt, [Rn, Rm]"),
   // STRD: pass through, let them fail!
-  ENTRY(IRC_SAFE,    armStrdInstruction,        armStrdPCInstruction,   0x004000f0, 0x0e5000f0, "STRD Rt, [Rn, #imm]"),
-  ENTRY(IRC_SAFE,    armStrdInstruction,        armStrdPCInstruction,   0x000000f0, 0x0e500ff0, "STRD Rt, [Rn, Rm]"),
+  ENTRY(IRC_SAFE,    armStrdInstruction,        armLdrStrPCInstruction, 0x004000f0, 0x0e5000f0, "STRD Rt, [Rn, #imm]"),
+  ENTRY(IRC_SAFE,    armStrdInstruction,        armLdrStrPCInstruction, 0x000000f0, 0x0e500ff0, "STRD Rt, [Rn, Rm]"),
   // signed 16 bit multiply, 32 bit accumulate, unpredictable if any R=PC
   ENTRY(IRC_SAFE,    armSmlabbInstruction,      NULL,                   0x01000080, 0x0ff000f0, "smlabb%c\t%16-19r, %0-3r, %8-11r, %12-15r"),
   ENTRY(IRC_SAFE,    armSmlatbInstruction,      NULL,                   0x010000a0, 0x0ff000f0, "smlatb%c\t%16-19r, %0-3r, %8-11r, %12-15r"),
@@ -119,11 +119,11 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   ENTRY(IRC_SAFE,    armSmulwbInstruction,      NULL,                   0x012000a0, 0x0ff0f0f0, "smulwb%c\t%16-19r, %0-3r, %8-11r"),
   ENTRY(IRC_SAFE,    armSmulwtInstruction,      NULL,                   0x012000e0, 0x0ff0f0f0, "smulwt%c\t%16-19r, %0-3r, %8-11r"),
   // STRH: passthrough, will data abort if something wrong
-  ENTRY(IRC_SAFE,    armStrhInstruction,        armStrhPCInstruction,   0x004000b0, 0x0e5000f0, "STRH Rt, [Rn, +-imm8]"),
-  ENTRY(IRC_SAFE,    armStrhInstruction,        armStrhPCInstruction,   0x000000b0, 0x0e500ff0, "STRH Rt, [Rn], +-Rm"),
+  ENTRY(IRC_SAFE,    armStrhInstruction,        armLdrStrPCInstruction, 0x004000b0, 0x0e5000f0, "STRH Rt, [Rn, +-imm8]"),
+  ENTRY(IRC_SAFE,    armStrhInstruction,        armLdrStrPCInstruction, 0x000000b0, 0x0e500ff0, "STRH Rt, [Rn], +-Rm"),
   // LDRH cant load halfword to PC, passthrough
-  ENTRY(IRC_SAFE,    armLdrhInstruction,        armLdrhPCInstruction,   0x00500090, 0x0e500090, "LDRH Rt, [Rn, +-imm8]"),
-  ENTRY(IRC_SAFE,    armLdrhInstruction,        armLdrhPCInstruction,   0x00100090, 0x0e500f90, "LDRH Rt, [Rn], +-Rm"),
+  ENTRY(IRC_SAFE,    armLdrhInstruction,        armLdrStrPCInstruction, 0x00500090, 0x0e500090, "LDRH Rt, [Rn, +-imm8]"),
+  ENTRY(IRC_SAFE,    armLdrhInstruction,        armLdrStrPCInstruction, 0x00100090, 0x0e500f90, "LDRH Rt, [Rn], +-Rm"),
   // AND: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armAndInstruction,         NULL,                   0x0000f000, 0x0fe0f010, "AND PC, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armAndInstruction,         NULL,                   0x0000f010, 0x0fe0f090, "AND PC, Rn, Rm, Rshamt"),
@@ -305,19 +305,19 @@ static struct decodingTableEntry armLoadStoreWordByteInstructions[] =
   ENTRY(IRC_LS_USER, armLdrbtInstruction,        NULL,                  0x04700000, 0x0f700000, "LDRBT Rd, [Rn], +-imm12"),
   ENTRY(IRC_LS_USER, armLdrbtInstruction,        NULL,                  0x06700000, 0x0f700010, "LDRBT Rd, [Rn], +-Rm"),
   // STR - all pass-through
-  ENTRY(IRC_SAFE,    armStrInstruction,          armStrPCInstruction,   0x04000000, 0x0e500000, "STR Rt, [Rn, +-imm12]"),
-  ENTRY(IRC_SAFE,    armStrInstruction,          armStrPCInstruction,   0x06000000, 0x0e500010, "STR Rt, [Rn], +-Rm"),
+  ENTRY(IRC_SAFE,    armStrInstruction,          armLdrStrPCInstruction,0x04000000, 0x0e500000, "STR Rt, [Rn, +-imm12]"),
+  ENTRY(IRC_SAFE,    armStrInstruction,          armLdrStrPCInstruction,0x06000000, 0x0e500010, "STR Rt, [Rn], +-Rm"),
   // LDR traps if dest = PC, otherwise pass through
   ENTRY(IRC_REPLACE, armLdrInstruction,          NULL,                  0x0410f000, 0x0e50f000, "LDR PC, [Rn], +-imm12"),
-  ENTRY(IRC_SAFE,    armLdrInstruction,          armLdrPCInstruction,   0x04100000, 0x0e500000, "LDR Rd, [Rn], +-imm12"),
+  ENTRY(IRC_SAFE,    armLdrInstruction,          armLdrStrPCInstruction,0x04100000, 0x0e500000, "LDR Rd, [Rn], +-imm12"),
   ENTRY(IRC_REPLACE, armLdrInstruction,          NULL,                  0x0610f000, 0x0e50f010, "LDR PC, [Rn], +-Rm"),
-  ENTRY(IRC_SAFE,    armLdrInstruction,          armLdrPCInstruction,   0x06100000, 0x0e500010, "LDR Rd, [Rn], +-Rm"),
+  ENTRY(IRC_SAFE,    armLdrInstruction,          armLdrStrPCInstruction,0x06100000, 0x0e500010, "LDR Rd, [Rn], +-Rm"),
   // STRB pass through
-  ENTRY(IRC_SAFE,    armStrbInstruction,         armStrbPCInstruction,  0x04400000, 0x0e500000, "STRB Rt, [Rn, +-imm12]"),
-  ENTRY(IRC_SAFE,    armStrbInstruction,         armStrbPCInstruction,  0x06400000, 0x0e500010, "STRB Rt, [Rn], +-Rm"),
+  ENTRY(IRC_SAFE,    armStrbInstruction,         armLdrStrPCInstruction,0x04400000, 0x0e500000, "STRB Rt, [Rn, +-imm12]"),
+  ENTRY(IRC_SAFE,    armStrbInstruction,         armLdrStrPCInstruction,0x06400000, 0x0e500010, "STRB Rt, [Rn], +-Rm"),
   // LDRB - pass through, dest can't be PC
-  ENTRY(IRC_SAFE,    armLdrbInstruction,         armLdrbPCInstruction,  0x04500000, 0x0e500000, "LDRB Rd, [Rn], +-imm12"),
-  ENTRY(IRC_SAFE,    armLdrbInstruction,         armLdrbPCInstruction,  0x06500000, 0x0e500010, "LDRB Rd, [Rn], +-Rm"),
+  ENTRY(IRC_SAFE,    armLdrbInstruction,         armLdrStrPCInstruction,0x04500000, 0x0e500000, "LDRB Rd, [Rn], +-imm12"),
+  ENTRY(IRC_SAFE,    armLdrbInstruction,         armLdrStrPCInstruction,0x06500000, 0x0e500010, "LDRB Rd, [Rn], +-Rm"),
 
   ENTRY(IRC_REPLACE, undefinedInstruction,       NULL,                  0x00000000, 0x00000000, "armLoadStoreWordByteInstructions")
 };

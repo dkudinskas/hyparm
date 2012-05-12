@@ -490,17 +490,17 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
     /*
      * Safe instruction; but does it use PC?
      */
-    if (!isPCSensitiveInstruction(*instruction) || (decodedInstruction->pcHandler == NULL))
+    if (isPCSensitiveInstruction(*instruction) && decodedInstruction->pcHandler != NULL)
     {
-      *code = *instruction;
-      code = updateCodeCachePointer(&context->translationCache, ++code);
-      continue;
+      // We abuse endOfBlockInstr...!
+      context->endOfBlockInstr = *instruction;
+      code = decodedInstruction->pcHandler(&context->translationCache, instruction, code, (u32int *)metaEntry.code);
     }
-    /*
-     * PC used as source register; call InstructionPCHandler. We abuse endOfBlockInstr...
-     */
-    context->endOfBlockInstr = *instruction;
-    code = updateCodeCachePointer(&context->translationCache, decodedInstruction->pcHandler(&context->translationCache, instruction, code, (u32int *)metaEntry.code));
+    else
+    {
+      *(code++) = *instruction;
+    }
+    code = updateCodeCachePointer(&context->translationCache, code);
   } /* for safe */
   /*
    * Critical instruction!

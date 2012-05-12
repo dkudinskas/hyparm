@@ -23,7 +23,10 @@
   printf("%s: %#.8x @ %#.8x" EOL, __func__, context->R15, instruction);
 
 
-#define ARM_EXTRACT_CONDITION_CODE(instructionWord)  (instructionWord >> 28)
+#define ARM_EXTRACT_CONDITION_CODE(instructionWord)         (instructionWord >> 28)
+#define ARM_EXTRACT_REGISTER(instructionWord, position)     ((instructionWord >> position) & 0xF)
+#define ARM_SET_REGISTER(instructionWord, position, value)                                         \
+  ((instructionWord & ~(0xF << position)) | (value << position))
 
 
 typedef enum
