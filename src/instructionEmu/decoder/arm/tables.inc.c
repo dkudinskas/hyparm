@@ -190,25 +190,25 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   // LSL: Rd = PC and shamt = #imm, then end block. Otherwise fine
   ENTRY(IRC_REPLACE, armLslInstruction,         NULL,                   0x01a0f000, 0x0feff070, "LSL Rd, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armLslInstruction,         NULL,                   0x01a0f010, 0x0feff0f0, "LSL Rd, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armLslInstruction,         armLslrPCInstruction,   0x01a00000, 0x0fef0070, "LSL Rd, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armLslInstruction,         armShiftPCInstruction,  0x01a00000, 0x0fef0070, "LSL Rd, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armLslInstruction,         NULL,                   0x01a00010, 0x0fef00f0, "LSL Rd, Rm, Rshamt"),
   // LSR: Rd = PC and shamt = #imm, then end block. Otherwise fine
   ENTRY(IRC_REPLACE, armLsrInstruction,         NULL,                   0x01a0f020, 0x0feff070, "LSR Rd, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armLsrInstruction,         NULL,                   0x01a0f030, 0x0feff0f0, "LSR Rd, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armLsrInstruction,         armLslrPCInstruction,   0x01a00020, 0x0fef0070, "LSR Rd, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armLsrInstruction,         armShiftPCInstruction,  0x01a00020, 0x0fef0070, "LSR Rd, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armLsrInstruction,         NULL,                   0x01a00030, 0x0fef00f0, "LSR Rd, Rm, Rshamt"),
   // ASR: Rd = PC and shamt = #imm, then end block. Otherwise fine
   ENTRY(IRC_REPLACE, armAsrInstruction,         NULL,                   0x01a0f040, 0x0feff070, "ASR Rd, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armAsrInstruction,         NULL,                   0x01a0f050, 0x0feff0f0, "ASR Rd, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armAsrInstruction,         armAsrPCInstruction,    0x01a00040, 0x0fef0070, "ASR Rd, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armAsrInstruction,         armShiftPCInstruction,  0x01a00040, 0x0fef0070, "ASR Rd, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armAsrInstruction,         NULL,                   0x01a00050, 0x0fef00f0, "ASR Rd, Rm, Rshamt"),
   // RRX: shift right and extend, Rd can be PC
   ENTRY(IRC_REPLACE, armRrxInstruction,         NULL,                   0x01a0f060, 0x0feffff0, "RRX PC, Rm"),
-  ENTRY(IRC_SAFE,    armRrxInstruction,         armRrxPCInstruction,    0x01a00060, 0x0fef0ff0, "RRX Rd, Rm"),
+  ENTRY(IRC_SAFE,    armRrxInstruction,         armShiftPCInstruction,  0x01a00060, 0x0fef0ff0, "RRX Rd, Rm"),
   // ROR: reg case destination unpredictable. imm case dest can be PC.
   ENTRY(IRC_SAFE,    armRorInstruction,         NULL,                   0x01a00070, 0x0fef00f0, "ROR Rd, Rm, Rn"),
   ENTRY(IRC_REPLACE, armRorInstruction,         NULL,                   0x01a0f060, 0x0feff070, "ROR PC, Rm, #imm"),
-  ENTRY(IRC_SAFE,    armRorInstruction,         armRorPCInstruction,    0x01a00060, 0x0fef0070, "ROR Rd, Rm, #imm"),
+  ENTRY(IRC_SAFE,    armRorInstruction,         armShiftPCInstruction,  0x01a00060, 0x0fef0070, "ROR Rd, Rm, #imm"),
   // BIC with Rd = PC end block, other are fine.
   ENTRY(IRC_REPLACE, armBicInstruction,         NULL,                   0x01c0f000, 0x0fe0f010, "BIC PC, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armBicInstruction,         NULL,                   0x01c0f010, 0x0fe0f090, "BIC PC, Rn, Rm, Rshamt"),
