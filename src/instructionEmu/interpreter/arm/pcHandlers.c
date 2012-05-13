@@ -38,10 +38,8 @@ enum
  *
  * All these instructions are data processing instructions which store their result into a some Rd.
  */
-u32int *armDPImmRegRSR(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
+u32int *armDPImmRegRSR(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
 {
-  u32int instruction = *instructionAddr;
-  const u32int pc = (u32int)instructionAddr;
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const bool immediateForm = (instruction >> 25 & DATA_PROC_IMMEDIATE_FORM_BIT);
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
@@ -67,13 +65,13 @@ u32int *armDPImmRegRSR(TranslationCache *tc, u32int *instructionAddr, u32int *cu
     if (!immediateForm && (operandNRegister == destinationRegister || operandMRegister == destinationRegister))
     {
       const u32int scratchRegister = getOtherRegisterOf3(destinationRegister, operandNRegister, operandMRegister);
-      currBlockCopyCacheAddr = armBackupRegisterToSpill(tc, currBlockCopyCacheAddr, conditionCode, scratchRegister);
-      currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
+      code = armBackupRegisterToSpill(tc, code, conditionCode, scratchRegister);
+      code = updateCodeCachePointer(tc, code);
       pcRegister = scratchRegister;
       restoreFromSpill = TRUE;
     }
 
-    currBlockCopyCacheAddr = armWritePCToRegister(tc, currBlockCopyCacheAddr, conditionCode, pcRegister, pc);
+    code = armWritePCToRegister(tc, code, conditionCode, pcRegister, pc);
 
     if (replaceN)
     {
@@ -86,15 +84,15 @@ u32int *armDPImmRegRSR(TranslationCache *tc, u32int *instructionAddr, u32int *cu
     }
   }
 
-  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
-  *(currBlockCopyCacheAddr++) = instruction;
+  code = updateCodeCachePointer(tc, code);
+  *(code++) = instruction;
 
   if (restoreFromSpill)
   {
-    currBlockCopyCacheAddr = armRestoreRegisterFromSpill(tc, currBlockCopyCacheAddr, conditionCode, pcRegister);
+    code = armRestoreRegisterFromSpill(tc, code, conditionCode, pcRegister);
   }
 
-  return currBlockCopyCacheAddr;
+  return code;
 }
 
 /*
@@ -104,10 +102,8 @@ u32int *armDPImmRegRSR(TranslationCache *tc, u32int *instructionAddr, u32int *cu
  * PSR and discard their result. Because there is no destination register, we need to spill some
  * register for the PC...
  */
-u32int *armDPImmRegRSRNoDest(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
+u32int *armDPImmRegRSRNoDest(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
 {
-  u32int instruction = *instructionAddr;
-  const u32int pc = (u32int)instructionAddr;
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const bool immediateForm = (instruction >> 25 & DATA_PROC_IMMEDIATE_FORM_BIT);
   const u32int operandNRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
@@ -120,8 +116,8 @@ u32int *armDPImmRegRSRNoDest(TranslationCache *tc, u32int *instructionAddr, u32i
   if (replaceN || replaceM)
   {
     pcRegister = getOtherRegisterOf2(operandNRegister, operandMRegister);
-    currBlockCopyCacheAddr = armBackupRegisterToSpill(tc, currBlockCopyCacheAddr, conditionCode, pcRegister);
-    currBlockCopyCacheAddr = armWritePCToRegister(tc, currBlockCopyCacheAddr, conditionCode, pcRegister, pc);
+    code = armBackupRegisterToSpill(tc, code, conditionCode, pcRegister);
+    code = armWritePCToRegister(tc, code, conditionCode, pcRegister, pc);
 
     if (replaceN)
     {
@@ -134,24 +130,22 @@ u32int *armDPImmRegRSRNoDest(TranslationCache *tc, u32int *instructionAddr, u32i
     }
   }
 
-  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
-  *(currBlockCopyCacheAddr++) = instruction;
+  code = updateCodeCachePointer(tc, code);
+  *(code++) = instruction;
 
   if (replaceN || replaceM)
   {
-    currBlockCopyCacheAddr = armRestoreRegisterFromSpill(tc, currBlockCopyCacheAddr, conditionCode, pcRegister);
+    code = armRestoreRegisterFromSpill(tc, code, conditionCode, pcRegister);
   }
 
-  return currBlockCopyCacheAddr;
+  return code;
 }
 
 /*
  * Translates {LDR,STR}{,B,H,D} in register & immediate forms for which Rd!=PC
  */
-u32int *armLdrStrPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
+u32int *armLdrStrPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
 {
-  u32int instruction = *instructionAddr;
-  const u32int pc = (u32int)instructionAddr;
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, LDR_RT_INDEX);
   const u32int baseRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
 
@@ -180,22 +174,20 @@ u32int *armLdrStrPCInstruction(TranslationCache *tc, u32int *instructionAddr, u3
 
   if (baseRegister == GPR_PC)
   {
-    currBlockCopyCacheAddr = armWritePCToRegister(tc, currBlockCopyCacheAddr, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
+    code = armWritePCToRegister(tc, code, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
     instruction = ARM_SET_REGISTER(instruction, RN_INDEX, destinationRegister);
   }
 
-  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
-  *currBlockCopyCacheAddr = instruction;
-  return ++currBlockCopyCacheAddr;
+  code = updateCodeCachePointer(tc, code);
+  *code = instruction;
+  return ++code;
 }
 
 /*
  * Translates MOV for which Rd!=PC.
  */
-u32int *armMovPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
+u32int *armMovPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
 {
-  u32int instruction = *instructionAddr;
-  const u32int pc = (u32int)instructionAddr;
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
   const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
@@ -207,17 +199,17 @@ u32int *armMovPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32in
    */
   if (sourceRegister == GPR_PC)
   {
-    currBlockCopyCacheAddr = armWritePCToRegister(tc, currBlockCopyCacheAddr, ARM_EXTRACT_CONDITION_CODE(*instructionAddr), destinationRegister, pc);
+    code = armWritePCToRegister(tc, code, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
     if (!(instruction & SETFLAGS_BIT))
     {
-      return ++currBlockCopyCacheAddr;
+      return ++code;
     }
     instruction = ARM_SET_REGISTER(instruction, RM_INDEX, destinationRegister);
   }
 
-  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
-  *(currBlockCopyCacheAddr++) = instruction;
-  return currBlockCopyCacheAddr;
+  code = updateCodeCachePointer(tc, code);
+  *(code++) = instruction;
+  return code;
 }
 
 /*
@@ -227,28 +219,24 @@ u32int *armMovPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32in
  * cond | 0001 | 101S | (0000) | Rd | imm5 | t2 | 0 | Rm
  * The shift type is determined by 2 bits (t2). For RRX, imm5 is always 00000.
  */
-u32int *armShiftPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
+u32int *armShiftPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
 {
-  u32int instruction = *instructionAddr;
-  const u32int pc = (u32int)instructionAddr;
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
   const u32int operandRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
   if (operandRegister == GPR_PC)
   {
-    currBlockCopyCacheAddr = armWritePCToRegister(tc, currBlockCopyCacheAddr, ARM_EXTRACT_CONDITION_CODE(*instructionAddr), destinationRegister, pc);
+    code = armWritePCToRegister(tc, code, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
     instruction = ARM_SET_REGISTER(instruction, RM_INDEX, destinationRegister);
   }
 
-  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
-  *(currBlockCopyCacheAddr++) = instruction;
-  return currBlockCopyCacheAddr;
+  code = updateCodeCachePointer(tc, code);
+  *(code++) = instruction;
+  return code;
 }
 
-u32int* armStmPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress)
+u32int* armStmPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
 {
-  u32int instruction = *instructionAddr;
-
   ASSERT(ARM_EXTRACT_REGISTER(instruction, RN_INDEX) != GPR_PC, "Rn=PC unpredictable");
 
   if ((instruction & STM_REGISTERS_PC_BIT))
@@ -304,7 +292,7 @@ u32int* armStmPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32in
     DIE_NOW(NULL, "STM.. Rn, ..-PC not implemented");
   }
 
-  currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
-  *currBlockCopyCacheAddr = instruction;
-  return ++currBlockCopyCacheAddr;
+  code = updateCodeCachePointer(tc, code);
+  *code = instruction;
+  return ++code;
 }

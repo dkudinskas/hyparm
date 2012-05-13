@@ -492,9 +492,7 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
      */
     if (isPCSensitiveInstruction(*instruction) && decodedInstruction->pcHandler != NULL)
     {
-      // We abuse endOfBlockInstr...!
-      context->endOfBlockInstr = *instruction;
-      code = decodedInstruction->pcHandler(&context->translationCache, instruction, code, (u32int *)metaEntry.code);
+      code = decodedInstruction->pcHandler(&context->translationCache, code, (u32int)instruction, *instruction);
     }
     else
     {

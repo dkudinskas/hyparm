@@ -9,9 +9,8 @@ struct translationCache;
 
 typedef u32int (*InstructionHandler)(struct guestContext *context, u32int instruction);
 
-typedef u32int *(*PCInstructionHandler)(struct translationCache *tc, u32int *instructionAddr,
-                                       u32int *currBlockCopyCacheAddr,
-                                       u32int *blockCopyCacheStartAddress);
+typedef u32int *(*PCInstructionHandler)(struct translationCache *tc, u32int *code, u32int pc,
+                                        u32int instruction);
 
 typedef enum
 {
