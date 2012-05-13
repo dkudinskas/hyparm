@@ -127,62 +127,62 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   // AND: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armAndInstruction,         NULL,                   0x0000f000, 0x0fe0f010, "AND PC, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armAndInstruction,         NULL,                   0x0000f010, 0x0fe0f090, "AND PC, Rn, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armAndInstruction,         standardImmRegRSR,      0x00000000, 0x0fe00010, "AND Rd, Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armAndInstruction,         armDPImmRegRSR,         0x00000000, 0x0fe00010, "AND Rd, Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armAndInstruction,         NULL,                   0x00000010, 0x0fe00090, "AND Rd, Rn, Rm, Rshamt"),
   // EOR: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armEorInstruction,         NULL,                   0x0020f000, 0x0fe0f010, "EOR PC, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armEorInstruction,         NULL,                   0x0020f010, 0x0fe0f090, "EOR PC, Rn, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armEorInstruction,         standardImmRegRSR,      0x00200000, 0x0fe00010, "EOR Rd, Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armEorInstruction,         armDPImmRegRSR,         0x00200000, 0x0fe00010, "EOR Rd, Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armEorInstruction,         NULL,                   0x00200010, 0x0fe00090, "EOR Rd, Rn, Rm, Rshamt"),
   // SUB: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armSubInstruction,         NULL,                   0x0040f000, 0x0fe0f010, "SUB PC, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armSubInstruction,         NULL,                   0x0040f010, 0x0fe0f090, "SUB PC, Rn, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armSubInstruction,         standardImmRegRSR,      0x00400000, 0x0fe00010, "SUB Rd, Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armSubInstruction,         armDPImmRegRSR,         0x00400000, 0x0fe00010, "SUB Rd, Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armSubInstruction,         NULL,                   0x00400010, 0x0fe00090, "SUB Rd, Rn, Rm, Rshamt"),
   // RSB: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armRsbInstruction,         NULL,                   0x0060f000, 0x0fe0f010, "RSB PC, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armRsbInstruction,         NULL,                   0x0060f010, 0x0fe0f090, "RSB PC, Rn, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armRsbInstruction,         standardImmRegRSR,      0x00600000, 0x0fe00010, "RSB Rd, Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armRsbInstruction,         armDPImmRegRSR,         0x00600000, 0x0fe00010, "RSB Rd, Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armRsbInstruction,         NULL,                   0x00600010, 0x0fe00090, "RSB Rd, Rn, Rm, Rshamt"),
   // ADD: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armAddInstruction,         NULL,                   0x0080f000, 0x0fe0f010, "ADD PC, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armAddInstruction,         NULL,                   0x0080f010, 0x0fe0f090, "ADD PC, Rn, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armAddInstruction,         standardImmRegRSR,      0x00800000, 0x0fe00010, "ADD Rd, Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armAddInstruction,         armDPImmRegRSR,         0x00800000, 0x0fe00010, "ADD Rd, Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armAddInstruction,         NULL,                   0x00800010, 0x0fe00090, "ADD Rd, Rn, Rm, Rshamt"),
   // ADC: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armAdcInstruction,         NULL,                   0x00a0f000, 0x0fe0f010, "ADC PC, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armAdcInstruction,         NULL,                   0x00a0f010, 0x0fe0f090, "ADC PC, Rn, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armAdcInstruction,         standardImmRegRSR,      0x00a00000, 0x0fe00010, "ADC Rd, Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armAdcInstruction,         armDPImmRegRSR,         0x00a00000, 0x0fe00010, "ADC Rd, Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armAdcInstruction,         NULL,                   0x00a00010, 0x0fe00090, "ADC Rd, Rn, Rm, Rshamt"),
   // SBC: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armSbcInstruction,         NULL,                   0x00c0f000, 0x0fe0f010, "SBC Rd, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armSbcInstruction,         NULL,                   0x00c0f010, 0x0fe0f090, "SBC Rd, Rn, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armSbcInstruction,         standardImmRegRSR,      0x00c00000, 0x0fe00010, "SBC Rd, Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armSbcInstruction,         armDPImmRegRSR,         0x00c00000, 0x0fe00010, "SBC Rd, Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armSbcInstruction,         NULL,                   0x00c00010, 0x0fe00090, "SBC Rd, Rn, Rm, Rshamt"),
   // RSC: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armRscInstruction,         NULL,                   0x00e0f000, 0x0fe0f010, "RSC PC, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armRscInstruction,         NULL,                   0x00e0f010, 0x0fe0f090, "RSC PC, Rn, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armRscInstruction,         standardImmRegRSR,      0x00e00000, 0x0fe00010, "RSC Rd, Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armRscInstruction,         armDPImmRegRSR,         0x00e00000, 0x0fe00010, "RSC Rd, Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armRscInstruction,         NULL,                   0x00e00010, 0x0fe00090, "RSC Rd, Rn, Rm, Rshamt"),
   // MSR/MRS: always hypercall! we must hide the real state from guest.
   ENTRY(IRC_REPLACE, armMsrInstruction,         NULL,                   0x0120f000, 0x0fb0fff0, "MSR, s/cpsr, Rn"),
   ENTRY(IRC_REPLACE, armMrsInstruction,         NULL,                   0x010f0000, 0x0fbf0fff, "MRS, Rn, s/cpsr"),
   // TST instructions are all fine
-  ENTRY(IRC_SAFE,    armTstInstruction,         standardImmRegRSRNoDest,0x01000000, 0x0fe00010, "TST Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armTstInstruction,         armDPImmRegRSRNoDest,   0x01000000, 0x0fe00010, "TST Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armTstInstruction,         NULL,                   0x01000010, 0x0fe00090, "TST Rn, Rm, Rshift"),
   // TEQ instructions are all fine
-  ENTRY(IRC_SAFE,    armTeqInstruction,         standardImmRegRSRNoDest,0x01200000, 0x0fe00010, "TEQ Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armTeqInstruction,         armDPImmRegRSRNoDest,   0x01200000, 0x0fe00010, "TEQ Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armTeqInstruction,         NULL,                   0x01200010, 0x0fe00090, "TEQ Rn, Rm, Rshift"),
   // CMP instructions are all fine
-  ENTRY(IRC_SAFE,    armCmpInstruction,         standardImmRegRSRNoDest,0x01400000, 0x0fe00010, "CMP Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armCmpInstruction,         armDPImmRegRSRNoDest,   0x01400000, 0x0fe00010, "CMP Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armCmpInstruction,         NULL,                   0x01400010, 0x0fe00090, "CMP Rn, Rm, Rshamt"),
   // CMN instructions are all fine
-  ENTRY(IRC_SAFE,    armCmnInstruction,         standardImmRegRSRNoDest,0x01600000, 0x0fe00010, "CMN Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armCmnInstruction,         armDPImmRegRSRNoDest,   0x01600000, 0x0fe00010, "CMN Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armCmnInstruction,         NULL,                   0x01600010, 0x0fe00090, "CMN Rn, Rm, Rshamt"),
   // ORR: Rd = PC end block, other are fine
   ENTRY(IRC_REPLACE, armOrrInstruction,         NULL,                   0x0180f000, 0x0fe0f010, "ORR PC, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armOrrInstruction,         NULL,                   0x0180f010, 0x0fe0f090, "ORR PC, Rn, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armOrrInstruction,         standardImmRegRSR,      0x01800000, 0x0fe00010, "ORR Rd, Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armOrrInstruction,         armDPImmRegRSR,         0x01800000, 0x0fe00010, "ORR Rd, Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armOrrInstruction,         NULL,                   0x01800010, 0x0fe00090, "ORR Rd, Rn, Rm, Rshamt"),
   // MOV with Rd = PC end block. MOV reg, <shifted reg> is a pseudo instr for shift instructions
   ENTRY(IRC_REPLACE, armMovInstruction,         NULL,                   0x01a0f000, 0x0deffff0, "MOV PC, Rm"),
@@ -212,7 +212,7 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   // BIC with Rd = PC end block, other are fine.
   ENTRY(IRC_REPLACE, armBicInstruction,         NULL,                   0x01c0f000, 0x0fe0f010, "BIC PC, Rn, Rm, #shamt"),
   ENTRY(IRC_REPLACE, armBicInstruction,         NULL,                   0x01c0f010, 0x0fe0f090, "BIC PC, Rn, Rm, Rshamt"),
-  ENTRY(IRC_SAFE,    armBicInstruction,         standardImmRegRSR,      0x01c00000, 0x0fe00010, "BIC Rd, Rn, Rm, #shamt"),
+  ENTRY(IRC_SAFE,    armBicInstruction,         armDPImmRegRSR,         0x01c00000, 0x0fe00010, "BIC Rd, Rn, Rm, #shamt"),
   ENTRY(IRC_SAFE,    armBicInstruction,         NULL,                   0x01c00010, 0x0fe00090, "BIC Rd, Rn, Rm, Rshamt"),
   // MVN with Rd = PC end block, other are fine.
   ENTRY(IRC_REPLACE, armMvnInstruction,         NULL,                   0x01e0f000, 0x0fe0f010, "MVN Rd, Rm, #shamt"),
@@ -242,47 +242,47 @@ static struct decodingTableEntry armDataProcMiscInstructions_op1[] =
   ENTRY(IRC_SAFE,    armMovtInstruction,        NULL,                   0x03400000, 0x0ff00000, "MOVT Rd, Rn"),
   // AND: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armAndInstruction,         NULL,                   0x0200f000, 0x0fe0f000, "AND PC, Rn, #imm"),
-  ENTRY(IRC_SAFE,    armAndInstruction,         standardImmRegRSR,      0x02000000, 0x0fe00000, "AND Rd, Rn, #imm"),
+  ENTRY(IRC_SAFE,    armAndInstruction,         armDPImmRegRSR,         0x02000000, 0x0fe00000, "AND Rd, Rn, #imm"),
   // EOR: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armEorInstruction,         NULL,                   0x0220f000, 0x0fe0f000, "EOR PC, Rn, Rm/#imm"),
-  ENTRY(IRC_SAFE,    armEorInstruction,         standardImmRegRSR,      0x02200000, 0x0fe00000, "EOR Rd, Rn, #imm"),
+  ENTRY(IRC_SAFE,    armEorInstruction,         armDPImmRegRSR,         0x02200000, 0x0fe00000, "EOR Rd, Rn, #imm"),
   // SUB: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armSubInstruction,         NULL,                   0x0240f000, 0x0fe0f000, "SUB PC, Rn, Rm/imm"),
-  ENTRY(IRC_SAFE,    armSubInstruction,         standardImmRegRSR,      0x02400000, 0x0fe00000, "SUB Rd, Rn, #imm"),
+  ENTRY(IRC_SAFE,    armSubInstruction,         armDPImmRegRSR,         0x02400000, 0x0fe00000, "SUB Rd, Rn, #imm"),
   // RSB: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armRsbInstruction,         NULL,                   0x0260f000, 0x0fe0f000, "RSB PC, Rn, Rm/imm"),
-  ENTRY(IRC_SAFE,    armRsbInstruction,         standardImmRegRSR,      0x02600000, 0x0fe00000, "RSB Rd, Rn, #imm"),
+  ENTRY(IRC_SAFE,    armRsbInstruction,         armDPImmRegRSR,         0x02600000, 0x0fe00000, "RSB Rd, Rn, #imm"),
   // ADD: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armAddInstruction,         NULL,                   0x0280f000, 0x0fe0f000, "ADD PC, Rn, #imm"),
-  ENTRY(IRC_SAFE,    armAddInstruction,         standardImmRegRSR,      0x02800000, 0x0fe00000, "ADD Rd, Rn, #imm"),
+  ENTRY(IRC_SAFE,    armAddInstruction,         armDPImmRegRSR,         0x02800000, 0x0fe00000, "ADD Rd, Rn, #imm"),
   // ADC: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armAdcInstruction,         NULL,                   0x02a0f000, 0x0fe0f000, "ADC PC, Rn/#imm"),
-  ENTRY(IRC_SAFE,    armAdcInstruction,         standardImmRegRSR,      0x02a00000, 0x0fe00000, "ADC Rd, Rn, #imm"),
+  ENTRY(IRC_SAFE,    armAdcInstruction,         armDPImmRegRSR,         0x02a00000, 0x0fe00000, "ADC Rd, Rn, #imm"),
   // SBC: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armSbcInstruction,         NULL,                   0x02c0f000, 0x0fe0f000, "SBC PC, Rn/#imm"),
-  ENTRY(IRC_SAFE,    armSbcInstruction,         standardImmRegRSR,      0x02c00000, 0x0fe00000, "SBC Rd, Rn, #imm"),
+  ENTRY(IRC_SAFE,    armSbcInstruction,         armDPImmRegRSR,         0x02c00000, 0x0fe00000, "SBC Rd, Rn, #imm"),
   // RSC: Rd = PC end block, others are fine
   ENTRY(IRC_REPLACE, armRscInstruction,         NULL,                   0x02e0f000, 0x0fe0f000, "RSC PC, Rn/#imm"),
-  ENTRY(IRC_SAFE,    armRscInstruction,         standardImmRegRSR,      0x02e00000, 0x0fe00000, "RSC Rd, Rn, #imm"),
+  ENTRY(IRC_SAFE,    armRscInstruction,         armDPImmRegRSR,         0x02e00000, 0x0fe00000, "RSC Rd, Rn, #imm"),
   // MSR: always hypercall! we must hide the real state from guest.
   ENTRY(IRC_REPLACE, armMsrInstruction,         NULL,                   0x0320f000, 0x0fb0f000, "MSR, s/cpsr, #imm"),
   // TST instructions are all fine
-  ENTRY(IRC_SAFE,    armTstInstruction,         standardImmRegRSRNoDest,0x03000000, 0x0fe00000, "TST Rn, #imm"),
+  ENTRY(IRC_SAFE,    armTstInstruction,         armDPImmRegRSRNoDest,   0x03000000, 0x0fe00000, "TST Rn, #imm"),
   // TEQ instructions are all fine
-  ENTRY(IRC_SAFE,    armTeqInstruction,         standardImmRegRSRNoDest,0x03200000, 0x0fe00000, "TEQ Rn, #imm"),
+  ENTRY(IRC_SAFE,    armTeqInstruction,         armDPImmRegRSRNoDest,   0x03200000, 0x0fe00000, "TEQ Rn, #imm"),
   // CMP instructions are all fine
-  ENTRY(IRC_SAFE,    armCmpInstruction,         standardImmRegRSRNoDest,0x03400000, 0x0fe00000, "CMP Rn, #imm"),
+  ENTRY(IRC_SAFE,    armCmpInstruction,         armDPImmRegRSRNoDest,   0x03400000, 0x0fe00000, "CMP Rn, #imm"),
   // CMN instructions are all fine
-  ENTRY(IRC_SAFE,    armCmnInstruction,         standardImmRegRSRNoDest,0x03600000, 0x0fe00000, "CMN Rn, #imm"),
+  ENTRY(IRC_SAFE,    armCmnInstruction,         armDPImmRegRSRNoDest,   0x03600000, 0x0fe00000, "CMN Rn, #imm"),
   // ORR: Rd = PC end block, other are fine
   ENTRY(IRC_REPLACE, armOrrInstruction,         NULL,                   0x0380f000, 0x0fe0f000, "ORR Rd, Rn, #imm"),
-  ENTRY(IRC_SAFE,    armOrrInstruction,         standardImmRegRSR,      0x03800000, 0x0fe00000, "ORR Rd, Rn, #imm"),
+  ENTRY(IRC_SAFE,    armOrrInstruction,         armDPImmRegRSR,         0x03800000, 0x0fe00000, "ORR Rd, Rn, #imm"),
   // MOV with Rd = PC end block. MOV <shifted reg> is a pseudo instr..
   ENTRY(IRC_REPLACE, armMovInstruction,         NULL,                   0x03a0f000, 0x0feff000, "MOV PC, #imm"),
   ENTRY(IRC_SAFE,    armMovInstruction,         NULL,                   0x03a00000, 0x0fef0000, "MOV Rn, #imm"),
   // BIC with Rd = PC end block, other are fine.
   ENTRY(IRC_REPLACE, armBicInstruction,         NULL,                   0x03c0f000, 0x0fe0f000, "BIC PC, Rn, #imm"),
-  ENTRY(IRC_SAFE,    armBicInstruction,         standardImmRegRSR,      0x03c00000, 0x0fe00000, "BIC Rd, Rn, #imm"),
+  ENTRY(IRC_SAFE,    armBicInstruction,         armDPImmRegRSR,         0x03c00000, 0x0fe00000, "BIC Rd, Rn, #imm"),
   // MVN with Rd = PC end block, other are fine.
   ENTRY(IRC_REPLACE, armMvnInstruction,         NULL,                   0x03e0f000, 0x0fe0f000, "MVN PC, #imm"),
   ENTRY(IRC_SAFE,    armMvnInstruction,         NULL,                   0x03e00000, 0x0fe00000, "MVN Rd, #imm"),

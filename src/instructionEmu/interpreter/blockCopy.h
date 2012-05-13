@@ -12,18 +12,9 @@ u32int *armBackupRegisterToSpill(TranslationCache *tc, u32int *code, u32int cond
 u32int *armRestoreRegisterFromSpill(TranslationCache *tc, u32int *code, u32int conditionCode, u32int reg);
 u32int *armWritePCToRegister(TranslationCache *tc, u32int *code, u32int conditionCode, u32int reg, u32int pc);
 
-
-
 /* function to find a register that is not one of the arguments */
 __macro__ u32int getOtherRegisterOf2(u32int usedRegister1, u32int usedRegister2);
-
-
-
-/* This function will process ImmRegRSR instructions see comment above implementation in c-file for further details*/
-u32int *standardImmRegRSR(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
-
-/* This function is similar to standardImmRegRSR but for instructions that do not have a destReg*/
-u32int *standardImmRegRSRNoDest(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
+__macro__ u32int getOtherRegisterOf3(u32int usedRegister1, u32int usedRegister2, u32int usedRegister3);
 
 
 /* Function will return a register different from usedRegisterX
@@ -31,6 +22,11 @@ u32int *standardImmRegRSRNoDest(TranslationCache *tc, u32int *instructionAddr, u
 __macro__ u32int getOtherRegisterOf2(u32int usedRegister1, u32int usedRegister2)
 {
   return countTrailingZeros(0xFFFF & ~((1 << usedRegister1) | (1 << usedRegister2)));
+}
+/* returns 0,1,2,3 for any 3... DUH */
+__macro__ u32int getOtherRegisterOf3(u32int usedRegister1, u32int usedRegister2, u32int usedRegister3)
+{
+  return countTrailingZeros(0xFFFF & ~((1 << usedRegister1) | (1 << usedRegister2) | (1 << usedRegister3)));
 }
 
 #endif /* __INSTRUCTION_EMU__INTERPRETER__BLOCK_COPY_H__ */
