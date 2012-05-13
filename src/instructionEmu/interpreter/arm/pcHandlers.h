@@ -18,4 +18,4 @@ u32int *armShiftPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32
 u32int *armLdrStrPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
 u32int *armStmPCInstruction(TranslationCache *tc, u32int *instructionAddr, u32int *currBlockCopyCacheAddr, u32int *blockCopyCacheStartAddress);
 
-#endif /* __INSTRUCTION_EMU__INTERPRETER__ARM__DATA_PROCESS_INSTRUCTIONS_H__ */
+#endif /* __INSTRUCTION_EMU__INTERPRETER__ARM__PC_HANDLERS_H__ */
