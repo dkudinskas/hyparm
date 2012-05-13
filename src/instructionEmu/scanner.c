@@ -35,7 +35,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int metaIndex);
 #ifdef CONFIG_BLOCK_COPY
 
 static void scanAndCopyArmBlock(GCONTXT *context, u32int *start, u32int metaIndex);
-static bool isPCSensitiveInstruction(u32int instruction);
+static bool armPCInsensitiveInstruction(u32int instruction);
 #endif
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
@@ -337,7 +337,9 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
       MetaCacheEntry *meta = context->translationCache.metaCache[svcCacheIndex];
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = meta->hyperedInstruction;
-      blockType = meta->type;
+      blockType = meta->type;  /*----------------Install HdlFunct----------------*/
+      *Save end of block instruction and handler function pointer close to us... */
+
       endIs16Bit = blockType == MCE_TYPE_THUMB && !txxIsThumb32(meta->hyperedInstruction);
       context->hdlFunct = meta->hdlFunct;
     }
@@ -481,43 +483,34 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
    */
   context->R15 = (u32int)updateCodeCachePointer(&context->translationCache, ++code);
   /*
-   * Scan and copy
+   * Scan guest code and copy to C$, translating instructions that use the PC on the fly
    */
   u32int *instruction = startAddress;
   struct decodingTableEntry *decodedInstruction;
   for (; (decodedInstruction = decodeArmInstruction(*instruction))->replace == IRC_SAFE; ++instruction)
   {
-    /*
-     * Safe instruction; but does it use PC?
-     */
-    if (isPCSensitiveInstruction(*instruction) && decodedInstruction->pcHandler != NULL)
-    {
-      code = decodedInstruction->pcHandler(&context->translationCache, code, (u32int)instruction, *instruction);
-    }
-    else
+    if (armPCInsensitiveInstruction(*instruction) || decodedInstruction->pcHandler == NULL)
     {
       *(code++) = *instruction;
     }
+    else
+    {
+      code = decodedInstruction->pcHandler(&context->translationCache, code, (u32int)instruction, *instruction);
+    }
     code = updateCodeCachePointer(&context->translationCache, code);
-  } /* for safe */
+  }
   /*
-   * Critical instruction!
+   * Next instruction must be translated into hypercall.
    */
-  /*----------------Install HdlFunct----------------*/
-  /*Non of the source registers is the ProgramCounter -> Just End Of Block
-   *Finish block by installing SVC
-   *Save end of block instruction and handler function pointer close to us... */
+  *(code++) = INSTR_SWI | ((metaIndex + 1) << 8);
   context->endOfBlockInstr = *instruction;
   context->hdlFunct = decodedInstruction->handler;
   context->PCOfLastInstruction = (u32int)instruction;
-  /* replace end of block instruction with hypercall of the appropriate code
-   *Check if there is room on blockCopyCacheCurrAddress and if not make it */
-  *(code++) = INSTR_SWI | ((metaIndex + 1) << 8);
-
   DEBUG(SCANNER, "EOB %p instr %#.8x SWIcode %#.2x hdlrFuncPtr %p" EOL, instruction,
       context->endOfBlockInstr, metaIndex, context->hdlFunct);
   /*
-   * We have to determine the size of the BlockCopyCache
+   * Cache metadata for the translated block. Code may wrap around C$ boundaries; take this into
+   * account when calculating the size of the translated code.
    */
   if (code < (u32int *)metaEntry.code)
   {
@@ -530,24 +523,23 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
   {
     metaEntry.codeSize = (u32int)code - (u32int)metaEntry.code;
   }
-  /*
-   * Now add metadata to cache
-   */
   metaEntry.endAddress = (u32int)instruction;
   metaEntry.hyperedInstruction = context->endOfBlockInstr,
   metaEntry.hdlFunct = context->hdlFunct;
   addMetaCacheEntry(&context->translationCache, metaIndex, &metaEntry);
   /*
-   * Round up
+   * Protect guest against self-modification.
    */
   guestWriteProtect((u32int)startAddress, (u32int)instruction);
 }
 
-
-/* allSrcRegNonPC will return true if all source registers of an instruction are zero  */
-static bool isPCSensitiveInstruction(u32int instruction)
+/*
+ * armPCInsensitiveInstruction returns TRUE if it is CERTAIN that an instruction does not depend
+ * on the current PC value.
+ */
+static bool armPCInsensitiveInstruction(u32int instruction)
 {
-  /*Source registers correspond with the bits [0..3],[8..11] or [16..19],  STMDB and PUSH may not write PC to mem :
+  /* STMDB and PUSH may not write PC to mem :
    * STM   1000|10?0
    * STMDA 1000|00?0
    * STMDB 1001|00?0
@@ -556,10 +548,11 @@ static bool isPCSensitiveInstruction(u32int instruction)
          * 100?|?0?0
    * mask    E |  5
    * value   8 |  0
-   * In registerlist only the bit of PC has to be checked.  And the source register for memory location is not important
    */
-  return (instruction & 0xF0000) == 0xF0000 || (instruction & 0xF00) == 0xF00
-         || (instruction & 0xF) == 0xF || (instruction & 0x0E508000) == 0x08008000;
+  return ARM_EXTRACT_REGISTER(instruction, 16) != GPR_PC
+         && ARM_EXTRACT_REGISTER(instruction, 12) != GPR_PC
+         && ARM_EXTRACT_REGISTER(instruction, 0) != GPR_PC
+         && (instruction & 0x0E508000) != 0x08008000;
 }
 
 #endif // CONFIG_BLOCK_COPY
