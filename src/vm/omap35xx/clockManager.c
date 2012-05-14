@@ -1065,11 +1065,14 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
   switch (reg)
   {
     case CM_FCLKEN_PER:
+    {
       if (clockMan->cmFclkEnPer != value)
       {
-        DIE_NOW(NULL, "storePerCm unimplemented store to reg cmFclkEnPer");
+        //DIE_NOW(NULL, "storePerCm unimplemented store to reg cmFclkEnPer");
+        printf("storePerCm unimplemented store to reg cmFclkEnPer" EOL);
       }
       break;
+    }
     case CM_ICLKEN_PER:
       if (clockMan->cmIclkEnPer != value)
       {
