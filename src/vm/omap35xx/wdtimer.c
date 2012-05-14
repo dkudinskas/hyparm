@@ -58,6 +58,11 @@ u32int loadWDTimer2(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyA
       value = wdtimer2->wdSysconfig;
       break;
     }
+    case WDT_WWPS:
+    {
+      value = wdtimer2->wwps;
+      break;
+    }
     default:
     {
       printf("%s: reg %#.8x addr %#.8x phy %#.8x" EOL, __func__, reg, virtAddr, phyAddr);
@@ -82,6 +87,11 @@ void storeWDTimer2(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAd
     case WDT_WD_SYSCONFIG:
     {
       wdtimer2->wdSysconfig = value;
+      break;
+    }
+    case WDT_WSPR:
+    {
+      wdtimer2->wspr = value;
       break;
     }
     default:
