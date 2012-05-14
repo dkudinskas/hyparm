@@ -122,7 +122,7 @@ typedef struct metaCacheEntry
    */
   u64int pcRemapBitmap;
 #endif
-  void *hdlFunct;
+  InstructionHandler hdlFunct;
 } MetaCacheEntry;
 
 

@@ -38,7 +38,7 @@ struct commandLineOption *addCommandLineOption(struct commandLineOption *options
 
 static struct commandLine *createCommandLine()
 {
-  struct commandLine *p = calloc(1, sizeof(struct commandLine));
+  struct commandLine *p = (struct commandLine *)calloc(1, sizeof(struct commandLine));
   if (p == NULL)
   {
     DIE_NOW(NULL, "malloc failed");
@@ -48,7 +48,7 @@ static struct commandLine *createCommandLine()
 
 static struct commandLineOption *createCommandLineOption()
 {
-  struct commandLineOption *p = calloc(1, sizeof(struct commandLineOption));
+  struct commandLineOption *p = (struct commandLineOption *)calloc(1, sizeof(struct commandLineOption));
   if (p == NULL)
   {
     DIE_NOW(NULL, "malloc failed");

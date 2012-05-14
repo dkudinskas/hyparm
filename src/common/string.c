@@ -4,8 +4,8 @@
 /* This version of memcpy assumes disjoint source and destination pointers */
 void *memcpy(void *destination, const void *source, u32int count)
 {
-  const char *src = source;
-  char *dst = destination;
+  const char *src = (const char *)source;
+  char *dst = (char *)destination;
   u32int i;
 
   if (!((u32int)source & 0xC) && !((u32int)destination & 0xC))

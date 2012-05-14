@@ -24,7 +24,7 @@
  **/
 simpleEntry *newLevelOnePageTable()
 {
-  simpleEntry *pageTable = memalign(1 << PT1_ALIGN_BITS, PT1_SIZE);
+  simpleEntry *pageTable = (simpleEntry *)memalign(1 << PT1_ALIGN_BITS, PT1_SIZE);
   if (pageTable == NULL)
   {
     DIE_NOW(NULL, "failed to allocate L1 page table");
@@ -66,7 +66,7 @@ for guest::
  **/
 u32int *newLevelTwoPageTable()
 {
-  u32int *pageTable = memalign(1 << PT2_ALIGN_BITS, PT2_SIZE);
+  u32int *pageTable = (u32int *)memalign(1 << PT2_ALIGN_BITS, PT2_SIZE);
   if (pageTable == NULL)
   {
     DIE_NOW(NULL, "failed to allocate L2 page table");
