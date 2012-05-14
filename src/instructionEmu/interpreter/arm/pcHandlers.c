@@ -38,7 +38,7 @@ enum
  *
  * All these instructions are data processing instructions which store their result into a some Rd.
  */
-u32int *armDPImmRegRSR(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
+void armDPImmRegRSR(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
 {
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const bool immediateForm = (instruction >> 25 & DATA_PROC_IMMEDIATE_FORM_BIT);
@@ -65,13 +65,13 @@ u32int *armDPImmRegRSR(TranslationCache *tc, u32int *code, u32int pc, u32int ins
     if (!immediateForm && (operandNRegister == destinationRegister || operandMRegister == destinationRegister))
     {
       const u32int scratchRegister = getOtherRegisterOf3(destinationRegister, operandNRegister, operandMRegister);
-      code = armBackupRegisterToSpill(tc, code, conditionCode, scratchRegister);
-      code = updateCodeCachePointer(tc, code);
+      armBackupRegisterToSpill(tc, block, conditionCode, scratchRegister);
+      block->code = updateCodeCachePointer(tc, block->code);
       pcRegister = scratchRegister;
       restoreFromSpill = TRUE;
     }
 
-    code = armWritePCToRegister(tc, code, conditionCode, pcRegister, pc);
+    armWritePCToRegister(tc, block, conditionCode, pcRegister, pc);
 
     if (replaceN)
     {
@@ -84,15 +84,17 @@ u32int *armDPImmRegRSR(TranslationCache *tc, u32int *code, u32int pc, u32int ins
     }
   }
 
-  code = updateCodeCachePointer(tc, code);
-  *(code++) = instruction;
+  block->code = updateCodeCachePointer(tc, block->code);
+  *block->code = instruction;
+  block->code++;
 
   if (restoreFromSpill)
   {
-    code = armRestoreRegisterFromSpill(tc, code, conditionCode, pcRegister);
+    armRestoreRegisterFromSpill(tc, block, conditionCode, pcRegister);
   }
 
-  return code;
+  block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
+  block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
 }
 
 /*
@@ -102,7 +104,7 @@ u32int *armDPImmRegRSR(TranslationCache *tc, u32int *code, u32int pc, u32int ins
  * PSR and discard their result. Because there is no destination register, we need to spill some
  * register for the PC...
  */
-u32int *armDPImmRegRSRNoDest(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
+void armDPImmRegRSRNoDest(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
 {
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const bool immediateForm = (instruction >> 25 & DATA_PROC_IMMEDIATE_FORM_BIT);
@@ -116,8 +118,8 @@ u32int *armDPImmRegRSRNoDest(TranslationCache *tc, u32int *code, u32int pc, u32i
   if (replaceN || replaceM)
   {
     pcRegister = getOtherRegisterOf2(operandNRegister, operandMRegister);
-    code = armBackupRegisterToSpill(tc, code, conditionCode, pcRegister);
-    code = armWritePCToRegister(tc, code, conditionCode, pcRegister, pc);
+    armBackupRegisterToSpill(tc, block, conditionCode, pcRegister);
+    armWritePCToRegister(tc, block, conditionCode, pcRegister, pc);
 
     if (replaceN)
     {
@@ -130,21 +132,23 @@ u32int *armDPImmRegRSRNoDest(TranslationCache *tc, u32int *code, u32int pc, u32i
     }
   }
 
-  code = updateCodeCachePointer(tc, code);
-  *(code++) = instruction;
+  block->code = updateCodeCachePointer(tc, block->code);
+  *block->code = instruction;
+  block->code++;
 
   if (replaceN || replaceM)
   {
-    code = armRestoreRegisterFromSpill(tc, code, conditionCode, pcRegister);
+    armRestoreRegisterFromSpill(tc, block, conditionCode, pcRegister);
   }
 
-  return code;
+  block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
+  block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
 }
 
 /*
  * Translates {LDR,STR}{,B,H,D} in register & immediate forms for which Rd!=PC
  */
-u32int *armLdrStrPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
+void armLdrStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
 {
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, LDR_RT_INDEX);
   const u32int baseRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
@@ -174,19 +178,21 @@ u32int *armLdrStrPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u3
 
   if (baseRegister == GPR_PC)
   {
-    code = armWritePCToRegister(tc, code, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
+    armWritePCToRegister(tc, block, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
     instruction = ARM_SET_REGISTER(instruction, RN_INDEX, destinationRegister);
   }
 
-  code = updateCodeCachePointer(tc, code);
-  *code = instruction;
-  return ++code;
+  block->code = updateCodeCachePointer(tc, block->code);
+  *block->code = instruction;
+  block->code++;
+  block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
+  block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
 }
 
 /*
  * Translates MOV for which Rd!=PC.
  */
-u32int *armMovPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
+void armMovPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
 {
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
   const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
@@ -199,17 +205,21 @@ u32int *armMovPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32in
    */
   if (sourceRegister == GPR_PC)
   {
-    code = armWritePCToRegister(tc, code, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
+    armWritePCToRegister(tc, block, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
     if (!(instruction & SETFLAGS_BIT))
     {
-      return ++code;
+      block->code++;
+      block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << (block->pcRemapBitmapShift - PC_REMAP_BIT_COUNT);
+      return;
     }
     instruction = ARM_SET_REGISTER(instruction, RM_INDEX, destinationRegister);
   }
 
-  code = updateCodeCachePointer(tc, code);
-  *(code++) = instruction;
-  return code;
+  block->code = updateCodeCachePointer(tc, block->code);
+  *block->code = instruction;
+  block->code++;
+  block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
+  block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
 }
 
 /*
@@ -219,23 +229,25 @@ u32int *armMovPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32in
  * cond | 0001 | 101S | (0000) | Rd | imm5 | t2 | 0 | Rm
  * The shift type is determined by 2 bits (t2). For RRX, imm5 is always 00000.
  */
-u32int *armShiftPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
+void armShiftPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
 {
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
   const u32int operandRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
   if (operandRegister == GPR_PC)
   {
-    code = armWritePCToRegister(tc, code, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
+    armWritePCToRegister(tc, block, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
     instruction = ARM_SET_REGISTER(instruction, RM_INDEX, destinationRegister);
   }
 
-  code = updateCodeCachePointer(tc, code);
-  *(code++) = instruction;
-  return code;
+  block->code = updateCodeCachePointer(tc, block->code);
+  *block->code = instruction;
+  block->code++;
+  block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
+  block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
 }
 
-u32int* armStmPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction)
+void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
 {
   ASSERT(ARM_EXTRACT_REGISTER(instruction, RN_INDEX) != GPR_PC, "Rn=PC unpredictable");
 
@@ -292,7 +304,9 @@ u32int* armStmPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32in
     DIE_NOW(NULL, "STM.. Rn, ..-PC not implemented");
   }
 
-  code = updateCodeCachePointer(tc, code);
-  *code = instruction;
-  return ++code;
+  block->code = updateCodeCachePointer(tc, block->code);
+  *block->code = instruction;
+  block->code++;
+  block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
+  block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
 }

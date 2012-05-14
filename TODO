@@ -1,10 +1,5 @@
 define BLOCK_COPY_DEBUG
 
 when raising exception in guest, make sure LR is correct!!!
-
-problems occur for ex when rewriting PUSH ..-PC
-we can isolate the PC case in a separate PUSH, however
-- PUSH will not abort on an unaligned address with one register , even though PUSH with multiple will
-- the extra PUSH pc may abort while the rest may not... the guest has to see this as an abort on the original STM!!!
-
-more crap with the generic STM!!!
+- mechanism for calculating correct PC is in place
+- now need to patch the exception delivery routines to make sure correct LR is set!

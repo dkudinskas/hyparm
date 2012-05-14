@@ -3,19 +3,21 @@
 
 #include "guestManager/translationCache.h"
 
+#include "instructionEmu/translationInfo.h"
+
 
 /*
  * Data processing instructions
  */
-u32int *armDPImmRegRSR(TranslationCache *tc, u32int *code, u32int pc, u32int instruction);
-u32int *armDPImmRegRSRNoDest(TranslationCache *tc, u32int *code, u32int pc, u32int instruction);
-u32int* armMovPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction);
-u32int *armShiftPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction);
+void armDPImmRegRSR(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction);
+void armDPImmRegRSRNoDest(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction);
+void armMovPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction);
+void armShiftPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction);
 
 /*
  * Load / store instructions
  */
-u32int *armLdrStrPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction);
-u32int *armStmPCInstruction(TranslationCache *tc, u32int *code, u32int pc, u32int instruction);
+void armLdrStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction);
+void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction);
 
 #endif /* __INSTRUCTION_EMU__INTERPRETER__ARM__PC_HANDLERS_H__ */

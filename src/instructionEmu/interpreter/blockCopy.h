@@ -7,10 +7,12 @@
 #include "guestManager/guestContext.h"
 #include "guestManager/translationCache.h"
 
+#include "instructionEmu/translationInfo.h"
 
-u32int *armBackupRegisterToSpill(TranslationCache *tc, u32int *code, u32int conditionCode, u32int reg);
-u32int *armRestoreRegisterFromSpill(TranslationCache *tc, u32int *code, u32int conditionCode, u32int reg);
-u32int *armWritePCToRegister(TranslationCache *tc, u32int *code, u32int conditionCode, u32int reg, u32int pc);
+
+void armBackupRegisterToSpill(TranslationCache *tc, ARMTranslationInfo *block, u32int conditionCode, u32int reg);
+void armRestoreRegisterFromSpill(TranslationCache *tc, ARMTranslationInfo *block, u32int conditionCode, u32int reg);
+void armWritePCToRegister(TranslationCache *tc, ARMTranslationInfo *block, u32int conditionCode, u32int reg, u32int pc);
 
 /* function to find a register that is not one of the arguments */
 __macro__ u32int getOtherRegisterOf2(u32int usedRegister1, u32int usedRegister2);

@@ -197,6 +197,61 @@ static u32int findMetaCacheEntry(const TranslationCache *tc, u32int address)
   return (u32int)-1;
 }
 
+
+#ifdef CONFIG_BLOCK_COPY
+
+u32int getOriginPC(TranslationCache *tc, u32int metaIndex, u32int codeCacheAddress)
+{
+  const MetaCacheEntry *const entry = &tc->metaCache[metaIndex];
+  const u32int codeStart = (u32int)entry->code;
+  ASSERT(codeCacheAddress >= codeStart && (codeStart + entry->codeSize) < codeCacheAddress,
+         "C$ address out of bounds");
+
+  u32int granularity;
+  switch (entry->type)
+  {
+    case MCE_TYPE_ARM:
+    {
+      granularity = 4;
+      break;
+    }
+#ifdef CONFIG_THUMB2
+    case MCE_TYPE_THUMB:
+    {
+      granularity = 2;
+      break;
+    }
+#endif
+    default:
+      DIE_NOW(NULL, "invalid M$ entry type");
+  }
+
+  u32int origin = entry->startAddress;
+  for (u32int address = (u32int)entry->code, shift = 0; address < codeCacheAddress;
+       address += granularity, shift += 2)
+  {
+    const u32int remapValue = (entry->pcRemapBitmap >> shift) & PC_REMAP_MASK;
+    switch (remapValue)
+    {
+      case PC_REMAP_LOOKUP:
+      {
+        DIE_NOW(NULL, "not implemented");
+      }
+      default:
+      {
+        // TODO: check whether compiler optimizes this to a bit shift
+        origin += granularity * remapValue;
+        break;
+      }
+    } /* switch (remap) */
+  } /* for */
+
+  return origin;
+}
+
+#endif /* CONFIG_BLOCK_COPY */
+
+
 void initialiseTranslationCache(GCONTXT *context)
 {
   TranslationCache *const tc = &context->translationCache;

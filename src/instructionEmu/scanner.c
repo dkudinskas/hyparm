@@ -13,11 +13,13 @@
 
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/scanner.h"
+#include "instructionEmu/translationInfo.h"
+
+#include "instructionEmu/interpreter/internals.h"
 
 #include "memoryManager/mmu.h"
 #include "memoryManager/pageTable.h"
 
-#include "instructionEmu/interpreter/internals.h"
 
 #define INSTR_SWI            0xEF000000U
 #define INSTR_SWI_THUMB      0x0000DF00U
@@ -469,20 +471,23 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
   /*
    * Check if there is room in the C$ and if not make it
    */
-  MetaCacheEntry metaEntry = {
-                               .startAddress = (u32int)startAddress,
-                               .type = MCE_TYPE_ARM,
-                               .code = context->translationCache.codeCacheNextEntry,
+  ARMTranslationInfo block = {
+                               .metaEntry = {
+                                              .startAddress = (u32int)startAddress,
+                                              .type = MCE_TYPE_ARM,
+                                              .code = context->translationCache.codeCacheNextEntry,
+                                            },
+                               .pcRemapBitmapShift = 0
                              };
-  u32int *code = updateCodeCachePointer(&context->translationCache, (u32int *)metaEntry.code);
+  block.code = updateCodeCachePointer(&context->translationCache, (u32int *)block.metaEntry.code);
   /*
    * Install backpointer in C$
    */
-  ((CodeCacheEntry *)code)->metaIndex = metaIndex;
+  ((CodeCacheEntry *)block.code)->metaIndex = metaIndex;
   /*
    * Instructions follow, so next R15 is here.
    */
-  context->R15 = (u32int)updateCodeCachePointer(&context->translationCache, ++code);
+  context->R15 = (u32int)updateCodeCachePointer(&context->translationCache, ++block.code);
   /*
    * Scan guest code and copy to C$, translating instructions that use the PC on the fly
    */
@@ -492,18 +497,21 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
   {
     if (armIsPCInsensitiveInstruction(*instruction) || decodedInstruction->pcHandler == NULL)
     {
-      *(code++) = *instruction;
+      *(block.code++) = *instruction;
+      block.metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block.pcRemapBitmapShift;
+      block.pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
     }
     else
     {
-      code = decodedInstruction->pcHandler(&context->translationCache, code, (u32int)instruction, *instruction);
+      decodedInstruction->pcHandler(&context->translationCache, &block, (u32int)instruction, *instruction);
     }
-    code = updateCodeCachePointer(&context->translationCache, code);
+    block.code = updateCodeCachePointer(&context->translationCache, block.code);
   }
+  ASSERT(block.pcRemapBitmapShift < sizeof(block.pcRemapBitmapShift), "block too long");
   /*
    * Next instruction must be translated into hypercall.
    */
-  *(code++) = INSTR_SWI | ((metaIndex + 1) << 8);
+  *(block.code++) = INSTR_SWI | ((metaIndex + 1) << 8);
   context->endOfBlockInstr = *instruction;
   context->hdlFunct = decodedInstruction->handler;
   context->PCOfLastInstruction = (u32int)instruction;
@@ -513,21 +521,21 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
    * Cache metadata for the translated block. Code may wrap around C$ boundaries; take this into
    * account when calculating the size of the translated code.
    */
-  if (code < (u32int *)metaEntry.code)
+  if (block.code < (u32int *)block.metaEntry.code)
   {
-    metaEntry.codeSize = (u32int)context->translationCache.codeCacheLastEntry
-                       - (u32int)metaEntry.code + (u32int)code
-                       - (u32int)context->translationCache.codeCache;
-    DEBUG(SCANNER, "Block exceeding end: blockCopyCacheSize=%#.8x" EOL, metaEntry.codeSize);
+    block.metaEntry.codeSize = (u32int)context->translationCache.codeCacheLastEntry
+                             - (u32int)block.metaEntry.code + (u32int)block.code
+                             - (u32int)context->translationCache.codeCache;
+    DEBUG(SCANNER, "Block exceeding end: blockCopyCacheSize=%#.8x" EOL, block.metaEntry.codeSize);
   }
   else
   {
-    metaEntry.codeSize = (u32int)code - (u32int)metaEntry.code;
+    block.metaEntry.codeSize = (u32int)block.code - (u32int)block.metaEntry.code;
   }
-  metaEntry.endAddress = (u32int)instruction;
-  metaEntry.hyperedInstruction = context->endOfBlockInstr,
-  metaEntry.hdlFunct = context->hdlFunct;
-  addMetaCacheEntry(&context->translationCache, metaIndex, &metaEntry);
+  block.metaEntry.endAddress = (u32int)instruction;
+  block.metaEntry.hyperedInstruction = context->endOfBlockInstr,
+  block.metaEntry.hdlFunct = context->hdlFunct;
+  addMetaCacheEntry(&context->translationCache, metaIndex, &block.metaEntry);
   /*
    * Protect guest against self-modification.
    */

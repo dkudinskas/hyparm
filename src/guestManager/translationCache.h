@@ -26,6 +26,18 @@
 #define TRANSLATION_CACHE_MEMORY_PER_BITMAP_BIT   (TRANSLATION_CACHE_MEMORY_PER_BITMAP / 32) // should be 8 megabytes
 
 
+enum
+{
+  PC_REMAP_NO_INCREMENT = 0b00,
+  PC_REMAP_INCREMENT = 0b01,
+  PC_REMAP_INCREMENT_TWO = 0b10,
+  PC_REMAP_LOOKUP = 0b11,
+
+  PC_REMAP_BIT_COUNT = 2,
+  PC_REMAP_MASK = 0b11,
+};
+
+
 enum metaCacheEntryType
 {
   MCE_TYPE_INVALID = 0,
@@ -71,7 +83,44 @@ typedef struct metaCacheEntry
   u8int type;
 #ifdef CONFIG_BLOCK_COPY
   u16int codeSize;
-  CodeCacheEntry *code; // pointer to code cache entry
+  CodeCacheEntry *code;
+  /*
+   * We need to keep track of how addresses are translated code map to addresses in original code.
+   * When raising exceptions in the guest, LR must be correct! We cannot give the guest the address
+   * in our C$, because that's functionally incorrect. The LR must be the address as the guest
+   * would have seen when executing natively: the origin of the translated instruction (sequence).
+   *
+   * For ARM code, a simple strategy is to use a bitmap, where every bit represents one translated
+   * instruction. Setting the value of the corresponding bit to 1 means we add 4 to the origin
+   * address (base address of the block in guest memory), while a zero indicates the instruction
+   * belongs to the previous and will share the same origin.
+   *
+   * For Thumb code, the variable instruction length seems to complicate things a bit. Since
+   * instructions are now either halfwords or words, we can just address the bitmap by halfwords,
+   * and add 2 to the origin address when a bit is set to 1.
+   *
+   * This solution works when translating instructions to remove location-dependencies, but cannot
+   * handle any kind of optimization. For example, when removing NOPs, the origin address may have
+   * to be incremented by any multiple of 4 in between two consecutive instructions in a translated
+   * block! Therefore we need to maintain an extra mapping of offsets for those cases. The approach
+   * can be combined by using an extra bit in the bitmap to determine whether the extra map is used
+   * or not.
+   *
+   * Hence, for ARM, per word, we have 2 bits in the bitmap that can be used as follows:
+   * - 00: no increment
+   * - 01: increment by 4
+   * - 10: increment by 8
+   * - 11: look up
+   * So the operation is simple: if bits != 11, add (bits << 2) to the origin.
+   *
+   * For Thumb we can do the same trick per halfword (with +2 and +4, and add bits << 1).
+   *
+   * NOTE: this only works when we DO NOT MIX ARM AND THUMB code IN ONE translated BLOCK.
+   *
+   * The bitmap below is 64-bit, which means it can contain information of at most 32 ARM or Thumb
+   * 16-bit instructions.
+   */
+  u64int pcRemapBitmap;
 #endif
   void *hdlFunct;
 } MetaCacheEntry;
@@ -97,6 +146,8 @@ void clearTranslationCacheByAddressRange(TranslationCache *tc, u32int startAddre
 
 void dumpMetaCacheEntry(MetaCacheEntry *entry);
 void dumpMetaCacheEntryByIndex(TranslationCache *tc, u32int metaIndex);
+
+u32int getOriginPC(TranslationCache *tc, u32int metaIndex, u32int codeCacheAddress);
 
 __macro__ MetaCacheEntry *getMetaCacheEntry(TranslationCache *tc, u32int metaIndex, u32int startAddress);
 __macro__ u32int getMetaCacheIndex(u32int startAddress);

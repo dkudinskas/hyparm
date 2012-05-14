@@ -4,13 +4,14 @@
 #include "common/types.h"
 
 
+struct armTranslationInfo;
 struct guestContext;
 struct translationCache;
 
 typedef u32int (*InstructionHandler)(struct guestContext *context, u32int instruction);
 
-typedef u32int *(*PCInstructionHandler)(struct translationCache *tc, u32int *code, u32int pc,
-                                        u32int instruction);
+typedef void (*PCInstructionHandler)(struct translationCache *tc, struct armTranslationInfo *block,
+                                     u32int pc, u32int instruction);
 
 typedef enum
 {
