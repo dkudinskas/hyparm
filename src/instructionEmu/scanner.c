@@ -35,7 +35,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int metaIndex);
 #ifdef CONFIG_BLOCK_COPY
 
 static void scanAndCopyArmBlock(GCONTXT *context, u32int *start, u32int metaIndex);
-static bool armPCInsensitiveInstruction(u32int instruction);
+static bool armIsPCInsensitiveInstruction(u32int instruction);
 #endif
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
@@ -449,6 +449,8 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 
 
 /*
+ * TODO: caching is disabled on C$, so no cache maintenance operations are called from here (!)
+ *
  * reserved words are painful here... we actually only need one spill location per C$
  * however...
  * for C$ size <= 4088 bytes we can use ONE spill location, at start of C$ (because of PC +8 offset)
@@ -465,7 +467,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaIndex)
 {
   /*
-   * Check if there is room on blockCopyCacheCurrAddres and if not make it
+   * Check if there is room in the C$ and if not make it
    */
   MetaCacheEntry metaEntry = {
                                .startAddress = (u32int)startAddress,
@@ -489,7 +491,7 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
   struct decodingTableEntry *decodedInstruction;
   for (; (decodedInstruction = decodeArmInstruction(*instruction))->replace == IRC_SAFE; ++instruction)
   {
-    if (armPCInsensitiveInstruction(*instruction) || decodedInstruction->pcHandler == NULL)
+    if (armIsPCInsensitiveInstruction(*instruction) || decodedInstruction->pcHandler == NULL)
     {
       *(code++) = *instruction;
     }
@@ -534,10 +536,10 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
 }
 
 /*
- * armPCInsensitiveInstruction returns TRUE if it is CERTAIN that an instruction does not depend
+ * armIsPCInsensitiveInstruction returns TRUE if it is CERTAIN that an instruction does not depend
  * on the current PC value.
  */
-static bool armPCInsensitiveInstruction(u32int instruction)
+static bool armIsPCInsensitiveInstruction(u32int instruction)
 {
   /* STMDB and PUSH may not write PC to mem :
    * STM   1000|10?0
