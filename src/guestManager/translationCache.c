@@ -9,9 +9,13 @@
 #include "memoryManager/mmu.h"
 
 
+#ifdef CONFIG_BLOCK_COPY
+
 COMPILE_TIME_ASSERT((TRANSLATION_CACHE_CODE_SIZE_B & 0b11) == 0, __code_cache_size_must_be_multiple_of_4);
 COMPILE_TIME_ASSERT(CODE_CACHE_MIN_SIZE <= TRANSLATION_CACHE_CODE_SIZE_B, __code_cache_size_below_minimum);
 COMPILE_TIME_ASSERT(TRANSLATION_CACHE_CODE_SIZE_B <= CODE_CACHE_MAX_SIZE, __code_cache_size_exceeds_maximum);
+
+#endif CONFIG_BLOCK_COPY
 
 
 #ifdef CONFIG_BLOCK_CACHE_COLLISION_COUNTER
