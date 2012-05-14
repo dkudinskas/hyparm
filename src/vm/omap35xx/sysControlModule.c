@@ -306,40 +306,41 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
   DEBUG(VP_OMAP_35XX_SCM, "%s load from pAddr: %#.8x, vAddr %#.8x, aSize %x" EOL, dev->deviceName,
       phyAddr, virtAddr, (u32int)size);
 
+  u32int alignedAddr = phyAddr & ~0x3;
   u32int val = 0;
 
-  if ((phyAddr >= SYS_CTRL_MOD_INTERFACE)
-      && (phyAddr <= (SYS_CTRL_MOD_INTERFACE + SYS_CTRL_MOD_INTERFACE_SIZE+4)))
+  if ((alignedAddr >= SYS_CTRL_MOD_INTERFACE)
+      && (alignedAddr <= (SYS_CTRL_MOD_INTERFACE + SYS_CTRL_MOD_INTERFACE_SIZE)))
   {
     val = loadInterfaceScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS)
-        && (phyAddr <= (SYS_CTRL_MOD_PADCONFS + SYS_CTRL_MOD_PADCONFS_SIZE+4)))
+  else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS)
+        && (alignedAddr <= (SYS_CTRL_MOD_PADCONFS + SYS_CTRL_MOD_PADCONFS_SIZE)))
   {
     val = loadPadconfsScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_GENERAL)
-        && (phyAddr <= (SYS_CTRL_MOD_GENERAL + SYS_CTRL_MOD_GENERAL_SIZE+4)))
+  else if ((alignedAddr >= SYS_CTRL_MOD_GENERAL)
+        && (alignedAddr <= (SYS_CTRL_MOD_GENERAL + SYS_CTRL_MOD_GENERAL_SIZE)))
   {
     val = loadGeneralScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_MEM_WKUP)
-        && (phyAddr <= (SYS_CTRL_MOD_MEM_WKUP + SYS_CTRL_MOD_MEM_WKUP_SIZE+4)))
+  else if ((alignedAddr >= SYS_CTRL_MOD_MEM_WKUP)
+        && (alignedAddr <= (SYS_CTRL_MOD_MEM_WKUP + SYS_CTRL_MOD_MEM_WKUP_SIZE)))
   {
     val = loadMemWkupScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS_WKUP)
-        && (phyAddr <= (SYS_CTRL_MOD_PADCONFS_WKUP + SYS_CTRL_MOD_PADCONFS_WKUP_SIZE+4)))
+  else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS_WKUP)
+        && (alignedAddr <= (SYS_CTRL_MOD_PADCONFS_WKUP + SYS_CTRL_MOD_PADCONFS_WKUP_SIZE)))
   {
     val = loadPadconfsWkupScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_GENERAL_WKUP)
-        && (phyAddr <= (SYS_CTRL_MOD_GENERAL_WKUP + SYS_CTRL_MOD_GENERAL_WKUP_SIZE+4)))
+  else if ((alignedAddr >= SYS_CTRL_MOD_GENERAL_WKUP)
+        && (alignedAddr <= (SYS_CTRL_MOD_GENERAL_WKUP + SYS_CTRL_MOD_GENERAL_WKUP_SIZE)))
   {
     val = loadGeneralWkupScm(dev, virtAddr, phyAddr);
   }
-  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS_ETK)
-        && (phyAddr <= (SYS_CTRL_MOD_PADCONFS_ETK + SYS_CTRL_MOD_PADCONFS_ETK_SIZE+4)))
+  else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS_ETK)
+        && (alignedAddr <= (SYS_CTRL_MOD_PADCONFS_ETK + SYS_CTRL_MOD_PADCONFS_ETK_SIZE)))
   {
     val = loadPadconfsScm(dev, virtAddr, phyAddr);
   }

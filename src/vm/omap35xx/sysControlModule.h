@@ -7,20 +7,20 @@
 
 
 /* instances live at these physical addresses */
-#define SYS_CTRL_MOD_INTERFACE        0x48002000
-#define SYS_CTRL_MOD_INTERFACE_SIZE        0x24 // 36 bytes
-#define SYS_CTRL_MOD_PADCONFS         0x48002030
-#define SYS_CTRL_MOD_PADCONFS_SIZE        0x234 // 564 bytes
-#define SYS_CTRL_MOD_GENERAL          0x48002270
-#define SYS_CTRL_MOD_GENERAL_SIZE         0x2ff // 767 bytes
-#define SYS_CTRL_MOD_MEM_WKUP         0x48002600
-#define SYS_CTRL_MOD_MEM_WKUP_SIZE        0x400 // 1K byte
-#define SYS_CTRL_MOD_PADCONFS_WKUP    0x48002A00
-#define SYS_CTRL_MOD_PADCONFS_WKUP_SIZE    0x50 // 80 bytes
-#define SYS_CTRL_MOD_GENERAL_WKUP     0x48002A60
-#define SYS_CTRL_MOD_GENERAL_WKUP_SIZE     0x1F // 31 bytes
+#define SYS_CTRL_MOD_INTERFACE          0x48002000
+#define SYS_CTRL_MOD_INTERFACE_SIZE           0x24 // 36 bytes
+#define SYS_CTRL_MOD_PADCONFS           0x48002030
+#define SYS_CTRL_MOD_PADCONFS_SIZE           0x234 // 564 bytes
+#define SYS_CTRL_MOD_GENERAL            0x48002270
+#define SYS_CTRL_MOD_GENERAL_SIZE            0x2FF // 767 bytes
+#define SYS_CTRL_MOD_MEM_WKUP           0x48002600
+#define SYS_CTRL_MOD_MEM_WKUP_SIZE           0x3FC // 1K byte
+#define SYS_CTRL_MOD_PADCONFS_WKUP      0x48002A00
+#define SYS_CTRL_MOD_PADCONFS_WKUP_SIZE       0x50 // 80 bytes
+#define SYS_CTRL_MOD_GENERAL_WKUP       0x48002A5C
+#define SYS_CTRL_MOD_GENERAL_WKUP_SIZE        0x1F // 31 bytes
 #define SYS_CTRL_MOD_PADCONFS_ETK       0x480025D8
-#define SYS_CTRL_MOD_PADCONFS_ETK_SIZE        0x20
+#define SYS_CTRL_MOD_PADCONFS_ETK_SIZE        0x24 // 36 bytes
 
 
 /************************
