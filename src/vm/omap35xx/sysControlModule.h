@@ -48,7 +48,6 @@
 #define CONTROL_PADCONF_SDRC_D28                       0x00000038
 #define CONTROL_PADCONF_SDRC_D30                       0x0000003C
 #define CONTROL_PADCONF_SDRC_CLK                       0x00000040
-#define CONTROL_PADCONF_SDRC_CKE1                      0x00000230 // ?????
 #define CONTROL_PADCONF_SDRC_DQS1                      0x00000044
 #define CONTROL_PADCONF_SDRC_DQS3                      0x00000048
 #define CONTROL_PADCONF_GPMC_A2                        0x0000004C
@@ -173,6 +172,7 @@
 #define CONTROL_PADCONF_SAD2D_SWRITE                   0x00000228
 #define CONTROL_PADCONF_SAD2D_SREAD                    0x0000022C
 #define CONTROL_PADCONF_SAD2D_SBUSFLAG                 0x00000230
+#define CONTROL_PADCONF_SDRC_CKE1                      0x00000234
 #define CONTROL_PADCONF_ETK_CLK                        0x000005A8
 #define CONTROL_PADCONF_ETK_D0                         0x000005AC
 #define CONTROL_PADCONF_ETK_D2                         0x000005B0
@@ -480,6 +480,39 @@ struct SystemControlModule
   u32int ctrlPadConfMcspi2Cs0;
 
   u32int ctrlPadConfSysNirq;
+
+  u32int ctrlPadConfSad2dMcad0;
+  u32int ctrlPadConfSad2dMcad2;
+  u32int ctrlPadConfSad2dMcad4;
+  u32int ctrlPadConfSad2dMcad6;
+  u32int ctrlPadConfSad2dMcad8;
+  u32int ctrlPadConfSad2dMcad10;
+  u32int ctrlPadConfSad2dMcad12;
+  u32int ctrlPadConfSad2dMcad14;
+  u32int ctrlPadConfSad2dMcad16;
+  u32int ctrlPadConfSad2dMcad18;
+  u32int ctrlPadConfSad2dMcad20;
+  u32int ctrlPadConfSad2dMcad22;
+  u32int ctrlPadConfSad2dMcad24;
+  u32int ctrlPadConfSad2dMcad26;
+  u32int ctrlPadConfSad2dMcad28;
+  u32int ctrlPadConfSad2dMcad30;
+  u32int ctrlPadConfSad2dMcad32;
+  u32int ctrlPadConfSad2dMcad34;
+  u32int ctrlPadConfSad2dMcad36;
+  u32int ctrlPadConfSad2dNrespwron;
+  u32int ctrlPadConfSad2dArmnirq;
+  u32int ctrlPadConfSad2dSpint;
+  u32int ctrlPadConfSad2dDmareq0;
+  u32int ctrlPadConfSad2dDmareq2;
+  u32int ctrlPadConfSad2dNtrst;
+  u32int ctrlPadConfSad2dTdo;
+  u32int ctrlPadConfSad2dTck;
+  u32int ctrlPadConfSad2dMstdby;
+  u32int ctrlPadConfSad2dIdleack;
+  u32int ctrlPadConfSad2dSwrite;
+  u32int ctrlPadConfSad2dSread;
+  u32int ctrlPadConfSad2dSbusflag;
 
   u32int ctrlPadConfEtkClk;
   u32int ctrlPadConfEtkD0;
