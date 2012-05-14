@@ -440,11 +440,10 @@ u32int *updateCodeCachePointer(TranslationCache *tc, u32int *pointer)
     return pointer;
   }
   DEBUG(BLOCK_CACHE, "C$ not clean @ %p" EOL, pointer);
-  MetaCacheEntry *entry = ((CodeCacheEntry *)pointer)->meta;
-  ASSERT(entry >= tc->metaCache && entry < (tc->metaCache + TRANSLATION_CACHE_META_SIZE_N),
-         "invalid backpointer");
-  DEBUG(BLOCK_CACHE, "cleaning block with meta index %#.3x" EOL, entry - tc->metaCache);
-  removeCacheEntry(tc, entry);
+  const u32int metaIndex = ((CodeCacheEntry *)pointer)->metaIndex;
+  ASSERT(metaIndex < TRANSLATION_CACHE_META_SIZE_N, "invalid backpointer");
+  DEBUG(BLOCK_CACHE, "cleaning block with meta index %#.3x" EOL, metaIndex);
+  removeCacheEntry(tc, &tc->metaCache[metaIndex]);
   return pointer;
 }
 

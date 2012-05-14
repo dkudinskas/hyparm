@@ -59,7 +59,7 @@ struct metaCacheEntry;
 // currently it is only used for clearing the cache when running out of space in C$
 typedef struct codeCacheEntry
 {
-  struct metaCacheEntry *meta;
+  u32int metaIndex;
   u32int codeStart;
 } CodeCacheEntry;
 

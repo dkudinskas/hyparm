@@ -477,9 +477,8 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
   u32int *code = updateCodeCachePointer(&context->translationCache, (u32int *)metaEntry.code);
   /*
    * Install backpointer in C$
-   * TODO: seriously, the full address? lol. and this is only used in the weird freeing-mechanism
    */
-  ((CodeCacheEntry *)code)->meta = &context->translationCache.metaCache[metaIndex];
+  ((CodeCacheEntry *)code)->metaIndex = metaIndex;
   /*
    * Instructions follow, so next R15 is here.
    */
