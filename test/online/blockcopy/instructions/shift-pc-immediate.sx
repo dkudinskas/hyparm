@@ -1,0 +1,18 @@
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+LSLS   r0, pc, #1
+LSRSCS r1, pc, #1
+LSLSPL r1, r1, #2
+SUBCS  r1, r1, #8
+CMP    r0, r1
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1

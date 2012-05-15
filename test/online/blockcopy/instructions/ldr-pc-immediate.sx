@@ -1,0 +1,26 @@
+/*
+ * LDR (literal) is used to load data from literal pools.
+ * Similar instructions are LDRB, LDRH, LDRD, STR, STRB, STRH and STRD.
+ */
+
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+MOVW   r0, 0xBEEF
+MOVT   r0, 0xDEAD
+LDR    r1, =meat
+LDR    r1, [r1]
+CMP    r0, r1
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1
+
+meat:
+.word 0xDEADBEEF
