@@ -607,7 +607,7 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
   }
 
   GCONTXT *context = getGuestContext();
-  simpleEntry* hostEntry = (simpleEntry *)getEntryFirst(context->pageTables->hypervisor, guestPhysical);
+  simpleEntry* hostEntry = getEntryFirst(context->pageTables->hypervisor, guestPhysical);
 
   u32int hostPhysical = 0;
   switch (hostEntry->type)

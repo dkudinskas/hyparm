@@ -7,6 +7,7 @@
 #include "guestManager/blockCache.h"
 
 #include "memoryManager/memoryProtection.h"
+#include "memoryManager/pageTableInfo.h"
 
 #include "vm/omap35xx/cp15coproc.h"
 #include "vm/omap35xx/hardwareLibrary.h"
