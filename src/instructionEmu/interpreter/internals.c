@@ -453,6 +453,13 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT *context)
 
 #ifdef CONFIG_GUEST_TEST
 
+enum guestBreakPointValues
+{
+  BKPT_TEST_PASS = 0,
+  BKPT_DUMP_ACTIVE_SPT = 0xFFFF
+};
+
+
 /*
  * This function is used in unit tests. It evaluates the value passed to the BKPT instruction.
  * Current values:
@@ -464,9 +471,11 @@ void evalBkptVal(GCONTXT *context, u32int value)
 {
   switch (value)
   {
-    case 0:
+    case BKPT_TEST_PASS:
+    {
       DIE_NOW(context, "test passed");
-    case 0xFFFF:
+    }
+    case BKPT_DUMP_ACTIVE_SPT:
     {
       dumpTranslationTable(context->pageTables->shadowActive);
       break;
