@@ -125,7 +125,7 @@ void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host)
         // not the first entry in list
         prev->nextEntry = head;
       }
-      free((void *)tmp);
+      free(tmp);
       return;
     }
     prev = head;
@@ -172,7 +172,7 @@ void invalidatePageTableInfo()
 
     ptInfo* tempPtr = context->pageTables->sptInfo;
     context->pageTables->sptInfo = context->pageTables->sptInfo->nextEntry;
-    free((void *)tempPtr);
+    free(tempPtr);
   }
 
   // gpt then
@@ -180,7 +180,7 @@ void invalidatePageTableInfo()
   {
     ptInfo *tempPtr = context->pageTables->gptInfo;
     context->pageTables->gptInfo = context->pageTables->gptInfo->nextEntry;
-    free((void *)tempPtr);
+    free(tempPtr);
   }
 
   DEBUG(MM_PAGE_TABLES, "invalidatePageTableInfo: ...done" EOL);
