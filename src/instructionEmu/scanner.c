@@ -497,6 +497,7 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
   {
     if (armIsPCInsensitiveInstruction(*instruction) || decodedInstruction->pcHandler == NULL)
     {
+      DEBUG(SCANNER, "instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instruction, instruction);
       *(block.code++) = *instruction;
       block.metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block.pcRemapBitmapShift;
       block.pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
@@ -507,7 +508,7 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
     }
     block.code = updateCodeCachePointer(&context->translationCache, block.code);
   }
-  ASSERT(block.pcRemapBitmapShift < sizeof(block.pcRemapBitmapShift), "block too long");
+  ASSERT(block.pcRemapBitmapShift < (sizeof(block.metaEntry.pcRemapBitmap) * CHAR_BIT), "block too long");
   /*
    * Next instruction must be translated into hypercall.
    */
