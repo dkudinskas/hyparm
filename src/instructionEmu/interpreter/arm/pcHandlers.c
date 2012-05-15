@@ -161,42 +161,61 @@ void armLdrStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, LDR_RT_INDEX);
   const u32int baseRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
+  const u32int offsetRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
-  ASSERT(destinationRegister != GPR_PC, "Rd=PC: trap (LDR/STR) or unpredictable (B/H/D)");
-
-  switch (instruction & LDR_LDRB_REGISTER_FORM_BITS)
-  {
-    case 0:
-    {
-      if ((instruction & LDRD_BIT))
-      {
-        ASSERT(destinationRegister != GPR_LR, "Rt2=PC unpredictable");
-      }
-      if ((instruction & LDRH_LDRD_IMMEDIATE_FORM_BIT))
-      {
-        break;
-      }
-    }
-    /* no break */
-    case LDR_LDRB_REGISTER_FORM_BITS:
-    {
-      ASSERT(ARM_EXTRACT_REGISTER(instruction, RM_INDEX) != GPR_PC, "Rm=PC unpredictable");
-      break;
-    }
-  }
+  u32int pcRegister = destinationRegister;
+  bool spill = FALSE;
 
   if (baseRegister == GPR_PC)
   {
+    ASSERT(destinationRegister != GPR_PC, "Rd=PC: trap (LDR/STR) or unpredictable (B/H/D)");
+
     DEBUG(TRANSLATION, "armLdrStrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
           "Rt=%x" EOL, instruction, pc, conditionCode, destinationRegister, baseRegister);
 
-    armWritePCToRegister(tc, block, conditionCode, destinationRegister, pc);
-    instruction = ARM_SET_REGISTER(instruction, RN_INDEX, destinationRegister);
+    switch (instruction & LDR_LDRB_REGISTER_FORM_BITS)
+    {
+      case 0:
+      {
+        if ((instruction & LDRD_BIT))
+        {
+          ASSERT(destinationRegister != GPR_LR, "Rt2=PC unpredictable");
+        }
+        if ((instruction & LDRH_LDRD_IMMEDIATE_FORM_BIT))
+        {
+          break;
+        }
+      }
+      /* no break */
+      case LDR_LDRB_REGISTER_FORM_BITS:
+      {
+        ASSERT(offsetRegister != GPR_PC, "Rm=PC unpredictable");
+        spill = offsetRegister == destinationRegister;
+        break;
+      }
+    }
+
+    if (spill)
+    {
+      const u32int scratchRegister = getOtherRegisterOf2(destinationRegister, offsetRegister);
+      armBackupRegisterToSpill(tc, block, conditionCode, scratchRegister);
+      block->code = updateCodeCachePointer(tc, block->code);
+      pcRegister = scratchRegister;
+    }
+
+    armWritePCToRegister(tc, block, conditionCode, pcRegister, pc);
+    instruction = ARM_SET_REGISTER(instruction, RN_INDEX, pcRegister);
   }
 
   block->code = updateCodeCachePointer(tc, block->code);
   *block->code = instruction;
   block->code++;
+
+  if (spill)
+  {
+    armRestoreRegisterFromSpill(tc, block, conditionCode, pcRegister);
+  }
+
   block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
   block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
 }
