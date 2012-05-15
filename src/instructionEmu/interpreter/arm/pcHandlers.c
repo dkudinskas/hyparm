@@ -125,7 +125,7 @@ void armDPImmRegRSRNoDest(TranslationCache *tc, ARMTranslationInfo *block, u32in
           "immediateForm=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, immediateForm,
           operandNRegister, operandMRegister);
 
-    pcRegister = getOtherRegisterOf2(operandNRegister, operandMRegister);
+    pcRegister = immediateForm ? 0 : getOtherRegisterOf2(operandNRegister, operandMRegister);
     armBackupRegisterToSpill(tc, block, conditionCode, pcRegister);
     armWritePCToRegister(tc, block, conditionCode, pcRegister, pc);
 
