@@ -17,7 +17,16 @@
 #include "memoryManager/shadowMap.h"
 
 
-static void setupPageTable(simpleEntry *pageTablePtr, bool hypervisor);
+
+typedef enum pageTableTarget
+{
+  PT_TARGET_HYPERVISOR,
+  PT_TARGET_GUEST_SHADOW_PRIVILEGED,
+  PT_TARGET_GUEST_SHADOW_UNPRIVILEGED
+} PageTableTarget;
+
+
+static void setupPageTable(GCONTXT *context, PageTableTarget target);
 
 
 void initVirtualAddressing(GCONTXT *context)
@@ -25,7 +34,7 @@ void initVirtualAddressing(GCONTXT *context)
   //alloc some space for our 1st Level page table
   context->pageTables->hypervisor = (simpleEntry *)newLevelOnePageTable();
 
-  setupPageTable(context->pageTables->hypervisor, TRUE);
+  setupPageTable(context, PT_TARGET_HYPERVISOR);
 
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: new hypervisor page table %p" EOL, context->pageTables->hypervisor);
 
@@ -38,12 +47,28 @@ void initVirtualAddressing(GCONTXT *context)
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: done" EOL);
 }
 
-static void setupPageTable(simpleEntry *pageTablePtr, bool hypervisor)
+static void setupPageTable(GCONTXT *context, PageTableTarget target)
 {
-  //map in the hypervisor
-  mapHypervisorMemory(pageTablePtr, hypervisor);
+  simpleEntry *pageTablePtr;
+  switch (target)
+  {
+    case PT_TARGET_HYPERVISOR:
+      pageTablePtr = context->pageTables->hypervisor;
+      break;
+    case PT_TARGET_GUEST_SHADOW_PRIVILEGED:
+      pageTablePtr = context->pageTables->shadowPriv;
+      break;
+    case PT_TARGET_GUEST_SHADOW_UNPRIVILEGED:
+      pageTablePtr = context->pageTables->shadowUser;
+      break;
+    default:
+      DIE_NOW(context, "bad target");
+  }
 
-  if (hypervisor)
+  //map in the hypervisor
+  mapHypervisorMemory(pageTablePtr);
+
+  if (target == PT_TARGET_HYPERVISOR)
   {
     // 1:1 Map the entire of physical memory
     mapRange(pageTablePtr, MEMORY_START_ADDR, MEMORY_START_ADDR, HYPERVISOR_BEGIN_ADDRESS,
@@ -99,6 +124,20 @@ static void setupPageTable(simpleEntry *pageTablePtr, bool hypervisor)
   //serial (UART3)
   mapSmallPage(pageTablePtr, BE_UART3, BE_UART3,
                HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
+
+#ifdef CONFIG_BLOCK_COPY
+  if (target != PT_TARGET_GUEST_SHADOW_UNPRIVILEGED)
+  {
+    const u32int codeAddress = (u32int)context->translationCache.codeCache;
+    const u32int spillAddress = (u32int)context->translationCache.spillPage;
+    mapRange(pageTablePtr, codeAddress, codeAddress,
+             codeAddress + SMALL_PAGE_SIZE, GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RO, FALSE, FALSE, 0,
+             FALSE);
+    mapRange(pageTablePtr, spillAddress, spillAddress,
+             spillAddress + SMALL_PAGE_SIZE, GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RW, FALSE, FALSE, 0,
+             TRUE);
+  }
+#endif
 }
 
 /**
@@ -262,8 +301,8 @@ void initialiseShadowPageTables(GCONTXT *gc)
   // allocate two shadow page tables and prepare the minimum for operation
   gc->pageTables->shadowPriv = (simpleEntry *)newLevelOnePageTable();
   gc->pageTables->shadowUser = (simpleEntry *)newLevelOnePageTable();
-  setupPageTable(gc->pageTables->shadowPriv, FALSE);
-  setupPageTable(gc->pageTables->shadowUser, FALSE);
+  setupPageTable(gc, PT_TARGET_GUEST_SHADOW_PRIVILEGED);
+  setupPageTable(gc, PT_TARGET_GUEST_SHADOW_UNPRIVILEGED);
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: allocated spt priv %p; spt usr %p" EOL,
         gc->pageTables->shadowPriv, gc->pageTables->shadowUser);
 

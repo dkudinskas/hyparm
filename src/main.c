@@ -133,7 +133,8 @@ void main(s32int argc, char *argv[])
   GCONTXT *context = createGuestContext();
   setGuestContext(context);
 
-  /* Setup MMU for Hypervisor */
+  /* Setup MMU for Hypervisor
+   * NOTE: assumes guest context is set up in full (PT info + T$) */
   initVirtualAddressing(context);
 
 #ifdef CONFIG_CLI

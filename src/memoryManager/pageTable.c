@@ -162,7 +162,7 @@ u32int mapRange(simpleEntry *pageTable, u32int virtualStartAddress, u32int physi
 /**
  * Map hypervisor into given base page table in sections, 1-2-1 VA to PA
  **/
-void mapHypervisorMemory(simpleEntry *pageTable, bool hypervisor)
+void mapHypervisorMemory(simpleEntry *pageTable)
 {
   DEBUG(MM_PAGE_TABLES, "mapHypervisorMemory in page table %p" EOL, pageTable);
   /*
@@ -278,15 +278,6 @@ void mapHypervisorMemory(simpleEntry *pageTable, bool hypervisor)
            TRUE);
   mapRange(pageTable, RAM_XN_POOL_BEGIN, RAM_XN_POOL_BEGIN, RAM_XN_POOL_END,
            HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
-#ifdef CONFIG_BLOCK_COPY
-  if (hypervisor)
-  {
-    printf("WARNING: allocating NON-CACHEABLE pool for block copy" EOL);
-    mapRange(pageTable, RAM_CODE_CACHE_POOL_BEGIN, RAM_CODE_CACHE_POOL_BEGIN,
-             RAM_CODE_CACHE_POOL_END, HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, FALSE, FALSE, 0,
-             TRUE);
-  }
-#endif
 }
 
 /**
