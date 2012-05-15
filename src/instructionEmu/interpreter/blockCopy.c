@@ -9,7 +9,7 @@
 void armBackupRegisterToSpill(TranslationCache *tc, ARMTranslationInfo *block, u32int conditionCode, u32int reg)
 {
   ASSERT(conditionCode <= CC_AL, "invalid condition code");
-  ASSERT(reg < 13, "invalid temporary register");
+  ASSERT(reg < GPR_SP, "invalid temporary register");
 
   block->code = updateCodeCachePointer(tc, block->code);
   u32int *pc = block->code + 2;
@@ -28,7 +28,7 @@ void armBackupRegisterToSpill(TranslationCache *tc, ARMTranslationInfo *block, u
 void armRestoreRegisterFromSpill(TranslationCache *tc, ARMTranslationInfo *block, u32int conditionCode, u32int reg)
 {
   ASSERT(conditionCode <= CC_AL, "invalid condition code");
-  ASSERT(reg < 13, "invalid temporary register");
+  ASSERT(reg < GPR_SP, "invalid temporary register");
 
   block->code = updateCodeCachePointer(tc, block->code);
   u32int *pc = block->code + 2;

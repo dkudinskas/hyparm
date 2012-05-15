@@ -354,6 +354,10 @@ config DEBUG_SCANNER_EXTRA
   bool "Extra debug messages"
   depends on DEBUG_SCANNER
 
+config DEBUG_TRANSLATION
+  bool "Debug translation"
+  depends on DEBUG && BLOCK_COPY
+
 config DEBUG_BLOCK_CACHE
   bool "Debug block cache"
   depends on DEBUG

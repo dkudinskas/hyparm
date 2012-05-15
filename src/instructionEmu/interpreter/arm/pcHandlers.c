@@ -55,6 +55,10 @@ void armDPImmRegRSR(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, 
 
   if (replaceN || replaceM)
   {
+    DEBUG(TRANSLATION, "armDPImmRegRSR: translating %#.8x @ %#.8x with cond=%x, immediateForm=%x, "
+          "Rd=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, immediateForm,
+          destinationRegister, operandNRegister, operandMRegister);
+
     /*
      * For the immediate case, e.g. ADD Rd,Rn,#imm, we cannot have Rn=Rd because Rn=PC and Rd=PC
      * must trap. For the register case however, we can have ADD Rd,Rn,Rm with
@@ -117,6 +121,10 @@ void armDPImmRegRSRNoDest(TranslationCache *tc, ARMTranslationInfo *block, u32in
 
   if (replaceN || replaceM)
   {
+    DEBUG(TRANSLATION, "armDPImmRegRSRNoDest: translating %#.8x @ %#.8x with cond=%x, "
+          "immediateForm=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, immediateForm,
+          operandNRegister, operandMRegister);
+
     pcRegister = getOtherRegisterOf2(operandNRegister, operandMRegister);
     armBackupRegisterToSpill(tc, block, conditionCode, pcRegister);
     armWritePCToRegister(tc, block, conditionCode, pcRegister, pc);
@@ -150,6 +158,7 @@ void armDPImmRegRSRNoDest(TranslationCache *tc, ARMTranslationInfo *block, u32in
  */
 void armLdrStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
 {
+  const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, LDR_RT_INDEX);
   const u32int baseRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
 
@@ -178,7 +187,10 @@ void armLdrStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32
 
   if (baseRegister == GPR_PC)
   {
-    armWritePCToRegister(tc, block, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
+    DEBUG(TRANSLATION, "armLdrStrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
+          "Rt=%x" EOL, instruction, pc, conditionCode, destinationRegister, baseRegister);
+
+    armWritePCToRegister(tc, block, conditionCode, destinationRegister, pc);
     instruction = ARM_SET_REGISTER(instruction, RN_INDEX, destinationRegister);
   }
 
@@ -194,6 +206,8 @@ void armLdrStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32
  */
 void armMovPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
 {
+  const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
+  const bool setFlags = instruction & SETFLAGS_BIT;
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
   const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
@@ -205,7 +219,11 @@ void armMovPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
    */
   if (sourceRegister == GPR_PC)
   {
-    armWritePCToRegister(tc, block, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
+    DEBUG(TRANSLATION, "armMovPCInstruction: translating %#.8x @ %#.8x with cond=%x, S=%x, Rd=%x, "
+          "Rm=%x" EOL, instruction, pc, conditionCode, setFlags, destinationRegister,
+          sourceRegister);
+
+    armWritePCToRegister(tc, block, conditionCode, destinationRegister, pc);
     if (!(instruction & SETFLAGS_BIT))
     {
       block->code++;
@@ -231,12 +249,16 @@ void armMovPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
  */
 void armShiftPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
 {
+  const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
   const u32int operandRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
   if (operandRegister == GPR_PC)
   {
-    armWritePCToRegister(tc, block, ARM_EXTRACT_CONDITION_CODE(instruction), destinationRegister, pc);
+    DEBUG(TRANSLATION, "armShiftPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
+          "Rm=%x" EOL, instruction, pc, conditionCode, destinationRegister, operandRegister);
+
+    armWritePCToRegister(tc, block, conditionCode, destinationRegister, pc);
     instruction = ARM_SET_REGISTER(instruction, RM_INDEX, destinationRegister);
   }
 
