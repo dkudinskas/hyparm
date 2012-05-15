@@ -46,8 +46,6 @@ void armDPImmRegRSR(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, 
   const u32int operandNRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
   const u32int operandMRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
-  ASSERT(destinationRegister != GPR_PC, "Rd=PC must trap");
-
   u32int pcRegister = destinationRegister;
   bool replaceN = operandNRegister == GPR_PC;
   bool replaceM = !immediateForm && operandMRegister == GPR_PC;
@@ -55,6 +53,8 @@ void armDPImmRegRSR(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, 
 
   if (replaceN || replaceM)
   {
+    ASSERT(destinationRegister != GPR_PC, "Rd=PC must trap");
+
     DEBUG(TRANSLATION, "armDPImmRegRSR: translating %#.8x @ %#.8x with cond=%x, immediateForm=%x, "
           "Rd=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, immediateForm,
           destinationRegister, operandNRegister, operandMRegister);
@@ -230,14 +230,14 @@ void armMovPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
   const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
-  ASSERT(destinationRegister != GPR_PC, "Rd=PC must trap");
-
   /*
    * A MOV Rd,PC can be translated to only MOVT & MOVW. MOVS requires an update of the condition
    * flags and since MOVT does not support setting flags, an extra MOVS Rd,Rd is required.
    */
   if (sourceRegister == GPR_PC)
   {
+    ASSERT(destinationRegister != GPR_PC, "Rd=PC must trap");
+
     DEBUG(TRANSLATION, "armMovPCInstruction: translating %#.8x @ %#.8x with cond=%x, S=%x, Rd=%x, "
           "Rm=%x" EOL, instruction, pc, conditionCode, setFlags, destinationRegister,
           sourceRegister);
@@ -274,6 +274,8 @@ void armShiftPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32i
 
   if (operandRegister == GPR_PC)
   {
+    ASSERT(destinationRegister != GPR_PC, "Rd=PC must trap");
+
     DEBUG(TRANSLATION, "armShiftPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
           "Rm=%x" EOL, instruction, pc, conditionCode, destinationRegister, operandRegister);
 
@@ -290,10 +292,10 @@ void armShiftPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32i
 
 void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
 {
-  ASSERT(ARM_EXTRACT_REGISTER(instruction, RN_INDEX) != GPR_PC, "Rn=PC unpredictable");
-
   if ((instruction & STM_REGISTERS_PC_BIT))
   {
+    ASSERT(ARM_EXTRACT_REGISTER(instruction, RN_INDEX) != GPR_PC, "Rn=PC unpredictable");
+
     /*
      * How to perform similar STM on all registers except PC, if any:
      *
