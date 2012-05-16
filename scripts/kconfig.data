@@ -567,6 +567,10 @@ config DEBUG_VP_OMAP_35XX_UART
   bool "Debug UART"
   depends on DEBUG_VIRTUAL_PLATFORM
 
+config DEBUG_VP_OMAP_35XX_WDTIMER
+  bool "Debug watchdog timers (WDTIMER)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
 config MMC
   bool "Use MMC/SD device to store debug output"
   depends on DEBUG

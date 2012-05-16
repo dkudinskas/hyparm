@@ -21,6 +21,7 @@
 #include "vm/omap35xx/timer32k.h"
 #include "vm/omap35xx/uart.h"
 #include "vm/omap35xx/controlModule.h"
+#include "vm/omap35xx/wdtimer.h"
 
 
 static bool attachDevice(device *parent, device *child);
@@ -306,11 +307,12 @@ device *createHardwareLibrary()
 
   // L4_CORE_WAKEUP: watchdog timer 2
   device *wdtimer2 = createDevice("WDTIMER2", FALSE, WDTIMER2, (u32int)(WDTIMER2 - 1 + WDTIMER2_SIZE),
-                                  l4CoreWakeupInt, &loadGeneric, &storeGeneric);
+                                  l4CoreWakeupInt, &loadWDTimer2, &storeWDTimer2);
   if (wdtimer2 == NULL)
   {
     goto wdtimer2Error;
   }
+  initWDTimer2();
 
   // L4_CORE_WAKEUP: general purpose timer 1
   device *gptimer1 = createDevice("GPTIMER1", FALSE, GPTIMER1, (u32int)(GPTIMER1 - 1 + GPTIMER1_SIZE),
