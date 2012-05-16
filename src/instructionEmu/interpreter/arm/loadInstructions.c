@@ -399,10 +399,7 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
   u32int regDst = (instruction & 0x0000F000) >> 12;
   u32int regDst2 = regDst + 1;
 
-  if ((regDst % 2) == 1)
-  {
-    DIE_NOW(context, "undefined case: regDst must be even number!");
-  }
+  ASSERT((regDst & 1) == 0, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int offsetAddress = 0;
   u32int baseAddress = loadGuestGPR(regSrc, context);
