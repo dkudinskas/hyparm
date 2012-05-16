@@ -37,8 +37,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
         case ADD:
           nextPC = loadGuestGPR(regSrc, context) + armExpandImm12(imm12);
 #ifndef CONFIG_BLOCK_COPY
-          /* Peter deleted this -- but probably this code path is never entered with block copy (??) */
-          if (regSrc == 0xF)
+          if (regSrc == GPR_PC)
           {
             nextPC += 8;
           }
@@ -78,17 +77,21 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
       {
         case ADD:
           nextPC = loadGuestGPR(regSrc, context) + shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+#ifndef CONFIG_BLOCK_COPY
           if (regSrc == GPR_PC)
           {
             nextPC += 8;
           }
+#endif
           break;
         case SUB:
           nextPC = loadGuestGPR(regSrc, context) - shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+#ifndef CONFIG_BLOCK_COPY
           if (regSrc == GPR_PC)
           {
             nextPC += 8;
           }
+#endif
           break;
         case MOV:
           // cant be shifted - mov shifted reg is a pseudo instr
