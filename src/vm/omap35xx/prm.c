@@ -630,6 +630,13 @@ u32int loadPerPrm(device *dev, u32int address, u32int phyAddr)
       val = prMan->prmPwststPer;
       break;
     }
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("loadPerPrm: loading invalid register." EOL);
+      val = 0;
+      break;
+    }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
@@ -1017,6 +1024,12 @@ void storePerPrm(device * dev, u32int address, u32int phyAddr, u32int value)
     case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlPer = value;
+      break;
+    }
+    case PM_UNKNOWN:
+    case PM_WKDEP:
+    {
+      printf("storePerPrm: storing to invalid register." EOL);
       break;
     }
     default:

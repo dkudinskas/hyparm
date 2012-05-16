@@ -117,6 +117,8 @@ void initClockManager()
   clockMan->cmSleepDepPer  = 0x00000000;
   clockMan->cmClkStCtrlPer = 0x00000000;
   clockMan->cmClkStStPer   = 0x00000001;
+  // USB_HOST registers
+  clockMan->cmClkstctrlUsb = 0;
 }
 
 /*************************************************************************
@@ -602,9 +604,20 @@ u32int loadNeonCm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadUsbHostCm(device * dev, u32int address, u32int phyAddr)
 {
-  printf("%s load from pAddr: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-  return 0;
+  u32int val = 0;
+  u32int reg = phyAddr - USBHOST_CM;
+  switch (reg)
+  {
+    case CM_CLKSTCTRL_USBHOST:
+    {
+      val = clockMan->cmClkstctrlUsb;
+      break;
+    }
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  } // switch ends
+  DEBUG(VP_OMAP_35XX_CM, "loadUsbHostCm reg %x value %.8x" EOL, reg, val);
+  return val;
 }
 
 /*************************************************************************
@@ -1001,7 +1014,17 @@ void storeNeonCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeUsbHostCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-  return;
+  DEBUG(VP_OMAP_35XX_CM, "storeUsbHostCm: store to address %#.8x val %#.8x" EOL, address, value);
+  u32int reg = phyAddr - USBHOST_CM;
+  switch (reg)
+  {
+    case CM_CLKSTCTRL_USBHOST:
+      if (clockMan->cmClkstctrlUsb != value)
+      {
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+      }
+      break;
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
 }
