@@ -160,7 +160,7 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
     u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
     valueToStore = loadGuestGPR(regSrc, context) & 0xFF;
     // regDest2 == PC then UNPREDICTABLE
-    ASSERT(regDst2 == GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+    ASSERT(regDst2 != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
