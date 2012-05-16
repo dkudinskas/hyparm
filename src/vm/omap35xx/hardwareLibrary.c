@@ -12,6 +12,7 @@
 #include "vm/omap35xx/gptimer.h"
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/intc.h"
+#include "vm/omap35xx/mmc.h"
 #include "vm/omap35xx/pm.h"
 #include "vm/omap35xx/prm.h"
 #include "vm/omap35xx/sdrc.h"
@@ -270,6 +271,33 @@ device *createHardwareLibrary()
   }
   initUart(2);
 
+  // L4INT_CORE: MMC/SD/SDIO1
+  device *mmc1 = createDevice("SD_MMC1", FALSE, SD_MMC1, (u32int) (SD_MMC1 - 1 + SD_MMC1_SIZE), l4IntCore,
+                               &loadMmc, &storeMmc);
+  if (mmc1 == NULL)
+  {
+    goto mmc1Error;
+  }
+  initMmc(1);
+
+  // L4INT_CORE: MMC/SD/SDIO2
+  device *mmc2 = createDevice("SD_MMC2", FALSE, SD_MMC2, (u32int) (SD_MMC2 - 1 + SD_MMC2_SIZE), l4IntCore,
+                               &loadMmc, &storeMmc);
+  if (mmc2 == NULL)
+  {
+    goto mmc2Error;
+  }
+  initMmc(2);
+
+  // L4INT_CORE: MMC/SD/SDIO3
+  device *mmc3 = createDevice("SD_MMC1", FALSE, SD_MMC3, (u32int) (SD_MMC3 - 1 + SD_MMC3_SIZE), l4IntCore,
+                               &loadMmc, &storeMmc);
+  if (mmc3 == NULL)
+  {
+    goto mmc3Error;
+  }
+  initMmc(3);
+
   // L4INT_CORE: interrupt controller
   device *intc = createDevice("INTC", FALSE, INTERRUPT_CONTROLLER,
                               (u32int)(INTERRUPT_CONTROLLER - 1 + INTERRUPT_CONTROLLER_SIZE),
@@ -489,6 +517,12 @@ dmTimerError:
 l4CoreWakeupIntError:
   free(intc);
 intcError:
+  free(mmc3);
+mmc3Error:
+  free(mmc2);
+mmc2Error:
+  free(mmc1);
+mmc1Error:
   free(uart2);
 uart2Error:
   free(uart1);

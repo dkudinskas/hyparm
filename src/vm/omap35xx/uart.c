@@ -77,10 +77,9 @@ void resetUart(u32int uartID)
 
 u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  if (size != BYTE)
-  {
-    printf("%s: invalid access size %d address %x!" EOL, __func__, size, phyAddr);
-  }
+  /*
+   * Normally access size is a word but linux accesses in halfword and byte size too.
+   */
 
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)
@@ -251,10 +250,9 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 
 void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  if (size != BYTE)
-  {
-    printf("%s: invalid access size %d address %x!" EOL, __func__, size, phyAddr);
-  }
+  /*
+   * Normally access size is a word but linux accesses in halfword and byte size too.
+   */
 
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)
@@ -503,12 +501,19 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       printf("%s", dev->deviceName);
       DIE_NOW(NULL, " storing to R/O register (MVR)");
       break;
+    case UART_WER_REG:
+    {
+      if (uart[uID]->wer != value)
+      {
+        printf("Unimplemented store to UART WER" EOL);
+      }
+      break;
+    }
     case UART_MDR2_REG:
     case UART_SFLSR_REG:
     case UART_RESUME_REG:
     case UART_SFREGL_REG:
     case UART_SFREGH_REG:
-    case UART_WER_REG:
       printf("storeUart%x reg %#x value %#.8x" EOL, uID+1, regOffs, value);
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     default:

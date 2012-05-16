@@ -101,10 +101,8 @@ u32int armSxthInstruction(GCONTXT *context, u32int instruction)
   u32int regDest = (instruction & 0x0000F000) >> 12;
   u32int rotate = (instruction & 0x00000C00) >> 10;
   u32int value = 0;
-  if (regDest == 15 || regSrc == 15)
-  {
-    DIE_NOW(context, "Rd/Rm is R15. Unpredictable behaviour" EOL);
-  }
+  ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regSrc != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
   if (evaluateConditionCode(context, instrCC))
   {
     /* load the least 16bits from the source register */

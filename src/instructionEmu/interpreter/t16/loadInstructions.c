@@ -100,10 +100,8 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
 
   int i;
   // we trapped from Thumb mode. I assume the PC reg is in the list
-  if ((instruction & 0x100) == 0)
-  {
-    DIE_NOW(context, "trapped but PC is not on the list...");
-  }
+  ASSERT((instruction & 0x100) != 0, "trapped but PC is not on the list...");
+
   regList = (((instruction & 0x0100) >> 8) << 15) | (instruction & 0x00FF);
 
   // Get baseAddress from SP

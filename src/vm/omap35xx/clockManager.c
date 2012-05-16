@@ -766,8 +766,8 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
       else
       {
         printf("%s: unimplemented store to cmIclkEn1Core" EOL, __func__);
-        printf("%x -> %x" EOL, clockMan->cmIclkEn1Core, value);
-        DIE_NOW(NULL, "unimplemented store");
+        printf("Value change: %x -> %x" EOL, clockMan->cmIclkEn1Core, value);
+        //DIE_NOW(NULL, "unimplemented store");
       }
 
       clockMan->cmIclkEn1Core = value;
@@ -1062,11 +1062,13 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
   switch (reg)
   {
     case CM_FCLKEN_PER:
+    {
       if (clockMan->cmFclkEnPer != value)
       {
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+        printf("storePerCm unimplemented store to reg cmFclkEnPer" EOL);
       }
       break;
+    }
     case CM_ICLKEN_PER:
       if (clockMan->cmIclkEnPer != value)
       {

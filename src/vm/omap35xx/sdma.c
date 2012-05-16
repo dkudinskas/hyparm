@@ -81,16 +81,41 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       value = SDMA_REVISION_NUMBER;
       found = TRUE;
       break;
+    case SDMA_IRQENABLE_L0:
+    {
+      value = sdma->irqEnableL0;
+      found = TRUE;
+      break;
+    }
+    case SDMA_IRQENABLE_L1:
+    {
+      value = sdma->irqEnableL1;
+      found = TRUE;
+      break;
+    }
+    case SDMA_IRQENABLE_L2:
+    {
+      value = sdma->irqEnableL2;
+      found = TRUE;
+      break;
+    }
+    case SDMA_IRQENABLE_L3:
+    {
+      value = sdma->irqEnableL3;
+      found = TRUE;
+      break;
+    }
+    case SDMA_OCP_SYSCONFIG:
+    {
+      value = sdma->ocpSysConfig;
+      found = TRUE;
+      break;
+    }
     case SDMA_IRQSTATUS_L0:
     case SDMA_IRQSTATUS_L1:
     case SDMA_IRQSTATUS_L2:
     case SDMA_IRQSTATUS_L3:
-    case SDMA_IRQENABLE_L0:
-    case SDMA_IRQENABLE_L1:
-    case SDMA_IRQENABLE_L2:
-    case SDMA_IRQENABLE_L3:
     case SDMA_SYSSTATUS:
-    case SDMA_OCP_SYSCONFIG:
     case SDMA_CAPS_0:
     case SDMA_CAPS_2:
     case SDMA_CAPS_3:
@@ -160,16 +185,56 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       sdma->gcr = value;
       found = TRUE;
       break;
+    case SDMA_IRQENABLE_L0:
+    {
+      if (sdma->irqEnableL0 != value)
+      {
+        printf("%s: unimplemented store to irqEnableL0" EOL, __func__);
+      }
+      found = TRUE;
+      break;
+    }
+    case SDMA_IRQENABLE_L1:
+    {
+      if (sdma->irqEnableL1 != value)
+      {
+        printf("%s: unimplemented store to irqEnableL1" EOL, __func__);
+      }
+      found = TRUE;
+      break;
+    }
+    case SDMA_IRQENABLE_L2:
+    {
+      if (sdma->irqEnableL2 != value)
+      {
+        printf("%s: unimplemented store to irqEnableL2" EOL, __func__);
+      }
+      found = TRUE;
+      break;
+    }
+    case SDMA_IRQENABLE_L3:
+    {
+      if (sdma->irqEnableL3 != value)
+      {
+        printf("%s: unimplemented store to irqEnableL3" EOL, __func__);
+      }
+      found = TRUE;
+      break;
+    }
+    case SDMA_OCP_SYSCONFIG:
+    {
+      if (sdma->ocpSysConfig != value)
+      {
+        printf("%s: unimplemented store to ocpSysConfig" EOL, __func__);
+      }
+      found = TRUE;
+      break;
+    }
     case SDMA_IRQSTATUS_L0:
     case SDMA_IRQSTATUS_L1:
     case SDMA_IRQSTATUS_L2:
     case SDMA_IRQSTATUS_L3:
-    case SDMA_IRQENABLE_L0:
-    case SDMA_IRQENABLE_L1:
-    case SDMA_IRQENABLE_L2:
-    case SDMA_IRQENABLE_L3:
     case SDMA_SYSSTATUS:
-    case SDMA_OCP_SYSCONFIG:
     case SDMA_CAPS_0:
     case SDMA_CAPS_2:
     case SDMA_CAPS_3:

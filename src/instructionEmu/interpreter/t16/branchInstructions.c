@@ -36,11 +36,8 @@ u32int t16BlxRegisterInstruction(GCONTXT *context, u32int instruction)
   DEBUG_TRACE(INTERPRETER_T16_BRANCH, context, instruction);
 
   u32int regDest = (instruction & 0x0078) >> 3;
+  ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
-  if (regDest == GPR_PC)
-  {
-    DIE_NOW(context, "use of PC is unpredictable");
-  }
   u32int destinationAddress = loadGuestGPR(regDest, context);
 
   u32int nextInstrAddress = context->R15 + T16_INSTRUCTION_SIZE;

@@ -57,10 +57,7 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
 
   u32int regDest = (instruction & 0x0000000F); // holds dest addr and mode bit
 
-  if (regDest == GPR_PC)
-  {
-    DIE_NOW(context, "use of PC is unpredictable");
-  }
+  ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int destinationAddress = loadGuestGPR(regDest, context);
   storeGuestGPR(GPR_LR, getRealPC(context) + ARM_INSTRUCTION_SIZE, context);
@@ -74,9 +71,9 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
     DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
 #endif
   }
-  else if (destinationAddress & 2)
+  else
   {
-    DIE_NOW(context, "branch to unaligned ARM address");
+    ASSERT((destinationAddress & 2) == 0, "branch to unaligned ARM address")
   }
 
   return destinationAddress;
@@ -110,9 +107,9 @@ u32int armBxInstruction(GCONTXT *context, u32int instruction)
     DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
 #endif
   }
-  else if (destinationAddress & 2)
+  else
   {
-    DIE_NOW(context, "branch to unaligned ARM address");
+    ASSERT((destinationAddress & 2) == 0, "branch to unaligned ARM address");
   }
 
   return destinationAddress;

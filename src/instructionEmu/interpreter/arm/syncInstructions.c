@@ -23,10 +23,8 @@ u32int armLdrexInstruction(GCONTXT *context, u32int instruction)
   u32int baseReg = (instruction & 0x000F0000) >> 16;
   u32int regDest = (instruction & 0x0000F000) >> 12;
 
-  if (baseReg == GPR_PC || regDest == GPR_PC)
-  {
-    DIE_NOW(context, "unpredictable case (PC used).");
-  }
+  ASSERT(baseReg != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int baseVal = loadGuestGPR(baseReg, context);
   u32int value = vmLoad(WORD, baseVal);
@@ -51,10 +49,8 @@ u32int armLdrexbInstruction(GCONTXT *context, u32int instruction)
   u32int baseReg = (instruction & 0x000F0000) >> 16;
   u32int regDest = (instruction & 0x0000F000) >> 12;
 
-  if (baseReg == GPR_PC || regDest == GPR_PC)
-  {
-    DIE_NOW(context, "unpredictable case (PC used).");
-  }
+  ASSERT(baseReg != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int baseVal = loadGuestGPR(baseReg, context);
   // byte zero extended to word...
@@ -80,10 +76,9 @@ u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
   u32int baseReg = (instruction & 0x000F0000) >> 16;
   u32int regDest = (instruction & 0x0000F000) >> 12;
 
-  if (baseReg == GPR_PC || regDest == GPR_PC)
-  {
-    DIE_NOW(context, "unpredictable case (PC used).");
-  }
+  ASSERT(baseReg != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+
   u32int baseVal = loadGuestGPR(baseReg, context);
   // halfword zero extended to word...
   u32int value = vmLoad(HALFWORD, baseVal) & 0xFFFF;
@@ -109,10 +104,10 @@ u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
   u32int regDest = (instruction & 0x0000F000) >> 12;
 
   // must not be PC, destination must be even and not link register
-  if ((baseReg == GPR_PC) || ((regDest % 2) != 0) || (regDest == GPR_LR))
-  {
-    DIE_NOW(context, "unpredictable case (invalid registers).");
-  }
+  ASSERT(baseReg != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT((regDest & 1) == 0, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regDest != GPR_LR, ERROR_UNPREDICTABLE_INSTRUCTION);
+
   u32int baseVal = loadGuestGPR(baseReg, context);
 
   u32int value = vmLoad(WORD, baseVal);
@@ -136,14 +131,11 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
   u32int regD = (instruction & 0x0000F000) >> 12;
   u32int regT = (instruction & 0x0000000F);
 
-  if ((regN == GPR_PC) || (regD == GPR_PC) || (regT == GPR_PC))
-  {
-    DIE_NOW(context, "unpredictable case (PC used)");
-  }
-  if ((regD == regN) || (regD == regT))
-  {
-    DIE_NOW(context, "unpredictable case (invalid register use)");
-  }
+  ASSERT(regN != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regT != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != regN, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != regT, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int address = loadGuestGPR(regN, context);
   u32int valToStore = loadGuestGPR(regT, context);
@@ -170,14 +162,11 @@ u32int armStrexbInstruction(GCONTXT *context, u32int instruction)
   u32int regD = (instruction & 0x0000F000) >> 12;
   u32int regT = (instruction & 0x0000000F);
 
-  if ((regN == GPR_PC) || (regD == GPR_PC) || (regT == GPR_PC))
-  {
-    DIE_NOW(context, "unpredictable case (PC used)");
-  }
-  if ((regD == regN) || (regD == regT))
-  {
-    DIE_NOW(context, "unpredictable case (invalid register use)");
-  }
+  ASSERT(regN != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regT != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != regN, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != regT, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int address = loadGuestGPR(regN, context);
 
@@ -213,14 +202,11 @@ u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
-  if ((regN == 15) || (regD == 15) || (regT == 15))
-  {
-    DIE_NOW(context, "unpredictable case (PC used)");
-  }
-  if ((regD == regN) || (regD == regT))
-  {
-    DIE_NOW(context, "unpredictable case (invalid register use)");
-  }
+  ASSERT(regN != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regT != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != regN, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != regT, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int address = loadGuestGPR(regN, context);
 
@@ -255,11 +241,13 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
-  if (regD == GPR_PC || (regT % 2) || regT == GPR_LR || regN == GPR_PC || regD == regN
-      || regD == regT || regD == (regT + 1))
-  {
-    DIE_NOW(context, "unpredictable");
-  }
+  ASSERT(regN != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT((regT & 1) == 0, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regT != GPR_LR, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != regN, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != regT, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regD != (regT + 1), ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int address = loadGuestGPR(regN, context);
 

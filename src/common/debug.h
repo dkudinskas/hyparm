@@ -1,6 +1,7 @@
 #ifndef __COMMON__DEBUG_H__
 #define __COMMON__DEBUG_H__
 
+#include "common/compiler.h"
 #include "common/stdarg.h"
 #include "common/stdio.h"
 #include "common/types.h"
@@ -13,10 +14,10 @@
 #ifdef CONFIG_ASSERT
 #define ASSERT(cond, msg)                                                                          \
   {                                                                                                \
-    if (!(cond))                                                                                   \
+    if (unlikely(!(cond)))                                                                         \
     {                                                                                              \
-      dieNow(__FILE__, EXPAND_TO_STRING(__LINE__), __func__,                                       \
-             "assertion (" #cond ") failed:" EOL msg);                                             \
+      dieNow2(__FILE__, __LINE__, __func__,                                                        \
+              "assertion (" #cond ") failed:" EOL, msg);                                           \
     }                                                                                              \
   }
 #else
@@ -39,28 +40,33 @@
     }                                                                                              \
   }
 
-#define DIE_NOW(context, msg)  dieNow(__FILE__, EXPAND_TO_STRING(__LINE__), __func__, msg)
+#define DIE_NOW(context, msg)  dieNow(__FILE__, __LINE__, __func__, msg)
 
 
 extern const char *const ERROR_NO_SUCH_REGISTER;
 extern const char *const ERROR_NOT_IMPLEMENTED;
+extern const char *const ERROR_UNPREDICTABLE_INSTRUCTION;
 
 
-void dieNow(const char *file, const char *line, const char *caller, const char *msg)
-           __attribute__((noreturn));
+void dieNow(const char *file, u32int line, const char *caller, const char *message)
+            __attribute__((noreturn));
+
+void dieNow2(const char *file, u32int line, const char *caller, const char *message1,
+             const char *message2) __attribute__((noreturn));
+
+void dieNowF(const char *file, u32int line, const char *caller, const char *format, ...)
+             __attribute__((format(__printf__, 4, 5))) __attribute__((noreturn));
 
 void dumpStack(void) __attribute__((naked));
 
 /* output to serial */
-u32int printf(const char *fmt, ...)
-  __attribute__((format(__printf__, 1, 2)));
+u32int printf(const char *fmt, ...) __attribute__((format(__printf__, 1, 2)));
 
 
 #ifdef CONFIG_MMC
 
 /* output to mmc */
-u32int fprintf(const char *fmt, ...)
-  __attribute__((format(__printf__, 1, 2)));
+u32int fprintf(const char *fmt, ...) __attribute__((format(__printf__, 1, 2)));
 
 #else
 

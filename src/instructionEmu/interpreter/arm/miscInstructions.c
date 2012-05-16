@@ -37,111 +37,95 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
   printf("CPS instr %08x @ %08x" EOL, instruction, getRealPC(context));
 #endif
 
-  if ( ((imod == 0) && (changeMode == 0)) || (imod == 1) )
-  {
-    DIE_NOW(context, "unpredictable");
-  }
+  ASSERT(imod != 0 || changeMode != 0, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(imod != 1, ERROR_UNPREDICTABLE_INSTRUCTION);
 
-  if ((context->CPSR & PSR_MODE) != PSR_USR_MODE)
+  // guest is not in privileged mode! cps should behave as a nop, but lets see what went wrong.
+  ASSERT((context->CPSR & PSR_MODE) != PSR_USR_MODE, "CPS trapped in guest user mode");
+
+  u32int oldCpsr = context->CPSR;
+  if (imod == 0x2) // enable
   {
-    u32int oldCpsr = context->CPSR;
-    if (imod == 0x2) // enable
-    {
 #ifdef ARM_INSTR_TRACE
-      printf("IMod: enable case" EOL);
+    printf("IMod: enable case" EOL);
 #endif
-      if (affectA != 0)
+    if (affectA != 0)
+    {
+      ASSERT((oldCpsr & PSR_A_BIT) == 0, "Guest enabling async aborts globally!");
+      oldCpsr &= ~PSR_A_BIT;
+    }
+    if (affectI)
+    {
+      if ((oldCpsr & PSR_I_BIT) != 0)
       {
-        if ((oldCpsr & PSR_A_BIT) != 0)
-        {
-          DIE_NOW(context, "Guest enabling async aborts globally!");
-        }
-        oldCpsr &= ~PSR_A_BIT;
-      }
-      if (affectI)
-      {
-        if ((oldCpsr & PSR_I_BIT) != 0)
-        {
 #ifdef ARM_INSTR_TRACE
-          printf("Guest enabling irqs globally!" EOL);
+        printf("Guest enabling irqs globally!" EOL);
 #endif
-          // chech interrupt controller if there is an interrupt pending
-          if (isIrqPending())
-          {
-            context->guestIrqPending = TRUE;
-          }
-        }
-        oldCpsr &= ~PSR_I_BIT;
-      }
-      if (affectF)
-      {
-        if ((oldCpsr & PSR_F_BIT) != 0)
+        // chech interrupt controller if there is an interrupt pending
+        if (isIrqPending())
         {
+          context->guestIrqPending = TRUE;
+        }
+      }
+      oldCpsr &= ~PSR_I_BIT;
+    }
+    if (affectF)
+    {
+      if ((oldCpsr & PSR_F_BIT) != 0)
+      {
 #ifdef ARM_INSTR_TRACE
-          printf("Guest enabling FIQs globally!" EOL);
+        printf("Guest enabling FIQs globally!" EOL);
 #endif
-          // chech interrupt controller if there is an interrupt pending
-          if (isFiqPending())
-          {
-            // context->guestFiqPending = TRUE; : IMPLEMENT!!
-            DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
-          }
-        }
-        oldCpsr &= ~PSR_F_BIT;
-      }
-    }
-    else if (imod == 3) // disable
-    {
-      if (affectA)
-      {
-        if (!(oldCpsr & PSR_A_BIT))
+        // chech interrupt controller if there is an interrupt pending
+        if (isFiqPending())
         {
-          DIE_NOW(context, "Guest disabling async aborts globally!");
+          // context->guestFiqPending = TRUE; : IMPLEMENT!!
+          DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
         }
-        oldCpsr |= PSR_A_BIT;
       }
-      if (affectI)
-      {
-        if (!(oldCpsr & PSR_I_BIT)) // were enabled, now disabled
-        {
-          // chech interrupt controller if there is an interrupt pending
-          if (context->guestIrqPending)
-          {
-            /*
-             * FIXME: Niels: wtf? why do we need the if?
-             */
-            context->guestIrqPending = FALSE;
-          }
-        }
-        oldCpsr |= PSR_I_BIT;
-      }
-      if (affectF)
-      {
-        if (!(oldCpsr & PSR_F_BIT))
-        {
-          DIE_NOW(context, "Guest disabling fiqs globally!");
-        }
-        oldCpsr |= PSR_F_BIT;
-      }
+      oldCpsr &= ~PSR_F_BIT;
     }
-    else
+  }
+  else if (imod == 3) // disable
+  {
+    if (affectA)
     {
-      DIE_NOW(context, "CPS invalid IMOD");
+      ASSERT((oldCpsr & PSR_A_BIT), "Guest disabling async aborts globally!");
+      oldCpsr |= PSR_A_BIT;
     }
-    // ARE we switching modes?
-    if (changeMode)
+    if (affectI)
     {
-      oldCpsr &= ~PSR_MODE;
-      oldCpsr |= newMode;
-      DIE_NOW(context, "guest is changing execution modes. To What?");
+      if (!(oldCpsr & PSR_I_BIT)) // were enabled, now disabled
+      {
+        // chech interrupt controller if there is an interrupt pending
+        if (context->guestIrqPending)
+        {
+          /*
+           * FIXME: Niels: wtf? why do we need the if?
+           */
+          context->guestIrqPending = FALSE;
+        }
+      }
+      oldCpsr |= PSR_I_BIT;
     }
-    context->CPSR = oldCpsr;
+    if (affectF)
+    {
+      ASSERT((oldCpsr & PSR_F_BIT), "Guest disabling fiqs globally!");
+      oldCpsr |= PSR_F_BIT;
+    }
   }
   else
   {
-    // guest is not in privileged mode! cps should behave as a nop, but lets see what went wrong.
-    DIE_NOW(context, "CPS instruction: executed in guest user mode.");
+    DIE_NOW(context, "CPS invalid IMOD");
   }
+  // ARE we switching modes?
+  if (unlikely(changeMode))
+  {
+    oldCpsr &= ~PSR_MODE;
+    oldCpsr |= newMode;
+    DIE_NOW(context, "guest is changing execution modes. To What?");
+  }
+  context->CPSR = oldCpsr;
 
   return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
@@ -185,10 +169,7 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
   printf("MRS instr %08x @ %08x" EOL, instruction, getRealPC(context));
 #endif
 
-  if (regDest == 0xF)
-  {
-    DIE_NOW(context, "mrsInstruction: cannot use PC as destination");
-  }
+  ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
@@ -196,10 +177,8 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
 
     if ((context->CPSR & PSR_MODE) == PSR_USR_MODE)
     {
-      if (readSpsr)
-      {
-        DIE_NOW(context, "SPSR read bit can not be set in USR mode");
-      }
+      //SPSR read bit can not be set in USR mode
+      ASSERT(!readSpsr, ERROR_UNPREDICTABLE_INSTRUCTION);
       value = context->CPSR & PSR_APSR;
     }
     else
@@ -226,7 +205,7 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
           case PSR_USR_MODE:
           case PSR_SYS_MODE:
           default:
-            DIE_NOW(context, "mrsInstruction: cannot request spsr in user/system mode");
+            DIE_NOW(context, "cannot request spsr in user/system mode");
         }
       }
       else
@@ -259,10 +238,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   {
     // register case
     u32int regSrc = instruction & 0x0000000F;
-    if (regSrc == 0xF)
-    {
-      DIE_NOW(context, "msrInstruction: cannot use PC as source register");
-    }
+    ASSERT(regSrc != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
     value = loadGuestGPR(regSrc, context);
   }
   else
@@ -299,7 +275,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
         oldValue = context->SPSR_UND;
         break;
       default:
-        DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
+        DIE_NOW(context, "invalid SPSR write for current guest mode");
     }
   }
 
@@ -314,10 +290,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   {
 #ifndef CONFIG_THUMB2
     // check for thumb toggle!
-    if ((oldValue & PSR_T_BIT) != (value & PSR_T_BIT))
-    {
-      DIE_NOW(context, "MSR toggle THUMB bit.");
-    }
+    ASSERT((oldValue & PSR_T_BIT) == (value & PSR_T_BIT), "MSR toggle THUMB bit");
 #endif
 
     // separate the field we're gonna update from new value
@@ -331,10 +304,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   {
     // extension field: async abt, endianness, IT[7:2]
     // check for endiannes toggle!
-    if ((oldValue & PSR_E_BIT) != (value & PSR_E_BIT))
-    {
-      DIE_NOW(context, "MSR toggle endianess bit.");
-    }
+    ASSERT((oldValue & PSR_E_BIT) == (value & PSR_E_BIT), "MSR toggle endianess bit");
     // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x0000FF00);
     // clear old fields!

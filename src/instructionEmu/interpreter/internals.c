@@ -67,45 +67,34 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
       u32int regSrc2   =  instr & 0x0000000F;
       u32int shiftType = (instr & 0x00000060) >> 5;
       u32int shamt = 0;
-      if ((instr & 0x00000010) == 0)
+      ASSERT((instr & 0x00000010) == 0, ERROR_UNPREDICTABLE_INSTRUCTION)
+      // shift amount is an immediate field
+      u32int imm5 = (instr & 0xF80) >> 7;
+      u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
+      shiftType = decodeShiftImmediate(shiftType, imm5, &shamt);
+      switch (opType)
       {
-        // shift amount is an immediate field
-        u32int imm5 = (instr & 0xF80) >> 7;
-        u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
-        shiftType = decodeShiftImmediate(shiftType, imm5, &shamt);
-        switch (opType)
-        {
-          case ADD:
-            nextPC = loadGuestGPR(regSrc, context) + shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
-            if (regSrc == GPR_PC)
-            {
-              nextPC += 8;
-            }
-            break;
-          case SUB:
-            nextPC = loadGuestGPR(regSrc, context) - shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
-            if (regSrc == GPR_PC)
-            {
-              nextPC += 8;
-            }
-            break;
-          case MOV:
-            // cant be shifted - mov shifted reg is a pseudo instr
-            if (shamt != 0)
-            {
-              DIE_NOW(context, "MOV PC, Rn cant be shifted - that is a pseudo instr");
-            }
-            nextPC = loadGuestGPR(regSrc2, context);
-            break;
-          default:
-            DIE_NOW(context, "invalid arithLogicOp opType");
-        }
-      }
-      else
-      {
-        // If shift amount is in register and any of the register
-        // operands are PC then instruction unpredictable
-        DIE_NOW(context, "unpredictable instruction <dataProc> PC, Rn, Rm, Rs");
+        case ADD:
+          nextPC = loadGuestGPR(regSrc, context) + shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+          if (regSrc == GPR_PC)
+          {
+            nextPC += 8;
+          }
+          break;
+        case SUB:
+          nextPC = loadGuestGPR(regSrc, context) - shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+          if (regSrc == GPR_PC)
+          {
+            nextPC += 8;
+          }
+          break;
+        case MOV:
+          // cant be shifted - mov shifted reg is a pseudo instr
+          ASSERT(shamt == 0, "MOV PC, Rn cant be shifted - that is a pseudo instr");
+          nextPC = loadGuestGPR(regSrc2, context);
+          break;
+        default:
+          DIE_NOW(context, "invalid arithLogicOp opType");
       }
     }
 
@@ -152,10 +141,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
       }
     }
 
-    if (nextPC & 1)
-    {
-      DIE_NOW(context, "Interworking branch not allowed");
-    }
+    ASSERT((nextPC & 1) == 0, "Interworking branch not allowed");
     return nextPC;
   }
   else
@@ -373,10 +359,7 @@ u32int rorVal(u32int value, u32int ramt)
 u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int * carryFlag)
 {
   // RRX can only shift right by 1
-  if ((shiftType == SHIFT_TYPE_RRX) && (shamt != 1))
-  {
-    DIE_NOW(NULL, "shiftVal: type rrx, but shamt not 1!");
-  }
+  ASSERT((shiftType != SHIFT_TYPE_RRX) || (shamt == 1), "type rrx, but shamt not 1!");
 
   u32int retVal = 0;
   if (shamt == 0)
