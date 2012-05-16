@@ -82,6 +82,7 @@ bool shadowMap(u32int virtAddr)
           pageTableEntry* shadowPageTable  = (pageTableEntry*)shadowFirst;
           pageTableEntry* guestPageTable = (pageTableEntry*)guestFirst;
           shadowMapPageTable(guestPageTable, guestPageTable, shadowPageTable);
+          //FIXME: Henri: This TLB flush should not be necessary
           mmuPageTableEdit((u32int)shadowPageTable, (virtAddr & SECTION_MASK));
           break;
         }
@@ -624,6 +625,12 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
       simpleEntry* hostPage = getEntrySecond((pageTableEntry*)hostEntry, guestPhysical);
       switch (hostPage->type)
       {
+        case FAULT:
+        {
+          addSmallPageEntry((smallPageEntry *)hostPage, guestPhysical,
+              GUEST_ACCESS_BITS, FALSE, FALSE, 0, FALSE);
+          // Then, fall through and get host physical address
+        }
         case SMALL_PAGE:
         case SMALL_PAGE_3:
         {
@@ -632,7 +639,6 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
           break;
         }
         case LARGE_PAGE:
-        case FAULT:
         default:
           DIE_NOW(context, "shadowMapSmallPage: host physical 2nd lvl unimplemented.");
       }

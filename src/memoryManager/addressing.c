@@ -256,7 +256,9 @@ void initialiseShadowPageTables(GCONTXT* gc)
   mmuClearDataCache();
   mmuDataMemoryBarrier();
 
-  invalidatePageTableInfo();
+  //FIXME: Henri: Why should these structures be invalidated?
+  //invalidatePageTableInfo();
+
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: invalidatePageTableInfo() done." EOL);
 
   // allocate two shadow page tables and prepare the minimum for operation

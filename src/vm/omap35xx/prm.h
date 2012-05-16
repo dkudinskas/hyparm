@@ -74,12 +74,9 @@
 #define PM_MPUGRPSEL_WKUP        0x000000A4 // select group of modules that wakeup MPU, RW
 #define PM_IVA2GRPSEL_WKUP       0x000000A8 // select group of modules that wakeup IVA, RW
 #define PM_WKST_WKUP             0x000000B0 // wakeup events status, RW
-#define PM_PWSTST_WKUP           0x000000E4 // invalid register!
-#define PM_PWSTCTRL_WKUP         0x000000E0 // invalid register!
 // Clock_Control_Reg registers
 #define PRM_CLKSEL               0x00000040 // select system clock frequency, RW
 #define PRM_CLKOUT_CTRL          0x00000070 // SYS_CLKOUT1 pin control, RW
-#define PM_PWSTST_CLK            0x000000E4 // invalid register!
 // DSS registers
 #define RM_RSTST_DSS             0x00000058 // reset status, RW
 #define PM_WKEN_DSS              0x000000A0 // wakeup events enable, RW
@@ -143,6 +140,17 @@
 #define PM_PWSTCTRL_USBHOST      0x000000E0 // power state transition control, RW
 #define PM_PWSTST_USBHOST        0x000000E4 // power state transition status, R/O
 #define PM_PREPWSTST_USBHOST     0x000000E8 // previous power state transition state, RW
+
+/**
+ * REGISTER OFFSETS
+ * These register offsets are used for invalid accesses.
+ * Linux kernels try sometimes to read-modify-write some of these registers
+ *   which belong to no module.
+ */
+#define PM_WKDEP                 0x000000C8 // domain wakeup enable, RW
+#define PM_PWSTCTRL              0x000000E0 // power state transition control, RW
+#define PM_PWSTST                0x000000E4 // previous power state transition state, RW
+#define PM_UNKNOWN               0x00000044 // unknown register
 
 void initPrm(void);
 
