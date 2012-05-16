@@ -6,6 +6,8 @@
 #include "guestManager/codeCacheAllocator.h"
 #include "guestManager/translationCache.h"
 
+#include "instructionEmu/scanner.h"
+
 #include "memoryManager/mmu.h"
 
 

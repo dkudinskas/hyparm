@@ -330,17 +330,17 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
     {
       // we hit a SVC that we placed ourselves as EOB. retrieve the real EOB...
       u32int svcCacheIndex = svcCode - 1;
-      if (svcCacheIndex >= BLOCK_CACHE_SIZE)
+      if (svcCacheIndex >= TRANSLATION_CACHE_META_SIZE_N)
       {
         printf("scanThumbBlock: instruction %#.8x @ %p", instruction, end);
         DIE_NOW(context, "scanThumbBlock: block cache index in SVC out of range");
       }
       DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB instruction is SVC @ %p code %#x" EOL, end, svcCacheIndex);
-      MetaCacheEntry *meta = context->translationCache.metaCache[svcCacheIndex];
+      const MetaCacheEntry *meta = &context->translationCache.metaCache[svcCacheIndex];
       // retrieve end of block instruction and handler function pointer
       context->endOfBlockInstr = meta->hyperedInstruction;
       blockType = meta->type;  /*----------------Install HdlFunct----------------*/
-      *Save end of block instruction and handler function pointer close to us... */
+      /*Save end of block instruction and handler function pointer close to us... */
 
       endIs16Bit = blockType == MCE_TYPE_THUMB && !txxIsThumb32(meta->hyperedInstruction);
       context->hdlFunct = meta->hdlFunct;
@@ -392,8 +392,8 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
   DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB %#.8x @ %p SVC code %#x hdlrFuncPtr %p" EOL,
       context->endOfBlockInstr, end, ((cacheIndex + 1) << 8), context->hdlFunct);
 
-  addMetaCacheEntry(context->translationCache, cacheIndex, (u32int)start, (u32int)end,
-      context->endOfBlockInstr, blockType, context->hdlFunct);
+  addMetaCacheEntry(&context->translationCache, cacheIndex, (u32int *)start, (u32int *)end,
+                    context->endOfBlockInstr, blockType, context->hdlFunct);
 
   /* To ensure that subsequent fetches from eobAddress get a hypercall
    * rather than the old cached copy...
