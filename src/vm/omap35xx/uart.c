@@ -79,7 +79,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   if (size != BYTE)
   {
-    DIE_NOW(NULL, "UART: loadUart invalid access size - byte");
+    printf("%s: invalid access size %d address %x!" EOL, __func__, size, phyAddr);
   }
 
   u32int uID = getUartNumber(phyAddr);
@@ -219,6 +219,11 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     case UART_MDR1_REG:
       value = uart[uID]->mdr1;
       break;
+    case UART_SYSC_REG:
+    {
+      value = uart[uID]->sysc;
+      break;
+    }
     case UART_MDR2_REG:
     case UART_SFLSR_REG:
     case UART_RESUME_REG:
@@ -228,7 +233,6 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     case UART_SCR_REG:
     case UART_SSR_REG:
     case UART_MVR_REG:
-    case UART_SYSC_REG:
     case UART_SYSS_REG:
     case UART_WER_REG:
       printf("loadUart%x reg %#x" EOL, uID+1, regOffs);
@@ -249,7 +253,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
 {
   if (size != BYTE)
   {
-    DIE_NOW(NULL, "UART: storeUart invalid access size - byte");
+    printf("%s: invalid access size %d address %x!" EOL, __func__, size, phyAddr);
   }
 
   u32int uID = getUartNumber(phyAddr);
