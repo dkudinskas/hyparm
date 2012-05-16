@@ -77,11 +77,9 @@ void resetUart(u32int uartID)
 
 u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  if (size != BYTE)
-  {
-    printf("%s: invalid access size %d address %x!" EOL, __func__, size, phyAddr);
-    //DIE_NOW(NULL, "UART: loadUart invalid access size - byte");
-  }
+  /*
+   * Normally access size is a word but linux accesses in halfword and byte size too.
+   */
 
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)
@@ -252,11 +250,9 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 
 void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  if (size != BYTE)
-  {
-    printf("%s: invalid access size %d address %x!" EOL, __func__, size, phyAddr);
-    //DIE_NOW(NULL, "UART: storeUart invalid access size - byte");
-  }
+  /*
+   * Normally access size is a word but linux accesses in halfword and byte size too.
+   */
 
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)
