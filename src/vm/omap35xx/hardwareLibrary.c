@@ -490,10 +490,10 @@ sysCtrlModError:
 l4IntCoreError:
   free(l4Interconnect);
 l4InterconnectError:
-  free(smsModule);
-smsModuleError:
   free(sdrcModule);
 sdrcModuleError:
+  free(smsModule);
+smsModuleError:
   free(pmModule);
 pmModuleError:
   free(gpmcModule);
