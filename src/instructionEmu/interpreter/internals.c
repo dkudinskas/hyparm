@@ -46,16 +46,18 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
           break;
         case SUB:
           // if S bit is set, this is return from exception!
-	  // FIXME: Niels: do we ever get here for exception return; aren't there valid cases where a SUBS does NOT perform exception return?
+          // FIXME: Niels: do we ever get here for exception return; aren't there valid cases where a SUBS does NOT perform exception return?
           if (setFlags != 0)
           {
             DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
           }
           nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
-          if (regSrc == 0xF)
+#ifndef CONFIG_BLOCK_COPY
+          if (regSrc == GPR_PC)
           {
             nextPC += 8;
           }
+#endif
           break;
         default:
           DIE_NOW(context, "invalid arithLogicOp opType");

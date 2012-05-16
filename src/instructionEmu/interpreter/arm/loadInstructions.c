@@ -162,7 +162,6 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
     }
     // immediate case
     offset = instruction & 0x00000FFF;
-
   } // Immediate case ends
   else
   {
