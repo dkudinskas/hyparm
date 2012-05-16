@@ -103,11 +103,11 @@
 #define Q1_SDRC_SMS                  0x70000000
 #define Q1_SDRC_SMS_SIZE             0x10000000
 
-#define QUARTER2                   0x80000000
+#define QUARTER2                     0x80000000
 #define Q2_SDRC_SMS                  0x80000000
 #define Q2_SDRC_SMS_SIZE             0x40000000
 
-#define QUARTER3                   0xC000000
+#define QUARTER3                     0xC000000
 #define Q3_RESERVED                  0xC0000000
 #define Q3_RESERVED_SIZE             0x20000000
 #define Q3_SDRC_SMS                  0xE0000000
