@@ -766,8 +766,8 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
       else
       {
         printf("%s: unimplemented store to cmIclkEn1Core" EOL, __func__);
-        printf("%x -> %x" EOL, clockMan->cmIclkEn1Core, value);
-        DIE_NOW(NULL, "unimplemented store");
+        printf("Value change: %x -> %x" EOL, clockMan->cmIclkEn1Core, value);
+        //DIE_NOW(NULL, "unimplemented store");
       }
 
       clockMan->cmIclkEn1Core = value;
