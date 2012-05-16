@@ -5,8 +5,6 @@
 
 #include "exceptions/exceptionHandlers.h"
 
-#include "guestManager/blockCache.h"
-
 #ifdef CONFIG_THUMB2
 #include "guestManager/guestExceptions.h"
 #endif
@@ -147,7 +145,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 #ifdef CONFIG_BLOCK_COPY
     /* First word is a backpointer */
     u32int *addressInBlockCopyCache = &meta->code->codeStart;
-    // The programcounter of the code that is executing should be set to the code in the blockCache
+    // The programcounter of the code that is executing should be set to the code in the C$
     if (addressInBlockCopyCache >= context->translationCache.codeCacheLastEntry)
     {
       /* blockCopyCacheAddresses will be used in a  cyclic manner

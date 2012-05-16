@@ -11,7 +11,6 @@
 
 #include "exceptions/exceptionHandlers.h"
 
-#include "guestManager/blockCache.h"
 #include "guestManager/guestExceptions.h"
 #include "guestManager/scheduler.h"
 

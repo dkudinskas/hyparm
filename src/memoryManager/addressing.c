@@ -7,8 +7,6 @@
 
 #include "drivers/beagle/memoryMap.h"
 
-#include "guestManager/blockCache.h"
-
 #include "memoryManager/addressing.h"
 #include "memoryManager/memoryConstants.h"
 #include "memoryManager/memoryProtection.h"

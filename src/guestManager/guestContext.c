@@ -34,22 +34,11 @@ GCONTXT *createGuestContext(void)
   DEBUG(GUEST_CONTEXT, "createGuestContext: coprocessor register bank @ %p" EOL,
       context->coprocRegBank);
 
-  /* Initialise block cache
-  context->blockCache = createBlockCache();
-  if (context->blockCache == NULL)
-  {
-    DIE_NOW(context, "Failed to allocate block cache");
-  }
-  DEBUG(GUEST_CONTEXT, "createGuestContext: block cache @ %p" EOL, context->blockCache);
-  */
-
-  // TODO port createBlockCache to TT
-
   /*
    * Initialise block copy cache
    */
-#ifdef CONFIG_BLOCK_COPY
   initialiseTranslationCache(context);
+#ifdef CONFIG_BLOCK_COPY
   DEBUG(GUEST_CONTEXT, "createGuestContext: block copy cache @ %p" EOL, context->translationCache.codeCache);
 #endif
 

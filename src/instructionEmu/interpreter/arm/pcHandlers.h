@@ -1,8 +1,6 @@
 #ifndef __INSTRUCTION_EMU__INTERPRETER__ARM__PC_HANDLERS_H__
 #define __INSTRUCTION_EMU__INTERPRETER__ARM__PC_HANDLERS_H__
 
-#include "guestManager/translationCache.h"
-
 #include "instructionEmu/translationInfo.h"
 
 

@@ -23,7 +23,6 @@
 #endif
 
 #include "guestManager/guestContext.h"
-#include "guestManager/blockCache.h"
 
 #include "instructionEmu/scanner.h"
 

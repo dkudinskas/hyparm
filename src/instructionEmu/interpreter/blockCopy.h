@@ -5,7 +5,6 @@
 #include "common/types.h"
 
 #include "guestManager/guestContext.h"
-#include "guestManager/translationCache.h"
 
 #include "instructionEmu/translationInfo.h"
 
