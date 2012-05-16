@@ -554,6 +554,10 @@ config DEBUG_VP_OMAP_35XX_SDMA
 config DEBUG_VP_OMAP_35XX_SDRAM
   bool "Debug SDRAM"
   depends on DEBUG_VIRTUAL_PLATFORM
+  
+config DEBUG_VP_OMAP_35XX_SDRC
+  bool "Debug SDRAM Controller (SDRC)"
+  depends on DEBUG_VIRTUAL_PLATFORM
 
 config DEBUG_VP_OMAP_35XX_SMS
   bool "Debug SDRAM Memory Scheduler (SMS)"

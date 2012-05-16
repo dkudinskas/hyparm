@@ -96,6 +96,8 @@
 #define Q1_L3_PM_SIZE                0x00004400
 #define Q1_L3_SMS                    0x6C000000
 #define Q1_L3_SMS_SIZE               0x01000000
+#define Q1_L3_SDRC                   0x6D000000
+#define Q1_L3_SDRC_SIZE              0x01000000
 #define Q1_SDRC_SMS                  0x70000000
 #define Q1_SDRC_SMS_SIZE             0x10000000
 
