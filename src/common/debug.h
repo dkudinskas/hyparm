@@ -46,6 +46,7 @@
 
 extern const char *const ERROR_NO_SUCH_REGISTER;
 extern const char *const ERROR_NOT_IMPLEMENTED;
+extern const char *const ERROR_UNPREDICTABLE_INSTRUCTION;
 
 
 void dieNow(const char *file, const char *line, const char *caller, const char *msg)
