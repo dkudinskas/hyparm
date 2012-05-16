@@ -1,6 +1,7 @@
 #ifndef __COMMON__DEBUG_H__
 #define __COMMON__DEBUG_H__
 
+#include "common/compiler.h"
 #include "common/stdarg.h"
 #include "common/stdio.h"
 #include "common/types.h"
@@ -15,7 +16,7 @@
 #ifdef CONFIG_ASSERT
 #define ASSERT(cond, msg)                                                                          \
   {                                                                                                \
-    if (!(cond))                                                                                   \
+    if (unlikely(!(cond)))                                                                         \
     {                                                                                              \
       dieNow(__FILE__, EXPAND_TO_STRING(__LINE__), __func__,                                       \
              "assertion (" #cond ") failed:" EOL msg);                                             \
