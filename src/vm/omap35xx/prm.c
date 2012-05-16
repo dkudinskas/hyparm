@@ -46,6 +46,7 @@ void initPrm(void)
   prMan->prmPolCtrl = 0xA;
   prMan->prmVoltSetup2 = 0;
   // IVA2 registers
+  prMan->prmWkdepIva2    = 0xB3;
   prMan->prmPwstctrlIva2 = 0xFF0F07;
   prMan->prmPwststIva2   = 0xFF7;
   // OCP_system_reg REGISTERS
@@ -54,12 +55,14 @@ void initPrm(void)
   prMan->prmIrqStatusMpuOcp = 0x0;
   prMan->prmIrqEnableMpuOcp = 0x0;
   // MPU registers
+  prMan->prmWkdepMpu    = 0xA5;
   prMan->prmPwstctrlMpu = 0x30107;
   prMan->prmPwststMpu   = 0xC7;
   // CORE registers
   prMan->prmPwstctrlCore = 0xF0307;
   prMan->prmPwststCore   = 0xF7;
   // SGX registers
+  prMan->prmWkdepSgx    = 0x16;
   prMan->prmPwstctrlSgx = 0x30107;
   prMan->prmPwststSgx   = 0x3;
   // Wakeup registers
@@ -68,9 +71,11 @@ void initPrm(void)
   prMan->prmIva2grpselWkup = 0;
   prMan->prmWkstWkup       = 0;
   // DSS registers
+  prMan->prmWkdepDss    = 0x16;
   prMan->prmPwstctrlDss = 0x30107;
   prMan->prmPwststDss   = 0x3;
   // CAM registers
+  prMan->prmWkdepCam    = 0x16;
   prMan->prmPwstctrlCam = 0x30107;
   prMan->prmPwststCam   = 0x3;
   // PER registers
@@ -79,9 +84,11 @@ void initPrm(void)
   // EMU registers
   prMan->prmPwststEmu = 0xC3;
   // NEON registers
+  prMan->prmWkdepNeon    = 0x2;
   prMan->prmPwstctrlNeon = 0x7;
   prMan->prmPwststNeon   = 0x3;
   // USBHOST registers
+  prMan->prmWkdepUsbhost    = 0x17;
   prMan->prmPwstctrlUsbhost = 0x30107;
   prMan->prmPwststUsbhost   = 0x3;
 
@@ -202,16 +209,18 @@ u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
       val = prMan->prmClkoutCtrlReg;
       break;
     }
-    case PM_PWSTST_CLK:
+    case PM_WKDEP:
+    case PM_PWSTST:
+    case PM_UNKNOWN:
     {
-      printf("loadClockControlPrm: Loading invalid register. Kernel 3.3 bug?" EOL);
+      printf("%s: loading invalid register." EOL, __func__);
       val = 0;
       break;
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadClockControlPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadClockControlPrm reg %x value %.8x" EOL, reg, val);
@@ -326,7 +335,7 @@ u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
       break;
     }
     default:
-      DIE_NOW(NULL, "loadGlobalRegPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_PRM, "loadGlobalRegPrm reg %x value %.8x" EOL, reg, val);
   return val;
@@ -339,20 +348,40 @@ u32int loadIva2Prm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - IVA2_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_IVA2:
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepIva2;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlIva2;
       break;
     }
-    case PM_PWSTST_IVA2:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststIva2;
       break;
     }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
+      break;
+    }
+    case RM_RSTCTRL:
+    case RM_RSTST:
+    case PM_PREPWSTST:
+    case PRM_IRQSTATUS_IVA2:
+    case PRM_IRQENABLE_IVA2:
+    {
+      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+    }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadIva2Prm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadIva2Prm reg %x value %.8x" EOL, reg, val);
@@ -387,7 +416,7 @@ u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
       break;
     }
     default:
-      DIE_NOW(NULL, "loadOcpSystemPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_PRM, "loadOcpSystemPrm reg %x value %.8x" EOL, reg, val);
   return val;
@@ -400,20 +429,40 @@ u32int loadMpuPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - MPU_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_MPU:
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepMpu;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlMpu;
       break;
     }
-    case PM_PWSTST_MPU:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststMpu;
       break;
     }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
+      break;
+    }
+    case RM_RSTST:
+    case PM_EVGENCTRL_MPU:
+    case PM_EVGENONTIM_MPU:
+    case PM_EVGENOFFTIM_MPU:
+    case PM_PREPWSTST:
+    {
+      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+    }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadMpuPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadMpuPrm reg %x value %.8x" EOL, reg, val);
@@ -427,20 +476,27 @@ u32int loadCorePrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - CORE_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_CORE:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlCore;
       break;
     }
-    case PM_PWSTST_CORE:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststCore;
+      break;
+    }
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadCorePrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadCorePrm reg %x value %.8x" EOL, reg, val);
@@ -454,20 +510,31 @@ u32int loadSgxPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - SGX_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_SGX:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlSgx;
       break;
     }
-    case PM_PWSTST_SGX:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststSgx;
+      break;
+    }
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepSgx;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadSgxPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadSgxPrm reg %x value %.8x" EOL, reg, val);
@@ -481,43 +548,49 @@ u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - WKUP_PRM;
   switch (reg)
   {
-    case PM_WKEN_WKUP:
+    case PM_WKEN:
     {
       val = prMan->prmWkenWkup;
       break;
     }
-    case PM_MPUGRPSEL_WKUP:
+    case PM_MPUGRPSEL:
     {
       val = prMan->prmMpugrpselWkup;
       break;
     }
-    case PM_IVA2GRPSEL_WKUP:
+    case PM_IVA2GRPSEL:
     {
       val = prMan->prmIva2grpselWkup;
       break;
     }
-    case PM_WKST_WKUP:
+    case PM_WKST:
     {
       val = prMan->prmWkstWkup;
       break;
     }
-    case PM_PWSTCTRL_WKUP:
-    case PM_PWSTST_WKUP:
+    case PM_WKDEP:
+    case PM_PWSTCTRL:
+    case PM_PWSTST:
     {
-      printf("loadWakeUpPrm: Loading invalid register. Kernel 3.3 bug?" EOL);
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
       val = 0;
       break;
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadWakeUpPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadWakeUpPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadDssPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -525,26 +598,36 @@ u32int loadDssPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - DSS_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_DSS:
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepDss;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlDss;
       break;
     }
-    case PM_PWSTST_DSS:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststDss;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadDssPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadDssPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadCamPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -552,26 +635,36 @@ u32int loadCamPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - CAM_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_CAM:
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepCam;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlCam;
       break;
     }
-    case PM_PWSTST_CAM:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststCam;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadCamPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadCamPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadPerPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -579,26 +672,32 @@ u32int loadPerPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - PER_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_PER:
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlPer;
       break;
     }
-    case PM_PWSTST_PER:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststPer;
+      break;
+    }
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadPerPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadPerPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadEmuPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -606,21 +705,27 @@ u32int loadEmuPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - EMU_PRM;
   switch (reg)
   {
-    case PM_PWSTST_EMU:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststEmu;
+      break;
+    }
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadEmuPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadEmuPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadNeonPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -628,26 +733,36 @@ u32int loadNeonPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - NEON_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_NEON:
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepNeon;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlNeon;
       break;
     }
-    case PM_PWSTST_NEON:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststNeon;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadNeonPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadNeonPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadUsbhostPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -655,20 +770,31 @@ u32int loadUsbhostPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - USBHOST_PRM;
   switch (reg)
   {
-    case PM_PWSTCTRL_USBHOST:
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepUsbhost;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlUsbhost;
       break;
     }
-    case PM_PWSTST_USBHOST:
+    case PM_PWSTST:
     {
       val = prMan->prmPwststUsbhost;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadUsbhostPrm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadUsbhostPrm reg %x value %.8x" EOL, reg, val);
@@ -686,7 +812,7 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u
   if (size != WORD)
   {
     // only word access allowed in these modules
-    DIE_NOW(NULL, "PRM: invalid access size.");
+    DIE_NOW(NULL, "invalid access size");
   }
 
   u32int base = phyAddr & 0xFFFFFF00;
@@ -763,24 +889,33 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u
       break;
     }
     default:
-      DIE_NOW(NULL, "PRM: store to invalid base module.");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
 
-
 void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, " storeClockControlPrm unimplemented.");
+  u32int reg = phyAddr - Clock_Control_Reg_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeClockControlPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+      value);
+  switch (reg)
+  {
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
 }
-
 
 void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, " storeGlobalRegPrm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
-
 
 void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -789,16 +924,25 @@ void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_IVA2:
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepIva2 = value;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlIva2 = value;
       break;
     }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
     default:
-      DIE_NOW(NULL, "storeIva2Prm store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -809,7 +953,7 @@ void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int valu
   {
     case PRM_REVISION_OCP:
     {
-      DIE_NOW(NULL, "storeOcpSystemPrm: storing to R/O register (revision).");
+      DIE_NOW(NULL, "storing to R/O register (revision).");
       break;
     }
     case PRM_SYSCONFIG_OCP:
@@ -819,19 +963,18 @@ void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int valu
     }
     case PRM_IRQSTATUS_MPU_OCP:
     {
-      DIE_NOW(NULL, "storeOcpSystemPrm store to IRQSTATUS. investigate.");
+      DIE_NOW(NULL, "store to IRQSTATUS. investigate.");
       break;
     }
     case PRM_IRQENABLE_MPU_OCP:
     {
-      DIE_NOW(NULL, "storeOcpSystemPrm store to IRQENABLE. investigate.");
+      DIE_NOW(NULL, "store to IRQENABLE. investigate.");
       break;
     }
     default:
-      DIE_NOW(NULL, "storeOcpSystemPrm store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
 }
-
 
 void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -840,16 +983,25 @@ void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_MPU:
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepMpu = value;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlMpu = value;
       break;
     }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
     default:
-      DIE_NOW(NULL, "storeMpuPrm store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeCorePrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -858,16 +1010,21 @@ void storeCorePrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_CORE:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlCore = value;
       break;
     }
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
     default:
-      DIE_NOW(NULL, "storeCorePrm store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeSgxPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -876,16 +1033,25 @@ void storeSgxPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_SGX:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlSgx = value;
       break;
     }
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepSgx = value;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
     default:
-      DIE_NOW(NULL, "storeSgxPrm store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeWakeUpPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -894,16 +1060,17 @@ void storeWakeUpPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_WKUP:
+    case PM_WKDEP:
+    case PM_PWSTCTRL:
+    case PM_UNKNOWN:
     {
-      printf("storeWakeUpPrm: storing to invalid register. Kernel 3.3 bug?" EOL);
+      printf("%s: storing to invalid register." EOL, __func__);
       break;
     }
     default:
-      DIE_NOW(NULL, "storeWakeUpPrm store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeDssPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -912,16 +1079,25 @@ void storeDssPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_DSS:
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepDss = value;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlDss = value;
       break;
     }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
     default:
-      DIE_NOW(NULL, "storeDssPrm store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeCamPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -930,41 +1106,66 @@ void storeCamPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_CAM:
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepCam = value;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlCam = value;
       break;
     }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
     default:
-      DIE_NOW(NULL, "storeCamPrm store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storePerPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   u32int reg = phyAddr - PER_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storePerPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
+        value);
   switch (reg)
   {
-    case PM_PWSTCTRL_PER:
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlPer = value;
       break;
     }
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
     default:
-      DIE_NOW(NULL, "storePerPrm store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
 
-
 void storeEmuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeEmuPrm unimplemented.");
+  u32int reg = phyAddr - EMU_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: storeEmuPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
+        value);
+  switch (reg)
+  {
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
+    default:
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+  }
 }
-
 
 void storeNeonPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -973,16 +1174,25 @@ void storeNeonPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_NEON:
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepNeon = value;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlNeon = value;
       break;
     }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
     default:
-      DIE_NOW(NULL, "storeNeonPrm store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeUsbhostPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -991,13 +1201,22 @@ void storeUsbhostPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
-    case PM_PWSTCTRL_USBHOST:
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepUsbhost = value;
+      break;
+    }
+    case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlUsbhost = value;
       break;
     }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
     default:
-      DIE_NOW(NULL, "storeUsbhostPrm store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-

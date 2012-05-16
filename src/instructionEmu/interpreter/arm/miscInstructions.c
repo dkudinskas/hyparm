@@ -14,14 +14,15 @@ u32int armBkptInstruction(GCONTXT *context, u32int instruction)
   u32int val = imm12 | imm4;
 
   evalBkptVal(context, val);
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 #else
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 #endif
 }
 
 u32int armClzInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armCpsInstruction(GCONTXT *context, u32int instruction)
@@ -83,7 +84,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
           if (isFiqPending())
           {
             // context->guestFiqPending = TRUE; : IMPLEMENT!!
-            DIE_NOW(context, "cps: FIQ pending!! unimplemented.");
+            DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
           }
         }
         oldCpsr &= ~PSR_F_BIT;
@@ -147,7 +148,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
 
 u32int armDbgInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armDmbInstruction(GCONTXT *context, u32int instruction)
@@ -416,32 +417,32 @@ u32int armPliInstruction(GCONTXT *context, u32int instruction)
 
 u32int armRfeInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armSetendInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armSevInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armSmcInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armSrsInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armWfeInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armWfiInstruction(GCONTXT *context, u32int instruction)
@@ -453,5 +454,5 @@ u32int armWfiInstruction(GCONTXT *context, u32int instruction)
 
 u32int armYieldInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }

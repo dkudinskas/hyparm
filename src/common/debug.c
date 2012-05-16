@@ -43,6 +43,10 @@ extern void setEmergencyExceptionVector(void);
 #endif
 
 
+const char *const ERROR_NO_SUCH_REGISTER = "no such register";
+const char *const ERROR_NOT_IMPLEMENTED = "not implemented";
+
+
 void dumpStackFromParameters(u32int snapshotOrigin, u32int psr, u32int *stack)
   __attribute__((externally_visible));
 
@@ -74,7 +78,7 @@ static void banner(const char *msg)
   printf(EOL EOL "%s[%s]%s%s" EOL EOL, padding, msg, ((msgLength & 1) ? "" : "="), padding);
 }
 
-void dieNow(struct guestContext *context, const char *file, const char *line, const char *caller, const char *msg)
+void dieNow(const char *file, const char *line, const char *caller, const char *msg)
 {
 #ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
   setEmergencyExceptionVector();
@@ -87,10 +91,8 @@ void dieNow(struct guestContext *context, const char *file, const char *line, co
   banner("ERROR");
   printf("%s:%s: in %s:" EOL, file, line, caller);
   printf("%s" EOL, msg);
-  if (context == NULL)
-  {
-    context = getGuestContext();
-  }
+
+  const GCONTXT *context = getGuestContext();
   if (context != NULL)
   {
     dumpGuestContext(context);

@@ -190,7 +190,7 @@ void guestEnableMMU()
  **/
 void guestDisableMMU()
 {
-  DIE_NOW(NULL, "guestDisableMMU: unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
 void guestSetContextID(u32int contextid)
@@ -295,7 +295,13 @@ void initialiseShadowPageTables(GCONTXT *gc)
   mmuClearDataCache();
   mmuDataMemoryBarrier();
 
+#ifdef CONFIG_GUEST_ANDROID
+  //FIXME: Henri: Why should these structures be invalidated?
+  //invalidatePageTableInfo();
+#else
   invalidatePageTableInfo();
+#endif /* CONFIG_GUEST_ANDROID */
+
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: invalidatePageTableInfo() done." EOL);
 
   // allocate two shadow page tables and prepare the minimum for operation
@@ -350,9 +356,8 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
       tempFirst = getEntryFirst(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical);
       backupEntry = *(u32int*)tempFirst;
       DEBUG(MM_ADDRESSING, "changeGuestDACR: backed up entry %08x @ %p" EOL, backupEntry, tempFirst);
-      mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
-                (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-                HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+      addSectionEntry((sectionEntry *)tempFirst, (u32int)context->pageTables->guestPhysical,
+                      HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
       mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
       gpt = context->pageTables->guestPhysical;
       DEBUG(MM_ADDRESSING, "changeGuestDACR: gpt now set to %p" EOL, gpt);

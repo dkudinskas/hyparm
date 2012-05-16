@@ -251,6 +251,11 @@ CREG *createCRB()
   crb[i].value = 0;
   crb[i].valid = TRUE;
 
+  /* TLBIMVA: invalidate unified TLB by MVA, write-only */
+  i = crbIndex(8, 0, 7, 1);
+  crb[i].value = 0;
+  crb[i].valid = TRUE;
+
   /* PRRR:
    * primary region remap register: does lots of weird things with
    * C, B, and TEX attributes of memory regions, init to 0x98AA4 */
@@ -365,8 +370,8 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
       default:
       {
         // no such cache exists on the beagleboard!
-        printf("setCregVal: CSSELR = %x\n", val);
-        DIE_NOW(NULL, "setCregVal: CSSELR selects an unimplemented cache.");
+        printf("setCregVal: CSSELR = %x selects unimplemented cache" EOL, val);
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
     } // switch (value) ends
     // update CCSIDR with correct value
@@ -575,7 +580,7 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
   }
   else if (CRn==8 && opc1==0 && CRm==7 && opc2==1)
   {
-    // TLBIALL: invalide unified TLB by MVA, write-only
+    // TLBIMVA: invalidate unified TLB by MVA, write-only
     DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate unified TLB by MVA" EOL);
     mmuInvalidateUTLBbyMVA(val);
   }
@@ -644,6 +649,6 @@ u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPt
   {
     printf("getCreg (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
            CRn, opc1, CRm, opc2, reg.value);
-    DIE_NOW(NULL, "Undefined CP15 register!");
+    DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }

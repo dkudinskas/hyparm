@@ -206,7 +206,7 @@ u32int loadSms(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     default:
       printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
           virtAddr, (u32int)size);
-      DIE_NOW(NULL, "Sms: load on invalid/unimplemented register.");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 
   DEBUG(VP_OMAP_35XX_SMS, "%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %#x" EOL,
@@ -358,6 +358,6 @@ void storeSms(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u
     default:
       printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
           virtAddr, (u32int)size);
-      DIE_NOW(NULL, "Sms: store to invalid/unimplemented register.");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 }

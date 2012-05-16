@@ -6,6 +6,7 @@
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/clockManager.h"
+#include "vm/omap35xx/dmtimer.h"
 #include "vm/omap35xx/gpio.h"
 #include "vm/omap35xx/gpmc.h"
 #include "vm/omap35xx/gptimer.h"
@@ -13,6 +14,7 @@
 #include "vm/omap35xx/intc.h"
 #include "vm/omap35xx/pm.h"
 #include "vm/omap35xx/prm.h"
+#include "vm/omap35xx/sdrc.h"
 #include "vm/omap35xx/sdma.h"
 #include "vm/omap35xx/sdram.h"
 #include "vm/omap35xx/sms.h"
@@ -21,6 +23,7 @@
 #include "vm/omap35xx/timer32k.h"
 #include "vm/omap35xx/uart.h"
 #include "vm/omap35xx/controlModule.h"
+#include "vm/omap35xx/wdtimer.h"
 
 
 static bool attachDevice(device *parent, device *child);
@@ -191,6 +194,16 @@ device *createHardwareLibrary()
   }
   initSms();
 
+  // L3INT: SDRAM Controller subsystem
+  device *sdrcModule = createDevice("L3_SDRC", FALSE,
+                                   Q1_L3_SDRC, (u32int)(Q1_L3_SDRC + Q1_L3_SDRC_SIZE - 1),
+                                   l3Interconnect, &loadSdrc, &storeSdrc);
+  if (sdrcModule == NULL)
+  {
+    goto sdrcModuleError;
+  }
+  initSdrc();
+
 
   // Q1: LEVEL4 INTERCONNECT (L4INT, parent Q1)
   device *l4Interconnect = createDevice("L4_INTERCONNECT", TRUE, Q1_L4_INTERCONNECT,
@@ -276,6 +289,16 @@ device *createHardwareLibrary()
     goto l4CoreWakeupIntError;
   }
 
+  // L4_CORE_WAKEUP: dual-mode timer
+  device *dmTimer = createDevice("DM_TIMER", FALSE, DM_TIMER, (u32int)(DM_TIMER + DM_TIMER_SIZE-1),
+                                 l4CoreWakeupInt, &loadDmTimer, &storeDmTimer);
+
+  if (dmTimer == NULL)
+  {
+    goto dmTimerError;
+  }
+  initDmTimer();
+
   // L4_CORE_WAKEUP: power and reset manager
   device *prm =  createDevice("PRM", FALSE, PRM, (u32int)(PRM - 1 + PRM_SIZE), l4CoreWakeupInt,
                               &loadPrm, &storePrm);
@@ -306,11 +329,12 @@ device *createHardwareLibrary()
 
   // L4_CORE_WAKEUP: watchdog timer 2
   device *wdtimer2 = createDevice("WDTIMER2", FALSE, WDTIMER2, (u32int)(WDTIMER2 - 1 + WDTIMER2_SIZE),
-                                  l4CoreWakeupInt, &loadGeneric, &storeGeneric);
+                                  l4CoreWakeupInt, &loadWDTimer2, &storeWDTimer2);
   if (wdtimer2 == NULL)
   {
     goto wdtimer2Error;
   }
+  initWDTimer2();
 
   // L4_CORE_WAKEUP: general purpose timer 1
   device *gptimer1 = createDevice("GPTIMER1", FALSE, GPTIMER1, (u32int)(GPTIMER1 - 1 + GPTIMER1_SIZE),
@@ -459,6 +483,8 @@ gpio1Error:
 ctrlModIDError:
   free(prm);
 prmError:
+  free(dmTimer);
+dmTimerError:
   free(l4CoreWakeupInt);
 l4CoreWakeupIntError:
   free(intc);
@@ -477,6 +503,8 @@ sysCtrlModError:
 l4IntCoreError:
   free(l4Interconnect);
 l4InterconnectError:
+  free(sdrcModule);
+sdrcModuleError:
   free(smsModule);
 smsModuleError:
   free(pmModule);
@@ -553,7 +581,7 @@ static void storeGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int 
       }
     }
     printf("Store to %s at address %.8x physical %.8x value %.8x" EOL, dev->deviceName, virtAddr, phyAddr, value);
-    DIE_NOW(NULL, "No child of current device holds load address in range.");
+    DIE_NOW(NULL, "No child of current device holds store address in range.");
   }
   else
   {
@@ -566,19 +594,9 @@ static void storeGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int 
 
 u32int vmLoad(ACCESS_SIZE size, u32int virtAddr)
 {
-  GCONTXT * gc = getGuestContext();
-  u32int physAddr = 0;
-
-  if (gc->virtAddrEnabled)
-  {
-    physAddr = getPhysicalAddress(gc->pageTables->shadowActive, virtAddr);
-  }
-  else
-  {
-    physAddr = getPhysicalAddress(gc->pageTables->hypervisor, virtAddr);
-  }
-  u32int value = gc->hardwareLibrary->loadFunction(gc->hardwareLibrary, size, virtAddr, physAddr);
-  return value;
+  GCONTXT *gc = getGuestContext();
+  u32int physAddr = getPhysicalAddress(gc->virtAddrEnabled ? gc->pageTables->shadowActive : gc->pageTables->hypervisor, virtAddr);
+  return gc->hardwareLibrary->loadFunction(gc->hardwareLibrary, size, virtAddr, physAddr);
 }
 
 void vmStore(ACCESS_SIZE size, u32int virtAddr, u32int value)

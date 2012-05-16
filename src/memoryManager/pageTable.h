@@ -18,10 +18,10 @@
 #define GUEST_ACCESS_DOMAIN       1
 #define GUEST_ACCESS_BITS         PRIV_RW_USR_RW //Priv R/W, USR R/W
 
-#define PT1_ALIGN_MASK     0xFFFFC000
-#define PT1_ALIGN_BITS     14
-#define PT2_ALIGN_MASK     0xFFFFFC00
-#define PT2_ALIGN_BITS     10
+#define PT1_ALIGN_MASK         0xFFFFC000
+#define PT1_ALIGN_BITS         14
+#define PT2_ALIGN_MASK         0xFFFFFC00
+#define PT2_ALIGN_BITS         10
 #define SECTION_SIZE           0x00100000
 #define SECTION_MASK           0xFFF00000
 #define LARGE_PAGE_SIZE        0x00010000
@@ -134,18 +134,6 @@ struct smallPageDescriptor
 typedef struct smallPageDescriptor smallPageEntry;
 
 
-struct PageTableMetaData
-{
-  pageTableEntry *firstLevelEntry;
-  u32int virtAddr;
-  u32int physAddr;
-  u32int mappedMegabyte;
-  bool host;
-  struct PageTableMetaData *nextEntry;
-};
-typedef struct PageTableMetaData ptInfo;
-
-
 void dumpTranslationTable(simpleEntry *table);
 
 /*************** rewritten functions *********************/
@@ -179,12 +167,6 @@ void splitSectionToSmallPages(simpleEntry* pageTable, u32int virtAddr);
 bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr);
 
 void pageTableEdit(u32int address, u32int newVal);
-
-void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u32int mapped, bool host);
-ptInfo* getPageTableInfo(pageTableEntry* firstLevelEntry);
-void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host);
-void dumpPageTableInfo(void);
-void invalidatePageTableInfo(void);
 
 void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, simpleEntry* shadow, u32int virtual);
 void editAttributesPageTable(pageTableEntry* oldTable, pageTableEntry* newTable, pageTableEntry* shadowTable, u32int virtual);

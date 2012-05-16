@@ -6,37 +6,37 @@
 u32int t32LdrbInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T32_LOAD, context, instruction);
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int t32LdrhImmediateInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T32_LOAD, context, instruction);
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int t32LdrhLiteralInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T32_LOAD, context, instruction);
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int t32LdrhRegisterInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T32_LOAD, context, instruction);
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int t32LdrdInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T32_LOAD, context, instruction);
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int t32LdrshImmediate8Instruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T32_LOAD, context, instruction);
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int t32LdrshImmediate12Instruction(GCONTXT *context, u32int instruction)
@@ -56,11 +56,11 @@ u32int t32LdrshImmediate12Instruction(GCONTXT *context, u32int instruction)
 u32int t32LdrshLiteralInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T32_LOAD, context, instruction);
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int t32LdrshRegisterInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T32_LOAD, context, instruction);
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }

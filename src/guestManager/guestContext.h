@@ -9,6 +9,7 @@
 #include "instructionEmu/decoder.h"
 
 #include "memoryManager/memoryProtection.h"
+#include "memoryManager/pageTableInfo.h"
 
 #include "vm/omap35xx/cp15coproc.h"
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -130,7 +131,7 @@ extern GCONTXT *getGuestContext(void);
 
 GCONTXT *createGuestContext(void);
 
-void dumpGuestContext(GCONTXT * gc);
+void dumpGuestContext(const GCONTXT * gc);
 
 /* a function to evaluate if guest is in priviledge mode or user mode */
 bool isGuestInPrivMode(GCONTXT * context);

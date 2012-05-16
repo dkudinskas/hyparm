@@ -145,7 +145,7 @@ u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phy
         val = gpio[index]->gpioDebouncingTime;
         break;
       default:
-        DIE_NOW(NULL, "load on invalid register of disconnected GPIO");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   else
@@ -184,7 +184,7 @@ u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phy
         val = beGetGPIO(regOffset, gpio[index]->physicalId);
         break;
       default:
-        DIE_NOW(NULL, "load on invalid register of connected GPIO");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_GPIO, "%s load from pAddr: %.8x, vAddr: %.8x access size %x val = %.8x" EOL,
@@ -321,6 +321,14 @@ void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phys
         }
         gpio[index]->gpioFallingDetect = value;
         break;
+      case GPIO_DEBOUNCENABLE:
+      {
+        if (gpio[index]->gpioDebounceEnable == value)
+        {
+          printf("%s: unimplemented store to gpioDebounceEnable" EOL, __func__);
+        }
+        break;
+      }
       case GPIO_CLEARIRQENABLE1:
         if ((gpio[index]->gpioIrqEnable1 & value))
         {
@@ -365,12 +373,11 @@ void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phys
         gpio[index]->gpioDataOut |= value;
         break;
       case GPIO_WAKEUPENABLE:
-      case GPIO_DEBOUNCENABLE:
       case GPIO_DEBOUNCINGTIME:
       case GPIO_SETWKUENA:
-        DIE_NOW(NULL, "unimplemented store to register of disconnected GPIO");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       default:
-        DIE_NOW(NULL, "store to invalid register of disconnected GPIO");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   else
@@ -407,6 +414,14 @@ void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phys
         }
         beStoreGPIO(regOffset, value, gpio[index]->physicalId);
         break;
+      case GPIO_DEBOUNCENABLE:
+      {
+        if (gpio[index]->gpioDebounceEnable == value)
+        {
+          printf("%s: unimplemented store to gpioDebounceEnable" EOL, __func__);
+        }
+        break;
+      }
       case GPIO_WAKEUPENABLE:
       case GPIO_IRQSTATUS2:
       case GPIO_IRQENABLE2:
@@ -414,7 +429,6 @@ void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phys
       case GPIO_LEVELDETECT1:
       case GPIO_RISINGDETECT:
       case GPIO_FALLINGDETECT:
-      case GPIO_DEBOUNCENABLE:
       case GPIO_DEBOUNCINGTIME:
       case GPIO_CLEARIRQENABLE1:
       case GPIO_SETIRQENABLE1:
@@ -422,10 +436,10 @@ void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phys
       case GPIO_SETIRQENABLE2:
       case GPIO_CLEARWKUENA:
       case GPIO_SETWKUENA:
-        DIE_NOW(NULL, "unimplemented store to register of connected GPIO");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
         break;
       default:
-        DIE_NOW(NULL, "store to invalid register of connected GPIO");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
 }

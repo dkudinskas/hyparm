@@ -161,7 +161,6 @@ menu "Guest software"
 
 config GUEST_ANDROID
   bool "Android"
-  select KERNEL_ANDROID
 
 config GUEST_FREERTOS
   bool "FreeRTOS"
@@ -563,6 +562,10 @@ config DEBUG_VP_OMAP_35XX_SDMA
 config DEBUG_VP_OMAP_35XX_SDRAM
   bool "Debug SDRAM"
   depends on DEBUG_VIRTUAL_PLATFORM
+  
+config DEBUG_VP_OMAP_35XX_SDRC
+  bool "Debug SDRAM Controller (SDRC)"
+  depends on DEBUG_VIRTUAL_PLATFORM
 
 config DEBUG_VP_OMAP_35XX_SMS
   bool "Debug SDRAM Memory Scheduler (SMS)"
@@ -574,6 +577,10 @@ config DEBUG_VP_OMAP_35XX_SRAM
 
 config DEBUG_VP_OMAP_35XX_UART
   bool "Debug UART"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_WDTIMER
+  bool "Debug watchdog timers (WDTIMER)"
   depends on DEBUG_VIRTUAL_PLATFORM
 
 config MMC
@@ -599,10 +606,5 @@ menu "Miscellaneous hacks"
 
 config CLI
   bool "Command-line interface"
-
-config KERNEL_ANDROID
-  bool "Small hacks for linux kernel 2.6.37 (Android)"
-  help
-    Hacks to boot the linux 2.6.37 kernel which is used by Android.
 
 endmenu

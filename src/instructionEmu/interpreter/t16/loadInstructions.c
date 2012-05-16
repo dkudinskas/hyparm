@@ -49,7 +49,7 @@ u32int t16LdrInstruction(GCONTXT *context, u32int instruction)
   }
   else
   {
-    DIE_NOW(context, "Unimplemented thumb16 LDR instr");
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
   storeGuestGPR(regDst, vmLoad(WORD, offsetAddress), context);
@@ -75,7 +75,7 @@ u32int t16LdrbInstruction(GCONTXT *context, u32int instruction)
   }
   else
   {
-    DIE_NOW(context, "Unimplemented Thumb-16 LDRB instruction");
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
   u32int baseAddress = loadGuestGPR(regSrc, context);
@@ -87,7 +87,7 @@ u32int t16LdrbInstruction(GCONTXT *context, u32int instruction)
 u32int t16LdrhImmediateInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T16_LOAD, context, instruction);
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int t16LdmInstruction(GCONTXT *context, u32int instruction)

@@ -75,14 +75,14 @@ GCONTXT *createGuestContext(void)
   return context;
 }
 
-void dumpGuestContext(GCONTXT *context)
+void dumpGuestContext(const GCONTXT *context)
 {
   printf("====== DUMP GUEST CONTEXT @ %p ==============" EOL, context);
 
   const char *modeString;
-  u32int *r8 = &(context->R8);
-  u32int *r13 = NULL;
-  u32int *spsr = NULL;
+  const u32int *r8 = &(context->R8);
+  const u32int *r13 = NULL;
+  const u32int *spsr = NULL;
   switch (context->CPSR & PSR_MODE)
   {
     case PSR_USR_MODE:

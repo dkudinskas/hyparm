@@ -303,7 +303,7 @@ GCONTXT *dataAbort(GCONTXT *context)
     default:
       printf("unimplemented user data abort %#.8x" EOL, faultStatus);
       printDataAbort();
-      DIE_NOW(context, "unimplemented user data abort");
+      DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
   enableInterrupts();
   return context;
@@ -351,7 +351,7 @@ void dataAbortPrivileged(u32int pc)
     default:
       printf("dataAbortPrivileged pc %08x addr %08x" EOL, pc, dfar);
       printDataAbort();
-      DIE_NOW(NULL, "unimplemented data abort type");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       break;
   }
   enableInterrupts();
@@ -412,8 +412,7 @@ GCONTXT *prefetchAbort(GCONTXT *context)
     case ifsTranslationTableWalk2ndLvlSynchParityError:
     default:
       printPrefetchAbort();
-      dumpTranslationTable(mmuGetTTBR0());
-      DIE_NOW(context, "Unimplemented guest prefetch abort.");
+      DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
   enableInterrupts();
   return context;
@@ -421,7 +420,6 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 
 void prefetchAbortPrivileged(void)
 {
-  DIE_NOW(NULL, "prefetchAbortPrivileged: unimplemented");
   IFSR ifsr = getIFSR();
   u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
   switch(faultStatus)
@@ -445,7 +443,7 @@ void prefetchAbortPrivileged(void)
     case ifsTranslationTableWalk2ndLvlSynchParityError:
     default:
       printPrefetchAbort();
-      DIE_NOW(NULL, "Unimplemented privileged prefetch abort.");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
    }
 }
 
@@ -456,7 +454,7 @@ GCONTXT *monitorMode(GCONTXT *context)
    * Does the omap 3 implement monitor/secure mode?
    * Niels: yes it does!
    */
-  DIE_NOW(context, "monitorMode: monitor/secure mode handler, Implement me!");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 void monitorModePrivileged(void)
@@ -466,7 +464,7 @@ void monitorModePrivileged(void)
    * Does the omap 3 implement monitor/secure mode?
    * Niels: yes it does!
    */
-  DIE_NOW(NULL, "monitorMode: monitor/secure mode handler, privileged mode. Implement me!");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
 GCONTXT *irq(GCONTXT *context)
@@ -511,7 +509,7 @@ GCONTXT *irq(GCONTXT *context)
     }
     default:
       printf("Received IRQ = %x" EOL, activeIrqNumber);
-      DIE_NOW(context, "irq: unimplemented IRQ number");
+      DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -566,7 +564,7 @@ void irqPrivileged()
     }
     default:
       printf("Received IRQ = %#x" EOL, activeIrqNumber);
-      DIE_NOW(NULL, "irqPrivileged: unimplemented IRQ number.");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -581,7 +579,7 @@ void irqPrivileged()
 
 void fiq(void)
 {
-  DIE_NOW(NULL, "fiq: FIQ handler unimplemented!");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
 

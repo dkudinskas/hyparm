@@ -43,16 +43,14 @@ bool shadowMap(u32int virtAddr)
     tempFirst = getEntryFirst(spt, (u32int)context->pageTables->guestPhysical);
     backupEntry = *(u32int*)tempFirst;
     DEBUG(MM_SHADOWING, "shadowMap: VA %#.8x backed up entry %#.8x @ %p" EOL, virtAddr, backupEntry, tempFirst);
-    mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical,
-              (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+    addSectionEntry((sectionEntry *)tempFirst, (u32int)context->pageTables->guestPhysical,
+                    HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
     mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
     gpt = context->pageTables->guestPhysical;
     tempEntry = *(u32int*)tempFirst;
     DEBUG(MM_SHADOWING, "shadowMap: gpt now set to %p" EOL, gpt);
     backedUp = TRUE;
   }
-
 
   simpleEntry* guestFirst = getEntryFirst(gpt, virtAddr);
   DEBUG(MM_SHADOWING, "shadowMap: VA %08x first entry %08x @ %p" EOL, virtAddr, *(u32int*)guestFirst, guestFirst);
@@ -84,6 +82,7 @@ bool shadowMap(u32int virtAddr)
           pageTableEntry* shadowPageTable  = (pageTableEntry*)shadowFirst;
           pageTableEntry* guestPageTable = (pageTableEntry*)guestFirst;
           shadowMapPageTable(guestPageTable, guestPageTable, shadowPageTable);
+          //FIXME: Henri: This TLB flush should not be necessary
           mmuPageTableEdit((u32int)shadowPageTable, (virtAddr & SECTION_MASK));
           break;
         }
@@ -124,8 +123,8 @@ bool shadowMap(u32int virtAddr)
       simpleEntry* shadow = getEntryFirst(context->pageTables->shadowActive, gptPhysAddr);
       u32int backup = *(u32int*)shadow;
       DEBUG(MM_SHADOWING, "shadowMap: backed up PT2 entry %#.8x @ %p" EOL, backup, shadow);
-      mapSection(context->pageTables->shadowActive, gptPhysAddr, gptPhysAddr,
-           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+      addSectionEntry((sectionEntry *)shadow, gptPhysAddr, HYPERVISOR_ACCESS_DOMAIN,
+                      HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
       mmuInvalidateUTLBbyMVA(gptPhysAddr);
 
       u32int index = (virtAddr & 0x000FF000) >> 10;
@@ -195,7 +194,7 @@ bool shadowMap(u32int virtAddr)
             tempEntry, *(u32int*)tempFirst);
     }
   }
-  
+
   return success;
 }
 
@@ -215,7 +214,8 @@ void shadowMapSection(sectionEntry* guest, sectionEntry* shadow, u32int virtual)
 
   if(guest->superSection)
   {
-    DIE_NOW(context, "shadowMapSection: copy supersection unimplemented");
+    // copy supersection unimplemented
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
   // Address mapping
@@ -609,7 +609,7 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
   }
 
   GCONTXT *context = getGuestContext();
-  simpleEntry* hostEntry = (simpleEntry *)getEntryFirst(context->pageTables->hypervisor, guestPhysical);
+  simpleEntry* hostEntry = getEntryFirst(context->pageTables->hypervisor, guestPhysical);
 
   u32int hostPhysical = 0;
   switch (hostEntry->type)
@@ -626,6 +626,12 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
       simpleEntry* hostPage = getEntrySecond((pageTableEntry*)hostEntry, guestPhysical);
       switch (hostPage->type)
       {
+        case FAULT:
+        {
+          addSmallPageEntry((smallPageEntry *)hostPage, guestPhysical,
+              GUEST_ACCESS_BITS, FALSE, FALSE, 0, FALSE);
+          // Then, fall through and get host physical address
+        }
         case SMALL_PAGE:
         case SMALL_PAGE_3:
         {
@@ -634,9 +640,9 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
           break;
         }
         case LARGE_PAGE:
-        case FAULT:
         default:
-          DIE_NOW(context, "shadowMapSmallPage: host physical 2nd lvl unimplemented.");
+          // host physical 2nd lvl unimplemented
+          DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
       }
       break;
     }
@@ -810,7 +816,8 @@ void mapAPBitsSection(sectionEntry* guest, simpleEntry* shadow, u32int virtual)
   u32int sysCtrlReg = getCregVal(1, 0, 0, 0, context->coprocRegBank);
   if ((sysCtrlReg & SYS_CTRL_ACCESS_FLAG))
   {
-    DIE_NOW(context, "mapAPBitsSection: access flag enabled set, unimplemented.\n");
+    // access flag enabled set, unimplemented
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
   u32int guestAP = (guest->ap2 << 2) | guest->ap10;
   u32int shadowAP = mapAccessPermissionBits(guestAP, guest->domain);
@@ -899,8 +906,8 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
   simpleEntry* first = getEntryFirst(context->pageTables->shadowActive, gptPhysAddr);
   u32int backupEntry = *(u32int*)first;
   DEBUG(MM_SHADOWING, "mapAPBitsPageTable: backed up entry %08x @ %p" EOL, backupEntry, first);
-  mapSection(context->pageTables->shadowActive, gptPhysAddr, gptPhysAddr,
-       HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+  addSectionEntry((sectionEntry *)first, gptPhysAddr, HYPERVISOR_ACCESS_DOMAIN,
+                  HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
   mmuInvalidateUTLBbyMVA(gptPhysAddr);
   mmuDataMemoryBarrier();
 
@@ -966,7 +973,8 @@ void mapAPBitsSmallPage(u32int dom, smallPageEntry* guest, smallPageEntry* shado
   u32int sysCtrlReg = getCregVal(1, 0, 0, 0, context->coprocRegBank);
   if (sysCtrlReg & SYS_CTRL_ACCESS_FLAG)
   {
-    DIE_NOW(context, "mapAPBitsSmallPage: access flag enabled set, unimplemented.\n");
+    // access flag enabled set, unimplemented
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
   u32int guestAP = (guest->ap2 << 2) | guest->ap10;
   u32int shadowAP = mapAccessPermissionBits(guestAP, dom);
@@ -1039,6 +1047,6 @@ u32int mapExecuteNeverBit(u32int guestDomain, u32int xn)
  **/
 u8int mapGuestDomain(u8int guestDomain)
 {
-  DIE_NOW(NULL, "unimplemented");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   // may do a lot of work here... change AP bits based on DACR
 }

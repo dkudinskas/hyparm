@@ -45,14 +45,18 @@
 #define INTERRUPT_CONTROLLER_SIZE        0x00002000
 #define L4_CORE_WAKEUP_INT               0x48300000
 #define L4_CORE_WAKEUP_INT_SIZE          0x00040FFF
+#define DM_TIMER                         0x48304000   // RESERVED
+#define DM_TIMER_SIZE                    0x00001000
 #define PRM                                0x48306000
 #define PRM_SIZE                           0x00004000
 #define CONTROL_MODULE_ID                  0x4830A000
 #define CONTROL_MODULE_ID_SIZE             0x00002000
 #define GPIO1                              0x48310000
 #define GPIO1_SIZE                         0x00002000
-#define WDTIMER2                           0x48314000
+#define WDTIMER2                           0x48314000 // MPU watchdog timer
 #define WDTIMER2_SIZE                      0x00002000
+#define WDTIMER3                           0x49030000 // IVA2 watchdog timer
+#define WDTIMER3_SIZE                      0x00002000
 #define GPTIMER1                           0x48318000
 #define GPTIMER1_SIZE                      0x00002000
 #define TIMER_32K                          0x48320000
@@ -94,6 +98,8 @@
 #define Q1_L3_PM_SIZE                0x00004400
 #define Q1_L3_SMS                    0x6C000000
 #define Q1_L3_SMS_SIZE               0x01000000
+#define Q1_L3_SDRC                   0x6D000000
+#define Q1_L3_SDRC_SIZE              0x01000000
 #define Q1_SDRC_SMS                  0x70000000
 #define Q1_SDRC_SMS_SIZE             0x10000000
 

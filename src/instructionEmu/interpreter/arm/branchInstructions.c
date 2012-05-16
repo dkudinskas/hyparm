@@ -122,5 +122,5 @@ u32int armBxjInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG(INTERPRETER_ARM_BRANCH, "armBxjInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }

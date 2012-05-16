@@ -213,11 +213,11 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     case REG_INTCPS_ILR95:
     {
       printf("Intc: Unimplemted regsiter load reg nr %#x" EOL, regOffset);
-      DIE_NOW(NULL, "PANIC");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       break;
     }
     default:
-      DIE_NOW(NULL, "Intc: load on invalid register.");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 
   DEBUG(VP_OMAP_35XX_INTC, "%s load from pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
@@ -493,11 +493,11 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
     case REG_INTCPS_ILR95:
     {
       printf("Intc: Unimplemted regsiter store reg nr %#x" EOL, regOffset);
-      DIE_NOW(NULL, "PANIC");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       break;
     }
     default:
-      DIE_NOW(NULL, "Intc: store on invalid register.");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
 

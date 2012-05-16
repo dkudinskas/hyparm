@@ -7,22 +7,22 @@
 
 u32int armCdpInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armCdp2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armLdcInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armLdc2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armMcrInstruction(GCONTXT *context, u32int instruction)
@@ -54,17 +54,17 @@ u32int armMcrInstruction(GCONTXT *context, u32int instruction)
 
 u32int armMcr2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armMcrrInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armMcrr2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armMrcInstruction(GCONTXT *context, u32int instruction)
@@ -85,7 +85,7 @@ u32int armMrcInstruction(GCONTXT *context, u32int instruction)
       u32int regDestNr = (instruction & 0x0000F000) >> 12;
       if (regDestNr == 0xF)
       {
-        DIE_NOW(context, "unimplemented load from CP15 to PC");
+        DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
       }
       storeGuestGPR(regDestNr, cregVal, context);
     }
@@ -100,25 +100,25 @@ u32int armMrcInstruction(GCONTXT *context, u32int instruction)
 
 u32int armMrc2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armMrrcInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armMrrc2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armStcInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int armStc2Instruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }

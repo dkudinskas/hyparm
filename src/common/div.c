@@ -152,7 +152,7 @@ u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor)
   UDIV(u64int, u64intPair, result, countTrailingZeros64, uldiv_recursive, result);
 #else
 # pragma message "*** WARNING *** __aeabi_uldivmod has no implementation for this compiler!"
-  DIE_NOW(NULL, "__aeabi_uldivmod not implemented");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
 }
 

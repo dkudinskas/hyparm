@@ -15,7 +15,7 @@
   {                                                                                                \
     if (!(cond))                                                                                   \
     {                                                                                              \
-      dieNow(NULL, __FILE__, EXPAND_TO_STRING(__LINE__), __func__,                                 \
+      dieNow(__FILE__, EXPAND_TO_STRING(__LINE__), __func__,                                       \
              "assertion (" #cond ") failed:" EOL msg);                                             \
     }                                                                                              \
   }
@@ -39,14 +39,15 @@
     }                                                                                              \
   }
 
-#define DIE_NOW(context, msg)  dieNow(context, __FILE__, EXPAND_TO_STRING(__LINE__), __func__, msg)
+#define DIE_NOW(context, msg)  dieNow(__FILE__, EXPAND_TO_STRING(__LINE__), __func__, msg)
 
 
-struct guestContext;
+extern const char *const ERROR_NO_SUCH_REGISTER;
+extern const char *const ERROR_NOT_IMPLEMENTED;
 
 
-void dieNow(struct guestContext *context, const char *file, const char *line, const char *caller,
-            const char *msg) __attribute__((noreturn));
+void dieNow(const char *file, const char *line, const char *caller, const char *msg)
+           __attribute__((noreturn));
 
 void dumpStack(void) __attribute__((naked));
 

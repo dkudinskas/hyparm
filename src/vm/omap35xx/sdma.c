@@ -97,7 +97,7 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     case SDMA_CAPS_4:
     case SDMA_GCR:
       printf("loadSdma reg %#x" EOL, regOffs);
-      DIE_NOW(NULL, "SDMA: load from unimplemented register.");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       break;
   } // switch ends
 
@@ -131,11 +131,11 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     case SDMA_CCFNi:
     case SDMA_COLORi:
       printf("loadSdma indexed reg %#x reg %#x" EOL, indexedRegOffs + 0x80, regOffs);
-      DIE_NOW(NULL, "SDMA: load from unimplemented register");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       break;
     default:
       printf("loadSdma indexed reg %#x reg %#x" EOL, indexedRegOffs + 0x80, regOffs);
-      DIE_NOW(NULL, "SDMA: load from undefined register");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
 
@@ -175,7 +175,7 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
     case SDMA_CAPS_3:
     case SDMA_CAPS_4:
       printf("storeSdma reg %x value %.8x" EOL, regOffs, value);
-      DIE_NOW(NULL, "SDMA: store to unimplemented register.");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       break;
   } // switch ends
 
@@ -250,7 +250,7 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
     default:
       printf("storeSdma indexed reg %x reg %x value %.8x" EOL, indexedRegOffs + 0x80, regOffs,
           value);
-      DIE_NOW(NULL, "SDMA: store to undefined register.");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
 

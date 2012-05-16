@@ -62,6 +62,10 @@
 #define CM_CLKSEL_CORE              0x00000040 // clock selection, RW
 #define CM_CLKSTCTRL_CORE           0x00000048 // enable power state transition, RW
 #define CM_CLKSTST_CORE             0x0000004C // interface clock activity status, R/O
+
+#define CM_CORE_UART1               0x00002000
+#define CM_CORE_SDRC                0x00000002
+
 // SGX_CM registers
 #define CM_FCLKEN_SGX               0x00000000 // control graphics engine fclk activity, RW
 #define CM_ICLKEN_SGX               0x00000010 // control graphics engine iclk activity, RW
@@ -372,6 +376,11 @@ struct ClockManager
   u32int cmSleepDepPer;
   u32int cmClkStCtrlPer;
   u32int cmClkStStPer;
+  // NEON_CM registers
+  u32int cmClkStCtrlNeon;
+  // USBHOST_CM registers
+  u32int cmAutoidleUsb;
+  u32int cmClkStCtrlUsb;
 };
 
 #endif

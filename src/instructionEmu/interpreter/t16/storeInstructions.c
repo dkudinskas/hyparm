@@ -60,7 +60,7 @@ u32int t16StrbInstruction(GCONTXT * context, u32int instruction)
   }
   else
   {
-    DIE_NOW(context, "Unimplemented Thumb16 STRB Instruction");
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
   u32int baseAddress = loadGuestGPR(regDst, context);
   u32int offsetAddress = baseAddress + imm32;
@@ -89,7 +89,7 @@ u32int t16StrhInstruction(GCONTXT *context, u32int instruction)
   }
   else
   {
-    DIE_NOW(context, "Unimplemented Thumb16 STRH");
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
   u32int baseAddress = loadGuestGPR(regDst, context);
