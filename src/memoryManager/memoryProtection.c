@@ -108,7 +108,7 @@ void writeProtectRange(simpleEntry* pageTable, u32int start, u32int end)
       }
       case LARGE_PAGE:
       {
-        DIE_NOW(NULL, "writeProtectRange: found large page, unimplemented.");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       default:
       {
@@ -281,7 +281,8 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
   if (sysCtrlReg & 0x20000000)
   {
     // check access flag: if AF=0 abort (access flag fault)
-    DIE_NOW(context, "shouldDataAbort: access flag enabled set, simplified AP model unimplemented.\n");
+    // access flag enabled set, simplified AP model unimplemented!
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
   // check domain
@@ -294,7 +295,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
     case DACR_NO_ACCESS:
     {
       // no-access for domain: abort (domain fault)
-      DIE_NOW(context, "shouldDataAbort(): DACR 0: no access! unimplemented");
+      DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
       break;
     }
     case DACR_RESERVED:
@@ -586,7 +587,8 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
   if (sysCtrlReg & 0x20000000)
   {
     // check access flag: if AF=0 abort (access flag fault)
-    DIE_NOW(context, "shouldPrefetchAbort: access flag enabled set, simplified AP model unimplemented.\n");
+    // access flag enabled set, simplified AP model unimplemented
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
   /***************************** step 2 **************************/
@@ -601,7 +603,7 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
     case DACR_NO_ACCESS:
     {
       // no-access for domain: abort (domain fault)
-      DIE_NOW(context, "shouldPrefetchAbort(): DACR 0: no access! unimplemented");
+      DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
       break;
     }
     case DACR_RESERVED:

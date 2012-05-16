@@ -46,7 +46,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
 	  // FIXME: Niels: do we ever get here for exception return; aren't there valid cases where a SUBS does NOT perform exception return?
           if (setFlags != 0)
           {
-            DIE_NOW(context, "SUBS return from exception case unimplemented.\n");
+            DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
           }
           nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
           if (regSrc == 0xF)
@@ -144,7 +144,8 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
       }
       else
       {
-        DIE_NOW(context, "arithLogicOp: unimplemented set flags case");
+        // unimplemented setflags case
+        DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
       }
     }
 
@@ -381,7 +382,7 @@ u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int * carryFlag)
        case SHIFT_TYPE_ASR:
        case SHIFT_TYPE_RRX:
        default:
-        DIE_NOW(NULL, "shiftVal: unimplemented shiftType");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
      } // switch
   } // else
   return retVal;

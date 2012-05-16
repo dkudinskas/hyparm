@@ -37,7 +37,7 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyA
     {
       printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr,
           virtAddr);
-      DIE_NOW(NULL, "Invalid register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   else
@@ -51,7 +51,7 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyA
 
 void storeTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  DIE_NOW(NULL, "32k timer store unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
 void initTimer32k()

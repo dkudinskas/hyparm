@@ -9,7 +9,7 @@
 
 u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  DIE_NOW(NULL, "SRAM_INTERNAL load unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   u32int val = 0;
 
   DEBUG(VP_OMAP_35XX_SRAM, "%s load from physical address: %#.8x, virtual address: %#.8x aSize %#x"

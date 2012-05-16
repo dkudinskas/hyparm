@@ -145,7 +145,7 @@ u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phy
         val = gpio[index]->gpioDebouncingTime;
         break;
       default:
-        DIE_NOW(NULL, "load on invalid register of disconnected GPIO");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   else
@@ -184,7 +184,7 @@ u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phy
         val = beGetGPIO(regOffset, gpio[index]->physicalId);
         break;
       default:
-        DIE_NOW(NULL, "load on invalid register of connected GPIO");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_GPIO, "%s load from pAddr: %.8x, vAddr: %.8x access size %x val = %.8x" EOL,
@@ -368,9 +368,9 @@ void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phys
       case GPIO_DEBOUNCENABLE:
       case GPIO_DEBOUNCINGTIME:
       case GPIO_SETWKUENA:
-        DIE_NOW(NULL, "unimplemented store to register of disconnected GPIO");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       default:
-        DIE_NOW(NULL, "store to invalid register of disconnected GPIO");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   else
@@ -422,10 +422,10 @@ void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phys
       case GPIO_SETIRQENABLE2:
       case GPIO_CLEARWKUENA:
       case GPIO_SETWKUENA:
-        DIE_NOW(NULL, "unimplemented store to register of connected GPIO");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
         break;
       default:
-        DIE_NOW(NULL, "store to invalid register of connected GPIO");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
 }

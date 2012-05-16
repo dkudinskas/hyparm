@@ -364,12 +364,12 @@ u32int loadIva2Prm(device *dev, u32int address, u32int phyAddr)
     case PRM_IRQENABLE_IVA2:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadIva2Prm: loading unimplemented register!");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadIva2Prm reg %x value %.8x" EOL, reg, val);
@@ -440,12 +440,12 @@ u32int loadMpuPrm(device *dev, u32int address, u32int phyAddr)
     case PM_PREPWSTST_MPU:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loadMpuPrm: loading unimplemented register!");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadMpuPrm reg %x value %.8x" EOL, reg, val);
@@ -472,7 +472,7 @@ u32int loadCorePrm(device *dev, u32int address, u32int phyAddr)
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadCorePrm reg %x value %.8x" EOL, reg, val);
@@ -499,7 +499,7 @@ u32int loadSgxPrm(device *dev, u32int address, u32int phyAddr)
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadSgxPrm reg %x value %.8x" EOL, reg, val);
@@ -543,13 +543,12 @@ u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadWakeUpPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadDssPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -570,13 +569,12 @@ u32int loadDssPrm(device *dev, u32int address, u32int phyAddr)
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadDssPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadCamPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -597,13 +595,12 @@ u32int loadCamPrm(device *dev, u32int address, u32int phyAddr)
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadCamPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadPerPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -624,13 +621,12 @@ u32int loadPerPrm(device *dev, u32int address, u32int phyAddr)
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadPerPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadEmuPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -646,13 +642,12 @@ u32int loadEmuPrm(device *dev, u32int address, u32int phyAddr)
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadEmuPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadNeonPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -673,13 +668,12 @@ u32int loadNeonPrm(device *dev, u32int address, u32int phyAddr)
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadNeonPrm reg %x value %.8x" EOL, reg, val);
   return val;
 }
-
 
 u32int loadUsbhostPrm(device *dev, u32int address, u32int phyAddr)
 {
@@ -700,7 +694,7 @@ u32int loadUsbhostPrm(device *dev, u32int address, u32int phyAddr)
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadUsbhostPrm reg %x value %.8x" EOL, reg, val);
@@ -795,10 +789,9 @@ void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u
       break;
     }
     default:
-      DIE_NOW(NULL, "store to invalid base module.");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -814,17 +807,15 @@ void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int v
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, " unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
-
 
 void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -844,10 +835,9 @@ void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -877,10 +867,9 @@ void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int valu
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
 }
-
 
 void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -900,10 +889,9 @@ void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeCorePrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -918,10 +906,9 @@ void storeCorePrm(device * dev, u32int address, u32int phyAddr, u32int value)
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeSgxPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -936,10 +923,9 @@ void storeSgxPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeWakeUpPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -954,10 +940,9 @@ void storeWakeUpPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeDssPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -972,10 +957,9 @@ void storeDssPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeCamPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -990,10 +974,9 @@ void storeCamPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storePerPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -1008,17 +991,15 @@ void storePerPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeEmuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
-
 
 void storeNeonPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -1033,10 +1014,9 @@ void storeNeonPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-
 
 void storeUsbhostPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
@@ -1051,7 +1031,6 @@ void storeUsbhostPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       break;
     }
     default:
-      DIE_NOW(NULL, "store to non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
-

@@ -222,7 +222,7 @@ u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u
       default:
         printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
             virtAddr, (u32int)size);
-        DIE_NOW(NULL, "PM_RT: load on invalid register.");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
     }
   }
@@ -340,7 +340,7 @@ u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u
       default:
         printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
             virtAddr, (u32int)size);
-        DIE_NOW(NULL, "PM_GPMC: load on invalid register.");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
     }
   }
@@ -458,7 +458,7 @@ u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u
       default:
         printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
             virtAddr, (u32int)size);
-        DIE_NOW(NULL, "PM_OCM_RAM: load on invalid register.");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
     }
   }
@@ -504,7 +504,7 @@ u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u
       default:
         printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
             virtAddr, (u32int)size);
-        DIE_NOW(NULL, "PM_OCM_ROM: load on invalid register.");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
     }
   }
@@ -574,13 +574,13 @@ u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u
       default:
         printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
             virtAddr, (u32int)size);
-        DIE_NOW(NULL, "PM_IVA: load on invalid register.");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
     }
   }
   else
   {
-    DIE_NOW(NULL, "loadProtectionMechanism: loading invalid/unimplemented register");
+    DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
   return value;
 }
@@ -629,7 +629,7 @@ void storeProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u
       default:
         printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, dev->deviceName, phyAddr,
             virtAddr, (u32int)size, value);
-        DIE_NOW(NULL, "PM_RT: store on invalid register.");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
     }
   }
@@ -741,7 +741,7 @@ void storeProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u
       default:
         printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, dev->deviceName, phyAddr,
             virtAddr, (u32int)size, value);
-        DIE_NOW(NULL, "PM_GPMC: store on invalid register.");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
     }
   }
@@ -853,7 +853,7 @@ void storeProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u
       default:
         printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, dev->deviceName, phyAddr,
             virtAddr, (u32int)size, value);
-        DIE_NOW(NULL, "PM_OCM_RAM: store on invalid register.");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
     }
   }
@@ -893,7 +893,7 @@ void storeProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u
       default:
         printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, dev->deviceName, phyAddr,
             virtAddr, (u32int)size, value);
-        DIE_NOW(NULL, "PM_OCM_ROM: store on invalid register.");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
     }
   }
@@ -957,13 +957,13 @@ void storeProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u
       default:
         printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, dev->deviceName, phyAddr,
             virtAddr, (u32int)size, value);
-        DIE_NOW(NULL, "PM_IVA: store on invalid register.");
+        DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
     }
   }
   else
   {
-    DIE_NOW(NULL, "storeProtectionMechanism: storing to invalid/unimplemented register");
+    DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 }
 

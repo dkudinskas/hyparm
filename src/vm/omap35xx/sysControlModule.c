@@ -198,7 +198,7 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
 u32int loadInterfaceScm(device *dev, u32int address, u32int phyAddr)
 {
   printf("%s load from pAddr: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, "loadInterfaceScm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
@@ -206,7 +206,7 @@ u32int loadInterfaceScm(device *dev, u32int address, u32int phyAddr)
 u32int loadPadconfsScm(device *dev, u32int address, u32int phyAddr)
 {
   printf("%s load from pAddr: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, "loadPadconfsScm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
@@ -231,7 +231,7 @@ u32int loadGeneralScm(device *dev, u32int address, u32int phyAddr)
       break;
     default:
       printf("loadGeneralScm: unimplemented reg addr %#.8x" EOL, phyAddr);
-      DIE_NOW(NULL, "loadGeneralScm loading non existing/unimplemented register!");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   } // switch ends
   DEBUG(VP_OMAP_35XX_SCM, "loadGeneralScm reg %x value %#.8x" EOL, reg, val);
   return val;
@@ -241,7 +241,7 @@ u32int loadGeneralScm(device *dev, u32int address, u32int phyAddr)
 u32int loadMemWkupScm(device *dev, u32int address, u32int phyAddr)
 {
   printf("%s load from pAddr: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, "loadMemWkupScm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
@@ -249,7 +249,7 @@ u32int loadMemWkupScm(device *dev, u32int address, u32int phyAddr)
 u32int loadPadconfsWkupScm(device *dev, u32int address, u32int phyAddr)
 {
   printf("%s load from pAddr: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, "loadPadconfsWkupScm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
@@ -257,7 +257,7 @@ u32int loadPadconfsWkupScm(device *dev, u32int address, u32int phyAddr)
 u32int loadGeneralWkupScm(device *dev, u32int address, u32int phyAddr)
 {
   printf("%s load from pAddr: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, "loadGeneralWkupScm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
@@ -302,35 +302,35 @@ void storeSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int 
 void storeInterfaceScm(device *dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeInterfaceScm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
 void storePadconfsScm(device *dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storePadconfsScm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
 void storeGeneralScm(device *dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeGeneralScm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
 void storeMemWkupScm(device *dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeMemWkupScm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
 void storePadconfsWkupScm(device *dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storePadconfsWkupScm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
 void storeGeneralWkupScm(device *dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeGeneralWkupScm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }

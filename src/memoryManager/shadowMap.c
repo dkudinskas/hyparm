@@ -214,7 +214,8 @@ void shadowMapSection(sectionEntry* guest, sectionEntry* shadow, u32int virtual)
 
   if(guest->superSection)
   {
-    DIE_NOW(context, "shadowMapSection: copy supersection unimplemented");
+    // copy supersection unimplemented
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
   // Address mapping
@@ -640,7 +641,8 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
         }
         case LARGE_PAGE:
         default:
-          DIE_NOW(context, "shadowMapSmallPage: host physical 2nd lvl unimplemented.");
+          // host physical 2nd lvl unimplemented
+          DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
       }
       break;
     }
@@ -814,7 +816,8 @@ void mapAPBitsSection(sectionEntry* guest, simpleEntry* shadow, u32int virtual)
   u32int sysCtrlReg = getCregVal(1, 0, 0, 0, context->coprocRegBank);
   if ((sysCtrlReg & SYS_CTRL_ACCESS_FLAG))
   {
-    DIE_NOW(context, "mapAPBitsSection: access flag enabled set, unimplemented.\n");
+    // access flag enabled set, unimplemented
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
   u32int guestAP = (guest->ap2 << 2) | guest->ap10;
   u32int shadowAP = mapAccessPermissionBits(guestAP, guest->domain);
@@ -970,7 +973,8 @@ void mapAPBitsSmallPage(u32int dom, smallPageEntry* guest, smallPageEntry* shado
   u32int sysCtrlReg = getCregVal(1, 0, 0, 0, context->coprocRegBank);
   if (sysCtrlReg & SYS_CTRL_ACCESS_FLAG)
   {
-    DIE_NOW(context, "mapAPBitsSmallPage: access flag enabled set, unimplemented.\n");
+    // access flag enabled set, unimplemented
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
   u32int guestAP = (guest->ap2 << 2) | guest->ap10;
   u32int shadowAP = mapAccessPermissionBits(guestAP, dom);
@@ -1043,6 +1047,6 @@ u32int mapExecuteNeverBit(u32int guestDomain, u32int xn)
  **/
 u8int mapGuestDomain(u8int guestDomain)
 {
-  DIE_NOW(NULL, "unimplemented");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   // may do a lot of work here... change AP bits based on DACR
 }

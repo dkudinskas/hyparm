@@ -36,7 +36,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       }
       else if ((instr & THUMB32_STRB_REG_MASK) == THUMB32_STRB_REG)
       {
-        DIE_NOW(context, "Unimplemented Thumb32 register generic load/store");
+        DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
       }
       /*
        * STRH
@@ -89,7 +89,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       else
       {
         printf("Instruction: %08x@%08x" EOL,instr, context->R15);
-        DIE_NOW(NULL, "Unknown THUMB32 load/store instr");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
     }
     else
@@ -159,7 +159,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       else
       {
         printf("Unimplemented Thumb16 %08x@%08x" EOL, instr, address);
-        DIE_NOW(context, "Unimplemented Thumb16 Load/Store");
+        DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
       }
     }
   }
@@ -254,7 +254,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
     else
     {
       printf("LoadStore @ %08x instruction %08x" EOL, context->R15, instr);
-      DIE_NOW(context, "Load/Store generic unimplemented");
+      DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
     }
   }
 }

@@ -446,7 +446,7 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
       {
         printf("getPhysicalAddress for VA %#.8x in PT @ %#.8x" EOL, virtAddr, (u32int)pageTable);
         printf("getPhysicalAddress: PT1 entry %#.8x @ %p" EOL, *(u32int*)section, section);
-        DIE_NOW(NULL, "supersection case unimplemented");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       else
       {
@@ -462,7 +462,7 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
       {
         case LARGE_PAGE:
         {
-          DIE_NOW(NULL, "Large page case unimplemented");
+          DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
         }
         // may not be shadow mapped? try it.
         case FAULT:
@@ -759,7 +759,7 @@ void pageTableEdit(u32int address, u32int newVal)
           shadowPriv = getEntrySecond((pageTableEntry*)shadowPriv, virtualAddress);
           printf("pageTableEdit: 2nd lvl shadowUser %#.8x @ %p shadowPriv %#.8x @ %p" EOL,
             *(u32int*)shadowUser, shadowUser, *(u32int*)shadowPriv, shadowPriv);
-          DIE_NOW(context, "remove/change type 2nd lvl entry unimplemented." EOL);
+          DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
         }
       }
     }
@@ -774,7 +774,7 @@ void pageTableEdit(u32int address, u32int newVal)
     if ((oldGuestEntry->type != FAULT) && (newGuestEntry->type != FAULT))
     {
       // old entry fault, new !fault. changing page table entry type. mustn't ignore
-      DIE_NOW(NULL, "old entry !fault, new entry !fault. change type unimplemented." EOL);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
   }
   else
@@ -841,11 +841,13 @@ void pageTableEdit(u32int address, u32int newVal)
         }
         case LARGE_PAGE:
         {
-          DIE_NOW(context, "editing attributes LARGE_PAGE: unimplemented");
+          // editing attributes LARGE_PAGE
+          DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
         }
         case FAULT:
         {
-          DIE_NOW(context, "editing attributes FAULT type?");
+          // editing attributes FAULT type?
+          DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
         }
       }
     } // else second-level entry ends 
@@ -953,7 +955,7 @@ void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, s
 void editAttributesPageTable(pageTableEntry* oldTable, pageTableEntry* newTable, pageTableEntry* shadowTable, u32int virtual)
 {
   printf("editAttributesPageTable: for virtual address %#.8x; implement" EOL, virtual);
-  DIE_NOW(NULL, "unimplemented");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
 

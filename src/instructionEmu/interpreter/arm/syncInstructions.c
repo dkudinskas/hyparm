@@ -274,5 +274,5 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
 
 u32int armSwpInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }

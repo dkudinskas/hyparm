@@ -56,7 +56,7 @@ u32int t32StrbInstruction(GCONTXT * context, u32int instruction)
   }
   else
   {
-    DIE_NOW(context, "t32StrbInstruction: register case not implemented");
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
   DEBUG(INTERPRETER_T32_STORE, "t32StrbInstruction: regsrc=%x, regdst=%x, address=%#.8x, value="
@@ -156,5 +156,5 @@ u32int t32StrdImmediateInstruction(GCONTXT *context, u32int instruction)
 u32int t32StrhtInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T32_STORE, context, instruction);
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }

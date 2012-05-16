@@ -229,7 +229,7 @@ u32int loadIva2Cm(device * dev, u32int address, u32int phyAddr)
 u32int loadOcpSystemCm(device * dev, u32int address, u32int phyAddr)
 {
   printf("%s load from pAddr: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, "loadOcpSystemCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
@@ -589,21 +589,21 @@ u32int loadEmuCm(device * dev, u32int address, u32int phyAddr)
 u32int loadGlobalRegCm(device * dev, u32int address, u32int phyAddr)
 {
   printf("%s load from pAddr: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, "loadGlobalRegCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
 u32int loadNeonCm(device * dev, u32int address, u32int phyAddr)
 {
   printf("%s load from pAddr: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, "loadNeonCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
 u32int loadUsbHostCm(device * dev, u32int address, u32int phyAddr)
 {
   printf("%s load from pAddr: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, "loadUsbHostCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
@@ -668,21 +668,21 @@ void storeClockManager(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int p
 void storeIva2Cm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeIva2Cm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return;
 }
 
 void storeOcpSystemCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeOcpSystemCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return;
 }
 
 void storeMpuCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeMpuCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return;
 }
 
@@ -696,13 +696,13 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_ICLKEN1_CORE:
       if (clockMan->cmIclkEn1Core != value)
       {
-        DIE_NOW(NULL, "storeCoreCm CM_ICLKEN1_CORE unimplemented.");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
     case CM_FCLKEN1_CORE:
       if (clockMan->cmFclkEn1Core != value)
       {
-        DIE_NOW(NULL, "storeCoreCm CM_FCLKEN1_CORE unimplemented.");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
     case CM_FCLKEN3_CORE:
@@ -717,10 +717,10 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_CLKSEL_CORE:
     case CM_CLKSTCTRL_CORE:
     case CM_CLKSTST_CORE:
-      DIE_NOW(NULL, "storeCoreCm unimplemented.");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       break;
     default:
-      DIE_NOW(NULL, "storeCoreCm storing non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   return;
 }
@@ -728,7 +728,7 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
 void storeSgxCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeSgxCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return;
 }
 
@@ -818,13 +818,13 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_IDLEST_WKUP:
       if (clockMan->cmIdleStWkup != value)
       {
-        DIE_NOW(NULL, " storeWkupCm unimplemented store to reg cmIdleStWkup");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
     case CM_AUTOIDLE_WKUP:
       if (clockMan->cmAutoIdleWkup != value)
       {
-        DIE_NOW(NULL, " storeWkupCm unimplemented store to reg cmAutoIdleWkup");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
     case CM_CLKSEL_WKUP:
@@ -885,25 +885,25 @@ void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int va
     case CM_CLKSEL5_PLL:
     case CM_CLKOUT_CTRL:
       printf("%s: store to VA %.8x, PA %.8x, value %.8x" EOL, dev->deviceName, address, phyAddr, value);
-      DIE_NOW(NULL, "storeClockControlCm store to unimplemented register register!");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       break;
     default:
       printf("%s: store to VA %.8x, PA %.8x, value %.8x" EOL, dev->deviceName, address, phyAddr, value);
-      DIE_NOW(NULL, "storeClockControlCm storing non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
 }
 
 void storeDssCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeDssCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return;
 }
 
 void storeCamCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeCamCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return;
 }
 
@@ -917,37 +917,37 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_FCLKEN_PER:
       if (clockMan->cmFclkEnPer != value)
       {
-        DIE_NOW(NULL, "storePerCm unimplemented store to reg cmFclkEnPer");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
     case CM_ICLKEN_PER:
       if (clockMan->cmIclkEnPer != value)
       {
-        DIE_NOW(NULL, "storePerCm unimplemented store to reg cmIclkEnPer");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
     case CM_IDLEST_PER:
       if (clockMan->cmIdleStPer != value)
       {
-        DIE_NOW(NULL, "storePerCm unimplemented store to reg cmIdleStPer");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
     case CM_AUTOIDLE_PER:
       if (clockMan->cmAutoIdlePer != value)
       {
-        DIE_NOW(NULL, "storePerCm unimplemented store to reg cmAutoIdlePer");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
     case CM_CLKSEL_PER:
       if (clockMan->cmClkSelPer != value)
       {
-        DIE_NOW(NULL, "storePerCm unimplemented store to reg cmClkSelPer");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
     case CM_SLEEPDEP_PER:
       if (clockMan->cmSleepDepPer != value)
       {
-        DIE_NOW(NULL, "storePerCm unimplemented store to reg cmSleepDepPer");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
     case CM_CLKSTCTRL_PER:
@@ -960,38 +960,38 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_CLKSTST_PER:
       if (clockMan->cmClkStStPer != value)
       {
-        DIE_NOW(NULL, "storePerCm unimplemented store to reg cmClkStStPer");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
     default:
-      DIE_NOW(NULL, "storePerCm storing non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
 }
 
 void storeEmuCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeEmuCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return;
 }
 
 void storeGlobalRegCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeGlobalRegCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return;
 }
 
 void storeNeonCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeNeonCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return;
 }
 
 void storeUsbHostCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
   printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, "storeUsbHostCm unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return;
 }

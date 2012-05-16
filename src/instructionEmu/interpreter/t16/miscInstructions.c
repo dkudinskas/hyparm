@@ -49,12 +49,12 @@ u32int t16ItInstruction(GCONTXT *context, u32int instruction)
 
 u32int t16UxtbInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int t16UxthInstruction(GCONTXT *context, u32int instruction)
 {
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 u32int t16BkptInstruction(GCONTXT *context, u32int instruction)
@@ -65,6 +65,6 @@ u32int t16BkptInstruction(GCONTXT *context, u32int instruction)
   evalBkptVal(context, val);
   return context->R15 + T16_INSTRUCTION_SIZE;
 #else
-  DIE_NOW(context, "not implemented");
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 #endif
 }

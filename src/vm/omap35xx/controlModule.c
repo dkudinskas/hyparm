@@ -35,7 +35,7 @@ u32int loadControlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
     default:
     {
       printf("loadControlModule: reg offs %x\n", regOffs);
-      DIE_NOW(NULL, "loadControlModule: unimplemented.");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
   }
   printf("loadControlModule: regOffs %x value %08x\n", regOffs, value);

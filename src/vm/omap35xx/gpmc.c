@@ -148,7 +148,7 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     default:
       printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
           virtAddr, (u32int)size);
-      DIE_NOW(NULL, "Gpmc: load on invalid register.");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 
   DEBUG(VP_OMAP_35XX_GPMC, "%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %#x" EOL,
@@ -176,9 +176,9 @@ void storeGpmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       gpmc->gpmcSysConfig = value & GPMC_SYSCONFIG_MASK;
       break;
     case GPMC_SYSSTATUS:
-      DIE_NOW(NULL, "Gpmc: store to read-only register.");
+      DIE_NOW(NULL, "store to read-only register");
       break;
     default:
-      DIE_NOW(NULL, "Gpmc: store to invalid register.");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }

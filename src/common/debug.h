@@ -44,6 +44,10 @@
 #define DIE_NOW(context, msg)  dieNow(context, __FILE__, EXPAND_TO_STRING(__LINE__), __func__, msg)
 
 
+extern const char *const ERROR_NO_SUCH_REGISTER;
+extern const char *const ERROR_NOT_IMPLEMENTED;
+
+
 void dieNow(GCONTXT *context, const char *file, const char *line, const char *caller,
             const char *msg) __attribute__((noreturn));
 

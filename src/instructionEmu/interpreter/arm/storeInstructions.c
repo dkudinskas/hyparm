@@ -252,7 +252,7 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
   // P = 0 and W == 1 then STR as if user mode
   if (!preOrPost && writeBack)
   {
-    DIE_NOW(context, "as user mode unimplemented");
+    DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
   if (regSrc == GPR_PC)

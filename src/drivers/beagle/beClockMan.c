@@ -64,9 +64,9 @@ void toggleTimerFclk(u32int clockID, bool enable)
       case 7:
       case 8:
       case 9:
-        DIE_NOW(NULL, "CLK_MAN_BE: toggleTimerFclk() unimplemented for clock ID");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       default:
-        DIE_NOW(NULL, "CLK_MAN_BE: setclockSource() invalid clock ID");
+        DIE_NOW(NULL, "invalid clock ID");
     }
     clkManRegWriteBE(PER_CM, CM_FCLKEN_PER, regVal);
   } // else ends
@@ -99,9 +99,9 @@ void setClockSource(u32int clockID, bool sysClock)
       case 7:
       case 8:
       case 9:
-        DIE_NOW(NULL, "CLK_MAN_BE: setclockSource() unimplemented for clock ID");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       default:
-        DIE_NOW(NULL, "CLK_MAN_BE: setclockSource() invalid clock ID");
+        DIE_NOW(NULL, "invalid clock ID");
     }
     clkManRegWriteBE(PER_CM, CM_CLKSEL_PER, regVal);
   } // else ends

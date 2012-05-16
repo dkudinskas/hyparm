@@ -151,7 +151,7 @@ void guestEnableMMU()
  **/
 void guestDisableMMU()
 {
-  DIE_NOW(NULL, "guestDisableMMU: unimplemented.");
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
 void guestSetContextID(u32int contextid)

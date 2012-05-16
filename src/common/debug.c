@@ -41,6 +41,10 @@ extern void setEmergencyExceptionVector(void);
 #endif
 
 
+const char *const ERROR_NO_SUCH_REGISTER = "no such register";
+const char *const ERROR_NOT_IMPLEMENTED = "not implemented";
+
+
 void dumpStackFromParameters(u32int snapshotOrigin, u32int psr, u32int *stack)
   __attribute__((externally_visible));
 

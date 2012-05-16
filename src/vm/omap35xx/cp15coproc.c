@@ -370,8 +370,8 @@ void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr,
       default:
       {
         // no such cache exists on the beagleboard!
-        printf("setCregVal: CSSELR = %x\n", val);
-        DIE_NOW(NULL, "setCregVal: CSSELR selects an unimplemented cache.");
+        printf("setCregVal: CSSELR = %x selects unimplemented cache" EOL, val);
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
     } // switch (value) ends
     // update CCSIDR with correct value

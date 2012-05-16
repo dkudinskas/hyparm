@@ -149,7 +149,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       if (getUartMode(uID+1) == configB)
       {
         // load XON1_ADDR1
-        DIE_NOW(NULL, "UART load XON1_ADDR1 unimplemented");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       else
       {
@@ -163,7 +163,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       if (getUartMode(uID+1) == configB)
       {
         // load XON2_ADDR2
-        DIE_NOW(NULL, "UART load XON2_ADDR2 unimplemented");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       else
       {
@@ -176,7 +176,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       if (getUartMode(uID+1) == configB)
       {
         // load TCR/XOFF1
-        DIE_NOW(NULL, "UART load TCR/XOFF1 unimplemented");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       else
       {
@@ -190,7 +190,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
         else
         {
           // sub-operational/sub-configA TCR_TLR mode, load xmission control
-          DIE_NOW(NULL, "UART store TCR unimplemented");
+          DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
         }
       }
       break;
@@ -198,7 +198,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       if (getUartMode(uID+1) == configB)
       {
         // store TLR/XOFF2
-        DIE_NOW(NULL, "UART load TLR/XOFF2 unimplemented");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       else
       {
@@ -212,7 +212,7 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
         else
         {
           // sub-operational/sub-configA TCR_TLR mode, store TLR reg
-          DIE_NOW(NULL, "UART store TLR unimplemented");
+          DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
         }
       }
       break;
@@ -232,10 +232,10 @@ u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     case UART_SYSS_REG:
     case UART_WER_REG:
       printf("loadUart%x reg %#x" EOL, uID+1, regOffs);
-      DIE_NOW(NULL, "UART: load from unimplemented register.");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     default:
       printf("loadUart%x reg %#x" EOL, uID+1, regOffs);
-      DIE_NOW(NULL, "UART: load from undefined register.");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
 
   DEBUG(VP_OMAP_35XX_UART, "%s: load from address %#.8x reg %#x value %#.8x" EOL, dev->deviceName,
@@ -363,7 +363,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       if (getUartMode(uID+1) == configB)
       {
         // store XON1_ADDR1
-        DIE_NOW(NULL, "UART store XON1_ADDR1 unimplemented");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       else
       {
@@ -404,7 +404,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       if (getUartMode(uID+1) == configB)
       {
         // store XON2_ADDR2
-        DIE_NOW(NULL, "UART store XON2_ADDR2 unimplemented");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       else
       {
@@ -415,13 +415,13 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       }
       break;
     case UART_MSR_REG:
-      DIE_NOW(NULL, "UART store MSR/TCR/XOFF1 unimplemented");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       break;
     case UART_SPR_REG:
       if (getUartMode(uID+1) == configB)
       {
         // store TLR/XOFF2
-        DIE_NOW(NULL, "UART store TLR/XOFF2 unimplemented");
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       else
       {
@@ -435,7 +435,7 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
         else
         {
           // sub-operational/sub-configA TCR_TLR mode, store TLR reg
-          DIE_NOW(NULL, "UART store TLR unimplemented");
+          DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
         }
       }
       break;
@@ -506,10 +506,10 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
     case UART_SFREGH_REG:
     case UART_WER_REG:
       printf("storeUart%x reg %#x value %#.8x" EOL, uID+1, regOffs, value);
-      DIE_NOW(NULL, "UART: store to unimplemented register.");
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     default:
       printf("storeUart%x reg %#x value %#.8x" EOL, uID+1, regOffs, value);
-      DIE_NOW(NULL, "UART: store to undefined register.");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
 }
 
