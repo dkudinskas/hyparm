@@ -256,8 +256,12 @@ void initialiseShadowPageTables(GCONTXT* gc)
   mmuClearDataCache();
   mmuDataMemoryBarrier();
 
+#ifdef CONFIG_GUEST_ANDROID
   //FIXME: Henri: Why should these structures be invalidated?
   //invalidatePageTableInfo();
+#else
+  invalidatePageTableInfo();
+#endif /* CONFIG_GUEST_ANDROID */
 
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: invalidatePageTableInfo() done." EOL);
 
