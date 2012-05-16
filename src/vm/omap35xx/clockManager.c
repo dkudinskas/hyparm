@@ -47,7 +47,7 @@ void initClockManager()
   clockMan->cmIclkEn1Core   = 0x3ffffedb;
   clockMan->cmIclkEn2Core   = 0x0000001f;
   clockMan->cmIclkEn3Core   = 0x00000000;
-  clockMan->cmIdleSt1Core   = 0xc000001d;
+  clockMan->cmIdleSt1Core   = 0x8000001D;
   clockMan->cmIdleSt2Core   = 0x00000000;
   clockMan->cmIdleSt3Core   = 0x0000000d;
   clockMan->cmAutoIdle1Core = 0x00000008;
@@ -120,6 +120,7 @@ void initClockManager()
   // NEON_CM registers
   clockMan->cmClkStCtrlNeon = 0;
   // USBHOST_CM registers
+  clockMan->cmAutoidleUsb  = 0;
   clockMan->cmClkStCtrlUsb = 0;
 }
 
@@ -621,6 +622,11 @@ u32int loadUsbHostCm(device * dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - USBHOST_CM;
   switch (reg)
   {
+    case CM_AUTOIDLE_USBHOST:
+    {
+      val = clockMan->cmAutoidleUsb;
+      break;
+    }
     case CM_CLKSTCTRL_USBHOST:
     {
       val = clockMan->cmClkStCtrlUsb;
@@ -742,21 +748,40 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
   switch (reg)
   {
     case CM_ICLKEN1_CORE:
-      if (clockMan->cmIclkEn1Core != value)
+    {
+      u32int peripherals = clockMan->cmIclkEn1Core ^ value;
+
+      if (!peripherals)
       {
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+        break;
       }
+      else if (peripherals & CM_CORE_UART1)
+      {
+        clockMan->cmIdleSt1Core ^= CM_CORE_UART1;
+      }
+      else if (peripherals & CM_CORE_SDRC)
+      {
+        clockMan->cmIdleSt1Core ^= CM_CORE_SDRC;
+      }
+      else
+      {
+        printf("%s: unimplemented store to cmIclkEn1Core" EOL, __func__);
+        printf("%x -> %x" EOL, clockMan->cmIclkEn1Core, value);
+        DIE_NOW(NULL, "unimplemented store");
+      }
+
+      clockMan->cmIclkEn1Core = value;
       break;
+    }
     case CM_FCLKEN1_CORE:
       if (clockMan->cmFclkEn1Core != value)
       {
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+        printf("%s: CM_FCLKEN1_CORE unimplemented." EOL, __func__);
       }
       break;
     case CM_CLKSTCTRL_CORE:
       if (clockMan->cmClkStCtrl != value)
       {
-        //FIXME: see spruf98v manual
         printf("%s: unimplemented store to reg cmClkStCtrl" EOL, __func__);
       }
       break;
@@ -963,6 +988,12 @@ void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int va
       }
       break;
     }
+    case CM_CLKSEL1_PLL:
+      if (clockMan->cmClkSel1Pll != value)
+      {
+        printf("%s: unimplemented store to reg cmClkSel1Pll" EOL, __func__);
+      }
+      break;
     case CM_CLKSEL4_PLL:
     {
       if (clockMan->cmClkSel4Pll != value)
@@ -974,7 +1005,6 @@ void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int va
     }
     case CM_IDLEST_CKGEN:
     case CM_IDLEST2_CKGEN:
-    case CM_CLKSEL1_PLL:
     case CM_CLKSEL2_PLL:
     case CM_CLKSEL3_PLL:
     case CM_CLKSEL5_PLL:
@@ -1137,11 +1167,16 @@ void storeUsbHostCm(device * dev, u32int address, u32int phyAddr, u32int value)
   u32int reg = phyAddr - USBHOST_CM;
   switch (reg)
   {
+    case CM_AUTOIDLE_USBHOST:
+      if (clockMan->cmAutoidleUsb != value)
+      {
+        printf("%s: unimplemented store to reg cmAutoidleUsb" EOL, __func__);
+      }
+      break;
     case CM_CLKSTCTRL_USBHOST:
       if (clockMan->cmClkStCtrlUsb != value)
       {
-        //FIXME: see spruf98v manual
-        printf("storeUsbHostCm unimplemented store to reg cmClkstctrlUsb");
+        printf("%s: unimplemented store to reg cmClkstctrlUsb" EOL, __func__);
       }
       break;
     default:
