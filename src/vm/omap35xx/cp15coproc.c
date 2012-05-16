@@ -649,6 +649,6 @@ u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPt
   {
     printf("getCreg (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
            CRn, opc1, CRm, opc2, reg.value);
-    DIE_NOW(NULL, "Undefined CP15 register!");
+    DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }

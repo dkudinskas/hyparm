@@ -157,7 +157,7 @@ u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAd
           dev->deviceName, val);
       break;
     default:
-      DIE_NOW(NULL, "GPT: load from undefined register.");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
 
  return val;
@@ -290,7 +290,7 @@ void storeGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAdd
           dev->deviceName, value);
       break;
     default:
-      DIE_NOW(NULL, "GPT: store to undefined register.");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
 }
 
