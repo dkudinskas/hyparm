@@ -26,17 +26,11 @@ __macro__ bool txxIsThumb32(u32int instruction);
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
 
-u64int scanBlockCounter;
-
 void resetScanBlockCounter(void);
-
-u64int getScanBlockCounter(void);
 
 #else
 
 #define resetScanBlockCounter()
-
-#define getScanBlockCounter()        (0ULL)
 
 #endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
 
