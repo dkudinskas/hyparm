@@ -30,32 +30,6 @@ simpleEntry *newLevelOnePageTable()
   {
     DIE_NOW(NULL, "failed to allocate L1 page table");
   }
-#if 0
-  //small page map the first MB of mem so we can best protect the bootstrap code from self modification
-  sectionMapMemory(hypervisorPtd, MEMORY_START_ADDR, (HYPERVISOR_START_ADDR-1), GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000);
-
-#ifdef CONFIG_BLOCK_COPY
-  u32int blockCopyCache = (u32int)gc->blockCopyCache;
-  //blockCopyCache is set to Hypervisordomain in mapHypervisorMemory (See logfile:pageTablesOutput.log)
-
-  //TODO: Check if it is possible to change accessbits for a smaller part.  Since 1 section = 1 MB which is much larger than the blockCopyCache.
-  if(setAccessBits(hypervisorPtd, blockCopyCache, PRIV_RW_USR_RO)>7){
-    DIE_NOW(0,"Failed to setting AccessBits for blockCopyCache");
-  }
-  disableCacheBit(hypervisorPtd,blockCopyCache);//Disable caching for blockCopyCache
-#endif
-for guest::
-#ifdef CONFIG_BLOCK_COPY
-  u32int blockCopyCache = (u32int)gc->blockCopyCache;
-  //TODO: Check if it is possible to change accessbits for a smaller part.  Since 1 section = 1 MB which is much larger than the blockCopyCache.
-  //Make sure that blockCopyCache is accessible for guestOS
-  if(setAccessBits(ptd, blockCopyCache, PRIV_RW_USR_RO)>7){
-    DIE_NOW(0,"Failed to setting AccessBits for blockCopyCache");
-  }
-  disableCacheBit(ptd,blockCopyCache);//Disable caching for blockCopyCache
-#endif
-
-#endif
   ASSERT(isAlignedToMask(pageTable, PT1_ALIGN_MASK), "new L1 page table is not correctly aligned");
   memset(pageTable, 0, PT1_SIZE);
   DEBUG(MM_PAGE_TABLES, "newLevelOnePageTable: Page Table base addr: %p" EOL, pageTable);
