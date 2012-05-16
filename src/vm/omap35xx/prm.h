@@ -173,6 +173,7 @@ struct PowerAndResetManager
   u32int prmPwstctrlCore;
   u32int prmPwststCore;
   // SGX registers
+  u32int prmWkdepSgx;
   u32int prmPwstctrlSgx;
   u32int prmPwststSgx;
   // Wakeup registers
@@ -181,9 +182,11 @@ struct PowerAndResetManager
   u32int prmIva2grpselWkup;
   u32int prmWkstWkup;
   // DSS registers
+  u32int prmWkdepDss;
   u32int prmPwstctrlDss;
   u32int prmPwststDss;
   // CAM registers
+  u32int prmWkdepCam;
   u32int prmPwstctrlCam;
   u32int prmPwststCam;
   // PER registers
@@ -192,9 +195,11 @@ struct PowerAndResetManager
   // EMU registers
   u32int prmPwststEmu;
   // NEON registers
+  u32int prmWkdepNeon;
   u32int prmPwstctrlNeon;
   u32int prmPwststNeon;
   // USBHOST registers
+  u32int prmWkdepUsbhost;
   u32int prmPwstctrlUsbhost;
   u32int prmPwststUsbhost;
 };

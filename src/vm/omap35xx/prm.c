@@ -62,6 +62,7 @@ void initPrm(void)
   prMan->prmPwstctrlCore = 0xF0307;
   prMan->prmPwststCore   = 0xF7;
   // SGX registers
+  prMan->prmWkdepSgx    = 0x16;
   prMan->prmPwstctrlSgx = 0x30107;
   prMan->prmPwststSgx   = 0x3;
   // Wakeup registers
@@ -70,9 +71,11 @@ void initPrm(void)
   prMan->prmIva2grpselWkup = 0;
   prMan->prmWkstWkup       = 0;
   // DSS registers
+  prMan->prmWkdepDss    = 0x16;
   prMan->prmPwstctrlDss = 0x30107;
   prMan->prmPwststDss   = 0x3;
   // CAM registers
+  prMan->prmWkdepCam    = 0x16;
   prMan->prmPwstctrlCam = 0x30107;
   prMan->prmPwststCam   = 0x3;
   // PER registers
@@ -81,9 +84,11 @@ void initPrm(void)
   // EMU registers
   prMan->prmPwststEmu = 0xC3;
   // NEON registers
+  prMan->prmWkdepNeon    = 0x2;
   prMan->prmPwstctrlNeon = 0x7;
   prMan->prmPwststNeon   = 0x3;
   // USBHOST registers
+  prMan->prmWkdepUsbhost    = 0x17;
   prMan->prmPwstctrlUsbhost = 0x30107;
   prMan->prmPwststUsbhost   = 0x3;
 
@@ -208,14 +213,14 @@ u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
     case PM_PWSTST:
     case PM_UNKNOWN:
     {
-      printf("loadClockControlPrm: loading invalid register." EOL);
+      printf("%s: loading invalid register." EOL, __func__);
       val = 0;
       break;
     }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   DEBUG(VP_OMAP_35XX_PRM, "loadClockControlPrm reg %x value %.8x" EOL, reg, val);
@@ -330,7 +335,7 @@ u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
       break;
     }
     default:
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_PRM, "loadGlobalRegPrm reg %x value %.8x" EOL, reg, val);
   return val;
@@ -360,7 +365,7 @@ u32int loadIva2Prm(device *dev, u32int address, u32int phyAddr)
     }
     case PM_UNKNOWN:
     {
-      printf("loadIva2Prm: loading invalid register." EOL);
+      printf("%s: loading invalid register." EOL, __func__);
       val = 0;
       break;
     }
@@ -411,7 +416,7 @@ u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
       break;
     }
     default:
-      DIE_NOW(NULL, "loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_PRM, "loadOcpSystemPrm reg %x value %.8x" EOL, reg, val);
   return val;
@@ -441,7 +446,7 @@ u32int loadMpuPrm(device *dev, u32int address, u32int phyAddr)
     }
     case PM_UNKNOWN:
     {
-      printf("loadMpuPrm: loading invalid register." EOL);
+      printf("%s: loading invalid register." EOL, __func__);
       val = 0;
       break;
     }
@@ -481,6 +486,13 @@ u32int loadCorePrm(device *dev, u32int address, u32int phyAddr)
       val = prMan->prmPwststCore;
       break;
     }
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
+      break;
+    }
     default:
     {
       printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
@@ -506,6 +518,17 @@ u32int loadSgxPrm(device *dev, u32int address, u32int phyAddr)
     case PM_PWSTST:
     {
       val = prMan->prmPwststSgx;
+      break;
+    }
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepSgx;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
@@ -545,10 +568,17 @@ u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
       val = prMan->prmWkstWkup;
       break;
     }
+    case PM_WKDEP:
     case PM_PWSTCTRL:
     case PM_PWSTST:
     {
-      printf("loadWakeUpPrm: loading invalid register." EOL);
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
       val = 0;
       break;
     }
@@ -568,6 +598,11 @@ u32int loadDssPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - DSS_PRM;
   switch (reg)
   {
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepDss;
+      break;
+    }
     case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlDss;
@@ -576,6 +611,12 @@ u32int loadDssPrm(device *dev, u32int address, u32int phyAddr)
     case PM_PWSTST:
     {
       val = prMan->prmPwststDss;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
@@ -594,6 +635,11 @@ u32int loadCamPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - CAM_PRM;
   switch (reg)
   {
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepCam;
+      break;
+    }
     case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlCam;
@@ -602,6 +648,12 @@ u32int loadCamPrm(device *dev, u32int address, u32int phyAddr)
     case PM_PWSTST:
     {
       val = prMan->prmPwststCam;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
@@ -633,7 +685,7 @@ u32int loadPerPrm(device *dev, u32int address, u32int phyAddr)
     case PM_WKDEP:
     case PM_UNKNOWN:
     {
-      printf("loadPerPrm: loading invalid register." EOL);
+      printf("%s: loading invalid register." EOL, __func__);
       val = 0;
       break;
     }
@@ -661,7 +713,7 @@ u32int loadEmuPrm(device *dev, u32int address, u32int phyAddr)
     case PM_WKDEP:
     case PM_UNKNOWN:
     {
-      printf("loadEmuPrm: loading invalid register." EOL);
+      printf("%s: loading invalid register." EOL, __func__);
       val = 0;
       break;
     }
@@ -681,6 +733,11 @@ u32int loadNeonPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - NEON_PRM;
   switch (reg)
   {
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepNeon;
+      break;
+    }
     case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlNeon;
@@ -689,6 +746,12 @@ u32int loadNeonPrm(device *dev, u32int address, u32int phyAddr)
     case PM_PWSTST:
     {
       val = prMan->prmPwststNeon;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
@@ -707,6 +770,11 @@ u32int loadUsbhostPrm(device *dev, u32int address, u32int phyAddr)
   u32int reg = phyAddr - USBHOST_PRM;
   switch (reg)
   {
+    case PM_WKDEP:
+    {
+      val = prMan->prmWkdepUsbhost;
+      break;
+    }
     case PM_PWSTCTRL:
     {
       val = prMan->prmPwstctrlUsbhost;
@@ -715,6 +783,12 @@ u32int loadUsbhostPrm(device *dev, u32int address, u32int phyAddr)
     case PM_PWSTST:
     {
       val = prMan->prmPwststUsbhost;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: loading invalid register." EOL, __func__);
+      val = 0;
       break;
     }
     default:
@@ -829,7 +903,7 @@ void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int v
     case PM_WKDEP:
     case PM_UNKNOWN:
     {
-      printf("storeClockControlPrm: storing to invalid register." EOL);
+      printf("%s: storing to invalid register." EOL, __func__);
       break;
     }
     default:
@@ -862,7 +936,7 @@ void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
     }
     case PM_UNKNOWN:
     {
-      printf("storeIva2Prm: storing to invalid register." EOL);
+      printf("%s: storing to invalid register." EOL, __func__);
       break;
     }
     default:
@@ -921,7 +995,7 @@ void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
     }
     case PM_UNKNOWN:
     {
-      printf("storeMpuPrm: storing to invalid register." EOL);
+      printf("%s: storing to invalid register." EOL, __func__);
       break;
     }
     default:
@@ -941,6 +1015,12 @@ void storeCorePrm(device * dev, u32int address, u32int phyAddr, u32int value)
       prMan->prmPwstctrlCore = value;
       break;
     }
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
     default:
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
@@ -958,6 +1038,16 @@ void storeSgxPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       prMan->prmPwstctrlSgx = value;
       break;
     }
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepSgx = value;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
+      break;
+    }
     default:
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
@@ -970,9 +1060,11 @@ void storeWakeUpPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
+    case PM_WKDEP:
     case PM_PWSTCTRL:
+    case PM_UNKNOWN:
     {
-      printf("storeWakeUpPrm: storing to invalid register." EOL);
+      printf("%s: storing to invalid register." EOL, __func__);
       break;
     }
     default:
@@ -987,9 +1079,19 @@ void storeDssPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepDss = value;
+      break;
+    }
     case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlDss = value;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
       break;
     }
     default:
@@ -1004,9 +1106,19 @@ void storeCamPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepCam = value;
+      break;
+    }
     case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlCam = value;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
       break;
     }
     default:
@@ -1026,10 +1138,10 @@ void storePerPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       prMan->prmPwstctrlPer = value;
       break;
     }
-    case PM_UNKNOWN:
     case PM_WKDEP:
+    case PM_UNKNOWN:
     {
-      printf("storePerPrm: storing to invalid register." EOL);
+      printf("%s: storing to invalid register." EOL, __func__);
       break;
     }
     default:
@@ -1044,10 +1156,10 @@ void storeEmuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
         value);
   switch (reg)
   {
-    case PM_UNKNOWN:
     case PM_WKDEP:
+    case PM_UNKNOWN:
     {
-      printf("storeEmuPrm: storing to invalid register." EOL);
+      printf("%s: storing to invalid register." EOL, __func__);
       break;
     }
     default:
@@ -1062,9 +1174,19 @@ void storeNeonPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepNeon = value;
+      break;
+    }
     case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlNeon = value;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
       break;
     }
     default:
@@ -1079,9 +1201,19 @@ void storeUsbhostPrm(device * dev, u32int address, u32int phyAddr, u32int value)
       value);
   switch (reg)
   {
+    case PM_WKDEP:
+    {
+      prMan->prmWkdepUsbhost = value;
+      break;
+    }
     case PM_PWSTCTRL:
     {
       prMan->prmPwstctrlUsbhost = value;
+      break;
+    }
+    case PM_UNKNOWN:
+    {
+      printf("%s: storing to invalid register." EOL, __func__);
       break;
     }
     default:

@@ -117,8 +117,10 @@ void initClockManager()
   clockMan->cmSleepDepPer  = 0x00000000;
   clockMan->cmClkStCtrlPer = 0x00000000;
   clockMan->cmClkStStPer   = 0x00000001;
-  // USB_HOST registers
-  clockMan->cmClkstctrlUsb = 0;
+  // NEON_CM registers
+  clockMan->cmClkStCtrlNeon = 0;
+  // USBHOST_CM registers
+  clockMan->cmClkStCtrlUsb = 0;
 }
 
 /*************************************************************************
@@ -222,7 +224,7 @@ u32int loadIva2Cm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStIva2Reg;
       break;
     default:
-      DIE_NOW(NULL, "loadIva2Cm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER); 
   } // switch ends
   DEBUG(VP_OMAP_35XX_CM, "loadIva2Cm reg %#x value %#.8x" EOL, reg, val);
   return val;
@@ -266,7 +268,7 @@ u32int loadMpuCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStMpuReg;
       break;
     default:
-      DIE_NOW(NULL, "loadMpuCm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_CM, "loadMpuCm reg %x value %.8x" EOL, reg, val);
   return val;
@@ -321,7 +323,7 @@ u32int loadCoreCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStSTCore;
       break;
     default:
-      DIE_NOW(NULL, "loadCoreCm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_CM, "loadCoreCm reg %x value %.8x" EOL, reg, val);
   return val;
@@ -355,7 +357,7 @@ u32int loadSgxCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStSt;
       break;
     default:
-      DIE_NOW(NULL, "loadSgxCm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_CM, "loadSgxCm reg %x value %.8x" EOL, reg, val);
   return val;
@@ -388,7 +390,7 @@ u32int loadWkupCm(device * dev, u32int address, u32int phyAddr)
       break;
     default:
       printf("loadWkupCm reg %x" EOL, reg);
-      DIE_NOW(NULL, "loadWkupCm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_CM, "loadWkupCm reg %x value %.8x" EOL, reg, val);
   return val;
@@ -443,7 +445,7 @@ u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr)
       break;
     default:
       printf("loadClockControlCm reg %x" EOL, reg);
-      DIE_NOW(NULL, "loadClockControlCm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_CM, "loadClockControlCm reg %#x value %#.8x" EOL, reg, val);
   return val;
@@ -480,7 +482,7 @@ u32int loadDssCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStDss;
       break;
     default:
-      DIE_NOW(NULL, "loadDssCm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_CM, "loadDssCm reg %#x value %#.8x" EOL, reg, val);
   return val;
@@ -517,7 +519,7 @@ u32int loadCamCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStCam;
       break;
     default:
-      DIE_NOW(NULL, "loadCamCm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_CM, "loadCamCm reg %#x value %#.8x" EOL, reg, val);
   return val;
@@ -554,7 +556,7 @@ u32int loadPerCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkStStPer;
       break;
     default:
-      DIE_NOW(NULL, "loadPerCm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_CM, "loadPerCm reg %#x value %#.8x" EOL, reg, val);
   return val;
@@ -582,7 +584,7 @@ u32int loadEmuCm(device * dev, u32int address, u32int phyAddr)
       val = clockMan->cmClkSel3Emu;
       break;
     default:
-      DIE_NOW(NULL, "loadEmuCm loading non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   DEBUG(VP_OMAP_35XX_CM, "loadEmuCm reg %#x value %#.8x" EOL, reg, val);
   return val;
@@ -597,9 +599,20 @@ u32int loadGlobalRegCm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadNeonCm(device * dev, u32int address, u32int phyAddr)
 {
-  printf("%s load from pAddr: %.8x, vAddr %.8x" EOL, dev->deviceName, phyAddr, address);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-  return 0;
+  u32int val = 0;
+  u32int reg = phyAddr - NEON_CM;
+  switch (reg)
+  {
+    case CM_CLKSTCTRL_NEON:
+    {
+      val = clockMan->cmClkStCtrlNeon;
+      break;
+    }
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  } // switch ends
+  DEBUG(VP_OMAP_35XX_CM, "loadNeonCm reg %x value %.8x" EOL, reg, val);
+  return val;
 }
 
 u32int loadUsbHostCm(device * dev, u32int address, u32int phyAddr)
@@ -610,7 +623,7 @@ u32int loadUsbHostCm(device * dev, u32int address, u32int phyAddr)
   {
     case CM_CLKSTCTRL_USBHOST:
     {
-      val = clockMan->cmClkstctrlUsb;
+      val = clockMan->cmClkStCtrlUsb;
       break;
     }
     default:
@@ -680,28 +693,50 @@ void storeClockManager(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int p
 
 void storeIva2Cm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-  return;
+  DEBUG(VP_OMAP_35XX_CM, "storeIva2Cm: store to address %#.8x val %#.8x" EOL, phyAddr, value);
+  u32int reg = phyAddr - IVA2_CM;
+  switch (reg)
+  {
+    case CM_CLKSTCTRL_IVA2:
+      if (clockMan->cmClkStCtrlIva2Reg != value)
+      {
+        //FIXME: see spruf98v manual
+        printf("%s: unimplemented store to reg cmClkstctrlIva2" EOL, __func__);
+      }
+      break;
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
 }
 
 void storeOcpSystemCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
+  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, phyAddr, value);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return;
 }
 
 void storeMpuCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-  return;
+  DEBUG(VP_OMAP_35XX_CM, "storeMpuCm: store to address %#.8x val %#.8x" EOL, phyAddr, value);
+  u32int reg = phyAddr - MPU_CM;
+  switch (reg)
+  {
+    case CM_CLKSTCTRL_MPU:
+      if (clockMan->cmClkStCtrlMpuReg != value)
+      {
+        //FIXME: see spruf98v manual
+        printf("%s: unimplemented store to reg cmClkStCtrlMpu" EOL, __func__);
+      }
+      break;
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
 }
 
 void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address,
+  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, phyAddr,
       value);
   u32int reg = phyAddr - CORE_CM;
   switch (reg)
@@ -718,6 +753,13 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       }
       break;
+    case CM_CLKSTCTRL_CORE:
+      if (clockMan->cmClkStCtrl != value)
+      {
+        //FIXME: see spruf98v manual
+        printf("%s: unimplemented store to reg cmClkStCtrl" EOL, __func__);
+      }
+      break;
     case CM_FCLKEN3_CORE:
     case CM_ICLKEN2_CORE:
     case CM_ICLKEN3_CORE:
@@ -728,10 +770,8 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_AUTOIDLE2_CORE:
     case CM_AUTOIDLE3_CORE:
     case CM_CLKSEL_CORE:
-    case CM_CLKSTCTRL_CORE:
     case CM_CLKSTST_CORE:
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-      break;
     default:
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
@@ -740,15 +780,26 @@ void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeSgxCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-  return;
+  DEBUG(VP_OMAP_35XX_CM, "storeSgxCm: store to address %#.8x val %#.8x" EOL, phyAddr, value);
+  u32int reg = phyAddr - SGX_CM;
+  switch (reg)
+  {
+    case CM_CLKSTCTRL_SGX:
+      if (clockMan->cmClkStCtrlSgx != value)
+      {
+        //FIXME: see spruf98v manual
+        printf("%s: unimplemented store to reg cmClkstctrlSgx" EOL, __func__);
+      }
+      break;
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
 }
 
 void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address,
-      value);
+  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, phyAddr,
+        value);
   u32int reg = phyAddr - WKUP_CM;
   switch (reg)
   {
@@ -868,33 +919,64 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
           dev->deviceName);
       break;
     default:
-      DIE_NOW(NULL, "storeWkupCm storing non existing register!");
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
   return;
 }
 
 void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
+  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %.8x val %.8x" EOL, dev->deviceName, phyAddr, value);
   u32int reg = phyAddr - Clock_Control_Reg_CM;
   switch (reg)
   {
     case CM_CLKEN_PLL:
+    {
       printf("Store to CM_CLKEN_PLL val %.8x" EOL, value);
       clockMan->cmClkEnPll = value;
       break;
-    case CM_AUTOIDLE_PLL:
-      printf("Store to CM_AUTOIDLE_PLL val %.8x" EOL, value);
-      clockMan->cmAutoIdlePll = value;
-      break;
+    }
     case CM_CLKEN2_PLL:
+    {
+      if (clockMan->cmClkEn2Pll != value)
+      {
+        //FIXME: see spruf98v manual
+        printf("%s: unimplemented store to reg cmClkEn2Pll" EOL, __func__);
+      }
+      break;
+    }
+    case CM_AUTOIDLE_PLL:
+    {
+      if (clockMan->cmAutoIdlePll != value)
+      {
+        //FIXME: see spruf98v manual
+        printf("%s: unimplemented store to reg cmAutoIdlePll" EOL, __func__);
+      }
+      break;
+    }
+    case CM_AUTOIDLE2_PLL:
+    {
+      if (clockMan->cmAutoIdle2Pll != value)
+      {
+        //FIXME: see spruf98v manual
+        printf("%s: unimplemented store to reg cmAutoIdle2Pll" EOL, __func__);
+      }
+      break;
+    }
+    case CM_CLKSEL4_PLL:
+    {
+      if (clockMan->cmClkSel4Pll != value)
+      {
+        //FIXME: see spruf98v manual
+        printf("%s: unimplemented store to reg cmClkSel4Pll" EOL, __func__);
+      }
+      break;
+    }
     case CM_IDLEST_CKGEN:
     case CM_IDLEST2_CKGEN:
-    case CM_AUTOIDLE2_PLL:
     case CM_CLKSEL1_PLL:
     case CM_CLKSEL2_PLL:
     case CM_CLKSEL3_PLL:
-    case CM_CLKSEL4_PLL:
     case CM_CLKSEL5_PLL:
     case CM_CLKOUT_CTRL:
       printf("%s: store to VA %.8x, PA %.8x, value %.8x" EOL, dev->deviceName, address, phyAddr, value);
@@ -908,21 +990,43 @@ void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int va
 
 void storeDssCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-  return;
+  DEBUG(VP_OMAP_35XX_CM, "storeDssCm: store to address %#.8x val %#.8x" EOL, phyAddr, value);
+  u32int reg = phyAddr - DSS_CM;
+  switch (reg)
+  {
+    case CM_CLKSTCTRL_DSS:
+      if (clockMan->cmClkStCtrlDss != value)
+      {
+        //FIXME: see spruf98v manual
+        printf("storeDssCm unimplemented store to reg cmClkstctrlUsb" EOL);
+      }
+      break;
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
 }
 
 void storeCamCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-  return;
+  DEBUG(VP_OMAP_35XX_CM, "storeCamCm: store to address %#.8x val %#.8x" EOL, phyAddr, value);
+  u32int reg = phyAddr - CAM_CM;
+  switch (reg)
+  {
+    case CM_CLKSTCTRL_CAM:
+      if (clockMan->cmClkStCtrlCam != value)
+      {
+        //FIXME: see spruf98v manual
+        printf("storeCamCm unimplemented store to reg cmClkstctrlUsb" EOL);
+      }
+      break;
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
 }
 
 void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address,
+  DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, phyAddr,
       value);
   u32int reg = phyAddr - PER_CM;
   switch (reg)
@@ -983,7 +1087,7 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeEmuCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  DEBUG(VP_OMAP_35XX_CM, "storeEmuCm: store to address %#.8x val %#.8x" EOL, address, value);
+  DEBUG(VP_OMAP_35XX_CM, "storeEmuCm: store to address %#.8x val %#.8x" EOL, phyAddr, value);
   u32int reg = phyAddr - EMU_CM;
   switch (reg)
   {
@@ -1007,9 +1111,20 @@ void storeGlobalRegCm(device * dev, u32int address, u32int phyAddr, u32int value
 
 void storeNeonCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-  return;
+  DEBUG(VP_OMAP_35XX_CM, "storeNeonCm: store to address %#.8x val %#.8x" EOL, phyAddr, value);
+  u32int reg = phyAddr - NEON_CM;
+  switch (reg)
+  {
+    case CM_CLKSTCTRL_NEON:
+      if (clockMan->cmClkStCtrlNeon != value)
+      {
+        //FIXME: see spruf98v manual
+        printf("%s: unimplemented store to reg cmClkstctrlNeon" EOL, __func__);
+      }
+      break;
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
 }
 
 void storeUsbHostCm(device * dev, u32int address, u32int phyAddr, u32int value)
@@ -1019,9 +1134,10 @@ void storeUsbHostCm(device * dev, u32int address, u32int phyAddr, u32int value)
   switch (reg)
   {
     case CM_CLKSTCTRL_USBHOST:
-      if (clockMan->cmClkstctrlUsb != value)
+      if (clockMan->cmClkStCtrlUsb != value)
       {
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+        //FIXME: see spruf98v manual
+        printf("storeUsbHostCm unimplemented store to reg cmClkstctrlUsb");
       }
       break;
     default:

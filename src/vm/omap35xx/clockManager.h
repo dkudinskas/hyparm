@@ -372,8 +372,10 @@ struct ClockManager
   u32int cmSleepDepPer;
   u32int cmClkStCtrlPer;
   u32int cmClkStStPer;
-  // USB_HOST registers
-  u32int cmClkstctrlUsb;
+  // NEON_CM registers
+  u32int cmClkStCtrlNeon;
+  // USBHOST_CM registers
+  u32int cmClkStCtrlUsb;
 };
 
 #endif
