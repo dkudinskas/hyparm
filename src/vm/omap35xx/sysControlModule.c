@@ -344,37 +344,37 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
   u32int val = 0;
 
   if ((alignedAddr >= SYS_CTRL_MOD_INTERFACE)
-      && (alignedAddr <= (SYS_CTRL_MOD_INTERFACE + SYS_CTRL_MOD_INTERFACE_SIZE)))
+      && (alignedAddr < (SYS_CTRL_MOD_INTERFACE + SYS_CTRL_MOD_INTERFACE_SIZE)))
   {
     val = loadInterfaceScm(dev, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS)
-        && (alignedAddr <= (SYS_CTRL_MOD_PADCONFS + SYS_CTRL_MOD_PADCONFS_SIZE)))
+        && (alignedAddr < (SYS_CTRL_MOD_PADCONFS + SYS_CTRL_MOD_PADCONFS_SIZE)))
   {
     val = loadPadconfsScm(dev, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_GENERAL)
-        && (alignedAddr <= (SYS_CTRL_MOD_GENERAL + SYS_CTRL_MOD_GENERAL_SIZE)))
+        && (alignedAddr < (SYS_CTRL_MOD_GENERAL + SYS_CTRL_MOD_GENERAL_SIZE)))
   {
     val = loadGeneralScm(dev, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_MEM_WKUP)
-        && (alignedAddr <= (SYS_CTRL_MOD_MEM_WKUP + SYS_CTRL_MOD_MEM_WKUP_SIZE)))
+        && (alignedAddr < (SYS_CTRL_MOD_MEM_WKUP + SYS_CTRL_MOD_MEM_WKUP_SIZE)))
   {
     val = loadMemWkupScm(dev, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS_WKUP)
-        && (alignedAddr <= (SYS_CTRL_MOD_PADCONFS_WKUP + SYS_CTRL_MOD_PADCONFS_WKUP_SIZE)))
+        && (alignedAddr < (SYS_CTRL_MOD_PADCONFS_WKUP + SYS_CTRL_MOD_PADCONFS_WKUP_SIZE)))
   {
     val = loadPadconfsWkupScm(dev, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_GENERAL_WKUP)
-        && (alignedAddr <= (SYS_CTRL_MOD_GENERAL_WKUP + SYS_CTRL_MOD_GENERAL_WKUP_SIZE)))
+        && (alignedAddr < (SYS_CTRL_MOD_GENERAL_WKUP + SYS_CTRL_MOD_GENERAL_WKUP_SIZE)))
   {
     val = loadGeneralWkupScm(dev, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS_ETK)
-        && (alignedAddr <= (SYS_CTRL_MOD_PADCONFS_ETK + SYS_CTRL_MOD_PADCONFS_ETK_SIZE)))
+        && (alignedAddr < (SYS_CTRL_MOD_PADCONFS_ETK + SYS_CTRL_MOD_PADCONFS_ETK_SIZE)))
   {
     val = loadPadconfsScm(dev, virtAddr, phyAddr);
   }
