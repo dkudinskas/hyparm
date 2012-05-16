@@ -1064,7 +1064,11 @@ void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
     case CM_SLEEPDEP_PER:
       if (clockMan->cmSleepDepPer != value)
       {
+#ifdef CONFIG_GUEST_ANDROID
+        printf("%s: IGNORING unimplemented store to reg cmSleepDepPer. Value: %x" EOL, __func__, value);
+#else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
       }
       break;
     case CM_CLKSTCTRL_PER:
