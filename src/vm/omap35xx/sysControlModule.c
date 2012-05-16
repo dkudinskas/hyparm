@@ -155,40 +155,35 @@ u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int
   DEBUG(VP_OMAP_35XX_SCM, "%s load from pAddr: %#.8x, vAddr %#.8x, aSize %x" EOL, dev->deviceName,
       phyAddr, virtAddr, (u32int)size);
 
-  if (size != WORD)
-  {
-    // only word access allowed in these modules
-    DIE_NOW(NULL, "SysControlModule: invalid access size.");
-  }
-
   u32int val = 0;
 
   if ((phyAddr >= SYS_CTRL_MOD_INTERFACE) && (phyAddr < (SYS_CTRL_MOD_INTERFACE + 36)))
   {
     val = loadInterfaceScm(dev, virtAddr, phyAddr);
   }
-  else if ( (phyAddr >= SYS_CTRL_MOD_PADCONFS) && (phyAddr < (SYS_CTRL_MOD_PADCONFS + 564)))
+  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS) && (phyAddr < (SYS_CTRL_MOD_PADCONFS + 564)))
   {
-    val = loadPadconfsScm(dev, virtAddr, phyAddr);
+    val = loadPadconfsScm(dev, size, virtAddr, phyAddr);
   }
-  else if ( (phyAddr >= SYS_CTRL_MOD_GENERAL) && (phyAddr < (SYS_CTRL_MOD_GENERAL + 767)))
+  else if ((phyAddr >= SYS_CTRL_MOD_GENERAL) && (phyAddr < (SYS_CTRL_MOD_GENERAL + 767)))
   {
     val = loadGeneralScm(dev, virtAddr, phyAddr);
   }
-  else if ( (phyAddr >= SYS_CTRL_MOD_MEM_WKUP) && (phyAddr < (SYS_CTRL_MOD_MEM_WKUP + 1024)))
+  else if ((phyAddr >= SYS_CTRL_MOD_MEM_WKUP) && (phyAddr < (SYS_CTRL_MOD_MEM_WKUP + 1024)))
   {
     val = loadMemWkupScm(dev, virtAddr, phyAddr);
   }
-  else if ( (phyAddr >= SYS_CTRL_MOD_PADCONFS_WKUP) && (phyAddr < (SYS_CTRL_MOD_PADCONFS_WKUP + 80)))
+  else if ((phyAddr >= SYS_CTRL_MOD_PADCONFS_WKUP) && (phyAddr < (SYS_CTRL_MOD_PADCONFS_WKUP + 80)))
   {
     val = loadPadconfsWkupScm(dev, virtAddr, phyAddr);
   }
-  else if ( (phyAddr >= SYS_CTRL_MOD_GENERAL_WKUP) && (phyAddr < (SYS_CTRL_MOD_GENERAL_WKUP + 31)))
+  else if ((phyAddr >= SYS_CTRL_MOD_GENERAL_WKUP) && (phyAddr < (SYS_CTRL_MOD_GENERAL_WKUP + 31)))
   {
     val = loadGeneralWkupScm(dev, virtAddr, phyAddr);
   }
   else
   {
+    printf("%s: load from PA: %#.8x, VA: %#.8x" EOL, __func__, phyAddr, virtAddr);
     DIE_NOW(NULL, "SysControlModule: invalid base module.");
   }
 

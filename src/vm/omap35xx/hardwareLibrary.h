@@ -45,6 +45,8 @@
 #define INTERRUPT_CONTROLLER_SIZE        0x00002000
 #define L4_CORE_WAKEUP_INT               0x48300000
 #define L4_CORE_WAKEUP_INT_SIZE          0x00040FFF
+#define DM_TIMER                         0x48304000   // RESERVED
+#define DM_TIMER_SIZE                    0x00001000
 #define PRM                                0x48306000
 #define PRM_SIZE                           0x00004000
 #define CONTROL_MODULE_ID                  0x4830A000

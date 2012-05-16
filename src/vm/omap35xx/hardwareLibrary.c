@@ -6,6 +6,7 @@
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/clockManager.h"
+#include "vm/omap35xx/dmtimer.h"
 #include "vm/omap35xx/gpio.h"
 #include "vm/omap35xx/gpmc.h"
 #include "vm/omap35xx/gptimer.h"
@@ -288,6 +289,16 @@ device *createHardwareLibrary()
     goto l4CoreWakeupIntError;
   }
 
+  // L4_CORE_WAKEUP: dual-mode timer
+  device *dmTimer = createDevice("DM_TIMER", FALSE, DM_TIMER, (u32int)(DM_TIMER + DM_TIMER_SIZE-1),
+                                 l4CoreWakeupInt, &loadDmTimer, &storeDmTimer);
+
+  if (dmTimer == NULL)
+  {
+    goto dmTimerError;
+  }
+  initDmTimer();
+
   // L4_CORE_WAKEUP: power and reset manager
   device *prm =  createDevice("PRM", FALSE, PRM, (u32int)(PRM - 1 + PRM_SIZE), l4CoreWakeupInt,
                               &loadPrm, &storePrm);
@@ -472,6 +483,8 @@ gpio1Error:
 ctrlModIDError:
   free(prm);
 prmError:
+  free(dmTimer);
+dmTimerError:
   free(l4CoreWakeupInt);
 l4CoreWakeupIntError:
   free(intc);
@@ -568,7 +581,7 @@ static void storeGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int 
       }
     }
     printf("Store to %s at address %.8x physical %.8x value %.8x" EOL, dev->deviceName, virtAddr, phyAddr, value);
-    DIE_NOW(NULL, "No child of current device holds load address in range.");
+    DIE_NOW(NULL, "No child of current device holds store address in range.");
   }
   else
   {
