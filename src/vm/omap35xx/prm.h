@@ -219,6 +219,7 @@ struct PowerAndResetManager
   u32int prmPolCtrl;
   u32int prmVoltSetup2;
   // IVA2 registers
+  u32int prmWkdepIva2;
   u32int prmPwstctrlIva2;
   u32int prmPwststIva2;
   // OCP_system_reg REGISTERS
@@ -227,6 +228,7 @@ struct PowerAndResetManager
   u32int prmIrqStatusMpuOcp;
   u32int prmIrqEnableMpuOcp;
   // MPU registers
+  u32int prmWkdepMpu;
   u32int prmPwstctrlMpu;
   u32int prmPwststMpu;
   // CORE registers
