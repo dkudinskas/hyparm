@@ -62,10 +62,6 @@ u32int armLdrexbInstruction(GCONTXT *context, u32int instruction)
 
 u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(context, "ldrexhInstruction is executed but not yet checked for blockCopyCompatibility");
-#endif
-
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
@@ -89,10 +85,6 @@ u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
 
 u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(context, "ldrexdInstruction is executed but not yet checked for blockCopyCompatibility");
-#endif
-
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
@@ -180,10 +172,6 @@ u32int armStrexbInstruction(GCONTXT *context, u32int instruction)
 
 u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(context, "strexhInstruction is executed but not yet checked for blockCopyCompatibility");
-#endif
-
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
@@ -219,10 +207,6 @@ u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
 
 u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(context, "strexdInstruction is executed but not yet checked for blockCopyCompatibility");
-#endif
-
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;

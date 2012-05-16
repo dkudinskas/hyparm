@@ -55,11 +55,7 @@ u32int armBicInstruction(GCONTXT *context, u32int instruction)
 /*********************************/
 u32int armCmnInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(context, "cmnInstruction is executed but not yet checked for blockCopyCompatibility");
-#else
   invalidDataProcTrap(context, instruction, __func__);
-#endif
 }
 
 /*********************************/
@@ -67,11 +63,7 @@ u32int armCmnInstruction(GCONTXT *context, u32int instruction)
 /*********************************/
 u32int armCmpInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(context, "cmpInstruction is executed but not yet checked for blockCopyCompatibility");
-#else
   invalidDataProcTrap(context, instruction, __func__);
-#endif
 }
 
 /*********************************/
@@ -178,12 +170,8 @@ u32int armSbcInstruction(GCONTXT *context, u32int instruction)
 /*********************************/
 u32int armSubInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(context, "subInstruction is executed but not yet checked for blockCopyCompatibility");
-#else
   OPTYPE opType = SUB;
   return arithLogicOp(context, instruction, opType, __func__);
-#endif
 }
 
 /*********************************/
@@ -191,11 +179,7 @@ u32int armSubInstruction(GCONTXT *context, u32int instruction)
 /*********************************/
 u32int armTeqInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(context, "teqInstruction is executed but not yet checked for blockCopyCompatibility");
-#else
   invalidDataProcTrap(context, instruction, __func__);
-#endif
 }
 
 /*********************************/

@@ -81,10 +81,6 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
 
 u32int armBxInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_BLOCK_COPY
-  DIE_NOW(context, "bxInstruction is executed but not yet checked for blockCopyCompatibility");
-#endif
-
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
     return getRealPC(context) + ARM_INSTRUCTION_SIZE;
