@@ -501,12 +501,19 @@ void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       printf("%s", dev->deviceName);
       DIE_NOW(NULL, " storing to R/O register (MVR)");
       break;
+    case UART_WER_REG:
+    {
+      if (uart[uID]->wer != value)
+      {
+        printf("Unimplemented store to UART WER" EOL);
+      }
+      break;
+    }
     case UART_MDR2_REG:
     case UART_SFLSR_REG:
     case UART_RESUME_REG:
     case UART_SFREGL_REG:
     case UART_SFREGH_REG:
-    case UART_WER_REG:
       printf("storeUart%x reg %#x value %#.8x" EOL, uID+1, regOffs, value);
       DIE_NOW(NULL, "UART: store to unimplemented register.");
     default:
