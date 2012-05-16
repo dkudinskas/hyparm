@@ -156,10 +156,8 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
 
   if (!regOrImm)
   {
-    if (regSrc == GPR_PC)
-    {
-      DIE_NOW(context, "check LDRB literal");
-    }
+    ASSERT(regSrc != GPR_PC, "check LDRB literal");
+
     // immediate case
     offset = instruction & 0x00000FFF;
   } // Immediate case ends
