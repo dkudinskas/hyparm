@@ -76,7 +76,7 @@ static void banner(const char *msg)
   printf(EOL EOL "%s[%s]%s%s" EOL EOL, padding, msg, ((msgLength & 1) ? "" : "="), padding);
 }
 
-void dieNow(GCONTXT *context, const char *file, const char *line, const char *caller, const char *msg)
+void dieNow(const char *file, const char *line, const char *caller, const char *msg)
 {
 #ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
   setEmergencyExceptionVector();
@@ -89,10 +89,8 @@ void dieNow(GCONTXT *context, const char *file, const char *line, const char *ca
   banner("ERROR");
   printf("%s:%s: in %s:" EOL, file, line, caller);
   printf("%s" EOL, msg);
-  if (context == NULL)
-  {
-    context = getGuestContext();
-  }
+
+  const GCONTXT *context = getGuestContext();
   if (context != NULL)
   {
     dumpGuestContext(context);

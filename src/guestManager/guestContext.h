@@ -127,7 +127,7 @@ extern GCONTXT *getGuestContext(void);
 
 GCONTXT *createGuestContext(void);
 
-void dumpGuestContext(GCONTXT * gc);
+void dumpGuestContext(const GCONTXT * gc);
 
 /* a function to evaluate if guest is in priviledge mode or user mode */
 bool isGuestInPrivMode(GCONTXT * context);
