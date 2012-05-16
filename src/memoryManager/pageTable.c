@@ -25,7 +25,7 @@
  **/
 simpleEntry *newLevelOnePageTable()
 {
-  simpleEntry *pageTable = memalign(1 << PT1_ALIGN_BITS, PT1_SIZE);
+  simpleEntry *pageTable = (simpleEntry *)memalign(1 << PT1_ALIGN_BITS, PT1_SIZE);
   if (pageTable == NULL)
   {
     DIE_NOW(NULL, "failed to allocate L1 page table");
@@ -41,7 +41,7 @@ simpleEntry *newLevelOnePageTable()
  **/
 u32int *newLevelTwoPageTable()
 {
-  u32int *pageTable = memalign(1 << PT2_ALIGN_BITS, PT2_SIZE);
+  u32int *pageTable = (u32int *)memalign(1 << PT2_ALIGN_BITS, PT2_SIZE);
   if (pageTable == NULL)
   {
     DIE_NOW(NULL, "failed to allocate L2 page table");
@@ -161,6 +161,11 @@ void mapHypervisorMemory(simpleEntry *pageTable)
   ASSERT(HYPERVISOR_RW_XN_END_ADDRESS <= RAM_XN_POOL_BEGIN, "bad linker symbols");
   ASSERT(RAM_XN_POOL_BEGIN < RAM_XN_POOL_END, "bad linker symbols");
   ASSERT(RAM_XN_POOL_END <= MEMORY_END_ADDR, "bad linker symbols");
+#ifdef CONFIG_BLOCK_COPY
+  ASSERT(RAM_XN_POOL_END < RAM_CODE_CACHE_POOL_BEGIN, "bad linker symbols");
+  ASSERT(RAM_CODE_CACHE_POOL_BEGIN < RAM_CODE_CACHE_POOL_END, "bad linker symbols");
+  ASSERT(RAM_CODE_CACHE_POOL_END <= MEMORY_END_ADDR, "bad linker symbols");
+#endif
   /*
    * Now make sure the linker followed our alignment constraints:
    */
@@ -172,6 +177,14 @@ void mapHypervisorMemory(simpleEntry *pageTable)
            "non-executable read-write sections not aligned on small page boundary");
   ASSERT(isAlignedToMaskN(RAM_XN_POOL_BEGIN, SMALL_PAGE_MASK),
          "non-executable RAM pool not aligned on small page boundary");
+  ASSERT(isAlignedToMaskN(RAM_XN_POOL_END, SMALL_PAGE_MASK),
+         "non-executable RAM pool not aligned on small page boundary");
+#ifdef CONFIG_BLOCK_COPY
+  ASSERT(isAlignedToMaskN(RAM_CODE_CACHE_POOL_BEGIN, SMALL_PAGE_MASK),
+         "executable RAM pool not aligned on small page boundary");
+  ASSERT(isAlignedToMaskN(RAM_CODE_CACHE_POOL_END, SMALL_PAGE_MASK),
+         "executable RAM pool not aligned on small page boundary");
+#endif
   /*
    * Stacks must be non-executable, and should be protected against overflow by leaving gaps (fault
    * entries) in the translation table. Stacks and gaps must reside in one of the data sections and
@@ -241,7 +254,6 @@ void mapHypervisorMemory(simpleEntry *pageTable)
   mapRange(pageTable, RAM_XN_POOL_BEGIN, RAM_XN_POOL_BEGIN, RAM_XN_POOL_END,
            HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
 }
-
 
 /**
  * Add a section mapping of given virtual to physical address

@@ -5,19 +5,19 @@
 
 #include "exceptions/exceptionHandlers.h"
 
-#include "guestManager/blockCache.h"
-
 #ifdef CONFIG_THUMB2
 #include "guestManager/guestExceptions.h"
 #endif
 
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/scanner.h"
+#include "instructionEmu/translationInfo.h"
+
+#include "instructionEmu/interpreter/internals.h"
 
 #include "memoryManager/mmu.h"
 #include "memoryManager/pageTable.h"
 
-#include "instructionEmu/interpreter/internals.h"
 
 #define INSTR_SWI            0xEF000000U
 #define INSTR_SWI_THUMB      0x0000DF00U
@@ -26,14 +26,17 @@
 #define INSTR_SWI_THUMB_MIX  ((INSTR_SWI_THUMB << 16) | INSTR_NOP_THUMB)
 
 
-static inline u32int getHash(u32int key);
-
-static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex);
+static void scanArmBlock(GCONTXT *context, u32int *start, u32int metaIndex);
 
 #ifdef CONFIG_THUMB2
-static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex);
+static void scanThumbBlock(GCONTXT *context, u16int *start, u32int metaIndex);
 #endif
 
+#ifdef CONFIG_BLOCK_COPY
+
+static void scanAndCopyArmBlock(GCONTXT *context, u32int *start, u32int metaIndex);
+static bool armIsPCInsensitiveInstruction(u32int instruction);
+#endif
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
 
@@ -96,19 +99,6 @@ void setScanBlockCallSource(u8int source)
 #endif /* CONFIG_DEBUG_SCANNER_MARK_INTERVAL */
 
 
-// http://www.concentric.net/~Ttwang/tech/inthash.htm
-// 32bit mix function
-static inline u32int getHash(u32int key)
-{
-  key = ~key + (key << 15); // key = (key << 15) - key - 1;
-  key = key ^ (key >> 12);
-  key = key + (key << 2);
-  key = key ^ (key >> 4);
-  key = key * 2057; // key = (key + (key << 3)) + (key << 11);
-  key = key ^ (key >> 16);
-  return key >> 2;
-}
-
 void scanBlock(GCONTXT *context, u32int startAddress)
 {
   /*
@@ -140,19 +130,32 @@ void scanBlock(GCONTXT *context, u32int startAddress)
         "%#.8x" EOL, getScanBlockCounter(), getDataAbortCounter(), getIrqCounter(), startAddress);
   }
 
-  u32int cacheIndex = (getHash(startAddress) & (BLOCK_CACHE_SIZE-1));// 0x1FF mask for 512 entry cache
-  bool cached = checkBlockCache(context->blockCache, cacheIndex, startAddress);
+  u32int cacheIndex = getMetaCacheIndex(startAddress);
+  MetaCacheEntry *meta = getMetaCacheEntry(&context->translationCache, cacheIndex, startAddress);
 
   DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: @%.8x, source = %#x, count = %#Lx; %s" EOL, startAddress,
-      getScanBlockCallSource(), getScanBlockCounter(), (cached ? "HIT" : "MISS"));
+    getScanBlockCallSource(), getScanBlockCounter(), (meta != NULL ? "HIT" : "MISS"));
 
   setScanBlockCallSource(SCANNER_CALL_SOURCE_NOT_SET);
 
-  if (cached)
+  if (meta != NULL)
   {
-    BCENTRY *bcEntry = getBlockCacheEntry(context->blockCache, cacheIndex);
-    context->hdlFunct = bcEntry->hdlFunct;
-    context->endOfBlockInstr = bcEntry->hyperedInstruction;
+    context->hdlFunct = meta->hdlFunct;
+    context->endOfBlockInstr = meta->hyperedInstruction;
+#ifdef CONFIG_BLOCK_COPY
+    /* First word is a backpointer */
+    u32int *addressInBlockCopyCache = &meta->code->codeStart;
+    // The programcounter of the code that is executing should be set to the code in the C$
+    if (addressInBlockCopyCache >= context->translationCache.codeCacheLastEntry)
+    {
+      /* blockCopyCacheAddresses will be used in a  cyclic manner
+      -> if end of blockCopyCache is passed blockCopyCacheCurrAddress must be updated */
+      addressInBlockCopyCache = addressInBlockCopyCache - (TRANSLATION_CACHE_CODE_SIZE_B - 1);
+    }
+    context->R15 = (u32int)addressInBlockCopyCache;
+    //But also the PC of the last instruction of the block should be set
+    context->PCOfLastInstruction = (u32int)meta->endAddress;
+#endif
     return;
   }
 
@@ -162,18 +165,24 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     scanThumbBlock(context, (void *)startAddress, cacheIndex);
   }
   else
-#endif
+#endif /* CONFIG_THUMB2 */
   {
+#ifdef CONFIG_BLOCK_COPY
+    scanAndCopyArmBlock(context, (u32int *)startAddress, cacheIndex);
+#else
     scanArmBlock(context, (u32int *)startAddress, cacheIndex);
+#endif
   }
 }
+
+#ifndef CONFIG_BLOCK_COPY
 
 static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
 {
   DEBUG(SCANNER, "scanArmBlock @ %p (R15 = %#.8x)" EOL, start, context->R15);
 
   u32int *end;
-  instructionHandler handler;
+  InstructionHandler handler;
   u32int instruction;
   instructionReplaceCode replaceCode;
   /*
@@ -197,16 +206,16 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
        */
       // we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
       u32int svcCacheIndex = (svcCode >> 8) - 1;
-      if (svcCacheIndex >= BLOCK_CACHE_SIZE)
+      if (svcCacheIndex >= TRANSLATION_CACHE_META_SIZE_N)
       {
         printf("scanArmBlock: instruction %#.8x @ %p", instruction, end);
         DIE_NOW(context, "scanArmBlock: block cache index in SWI out of range.");
       }
       DEBUG(SCANNER_EXTRA, "scanArmBlock: EOB instruction is SWI @ %p code %#x" EOL, end, svcCacheIndex);
-      BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, svcCacheIndex);
+      MetaCacheEntry *meta = &context->translationCache.metaCache[svcCacheIndex];
       // retrieve end of block instruction and handler function pointer
-      context->endOfBlockInstr = bcEntry->hyperedInstruction;
-      context->hdlFunct = bcEntry->hdlFunct;
+      context->endOfBlockInstr = meta->hyperedInstruction;
+      context->hdlFunct = meta->hdlFunct;
     }
     else //Handle guest SVC
     {
@@ -233,8 +242,8 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
   DEBUG(SCANNER_EXTRA, "scanArmBlock: EOB %#.8x @ %p SVC code %#x hdlrFuncPtr %p" EOL,
       context->endOfBlockInstr, end, ((cacheIndex + 1) << 8), context->hdlFunct);
 
-  addToBlockCache(context->blockCache, cacheIndex, (u32int) start, (u32int)end,
-      context->endOfBlockInstr, BCENTRY_TYPE_ARM, context->hdlFunct);
+  addMetaCacheEntry(&context->translationCache, cacheIndex, start, end,
+      context->endOfBlockInstr, MCE_TYPE_ARM, context->hdlFunct);
 
   /* To ensure that subsequent fetches from eobAddress get a hypercall
    * rather than the old cached copy...
@@ -254,10 +263,10 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
   DEBUG(SCANNER, "scanThumbBlock @ %#.8x" EOL, context->R15);
 
   u16int *end;
-  instructionHandler handler;
+  InstructionHandler handler;
   instructionReplaceCode replaceCode;
   u32int instruction;
-  u32int blockType = BCENTRY_TYPE_THUMB;
+  u32int blockType = MCE_TYPE_THUMB;
   u32int endIs16Bit;
 
   u16int *currtmpAddress = start;   //backup pointer  ?? seems to be start address of last instruction
@@ -319,18 +328,20 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
     {
       // we hit a SVC that we placed ourselves as EOB. retrieve the real EOB...
       u32int svcCacheIndex = svcCode - 1;
-      if (svcCacheIndex >= BLOCK_CACHE_SIZE)
+      if (svcCacheIndex >= TRANSLATION_CACHE_META_SIZE_N)
       {
         printf("scanThumbBlock: instruction %#.8x @ %p", instruction, end);
         DIE_NOW(context, "scanThumbBlock: block cache index in SVC out of range");
       }
       DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB instruction is SVC @ %p code %#x" EOL, end, svcCacheIndex);
-      BCENTRY * bcEntry = getBlockCacheEntry(context->blockCache, svcCacheIndex);
+      const MetaCacheEntry *meta = &context->translationCache.metaCache[svcCacheIndex];
       // retrieve end of block instruction and handler function pointer
-      context->endOfBlockInstr = bcEntry->hyperedInstruction;
-      blockType = bcEntry->type;
-      endIs16Bit = blockType == BCENTRY_TYPE_THUMB && !txxIsThumb32(bcEntry->hyperedInstruction);
-      context->hdlFunct = bcEntry->hdlFunct;
+      context->endOfBlockInstr = meta->hyperedInstruction;
+      blockType = meta->type;  /*----------------Install HdlFunct----------------*/
+      /*Save end of block instruction and handler function pointer close to us... */
+
+      endIs16Bit = blockType == MCE_TYPE_THUMB && !txxIsThumb32(meta->hyperedInstruction);
+      context->hdlFunct = meta->hdlFunct;
     }
     else // Guest SVC
     {
@@ -379,8 +390,8 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
   DEBUG(SCANNER_EXTRA, "scanThumbBlock: EOB %#.8x @ %p SVC code %#x hdlrFuncPtr %p" EOL,
       context->endOfBlockInstr, end, ((cacheIndex + 1) << 8), context->hdlFunct);
 
-  addToBlockCache(context->blockCache, cacheIndex, (u32int)start, (u32int)end,
-      context->endOfBlockInstr, blockType, context->hdlFunct);
+  addMetaCacheEntry(&context->translationCache, cacheIndex, (u32int *)start, (u32int *)end,
+                    context->endOfBlockInstr, blockType, context->hdlFunct);
 
   /* To ensure that subsequent fetches from eobAddress get a hypercall
    * rather than the old cached copy...
@@ -432,3 +443,124 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
 }
 
 #endif /* CONFIG_THUMB2 */
+
+
+#else /* CONFIG_BLOCK_COPY */
+
+
+/*
+ * TODO: caching is disabled on C$, so no cache maintenance operations are called from here (!)
+ *
+ * reserved words are painful here... we actually only need one spill location per C$
+ * however...
+ * for C$ size <= 4088 bytes we can use ONE spill location, at start of C$ (because of PC +8 offset)
+ * for C$ size <= 4096 we can use ONE spill location at end of C$
+ * for C$ size <= 8192 we use one at start and end
+ * for any bigger C$ size ... embed in the middle
+ * ....given that LDR literal can address any offset -4095..+4095 from the PC (in both arm &thumb2)
+ * in thumb PC is always aligned to a 4 byte boundary when used in LDR
+ * we will DABT on spill location store
+ * to make sure no guest has an abs addr into the spill location we need to verify that
+ * LR points to a hypervisor-placed spill store, if not its a store hardcoded into guest
+ * this may require a bitmap
+ */
+void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaIndex)
+{
+  /*
+   * Check if there is room in the C$ and if not make it
+   */
+  ARMTranslationInfo block = {
+                               .metaEntry = {
+                                              .startAddress = (u32int)startAddress,
+                                              .type = MCE_TYPE_ARM,
+                                              .code = context->translationCache.codeCacheNextEntry,
+                                            },
+                               .pcRemapBitmapShift = 0
+                             };
+  block.code = updateCodeCachePointer(&context->translationCache, (u32int *)block.metaEntry.code);
+  /*
+   * Install backpointer in C$
+   */
+  ((CodeCacheEntry *)block.code)->metaIndex = metaIndex;
+  /*
+   * Instructions follow, so next R15 is here.
+   */
+  context->R15 = (u32int)updateCodeCachePointer(&context->translationCache, ++block.code);
+  /*
+   * Scan guest code and copy to C$, translating instructions that use the PC on the fly
+   */
+  u32int *instruction = startAddress;
+  struct decodingTableEntry *decodedInstruction;
+  for (; (decodedInstruction = decodeArmInstruction(*instruction))->replace == IRC_SAFE; ++instruction)
+  {
+    if (armIsPCInsensitiveInstruction(*instruction) || decodedInstruction->pcHandler == NULL)
+    {
+      DEBUG(SCANNER, "instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instruction, instruction);
+      *(block.code++) = *instruction;
+      block.metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block.pcRemapBitmapShift;
+      block.pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
+    }
+    else
+    {
+      decodedInstruction->pcHandler(&context->translationCache, &block, (u32int)instruction, *instruction);
+    }
+    block.code = updateCodeCachePointer(&context->translationCache, block.code);
+  }
+  ASSERT(block.pcRemapBitmapShift < (sizeof(block.metaEntry.pcRemapBitmap) * CHAR_BIT), "block too long");
+  /*
+   * Next instruction must be translated into hypercall.
+   */
+  *(block.code++) = INSTR_SWI | ((metaIndex + 1) << 8);
+  context->endOfBlockInstr = *instruction;
+  context->hdlFunct = decodedInstruction->handler;
+  context->PCOfLastInstruction = (u32int)instruction;
+  DEBUG(SCANNER, "EOB %p instr %#.8x SWIcode %#.2x hdlrFuncPtr %p" EOL, instruction,
+      context->endOfBlockInstr, metaIndex, context->hdlFunct);
+  /*
+   * Cache metadata for the translated block. Code may wrap around C$ boundaries; take this into
+   * account when calculating the size of the translated code.
+   */
+  if (block.code < (u32int *)block.metaEntry.code)
+  {
+    block.metaEntry.codeSize = (u32int)context->translationCache.codeCacheLastEntry
+                             - (u32int)block.metaEntry.code + (u32int)block.code
+                             - (u32int)context->translationCache.codeCache;
+    DEBUG(SCANNER, "Block exceeding end: blockCopyCacheSize=%#.8x" EOL, block.metaEntry.codeSize);
+  }
+  else
+  {
+    block.metaEntry.codeSize = (u32int)block.code - (u32int)block.metaEntry.code;
+  }
+  block.metaEntry.endAddress = (u32int)instruction;
+  block.metaEntry.hyperedInstruction = context->endOfBlockInstr,
+  block.metaEntry.hdlFunct = context->hdlFunct;
+  addMetaCacheEntry(&context->translationCache, metaIndex, &block.metaEntry);
+  /*
+   * Protect guest against self-modification.
+   */
+  guestWriteProtect((u32int)startAddress, (u32int)instruction);
+}
+
+/*
+ * armIsPCInsensitiveInstruction returns TRUE if it is CERTAIN that an instruction does not depend
+ * on the current PC value.
+ */
+static bool armIsPCInsensitiveInstruction(u32int instruction)
+{
+  /* STMDB and PUSH may not write PC to mem :
+   * STM   1000|10?0
+   * STMDA 1000|00?0
+   * STMDB 1001|00?0
+   * STMIB 1001|10?0
+         * --------
+         * 100?|?0?0
+   * mask    E |  5
+   * value   8 |  0
+   */
+  return ARM_EXTRACT_REGISTER(instruction, 16) != GPR_PC
+         && ARM_EXTRACT_REGISTER(instruction, 12) != GPR_PC
+         && ARM_EXTRACT_REGISTER(instruction, 0) != GPR_PC
+         && (instruction & 0x0E508000) != 0x08008000;
+}
+
+#endif // CONFIG_BLOCK_COPY

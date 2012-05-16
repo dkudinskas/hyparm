@@ -5,13 +5,13 @@ ENTRY("_start")
 
 MEMORY
 {
-	RAM (rwx) : ORIGIN = 0x8f000000 LENGTH = 16777216
+	RAM (rwx) : ORIGIN = 0x8f000000 LENGTH = 16M
 }
 
 SECTIONS
 {
 	. = 0x8f000000;
-	. = ALIGN(4096);
+	. = ALIGN(4K);
 
 	__HYPERVISOR_BEGIN__ = .;
 
@@ -23,7 +23,7 @@ SECTIONS
 		*(.text)
 	} > RAM
 
-	. = ALIGN(4096);
+	. = ALIGN(4K);
 
 	.rodata . :
 	{
@@ -32,7 +32,7 @@ SECTIONS
 		*(.rodata)
 	} > RAM
 
-	. = ALIGN(4096);
+	. = ALIGN(4K);
 
 	.data . :
 	{
@@ -53,7 +53,9 @@ SECTIONS
 
 	__HYPERVISOR_END__ = .;
 
+	__RAM_CODE_CACHE_POOL_END__ = 0x90000000;
+	__RAM_CODE_CACHE_POOL_BEGIN__ = __RAM_CODE_CACHE_POOL_END__ - 8K;
+	__RAM_XN_POOL_END__ = __RAM_CODE_CACHE_POOL_BEGIN__ - 4K;
 	__RAM_XN_POOL_BEGIN__ = ALIGN(4096);
-	__RAM_XN_POOL_END__ = 0x90000000;
 }
 

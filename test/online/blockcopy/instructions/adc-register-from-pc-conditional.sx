@@ -1,0 +1,28 @@
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+/*
+ * Set APSR.C (carry flag)
+ */
+MOV    r0, #0x80000000
+ADDS   r0, r0, r0
+MOV    r1, r0
+
+/*
+ * Result of ADC should be PC = (PC + 8) + 4
+ */
+MOVCS  r0, pc
+MOVCC  r1, pc
+ADCCS  r1, pc, r1
+SUB    r3, r1, r0
+CMP    r3, #9
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1

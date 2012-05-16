@@ -47,8 +47,8 @@ u32int armBicInstruction(GCONTXT *context, u32int instruction);
  */
 
 u32int armMovInstruction(GCONTXT *context, u32int instruction);
-u32int armMovwInstruction(GCONTXT *context, u32int instruction);
 u32int armMovtInstruction(GCONTXT *context, u32int instruction);
+u32int armMovwInstruction(GCONTXT *context, u32int instruction);
 
 u32int armAsrInstruction(GCONTXT *context, u32int instruction);
 u32int armLslInstruction(GCONTXT *context, u32int instruction);

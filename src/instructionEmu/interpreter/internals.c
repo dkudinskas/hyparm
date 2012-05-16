@@ -8,7 +8,7 @@
 
 u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *instrString)
 {
-  u32int nextPC = context->R15;
+  u32int nextPC = getRealPC(context);
   u32int regDest = (instr & 0x0000F000) >> 12;
 
   if (regDest != GPR_PC)
@@ -17,7 +17,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
   }
 
 #ifdef DATA_PROC_TRACE
-  printf("%s: %#.8x @ %#.8x" EOL, instrString, instr, context->R15);
+  printf("%s: %#.8x @ %#.8x" EOL, instrString, instr, getRealPC(context));
 #endif
 
   if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instr)))
@@ -36,23 +36,27 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
       {
         case ADD:
           nextPC = loadGuestGPR(regSrc, context) + armExpandImm12(imm12);
-          if (regSrc == 0xF)
+#ifndef CONFIG_BLOCK_COPY
+          if (regSrc == GPR_PC)
           {
             nextPC += 8;
           }
+#endif
           break;
         case SUB:
           // if S bit is set, this is return from exception!
-	  // FIXME: Niels: do we ever get here for exception return; aren't there valid cases where a SUBS does NOT perform exception return?
+          // FIXME: Niels: do we ever get here for exception return; aren't there valid cases where a SUBS does NOT perform exception return?
           if (setFlags != 0)
           {
             DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
           }
           nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
-          if (regSrc == 0xF)
+#ifndef CONFIG_BLOCK_COPY
+          if (regSrc == GPR_PC)
           {
             nextPC += 8;
           }
+#endif
           break;
         default:
           DIE_NOW(context, "invalid arithLogicOp opType");
@@ -73,17 +77,21 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
       {
         case ADD:
           nextPC = loadGuestGPR(regSrc, context) + shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+#ifndef CONFIG_BLOCK_COPY
           if (regSrc == GPR_PC)
           {
             nextPC += 8;
           }
+#endif
           break;
         case SUB:
           nextPC = loadGuestGPR(regSrc, context) - shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
+#ifndef CONFIG_BLOCK_COPY
           if (regSrc == GPR_PC)
           {
             nextPC += 8;
           }
+#endif
           break;
         case MOV:
           // cant be shifted - mov shifted reg is a pseudo instr
@@ -143,7 +151,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
   }
   else
   {
-    nextPC = context->R15 + ARM_INSTRUCTION_SIZE;
+    nextPC = getRealPC(context) + ARM_INSTRUCTION_SIZE;
     return nextPC;
   }
 }
@@ -247,7 +255,7 @@ bool evaluateConditionCode(GCONTXT *context, u32int conditionCode)
 
 void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
 {
-  printf("%#.8x @ %#.8x should not have trapped!" EOL, instruction, context->R15);
+  printf("%#.8x @ %#.8x should not have trapped!" EOL, instruction, getRealPC(context));
   DIE_NOW(context, message);
 }
 
@@ -260,6 +268,20 @@ u32int loadGuestGPR(u32int regSrc, GCONTXT *context)
   u32int guestMode = context->CPSR & PSR_MODE;
   u32int value = 0;
 
+#ifdef CONFIG_BLOCK_COPY
+  if (regSrc < 8)
+  {
+    // dont care about modes here. just get the value.
+    u32int * ldPtr = &(context->R0);
+    ldPtr = (u32int*)( (u32int)ldPtr + 4 * regSrc);
+    value = *ldPtr;
+  }
+  else if (regSrc == 15)
+  {
+    //The function loadGuestGPR is only called when emulation of a critical instruction is done (last instruction of cacheblock)
+	value = context->PCOfLastInstruction+8;//Do +8 because PC is 2 instruction behind
+  }
+#else
   if ((regSrc < 8) || (regSrc == 15))
   {
     // dont care about modes here. just get the value.
@@ -267,6 +289,7 @@ u32int loadGuestGPR(u32int regSrc, GCONTXT *context)
     ldPtr = (u32int*)( (u32int)ldPtr + 4 * regSrc);
     value = *ldPtr;
   }
+#endif
   else
   {
     u32int * ldPtr = 0;

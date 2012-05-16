@@ -11,7 +11,7 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
@@ -100,7 +100,7 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
     bool abort = shouldDataAbort(FALSE, FALSE, address);
     if (abort)
     {
-      return context->R15;
+      return getRealPC(context);
     }
   }
 
@@ -123,11 +123,11 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
   }
   if (regDst == GPR_PC)
   {
-    return context->R15;
+    return getRealPC(context);
   }
   else
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 }
 
@@ -135,7 +135,7 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
@@ -156,13 +156,10 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
 
   if (!regOrImm)
   {
-    if (regSrc == GPR_PC)
-    {
-      DIE_NOW(context, "check LDRB literal");
-    }
+    ASSERT(regSrc != GPR_PC, "check LDRB literal");
+
     // immediate case
     offset = instruction & 0x00000FFF;
-
   } // Immediate case ends
   else
   {
@@ -209,7 +206,7 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
   // P = 0 and W == 1 then LDRB as if user mode
   if (!preOrPost && writeBack && shouldDataAbort(FALSE, FALSE, address))
   {
-    return context->R15;
+    return getRealPC(context);
   }
 
   // DO the actual load from memory
@@ -226,14 +223,14 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
     // Rn = offsetAddr;
     storeGuestGPR(regSrc, offsetAddress, context);
   }
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
@@ -339,14 +336,14 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
     storeGuestGPR(regSrc, offsetAddress, context);
   }
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
@@ -440,7 +437,7 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
     // Rn = offsetAddr;
     storeGuestGPR(regSrc, offsetAddress, context);
   }
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 
@@ -466,7 +463,7 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
@@ -596,14 +593,19 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
 
   if (isPCinRegList)
   {
-    // If PC is in the list this is an interworking branch
+    /*
+     * BLOCK COPY WARNING: we must use context->R15 instead of getRealPC(context) because we just
+     * updated the former!
+     *
+     * If PC is in the list this is an interworking branch.
+     */
     if (context->R15 & 0x1)
     {
 #ifdef CONFIG_THUMB2
       context->CPSR |= PSR_T_BIT;
       context->R15 &= ~1;
 #else
-    DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
+      DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
 #endif
     }
     else
@@ -612,8 +614,6 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
     }
     return context->R15;
   }
-  else
-  {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
+
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }

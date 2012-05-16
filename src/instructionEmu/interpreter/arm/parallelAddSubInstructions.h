@@ -48,4 +48,4 @@ u32int armUhsaxInstruction(GCONTXT *context, u32int instruction);
 u32int armUhsub16Instruction(GCONTXT *context, u32int instruction);
 u32int armUhsub8Instruction(GCONTXT *context, u32int instruction);
 
-#endif /* __INSTRUCTION_EMU__INTERPRETER__ARM__PARALLEL_MEDIA_INSTRUCTIONS_H__ */
+#endif /* __INSTRUCTION_EMU__INTERPRETER__ARM__PARALLEL_ADD_SUB_INSTRUCTIONS_H__ */

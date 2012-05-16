@@ -1,0 +1,28 @@
+/*
+ * LDR (register) is used to load data from a base address + offset, both stored in registers.
+ * Similar instructions are LDRB, LDRH, LDRD, STR, STRB, STRH and STRD.
+ */
+
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+B      meat
+.word  0xDEADBEEF
+
+meat:
+MOV    r0, #16
+LDR    r0, [pc, -r0]
+MOVW   r1, 0xBEEF
+MOVT   r1, 0xDEAD
+
+CMP    r0, r1
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1

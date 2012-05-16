@@ -34,7 +34,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
   u32int affectF    = (instruction & 0x00000040) >>  6;
   u32int newMode    =  instruction & 0x0000001F;
 #ifdef ARM_INSTR_TRACE
-  printf("CPS instr %08x @ %08x" EOL, instruction, context->R15);
+  printf("CPS instr %08x @ %08x" EOL, instruction, getRealPC(context));
 #endif
 
   ASSERT(imod != 0 || changeMode != 0, ERROR_UNPREDICTABLE_INSTRUCTION);
@@ -127,7 +127,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
   }
   context->CPSR = oldCpsr;
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armDbgInstruction(GCONTXT *context, u32int instruction)
@@ -149,7 +149,7 @@ u32int armDsbInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: DSB (ignored)!" EOL);
 #endif
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armIsbInstruction(GCONTXT *context, u32int instruction)
@@ -157,7 +157,7 @@ u32int armIsbInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: ISB (ignored)!" EOL);
 #endif
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armMrsInstruction(GCONTXT *context, u32int instruction)
@@ -166,7 +166,7 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
   int regDest  = (instruction & 0x0000F000) >> 12;
 
 #ifdef ARM_INSTR_TRACE
-  printf("MRS instr %08x @ %08x" EOL, instruction, context->R15);
+  printf("MRS instr %08x @ %08x" EOL, instruction, getRealPC(context));
 #endif
 
   ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
@@ -217,7 +217,7 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
     storeGuestGPR(regDest, value, context);
   } // condition met ends
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armMsrInstruction(GCONTXT *context, u32int instruction)
@@ -228,12 +228,10 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   u32int fieldMsk =   (instruction & 0x000F0000) >> 16;
 
   u32int value = 0;
-  u32int nextPC = 0;
 
   if (!evaluateConditionCode(context, instrCC))
   {
-    nextPC = context->R15 + 4;
-    return nextPC;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   if (regOrImm == 0)
@@ -336,7 +334,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   }
 
 #ifdef ARM_INSTR_TRACE
-  printf("MSR instr %08x @ %08x" EOL, instruction, context->R15);
+  printf("MSR instr %08x @ %08x" EOL, instruction, getRealPC(context));
 #endif
   // got the final value to write in u32int oldValue. where do we write it thou..?
   if (cpsrOrSpsr == 0)
@@ -368,9 +366,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
     }
   }
-
-  nextPC = context->R15 + 4;
-  return nextPC;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armPldInstruction(GCONTXT *context, u32int instruction)
@@ -378,7 +374,7 @@ u32int armPldInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: PLD!" EOL);
 #endif
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armPliInstruction(GCONTXT *context, u32int instruction)
@@ -386,7 +382,7 @@ u32int armPliInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: PLI!" EOL);
 #endif
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armRfeInstruction(GCONTXT *context, u32int instruction)
@@ -423,7 +419,7 @@ u32int armWfiInstruction(GCONTXT *context, u32int instruction)
 {
   // stop guest execution...
   guestIdle(context);
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armYieldInstruction(GCONTXT *context, u32int instruction)

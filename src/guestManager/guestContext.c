@@ -7,9 +7,10 @@
 
 #include "guestManager/guestContext.h"
 
+#include "memoryManager/addressing.h"
+
 #include "vm/omap35xx/sdram.h"
 
-#include "memoryManager/addressing.h"
 
 GCONTXT *createGuestContext(void)
 {
@@ -33,13 +34,13 @@ GCONTXT *createGuestContext(void)
   DEBUG(GUEST_CONTEXT, "createGuestContext: coprocessor register bank @ %p" EOL,
       context->coprocRegBank);
 
-  // Initialise block cache
-  context->blockCache = createBlockCache();
-  if (context->blockCache == NULL)
-  {
-    DIE_NOW(context, "Failed to allocate basic block cache");
-  }
-  DEBUG(GUEST_CONTEXT, "createGuestContext: block cache @ %p" EOL, context->blockCache);
+  /*
+   * Initialise block copy cache
+   */
+  initialiseTranslationCache(context);
+#ifdef CONFIG_BLOCK_COPY
+  DEBUG(GUEST_CONTEXT, "createGuestContext: block copy cache @ %p" EOL, context->translationCache.codeCache);
+#endif
 
   // virtual machine page table structs
   context->pageTables = (pageTablesVM *)calloc(1, sizeof(pageTablesVM));
@@ -160,7 +161,7 @@ void dumpGuestContext(const GCONTXT *context)
   printf("Data abort pending: %x" EOL, context->guestDataAbtPending);
   printf("Prefetch abort pending: %x" EOL, context->guestPrefetchAbtPending);
   printf("Guest idle: %x" EOL, context->guestIdle);
-  printf("Block cache at: %#.8x" EOL, (u32int)context->blockCache);
+  printf("Block cache at: %#.8x" EOL, (u32int)context->translationCache.metaCache);
 
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
   printf("Block trace:" EOL);
@@ -180,6 +181,14 @@ void dumpGuestContext(const GCONTXT *context)
       printf("%3u: %#.8x" EOL, printIndex, context->blockTrace[traceIndex]);
     }
   }
+#endif
+
+#ifdef CONFIG_BLOCK_COPY
+  /* BlockCache with copied code */
+  printf("gc blockCopyCache: %p" EOL, context->translationCache.codeCache);
+  printf("gc blockCopyCache next: %p" EOL, context->translationCache.codeCacheNextEntry);
+  printf("gc blockCopyCacheEnd: %p" EOL, context->translationCache.codeCacheLastEntry);
+  printf("gc PCOfLastInstruction: %#.8x" EOL, context->PCOfLastInstruction);
 #endif
   dumpSdramStats();
 }

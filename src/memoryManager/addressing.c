@@ -7,8 +7,6 @@
 
 #include "drivers/beagle/memoryMap.h"
 
-#include "guestManager/blockCache.h"
-
 #include "memoryManager/addressing.h"
 #include "memoryManager/memoryConstants.h"
 #include "memoryManager/memoryProtection.h"
@@ -17,7 +15,16 @@
 #include "memoryManager/shadowMap.h"
 
 
-static void setupPageTable(simpleEntry *pageTablePtr, bool hypervisor);
+
+typedef enum pageTableTarget
+{
+  PT_TARGET_HYPERVISOR,
+  PT_TARGET_GUEST_SHADOW_PRIVILEGED,
+  PT_TARGET_GUEST_SHADOW_UNPRIVILEGED
+} PageTableTarget;
+
+
+static void setupPageTable(GCONTXT *context, PageTableTarget target);
 
 
 void initVirtualAddressing(GCONTXT *context)
@@ -25,7 +32,7 @@ void initVirtualAddressing(GCONTXT *context)
   //alloc some space for our 1st Level page table
   context->pageTables->hypervisor = (simpleEntry *)newLevelOnePageTable();
 
-  setupPageTable(context->pageTables->hypervisor, TRUE);
+  setupPageTable(context, PT_TARGET_HYPERVISOR);
 
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: new hypervisor page table %p" EOL, context->pageTables->hypervisor);
 
@@ -38,12 +45,28 @@ void initVirtualAddressing(GCONTXT *context)
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: done" EOL);
 }
 
-static void setupPageTable(simpleEntry *pageTablePtr, bool hypervisor)
+static void setupPageTable(GCONTXT *context, PageTableTarget target)
 {
+  simpleEntry *pageTablePtr;
+  switch (target)
+  {
+    case PT_TARGET_HYPERVISOR:
+      pageTablePtr = context->pageTables->hypervisor;
+      break;
+    case PT_TARGET_GUEST_SHADOW_PRIVILEGED:
+      pageTablePtr = context->pageTables->shadowPriv;
+      break;
+    case PT_TARGET_GUEST_SHADOW_UNPRIVILEGED:
+      pageTablePtr = context->pageTables->shadowUser;
+      break;
+    default:
+      DIE_NOW(context, "bad target");
+  }
+
   //map in the hypervisor
   mapHypervisorMemory(pageTablePtr);
 
-  if (hypervisor)
+  if (target == PT_TARGET_HYPERVISOR)
   {
     // 1:1 Map the entire of physical memory
     mapRange(pageTablePtr, MEMORY_START_ADDR, MEMORY_START_ADDR, HYPERVISOR_BEGIN_ADDRESS,
@@ -99,6 +122,20 @@ static void setupPageTable(simpleEntry *pageTablePtr, bool hypervisor)
   //serial (UART3)
   mapSmallPage(pageTablePtr, BE_UART3, BE_UART3,
                HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
+
+#ifdef CONFIG_BLOCK_COPY
+  if (target != PT_TARGET_GUEST_SHADOW_UNPRIVILEGED)
+  {
+    const u32int codeAddress = (u32int)context->translationCache.codeCache;
+    const u32int spillAddress = (u32int)context->translationCache.spillPage;
+    mapRange(pageTablePtr, codeAddress, codeAddress,
+             codeAddress + SMALL_PAGE_SIZE, GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RO, FALSE, FALSE, 0,
+             FALSE);
+    mapRange(pageTablePtr, spillAddress, spillAddress,
+             spillAddress + SMALL_PAGE_SIZE, GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RW, FALSE, FALSE, 0,
+             TRUE);
+  }
+#endif
 }
 
 /**
@@ -167,25 +204,25 @@ void guestSetContextID(u32int contextid)
  **/
 void privToUserAddressing()
 {
-  GCONTXT *gc = getGuestContext();
+  GCONTXT *context = getGuestContext();
 
-  DEBUG(MM_ADDRESSING, "privToUserAddressing: set shadowActive to %p" EOL, gc->pageTables->shadowUser);
+  DEBUG(MM_ADDRESSING, "privToUserAddressing: set shadowActive to %p" EOL, context->pageTables->shadowUser);
 
   // invalidate the whole block cache
-  clearBlockCache(gc->blockCache);
+  clearTranslationCache(&context->translationCache);
 
-  gc->pageTables->shadowActive = gc->pageTables->shadowUser;
+  context->pageTables->shadowActive = context->pageTables->shadowUser;
   
-  if (gc->pageTables->guestVirtual != 0)
+  if (context->pageTables->guestVirtual != 0)
   {
     // shadow map gpt1 address if not shadow mapped yet
-    simpleEntry* entry = getEntryFirst(gc->pageTables->shadowActive, (u32int)gc->pageTables->guestVirtual);
+    simpleEntry* entry = getEntryFirst(context->pageTables->shadowActive, (u32int)context->pageTables->guestVirtual);
     if (entry->type == FAULT)
     {
-      bool mapped = shadowMap((u32int)gc->pageTables->guestVirtual);
+      bool mapped = shadowMap((u32int)context->pageTables->guestVirtual);
       if (!mapped)
       {
-        DIE_NOW(gc, "privToUserAddressing: couldn't shadow map guest page table." EOL);
+        DIE_NOW(context, "privToUserAddressing: couldn't shadow map guest page table." EOL);
       }
     }
   }
@@ -194,7 +231,7 @@ void privToUserAddressing()
   mmuDataMemoryBarrier();
 
   // set translation table base register in the physical MMU!
-  mmuSetTTBR0(gc->pageTables->shadowActive, (0x100 | gc->pageTables->contextID));
+  mmuSetTTBR0(context->pageTables->shadowActive, (0x100 | context->pageTables->contextID));
 
   // clean out all TLB entries - may have conflicting entries
   mmuInvalidateUTLB();
@@ -208,24 +245,24 @@ void privToUserAddressing()
  **/
 void userToPrivAddressing()
 {
-  GCONTXT* gc = getGuestContext();
+  GCONTXT *context = getGuestContext();
 
-  DEBUG(MM_ADDRESSING, "userToPrivAddressing: set shadowActive to %p" EOL, gc->pageTables->shadowPriv);
+  DEBUG(MM_ADDRESSING, "userToPrivAddressing: set shadowActive to %p" EOL, context->pageTables->shadowPriv);
 
   // invalidate the whole block cache
-  clearBlockCache(gc->blockCache);
+  clearTranslationCache(&context->translationCache);
 
-  gc->pageTables->shadowActive = gc->pageTables->shadowPriv;
-  if (gc->pageTables->guestVirtual != 0)
+  context->pageTables->shadowActive = context->pageTables->shadowPriv;
+  if (context->pageTables->guestVirtual != 0)
   {
     // shadow map gpt1 address if not shadow mapped yet
-    simpleEntry* entry = getEntryFirst(gc->pageTables->shadowActive, (u32int)gc->pageTables->guestVirtual);
+    simpleEntry* entry = getEntryFirst(context->pageTables->shadowActive, (u32int)context->pageTables->guestVirtual);
     if (entry->type == FAULT)
     {
-      bool mapped = shadowMap((u32int)gc->pageTables->guestVirtual);
+      bool mapped = shadowMap((u32int)context->pageTables->guestVirtual);
       if (!mapped)
       {
-        DIE_NOW(gc, "privToUserAddressing: couldn't shadow map guest page table." EOL);
+        DIE_NOW(context, "privToUserAddressing: couldn't shadow map guest page table." EOL);
       }
     }
   }
@@ -234,7 +271,7 @@ void userToPrivAddressing()
   mmuDataMemoryBarrier();
 
   // set translation table base register in the physical MMU!
-  mmuSetTTBR0(gc->pageTables->shadowActive, (0x100 | gc->pageTables->contextID) );
+  mmuSetTTBR0(context->pageTables->shadowActive, (0x100 | context->pageTables->contextID) );
 
   // clean out all TLB entries - may have conflicting entries
   mmuInvalidateUTLB();
@@ -246,12 +283,12 @@ void userToPrivAddressing()
 /**
  * allocate and set up double shadow page tables for the guest
  **/
-void initialiseShadowPageTables(GCONTXT* gc)
+void initialiseShadowPageTables(GCONTXT *gc)
 {
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: create double-shadows!" EOL);
 
   // invalidate the whole block cache
-  clearBlockCache(gc->blockCache);
+  clearTranslationCache(&gc->translationCache);
 
   mmuClearDataCache();
   mmuDataMemoryBarrier();
@@ -268,8 +305,8 @@ void initialiseShadowPageTables(GCONTXT* gc)
   // allocate two shadow page tables and prepare the minimum for operation
   gc->pageTables->shadowPriv = (simpleEntry *)newLevelOnePageTable();
   gc->pageTables->shadowUser = (simpleEntry *)newLevelOnePageTable();
-  setupPageTable(gc->pageTables->shadowPriv, FALSE);
-  setupPageTable(gc->pageTables->shadowUser, FALSE);
+  setupPageTable(gc, PT_TARGET_GUEST_SHADOW_PRIVILEGED);
+  setupPageTable(gc, PT_TARGET_GUEST_SHADOW_UNPRIVILEGED);
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: allocated spt priv %p; spt usr %p" EOL,
         gc->pageTables->shadowPriv, gc->pageTables->shadowUser);
 

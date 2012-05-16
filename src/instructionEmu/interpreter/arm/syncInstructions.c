@@ -8,14 +8,14 @@ u32int armClrexInstruction(GCONTXT *context, u32int instruction)
   DEBUG_TRACE(INTERPRETER_ARM_SYNC, context, instruction);
   DEBUG(INTERPRETER_ARM_SYNC, "ignored!");
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrexInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
@@ -34,14 +34,14 @@ u32int armLdrexInstruction(GCONTXT *context, u32int instruction)
 
   storeGuestGPR(regDest, value, context);
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrexbInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
@@ -57,14 +57,14 @@ u32int armLdrexbInstruction(GCONTXT *context, u32int instruction)
   u32int value = vmLoad(BYTE, baseVal) & 0xFF;
   storeGuestGPR(regDest, value, context);
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
@@ -80,14 +80,14 @@ u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
   u32int value = vmLoad(HALFWORD, baseVal) & 0xFFFF;
   storeGuestGPR(regDest, value, context);
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
@@ -107,14 +107,14 @@ u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
   storeGuestGPR(regDest, value, context);
   storeGuestGPR(regDest + 1, value2, context);
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrexInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
@@ -138,14 +138,14 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
   // operation succeeded updating memory, flag regD (0 - updated, 1 - fail)
   storeGuestGPR(regD, 0, context);
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrexbInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
@@ -167,14 +167,14 @@ u32int armStrexbInstruction(GCONTXT *context, u32int instruction)
 
   storeGuestGPR(regD, 0, context);
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
@@ -187,7 +187,7 @@ u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
   if (!evaluateConditionCode(context, condcode))
   {
     // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   ASSERT(regN != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
@@ -202,14 +202,14 @@ u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
   vmStore(HALFWORD, address, valToStore & 0xFFFF);
   storeGuestGPR(regD, 0, context);
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
@@ -222,7 +222,7 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
   if (!evaluateConditionCode(context, condcode))
   {
     // condition not met! allright, we're done here. next instruction...
-    return context->R15 + 4;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   ASSERT(regN != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
@@ -257,7 +257,7 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
   }
   storeGuestGPR(regD, 0, context);
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armSwpInstruction(GCONTXT *context, u32int instruction)

@@ -9,14 +9,14 @@ u32int armBInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG(INTERPRETER_ARM_BRANCH, "armBInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
   u32int link = instruction & 0x0F000000;
   u32int offset = signExtend((instruction & 0x00FFFFFF) << 2, 26);
-  u32int currPC = context->R15 + ARM_INSTRUCTION_SIZE;
+  u32int currPC = getRealPC(context) + ARM_INSTRUCTION_SIZE;
   if (link == 0x0B000000)
   {
     storeGuestGPR(14, currPC, context);
@@ -49,7 +49,7 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG(INTERPRETER_ARM_BRANCH, "armBlxRegisterInstruction: %#.8x @ %#.8x" EOL, instruction,
@@ -60,7 +60,7 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
   ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int destinationAddress = loadGuestGPR(regDest, context);
-  storeGuestGPR(GPR_LR, context->R15 + ARM_INSTRUCTION_SIZE, context);
+  storeGuestGPR(GPR_LR, getRealPC(context) + ARM_INSTRUCTION_SIZE, context);
 
   if (destinationAddress & 1)
   {
@@ -83,7 +83,7 @@ u32int armBxInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG(INTERPRETER_ARM_BRANCH, "armBxInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);

@@ -13,6 +13,15 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
 {
   u32int instr;
 
+#ifdef CONFIG_BLOCK_COPY
+  // save the PCOfLastInstruction. The emulationfunctions make use of this value to calculate the next PC so R15 should be stored here temporary
+  // but after the abort the PCOfLastInstruction should be back a valid value since the next emulation function will make use of this!
+  u32int PCOfLastInstructionBackup = context->PCOfLastInstruction;
+
+  //emulate methods will take PCOfLastInstruction from context, put it there
+  context->PCOfLastInstruction = context->R15;
+#endif
+
 #ifdef CONFIG_THUMB2
   if (context->CPSR & PSR_T_BIT)
   {
@@ -31,7 +40,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       if (((instr & THUMB32_STRB_IMM12_MASK) == THUMB32_STRB_IMM12) ||
           ((instr & THUMB32_STRB_IMM8_MASK) == THUMB32_STRB_IMM8))
       {
-        validateCachePreChange(context->blockCache, address);
+        clearTranslationCacheByAddress(&context->translationCache, address);
         t32StrbInstruction(context, instr);
       }
       else if ((instr & THUMB32_STRB_REG_MASK) == THUMB32_STRB_REG)
@@ -43,17 +52,17 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
        */
       else if ((instr & THUMB32_STRH_REG_IMM5_MASK) == THUMB32_STRH_REG_IMM5)
       {
-        validateCachePreChange(context->blockCache, address);
+        clearTranslationCacheByAddress(&context->translationCache, address);
         t32StrhImmediateInstruction(context, instr);
       }
       else if ((instr & THUMB32_STRH_REG_IMM8_MASK) == THUMB32_STRH_REG_IMM8)
       {
-        validateCachePreChange(context->blockCache, address);
+        clearTranslationCacheByAddress(&context->translationCache, address);
         t32StrhtInstruction(context, instr);
       }
       else if ((instr & THUMB32_STRH_REG_MASK) == THUMB32_STRH_REG)
       {
-        validateCachePreChange(context->blockCache, address);
+        clearTranslationCacheByAddress(&context->translationCache, address);
         t32StrhRegisterInstruction(context, instr);
       }
       /*
@@ -80,7 +89,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
        */
       else if (((instr & THUMB32_STRD_IMM8_MASK) == THUMB32_STRD_IMM8))
       {
-        validateCachePreChange(context->blockCache, address);
+        clearTranslationCacheByAddress(&context->translationCache, address);
         t32StrdImmediateInstruction(context, instr);
       }
       /*
@@ -101,12 +110,12 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
        */
       if ((instr & THUMB16_STR_IMM5_MASK) == THUMB16_STR_IMM5)
       {
-        validateCachePreChange(context->blockCache, address);
+        clearTranslationCacheByAddress(&context->translationCache, address);
         t16StrInstruction(context, instr);
       }
       else if ((instr & THUMB16_STR_IMM8_MASK) == THUMB16_STR_IMM8)
       {
-        validateCachePreChange(context->blockCache, address);
+        clearTranslationCacheByAddress(&context->translationCache, address);
         t16StrSpInstruction(context, instr);
       }
       /*
@@ -124,7 +133,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
        */
       else if ((instr & THUMB16_PUSH_MASK) == THUMB16_PUSH)
       {
-        validateCachePreChange(context->blockCache,address);
+        clearTranslationCacheByAddress(&context->translationCache, address);
         t16PushInstruction(context, instr);
       }
       /*
@@ -141,7 +150,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       else if (((instr & THUMB16_STRB_IMM5_MASK) == THUMB16_STRB_IMM5) ||
                ((instr & THUMB16_STRB_REG_MASK) == THUMB16_STRB_REG))
       {
-        validateCachePreChange(context->blockCache,address);
+        clearTranslationCacheByAddress(&context->translationCache, address);
         t16StrbInstruction(context, instr);
       }
       /*
@@ -150,7 +159,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       else if (((instr & THUMB16_STRH_IMM5_MASK) == THUMB16_STRH_IMM5) ||
                ((instr & THUMB16_STRH_REG_MASK) == THUMB16_STRH_REG))
       {
-        validateCachePreChange(context->blockCache, address);
+        clearTranslationCacheByAddress(&context->translationCache, address);
         t16StrhInstruction(context, instr);
       }
       /*
@@ -176,7 +185,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
         ((instr & STR_REG_MASK) == STR_REG_MASKED))
     {
       // storing to a protected area.. adjust block cache if needed
-      validateCachePreChange(context->blockCache, address);
+      clearTranslationCacheByAddress(&context->translationCache, address);
       // STR Rd, [Rn, Rm/#imm12]
       armStrInstruction(context, instr);
     }
@@ -184,7 +193,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
              ((instr & STRB_REG_MASK) == STRB_REG_MASKED))
     {
       // storing to a protected area.. adjust block cache if needed
-      validateCachePreChange(context->blockCache, address);
+      clearTranslationCacheByAddress(&context->translationCache, address);
       // STRB Rd, [Rn, Rm/#imm12]
       armStrbInstruction(context, instr);
     }
@@ -192,7 +201,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
              ((instr & STRH_REG_MASK) == STRH_REG_MASKED))
     {
       // storing to a protected area.. adjust block cache if needed
-      validateCachePreChange(context->blockCache, address);
+      clearTranslationCacheByAddress(&context->translationCache, address);
       // STRH Rd, [Rn, Rm/#imm12]
       armStrhInstruction(context, instr);
     }
@@ -200,14 +209,14 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
              ((instr & STRD_REG_MASK) == STRD_REG_MASKED))
     {
       // storing to a protected area.. adjust block cache if needed
-      validateCachePreChange(context->blockCache, address);
+      clearTranslationCacheByAddress(&context->translationCache, address);
       // STRD Rd, [Rn, Rm/#imm12]
       armStrdInstruction(context, instr);
     }
     else if ((instr & STREX_MASK) == STREX_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
-      validateCachePreChange(context->blockCache, address);
+      clearTranslationCacheByAddress(&context->translationCache, address);
       // STREX Rd, [Rn, Rm]
       armStrexInstruction(context, instr);
     }
@@ -257,4 +266,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
     }
   }
+#ifdef CONFIG_BLOCK_COPY
+  context->PCOfLastInstruction = PCOfLastInstructionBackup;
+#endif
 }

@@ -16,6 +16,15 @@
 #include "instructionEmu/interpreter/arm/syncInstructions.h"
 
 
+#ifdef CONFIG_BLOCK_COPY
+
+#include "instructionEmu/interpreter/blockCopy.h"
+
+#include "instructionEmu/interpreter/arm/pcHandlers.h"
+
+#endif /* CONFIG_BLOCK_COPY */
+
+
 #ifdef CONFIG_THUMB2
 
 #include "instructionEmu/interpreter/t16/branchInstructions.h"

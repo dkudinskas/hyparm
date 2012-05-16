@@ -1,0 +1,24 @@
+/*
+ * TST has no destination register so this case is tricky for translation.
+ */
+
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+/*
+ * Let's see if the hypervisor reveals itself. It resides in 0x8f...... range, and we should really
+ * be in the 0x8000.... range. Find out!
+ */
+MOV    r0, #0
+MOVT   r0, #0x0fff
+TST    pc, r0
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1

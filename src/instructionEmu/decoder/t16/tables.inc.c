@@ -3,7 +3,7 @@
  */
 
 
-static struct instruction32bit t16ArithmeticInstructions[] =
+static struct decodingTableEntry t16ArithmeticInstructions[] =
 {
   // According to Thumb-2 spec, R15 cannot be used in arithmetic
   // instructions. So dont trap
@@ -25,14 +25,14 @@ static struct instruction32bit t16ArithmeticInstructions[] =
 };
 
 /* verified */
-static struct instruction32bit t16ConditionalBranchSvcInstructions[] =
+static struct decodingTableEntry t16ConditionalBranchSvcInstructions[] =
 {
   { IRC_REPLACE, &svcInstruction,       0xDF00, 0xFF00, "SVC call" },
   { IRC_REPLACE, &t16BImmediate8Instruction, 0xD000, 0xF000, "B<c> [PC,#<imm8>]" },
   { IRC_REPLACE, &undefinedInstruction, 0x0000, 0x0000, "t16ConditionalBranchSvcInstructions" }
 };
 
-static struct instruction32bit t16DataProcInstructions[] =
+static struct decodingTableEntry t16DataProcInstructions[] =
 {
   { IRC_SAFE,    &t16MvnInstruction,       0x43C0, 0xFFC0, "MVN <Rd>, <Rm>" },
   { IRC_SAFE,    &t16CmpInstruction,       0x4280, 0xFFC0, "CMP <Rn>, <Rm>" },
@@ -43,7 +43,7 @@ static struct instruction32bit t16DataProcInstructions[] =
   { IRC_REPLACE, &undefinedInstruction,    0x0000, 0x0000, "t16DataProcInstructions" }
 };
 
-static struct instruction32bit t16ldrInstructions[] =
+static struct decodingTableEntry t16ldrInstructions[] =
 {
   /*
    * FIXME: impossible
@@ -58,7 +58,7 @@ static struct instruction32bit t16ldrInstructions[] =
   { IRC_REPLACE, &undefinedInstruction, 0x0000, 0x0000, "t16ldrInstructions" }
 };
 
-static struct instruction32bit t16LoadStoreInstructions[] =
+static struct decodingTableEntry t16LoadStoreInstructions[] =
 {
   { IRC_SAFE,    &t16StrInstruction,    0x6000, 0xF800, "STR Rd, [<Rn>, {#<imm5>}]" },
   { IRC_SAFE,    &t16StrSpInstruction,  0x9000, 0xF800, "STR Rd, [SP,#<imm8]" },
@@ -79,7 +79,7 @@ static struct instruction32bit t16LoadStoreInstructions[] =
   { IRC_REPLACE, &undefinedInstruction, 0x0000, 0x0000, "t16LoadStoreInstructions" }
 };
 
-static struct instruction32bit t16MiscInstructions[] =
+static struct decodingTableEntry t16MiscInstructions[] =
 {
   { IRC_SAFE,    &t16PushInstruction,   0xB400, 0xFE00, "PUSH {reglist}" },
   { IRC_SAFE,    &t16SubInstruction,       0xB080, 0xFF80, "SUB SP,SP,<imm7>" },
@@ -99,14 +99,14 @@ static struct instruction32bit t16MiscInstructions[] =
   { IRC_REPLACE, &undefinedInstruction, 0x0000, 0x0000, "t16MiscInstructions" }
 };
 
-static struct instruction32bit t16PCRelInstructions[] =
+static struct decodingTableEntry t16PCRelInstructions[] =
 {
   // ADR instruction is add or sub but in any case it does not trap
   { IRC_SAFE,    &t16AddInstruction,       0xA000, 0xF800, "ADR <Rd>, <label>" },
   { IRC_REPLACE, &undefinedInstruction, 0x0000, 0x0000, "t16PCRelInstructions" }
 };
 
-static struct instruction32bit t16SpecialBranchInstructions[] =
+static struct decodingTableEntry t16SpecialBranchInstructions[] =
 {
   { IRC_REPLACE, &t16BxInstruction,     0x4700, 0xFF80, "BX<c> <Rm>" },
   { IRC_REPLACE, &t16BlxRegisterInstruction, 0x4780, 0xFF80, "BLX<c> <Rm>" },
@@ -120,7 +120,7 @@ static struct instruction32bit t16SpecialBranchInstructions[] =
   { IRC_REPLACE, &undefinedInstruction, 0x0000, 0x0000, "t16SpecialBranchInstructions" }
 };
 
-static struct instruction32bit t16SPInstructions[] =
+static struct decodingTableEntry t16SPInstructions[] =
 {
   { IRC_SAFE,    &t16AddInstruction,       0xA800, 0xF800, "ADD <Rd>, SP, #<imm>" },
   /*
@@ -131,14 +131,14 @@ static struct instruction32bit t16SPInstructions[] =
 };
 
 /* verified */
-static struct instruction32bit t16UnconditionalInstructions[] =
+static struct decodingTableEntry t16UnconditionalInstructions[] =
 {
   { IRC_REPLACE, &t16BImmediate11Instruction, 0xE000, 0xF800, "B<c> [PC,#<imm11>]" },
   { IRC_REPLACE, &undefinedInstruction, 0x0000, 0x0000, "t16UnconditionalInstructions" }
 };
 
 
-static struct TopLevelCategory t16Categories[] =
+static struct decodingTable t16Categories[] =
 {
   { 0xF800, 0xE000, t16UnconditionalInstructions },
   { 0xF000, 0xD000, t16ConditionalBranchSvcInstructions },

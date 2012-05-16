@@ -1,0 +1,29 @@
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+/*
+ * Clear negative flag (N bit), and make sure 'MOV r0, pc' does not set it...
+ */
+MOVS   r0, #0
+MOVPL  r0, pc
+
+/*
+ * Set negative flag (N bit) with 'MOVS r0, pc' and check...
+ */
+MOVS   r1, pc
+SUBMI  r1, #4
+
+/*
+ * Compare PC values!
+ */
+CMP    r0, r1
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1

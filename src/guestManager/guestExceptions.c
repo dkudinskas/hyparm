@@ -19,7 +19,6 @@
 void deliverServiceCall(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverServiceCall: @ PC = %#.8x" EOL, context->R15);
-//  printf("deliverServiceCall: @ PC %#.8x\n", context->R15);
   if (!isGuestInPrivMode(context))
   {
     guestToPrivMode();

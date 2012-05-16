@@ -1,5 +1,5 @@
-#ifndef __INSTRUCTION_EMU__INTERPRETER__COMMON_INSTRUCTIONS_H__
-#define __INSTRUCTION_EMU__INTERPRETER__COMMON_INSTRUCTIONS_H__
+#ifndef __INSTRUCTION_EMU__INTERPRETER__COMMON_H__
+#define __INSTRUCTION_EMU__INTERPRETER__COMMON_H__
 
 #include "common/types.h"
 
@@ -12,4 +12,4 @@ u32int svcInstruction(GCONTXT *context, u32int instruction);
 
 u32int undefinedInstruction(GCONTXT *context, u32int instruction);
 
-#endif
+#endif /* __INSTRUCTION_EMU__INTERPRETER__COMMON_H__ */

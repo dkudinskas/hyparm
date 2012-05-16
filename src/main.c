@@ -23,7 +23,8 @@
 #endif
 
 #include "guestManager/guestContext.h"
-#include "guestManager/blockCache.h"
+
+#include "instructionEmu/scanner.h"
 
 #ifdef CONFIG_MMC
 #include "io/mmc.h"
@@ -131,7 +132,8 @@ void main(s32int argc, char *argv[])
   GCONTXT *context = createGuestContext();
   setGuestContext(context);
 
-  /* Setup MMU for Hypervisor */
+  /* Setup MMU for Hypervisor
+   * NOTE: assumes guest context is set up in full (PT info + T$) */
   initVirtualAddressing(context);
 
 #ifdef CONFIG_CLI

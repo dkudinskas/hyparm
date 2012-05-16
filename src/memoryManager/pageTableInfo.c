@@ -1,6 +1,8 @@
 #include "common/debug.h"
 #include "common/stdlib.h"
 
+#include "guestManager/guestContext.h"
+
 #include "memoryManager/pageTableInfo.h"
 
 

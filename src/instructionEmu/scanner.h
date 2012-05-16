@@ -75,5 +75,4 @@ __macro__ bool txxIsThumb32(u32int instruction)
   return instruction & 0xFFFF0000;
 }
 
-
 #endif /* __INSTRUCTION_EMU__SCANNER_H__ */

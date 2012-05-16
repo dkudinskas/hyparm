@@ -9,7 +9,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -96,7 +96,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
   // P = 0 and W == 1 then STR as if user mode
   if (preOrPost == 0 && writeBack != 0 && shouldDataAbort(FALSE, TRUE, address))
   {
-    return context->R15;
+    return getRealPC(context);
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
@@ -113,14 +113,14 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
     // Rn = offsetAddr;
     storeGuestGPR(regDst, offsetAddress, context);
   }
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrbInstruction(GCONTXT * context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -198,7 +198,7 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
   // P = 0 and W == 1 then STR as if user mode -- only continue if usr can write
   if (!preOrPost && writeBack && shouldDataAbort(FALSE, TRUE, address))
   {
-    return context->R15;
+    return getRealPC(context);
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
@@ -214,14 +214,14 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
     // Rn = offsetAddr;
     storeGuestGPR(regDst, offsetAddress, context);
   }
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrhInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -324,14 +324,14 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
     // Rn = offsetAddr;
     storeGuestGPR(regDst, offsetAddress, context);
   }
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrdInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -429,7 +429,7 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
     // Rn = offsetAddr;
     storeGuestGPR(regDst, offsetAddress, context);
   }
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 
@@ -454,7 +454,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
+    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -508,7 +508,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
       DEBUG(INTERPRETER_ARM_STORE, "armStmInstruction: *(%#.8x) = R[%x] = %#.8x" EOL, address, i,
           valueLoaded);
       // emulating store. Validate cache if needed
-      validateCachePreChange(context->blockCache, address);
+      clearTranslationCacheByAddress(&context->translationCache, address);
       // *(address)= R[i];
       vmStore(WORD, address, valueLoaded);
       address = address + 4;
@@ -518,7 +518,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
   if ((regList >> 15) & 0x1)
   {
     // emulating store. Validate cache if needed
-    validateCachePreChange(context->blockCache, address);
+    clearTranslationCacheByAddress(&context->translationCache, address);
     // *(address)= PC+8 - architectural feature due to pipeline..
     vmStore(WORD, address, (loadGuestGPR(15, context) + 8));
   }
@@ -545,5 +545,5 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
     context->CPSR = savedCPSR;
   }
 
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }

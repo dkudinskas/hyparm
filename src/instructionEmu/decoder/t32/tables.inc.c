@@ -2,7 +2,7 @@
  * Thumb 32-bit decoding tables for the table search decoder
  */
 
-static struct instruction32bit t32DataProcInstructions[] =
+static struct decodingTableEntry t32DataProcInstructions[] =
 {
   // this is for T2 encoding, page 480
   { IRC_SAFE,    t32MovInstruction,       0xF04F0000, 0xFBEF1000, "MOVW<c> <Rd>, #<imm12>" },
@@ -49,7 +49,7 @@ static struct instruction32bit t32DataProcInstructions[] =
   { IRC_REPLACE, undefinedInstruction, 0x00000000, 0x00000000, "t32DataProcInstructions" }
 };
 
-static struct instruction32bit t32SingleStoreInstructions[] =
+static struct decodingTableEntry t32SingleStoreInstructions[] =
 {
   { IRC_SAFE,    t32StrbInstruction,   0xF8800000, 0xFFF00000, "STRB Rt, [Rn, #<imm12>]" },
   { IRC_SAFE,    t32StrbInstruction,   0xF8000800, 0xFFF00800, "STRB Rt, [Rn, +-#<imm8>]" },
@@ -58,7 +58,7 @@ static struct instruction32bit t32SingleStoreInstructions[] =
   { IRC_REPLACE, undefinedInstruction, 0x00000000, 0x00000000, "t32SingleStoreInstructions" }
 };
 
-static struct instruction32bit t32LoadByteInstructions[] =
+static struct decodingTableEntry t32LoadByteInstructions[] =
 {
   { IRC_REPLACE, t32LdrbInstruction,   0xF81FF000, 0xFEFFFFC0, "LDRB<c> PC ,#<label>" },
   { IRC_SAFE,    t32LdrbInstruction,   0xF8900000, 0xFFF00000, "LDRB<c> Rt, [Rn{,#<imm12>}]" },
@@ -72,7 +72,7 @@ static struct instruction32bit t32LoadByteInstructions[] =
  * LDRSHT 0x FFF0 0F00 / 0x F930 0E00
  * LDRHT  0x FFF0 0F00 / 0x F830 0E00
  */
-static struct instruction32bit t32LoadHalfWordInstructions[] =
+static struct decodingTableEntry t32LoadHalfWordInstructions[] =
 {
   { IRC_SAFE,    t32LdrhImmediateInstruction,    0xF8B00000, 0xFFF00000, "LDRH.W <Rt>, [<Rn>{. #<imm32>}]" },
   { IRC_SAFE,    t32LdrhLiteralInstruction,      0xF83F0000, 0xFF7F0000, "LDRH <Rt>, <label>" },
@@ -84,14 +84,14 @@ static struct instruction32bit t32LoadHalfWordInstructions[] =
   { IRC_REPLACE, undefinedInstruction, 0x00000000, 0x00000000, "t32LoadHalfWordInstructions" }
 };
 
-static struct instruction32bit t32MultiplyInstructions[] =
+static struct decodingTableEntry t32MultiplyInstructions[] =
 {
   { IRC_SAFE,    t32MulInstruction,       0xFB00F000, 0xFFF0F0F0, "MULW <Rd>, <Rn>, <Rm>" },
   { IRC_SAFE,    t32SmullInstruction,     0xFB800000, 0xFFE000F0, "SMULL <RdLo>, <RdHi>, <Rn>, <Rm>" },
   { IRC_REPLACE, undefinedInstruction, 0x00000000, 0x00000000, "t32MultiplyInstructions" }
 };
 
-static struct instruction32bit t32BranchMiscInstructions[] =
+static struct decodingTableEntry t32BranchMiscInstructions[] =
 {
   { IRC_REPLACE, t32MrsInstruction, 0xF3E08000, 0xFFE0A000, "MRS <Rd>, <spec R>"},
   { IRC_REPLACE, t32BImmediate21Instruction, 0xF0009000, 0xF800D000, "B #<imm21>" },
@@ -101,7 +101,7 @@ static struct instruction32bit t32BranchMiscInstructions[] =
   { IRC_REPLACE, undefinedInstruction, 0x00000000, 0x00000000, "t32BranchMiscInstructions" }
 };
 
-static struct instruction32bit t32LoadStoreDoubleExclusiveInstructions[] =
+static struct decodingTableEntry t32LoadStoreDoubleExclusiveInstructions[] =
 {
   { IRC_SAFE,    t32LdrdInstruction,   0xE8500000, 0xFE500000, "LDRD <Rt>, <Rt2>, [<Rn>,{,#+/-<imm>}]" },
   { IRC_SAFE,    t32LdrdInstruction,   0xE85F0000, 0xFE7F0000, "LDRD <Rt>, <Rt2>, <label>" },
@@ -110,7 +110,7 @@ static struct instruction32bit t32LoadStoreDoubleExclusiveInstructions[] =
 };
 
 
-static struct TopLevelCategory t32Categories[] =
+static struct decodingTable t32Categories[] =
 {
   /*
    * TODO: not implemented

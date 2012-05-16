@@ -17,7 +17,7 @@
  **/
 bool shadowMap(u32int virtAddr)
 {
-  GCONTXT* context = getGuestContext();
+  GCONTXT *context = getGuestContext();
   DEBUG(MM_SHADOWING, "shadowMap: virtual address %#.8x" EOL, virtAddr);
 
   u32int backupEntry = 0;
@@ -336,7 +336,7 @@ void shadowUnmapSection(simpleEntry* shadow, sectionEntry* guest, u32int virtual
   // Need to flush block cache at these addresses first
   // but which addresses to flush? shadow entries might have been fragmented to pages from a section...
   // so flush address range that the guest mapped originally.
-  validateCacheMultiPreChange(context->blockCache, virtual, (virtual+SECTION_SIZE-1));
+  clearTranslationCacheByAddressRange(&context->translationCache, virtual, (virtual+SECTION_SIZE-1));
   
   if (context->pageTables->guestVirtual != 0)
   {
@@ -561,7 +561,7 @@ void shadowUnmapPageTable(pageTableEntry *shadow, pageTableEntry *guest, u32int 
 
   // validate block cache...
   GCONTXT *context = getGuestContext();
-  validateCacheMultiPreChange(context->blockCache, virtual, (virtual+SECTION_SIZE-1));
+  clearTranslationCacheByAddressRange(&context->translationCache, virtual, (virtual+SECTION_SIZE-1));
 
   if (context->pageTables->guestVirtual != NULL)
   {
@@ -715,7 +715,7 @@ void shadowUnmapSmallPage(smallPageEntry* shadow, smallPageEntry* guest, u32int 
   // but which addresses to flush? shadow entries might have been fragmented to pages from a section...
   // so flush address range that the guest mapped originally.
   GCONTXT *context = getGuestContext();
-  validateCacheMultiPreChange(context->blockCache, virtual, (virtual+SMALL_PAGE_SIZE-1));
+  clearTranslationCacheByAddressRange(&context->translationCache, virtual, (virtual+SMALL_PAGE_SIZE-1));
 
   if (context->pageTables->guestVirtual != NULL)
   {

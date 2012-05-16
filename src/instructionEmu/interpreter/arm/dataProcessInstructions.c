@@ -110,7 +110,7 @@ u32int armMovwInstruction(GCONTXT *context, u32int instruction)
 }
 
 /*********************************/
-/* MVN Rd, Rs                    */
+/* MVN Rd, Rs/imm                */
 /*********************************/
 u32int armMvnInstruction(GCONTXT *context, u32int instruction)
 {

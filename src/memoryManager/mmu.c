@@ -1,4 +1,5 @@
 #include "common/assert.h"
+#include "common/compiler.h"
 #include "common/debug.h"
 
 #include "memoryManager/mmu.h"
@@ -13,17 +14,17 @@ static const char *const dataAbtFaultString[] =
   "Alignment Fault",
   "Debug Event",
   "Access Flag - Section",
-  "Instruction Cache Maintainance Fault",
+  "Instruction Cache Maintenance Fault",
   "Translation Fault - Section",
   "Access Flag - Page",
   "Translation Fault - Page",
-  "Syncronous External Abort",
+  "Synchronous External Abort",
   "Domain Fault - Section",
   "INVALID ENTRY",
   "Domain Fault - Page",
   "Translation Table Walk - 1st Level",
   "Permission Fault - Section",
-  "Syncronous External Abort - 2nd Level",
+  "Synchronous External Abort - 2nd Level",
   "Permission Fault - Page",
 };
 
@@ -487,6 +488,7 @@ void printPrefetchAbort()
   u32int faultStatus = ifsr.fs3_0 | (ifsr.fs4 << 4);
 
   printf("Prefetch Abort Address: %08x" EOL, ifar);
+  printf("Fault status register: %#.8x" EOL, *(u32int *)&ifsr);
   printf("Fault type: ");
   printf("%s", prefetchAbtFaultString[faultStatus]);
   printf(" (%x),  External: %x" EOL, faultStatus, ifsr.ExT);

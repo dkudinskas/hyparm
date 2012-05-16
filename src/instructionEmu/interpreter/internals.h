@@ -23,7 +23,10 @@
   printf("%s: %#.8x @ %#.8x" EOL, __func__, context->R15, instruction);
 
 
-#define ARM_EXTRACT_CONDITION_CODE(instructionWord)  (instructionWord >> 28)
+#define ARM_EXTRACT_CONDITION_CODE(instructionWord)         (instructionWord >> 28)
+#define ARM_EXTRACT_REGISTER(instructionWord, position)     ((instructionWord >> position) & 0xF)
+#define ARM_SET_REGISTER(instructionWord, position, value)                                         \
+  ((instructionWord & ~(0xF << position)) | (value << position))
 
 
 typedef enum
@@ -67,6 +70,8 @@ u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int *shamt);
 /* a function to evaluate if a condition value is satisfied */
 bool evaluateConditionCode(GCONTXT *context, u32int conditionCode);
 
+__macro__ u32int getRealPC(GCONTXT *context);
+
 void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
   __attribute__((noinline,noreturn));
 
@@ -86,5 +91,15 @@ void storeGuestGPR(u32int regDest, u32int value, GCONTXT *context);
 // function to evaluate breakpoint value in unittests
 void evalBkptVal(GCONTXT *context, u32int value);
 #endif
+
+
+__macro__ u32int getRealPC(GCONTXT *context)
+{
+#ifdef CONFIG_BLOCK_COPY
+  return context->PCOfLastInstruction;
+#else
+  return context->R15;
+#endif
+}
 
 #endif
