@@ -37,13 +37,9 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex);
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
 
-u64int scanBlockCounter;
-
-static inline u64int getScanBlockCounter(void);
-
 static inline void incrementScanBlockCounter(void);
 
-static inline u64int getScanBlockCounter()
+u64int getScanBlockCounter()
 {
   return scanBlockCounter;
 }
@@ -60,7 +56,6 @@ void resetScanBlockCounter()
 
 #else
 
-#define getScanBlockCounter()        (0ULL)
 #define incrementScanBlockCounter()
 
 #endif /* CONFIG_SCANNER_COUNT_BLOCKS */
