@@ -16,10 +16,7 @@ u32int t32MrsInstruction(GCONTXT *context, u32int instruction)
 
   if ((context->CPSR & PSR_MODE) == PSR_USR_MODE)
   {
-    if (readSpsr)
-    {
-      DIE_NOW(context, "SPSR read bit can not be set in USR mode");
-    }
+    ASSERT(!readSpsr, "SPSR read bit can not be set in USR mode");
     value = context->CPSR & PSR_APSR;
   }
   else
