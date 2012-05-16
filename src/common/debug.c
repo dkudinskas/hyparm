@@ -7,8 +7,6 @@
 
 #include "drivers/beagle/beUart.h"
 
-#include "guestManager/guestContext.h"
-
 #ifdef CONFIG_MMC
 #include "io/fs/fat.h"
 #endif

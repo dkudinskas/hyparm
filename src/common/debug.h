@@ -6,6 +6,8 @@
 #include "common/stdio.h"
 #include "common/types.h"
 
+#include "guestManager/guestContext.h"
+
 
 #define EXPAND_TO_STRING(s)    TO_STRING(s)
 #define TO_STRING(s)           #s
