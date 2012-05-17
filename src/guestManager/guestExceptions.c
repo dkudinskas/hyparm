@@ -9,6 +9,9 @@
 #include "vm/omap35xx/intc.h"
 
 
+static inline u32int getExceptionHandlerAddress(GCONTXT *context, u32int offset);
+
+
 /*
  * FIXME
  *
@@ -40,7 +43,7 @@ void deliverServiceCall(GCONTXT *context)
 #ifdef CONFIG_THUMB2
   }
   // 5. Clear or set Thumb bit according to SCTLR.TE
-  if (getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE)
+  if (getCregVal(context->coprocRegBank, CP15_SCTRL) & SCTLR_TE)
   {
     context->CPSR |= PSR_T_BIT;
   }
@@ -50,27 +53,35 @@ void deliverServiceCall(GCONTXT *context)
   }
 #endif
   // 6. set PC to guest svc handler address
-  if (context->virtAddrEnabled)
+  context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_SVC);
+  // update AFI bits for SVC:
+  context->CPSR |= PSR_I_BIT;
+}
+
+static inline u32int getExceptionHandlerAddress(GCONTXT *context, u32int offset)
+{
+  /*
+   * If SCTLR.V == 0, the exception base address is controlled by VBAR, otherwise, 'Hivecs' are
+   * in use and the exception base address is fixed at EXC_VECT_HIGH_OFFS.
+   * WARNING: the calculation below is NOT valid for the monitor exception base address!
+   */
+  if (context->guestHighVectorSet)
   {
-    if (context->guestHighVectorSet)
-    {
-      context->R15 = EXC_VECT_HIGH_SVC;
-    }
-    else
-    {
-      context->R15 = EXC_VECT_LOW_SVC;
-    }
+    return EXC_VECT_HIGH_OFFS + offset;
   }
   else
   {
-#ifdef CONFIG_GUEST_FREERTOS
-    context->R15 = context->guestSwiHandler;
-#else
-    DIE_NOW(context, "deliverInterrupt: SVC to be delivered with guest vmem off.");
-#endif
+    u32int vbar = getCregVal(context->coprocRegBank, CP15_VBAR);
+    if (likely(vbar == 0))
+    {
+      // Hack: bypass boot ROM, SRAM, etc.
+      return *(u32int *)((u32int)context + offsetof(GCONTXT, guestUndefinedHandler) + offset - 4);
+    }
+    else
+    {
+      return vbar + offset;
+    }
   }
-  // update AFI bits for SVC:
-  context->CPSR |= PSR_I_BIT;
 }
 
 void throwInterrupt(u32int irqNumber)
@@ -147,7 +158,7 @@ void deliverInterrupt(GCONTXT *context)
 
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
-  if (getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE)
+  if (getCregVal(context->coprocRegBank, CP15_SCTRL) & SCTLR_TE)
   {
     context->CPSR |= PSR_T_BIT;
   }
@@ -158,27 +169,8 @@ void deliverInterrupt(GCONTXT *context)
 #endif
   // 5. set LR to PC+4
   context->R14_IRQ = context->R15 + LR_OFFSET_IRQ;
-
   // 6. set PC to guest irq handler address
-  if (context->virtAddrEnabled)
-  {
-    if (context->guestHighVectorSet)
-    {
-      context->R15 = EXC_VECT_HIGH_IRQ;
-    }
-    else
-    {
-      context->R15 = EXC_VECT_LOW_IRQ;
-    }
-  }
-  else
-  {
-#ifdef CONFIG_GUEST_FREERTOS
-    context->R15 = context->guestIrqHandler;
-#else
-    DIE_NOW(context, "deliverInterrupt: IRQ to be delivered with guest vmem off.");
-#endif
-  }
+  context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_IRQ);
   // update AFI bits for IRQ:
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
@@ -199,7 +191,7 @@ void deliverDataAbort(GCONTXT *context)
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
-  if (getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE)
+  if (getCregVal(context->coprocRegBank, CP15_SCTRL) & SCTLR_TE)
   {
     context->CPSR |= PSR_T_BIT;
   }
@@ -211,21 +203,7 @@ void deliverDataAbort(GCONTXT *context)
   // 5. set LR to PC+8
   context->R14_ABT = context->R15 + LR_OFFSET_DATA_ABT;
   // 6. set PC to guest irq handler address
-  if (context->virtAddrEnabled)
-  {
-    if (context->guestHighVectorSet)
-    {
-      context->R15 = EXC_VECT_HIGH_DABT;
-    }
-    else
-    {
-      context->R15 = EXC_VECT_LOW_DABT;
-    }
-  }
-  else
-  {
-    context->R15 = context->guestDataAbortHandler;
-  }
+  context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_DABT);
   // update AFI bits for IRQ:
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
@@ -241,9 +219,9 @@ void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isW
   }
   DEBUG(GUEST_EXCEPTIONS, "throwDataAbort: address %#.8x: faultType %#x, isWrite %x, dom %#x, @ PC"
       " %#.8x, dfsr %#.8x" EOL, address, faultType, isWrite, domain, context->R15, dfsr);
-  setCregVal(5, 0, 0, 0, context->coprocRegBank, dfsr);
+  setCregVal(context->coprocRegBank, CP15_DFSR, dfsr);
   // set CP15 Data Fault Address Register to 'address'
-  setCregVal(6, 0, 0, 0, context->coprocRegBank, address);
+  setCregVal(context->coprocRegBank, CP15_DFAR, address);
   // set guest abort pending flag, return
   context->guestDataAbtPending = TRUE;
 }
@@ -263,7 +241,7 @@ void deliverPrefetchAbort(GCONTXT *context)
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
-  if (getCregVal(1, 0, 0, 0, context->coprocRegBank) & SCTLR_TE)
+  if (getCregVal(context->coprocRegBank, CP15_SCTRL) & SCTLR_TE)
   {
     context->CPSR |= PSR_T_BIT;
   }
@@ -275,21 +253,7 @@ void deliverPrefetchAbort(GCONTXT *context)
   // 5. set LR to PC+4
   context->R14_ABT = context->R15 + LR_OFFSET_PREFETCH_ABT;
   // 6. set PC to guest irq handler address
-  if (context->virtAddrEnabled)
-  {
-    if (context->guestHighVectorSet)
-    {
-      context->R15 = EXC_VECT_HIGH_IABT;
-    }
-    else
-    {
-      context->R15 = EXC_VECT_LOW_IABT;
-    }
-  }
-  else
-  {
-    DIE_NOW(context, "deliverInterrupt: Prefetch abort to be delivered with guest vmem off.");
-  }
+  context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_PABT);
   // update AFI bits for IRQ:
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
@@ -302,9 +266,9 @@ void throwPrefetchAbort(GCONTXT *context, u32int address, u32int faultType)
   DEBUG(GUEST_EXCEPTIONS, "throwPrefetchAbort: address %#.8x, faultType %#x, @ PC %#.8x, IFSR "
       "%#.8x" EOL, address, faultType, context->R15, ifsr);
 
-  setCregVal(5, 0, 0, 1, context->coprocRegBank, ifsr);
+  setCregVal(context->coprocRegBank, CP15_IFSR, ifsr);
   // set CP15 Data Fault Address Register to 'address'
-  setCregVal(6, 0, 0, 2, context->coprocRegBank, address);
+  setCregVal(context->coprocRegBank, CP15_IFAR, address);
   // set guest abort pending flag, return
   context->guestPrefetchAbtPending = TRUE;
 }

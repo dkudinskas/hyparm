@@ -1,5 +1,5 @@
-#ifndef __MEMORY_MANAGER__CP15_COPROC_H__
-#define __MEMORY_MANAGER__CP15_COPROC_H__
+#ifndef __VM__OMAP_35XX__CP15_COPROC_H__
+#define __VM__OMAP_35XX__CP15_COPROC_H__
 
 #include "common/compiler.h"
 #include "common/types.h"
@@ -32,17 +32,67 @@
 #define SYS_CTRL_THUMB_EXC_HANDLE    0x40000000
 
 
-struct crbEntry
+#define CRB_INDEX(CRn, opc1, CRm, opc2)                                                            \
+  ((((CRn * MAX_OPC1_VALUES) + opc1) * MAX_CRM_VALUES + CRm) * MAX_OPC2_VALUES + opc2)
+
+
+typedef enum coprocessor15Register
+{
+  CP15_MIDR      = CRB_INDEX( 0, 0,  0, 0),
+  CP15_CTR       = CRB_INDEX( 0, 0,  0, 1),
+  CP15_MMFR0     = CRB_INDEX( 0, 0,  1, 4),
+  CP15_MMFR1     = CRB_INDEX( 0, 0,  1, 5),
+  CP15_CCSIDR    = CRB_INDEX( 0, 1,  0, 0),
+  CP15_CLIDR     = CRB_INDEX( 0, 1,  0, 1),
+  CP15_CSSELR    = CRB_INDEX( 0, 2,  0, 0),
+  CP15_SCTRL     = CRB_INDEX( 1, 0,  0, 0),
+  CP15_TTBR0     = CRB_INDEX( 2, 0,  0, 0),
+  CP15_TTBR1     = CRB_INDEX( 2, 0,  0, 1),
+  CP15_TTBCR     = CRB_INDEX( 2, 0,  0, 2),
+  CP15_DACR      = CRB_INDEX( 3, 0,  0, 0),
+  CP15_DFSR      = CRB_INDEX( 5, 0,  0, 0),
+  CP15_IFSR      = CRB_INDEX( 5, 0,  0, 1),
+  CP15_DFAR      = CRB_INDEX( 6, 0,  0, 0),
+  CP15_IFAR      = CRB_INDEX( 6, 0,  0, 2),
+  CP15_ICIALLU   = CRB_INDEX( 7, 0,  5, 0),
+  CP15_ICIMVAU   = CRB_INDEX( 7, 0,  5, 1),
+  CP15_ISB       = CRB_INDEX( 7, 0,  5, 4),
+  CP15_BPIALL    = CRB_INDEX( 7, 0,  5, 6),
+  CP15_DCCMVAC   = CRB_INDEX( 7, 0, 10, 1),
+  CP15_DCCSW     = CRB_INDEX( 7, 0, 10, 2),
+  CP15_DSB       = CRB_INDEX( 7, 0, 10, 4),
+  CP15_DMB       = CRB_INDEX( 7, 0, 10, 5),
+  CP15_DCCMVAU   = CRB_INDEX( 7, 0, 11, 1),
+  CP15_DCCIMVAC  = CRB_INDEX( 7, 0, 14, 1),
+  CP15_DCCISW    = CRB_INDEX( 7, 0, 14, 2),
+  CP15_ITLBIALL  = CRB_INDEX( 8, 0,  5, 0),
+  CP15_ITLBIMVA  = CRB_INDEX( 8, 0,  5, 1),
+  CP15_ITLBIASID = CRB_INDEX( 8, 0,  5, 2),
+  CP15_DTLBIALL  = CRB_INDEX( 8, 0,  6, 0),
+  CP15_DTLBIMVA  = CRB_INDEX( 8, 0,  6, 1),
+  CP15_DTLBIASID = CRB_INDEX( 8, 0,  6, 2),
+  CP15_TLBIALL   = CRB_INDEX( 8, 0,  7, 0),
+  CP15_TLBIMVA   = CRB_INDEX( 8, 0,  7, 1),
+  CP15_PRRR      = CRB_INDEX(10, 0,  2, 0),
+  CP15_NMRR      = CRB_INDEX(10, 0,  2, 1),
+  CP15_VBAR      = CRB_INDEX(12, 0,  0, 0),
+  CP15_FCSEIDR   = CRB_INDEX(13, 0,  0, 0),
+  CP15_CONTEXTID = CRB_INDEX(13, 0,  0, 1),
+  CP15_TPIDRURW  = CRB_INDEX(13, 0,  0, 2),
+  CP15_TPIDRURO  = CRB_INDEX(13, 0,  0, 3),
+  CP15_TPIDRPRW  = CRB_INDEX(13, 0,  0, 4)
+} Coprocessor15Register;
+
+typedef struct coprocessorRegisterBankEntry
 {
   u32int value;
   bool   valid;
-};
+} CREG;
 
-typedef struct crbEntry CREG;
 
 CREG *createCRB(void) __cold__;
+u32int getCregVal(CREG *registerBank, u32int registerIndex);
+void setCregVal(CREG *registerBank, u32int registerIndex, u32int value);
 
-u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr);
-void   setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr, u32int val);
 
-#endif
+#endif /* __VM__OMAP_35XX__CP15_COPROC_H__ */

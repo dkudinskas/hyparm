@@ -9,24 +9,11 @@
 #include "vm/omap35xx/cp15coproc.h"
 
 
-static u32int crbIndex(u32int CRn, u32int opc1, u32int CRm, u32int opc2);
+#define VBAR_ALIGN_MASK  ~0x1F
 
 
-static u32int crbIndex(u32int CRn, u32int opc1, u32int CRm, u32int opc2)
-{
-  u32int index = 0;
-  // value 0 to 7
-  u32int indexOpc2 = opc2;
-  // values 0, 8, 16... to 120 ( 16 increments of 8)
-  u32int indexCRm  = CRm  * MAX_OPC2_VALUES;
-  // values 0, 128, 256, 384... 894 (8 increments of 128)
-  u32int indexOpc1 = opc1 * MAX_CRM_VALUES * MAX_OPC2_VALUES;
-  // values 0, 1024, 2048, 3072, 4096... 15360 (16 increments of 1024)
-  u32int indexCRn  = CRn * MAX_OPC1_VALUES * MAX_CRM_VALUES * MAX_OPC2_VALUES;
+static void initialiseRegister(CREG *crb, Coprocessor15Register reg, u32int value) __cold__;
 
-  index = indexCRn + indexOpc1 + indexCRm + indexOpc2;
-  return index;
-}
 
 CREG *createCRB()
 {
@@ -46,609 +33,564 @@ CREG *createCRB()
    * xxxFxxxx - architecture
    * xxxxC08x - primary part number
    * xxxxxxx3 - revision */
-  u32int i = crbIndex(0, 0, 0, 0);
-  crb[i].value = 0x411FC083;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_MIDR, 0x411FC083);
 
   /* CTR:
    * cache type register: information on the architecture of caches
    * read only. init to 80048004 */
-  i = crbIndex(0, 0, 0, 1);
-  crb[i].value = 0x80048004;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_CTR, 0x80048004);
 
   /* MMFR0:
    * memory model feature register 0
    * read only, init to 31100003 */
-  i = crbIndex(0, 0, 1, 4);
-  crb[i].value = 0x31100003;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_MMFR0, 0x31100003);
 
   /* MMFR1:
    * memory model feature register 1
    * read only, init to 20000000 */
-  i = crbIndex(0, 0, 1, 5);
-  crb[i].value = 0x20000000;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_MMFR1, 0x20000000);
 
   /* CCSIDR:
    * cache size id register: provide information about the architecture of caches
    * CSSELR selects default level 0 data cache information: 0xE007E01A
    * WT, WB, RA able, no WA. 256 sets, associativity 4, words per line 16 */
-  i = crbIndex(0, 1, 0, 0);
-  crb[i].value = 0xE007E01A;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_CCSIDR, 0xE007E01A);
 
   /* CLIDR:
    * cache level ID register: beagle board 0x0A000023
    * lvl1 separate I&D caches, lvl2 unified cache */
-  i = crbIndex(0, 1, 0, 1);
-  crb[i].value = 0x0A000023;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_CLIDR, 0x0A000023);
 
   /* CSSELR:
    * cache size select register: selects the current CCSIDR
    * initialize to lvl0, data cache (0x00000000) */
-  i = crbIndex(0, 2, 0, 0);
-  crb[i].value = 0x00000000;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_CSSELR, 0);
 
   /* SCTRL:
    * system control register, init to C5187A */
-  i = crbIndex(1, 0, 0, 0);
-  crb[i].value = 0xC5187A;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_SCTRL, 0x00C5187A);
 
   /* TTBR0:
    * translation table base register 0. initialise to 0. */
-  i = crbIndex(2, 0, 0, 0);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_TTBR0, 0);
 
   /* TTBR1:
    * translation table base register 1. initialise to 0. */
-  i = crbIndex(2, 0, 0, 1);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_TTBR1, 0);
 
   /* TTBCR:
    * translation table base control register: determines which TTBR to use */
-  i = crbIndex(2, 0, 0, 2);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_TTBCR, 0);
 
   /* DACR:
    * domain access control register: initialise to dom0 ALL, dom1 ALL */
-  i = crbIndex(3, 0, 0, 0);
-  crb[i].value = 0x0000000f;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_DACR, 0x0000000f);
 
   /* DFSR:
    * data fault status register: encodes information about the last dAbort
    * initialize to 0 */
-  i = crbIndex(5, 0, 0, 0);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_DFSR, 0);
 
   /* IFSR:
    * instruction fault status register: encodes information about the last
    * prefetch abort. Initialize to 0 */
-  i = crbIndex(5, 0, 0, 1);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_IFSR, 0);
 
   /* DFAR:
    * data fault address register: target address of last mem access that
    * caused a data abort. initialize to 0 */
-  i = crbIndex(6, 0, 0, 0);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_DFAR, 0);
 
   /* IFAR:
    * instruction fault address register: target PC of the last instruction fetch
    * that caused a prefetch abort. Initialize to 0 */
-  i = crbIndex(6, 0, 0, 2);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_IFAR, 0);
 
   /* ICIALLU:
    * invalidate all instruction caches to PoC, write-only */
-  i = crbIndex(7, 0, 5, 0);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_ICIALLU, 0);
 
   /* ICIMVAU:
    * invalidate instruction caches by MVA to PoU, write-only */
-  i = crbIndex(7, 0, 5, 1);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_ICIMVAU, 0);
 
   /* CP15ISB:
    * Instruction Synchronization Barrier operation */
-  i = crbIndex(7, 0, 5, 4);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_ISB, 0);
 
   /* BPIALL:
    * invalidate entire branch predictor array, write-only */
-  i = crbIndex(7, 0, 5, 6);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_BPIALL, 0);
 
   /* DCCMVAC:
    * clean data cache line by MVA to PoC, write-only */
-  i = crbIndex(7, 0, 10, 1);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_DCCMVAC, 0);
 
   /* DCCSW:
-   * clean data cache line by set/way to PoC, write-only */
-  i = crbIndex(7, 0, 10, 2);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+   * clean data cache line by set/way tSo PoC, write-only */
+  initialiseRegister(crb, CP15_DCCSW, 0);
 
   /* CP15DSB:
    * Data Synchronization Barrier operation */
-  i = crbIndex(7, 0, 10, 4);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_DSB, 0);
 
   /* CP15DMB
    * Data Memory Barrier operation */
-  i = crbIndex(7, 0, 10, 5);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_DMB, 0);
 
   /* DCCMVAU:
    * clean data cache line by MVA to PoU, write only */
-  i = crbIndex(7, 0, 11, 1);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_DCCMVAU, 0);
 
   /* DCCIMVAC: clean and invalidate dCache by MVA to PoC, write-only */
-  i = crbIndex(7, 0, 14, 1);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_DCCIMVAC, 0);
 
   /* DCCISW:
    * clean and invalidate data cache line by set/way, write-only */
-  i = crbIndex(7, 0, 14, 2);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_DCCISW, 0);
 
   /* ITLBIALL: invalide instruction TLB (all), write-only */
-  i = crbIndex(8, 0, 5, 0);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_ITLBIALL, 0);
 
   /* ITLBIMVA: invalide instruction TLB by MVA, write-only */
-  i = crbIndex(8, 0, 5, 1);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_ITLBIMVA, 0);
 
   /* ITLBIASID: invalide instruction TLB by ASID match, write-only */
-  i = crbIndex(8, 0, 5, 2);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_ITLBIASID, 0);
 
   /* DTLBIALL: invalide data TLB (all), write-only */
-  i = crbIndex(8, 0, 6, 0);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_DTLBIALL, 0);
 
   /* DTLBIMVA: invalide data TLB by MVA, write-only */
-  i = crbIndex(8, 0, 6, 1);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_DTLBIMVA, 0);
 
-  /* DTLBIMVA: invalide data TLB by ASID match, write-only */
-  i = crbIndex(8, 0, 6, 2);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  /* DTLBIASID: invalide data TLB by ASID match, write-only */
+  initialiseRegister(crb, CP15_DTLBIASID, 0);
 
   /* TLBIALL: invalide unified TLB, write-only */
-  i = crbIndex(8, 0, 7, 0);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_TLBIALL, 0);
 
   /* TLBIMVA: invalidate unified TLB by MVA, write-only */
-  i = crbIndex(8, 0, 7, 1);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_TLBIMVA, 0);
 
   /* PRRR:
    * primary region remap register: does lots of weird things with
    * C, B, and TEX attributes of memory regions, init to 0x98AA4 */
-  i = crbIndex(10, 0, 2, 0);
-  crb[i].value = 0x98AA4;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_PRRR, 0x00098AA4);
 
   /* NMRR:
    * normal memory remap register: additional mapping controls for memory regions
    * that are mapped as Normal memory by their entry in the PRRR
    * initialize to 44E048E0 */
-  i = crbIndex(10, 0, 2, 1);
-  crb[i].value = 0x44E048E0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_NMRR, 0x44E048E0);
 
   /* VBAR:
    * vector base address register */
-  i = crbIndex(12, 0, 0, 0);
-  crb[i].value = 0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_VBAR, 0);
 
   /* FCSEIDR:
    * fast context switch extension process ID register
    * initialize to 0 */
-  i = crbIndex(13, 0, 0, 0);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_FCSEIDR, 0);
 
   /* CONTEXTID:
    * context ID register
    * initialize to 0 */
-  i = crbIndex(13, 0, 0, 1);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_CONTEXTID, 0);
 
   /* TPIDRURW:
    * software thread ID register, user mode read-write
    * initialize to 0 */
-  i = crbIndex(13, 0, 0, 2);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_TPIDRURW, 0);
 
   /* TPIDRURO:
    * software thread ID register, user mode read-only
    * initialize to 0 */
-  i = crbIndex(13, 0, 0, 3);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_TPIDRURO, 0);
 
   /* TPIDRPRW:
    * software thread ID register, privileged read/write only
    * initialize to 0 */
-  i = crbIndex(13, 0, 0, 4);
-  crb[i].value = 0x0;
-  crb[i].valid = TRUE;
+  initialiseRegister(crb, CP15_TPIDRPRW, 0);
 
   return crb;
 }
 
-void setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr, u32int val)
+static void initialiseRegister(CREG *crb, Coprocessor15Register reg, u32int value)
 {
-  u32int index = crbIndex(CRn, opc1, CRm, opc2);
+  crb[reg].value = value;
+  crb[reg].valid = TRUE;
+}
 
-  if (!crbPtr[index].valid)
+void setCregVal(CREG *registerBank, u32int registerIndex, u32int value)
+{
+  if (unlikely(!registerBank[registerIndex].valid))
   {
     // guest writing to a register that is not valid yet! investigate
-    printf("setCregVal (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
-           CRn, opc1, CRm, opc2, val);
-    DIE_NOW(NULL, "setCregVal: writing to uninitialized register. investigate.");
+    printf("setCregVal: reg=%#.8x value=%#.8x" EOL, registerIndex, value);
+    DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
-  u32int oldVal = crbPtr[index].value;
-  crbPtr[index].value = val;
-  // if we are writting to this register, it's probably valid already!
-  crbPtr[index].valid = TRUE;
 
-  DEBUG(INTERPRETER_ANY_COPROC, "setCregVal (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n" EOL, CRn, opc1, CRm, opc2, val);
+  u32int oldVal = registerBank[registerIndex].value;
+  registerBank[registerIndex].value = value;
 
-  /* probably a better place to put these checks */
-  if (CRn==0 && opc1==1 && CRm==0 && opc2==0)
-  {
-    DIE_NOW(NULL, "setCregVal: writing to CCSIDR - read-only");
-  }
-  else if (CRn==0 && opc1==1 && CRm==0 && opc2==1)
-  {
-    DIE_NOW(NULL, "setCregVal: writing to CLIDR - read-only");
-  }
-  else if (CRn==0 && opc1==2 && CRm==0 && opc2==0)
-  {
-    // write to CSSELR: cache size select register.
-    // need to update R/O CSSIDR value
-    u32int newCCSIDR = 0;
-    switch (val)
-    {
-      case 0:
-      {
-        // 0b0000 - lvl1 data cache
-        newCCSIDR = 0xE007E01A;
-        break;
-      }
-      case 1:
-      {
-        // 0b0001 - lvl1 instruction cache
-        newCCSIDR = 0x2007E01A;
-        break;
-      }
-      case 2:
-      {
-        // 0b0010 - lvl2 unified cache
-        newCCSIDR = 0xF03FE03A;
-        break;
-      }
-      default:
-      {
-        // no such cache exists on the beagleboard!
-        printf("setCregVal: CSSELR = %x selects unimplemented cache" EOL, val);
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-      }
-    } // switch (value) ends
-    // update CCSIDR with correct value
-    crbPtr[crbIndex(0, 1, 0, 0)].value = newCCSIDR;
-  }
-  else if (CRn==1 && opc1==0 && CRm==0 && opc2==0)
-  {
-    // SCTRL: System control register
-    if (((oldVal & SYS_CTRL_MMU_ENABLE) == 0) && ((val & SYS_CTRL_MMU_ENABLE) != 0))
-    {
-      DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - MMU enable." EOL);
-      guestEnableMMU();
-    }
-    else if (((oldVal & SYS_CTRL_MMU_ENABLE)!=0) && ((val & SYS_CTRL_MMU_ENABLE)==0))
-    {
-      DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - MMU disable." EOL);
-      guestDisableMMU();
-    }
+  DEBUG(INTERPRETER_ANY_COPROC, "setCregVal reg=%#.8x value=%#.8x -> %#.8x" EOL, registerIndex,
+        oldVal, value);
 
-    //Interupt handler remap
-    if (((oldVal & SYS_CTRL_HIGH_VECS) == 0) && ((val & SYS_CTRL_HIGH_VECS) != 0))
+  switch (registerIndex)
+  {
+    case CP15_MIDR:
+    case CP15_CTR:
+    case CP15_MMFR0:
+    case CP15_MMFR1:
+    case CP15_CCSIDR:
+    case CP15_CLIDR:
+      DIE_NOW(NULL, "read-only register");
+    case CP15_CSSELR:
     {
-      DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - high interrupt vector set." EOL);
-      (getGuestContext())->guestHighVectorSet = TRUE;
+      // write to CSSELR: cache size select register.
+      // need to update R/O CSSIDR value
+      switch (value)
+      {
+        case 0b0000:
+        {
+          // lvl1 data cache
+          registerBank[CP15_CCSIDR].value = 0xE007E01A;
+          break;
+        }
+        case 0b0001:
+        {
+          // lvl1 instruction cache
+          registerBank[CP15_CCSIDR].value = 0x2007E01A;
+          break;
+        }
+        case 0b0010:
+        {
+          // lvl2 unified cache
+          registerBank[CP15_CCSIDR].value = 0xF03FE03A;
+          break;
+        }
+        default:
+        {
+          // no such cache exists on the beagleboard!
+          printf("setCregVal: CSSELR = %x selects unimplemented cache" EOL, value);
+          DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+        }
+      } // switch (value) ends
+      break;
     }
-    else if (((oldVal & SYS_CTRL_HIGH_VECS) != 0) && ((val & SYS_CTRL_HIGH_VECS) == 0))
+    case CP15_SCTRL:
     {
-      DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - low interrupt vector set." EOL);
-      (getGuestContext())->guestHighVectorSet = FALSE;
-    }
+      // SCTRL: System control register
+      if (((oldVal & SYS_CTRL_MMU_ENABLE) == 0) && ((value & SYS_CTRL_MMU_ENABLE) != 0))
+      {
+        DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - MMU enable." EOL);
+        guestEnableMMU();
+      }
+      else if (((oldVal & SYS_CTRL_MMU_ENABLE)!=0) && ((value & SYS_CTRL_MMU_ENABLE)==0))
+      {
+        DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - MMU disable." EOL);
+        guestDisableMMU();
+      }
 
-    if ((val & SYS_CTRL_ACCESS_FLAG) != 0)
-    {
-      DIE_NOW(NULL, "CP15: SysCtrl - set access flag, investigate.\n");
-    }
-    if ((val & SYS_CTRL_HW_ACC_FLAG) != 0)
-    {
-      DIE_NOW(NULL, "CP15: SysCtrl - set hw access flag, investigate.\n");
-    }
-    if ((val & SYS_CTRL_TEX_REMAP) != 0)
-    {
+      //Interupt handler remap
+      if (((oldVal & SYS_CTRL_HIGH_VECS) == 0) && ((value & SYS_CTRL_HIGH_VECS) != 0))
+      {
+        DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - high interrupt vector set." EOL);
+        (getGuestContext())->guestHighVectorSet = TRUE;
+      }
+      else if (((oldVal & SYS_CTRL_HIGH_VECS) != 0) && ((value & SYS_CTRL_HIGH_VECS) == 0))
+      {
+        DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - low interrupt vector set." EOL);
+        (getGuestContext())->guestHighVectorSet = FALSE;
+      }
+
+      if ((value & SYS_CTRL_ACCESS_FLAG) != 0)
+      {
+        DIE_NOW(NULL, "CP15: SysCtrl - set access flag, investigate.\n");
+      }
+      if ((value & SYS_CTRL_HW_ACC_FLAG) != 0)
+      {
+        DIE_NOW(NULL, "CP15: SysCtrl - set hw access flag, investigate.\n");
+      }
+      if ((value & SYS_CTRL_TEX_REMAP) != 0)
+      {
 //      DIE_NOW(NULL, "CP15: SysCtrl - set tex remap, investigate.\n");
+        printf("WARNING: CP15: SysCtrl - set tex remap" EOL);
+      }
+      if ((value & SYS_CTRL_VECT_INTERRUPT) != 0)
+      {
+        DIE_NOW(NULL, "CP15: SysCtrl - set interrupt vector, investigate.\n");
+      }
+      break;
     }
-    if ((val & SYS_CTRL_VECT_INTERRUPT) != 0)
+    case CP15_TTBR0:
     {
-      DIE_NOW(NULL, "CP15: SysCtrl - set interrupt vector, investigate.\n");
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: TTBR0 write %x" EOL, value);
+      // must calculate: bits 31 to (14-N) give TTBR value. N is [0:2] of TTBCR!
+      u32int ttbcr = getCregVal(registerBank, CP15_TTBCR);
+      u32int N = ttbcr & 0x7;
+      u32int bottomBitNumber = 14 - N;
+      u32int mask = ~((1 << bottomBitNumber)-1);
+      guestSetPageTableBase(value & mask);
+      break;
     }
-  }
-  else if (CRn==2 && opc1==0 && CRm==0 && opc2==0)
-  {
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: TTBR0 write %x" EOL, val);
-    // must calculate: bits 31 to (14-N) give TTBR value. N is [0:2] of TTBCR!
-    u32int ttbcr = getCregVal(2, 0, 0, 2, crbPtr);
-    u32int N = ttbcr & 0x7;
-    u32int bottomBitNumber = 14 - N;
-    u32int mask = ~((1 << bottomBitNumber)-1);
-    guestSetPageTableBase(val & mask);
-  }
-  else if (CRn==2 && opc1==0 && CRm==0 && opc2==1)
-  {
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: TTBR1 write %x" EOL, val);
-  }
-  else if (CRn==2 && opc1==0 && CRm==0 && opc2==2)
-  {
-    // TTBCR: translation table base control register
-    // 0b000 - always use TTBR0. !0 - depends...
-    if ((val & 0x7) != 0)
+    case CP15_TTBR1:
     {
-      DIE_NOW(NULL, "setCregVal: TTBCR needs to select translation table base!");
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: TTBR1 write %x" EOL, value);
+      break;
     }
-  }
-  else if (CRn == 3 && opc1 == 0 && CRm==0 && opc2==0)
-  {
-    if (oldVal != val)
+    case CP15_TTBCR:
     {
-      DEBUG(INTERPRETER_ANY_COPROC, "CP15: DACR change val %x old DACR %x" EOL, val, oldVal);
-      changeGuestDACR(oldVal, val);
+      // TTBCR: translation table base control register
+      // 0b000 - always use TTBR0. !0 - depends...
+      ASSERT((value & 0x7) == 0, ERROR_NOT_IMPLEMENTED);
+      break;
     }
-  }
-  else if (CRn==5 && opc1==0 && CRm==0 && opc2==0)
-  {
-    // DFSR: data fault status register
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: set DFSR to %x\n", val);
-  }
-  else if (CRn==5 && opc1==0 && CRm==0 && opc2==1)
-  {
-    // IFSR: instruction fault status register
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: set IFSR to %x\n", val);
-  }
-  else if (CRn==6 && opc1==0 && CRm==0 && opc2==0)
-  {
-    // DFAR: data fault address register
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: set DFAR to %x\n", val);
-  }
-  else if (CRn==6 && opc1==0 && CRm==0 && opc2==2)
-  {
-    // IFAR: instruction fault address register
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: set IFAR to %x\n", val);
-  }
-  else if (CRn==7 && opc1==0 && CRm==5 && opc2==0)
-  {
-    // ICIALLU: invalidate all instruction caches to PoU
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate all iCaches to PoU" EOL);
-    mmuInvIcacheToPOU();
-  }
-  else if (CRn==7 && opc1==0 && CRm==5 && opc2==1)
-  {
-    // ICIMVAU: invalidate instruction caches by MVA to PoU
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate iCaches by MVA to PoU: %x" EOL, val);
-    mmuInvIcacheByMVAtoPOU(val);
-  }
-  else if (CRn==7 && opc1==0 && CRm==5 && opc2==4)
-  {
-    // CP15DSB: Instruction Synchronization Barrier operation
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: Instruction Synchronization Barrier operation" EOL);
-    mmuInstructionSync();
-  }
-  else if (CRn==7 && opc1==0 && CRm==5 && opc2==6)
-  {
-    // BPIALL: invalidate entire branch predictor array
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate entire branch predictor array (no effect)" EOL);
-  }
-  else if (CRn==7 && opc1==0 && CRm==10 && opc2==1)
-  {
-    // DCCMVAC: clean data cache line by MVA to PoC
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: clean Dcache line by MVA to PoC: %x" EOL, val);
-    mmuCleanDcacheByMVAtoPOC(val);
-  }
-  else if (CRn==7 && opc1==0 && CRm==10 && opc2==2)
-  {
-    // DCCSW: clean data cache line by set/way
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: clean Dcache line, set/way: %x" EOL, val);
-    mmuCleanInvDCacheBySetWay(val);
-  }
-  else if (CRn==7 && opc1==0 && CRm==10 && opc2==4)
-  {
-    // CP15DSB: Data Synchronization Barrier operation
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: Data Synchronization Barrier operation" EOL);
-    mmuDataSyncBarrier();
-  }
-  else if (CRn==7 && opc1==0 && CRm==10 && opc2==5)
-  {
-    // CP15DMB: Data Memory Barrier operation
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: Data Memory Barrier operation" EOL);
-    mmuDataMemoryBarrier();
-  }
-  else if (CRn==7 && opc1==0 && CRm==11 && opc2==1)
-  {
-    // DCCMVAU: clean data cache line by MVA to PoU
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: clean dCache line by MVA to PoU: %x" EOL, val);
-    mmuCleanDCacheByMVAtoPOU(val);
-  }
-  else if (CRn==7 && opc1==0 && CRm==14 && opc2==1)
-  {
-    // DCCIMVAC: clean and invalidate dCache by MVA to PoC
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: clean and invalidate dCache by MVA to PoC: %x" EOL, val);
-    mmuCleanInvDCacheByMVAtoPOC(val);
-  }
-  else if (CRn==7 && opc1==0 && CRm==14 && opc2==2)
-  {
-    // DCCISW: clean and invalidate data cache line by set/way
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: clean and invalidate Dcache line, set/way: %x" EOL, val);
-    mmuCleanInvDCacheBySetWay(val);
-  }
-  else if (CRn==8 && opc1==0 && CRm==5 && opc2==0)
-  {
-    // ITLBIALL: invalide instruction TLB (all)
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate instruction TLB (all)" EOL);
-    mmuInvalidateITLB();
-  }
-  else if (CRn==8 && opc1==0 && CRm==5 && opc2==1)
-  {
-    // ITLBIALL: invalide instruction TLB by MVA
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate instruction TLB by MVA: %x" EOL, val);
-    mmuInvalidateITLBbyMVA(val);
-  }
-  else if (CRn==8 && opc1==0 && CRm==5 && opc2==2)
-  {
-    // ITLBIASID: invalide instruction TLB by ASID match
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate instruction TLB by ASID match: %x" EOL, val);
-    mmuInvalidateITLBbyASID(val);
-  }
-  else if (CRn==8 && opc1==0 && CRm==6 && opc2==0)
-  {
-    // DTLBIALL: invalide data TLB (all)
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate data TLB (all)" EOL);
-    mmuInvalidateDTLB();
-  }
-  else if (CRn==8 && opc1==0 && CRm==6 && opc2==1)
-  {
-    // DTLBIMVA: invalidate dTLB entry by MVA
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate data TLB by MVA: %x" EOL, val);
-    mmuInvalidateDTLBbyMVA(val);
-  }
-  else if (CRn==8 && opc1==0 && CRm==6 && opc2==2)
-  {
-    // DTLBIASID: invalidate dTLB entry by MVA
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate data TLB by ASID match: %x" EOL, val);
-    mmuInvalidateDTLBbyASID(val);
-  }
-  else if (CRn==8 && opc1==0 && CRm==7 && opc2==0)
-  {
-    // TLBIALL: invalide unified TLB, write-only
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate unified TLB (all)" EOL);
-    mmuInvalidateUTLB();
-  }
-  else if (CRn==8 && opc1==0 && CRm==7 && opc2==1)
-  {
-    // TLBIMVA: invalidate unified TLB by MVA, write-only
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate unified TLB by MVA" EOL);
-    mmuInvalidateUTLBbyMVA(val);
-  }
-  else if (CRn==10 && opc1==0 && CRm==2 && opc2==0)
-  {
-    // PRRR: primary region remap register
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: PRRR value %x" EOL, val);
-    __asm__ __volatile__("mcr p15, 0, %0, c10, c2, 0": :"r"(val));
-  }
-  else if (CRn==10 && opc1==0 && CRm==2 && opc2==1)
-  {
-    // NMRR: normal memory remap register
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: NMRR value %x" EOL, val);
-    __asm__ __volatile__("mcr p15, 0, %0, c10, c2, 1": :"r"(val));
-  }
-  else if (CRn==13 && opc1==0 && CRm==0 && opc2==0)
-  {
-    // FCSEIDR: fast context switch extension process ID register
-    DIE_NOW(NULL, "setCregVal: writing FCSEIDR - investigate!");
-  }
-  else if (CRn==13 && opc1==0 && CRm==0 && opc2==1)
-  {
-    // CONTEXTID: context ID register
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: CONTEXTID value %x" EOL, val);
-    guestSetContextID(val);
-  }
-  else if (CRn==13 && opc1==0 && CRm==0 && opc2==2)
-  {
-    // TPIDRURW: software thread ID register, user mode read-write
-    if (val != 0)
+    case CP15_DACR:
     {
-      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: TPIDRURW value %x\n", val);
+      if (oldVal != value)
+      {
+        DEBUG(INTERPRETER_ANY_COPROC, "CP15: DACR change val %x old DACR %x" EOL, value, oldVal);
+        changeGuestDACR(oldVal, value);
+      }
+      break;
     }
-  }
-  else if (CRn==13 && opc1==0 && CRm==0 && opc2==3)
-  {
-    // TPIDRURO: software thread ID register, user mode read-only
-    // writes are caught by the hypervisor - they are privileged operations
-    // but reads are not! must propagate TPIDRURO value to real CP15.
-    DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: TPIDRURO value %x" EOL, val);
-    __asm__ __volatile__("mcr p15, 0, %0, c13, c0, 3": :"r"(val));
-  }
-  else if (CRn==13 && opc1==0 && CRm==0 && opc2==4)
-  {
-    // TPIDRPRW: software thread ID register, user mode no access
-    if (val != 0)
+    case CP15_DFSR:
     {
-      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: TPIDRPRW value %x\n", val);
+      // DFSR: data fault status register
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: set DFSR to %x\n", value);
+      break;
     }
+    case CP15_IFSR:
+    {
+      // IFSR: instruction fault status register
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: set IFSR to %x\n", value);
+      break;
+    }
+    case CP15_DFAR:
+    {
+      // DFAR: data fault address register
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: set DFAR to %x\n", value);
+      break;
+    }
+    case CP15_IFAR:
+    {
+      // IFAR: instruction fault address register
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: set IFAR to %x\n", value);
+      break;
+    }
+    case CP15_ICIALLU:
+    {
+      // ICIALLU: invalidate all instruction caches to PoU
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate all iCaches to PoU" EOL);
+      mmuInvIcacheToPOU();
+      break;
+    }
+    case CP15_ICIMVAU:
+    {
+      // ICIMVAU: invalidate instruction caches by MVA to PoU
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate iCaches by MVA to PoU: %x" EOL, value);
+      mmuInvIcacheByMVAtoPOU(value);
+      break;
+    }
+    case CP15_ISB:
+    {
+      // CP15DSB: Instruction Synchronization Barrier operation
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: Instruction Synchronization Barrier operation" EOL);
+      mmuInstructionSync();
+      break;
+    }
+    case CP15_BPIALL:
+    {
+      // BPIALL: invalidate entire branch predictor array
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate entire branch predictor array (no effect)" EOL);
+      break;
+    }
+    case CP15_DCCMVAC:
+    {
+      // DCCMVAC: clean data cache line by MVA to PoC
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: clean Dcache line by MVA to PoC: %x" EOL, value);
+      mmuCleanDcacheByMVAtoPOC(value);
+      break;
+    }
+    case CP15_DCCSW:
+    {
+      // DCCSW: clean data cache line by set/way
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: clean Dcache line, set/way: %x" EOL, value);
+      mmuCleanInvDCacheBySetWay(value);
+      break;
+    }
+    case CP15_DSB:
+    {
+      // CP15DSB: Data Synchronization Barrier operation
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: Data Synchronization Barrier operation" EOL);
+      mmuDataSyncBarrier();
+      break;
+    }
+    case CP15_DMB:
+    {
+      // CP15DMB: Data Memory Barrier operation
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: Data Memory Barrier operation" EOL);
+      mmuDataMemoryBarrier();
+      break;
+    }
+    case CP15_DCCMVAU:
+    {
+      // DCCMVAU: clean data cache line by MVA to PoU
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: clean dCache line by MVA to PoU: %x" EOL, value);
+      mmuCleanDCacheByMVAtoPOU(value);
+      break;
+    }
+    case CP15_DCCIMVAC:
+    {
+      // DCCIMVAC: clean and invalidate dCache by MVA to PoC
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: clean and invalidate dCache by MVA to PoC: %x" EOL, value);
+      mmuCleanInvDCacheByMVAtoPOC(value);
+      break;
+    }
+    case CP15_DCCISW:
+    {
+      // DCCISW: clean and invalidate data cache line by set/way
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: clean and invalidate Dcache line, set/way: %x" EOL, value);
+      mmuCleanInvDCacheBySetWay(value);
+      break;
+    }
+    case CP15_ITLBIALL:
+    {
+      // ITLBIALL: invalide instruction TLB (all)
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate instruction TLB (all)" EOL);
+      mmuInvalidateITLB();
+      break;
+    }
+    case CP15_ITLBIMVA:
+    {
+      // ITLBIMVA: invalide instruction TLB by MVA
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate instruction TLB by MVA: %x" EOL, value);
+      mmuInvalidateITLBbyMVA(value);
+      break;
+    }
+    case CP15_ITLBIASID:
+    {
+      // ITLBIASID: invalide instruction TLB by ASID match
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate instruction TLB by ASID match: %x" EOL, value);
+      mmuInvalidateITLBbyASID(value);
+      break;
+    }
+    case CP15_DTLBIALL:
+    {
+      // DTLBIALL: invalide data TLB (all)
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate data TLB (all)" EOL);
+      mmuInvalidateDTLB();
+      break;
+    }
+    case CP15_DTLBIMVA:
+    {
+      // DTLBIMVA: invalidate dTLB entry by MVA
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate data TLB by MVA: %x" EOL, value);
+      mmuInvalidateDTLBbyMVA(value);
+      break;
+    }
+    case CP15_DTLBIASID:
+    {
+      // DTLBIASID: invalidate dTLB entry by MVA
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate data TLB by ASID match: %x" EOL, value);
+      mmuInvalidateDTLBbyASID(value);
+      break;
+    }
+    case CP15_TLBIALL:
+    {
+      // TLBIALL: invalide unified TLB, write-only
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate unified TLB (all)" EOL);
+      mmuInvalidateUTLB();
+      break;
+    }
+    case CP15_TLBIMVA:
+    {
+      // TLBIMVA: invalidate unified TLB by MVA, write-only
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate unified TLB by MVA" EOL);
+      mmuInvalidateUTLBbyMVA(value);
+      break;
+    }
+    case CP15_PRRR:
+    {
+      // PRRR: primary region remap register
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: PRRR value %x" EOL, value);
+      __asm__ __volatile__("mcr p15, 0, %0, c10, c2, 0": :"r"(value));
+      break;
+    }
+    case CP15_NMRR:
+    {
+      // NMRR: normal memory remap register
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: NMRR value %x" EOL, value);
+      __asm__ __volatile__("mcr p15, 0, %0, c10, c2, 1": :"r"(value));
+      break;
+    }
+    case CP15_VBAR:
+    {
+      // VBAR: vector base address register
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: VBAR=%x" EOL, value);
+      break;
+    }
+    case CP15_FCSEIDR:
+    {
+      // FCSEIDR: fast context switch extension process ID register
+      DIE_NOW(NULL, "setCregVal: writing FCSEIDR - investigate!");
+      break;
+    }
+    case CP15_CONTEXTID:
+    {
+      // CONTEXTID: context ID register
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: CONTEXTID value %x" EOL, value);
+      guestSetContextID(value);
+      break;
+    }
+    case CP15_TPIDRURW:
+    {
+      // TPIDRURW: software thread ID register, user mode read-write
+      if (value)
+      {
+        DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: TPIDRURW value %x\n", value);
+      }
+      break;
+    }
+    case CP15_TPIDRURO:
+    {
+      // TPIDRURO: software thread ID register, user mode read-only
+      // writes are caught by the hypervisor - they are privileged operations
+      // but reads are not! must propagate TPIDRURO value to real CP15.
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: TPIDRURO value %x" EOL, value);
+      __asm__ __volatile__("mcr p15, 0, %0, c13, c0, 3": :"r"(value));
+      break;
+    }
+    case CP15_TPIDRPRW:
+    {
+      // TPIDRPRW: software thread ID register, user mode no access
+      if (value)
+      {
+        DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: TPIDRPRW value %x\n", value);
+      }
+      break;
+    }
+    default:
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 }
 
-u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr)
+u32int getCregVal(CREG *registerBank, u32int registerIndex)
 {
-  CREG reg;
-  u32int index = crbIndex(CRn, opc1, CRm, opc2);
-  reg = crbPtr[index];
+  const CREG *cr = &registerBank[registerIndex];
 
-  DEBUG(INTERPRETER_ANY_COPROC, "getCreg (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n", CRn, opc1, CRm, opc2, reg.value);
+  DEBUG(INTERPRETER_ANY_COPROC, "getCreg: reg=%#.8x value=%#.8x valid=%x" EOL, registerIndex,
+        cr->value, cr->valid);
 
-  if (reg.valid)
+  if (cr->valid)
   {
-    return reg.value;
+    return cr->value;
   }
   else
   {
-    printf("getCreg (CRn=%x opc1=%x CRm=%x opc2=%x) Value = %x\n",
-           CRn, opc1, CRm, opc2, reg.value);
-    DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    printf("getCreg: reg=%#.8x value=%#.8x invalid" EOL, registerIndex, cr->value);
+    DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 }

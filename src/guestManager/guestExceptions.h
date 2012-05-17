@@ -9,14 +9,10 @@
 #define EXC_VECT_HIGH_OFFS  0xffff0000
 
 #define EXC_VECT_LOW_SVC   0x08
-#define EXC_VECT_LOW_IABT  0x0C
+#define EXC_VECT_LOW_PABT  0x0C
 #define EXC_VECT_LOW_DABT  0x10
 #define EXC_VECT_LOW_IRQ   0x18
 
-#define EXC_VECT_HIGH_SVC   (EXC_VECT_LOW_SVC + EXC_VECT_HIGH_OFFS)
-#define EXC_VECT_HIGH_IABT  (EXC_VECT_LOW_IABT + EXC_VECT_HIGH_OFFS)
-#define EXC_VECT_HIGH_DABT  (EXC_VECT_LOW_DABT + EXC_VECT_HIGH_OFFS)
-#define EXC_VECT_HIGH_IRQ   (EXC_VECT_LOW_IRQ + EXC_VECT_HIGH_OFFS)
 
 // no need to throw a service call to guest context.
 // hypercall handler deals with it.

@@ -741,7 +741,7 @@ u32int mapAccessPermissionBits(u32int guestAP, u32int domain)
 {
   GCONTXT *context = getGuestContext();
   
-  u32int dacr = getCregVal(3, 0, 0, 0, context->coprocRegBank);
+  u32int dacr = getCregVal(context->coprocRegBank, CP15_DACR);
   u32int domBits = (dacr >> (domain*2)) & 0x3;
   u32int shadowAP = 0;
   bool guestPriv = isGuestInPrivMode(context);
@@ -813,7 +813,7 @@ void mapAPBitsSection(sectionEntry* guest, simpleEntry* shadow, u32int virtual)
   GCONTXT *context = getGuestContext();
 
   // get new access permission bits, that take into account guest DACR
-  u32int sysCtrlReg = getCregVal(1, 0, 0, 0, context->coprocRegBank);
+  u32int sysCtrlReg = getCregVal(context->coprocRegBank, CP15_SCTRL);
   if ((sysCtrlReg & SYS_CTRL_ACCESS_FLAG))
   {
     // access flag enabled set, unimplemented
@@ -970,7 +970,7 @@ void mapAPBitsSmallPage(u32int dom, smallPageEntry* guest, smallPageEntry* shado
   GCONTXT *context = getGuestContext();
 
   // get new access permission bits, that take into account guest DACR
-  u32int sysCtrlReg = getCregVal(1, 0, 0, 0, context->coprocRegBank);
+  u32int sysCtrlReg = getCregVal(context->coprocRegBank, CP15_SCTRL);
   if (sysCtrlReg & SYS_CTRL_ACCESS_FLAG)
   {
     // access flag enabled set, unimplemented
@@ -1026,7 +1026,7 @@ u32int mapExecuteNeverBit(u32int guestDomain, u32int xn)
   }
   else
   {
-    u32int dacr = getCregVal(3, 0, 0, 0, context->coprocRegBank);
+    u32int dacr = getCregVal(context->coprocRegBank, CP15_DACR);
     u32int domBits = (dacr >> (guestDomain*2)) & 0x3;
     if (domBits == DACR_MANAGER)
     {

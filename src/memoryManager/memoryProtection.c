@@ -150,7 +150,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
   simpleEntry* gpt = 0;
   u32int gpt2 = 0; // this is just a the physical address as unsigned int
   simpleEntry* spt = context->pageTables->shadowActive;
-  u32int sysCtrlReg = getCregVal(1, 0, 0, 0, &context->coprocRegBank[0]);
+  u32int sysCtrlReg = getCregVal(context->coprocRegBank, CP15_SCTRL);
 
   if (sysCtrlReg & 0x00000002)
   {
@@ -287,7 +287,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 
   // check domain
   u32int dom  = ((sectionEntry*)guestFirst)->domain;
-  u32int dacr = getCregVal(3, 0, 0, 0, &context->coprocRegBank[0]);
+  u32int dacr = getCregVal(context->coprocRegBank, CP15_DACR);
   u32int domBits = (dacr >> (dom*2)) & 0x3;
   
   switch (domBits)
@@ -465,7 +465,7 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
   simpleEntry* gpt = 0;
   u32int gpt2 = 0; // this is just a the physical address as unsigned int
   simpleEntry* spt = context->pageTables->shadowActive;
-  u32int sysCtrlReg = getCregVal(1, 0, 0, 0, &context->coprocRegBank[0]);
+  u32int sysCtrlReg = getCregVal(context->coprocRegBank, CP15_SCTRL);
 /*
   if (sysCtrlReg & 0x00000002)
   {
@@ -595,7 +595,7 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
   /* check domain: access type manager/client/no access          */ 
   /***************************************************************/
   u32int dom  = ((sectionEntry*)guestFirst)->domain;
-  u32int dacr = getCregVal(3, 0, 0, 0, &context->coprocRegBank[0]);
+  u32int dacr = getCregVal(context->coprocRegBank, CP15_DACR);
   u32int domBits = (dacr >> (dom*2)) & 0x3;
   
   switch (domBits)
