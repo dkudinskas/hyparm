@@ -1,6 +1,7 @@
 #ifndef __VM__OMAP_35XX__MMC_H__
 #define __VM__OMAP_35XX__MMC_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -67,7 +68,7 @@
 
 u32int getMmcId(u32int phyAddr);
 
-void initMmc(u32int mmcNumber);
+void initMmc(u32int mmcNumber) __cold__;
 
 u32int loadMmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 void storeMmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);

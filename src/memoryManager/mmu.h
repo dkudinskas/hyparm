@@ -1,6 +1,7 @@
 #ifndef __MEMORY_MANAGER__MMU_H__
 #define __MEMORY_MANAGER__MMU_H__
 
+#include "common/compiler.h"
 #include "common/stddef.h"
 #include "common/types.h"
 
@@ -221,8 +222,8 @@ void mmuPageTableEdit(u32int entryAddr, u32int pageAddr);
 
 __macro__ PhysicalAddressRegister mmuTryTranslate(u32int virtualAddress, TryTranslatePurpose purpose);
 
-void printDataAbort(void); //gets & prints the dfsr & dfar
-void printPrefetchAbort(void); //gets & prints the ifsr & ifar
+void printDataAbort(void) __cold__; //gets & prints the dfsr & dfar
+void printPrefetchAbort(void) __cold__; //gets & prints the ifsr & ifar
 
 
 __macro__ bool isMmuEnabled()

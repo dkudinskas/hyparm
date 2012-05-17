@@ -1,6 +1,7 @@
 #ifndef __HARDWARE__CONTROL_MODULE_H__
 #define __HARDWARE__CONTROL_MODULE_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -21,7 +22,7 @@
 #define CONTROL_MOD_PROD_ID_720_520   0x00000008
 
 
-void initControlModule(void);
+void initControlModule(void) __cold__;
 
 u32int loadControlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 void storeControlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);

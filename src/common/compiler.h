@@ -5,6 +5,13 @@
  * Header for overly compiler-specific things
  */
 
+/*
+ * __cold__
+ * Hint the compiler that a specific function is unlikely to be executed. It will be put in a
+ * separate section, .text.unlikely, so that hot code is put together (better cache behavior).
+ */
+#define __cold__      __attribute__((cold))
+
 #define __constant__  __attribute__((const))
 #define __pure__      __attribute__((pure))
 

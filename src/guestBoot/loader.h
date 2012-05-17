@@ -1,6 +1,7 @@
 #ifndef __GUEST_BOOT__LOADER_H__
 #define __GUEST_BOOT__LOADER_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "guestManager/guestContext.h"
@@ -10,17 +11,18 @@ struct MemoryBank;
 struct tag;
 
 
-void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint) __attribute__((noreturn));
+void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint) __cold__
+  __attribute__((noreturn));
 
-struct tag *getTagListBaseAddress(void);
+struct tag *getTagListBaseAddress(void) __cold__;
 
-void setupStartTag(struct tag **tag);
-void setupRevisionTag(struct tag **tag);
-void setupInitrdTag(struct tag **tag, u32int initrdStart, u32int initrdEnd);
-void setupMemoryTag(struct tag **tag, u32int startAddress, u32int size);
-void setupMemoryTags(struct tag **tag);
-void setupCommandLineTag(struct tag **tag, const char *commandLine);
-void setupEndTag(struct tag **tag);
+void setupStartTag(struct tag **tag) __cold__;
+void setupRevisionTag(struct tag **tag) __cold__;
+void setupInitrdTag(struct tag **tag, u32int initrdStart, u32int initrdEnd) __cold__;
+void setupMemoryTag(struct tag **tag, u32int startAddress, u32int size) __cold__;
+void setupMemoryTags(struct tag **tag) __cold__;
+void setupCommandLineTag(struct tag **tag, const char *commandLine) __cold__;
+void setupEndTag(struct tag **tag) __cold__;
 
 
 struct tag_header {

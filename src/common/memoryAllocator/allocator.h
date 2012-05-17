@@ -6,10 +6,11 @@
  */
 
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 
-void initialiseAllocator(u32int startAddress, u32int bytes);
+void initialiseAllocator(u32int startAddress, u32int bytes) __cold__;
 
 void dumpAllocatorInternals(void);
 

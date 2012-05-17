@@ -1,6 +1,7 @@
 #ifndef __HARDWARE__TIMER_32K_H__
 #define __HARDWARE__TIMER_32K_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -14,6 +15,6 @@
 u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 void storeTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
-void initTimer32k(void);
+void initTimer32k(void) __cold__;
 
 #endif

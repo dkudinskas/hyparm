@@ -1,6 +1,7 @@
 #ifndef __VM__OMAP_35XX__INTC_H__
 #define __VM__OMAP_35XX__INTC_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -327,7 +328,7 @@ M_IRQ_95 Reserved       Reserved
 #define REG_INTCPS_ILR95          0x0000027C //
 
 
-void initIntc(void);
+void initIntc(void) __cold__;
 
 void intcReset(void);
 

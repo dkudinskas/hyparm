@@ -144,15 +144,15 @@ void clearTranslationCache(TranslationCache *tc);
 void clearTranslationCacheByAddress(TranslationCache *tc, u32int address);
 void clearTranslationCacheByAddressRange(TranslationCache *tc, u32int startAddress, u32int endAddress);
 
-void dumpMetaCacheEntry(MetaCacheEntry *entry);
-void dumpMetaCacheEntryByIndex(TranslationCache *tc, u32int metaIndex);
+void dumpMetaCacheEntry(MetaCacheEntry *entry) __cold__;
+void dumpMetaCacheEntryByIndex(TranslationCache *tc, u32int metaIndex) __cold__;
 
 u32int getOriginPC(TranslationCache *tc, u32int metaIndex, u32int codeCacheAddress);
 
 __macro__ MetaCacheEntry *getMetaCacheEntry(TranslationCache *tc, u32int metaIndex, u32int startAddress);
 __macro__ u32int getMetaCacheIndex(u32int startAddress);
 
-void initialiseTranslationCache(struct guestContext *context);
+void initialiseTranslationCache(struct guestContext *context) __cold__;
 
 
 #ifdef CONFIG_BLOCK_COPY

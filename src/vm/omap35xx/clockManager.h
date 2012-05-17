@@ -1,6 +1,7 @@
 #ifndef __VM_OMAP_35XX__CLOCK_MANAGER_H__
 #define __VM_OMAP_35XX__CLOCK_MANAGER_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -240,7 +241,7 @@
 #define CM_CLKSTST_USBHOST          0x0000004C // interface clock activity status, R/O
 
 
-void initClockManager(void);
+void initClockManager(void) __cold__;
 
 /* top load function */
 u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);

@@ -1,6 +1,7 @@
 #ifndef __VM__OMAP_35XX__SMS_H__
 #define __VM__OMAP_35XX__SMS_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -23,7 +24,7 @@
 
 #define SMS_REVISION_VALUE       0x30
 
-void initSms(void);
+void initSms(void) __cold__;
 
 /* top load function */
 u32int loadSms(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);

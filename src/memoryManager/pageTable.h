@@ -1,6 +1,7 @@
 #ifndef __MEMORY_MANAGER__PAGE_TABLE_H__
 #define __MEMORY_MANAGER__PAGE_TABLE_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "drivers/beagle/memoryMap.h"
@@ -134,7 +135,7 @@ struct smallPageDescriptor
 typedef struct smallPageDescriptor smallPageEntry;
 
 
-void dumpTranslationTable(simpleEntry *table);
+void dumpTranslationTable(simpleEntry *table) __cold__;
 
 /*************** rewritten functions *********************/
 simpleEntry *newLevelOnePageTable(void);

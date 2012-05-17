@@ -1,5 +1,7 @@
 #include "cpuArch/constants.h"
 
+.section .text.unlikely
+
 /*
  * callKernel
  *

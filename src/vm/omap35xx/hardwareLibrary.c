@@ -27,9 +27,9 @@
 #include "vm/omap35xx/wdtimer.h"
 
 
-static bool attachDevice(device *parent, device *child);
+static bool attachDevice(device *parent, device *child) __cold__;
 static device *createDevice(const char *devName, bool isBus, u32int addrStart, u32int addrEnd,
-                            device *parent, LOAD_FUNCTION ldFn, STORE_FUNCTION stFn);
+                            device *parent, LOAD_FUNCTION ldFn, STORE_FUNCTION stFn) __cold__;
 static inline bool isAddressInDevice(u32int address, device *dev);
 static u32int loadGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int physAddr);
 static void storeGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int physAddr, u32int value);

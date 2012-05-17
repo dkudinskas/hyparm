@@ -1,6 +1,7 @@
 #ifndef __VM__OMAP_35XX__GPIO_H__
 #define __VM__OMAP_35XX__GPIO_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -52,9 +53,9 @@
 #define GPIO_SETDATAOUT          0x094
 
 
-void connectGpio(u32int gpioNumber, u32int physicalGpioNumber);
+void connectGpio(u32int gpioNumber, u32int physicalGpioNumber) __cold__;
 
-void initGpio(u32int gpioNumber);
+void initGpio(u32int gpioNumber) __cold__;
 
 u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress);
 

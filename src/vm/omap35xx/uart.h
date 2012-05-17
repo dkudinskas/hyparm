@@ -1,6 +1,7 @@
 #ifndef __HARDWARE__UART_H__
 #define __HARDWARE__UART_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -153,7 +154,7 @@ enum UART_REG_ACCESS_MODE
 
 typedef enum UART_REG_ACCESS_MODE uartMode;
 
-void initUart(u32int uartID);
+void initUart(u32int uartID) __cold__;
 
 void resetUart(u32int uartID);
 

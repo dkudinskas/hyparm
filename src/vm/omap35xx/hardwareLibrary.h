@@ -1,6 +1,7 @@
 #ifndef __VM__OMAP_35XX__HARDWARE_LIBRARY_H__
 #define __VM__OMAP_35XX__HARDWARE_LIBRARY_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 
@@ -142,7 +143,7 @@ struct genericDevice
 };
 
 
-device *createHardwareLibrary(void);
+device *createHardwareLibrary(void) __cold__;
 u32int vmLoad(ACCESS_SIZE size, u32int virtAddr);
 void vmStore(ACCESS_SIZE size, u32int virtAddr, u32int value);
 

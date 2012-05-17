@@ -1,6 +1,7 @@
 #ifndef __VM__OMAP_35XX__WDTIMER_H__
 #define __VM__OMAP_35XX__WDTIMER_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -20,7 +21,7 @@
 #define WDT_WSPR            0x48
 
 
-void initWDTimer2(void);
+void initWDTimer2(void) __cold__;
 void resetWDTimer2(void);
 
 u32int loadWDTimer2(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);

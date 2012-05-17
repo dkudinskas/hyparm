@@ -1,6 +1,7 @@
 #ifndef __GUEST_BOOT__IMAGE_H__
 #define __GUEST_BOOT__IMAGE_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 
@@ -102,7 +103,7 @@ typedef struct image_info {
 } image_info_t;
 
 
-image_header_t getImageHeader(ulong uImageAddr);
-void dumpHdrInfo(image_header_t * imgHdr);
+image_header_t getImageHeader(ulong uImageAddr) __cold__;
+void dumpHdrInfo(image_header_t * imgHdr) __cold__;
 
 #endif  /* __IMAGE_H__ */

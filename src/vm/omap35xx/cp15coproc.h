@@ -1,6 +1,7 @@
 #ifndef __MEMORY_MANAGER__CP15_COPROC_H__
 #define __MEMORY_MANAGER__CP15_COPROC_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 
@@ -39,8 +40,8 @@ struct crbEntry
 
 typedef struct crbEntry CREG;
 
+CREG *createCRB(void) __cold__;
 
-CREG *createCRB(void);
 u32int getCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr);
 void   setCregVal(u32int CRn, u32int opc1, u32int CRm, u32int opc2, CREG * crbPtr, u32int val);
 

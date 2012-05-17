@@ -65,9 +65,10 @@ struct runtimeConfiguration
 };
 
 
-static void dumpRuntimeConfiguration(struct runtimeConfiguration *config);
-static void processCommandLine(struct runtimeConfiguration *config, s32int argc, char *argv[]);
-static bool stringToAddress(const char *str, u32int *address);
+static void dumpRuntimeConfiguration(struct runtimeConfiguration *config) __cold__;
+void main(s32int argc, char *argv[]) __cold__;
+static void processCommandLine(struct runtimeConfiguration *config, s32int argc, char *argv[]) __cold__;
+static bool stringToAddress(const char *str, u32int *address) __cold__;
 
 extern void setGuestContext(GCONTXT *gContext);
 

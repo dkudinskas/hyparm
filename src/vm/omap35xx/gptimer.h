@@ -1,6 +1,7 @@
 #ifndef __VM__OMAP_35XX__GPTIMER_H__
 #define __VM__OMAP_35XX__GPTIMER_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -127,7 +128,7 @@
 #define TLDR1MS  0xFFFFFFE0
 
 
-void initGPTimer(void);
+void initGPTimer(void) __cold__;
 
 void resetGPTimer(void);
 

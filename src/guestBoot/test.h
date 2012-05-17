@@ -1,12 +1,15 @@
 #ifndef __GUEST_BOOT__TEST_H__
 #define __GUEST_BOOT__TEST_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
+
 #include "guestManager/guestContext.h"
+
 
 #define TEST_IMAGE_HEADER_NAME_LENGTH  64
 
-void bootTest(GCONTXT *context, u32int imageAddress)  __attribute__((noreturn));
+void bootTest(GCONTXT *context, u32int imageAddress) __cold__ __attribute__((noreturn));
 
 struct testImageHeader getTestImageHeader(ulong uImageAddr);
 

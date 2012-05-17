@@ -1,6 +1,7 @@
 #ifndef __HARDWARE__SDMA_H__
 #define __HARDWARE__SDMA_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -55,7 +56,7 @@
 #define SDMA_COLORi          0x000000C4 //+(i*0x60) channel DMA color key
 
 
-void initSdma(void);
+void initSdma(void) __cold__;
 
 void resetSdma(void);
 

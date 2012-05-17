@@ -1,6 +1,7 @@
 #ifndef __VM__OMAP_35XX__SDRC_H__
 #define __VM__OMAP_35XX__SDRC_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -37,7 +38,7 @@
 #define SDRC_REVISION_VALUE     0x00000040
 
 
-void initSdrc(void);
+void initSdrc(void) __cold__;
 
 /* top load function */
 u32int loadSdrc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);

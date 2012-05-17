@@ -1,6 +1,7 @@
 #ifndef __VM__OMAP_35XX__PM_H__
 #define __VM__OMAP_35XX__PM_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -67,7 +68,7 @@
 #define PM_ADDR_MATCH_7             0x140
 
 
-void initProtectionMechanism(void);
+void initProtectionMechanism(void) __cold__;
 
 /* top load function */
 u32int loadProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);

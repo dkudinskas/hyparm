@@ -1,6 +1,7 @@
 #ifndef __VM__OMAP_35XX__PRM_H__
 #define __VM__OMAP_35XX__PRM_H__
 
+#include "common/compiler.h"
 #include "common/types.h"
 
 #include "vm/omap35xx/hardwareLibrary.h"
@@ -90,7 +91,7 @@
  */
 #define PM_UNKNOWN               0x00000044 // unknown register
 
-void initPrm(void);
+void initPrm(void) __cold__;
 
 /* top load function */
 u32int loadPrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
