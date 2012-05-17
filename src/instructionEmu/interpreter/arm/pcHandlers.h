@@ -15,7 +15,8 @@ void armShiftPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32i
 /*
  * Load / store instructions
  */
-void armLdrStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction);
+void armLdrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction);
+void armStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction);
 void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction);
 
 #endif /* __INSTRUCTION_EMU__INTERPRETER__ARM__PC_HANDLERS_H__ */

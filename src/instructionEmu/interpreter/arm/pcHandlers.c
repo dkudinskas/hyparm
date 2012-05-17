@@ -5,20 +5,29 @@
 
 
 /*
- * Bit offsets in instruction words (LDR and STR have same offsets)
+ * Bit offsets in instruction words
  */
 enum
 {
   DATA_PROC_IMMEDIATE_FORM_BIT = 1 << 25,
 
   LDR_RT_INDEX = 12,
-  LDR_LDRB_REGISTER_FORM_BITS = 0b11 << 25,
+  LDR_LDRB_FORM_BITS = 0b11 << 25,
+  LDR_LDRB_IMMEDIATE_FORM_BITS = 0b10 << 25,
+  LDR_LDRB_REGISTER_FORM_BITS = LDR_LDRB_FORM_BITS,
   LDRH_LDRD_IMMEDIATE_FORM_BIT = 1 << 22,
   LDRD_BIT = 1 << 6,
 
   STM_REGISTERS_MASK = 0xFFFF,
   STM_REGISTERS_PC_BIT = 1 << GPR_PC,
   STM_WRITEBACK_BIT = 1 << 21,
+
+  STR_RT_INDEX = LDR_RT_INDEX,
+  STR_STRB_FORM_BITS = LDR_LDRB_FORM_BITS,
+  STR_STRB_IMMEDIATE_FORM_BITS = LDR_LDRB_IMMEDIATE_FORM_BITS,
+  STR_STRB_REGISTER_FORM_BITS = LDR_LDRB_REGISTER_FORM_BITS,
+  STRH_STRD_IMMEDIATE_FORM_BIT = LDRH_LDRD_IMMEDIATE_FORM_BIT,
+  STRD_BIT = LDRD_BIT,
 
   RD_INDEX = 12,
   RM_INDEX = 0,
@@ -154,9 +163,9 @@ void armDPImmRegRSRNoDest(TranslationCache *tc, ARMTranslationInfo *block, u32in
 }
 
 /*
- * Translates {LDR,STR}{,B,H,D} in register & immediate forms for which Rd!=PC
+ * Translates LDR{,B,H,D} in register & immediate forms for which Rd!=PC
  */
-void armLdrStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
+void armLdrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
 {
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, LDR_RT_INDEX);
@@ -168,11 +177,15 @@ void armLdrStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32
 
   if (baseRegister == GPR_PC)
   {
-    ASSERT(destinationRegister != GPR_PC, "Rd=PC: trap (LDR/STR) or unpredictable (B/H/D)");
+    ASSERT(destinationRegister != GPR_PC, "Rd=PC: trap (LDR) or unpredictable (LDR[BHD])");
 
-    DEBUG(TRANSLATION, "armLdrStrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
+    DEBUG(TRANSLATION, "armLdrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
           "Rt=%x" EOL, instruction, pc, conditionCode, destinationRegister, baseRegister);
 
+    /*
+     * In here, we know that Rd!=PC and Rn=PC; hence Rd!=Rn. For the register case we still need to
+     * check whether Rm=Rd, since Rd cannot be used to store the PC in that case.
+     */
     switch (instruction & LDR_LDRB_REGISTER_FORM_BITS)
     {
       case 0:
@@ -350,6 +363,93 @@ void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
   block->code = updateCodeCachePointer(tc, block->code);
   *block->code = instruction;
   block->code++;
+  block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
+  block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
+}
+
+/*
+ * Translates STR{,B,H,D} in register & immediate forms
+ */
+void armStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, u32int instruction)
+{
+  const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
+  const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, STR_RT_INDEX);
+  const u32int baseRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
+  const u32int offsetRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
+
+  const bool replaceSource = sourceRegister == GPR_PC;
+  const bool replaceBase = baseRegister == GPR_PC;
+  u32int scratchRegister;
+
+  if (replaceSource || replaceBase)
+  {
+    DEBUG(TRANSLATION, "armStrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
+          "Rt=%x" EOL, instruction, pc, conditionCode, sourceRegister, baseRegister);
+
+    if (!(instruction & STR_STRB_FORM_BITS) && (instruction & STRD_BIT))
+    {
+      /*
+       * Instruction is STRD immediate or register.
+       * The immediate form uses 3 registers while the register form uses 4 of them! To arrive
+       * here, we have Rn=PC and Rt!=PC, so we omit the base register from getOtherRegisterOfN.
+       */
+      ASSERT((sourceRegister & 1) == 0, ERROR_UNPREDICTABLE_INSTRUCTION);
+      ASSERT(sourceRegister != GPR_LR, ERROR_UNPREDICTABLE_INSTRUCTION);
+
+      if (instruction & STRH_STRD_IMMEDIATE_FORM_BIT)
+      {
+        scratchRegister = getOtherRegisterOf2(sourceRegister, sourceRegister + 1);
+      }
+      else
+      {
+        ASSERT(offsetRegister != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+        scratchRegister = getOtherRegisterOf3(sourceRegister, sourceRegister + 1, offsetRegister);
+      }
+    }
+    else if ((instruction & STR_STRB_FORM_BITS) == STR_STRB_IMMEDIATE_FORM_BITS
+             || (!(instruction & STR_STRB_FORM_BITS) && (instruction & STRH_STRD_IMMEDIATE_FORM_BIT)))
+    {
+      /*
+       * Instruction is STR{,B,H} immediate: only 2 registers used!
+       */
+      scratchRegister = getOtherRegisterOf2(sourceRegister, baseRegister);
+    }
+    else
+    {
+      ASSERT((instruction & STR_STRB_FORM_BITS) == STR_STRB_REGISTER_FORM_BITS ||
+             (!(instruction & STR_STRB_FORM_BITS) && !(instruction & STRH_STRD_IMMEDIATE_FORM_BIT)),
+             ERROR_BAD_ARGUMENTS);
+      /*
+       * Instruction is STR{,B,H} register: 3 registers used.
+       */
+      ASSERT(offsetRegister != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+      scratchRegister = getOtherRegisterOf3(sourceRegister, baseRegister, offsetRegister);
+    }
+
+    armBackupRegisterToSpill(tc, block, conditionCode, scratchRegister);
+    block->code = updateCodeCachePointer(tc, block->code);
+    armWritePCToRegister(tc, block, conditionCode, scratchRegister, pc);
+
+    if (replaceSource)
+    {
+      instruction = ARM_SET_REGISTER(instruction, STR_RT_INDEX, scratchRegister);
+    }
+
+    if (replaceBase)
+    {
+      instruction = ARM_SET_REGISTER(instruction, RN_INDEX, scratchRegister);
+    }
+  }
+
+  block->code = updateCodeCachePointer(tc, block->code);
+  *block->code = instruction;
+  block->code++;
+
+  if (replaceSource || replaceBase)
+  {
+    armRestoreRegisterFromSpill(tc, block, conditionCode, scratchRegister);
+  }
+
   block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
   block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
 }
