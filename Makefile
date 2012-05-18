@@ -201,7 +201,7 @@ HYPARM_DIRS-$(CONFIG_CLI) += cli
 
 HYPARM_SRCS_C-y  := main.c
 HYPARM_SRCS_S-y  :=
-HYPARM_SRCS_SX-y := startup.S
+HYPARM_SRCS_SX-y := startup.S debug.S
 
 
 # Include all makefile.mk files from HYPARM_DIRS-y

@@ -88,8 +88,17 @@ void l2_cache_disable(void);
 
 
 /*
- * Infinite loop waiting for interrupts (even if they are masked)
+ * Infinite loop waiting for interrupts (even if they are masked); used on crash
  */
+#ifdef CONFIG_BKPT
+#define infiniteIdleLoop() \
+  { \
+    while (TRUE) \
+    { \
+      __asm__ __volatile__ ("BKPT #0xBAD"); \
+    } \
+  }
+#else
 #define infiniteIdleLoop() \
   { \
     while (TRUE) \
@@ -97,6 +106,6 @@ void l2_cache_disable(void);
       __asm__ __volatile__ ("WFI"); \
     } \
   }
-
+#endif /* CONFIG_BKPT */
 
 #endif /* __CPU_ARCH__ARM_V7_H__ */
