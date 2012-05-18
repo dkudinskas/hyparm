@@ -1,4 +1,5 @@
 #include "common/debug.h"
+#include "common/linker.h"
 #include "common/memFunctions.h" // for memset
 
 #include "cpuArch/constants.h"
@@ -15,7 +16,6 @@
 #include "memoryManager/shadowMap.h"
 
 
-extern const void* _start_marker;
 
 void initVirtualAddressing()
 {
@@ -53,9 +53,8 @@ void setupHypervisorPageTable(simpleEntry* pageTablePtr)
   mapHypervisorMemory(pageTablePtr);
 
   // 1:1 Map the entire of physical memory
-  u32int hypervisorStart = (u32int)&_start_marker;
   u32int memStart = MEMORY_START_ADDR;
-  while (memStart < hypervisorStart) 
+  while (memStart < HYPERVISOR_BEGIN_ADDRESS) 
   {
     mapSection(pageTablePtr, memStart, memStart, 
                GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000);

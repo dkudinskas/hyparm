@@ -1,5 +1,6 @@
-#include "common/debug.h"
 #include "common/assert.h"
+#include "common/debug.h"
+#include "common/linker.h"
 #include "common/memFunctions.h"
 
 #include "guestManager/guestContext.h"
@@ -14,9 +15,6 @@
 #include "cpuArch/constants.h"
 
 extern void v7_flush_dcache_all(u32int dev);
-
-extern u32int _start_marker;
-extern u32int _end_marker;
 
 
 /**
@@ -126,7 +124,7 @@ void mapHypervisorMemory(simpleEntry* pageTable)
 #ifdef PAGE_TABLE_DBG
   printf("mapHypervisorMemory in page table %08x\n", (u32int)pageTable);
 #endif
-  u32int startAddr = (u32int)&_start_marker;
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
 
   while (startAddr < endAddr)

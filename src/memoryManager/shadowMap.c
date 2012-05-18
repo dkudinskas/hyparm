@@ -1,16 +1,14 @@
-#include "memoryManager/shadowMap.h"
-#include "memoryManager/memoryConstants.h"
-#include "memoryManager/mmu.h"
-
-#include "common/debug.h"
 #include "common/assert.h"
+#include "common/debug.h"
+#include "common/linker.h"
 #include "common/memFunctions.h" // for memset
 
 #include "guestManager/guestContext.h"
 
+#include "memoryManager/memoryConstants.h"
+#include "memoryManager/mmu.h"
+#include "memoryManager/shadowMap.h"
 
-extern u32int _start_marker;
-extern u32int _end_marker;
 
 /**
  * take a VA that caused a memory abort and try to add a shadow mapping
@@ -258,7 +256,7 @@ void shadowMapSection(sectionEntry* guest, sectionEntry* shadow, u32int virtual)
     }
   }
 
-  u32int startAddr = (u32int)&_start_marker;
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
   // if the hypervisor memory starts/ends in this section, panic
   if ( ((guestPhysAddr >= startAddr) && (guestPhysAddr <= endAddr)) ||
@@ -371,7 +369,7 @@ void shadowUnmapSection(simpleEntry* shadow, sectionEntry* guest, u32int virtual
 
   // would gladly remove this entry, but must check if the guest didnt decide
   // to remove pte that maps the for the hypervisor
-  u32int startAddr = (u32int)&_start_marker;
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
   // if the hypervisor memory starts/ends in this section, panic
   if ( ((physAddr >= startAddr) && (physAddr <= endAddr)) ||
@@ -617,7 +615,7 @@ void shadowUnmapPageTable(pageTableEntry* shadow, pageTableEntry* guest, u32int 
 
   // would gladly remove this entry, but must check if the guest didnt decide
   // to remove pte that maps the for the hypervisor
-  u32int startAddr = (u32int)&_start_marker;
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
 
   ptInfo* metadata = getPageTableInfo(shadow);
@@ -694,7 +692,7 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
     }
   }
 
-  u32int startAddr = (u32int)&_start_marker;
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
   // if the hypervisor memory starts/ends in this section, panic
   if ( ((guestPhysical >= startAddr) && (guestPhysical <= endAddr)) ||
@@ -803,7 +801,7 @@ void shadowUnmapSmallPage(smallPageEntry* shadow, smallPageEntry* guest, u32int 
 #endif
 
   // if the hypervisor memory starts/ends in this page, panic
-  u32int startAddr = (u32int)&_start_marker;
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
   if ( ((physAddr >= startAddr) && (physAddr <= endAddr)) ||
       (((physAddr+SMALL_PAGE_SIZE-1) >= startAddr) && ((physAddr+SMALL_PAGE_SIZE-1) <= endAddr)) )
