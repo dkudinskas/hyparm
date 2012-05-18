@@ -7,6 +7,8 @@
 
 #include "drivers/beagle/beUart.h"
 
+#include "guestManager/guestContext.h"
+
 #ifdef CONFIG_MMC
 #include "io/fs/fat.h"
 #endif
@@ -44,6 +46,8 @@ extern void setEmergencyExceptionVector(void);
 void dumpStackFromParameters(u32int snapshotOrigin, u32int psr, u32int *stack)
   __attribute__((externally_visible));
 
+static u32int vprintf(const char *format, va_list args) __attribute__((always_inline));
+
 
 static void banner(const char *msg)
 {
@@ -72,7 +76,17 @@ static void banner(const char *msg)
   printf(EOL EOL "%s[%s]%s%s" EOL EOL, padding, msg, ((msgLength & 1) ? "" : "="), padding);
 }
 
-void dieNow(GCONTXT *context, const char *caller, const char *msg)
+void dieNow(const char *file, u32int line, const char *caller, const char *message)
+{
+  dieNowF(file, line, caller, "%s", message);
+}
+
+void dieNow2(const char *file, u32int line, const char *caller, const char *message1, const char *message2)
+{
+  dieNowF(file, line, caller, "%s%s", message1, message2);
+}
+
+void dieNowF(const char *file, u32int line, const char *caller, const char *format, ...)
 {
 #ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
   setEmergencyExceptionVector();
@@ -82,13 +96,16 @@ void dieNow(GCONTXT *context, const char *caller, const char *msg)
   fclose(&mainFilesystem, debugStream);
 #endif
 
+  va_list args;
+  va_start(args, format);
   banner("ERROR");
-  printf("%s: %s" EOL, caller, msg);
-  if (context == 0)
-  {
-    context = getGuestContext();
-  }
-  if (context != 0)
+  printf("%s:%u: in %s:" EOL, file, line, caller);
+  vprintf(format, args);
+  va_end(args);
+  printf(EOL);
+
+  const GCONTXT *context = getGuestContext();
+  if (context != NULL)
   {
     dumpGuestContext(context);
   }
@@ -99,7 +116,6 @@ void dieNow(GCONTXT *context, const char *caller, const char *msg)
 
   infiniteIdleLoop();
 }
-
 
 void dumpStack()
 {
@@ -183,16 +199,28 @@ void dumpStackFromParameters(u32int snapshotOrigin, u32int psr, u32int *stack)
   }
 }
 
-
+/*
+ * WARNING: this function or any functions called from here must *NEVER* call the memory allocator
+ * because it may be used to debug the allocator itself.
+ */
 u32int printf(const char *fmt, ...)
 {
   va_list args;
   u32int i;
-  char printbuffer[256];
   va_start(args, fmt);
 
-  i = vsprintf(printbuffer, fmt, args);
+  i = vprintf(fmt, args);
   va_end(args);
+
+  return i;
+}
+
+static inline u32int vprintf(const char *format, va_list args)
+{
+  u32int i;
+  char printbuffer[256];
+
+  i = vsprintf(printbuffer, format, args);
 
   /* Print the string */
   serialPuts(printbuffer);

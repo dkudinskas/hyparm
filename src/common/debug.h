@@ -5,8 +5,23 @@
 #include "common/stdio.h"
 #include "common/types.h"
 
-#include "guestManager/guestContext.h"
 
+#define EXPAND_TO_STRING(s)    TO_STRING(s)
+#define TO_STRING(s)           #s
+
+
+#ifdef CONFIG_ASSERT
+#define ASSERT(cond, msg)                                                                          \
+  {                                                                                                \
+    if (unlikely(!(cond)))                                                                         \
+    {                                                                                              \
+      dieNow2(__FILE__, __LINE__, __func__,                                                        \
+              "assertion (" #cond ") failed:" EOL, msg);                                           \
+    }                                                                                              \
+  }
+#else
+#define ASSERT(cond, msg)
+#endif /* CONFIG_ASSERT */
 
 #define DEBUG(what, ...)                                                                           \
   {                                                                                                \
@@ -24,14 +39,18 @@
     }                                                                                              \
   }
 
-#define DIE_NOW(context, msg)  dieNow(context, __func__, msg)
-
-#define EXPAND_TO_STRING(s)    TO_STRING(s)
-#define TO_STRING(s)           #s
+#define DIE_NOW(context, msg)  dieNow(__FILE__, __LINE__, __func__, msg)
 
 
-void dieNow(GCONTXT *context, const char *caller, const char *msg)
-  __attribute__((noreturn));
+
+void dieNow(const char *file, u32int line, const char *caller, const char *message)
+            __attribute__((noreturn));
+
+void dieNow2(const char *file, u32int line, const char *caller, const char *message1,
+             const char *message2) __attribute__((noreturn));
+
+void dieNowF(const char *file, u32int line, const char *caller, const char *format, ...)
+             __attribute__((format(__printf__, 4, 5))) __attribute__((noreturn));
 
 void dumpStack(void) __attribute__((naked));
 
