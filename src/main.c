@@ -4,10 +4,12 @@
 
 #include "common/commandLine.h"
 #include "common/debug.h"
-#include "common/memFunctions.h"
+#include "common/linker.h"
 #include "common/stdarg.h"
 #include "common/stddef.h"
 #include "common/string.h"
+
+#include "common/memoryAllocator/allocator.h"
 
 #include "cpuArch/armv7.h"
 
@@ -65,12 +67,14 @@ static bool stringToAddress(const char *str, u32int *address);
 
 extern void setGuestContext(GCONTXT *gContext);
 
+
 #ifdef CONFIG_MMC
 fatfs mainFilesystem;
 partitionTable primaryPartitionTable;
 struct mmc *mmcDevice;
-file * debugStream;
+file *debugStream;
 #endif
+
 
 static void dumpRuntimeConfiguration(struct runtimeConfiguration *config)
 {
@@ -84,16 +88,16 @@ void main(s32int argc, char *argv[])
   struct runtimeConfiguration config;
   memset(&config, 0, sizeof(struct runtimeConfiguration));
   config.guestOS = GUEST_OS_LINUX;
-  
+ 
 #ifdef CONFIG_MMC
-  mmcDevice = 0;
-  debugStream = 0;
+  mmcDevice = NULL;
+  debugStream = NULL;
 #endif
 
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
 
-  mallocInit();
+  initialiseAllocator(RAM_XN_POOL_BEGIN, RAM_XN_POOL_END - RAM_XN_POOL_BEGIN);
 
   /* initialise uart backend, important to be before any debug output. */
   /* init function initialises UARTs in disabled mode. */
@@ -107,6 +111,11 @@ void main(s32int argc, char *argv[])
 #else
   beUartStartup(3, 115200);
 #endif
+
+  /*
+   * Print the bounds of the hypervisor image in RAM.
+   */
+  DEBUG(STARTUP, "Hypervisor @ %#.8x -- %#.8x" EOL, HYPERVISOR_BEGIN_ADDRESS, HYPERVISOR_END_ADDRESS);
 
   /*
    * Use command line arguments passed by U-Boot to update the runtime configuration structure. The
@@ -141,6 +150,7 @@ void main(s32int argc, char *argv[])
 
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
+
 #ifdef CONFIG_MMC
   u32int err = 0;
   if ((err = mmcMainInit()) != 0)

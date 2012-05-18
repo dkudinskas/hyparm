@@ -1,26 +1,25 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "cpuArch/constants.h"
 
 #include "guestManager/guestContext.h"
 
-#include "vm/omap35xx/sdram.h"
-
 #include "memoryManager/addressing.h"
+
+#include "vm/omap35xx/sdram.h"
 
 
 GCONTXT *allocateGuestContext()
 {
   // Allocate guest context
-  GCONTXT *context = (GCONTXT *)mallocBytes(sizeof(GCONTXT));
+  GCONTXT *context = (GCONTXT *)calloc(1, sizeof(GCONTXT));
   if (context == 0)
   {
     DIE_NOW(NULL, "Failed to allocate guest context.");
   }
-  memset(context, 0, sizeof(GCONTXT));
   DEBUG(GUEST_CONTEXT, "createGuestContext: @ %p; initialising..." EOL, context);
   return context;
 }
@@ -31,7 +30,7 @@ void initGuestContext(GCONTXT* context)
   context->CPSR = (PSR_F_BIT | PSR_I_BIT | PSR_SVC_MODE);
 
   // Initialise coprocessor register bank
-  context->coprocRegBank = (CREG *)mallocBytes(MAX_CRB_SIZE * sizeof(CREG));
+  context->coprocRegBank = (CREG *)malloc(MAX_CRB_SIZE * sizeof(CREG));
   if (context->coprocRegBank == NULL)
   {
     DIE_NOW(context, "Failed to allocate coprocessor register bank.");
@@ -41,34 +40,30 @@ void initGuestContext(GCONTXT* context)
   initCRB(context->coprocRegBank);
 
   // Initialise block cache
-  context->blockCache = (BCENTRY *)mallocBytes(BLOCK_CACHE_SIZE * sizeof(BCENTRY));
+  context->blockCache = (BCENTRY *)calloc(BLOCK_CACHE_SIZE, sizeof(BCENTRY));
   if (context->blockCache == NULL)
   {
     DIE_NOW(context, "Failed to allocate basic block cache");
   }
   DEBUG(GUEST_CONTEXT, "createGuestContext: block cache @ %p" EOL, context->blockCache);
-  memset(context->blockCache, 0, BLOCK_CACHE_SIZE * sizeof(BCENTRY));
   initialiseBlockCache(context->blockCache);
 
   // virtual machine page table structs
-  context->pageTables = (pageTablesVM*)mallocBytes(sizeof(pageTablesVM));
+  context->pageTables = (pageTablesVM *)calloc(1, sizeof(pageTablesVM));
   if (context->pageTables == NULL)
   {
     DIE_NOW(context, "Failed to allocate page tables struct");
   }
   DEBUG(GUEST_CONTEXT, "allocateGuestContext: page tables @ %p" EOL, context->pageTables);
-  memset(context->pageTables, 0, sizeof(pageTablesVM));
-
 
   // virtual machine struct
-  context->vm = (virtualMachine*)mallocBytes(sizeof(virtualMachine));
+  context->vm = (virtualMachine*)calloc(1, sizeof(virtualMachine));
   if (context->vm == NULL)
   {
     DIE_NOW(context, "Failed to allocate vm struct");
   }
   DEBUG(GUEST_CONTEXT, "allocateGuestContext: virtual machine @ %p" EOL, context->vm);
   memset(context->vm, 0, sizeof(virtualMachine));
-
 
   // Initialise virtual hardware devices
   context->hardwareLibrary = initialiseHardwareLibrary();

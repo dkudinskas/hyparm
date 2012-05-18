@@ -1,6 +1,6 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "guestManager/guestContext.h"
@@ -11,32 +11,24 @@
 void initSdram(void)
 {
   GCONTXT* context = getGuestContext();
-  struct SdramController* sdram = (struct SdramController *)mallocBytes(sizeof(struct SdramController));
-  if (sdram == 0)
+  struct SdramController* sdram = (struct SdramController *)calloc(1, sizeof(struct SdramController));
+  if (sdram == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate SDRAM instance");
   }
-  else
-  {
-    memset((void*)sdram, 0x0, sizeof(struct SdramController));
-    DEBUG(VP_OMAP_35XX_SDRAM, "Sdram instance at %p" EOL, sdram);
-  }
+  DEBUG(VP_OMAP_35XX_SDRAM, "Sdram instance at %p" EOL, sdram);
 
   sdram->enabled = 1;
 
   context->vm->sdram = sdram;
 
 #ifdef SDRAM_STORE_COUNTER
-  u32int * storeTrace = (u32int*)mallocBytes(MEGABYTE_COUNT * sizeof(u32int));
-  if (storeTrace == 0)
+  u32int *storeTrace = (u32int *)calloc(MEGABYTE_COUNT, sizeof(u32int));
+  if (storeTrace == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate store trace.");
   }
-  else
-  {
-    memset((void*)storeTrace, 0x0, MEGABYTE_COUNT*sizeof(u32int));
-    printf("Store trace at %.8x" EOL, (u32int)storeTrace);
-  }
+  printf("Store trace at %.8x" EOL, (u32int)storeTrace);
   sdram->storeCounters = storeTrace;
 
   u32int y = 0;
@@ -46,7 +38,6 @@ void initSdram(void)
   }
 #endif
 }
-
 
 void dumpSdramStats()
 {

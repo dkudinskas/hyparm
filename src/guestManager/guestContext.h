@@ -3,7 +3,6 @@
 
 #include "common/compiler.h"
 #include "common/types.h"
-#include "common/memFunctions.h"
 
 #include "guestManager/blockCache.h"
 

@@ -1,5 +1,10 @@
-#ifndef __COMMON__MEM_FUNCTIONS_H__
-#define __COMMON__MEM_FUNCTIONS_H__
+#ifndef __COMMON__MEMORY_ALLOCATOR__LEGACY_H__
+#define __COMMON__MEMORY_ALLOCATOR__LEGACY_H__
+
+/*
+ * Private header for the legacy memory allocator.
+ */
+
 
 #include "common/types.h"
 
@@ -25,14 +30,4 @@ struct chunkLinkedListElement
   memchunkListElem* nextChunk;
 };
 
-
-void mallocInit(void);
-
-void dumpMallocs(void);
-
-void* mallocBytes(u32int size);
-void* mallocBytesWithAlign(u32int size, u32int alignBits);
-
-void free(void *pointer);
-
-#endif
+#endif /* __COMMON__MEMORY_ALLOCATOR__LEGACY_H__ */

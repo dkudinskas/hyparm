@@ -1,6 +1,6 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #ifdef CONFIG_GUEST_FREERTOS
@@ -16,13 +16,12 @@ void initGpio(u32int gpioNumber)
 {
   GCONTXT* context = getGuestContext();
 
-  context->vm->gpio[gpioNumber - 1] = (struct Gpio *)mallocBytes(sizeof(struct Gpio));
+  context->vm->gpio[gpioNumber - 1] = (struct Gpio *)calloc(1, sizeof(struct Gpio));
   if (!context->vm->gpio[gpioNumber - 1])
   {
     DIE_NOW(NULL, "Failed to allocate Gpio.");
   }
 
-  memset(context->vm->gpio[gpioNumber - 1], 0, sizeof(struct Gpio));
   DEBUG(VP_OMAP_35XX_GPIO, "initGpio: GPIO%x @ %p" EOL, 
         gpioNumber, context->vm->gpio[gpioNumber - 1]);
 

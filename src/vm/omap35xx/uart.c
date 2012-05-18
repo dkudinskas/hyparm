@@ -1,6 +1,6 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "guestManager/guestContext.h"
@@ -20,12 +20,12 @@ void initUart(u32int uartID)
 
   u32int uID = uartID - 1;
   // init function: setup device, reset register values to defaults!
-  context->vm->uart[uID] = (struct Uart *)mallocBytes(sizeof(struct Uart));
-  if (context->vm->uart[uID] == 0)
+  context->vm->uart[uID] = (struct Uart *)calloc(1, sizeof(struct Uart));
+  if (context->vm->uart[uID] == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate uart.");
   }
-  memset((void*)context->vm->uart[uID], 0, sizeof(struct Uart));
+
   DEBUG(VP_OMAP_35XX_UART, "Initializing Uart%x at %p" EOL, uartID, context->vm->uart[uID]);
   resetUart(uartID);
 }

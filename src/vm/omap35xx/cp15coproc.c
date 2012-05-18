@@ -1,5 +1,6 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
+#include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "memoryManager/addressing.h"

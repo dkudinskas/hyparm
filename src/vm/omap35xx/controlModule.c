@@ -1,5 +1,4 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
 
 #include "guestManager/guestContext.h"
@@ -47,4 +46,3 @@ void storeControlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int 
 {
   DIE_NOW(0, "storeControlModule: control module is a read only device!");
 }
-

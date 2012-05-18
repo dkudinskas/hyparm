@@ -57,6 +57,21 @@ config DECODER_TABLE_SEARCH
 
 endchoice
 
+choice
+  prompt "Memory allocator"
+  default MEMORY_ALLOCATOR_LEGACY
+
+config MEMORY_ALLOCATOR_LEGACY
+  bool "Legacy (no free)"
+
+config MEMORY_ALLOCATOR_NAIVE
+  bool "Naive (no free)"
+
+config MEMORY_ALLOCATOR_TLSF
+  bool "TLSF"
+
+endchoice
+
 config PATH_AUTODECODER
   string "Path to autodecoder"
 
@@ -253,14 +268,18 @@ config DEBUG_STARTUP
   bool "Debug startup"
   depends on DEBUG
 
-config DEBUG_MALLOC
-  bool "Debug malloc"
-  depends on DEBUG
-
 config DEBUG_GUEST_CONTEXT
   bool "Debug guest context routines"
   default y
   depends on DEBUG
+
+config DEBUG_MEMORY_ALLOCATOR
+  bool "Debug memory allocator"
+  depends on DEBUG
+
+config DEBUG_MEMORY_ALLOCATOR_BOOKKEEPING
+  bool "Debug memory allocator bookkeeping"
+  depends on DEBUG && MEMORY_ALLOCATOR_BOOKKEEPING
 
 config DEBUG_MEMORY_MANAGER
   bool "Debug memory manager"

@@ -1,7 +1,7 @@
 #include "common/assert.h"
 #include "common/debug.h"
 #include "common/linker.h"
-#include "common/memFunctions.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "guestManager/guestContext.h"
@@ -354,7 +354,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* shadow)
     case FAULT:
     {
       // need to allocate a new shadow page table!
-      if ((sptVirtAddr = (u32int)mallocBytesWithAlign(PT2_SIZE, PT2_ALIGN_BITS)) == 0)
+      if ((sptVirtAddr = (u32int)memalign(1 << PT2_ALIGN_BITS, PT2_SIZE)) == 0)
       {
         DIE_NOW(0, "shadowMapPageTable: Failed to allocate 2lvl shadow page table");
       }

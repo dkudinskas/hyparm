@@ -1,6 +1,6 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "drivers/beagle/beGPTimer.h"
@@ -14,19 +14,15 @@
 
 void initGPTimer()
 {
-  GCONTXT* context = getGuestContext();
-
-  // init function: setup device, reset register values to defaults!
-  struct GeneralPurposeTimer* gptimer = (struct GeneralPurposeTimer*)mallocBytes(sizeof(struct GeneralPurposeTimer));
-  if (gptimer == 0)
+  GCONTXT *context = getGuestContext();
+  struct GeneralPurposeTimer *gptimer = (struct GeneralPurposeTimer *)calloc(1, sizeof(struct GeneralPurposeTimer));
+  if (gptimer == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate general purpose timer.");
   }
-  memset((void*)gptimer, 0x0, sizeof(struct GeneralPurposeTimer));
-  DEBUG(VP_OMAP_35XX_GPTIMER, "Initializing General Purpose timer at %p" EOL, gptimer);
-
   context->vm->gptimer = gptimer;
 
+  DEBUG(VP_OMAP_35XX_GPTIMER, "Initializing General Purpose timer at %p" EOL, gptimer);
   resetGPTimer();
 }
 

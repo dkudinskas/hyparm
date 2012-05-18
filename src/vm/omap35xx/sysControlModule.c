@@ -1,6 +1,6 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "guestManager/guestContext.h"
@@ -13,16 +13,13 @@
 void initSysControlModule()
 {
   GCONTXT* context = getGuestContext();
-  struct SystemControlModule* sysCtrlModule = (struct SystemControlModule *)mallocBytes(sizeof(struct SystemControlModule));
-  if (sysCtrlModule == 0)
+  struct SystemControlModule* sysCtrlModule = (struct SystemControlModule *)calloc(1, sizeof(struct SystemControlModule));
+  if (sysCtrlModule == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate system control module.");
   }
-  else
-  {
-    memset(sysCtrlModule, 0x0, sizeof(struct SystemControlModule));
-    DEBUG(VP_OMAP_35XX_SCM, "Initializing system control module at %p" EOL, sysCtrlModule);
-  }
+
+  DEBUG(VP_OMAP_35XX_SCM, "Initializing system control module at %p" EOL, sysCtrlModule);
 
   // register default values
   // SYS_CTRL_MOD_INTERFACE      0x48002000 base, 36 bytes length

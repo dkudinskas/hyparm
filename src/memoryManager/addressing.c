@@ -1,6 +1,5 @@
 #include "common/debug.h"
 #include "common/linker.h"
-#include "common/memFunctions.h"
 #include "common/string.h"
 
 #include "cpuArch/constants.h"

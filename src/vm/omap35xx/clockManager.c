@@ -1,6 +1,6 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "guestManager/guestContext.h"
@@ -10,15 +10,13 @@
 
 void initClockManager()
 {
-  // init function: setup device, reset register values to defaults!
-  GCONTXT* context = getGuestContext();
-
-  struct ClockManager* clockMan = (struct ClockManager *)mallocBytes(sizeof(struct ClockManager));
-  if (clockMan == 0)
+  GCONTXT *context = getGuestContext();
+  struct ClockManager *clockMan = (struct ClockManager *)calloc(1, sizeof(struct ClockManager));
+  if (clockMan == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate clock manager.");
   }
-  memset(clockMan, 0x0, sizeof(struct ClockManager));
+
   DEBUG(VP_OMAP_35XX_CM, "Initializing Clock manager at %p" EOL, clockMan);
 
   // IVA2_CM registers

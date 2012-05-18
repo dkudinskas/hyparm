@@ -1,7 +1,7 @@
 #include "common/assert.h"
 #include "common/debug.h"
 #include "common/linker.h"
-#include "common/memFunctions.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "guestManager/guestContext.h"
@@ -24,7 +24,7 @@ extern void v7_flush_dcache_all(u32int dev);
 u32int* newLevelOnePageTable()
 {
   // alloc some some space for the 1stLevel table
-  u32int pageTableAddress = (u32int)mallocBytesWithAlign(PT1_SIZE, PT1_ALIGN_BITS);
+  u32int pageTableAddress = (u32int)memalign(1 << PT1_ALIGN_BITS, PT1_SIZE);
   if (pageTableAddress == 0)
   {
     DIE_NOW(0, "newLevelOnePageTable: Failed to allocate page table");
@@ -49,7 +49,7 @@ u32int* newLevelOnePageTable()
 u32int* newLevelTwoPageTable(void)
 {
   //alloc some some space for the 1stLevel table
-  u32int pageTableAddress = (u32int)mallocBytesWithAlign(PT2_SIZE, PT2_ALIGN_BITS);
+  u32int pageTableAddress = (u32int)memalign(1 << PT2_ALIGN_BITS, PT2_SIZE);
   if (pageTableAddress == 0)
   {
     DIE_NOW(0, "newLevelTwoPageTable: Failed to allocate page table");
@@ -578,7 +578,7 @@ void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u3
 #endif
   GCONTXT* context = getGuestContext();
   
-  ptInfo* newEntry = (ptInfo*)mallocBytes(sizeof(ptInfo));
+  ptInfo* newEntry = (ptInfo*)malloc(sizeof(ptInfo));
 #ifdef PAGE_TABLE_DBG
   printf("addPageTableInfo: new entry @ %p\n", newEntry);
 #endif

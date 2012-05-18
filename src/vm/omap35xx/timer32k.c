@@ -1,5 +1,6 @@
 #include "common/debug.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "guestManager/guestContext.h"
@@ -9,18 +10,15 @@
 
 void initTimer32k()
 {
-  GCONTXT* context = getGuestContext();
-
-  struct SynchronizedTimer32k* timer32k = (struct SynchronizedTimer32k*)mallocBytes(sizeof(struct SynchronizedTimer32k));
-  if (timer32k == 0)
+  GCONTXT *context = getGuestContext();
+  struct SynchronizedTimer32k *timer32k = (struct SynchronizedTimer32k *)calloc(1, sizeof(struct SynchronizedTimer32k));
+  if (timer32k == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate 32Khz sync timer struct.");
   }
-  else
-  {
-    memset(timer32k, 0x0, sizeof(struct SynchronizedTimer32k));
-    DEBUG(VP_OMAP_35XX_TIMER32K, "Initializing 32kHz synchronized timer at %p" EOL, timer32k);
-  }
+
+  DEBUG(VP_OMAP_35XX_TIMER32K, "Initializing 32kHz synchronized timer at %p" EOL, timer32k);
+
   // sysconf value is emulated. Reset to zero
   timer32k->timer32SysconfReg = 0;
   volatile u32int * memPtr = (u32int *)(TIMER32K_BASE + REG_TIMER_32K_COUNTER);

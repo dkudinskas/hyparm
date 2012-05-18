@@ -1,5 +1,5 @@
 #include "common/debug.h"
-#include "common/memFunctions.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "guestManager/blockCache.h"
@@ -64,12 +64,11 @@ void initialiseBlockCache(BCENTRY *blockCache)
   DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, blockCache);
 
   // Allocate execution flag bitmap
-  u32int* execBitMap = (u32int*)mallocBytes(sizeof(u32int)*NUMBER_OF_BITMAPS);
+  u32int *execBitMap = (u32int *)calloc(NUMBER_OF_BITMAPS, sizeof(u32int));
   if (execBitMap == 0)
   {
     DIE_NOW(context, "Failed to allocate execution bitmap.");
   }
-  memset(execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
 
   memset(blockCache, 0, sizeof(BCENTRY) * BLOCK_CACHE_SIZE);
   
