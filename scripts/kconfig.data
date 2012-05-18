@@ -1,5 +1,34 @@
 menu "General setup"
 
+choice
+  prompt "Compiler optimization level"
+  default OLEVEL_3
+
+config OLEVEL_0
+  bool "None (-O0)"
+
+config OLEVEL_S
+  bool "Size (-Os)"
+  depends on !PREDICTABLE_DEBUGGING
+
+config OLEVEL_1
+  bool "Level 1 (-O1)"
+  depends on !PREDICTABLE_DEBUGGING
+
+config OLEVEL_2
+  bool "Level 2 (-O2)"
+  depends on !PREDICTABLE_DEBUGGING
+
+config OLEVEL_3
+  bool "Level 3 (-O3)"
+  depends on !PREDICTABLE_DEBUGGING
+
+endchoice
+
+config BUILD_ANALYZE_FUNCTIONS
+  bool "Let the compiler suggest function attributes"
+  depends on OLEVEL_3
+
 config BUILD_SSP
   bool "Enable stack-smashing protector"
 

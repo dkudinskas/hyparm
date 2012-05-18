@@ -84,10 +84,8 @@ void *mallocBytes(u32int size)
 {
   DEBUG(MALLOC, "mallocBytes: size %x" EOL, size);
 
-  if ((size & 0x3) != 0)
-  {
-    DIE_NOW(NULL, "mallocBytes not word aligned.");
-  }
+  // Adjust size to be a multiple of 4 bytes
+  size = (size + 3) & ~0b11;
 
   if ((freePtr + size) >= heapEnd)
   {

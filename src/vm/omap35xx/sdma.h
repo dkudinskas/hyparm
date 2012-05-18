@@ -62,7 +62,6 @@ void resetSdma(void);
 u32int loadSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 void storeSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
-inline u32int getChannelNumber(u32int regOffs);
 
 struct SdmaIndexedRegs
 {

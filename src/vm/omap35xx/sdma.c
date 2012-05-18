@@ -9,6 +9,9 @@
 #include "vm/omap35xx/timer32k.h"
 
 
+static inline u32int getChannelNumber(u32int regOffs);
+
+
 void initSdma()
 {
   GCONTXT* context = getGuestContext();

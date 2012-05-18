@@ -159,19 +159,7 @@ struct guestContext
   enum guestOSType os;
 };
 
-#ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
-__macro__ void traceBlock(GCONTXT *context, u32int startAddress)
-{
-  context->blockTraceIndex++;
-  if (context->blockTraceIndex >= CONFIG_GUEST_CONTEXT_BLOCK_TRACE_SIZE)
-  {
-    context->blockTraceIndex = 0;
-  }
-  context->blockTrace[context->blockTraceIndex] = startAddress;
-}
-#else
-#define traceBlock(context, startAddress)
-#endif /* CONFIG_GUEST_CONTEXT_BLOCK_TRACE */
+
 
 /*
  * Gets the guest context pointer.
@@ -196,4 +184,20 @@ void guestToPrivMode(void);
 /* function to call when hypervisor changes guest modes. */
 void guestChangeMode(u32int guestMode);
 
-#endif
+__macro__ void traceBlock(GCONTXT *context, u32int startAddress);
+
+
+__macro__ void traceBlock(GCONTXT *context, u32int startAddress)
+{
+#ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
+  context->blockTraceIndex++;
+  if (context->blockTraceIndex >= CONFIG_GUEST_CONTEXT_BLOCK_TRACE_SIZE)
+  {
+    context->blockTraceIndex = 0;
+  }
+  context->blockTrace[context->blockTraceIndex] = startAddress;
+#endif /* CONFIG_GUEST_CONTEXT_BLOCK_TRACE */
+}
+
+
+#endif /* __GUEST_MANAGER__GUEST_CONTEXT_H__ */
