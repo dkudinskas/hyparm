@@ -136,6 +136,16 @@ config DEBUG_GUEST_CONTEXT
   default y
   depends on DEBUG
 
+config DEBUG_MEMORY_MANAGER
+  bool "Debug memory manager"
+  default n
+  depends on DEBUG
+
+config DEBUG_MM_MMU
+  bool "Debug MMU operations"
+  default n
+  depends on DEBUG_MEMORY_MANAGER
+
 config DEBUG_EXCEPTION_HANDLERS
   bool "Debug exception handlers"
   depends on DEBUG

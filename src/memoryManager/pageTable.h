@@ -135,6 +135,9 @@ struct smallPageDescriptor
 typedef struct smallPageDescriptor smallPageEntry;
 
 
+void dumpTranslationTable(simpleEntry *table) __cold__;
+
+
 struct PageTableMetaData
 {
   pageTableEntry* firstLevelEntry;
