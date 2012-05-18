@@ -271,7 +271,7 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
   }
 }
 
-inline u32int getChannelNumber(u32int regOffs)
+static inline u32int getChannelNumber(u32int regOffs)
 {
   return ((regOffs - 0x80) / 0x60);
 }
