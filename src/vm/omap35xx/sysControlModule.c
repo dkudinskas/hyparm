@@ -9,12 +9,10 @@
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 
 
-struct SystemControlModule *sysCtrlModule;
-
-
 void initSysControlModule()
 {
-  sysCtrlModule = (struct SystemControlModule *)mallocBytes(sizeof(struct SystemControlModule));
+  GCONTXT* context = getGuestContext();
+  struct SystemControlModule* sysCtrlModule = (struct SystemControlModule *)mallocBytes(sizeof(struct SystemControlModule));
   if (sysCtrlModule == 0)
   {
     DIE_NOW(NULL, "Failed to allocate system control module.");
@@ -149,6 +147,7 @@ void initSysControlModule()
   // TODO
   // SYS_CTRL_MOD_GENERAL_WKUP   0x48002A60 base, 31 bytes length
   // TODO
+  context->vm->sysCtrlModule = sysCtrlModule;
 }
 
 /* load function */
@@ -215,6 +214,8 @@ u32int loadPadconfsScm(device *dev, u32int address, u32int phyAddr)
 
 u32int loadGeneralScm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct SystemControlModule* sysCtrlModule = context->vm->sysCtrlModule;
   u32int val = 0;
   u32int reg = phyAddr - SYS_CTRL_MOD_GENERAL;
   switch (reg)

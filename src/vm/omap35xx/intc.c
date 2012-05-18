@@ -9,17 +9,20 @@
 #include "vm/omap35xx/intc.h"
 
 
-struct InterruptController * irqController;
-
 void initIntc()
 {
-  irqController = (struct InterruptController *)mallocBytes(sizeof(struct InterruptController));
+  GCONTXT* context = getGuestContext();
+
+  struct InterruptController* irqController = (struct InterruptController *)mallocBytes(sizeof(struct InterruptController));
   if (irqController == 0)
   {
     DIE_NOW(NULL, "Failed to allocate INTC.");
   }
   memset((void *)irqController, 0x0, sizeof(struct InterruptController));
   DEBUG(VP_OMAP_35XX_INTC, "Initializing Interrupt controller at %p" EOL, irqController);
+  
+  context->vm->irqController = irqController;
+
   intcReset();
 }
 
@@ -32,6 +35,9 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     DIE_NOW(NULL, "Intc: invalid access size.");
   }
 
+  GCONTXT* context = getGuestContext();
+  struct InterruptController* irqController = context->vm->irqController;
+
   u32int regOffset = phyAddr - INTERRUPT_CONTROLLER;
   u32int val = 0;
   switch (regOffset)
@@ -43,6 +49,7 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       val = irqController->intcSysConfig;
       break;
     case REG_INTCPS_SYSSTATUS:
+    {
       val = irqController->intcSysStatus;
       // check reset done flag - it auto clears...
       if (irqController->intcSysStatus & INTCPS_SYSSTATUS_SOFTRESET)
@@ -50,6 +57,7 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
         irqController->intcSysStatus = irqController->intcSysStatus & ~INTCPS_SYSSTATUS_SOFTRESET;
       }
       break;
+    }
     case REG_INTCPS_MIR_CLEAR0:
       DIE_NOW(NULL, "INTC: load from W/O register (MIR0_CLEAR)");
       break;
@@ -78,17 +86,23 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
       DIE_NOW(NULL, "INTC: load from W/O register (ISR2_CLEAR)");
       break;
     case REG_INTCPS_PENDING_IRQ0:
+    {
       val = irqController->intcPendingIrq0;
       DEBUG(VP_OMAP_35XX_INTC, "INTC: load pending irq0 value %#.8x" EOL, val);
       break;
+    }
     case REG_INTCPS_PENDING_IRQ1:
+    {
       val = irqController->intcPendingIrq1;
       DEBUG(VP_OMAP_35XX_INTC, "INTC: load pending irq1 value %#.8x" EOL, val);
       break;
+    }
     case REG_INTCPS_PENDING_IRQ2:
+    {
       val = irqController->intcPendingIrq2;
       DEBUG(VP_OMAP_35XX_INTC, "INTC: load pending irq2 value %#.8x" EOL, val);
       break;
+    }
     case REG_INTCPS_SIR_IRQ:
       val = prioritySortIrqs();
       break;
@@ -237,6 +251,9 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
     // only word access allowed in these modules
     DIE_NOW(NULL, "Intc: invalid access size.");
   }
+
+  GCONTXT* context = getGuestContext();
+  struct InterruptController* irqController = context->vm->irqController;
 
   u32int regOffset = phyAddr - INTERRUPT_CONTROLLER;
   switch (regOffset)
@@ -502,6 +519,9 @@ void storeIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
 
 void intcReset()
 {
+  GCONTXT* context = getGuestContext();
+  struct InterruptController* irqController = context->vm->irqController;
+
   // reset all register values to defaults
   irqController->intcSysConfig   = 0x00000000;
   irqController->intcSysStatus   = 0x00000000;
@@ -548,6 +568,8 @@ void intcReset()
 
 void maskInterrupt(u32int interruptNumber)
 {
+  GCONTXT* context = getGuestContext();
+  struct InterruptController* irqController = context->vm->irqController;
   u32int bitMask = 0;
   u32int bankNumber = 0;
 
@@ -578,6 +600,8 @@ void maskInterrupt(u32int interruptNumber)
 
 void unmaskInterrupt(u32int interruptNumber)
 {
+  GCONTXT* context = getGuestContext();
+  struct InterruptController* irqController = context->vm->irqController;
   u32int bitMask = 0;
   u32int bankNumber = 0;
 
@@ -605,6 +629,8 @@ void unmaskInterrupt(u32int interruptNumber)
 
 bool isGuestIrqMasked(u32int interruptNumber)
 {
+  GCONTXT* context = getGuestContext();
+  struct InterruptController* irqController = context->vm->irqController;
   u32int bitMask = 0;
   u32int bankNumber = 0;
 
@@ -635,11 +661,16 @@ bool isGuestIrqMasked(u32int interruptNumber)
 u32int getIrqNumber(void)
 {
   DIE_NOW(NULL, "INTC: getIrqNumber - implement priority sorting of queued IRQS");
+  GCONTXT* context = getGuestContext();
+  struct InterruptController* irqController = context->vm->irqController;
   return (irqController->intcSirIrq & INTCPS_SIR_IRQ_ACTIVEIRQ);
 }
 
 void setInterrupt(u32int irqNum)
 {
+  GCONTXT* context = getGuestContext();
+  struct InterruptController* irqController = context->vm->irqController;
+
   // 1. set raw interrupt signal before masking
   u32int bitMask = 0;
   u32int bankNumber = 0;
@@ -690,6 +721,9 @@ void setInterrupt(u32int irqNum)
 
 void clearInterrupt(u32int irqNum)
 {
+  GCONTXT* context = getGuestContext();
+  struct InterruptController* irqController = context->vm->irqController;
+
   // 1. clear raw interrupt signal before masking
   u32int bitMask = 0;
   u32int bankNumber = 0;
@@ -738,6 +772,9 @@ void clearInterrupt(u32int irqNum)
 // return: interrupt number
 u32int prioritySortIrqs()
 {
+  GCONTXT* context = getGuestContext();
+  struct InterruptController* irqController = context->vm->irqController;
+
   if (!isIrqPending())
   {
     // no interrupts pending.
@@ -817,6 +854,7 @@ u32int prioritySortIrqs()
 
 bool isIrqPending()
 {
+  struct InterruptController* irqController = getGuestContext()->vm->irqController;
   return ( (irqController->intcPendingIrq0 != 0) ||
            (irqController->intcPendingIrq1 != 0) ||
            (irqController->intcPendingIrq2 != 0) );
@@ -824,16 +862,18 @@ bool isIrqPending()
 
 bool isFiqPending()
 {
+  struct InterruptController* irqController = getGuestContext()->vm->irqController;
   return ( (irqController->intcPendingFiq0 != 0) ||
            (irqController->intcPendingFiq1 != 0) ||
            (irqController->intcPendingFiq2 != 0) );
 }
 
-void intcDumpRegisters(void)
+void intcDumpRegisters()
 {
   /*
    * FIXME: missing argument to format
    */
+  struct InterruptController* irqController = getGuestContext()->vm->irqController;
   printf("INTC: Revision %#.8x" EOL, INTC_REVISION);
   printf("INTC: sysconfig reg %#.8x" EOL, irqController->intcSysConfig);
   printf("INTC: sysStatus reg %#.8x" EOL, irqController->intcSysStatus);

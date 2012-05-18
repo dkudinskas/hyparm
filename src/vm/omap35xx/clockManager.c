@@ -7,19 +7,19 @@
 #include "vm/omap35xx/clockManager.h"
 
 
-struct ClockManager * clockMan;
-
-
 void initClockManager()
 {
   // init function: setup device, reset register values to defaults!
-  clockMan = (struct ClockManager *)mallocBytes(sizeof(struct ClockManager));
+  GCONTXT* context = getGuestContext();
+
+  struct ClockManager* clockMan = (struct ClockManager *)mallocBytes(sizeof(struct ClockManager));
   if (clockMan == 0)
   {
     DIE_NOW(NULL, "Failed to allocate clock manager.");
   }
   memset(clockMan, 0x0, sizeof(struct ClockManager));
   DEBUG(VP_OMAP_35XX_CM, "Initializing Clock manager at %p" EOL, clockMan);
+
   // IVA2_CM registers
   clockMan->cmFClkEnIva2Reg      = 0x00000001; // IVA2_CLK is enabled
   clockMan->cmClkEnPllIva2Reg    = 0x00000037; // enable DPLL in lock mode, 0.75 MHz--1.0 MHz freq
@@ -115,6 +115,8 @@ void initClockManager()
   clockMan->cmSleepDepPer  = 0x00000000;
   clockMan->cmClkStCtrlPer = 0x00000000;
   clockMan->cmClkStStPer   = 0x00000001;
+
+  context->vm->clockMan = clockMan;
 }
 
 /*************************************************************************
@@ -186,6 +188,8 @@ u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int 
 
 u32int loadIva2Cm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   u32int val = 0;
   u32int reg = phyAddr - IVA2_CM;
   switch (reg)
@@ -233,6 +237,9 @@ u32int loadOcpSystemCm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadMpuCm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
+
   u32int val = 0;
   u32int reg = phyAddr - MPU_CM;
   switch (reg)
@@ -270,6 +277,8 @@ u32int loadMpuCm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadCoreCm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   u32int val = 0;
   u32int reg = phyAddr - CORE_CM;
   switch (reg)
@@ -325,6 +334,8 @@ u32int loadCoreCm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadSgxCm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   u32int val = 0;
   u32int reg = phyAddr - SGX_CM;
   switch (reg)
@@ -359,6 +370,8 @@ u32int loadSgxCm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadWkupCm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   u32int val = 0;
   u32int reg = phyAddr - WKUP_CM;
   switch (reg)
@@ -392,6 +405,8 @@ u32int loadWkupCm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   u32int val = 0;
   u32int reg = phyAddr - Clock_Control_Reg_CM;
   switch (reg)
@@ -447,6 +462,8 @@ u32int loadClockControlCm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadDssCm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   u32int val = 0;
   u32int reg = phyAddr - DSS_CM;
   switch (reg)
@@ -484,6 +501,8 @@ u32int loadDssCm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadCamCm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   u32int val = 0;
   u32int reg = phyAddr - CAM_CM;
   switch (reg)
@@ -521,6 +540,8 @@ u32int loadCamCm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadPerCm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   u32int val = 0;
   u32int reg = phyAddr - PER_CM;
   switch (reg)
@@ -558,6 +579,8 @@ u32int loadPerCm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadEmuCm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   u32int val = 0;
   u32int reg = phyAddr - EMU_CM;
   switch (reg)
@@ -686,23 +709,29 @@ void storeMpuCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeCoreCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address,
       value);
   u32int reg = phyAddr - CORE_CM;
   switch (reg)
   {
     case CM_ICLKEN1_CORE:
+    {
       if (clockMan->cmIclkEn1Core != value)
       {
         DIE_NOW(NULL, "storeCoreCm CM_ICLKEN1_CORE unimplemented.");
       }
       break;
+    }
     case CM_FCLKEN1_CORE:
+    {
       if (clockMan->cmFclkEn1Core != value)
       {
         DIE_NOW(NULL, "storeCoreCm CM_FCLKEN1_CORE unimplemented.");
       }
       break;
+    }
     case CM_FCLKEN3_CORE:
     case CM_ICLKEN2_CORE:
     case CM_ICLKEN3_CORE:
@@ -732,12 +761,15 @@ void storeSgxCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address,
       value);
   u32int reg = phyAddr - WKUP_CM;
   switch (reg)
   {
     case CM_FCLKEN_WKUP:
+    {
       // clear reserved bits... and check meaningful bit values
       value = value & ~CM_FCLKEN_WKUP_RESERVED;
       if (clockMan->cmFclkEnWkup != value)
@@ -775,7 +807,9 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
         clockMan->cmFclkEnWkup = value;
       }
       break;
+    }
     case CM_ICLKEN_WKUP:
+    {
       // clear reserved bits... and check meaningful bit values
       value = value & ~CM_ICLKEN_WKUP_RESERVED;
       if (clockMan->cmIclkEnWkup != value)
@@ -813,19 +847,25 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
         clockMan->cmFclkEnWkup = value;
       }
       break;
+    }
     case CM_IDLEST_WKUP:
+    {
       if (clockMan->cmIdleStWkup != value)
       {
         DIE_NOW(NULL, " storeWkupCm unimplemented store to reg cmIdleStWkup");
       }
       break;
+    }
     case CM_AUTOIDLE_WKUP:
+    {
       if (clockMan->cmAutoIdleWkup != value)
       {
         DIE_NOW(NULL, " storeWkupCm unimplemented store to reg cmAutoIdleWkup");
       }
       break;
+    }
     case CM_CLKSEL_WKUP:
+    {
 #define CM_CLKSEL_WKUP_GPT1            0x00000001
       // clear reserved bits... and check meaningful bit values
       value = value & ~CM_CLKSEL_WKUP_RESERVED1;
@@ -848,10 +888,13 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
       }
       clockMan->cmClkSelWkup = value;
       break;
+    }
     case CM_CLKSTCTRL_WKUP:
+    {
       DEBUG(VP_OMAP_35XX_CM, "%s WARN: store to undocumented register CM_CLKSTCTRL_WKUP" EOL,
           dev->deviceName);
       break;
+    }
     default:
       DIE_NOW(NULL, "storeWkupCm storing non existing register!");
   } // switch ends
@@ -860,18 +903,24 @@ void storeWkupCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   DEBUG(VP_OMAP_35XX_CM, "%s: store to address %.8x val %.8x" EOL, dev->deviceName, address, value);
   u32int reg = phyAddr - Clock_Control_Reg_CM;
   switch (reg)
   {
     case CM_CLKEN_PLL:
+    {
       printf("Store to CM_CLKEN_PLL val %.8x" EOL, value);
       clockMan->cmClkEnPll = value;
       break;
+    }
     case CM_AUTOIDLE_PLL:
+    {
       printf("Store to CM_AUTOIDLE_PLL val %.8x" EOL, value);
       clockMan->cmAutoIdlePll = value;
       break;
+    }
     case CM_CLKEN2_PLL:
     case CM_IDLEST_CKGEN:
     case CM_IDLEST2_CKGEN:
@@ -882,12 +931,16 @@ void storeClockControlCm(device * dev, u32int address, u32int phyAddr, u32int va
     case CM_CLKSEL4_PLL:
     case CM_CLKSEL5_PLL:
     case CM_CLKOUT_CTRL:
+    {
       printf("%s: store to VA %.8x, PA %.8x, value %.8x" EOL, dev->deviceName, address, phyAddr, value);
       DIE_NOW(NULL, "storeClockControlCm store to unimplemented register register!");
       break;
+    }
     default:
+    {
       printf("%s: store to VA %.8x, PA %.8x, value %.8x" EOL, dev->deviceName, address, phyAddr, value);
       DIE_NOW(NULL, "storeClockControlCm storing non existing register!");
+    }
   } // switch ends
 }
 
@@ -907,60 +960,78 @@ void storeCamCm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storePerCm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct ClockManager * clockMan = context->vm->clockMan;
   DEBUG(VP_OMAP_35XX_CM, "%s: store to address %#.8x val %#.8x" EOL, dev->deviceName, address,
       value);
   u32int reg = phyAddr - PER_CM;
   switch (reg)
   {
     case CM_FCLKEN_PER:
+    {
       if (clockMan->cmFclkEnPer != value)
       {
         DIE_NOW(NULL, "storePerCm unimplemented store to reg cmFclkEnPer");
       }
       break;
+    }
     case CM_ICLKEN_PER:
+    {
       if (clockMan->cmIclkEnPer != value)
       {
         DIE_NOW(NULL, "storePerCm unimplemented store to reg cmIclkEnPer");
       }
       break;
+    }
     case CM_IDLEST_PER:
+    {
       if (clockMan->cmIdleStPer != value)
       {
         DIE_NOW(NULL, "storePerCm unimplemented store to reg cmIdleStPer");
       }
       break;
+    }
     case CM_AUTOIDLE_PER:
+    {
       if (clockMan->cmAutoIdlePer != value)
       {
         DIE_NOW(NULL, "storePerCm unimplemented store to reg cmAutoIdlePer");
       }
       break;
+    }
     case CM_CLKSEL_PER:
+    {
       if (clockMan->cmClkSelPer != value)
       {
         DIE_NOW(NULL, "storePerCm unimplemented store to reg cmClkSelPer");
       }
       break;
+    }
     case CM_SLEEPDEP_PER:
+    {
       if (clockMan->cmSleepDepPer != value)
       {
         DIE_NOW(NULL, "storePerCm unimplemented store to reg cmSleepDepPer");
       }
       break;
+    }
     case CM_CLKSTCTRL_PER:
+    {
       if (value & 0x2)
       {
         printf("CMper: WARNING software forced wakeup, deliver interrupt?" EOL);
       }
       clockMan->cmClkStCtrlPer = value;
       break;
+    }
     case CM_CLKSTST_PER:
+    {
       if (clockMan->cmClkStStPer != value)
       {
         DIE_NOW(NULL, "storePerCm unimplemented store to reg cmClkStStPer");
       }
       break;
+    }
     default:
       DIE_NOW(NULL, "storePerCm storing non existing register!");
   } // switch ends

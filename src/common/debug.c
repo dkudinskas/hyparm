@@ -183,6 +183,7 @@ void dumpStackFromParameters(u32int snapshotOrigin, u32int psr, u32int *stack)
   }
 }
 
+
 u32int printf(const char *fmt, ...)
 {
   va_list args;

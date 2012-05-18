@@ -116,7 +116,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   disableInterrupts();
   incrementSvcCounter();
 
-  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
+//  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
 
   // parse the instruction to find the start address of next block
   u32int nextPC = 0;
@@ -196,7 +196,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     deliverDataAbort(context);
   }
 
-  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = %#.8x" EOL, nextPC);
+//  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = %#.8x" EOL, nextPC);
 
   if ((context->CPSR & PSR_MODE) != PSR_USR_MODE)
   {
@@ -221,7 +221,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   {
     delayResetLoopDetector();
   }
-  enableInterrupts();
   return context;
 }
 
@@ -231,7 +230,6 @@ GCONTXT *dataAbort(GCONTXT *context)
   /*
    * Make sure interrupts are disabled while we deal with data abort.
    */
-  disableInterrupts();
   incrementDataAbortCounter();
   /* Encodings: Page 1289 & 1355 */
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
@@ -271,14 +269,13 @@ GCONTXT *dataAbort(GCONTXT *context)
       printDataAbort();
       DIE_NOW(context, "unimplemented user data abort");
   }
-  enableInterrupts();
   return context;
 }
 
 
-void dataAbortPrivileged(u32int pc)
+void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 {
-  disableInterrupts();
+  GCONTXT* context = getGuestContext();
   incrementDataAbortCounter();
   u32int faultStatus = (getDFSR().fs3_0) | (getDFSR().fs4 << 4);
   switch(faultStatus)
@@ -286,7 +283,7 @@ void dataAbortPrivileged(u32int pc)
     case dfsTranslationSection:
     case dfsTranslationPage:
     {
-      dabtTranslationFault(getGuestContext(), getDFSR(), getDFAR());
+      dabtTranslationFault(context, getDFSR(), getDFAR());
       break;
     }
     case dfsAlignmentFault:
@@ -315,7 +312,6 @@ void dataAbortPrivileged(u32int pc)
       DIE_NOW(0, "Entering infinite loop\n");
       break;
   }
-  enableInterrupts();
 }
 
 GCONTXT *undefined(GCONTXT *context)
@@ -333,7 +329,6 @@ GCONTXT *prefetchAbort(GCONTXT *context)
   /*
    * Make sure interrupts are disabled while we deal with prefetch abort.
    */
-  disableInterrupts();
 
   IFSR ifsr = getIFSR();
   u32int ifar = getIFAR();
@@ -377,7 +372,6 @@ GCONTXT *prefetchAbort(GCONTXT *context)
       printPrefetchAbort();
       DIE_NOW(context, "Unimplemented guest prefetch abort.");
   }
-  enableInterrupts();
   return context;
 }
 
@@ -440,11 +434,14 @@ GCONTXT *irq(GCONTXT *context)
   switch(activeIrqNumber)
   {
     case GPT1_IRQ:
+    {
       scheduleGuest();
       gptBEClearOverflowInterrupt(1);
       acknowledgeIrqBE();
       break;
+    }
     case GPT2_IRQ:
+    {
       throwInterrupt(activeIrqNumber);
       /*
        * FIXME: figure out which interrupt to clear and then clear the right one?
@@ -459,6 +456,7 @@ GCONTXT *irq(GCONTXT *context)
 #endif
       acknowledgeIrqBE();
       break;
+    }
     case UART3_IRQ:
     {
       /*
@@ -472,8 +470,10 @@ GCONTXT *irq(GCONTXT *context)
       break;
     }
     default:
+    {
       printf("Received IRQ = %x" EOL, activeIrqNumber);
       DIE_NOW(context, "irq: unimplemented IRQ number");
+    }
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -496,10 +496,13 @@ void irqPrivileged()
   switch(activeIrqNumber)
   {
     case GPT1_IRQ:
+    {
       gptBEClearOverflowInterrupt(1);
       acknowledgeIrqBE();
       break;
+    }
     case GPT2_IRQ:
+    {
       throwInterrupt(activeIrqNumber);
       /*
        * FIXME: figure out which interrupt to clear and then clear the right one?
@@ -514,6 +517,7 @@ void irqPrivileged()
 #endif
       acknowledgeIrqBE();
       break;
+    }
     case UART3_IRQ:
     {
       /*
@@ -527,8 +531,10 @@ void irqPrivileged()
       break;
     }
     default:
+    {
       printf("Received IRQ = %#x" EOL, activeIrqNumber);
       DIE_NOW(NULL, "irqPrivileged: unimplemented IRQ number.");
+    }
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
@@ -599,8 +605,6 @@ void dabtTranslationFault(GCONTXT * gc, DFSR dfsr, u32int dfar)
      see if translation fault should be forwarded to the guest!
      if THAT fails, then really panic.
    */
-//  printf("dabtTranslationFault: dfar %08x, priv %x, write %x\n",
-//         dfar, isGuestInPrivMode(gc), dfsr.WnR);
   if (!shadowMap(dfar))
   {
     // failed to shadow map!
@@ -627,7 +631,6 @@ void iabtTranslationFault(GCONTXT * gc, IFSR ifsr, u32int ifar)
      see if translation fault should be forwarded to the guest!
      if THAT fails, then really panic.
    */
-//  printf("iabtTranslationFault: ifar %08x, priv %x\n", ifar, isGuestInPrivMode(gc));
   if (!shadowMap(ifar))
   {
     // failed to shadow map!

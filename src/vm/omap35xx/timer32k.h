@@ -16,4 +16,10 @@ void storeTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAd
 
 void initTimer32k(void);
 
+struct SynchronizedTimer32k
+{
+  u32int timer32SysconfReg;
+  u32int counterVal;
+};
+
 #endif

@@ -11,13 +11,12 @@
 #include "vm/omap35xx/gptimer.h"
 
 
-struct GeneralPurposeTimer * gptimer;
-
-
 void initGPTimer()
 {
+  GCONTXT* context = getGuestContext();
+
   // init function: setup device, reset register values to defaults!
-  gptimer = (struct GeneralPurposeTimer*)mallocBytes(sizeof(struct GeneralPurposeTimer));
+  struct GeneralPurposeTimer* gptimer = (struct GeneralPurposeTimer*)mallocBytes(sizeof(struct GeneralPurposeTimer));
   if (gptimer == 0)
   {
     DIE_NOW(NULL, "Failed to allocate general purpose timer.");
@@ -25,11 +24,15 @@ void initGPTimer()
   memset((void*)gptimer, 0x0, sizeof(struct GeneralPurposeTimer));
   DEBUG(VP_OMAP_35XX_GPTIMER, "Initializing General Purpose timer at %p" EOL, gptimer);
 
+  context->vm->gptimer = gptimer;
+
   resetGPTimer();
 }
 
 void resetGPTimer(void)
 {
+  GCONTXT* context = getGuestContext();
+  struct GeneralPurposeTimer* gptimer = context->vm->gptimer;
   // reset to default register values
   gptimer->gptTiocpCfg = 0x00000000;
   gptimer->gptTistat   = 0x00000000;

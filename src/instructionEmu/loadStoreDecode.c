@@ -170,6 +170,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
      */
     // get the store instruction
     instr = *(volatile u32int *)(context->R15);
+
     // emulate methods will take instr from context, put it there
     if (((instr & STR_IMM_MASK) == STR_IMM_MASKED) ||
         ((instr & STR_REG_MASK) == STR_REG_MASKED))

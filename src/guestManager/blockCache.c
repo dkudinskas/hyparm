@@ -2,6 +2,7 @@
 #include "common/memFunctions.h"
 
 #include "guestManager/blockCache.h"
+#include "guestManager/guestContext.h"
 
 #include "instructionEmu/scanner.h"
 
@@ -44,10 +45,6 @@ static inline void resetCollisionCounter()
 #define MEMORY_PER_BITMAP_BIT   (MEMORY_PER_BITMAP / 32) // should be 8 megabytes
 
 
-static u32int execBitMap[NUMBER_OF_BITMAPS];
-
-
-static void clearExecBitMap(u32int address);
 static u32int findBlockCacheEntry(BCENTRY *blockCache, u32int address);
 static bool isBitmapSetForAddress(u32int address);
 static void removeCacheEntries(BCENTRY *blockCache);
@@ -55,6 +52,29 @@ static void removeCacheEntry(BCENTRY *blockCache, u32int index);
 static void resolveCacheConflict(BCENTRY *blockCache, u32int index);
 static void restoreReplacedInstruction(BCENTRY *blockCache, u32int index);
 static void setExecBitMap(u32int address);
+
+
+void initialiseBlockCache(BCENTRY *blockCache)
+{
+  GCONTXT* context = getGuestContext();
+
+  resetCollisionCounter();
+
+  DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, blockCache);
+
+  // Allocate execution flag bitmap
+  u32int* execBitMap = (u32int*)mallocBytes(sizeof(u32int)*NUMBER_OF_BITMAPS);
+  if (execBitMap == 0)
+  {
+    DIE_NOW(context, "Failed to allocate execution bitmap.");
+  }
+  memset(execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
+
+  memset(blockCache, 0, sizeof(BCENTRY) * BLOCK_CACHE_SIZE);
+  
+  context->execBitMap = execBitMap;
+}
+
 
 
 void addToBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress, u32int endAddress,
@@ -101,15 +121,9 @@ bool checkBlockCache(BCENTRY *blockCache, u32int index, u32int startAddress)
 
 void clearBlockCache(BCENTRY *blockCache)
 {
+  GCONTXT* context = getGuestContext();
   removeCacheEntries(blockCache);
-  memset(execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
-}
-
-static void clearExecBitMap(u32int address)
-{
-  u32int index = address / MEMORY_PER_BITMAP;
-  u32int bitNumber = (address & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
-  execBitMap[index] = execBitMap[index] & ~(1 << bitNumber);
+  memset(context->execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
 }
 
 void dumpBlockCacheEntry(BCENTRY *blockCache, u32int index)
@@ -150,22 +164,13 @@ BCENTRY *getBlockCacheEntry(BCENTRY *blockCache, u32int index)
   return &blockCache[index];
 }
 
-void initialiseBlockCache(BCENTRY *blockCache)
-{
-  resetCollisionCounter();
-
-  DEBUG(BLOCK_CACHE, "initialiseBlockCache: @ %p" EOL, blockCache);
-
-  memset(blockCache, 0, sizeof(BCENTRY) * BLOCK_CACHE_SIZE);
-  memset(execBitMap, 0, sizeof(u32int) * NUMBER_OF_BITMAPS);
-}
-
 
 static bool isBitmapSetForAddress(u32int address)
 {
+  GCONTXT* context = getGuestContext();
   u32int index = address / MEMORY_PER_BITMAP;
   u32int bitNumber = (address & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
-  return execBitMap[index] & (1 << bitNumber);
+  return context->execBitMap[index] & (1 << bitNumber);
 }
 
 static void removeCacheEntries(BCENTRY *blockCache)
@@ -302,9 +307,10 @@ static void restoreReplacedInstruction(BCENTRY *blockCache, u32int index)
 
 static void setExecBitMap(u32int address)
 {
+  GCONTXT* context = getGuestContext();
   u32int index = address / MEMORY_PER_BITMAP;
   u32int bitNumber = (address & 0x0FFFFFFF) / MEMORY_PER_BITMAP_BIT;
-  execBitMap[index] = execBitMap[index] | (1 << bitNumber);
+  context->execBitMap[index] = context->execBitMap[index] | (1 << bitNumber);
 }
 
 // finds and clears block cache entries within the given address range

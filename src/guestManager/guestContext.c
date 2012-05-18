@@ -10,7 +10,8 @@
 
 #include "memoryManager/addressing.h"
 
-GCONTXT *createGuestContext(void)
+
+GCONTXT *allocateGuestContext()
 {
   // Allocate guest context
   GCONTXT *context = (GCONTXT *)mallocBytes(sizeof(GCONTXT));
@@ -18,10 +19,14 @@ GCONTXT *createGuestContext(void)
   {
     DIE_NOW(NULL, "Failed to allocate guest context.");
   }
-  DEBUG(GUEST_CONTEXT, "createGuestContext: @ %p; initialising..." EOL, context);
-  
-  // Set initial values
   memset(context, 0, sizeof(GCONTXT));
+  DEBUG(GUEST_CONTEXT, "createGuestContext: @ %p; initialising..." EOL, context);
+  return context;
+}
+
+void initGuestContext(GCONTXT* context)
+{
+  // Set initial values
   context->CPSR = (PSR_F_BIT | PSR_I_BIT | PSR_SVC_MODE);
 
   // Initialise coprocessor register bank
@@ -54,6 +59,16 @@ GCONTXT *createGuestContext(void)
   memset(context->pageTables, 0, sizeof(pageTablesVM));
 
 
+  // virtual machine struct
+  context->vm = (virtualMachine*)mallocBytes(sizeof(virtualMachine));
+  if (context->vm == NULL)
+  {
+    DIE_NOW(context, "Failed to allocate vm struct");
+  }
+  DEBUG(GUEST_CONTEXT, "allocateGuestContext: virtual machine @ %p" EOL, context->vm);
+  memset(context->vm, 0, sizeof(virtualMachine));
+
+
   // Initialise virtual hardware devices
   context->hardwareLibrary = initialiseHardwareLibrary();
   if (context->hardwareLibrary == NULL)
@@ -65,7 +80,6 @@ GCONTXT *createGuestContext(void)
   // Print the address of the block trace, it may come in handy when debugging...
   DEBUG(GUEST_CONTEXT, "allocateGuestContext: block trace @ %p" EOL, &(context->blockTrace));
 #endif
-  return context;
 }
 
 void dumpGuestContext(GCONTXT *context)
@@ -161,6 +175,7 @@ void dumpGuestContext(GCONTXT *context)
   printf("IRQ: %#.8x" EOL, context->guestIrqHandler);
   printf("FIQ: %#.8x" EOL, context->guestFiqHandler);
   printf("Hardware library: not core dumping just yet" EOL);
+  printf("Virtual Machine structure at %p" EOL, context->vm);
   printf("Interrupt pending: %x" EOL, context->guestIrqPending);
   printf("Data abort pending: %x" EOL, context->guestDataAbtPending);
   printf("Prefetch abort pending: %x" EOL, context->guestPrefetchAbtPending);
@@ -212,4 +227,14 @@ void guestToUserMode()
 void guestToPrivMode()
 {
   userToPrivAddressing();
+}
+
+
+/**
+ * guest is switching modes.
+ **/
+void guestChangeMode(u32int guestMode)
+{
+  // we must make sure the correct exception vector is set.
+  setExceptionVector(guestMode);
 }

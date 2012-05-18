@@ -29,4 +29,7 @@ void userToPrivAddressing(void);
 void initialiseShadowPageTables(GCONTXT* gc);
 
 void changeGuestDACR(u32int oldVal, u32int newVal);
+
+void setExceptionVector(u32int guestMode);
+
 #endif

@@ -116,8 +116,9 @@ void main(s32int argc, char *argv[])
   dumpRuntimeConfiguration(&config);
 
   /* initialize guest context */
-  GCONTXT *context = createGuestContext();
+  GCONTXT *context = allocateGuestContext();
   setGuestContext(context);
+  initGuestContext(context);
 
   /* Setup MMU for Hypervisor */
   initVirtualAddressing();
