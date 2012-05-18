@@ -19,10 +19,10 @@
 #define GUEST_ACCESS_DOMAIN       1
 #define GUEST_ACCESS_BITS         PRIV_RW_USR_RW //Priv R/W, USR R/W
 
-#define PT1_ALIGN_MASK     0xFFFF8000
-#define PT1_ALIGN_BITS     15
-#define PT2_ALIGN_MASK     0xFFFFFC00
-#define PT2_ALIGN_BITS     10
+#define PT1_ALIGN_MASK         0xFFFFC000
+#define PT1_ALIGN_BITS         14
+#define PT2_ALIGN_MASK         0xFFFFFC00
+#define PT2_ALIGN_BITS         10
 #define SECTION_SIZE           0x00100000
 #define SECTION_MASK           0xFFF00000
 #define LARGE_PAGE_SIZE        0x00010000
@@ -68,7 +68,7 @@ struct simpleDescriptor
   u32int imp:1; // 9 imp use to indicate memory protection is active
   u32int:8; // 17-10 Ignored
   u32int superSection:1; //18
-  u32int:12; //31-19 Ignored
+  u32int:13; //31-19 Ignored
 };
 typedef struct simpleDescriptor simpleEntry;
 
