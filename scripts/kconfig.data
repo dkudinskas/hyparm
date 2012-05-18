@@ -291,6 +291,11 @@ config DEBUG_MM_MMU
   default n
   depends on DEBUG_MEMORY_MANAGER
 
+config DEBUG_MM_PAGE_TABLES
+  bool "Debug low-level page table operations"
+  default n
+  depends on DEBUG_MEMORY_MANAGER
+
 config DEBUG_EXCEPTION_HANDLERS
   bool "Debug exception handlers"
   depends on DEBUG
@@ -563,6 +568,9 @@ menu "Miscellaneous hacks"
 
 config CLI
   bool "Command-line interface"
+
+config DISABLE_HYPERVISOR_MEMORY_PROTECTION
+  bool "Disable hypervisor memory protection"
 
 config THUMB_IGNORE_IT
   bool "Treat Thumb IT instruction as safe"

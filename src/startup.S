@@ -7,14 +7,30 @@
  */
 .global _start
 _start:
-
   /*
    * The hypervisor is started through U-Boot, and any command line arguments are passed as following:
    * - R0 contains the number of arguments;
    * - R1 is a pointer to an array of null-terminated C strings.
    * These arguments will be used by main and will be preserved if we don't touch R0 and R1.
    *
-   * Set up stack pointer for all modes (SVC,FIQ,IRQ,ABT,UND,SYS/USR) and switch back to SVC mode.
+   * Zero-fill BSS section. Since the BSS section is aligned to a 32-byte boundary, we can safely
+   * store 32 bytes at once.
+   */
+  LDR     r2, =__BSS_BEGIN__
+  LDR     r3, =__BSS_END__
+  MOV     r4, #0
+  MOV     r5, #0
+  MOV     r6, #0
+  MOV     r7, #0
+  MOV     r8, #0
+  MOV     r9, #0
+  MOV     r10, #0
+  MOV     r11, #0
+zeroFillBSS$:
+  STMIA   r2!, {r4-r11}
+  CMP     r2, r3
+  BCC     zeroFillBSS$
+  /* Set up stack pointer for all modes (SVC,FIQ,IRQ,ABT,UND,SYS/USR) and switch back to SVC mode.
    * We do not make use of secure modes, so we do not set up a stack pointer for MON mode.
    * Hence, the hypervisor and its guests must never execute the SMC instruction.
    */
@@ -758,47 +774,75 @@ exception_vector:
   .err @ Unknown target
 #endif
 
-/* 32-bit space for the guest context pointer.
- * This space must be in a .data section to make sure it is initialized to zero. */
-guestContextSpace:
-  .space 4
 
-
-/* Space allocated in the BSS section is *not* initialized to zero. */
+/*
+ * Space allocated in the BSS section is initialized to zero in _start.
+ */
 .bss
 
-/* Allocate stack space. Note that stacks grown down, i.e., every PUSH lowers the value of SP, and
+/*
+ * Allocate stack space. Note that stacks grown down, i.e., every PUSH lowers the value of SP, and
  * every POP increases the value of SP. Hence, labels have to be put after the reserved space.
  *
- * WARNING: EABI requires 8-byte aligned stacks (on public interfaces)! */
-  .balign 8
-stackSpaceEnd:
-.global svcStackEnd
-svcStackEnd:
-  .space 4096 /* SVC */
+ * WARNING: EABI requires 8-byte aligned stacks (on public interfaces)!
+ * WARNING: all stacks aligned on 4k boundaries for memory protection!
+ */
+.balign 4096
 .global svcStack
-svcStack:
-.global abtStackEnd
-abtStackEnd:
-  .space 4096 /* ABT */
+.global svcStackEnd
+.global svcStackGap
 .global abtStack
-abtStack:
-.global undStackEnd
+.global abtStackEnd
+.global abtStackGap
 .global undStack
-undStackEnd:
-  .space 4096 /* UND */
-undStack:
-.global irqStackEnd
+.global undStackEnd
+.global undStackGap
 .global irqStack
+.global irqStackEnd
+.global irqStackGap
+.global fiqStack
+.global fiqStackEnd
+.global fiqStackGap
+.global topStackGap
+
+svcStackGap:
+  .space 4096 /* SVC gap */
+svcStackEnd:
+  .space 4096 /* SVC stack */
+svcStack:
+
+abtStackGap:
+  .space 4096 /* ABT gap */
+abtStackEnd:
+  .space 4096 /* ABT stack */
+abtStack:
+
+undStackGap:
+  .space 4096 /* UND gap */
+undStackEnd:
+  .space 4096 /* UND stack */
+undStack:
+
+irqStackGap:
+  .space 4096 /* IRQ gap */
 irqStackEnd:
   .space 4096 /* IRQ */
 irqStack:
-.global fiqStackEnd
-.global fiqStack
+
+fiqStackGap:
+  .space 4096
 fiqStackEnd:
   .space 4096 /* FIQ */
 fiqStack:
-stackSpaceBegin:
+
+topStackGap:
+  .space 4096
+
+/*
+ * 32-bit space for the guest context pointer. Must be initialized to zero at start!
+ */
+guestContextSpace:
+  .space 4
 
 /*
  * Guard value for GCC stack-smashing protection (SSP).

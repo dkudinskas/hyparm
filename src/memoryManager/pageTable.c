@@ -5,6 +5,9 @@
 #include "common/stdlib.h"
 #include "common/string.h"
 
+#include "cpuArch/armv7.h"
+#include "cpuArch/constants.h"
+
 #include "guestManager/guestContext.h"
 
 #include "memoryManager/addressing.h"
@@ -12,9 +15,8 @@
 #include "memoryManager/mmu.h"
 #include "memoryManager/pageTable.h"
 #include "memoryManager/shadowMap.h"
+#include "memoryManager/stack.h"
 
-#include "cpuArch/armv7.h"
-#include "cpuArch/constants.h"
 
 extern void v7_flush_dcache_all(u32int dev);
 
@@ -154,39 +156,117 @@ u32int mapRange(simpleEntry *pageTable, u32int virtualStartAddress, u32int physi
 /**
  * Map hypervisor into given base page table in sections, 1-2-1 VA to PA
  **/
-void mapHypervisorMemory(simpleEntry* pageTable)
+void mapHypervisorMemory(simpleEntry *pageTable)
 {
-#ifdef PAGE_TABLE_DBG
-  printf("mapHypervisorMemory in page table %08x\n", (u32int)pageTable);
+  DEBUG(MM_PAGE_TABLES, "mapHypervisorMemory in page table %p" EOL, pageTable);
+  /*
+   * Make use of MMU protection mechanisms to protect the hypervisor against guests and itself.
+   * Make as few memory as possible executable: only the code of the hypervisor and instruction
+   * caches, if we have them (only with block copy -- TODO).
+   *
+   * First of all, make sure the stuff we get from the linker makes sense (it usually either works
+   * or dies, but sometimes silently messes up):
+   */
+  ASSERT(MEMORY_START_ADDR <= HYPERVISOR_BEGIN_ADDRESS, "bad linker symbols");
+  ASSERT(HYPERVISOR_BEGIN_ADDRESS < HYPERVISOR_END_ADDRESS, "bad linker symbols");
+  ASSERT(HYPERVISOR_END_ADDRESS <= MEMORY_END_ADDR, "bad linker symbols");
+  ASSERT(HYPERVISOR_BEGIN_ADDRESS == HYPERVISOR_TEXT_BEGIN_ADDRESS, "bad linker symbols");
+  ASSERT(HYPERVISOR_TEXT_BEGIN_ADDRESS < HYPERVISOR_TEXT_END_ADDRESS, "bad linker symbols");
+  ASSERT(HYPERVISOR_TEXT_END_ADDRESS <= HYPERVISOR_RO_XN_BEGIN_ADDRESS, "bad linker symbols");
+  ASSERT(HYPERVISOR_RO_XN_BEGIN_ADDRESS < HYPERVISOR_RO_XN_END_ADDRESS, "bad linker symbols");
+  ASSERT(HYPERVISOR_RO_XN_BEGIN_ADDRESS <= HYPERVISOR_RW_XN_BEGIN_ADDRESS, "bad linker symbols");
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS < HYPERVISOR_RW_XN_END_ADDRESS, "bad linker symbols");
+  ASSERT(HYPERVISOR_RW_XN_END_ADDRESS == HYPERVISOR_END_ADDRESS, "bad linker symbols");
+  ASSERT(HYPERVISOR_RW_XN_END_ADDRESS <= RAM_XN_POOL_BEGIN, "bad linker symbols");
+  ASSERT(RAM_XN_POOL_BEGIN < RAM_XN_POOL_END, "bad linker symbols");
+  ASSERT(RAM_XN_POOL_END <= MEMORY_END_ADDR, "bad linker symbols");
+  /*
+   * Now make sure the linker followed our alignment constraints:
+   */
+  ASSERT(isAlignedToMaskN(HYPERVISOR_TEXT_BEGIN_ADDRESS, SMALL_PAGE_MASK),
+         "executable section not aligned on small page boundary");
+  ASSERT(isAlignedToMaskN(HYPERVISOR_RO_XN_BEGIN_ADDRESS, SMALL_PAGE_MASK),
+         "non-executable read-only section not aligned on small page boundary");
+  ASSERT(isAlignedToMaskN(HYPERVISOR_RW_XN_BEGIN_ADDRESS, SMALL_PAGE_MASK),
+           "non-executable read-write sections not aligned on small page boundary");
+  ASSERT(isAlignedToMaskN(RAM_XN_POOL_BEGIN, SMALL_PAGE_MASK),
+         "non-executable RAM pool not aligned on small page boundary");
+  ASSERT(isAlignedToMaskN(RAM_XN_POOL_END, SMALL_PAGE_MASK),
+         "non-executable RAM pool not aligned on small page boundary");
+  /*
+   * Stacks must be non-executable, and should be protected against overflow by leaving gaps (fault
+   * entries) in the translation table. Stacks and gaps must reside in one of the data sections and
+   * must be aligned on small page boundaries! Gaps must directly precede their associated stack.
+   * This implies stack size must be a multiple of small page size.
+   */
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= ABT_STACK_GAP, "bad stack layout");
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= FIQ_STACK_GAP, "bad stack layout");
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= IRQ_STACK_GAP, "bad stack layout");
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= SVC_STACK_GAP, "bad stack layout");
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= UND_STACK_GAP, "bad stack layout");
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= TOP_STACK_GAP, "bad stack layout");
+  ASSERT(isAlignedToMaskN(ABT_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
+  ASSERT(isAlignedToMaskN(FIQ_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
+  ASSERT(isAlignedToMaskN(IRQ_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
+  ASSERT(isAlignedToMaskN(SVC_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
+  ASSERT(isAlignedToMaskN(UND_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
+  ASSERT(isAlignedToMaskN(TOP_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
+  ASSERT((ABT_STACK_GAP + SMALL_PAGE_SIZE) == ABT_STACK_LB, "bad stack gap position");
+  ASSERT((FIQ_STACK_GAP + SMALL_PAGE_SIZE) == FIQ_STACK_LB, "bad stack gap position");
+  ASSERT((IRQ_STACK_GAP + SMALL_PAGE_SIZE) == IRQ_STACK_LB, "bad stack gap position");
+  ASSERT((SVC_STACK_GAP + SMALL_PAGE_SIZE) == SVC_STACK_LB, "bad stack gap position");
+  ASSERT((UND_STACK_GAP + SMALL_PAGE_SIZE) == UND_STACK_LB, "bad stack gap position");
+  ASSERT(isAlignedToMaskN(ABT_STACK_UB, SMALL_PAGE_MASK), "bad stack alignment");
+  ASSERT(isAlignedToMaskN(FIQ_STACK_UB, SMALL_PAGE_MASK), "bad stack alignment");
+  ASSERT(isAlignedToMaskN(IRQ_STACK_UB, SMALL_PAGE_MASK), "bad stack alignment");
+  ASSERT(isAlignedToMaskN(SVC_STACK_UB, SMALL_PAGE_MASK), "bad stack alignment");
+  ASSERT(isAlignedToMaskN(UND_STACK_UB, SMALL_PAGE_MASK), "bad stack alignment");
+  ASSERT(ABT_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
+  ASSERT(FIQ_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
+  ASSERT(IRQ_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
+  ASSERT(SVC_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
+  ASSERT(UND_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
+  ASSERT((TOP_STACK_GAP + SMALL_PAGE_SIZE) <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
+  /*
+   * Hardcoded stack order... have some ASSERTs ready for when someone decides to change startup.S.
+   */
+  ASSERT(SVC_STACK_UB == ABT_STACK_GAP, "hardcoded stack layout was modified; update required");
+  ASSERT(ABT_STACK_UB == UND_STACK_GAP, "hardcoded stack layout was modified; update required");
+  ASSERT(UND_STACK_UB == IRQ_STACK_GAP, "hardcoded stack layout was modified; update required");
+  ASSERT(IRQ_STACK_UB == FIQ_STACK_GAP, "hardcoded stack layout was modified; update required");
+  ASSERT(FIQ_STACK_UB == TOP_STACK_GAP, "hardcoded stack layout was modified; update required");
+  /*
+   * Finally... map hypervisor memory.
+   */
+#ifndef CONFIG_DISABLE_HYPERVISOR_MEMORY_PROTECTION
+  mapRange(pageTable, HYPERVISOR_TEXT_BEGIN_ADDRESS, HYPERVISOR_TEXT_BEGIN_ADDRESS,
+           HYPERVISOR_TEXT_END_ADDRESS, HYPERVISOR_ACCESS_DOMAIN, PRIV_RO_USR_NO, TRUE,
+           FALSE, 0, FALSE);
+  mapRange(pageTable, HYPERVISOR_RO_XN_BEGIN_ADDRESS, HYPERVISOR_RO_XN_BEGIN_ADDRESS,
+           HYPERVISOR_RO_XN_END_ADDRESS, HYPERVISOR_ACCESS_DOMAIN, PRIV_RO_USR_NO, TRUE, FALSE, 0,
+           TRUE);
+  mapRange(pageTable, HYPERVISOR_RW_XN_BEGIN_ADDRESS, HYPERVISOR_RW_XN_BEGIN_ADDRESS,
+           SVC_STACK_GAP, HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRange(pageTable, SVC_STACK_LB, SVC_STACK_LB, SVC_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
+           PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRange(pageTable, ABT_STACK_LB, ABT_STACK_LB, ABT_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
+           PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRange(pageTable, UND_STACK_LB, UND_STACK_LB, UND_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
+           PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRange(pageTable, IRQ_STACK_LB, IRQ_STACK_LB, IRQ_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
+           PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRange(pageTable, FIQ_STACK_LB, FIQ_STACK_LB, FIQ_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
+           PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRange(pageTable, TOP_STACK_GAP + SMALL_PAGE_SIZE, TOP_STACK_GAP + SMALL_PAGE_SIZE,
+           HYPERVISOR_RW_XN_END_ADDRESS, HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0,
+           TRUE);
+  mapRange(pageTable, RAM_XN_POOL_BEGIN, RAM_XN_POOL_BEGIN, RAM_XN_POOL_END,
+           HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+#else
+  mapRange(pageTable, HYPERVISOR_BEGIN_ADDRESS, HYPERVISOR_BEGIN_ADDRESS, MEMORY_END_ADDR,
+           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
 #endif
-  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
-  u32int endAddr = MEMORY_END_ADDR;
-#ifdef PAGE_TABLE_DBG
-  printf("mapHypervisorMemory start %08x end %08x\n", startAddr, endAddr);
-#endif
-
-  while (startAddr < endAddr)
-  {
-    // @ hypervisor domain, all acces bits, cachable, not bufferable, tex 0
-    mapSection(pageTable, startAddr, startAddr, HYPERVISOR_ACCESS_DOMAIN,
-                      HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
-    startAddr += SECTION_SIZE;
-  }
-
-  u32int mallocStart = (endAddr & 0xFFF00000) + SECTION_SIZE;
-  u32int mallocEnd = MEMORY_END_ADDR;
-#ifdef PAGE_TABLE_DBG
-  printf("mapHypervisorMemory malloc start %08x end %08x\n", mallocStart, mallocEnd);
-#endif
-  while (mallocStart < mallocEnd)
-  {
-    // @ hypervisor domain, all acces bits, cachable, not bufferable, tex 0
-    mapSection(pageTable, mallocStart, mallocStart, HYPERVISOR_ACCESS_DOMAIN,
-                      HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 1);
-    mallocStart += SECTION_SIZE;
-  }
 }
-
 
 /**
  * Add a section mapping of given virtual to physical address
@@ -253,7 +333,12 @@ void mapSmallPage(simpleEntry* pageTable, u32int virtAddr, u32int physical,
       // we need a new second level page table. This gives a virtual address allocated
       u32int* vAddr = newLevelTwoPageTable();
       // need to get the physical address
+#ifdef CONFIG_DISABLE_HYPERVISOR_MEMORY_PROTECTION
       u32int pAddr = getPhysicalAddress(pageTable, (u32int)vAddr);
+#else
+      u32int pAddr = getGuestContext()->virtAddrEnabled
+                   ? getPhysicalAddress(pageTable, (u32int)vAddr) : (u32int)vAddr;
+#endif
 #ifdef PAGE_TABLE_DBG
       printf("mapSmallPage: PT VA %08x PA %08x\n", (u32int)vAddr, pAddr);
 #endif
