@@ -1,4 +1,5 @@
 #include "common/assert.h"
+#include "common/bit.h"
 #include "common/debug.h"
 #include "common/linker.h"
 #include "common/stdlib.h"
@@ -116,6 +117,39 @@ void deleteLevelTwoPageTable(pageTableEntry* pageTable)
   } // while ends
 }
 
+u32int mapRange(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
+                u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,
+                bool bufferable, u8int regionAttributes, bool executeNever)
+{
+  ASSERT(isAlignedToMaskN(physicalStartAddress, SMALL_PAGE_MASK), "bad alignment");
+  /*
+   * Construct a conservative, linear mapping for the specified address range.
+   */
+  while (physicalStartAddress < physicalEndAddress)
+  {
+    if (isAlignedToMaskN(physicalStartAddress, SECTION_MASK)
+        && (physicalEndAddress - physicalStartAddress) >= SECTION_SIZE)
+    {
+      /* 1 MB, map a section */
+      mapSection(pageTable, virtualStartAddress, physicalStartAddress, domain, accessBits,
+                 cacheable, bufferable, regionAttributes, executeNever);
+      physicalStartAddress += SECTION_SIZE;
+      virtualStartAddress += SECTION_SIZE;
+    }
+    else
+    {
+      /* 4 kB, map a small page -- may involve creation of an L2 table */
+      mapSmallPage(pageTable, virtualStartAddress, physicalStartAddress, domain, accessBits,
+                   cacheable, bufferable, regionAttributes, executeNever);
+      physicalStartAddress += SMALL_PAGE_SIZE;
+      virtualStartAddress += SMALL_PAGE_SIZE;
+    }
+  }
+  /*
+   * Return the last mapped *physical* address (useful to check for overlaps).
+   */
+  return physicalStartAddress;
+}
 
 /**
  * Map hypervisor into given base page table in sections, 1-2-1 VA to PA
