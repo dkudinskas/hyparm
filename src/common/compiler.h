@@ -6,6 +6,16 @@
  */
 
 /*
+ * __cold__
+ * Hint the compiler that a specific function is unlikely to be executed. It will be put in a
+ * separate section, .text.unlikely, so that hot code is put together (better cache behavior).
+ */
+#define __cold__      __attribute__((cold))
+
+#define __constant__  __attribute__((const))
+#define __pure__      __attribute__((pure))
+
+/*
  * __macro__
  * Make a function definition behave like a macro. The definition is used only for inlining. In no
  * case is the function compiled as a standalone function, not even if you take its address
@@ -21,6 +31,7 @@
 #if (__GNUC__ == 4 && __GNUC_MINOR__ >= 6) || __GNUC__ > 4
 #define COMPILER_CAN_HIDE_WARNINGS
 #define COMPILER_HAS_GCC_VECTOR_TYPES
+#define COMPILER_HAS_STATIC_ASSERT
 #endif
 #endif
 
