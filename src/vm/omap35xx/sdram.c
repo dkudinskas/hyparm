@@ -21,7 +21,7 @@ void initSdram(virtualMachine *vm)
 
   vm->sdram = sdram;
 
-#ifdef SDRAM_STORE_COUNTER
+#ifdef CONFIG_SDRAM_STORE_COUNTER
   u32int *storeTrace = (u32int *)calloc(MEGABYTE_COUNT, sizeof(u32int));
   if (storeTrace == NULL)
   {
@@ -41,7 +41,7 @@ void initSdram(virtualMachine *vm)
 void dumpSdramStats()
 {
   struct SdramController* sdram = getGuestContext()->vm.sdram;
-#ifdef SDRAM_STORE_COUNTER
+#ifdef CONFIG_SDRAM_STORE_COUNTER
   printf("Store trace:" EOL);
 
   u32int i = 0;
@@ -100,7 +100,7 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr,
   DEBUG(VP_OMAP_35XX_SDRAM, "%s store to physical address: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x"
       EOL, dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
-#ifdef SDRAM_STORE_COUNTER
+#ifdef CONFIG_SDRAM_STORE_COUNTER
   u32int index = (virtAddr >> 20) & 0xFFF;
   sdram->storeCounters[index] = sdram->storeCounters[index] + 1;
 #endif

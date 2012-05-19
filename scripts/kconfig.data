@@ -268,6 +268,11 @@ config MEMORY_ALLOCATOR_BOOKKEEPING
   bool "Extensive memory allocator bookkeeping"
   depends on DEBUGGING_HACKS
 
+config SDRAM_STORE_COUNTER
+  bool "SDRAM store counter"
+  default y
+  depends on DEBUGGING_HACKS
+
 menuconfig DEBUG
   bool "Debug output"
   default y

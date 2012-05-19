@@ -9,8 +9,6 @@
 
 #define MEGABYTE_COUNT   4096
 
-// uncomment me to enable store counters:
-#define SDRAM_STORE_COUNTER
 
 
 typedef struct EmumulatedVirtualMachine virtualMachine;
@@ -26,7 +24,7 @@ void dumpSdramStats(void);
 struct SdramController
 {
   u32int enabled;
-#ifdef SDRAM_STORE_COUNTER
+#ifdef CONFIG_SDRAM_STORE_COUNTER
   u32int *storeCounters;
 #endif
 };
