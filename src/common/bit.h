@@ -16,6 +16,8 @@ __macro__ bool isAlignedToBits(void *pointer, u32int bits);
 __macro__ bool isAlignedToBitsN(u32int value, u32int bits);
 __macro__ bool isAlignedToMask(void *pointer, u32int mask);
 __macro__ bool isAlignedToMaskN(u32int value, u32int mask);
+__macro__ bool isSettingBits(u32int oldValue, u32int newValue, u32int bits);
+__macro__ bool isUnsettingBits(u32int oldValue, u32int newValue, u32int bits);
 __macro__ u32int maskedBitShift(u32int value, u32int mask);
 __macro__ u32int signExtend(u32int value, u32int bits);
 __macro__ bool testBitsEqual(u32int subject, u32int highBit, u32int lowBit);
@@ -133,6 +135,16 @@ __macro__ bool isAlignedToMask(void *pointer, u32int mask)
 __macro__ bool isAlignedToMaskN(u32int value, u32int mask)
 {
   return (value & ~mask) == 0;
+}
+
+__macro__ bool isSettingBits(u32int oldValue, u32int newValue, u32int bits)
+{
+  return !(oldValue & bits) && (newValue & bits) == bits;
+}
+
+__macro__ bool isUnsettingBits(u32int oldValue, u32int newValue, u32int bits)
+{
+  return (oldValue & bits) == bits && !(newValue & bits);
 }
 
 /*
