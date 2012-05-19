@@ -43,6 +43,7 @@ extern void setEmergencyExceptionVector(void);
 #endif
 
 
+const char *const ERROR_BAD_ACCESS_SIZE = "bad access size";
 const char *const ERROR_BAD_ARGUMENTS = "bad arguments";
 const char *const ERROR_NO_SUCH_REGISTER = "no such register";
 const char *const ERROR_NOT_IMPLEMENTED = "not implemented";
