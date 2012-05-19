@@ -99,7 +99,7 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
   // P = 0 and W == 1 then LDR as if user mode
   if ((preOrPost == 0) && (writeBack != 0))
   {
-    bool abort = shouldDataAbort(FALSE, FALSE, address);
+    bool abort = shouldDataAbort(context, FALSE, FALSE, address);
     if (abort)
     {
       return getRealPC(context);
@@ -107,7 +107,7 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
   }
 
   // DO the actual load from memory
-  u32int valueLoaded = vmLoad(WORD, address);
+  u32int valueLoaded = vmLoad(context, WORD, address);
 
   // LDR loading to PC should load a word-aligned value
   ASSERT(regDst != GPR_PC || (valueLoaded & 0x3) == 0, "loading unaligned value to PC!");
@@ -206,13 +206,13 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
   }
 
   // P = 0 and W == 1 then LDRB as if user mode
-  if (!preOrPost && writeBack && shouldDataAbort(FALSE, FALSE, address))
+  if (!preOrPost && writeBack && shouldDataAbort(context, FALSE, FALSE, address))
   {
     return getRealPC(context);
   }
 
   // DO the actual load from memory
-  u32int valueLoaded = vmLoad(BYTE, address) & 0xFF;
+  u32int valueLoaded = vmLoad(context, BYTE, address) & 0xFF;
 
   // put loaded val to reg
   storeGuestGPR(regDst, valueLoaded, context);
@@ -321,7 +321,7 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
     ASSERT((address & 0x1) == 0, "load address unaligned");
   } // reg case done
 
-  u32int valueLoaded = vmLoad(HALFWORD, address) & 0xFFFF;
+  u32int valueLoaded = vmLoad(context, HALFWORD, address) & 0xFFFF;
 
   // put loaded val to reg
   storeGuestGPR(regDst, valueLoaded, context);
@@ -425,8 +425,8 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
 
   DEBUG(INTERPRETER_ARM_LOAD, "armLdrdInstruction: address = %#.8x" EOL, address);
 
-  u32int valueLoaded = vmLoad(WORD, address);
-  u32int valueLoaded2 = vmLoad(WORD, address + 4);
+  u32int valueLoaded = vmLoad(context, WORD, address);
+  u32int valueLoaded2 = vmLoad(context, WORD, address + 4);
   // put loaded values to their registers
   storeGuestGPR(regDst, valueLoaded, context);
   storeGuestGPR(regDst2, valueLoaded2, context);
@@ -533,7 +533,7 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
         isPCinRegList = TRUE;
       }
       // R[i] = *(address);
-      u32int valueLoaded = vmLoad(WORD, address);
+      u32int valueLoaded = vmLoad(context, WORD, address);
       storeGuestGPR(i, valueLoaded, context);
       DEBUG(INTERPRETER_ARM_LOAD, "armLdmInstruction: R[%x] = *(%#.8x) = %#.8x" EOL, i, address,
           valueLoaded);

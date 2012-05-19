@@ -12,9 +12,10 @@ typedef enum loadStoreAccessSize
 } ACCESS_SIZE;
 
 typedef struct genericDevice device;
+struct guestContext;
 
-typedef u32int (*LOAD_FUNCTION)(device *, ACCESS_SIZE, u32int, u32int);
-typedef void (*STORE_FUNCTION)(device *, ACCESS_SIZE, u32int, u32int, u32int);
+typedef u32int (*LOAD_FUNCTION)(struct guestContext *, device *, ACCESS_SIZE, u32int, u32int);
+typedef void (*STORE_FUNCTION)(struct guestContext *, device *, ACCESS_SIZE, u32int, u32int, u32int);
 
 #define MAX_NR_ATTACHED  20
 
@@ -30,5 +31,7 @@ struct genericDevice
   LOAD_FUNCTION loadFunction;
   STORE_FUNCTION storeFunction;
 };
+
+typedef struct EmulatedVirtualMachine virtualMachine;
 
 #endif /* __VM__TYPES_H__ */

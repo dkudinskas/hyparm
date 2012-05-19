@@ -27,7 +27,7 @@ u32int armLdrexInstruction(GCONTXT *context, u32int instruction)
   ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int baseVal = loadGuestGPR(baseReg, context);
-  u32int value = vmLoad(WORD, baseVal);
+  u32int value = vmLoad(context, WORD, baseVal);
 
   DEBUG(INTERPRETER_ARM_LOAD_SYNC, "armLdrexInstruction: baseVal = %#.8x loaded %#.8x store to "
       "%#.8x" EOL, baseVal, value, regDest);
@@ -54,7 +54,7 @@ u32int armLdrexbInstruction(GCONTXT *context, u32int instruction)
 
   u32int baseVal = loadGuestGPR(baseReg, context);
   // byte zero extended to word...
-  u32int value = vmLoad(BYTE, baseVal) & 0xFF;
+  u32int value = vmLoad(context, BYTE, baseVal) & 0xFF;
   storeGuestGPR(regDest, value, context);
 
   return getRealPC(context) + ARM_INSTRUCTION_SIZE;
@@ -77,7 +77,7 @@ u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
 
   u32int baseVal = loadGuestGPR(baseReg, context);
   // halfword zero extended to word...
-  u32int value = vmLoad(HALFWORD, baseVal) & 0xFFFF;
+  u32int value = vmLoad(context, HALFWORD, baseVal) & 0xFFFF;
   storeGuestGPR(regDest, value, context);
 
   return getRealPC(context) + ARM_INSTRUCTION_SIZE;
@@ -102,8 +102,8 @@ u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
 
   u32int baseVal = loadGuestGPR(baseReg, context);
 
-  u32int value = vmLoad(WORD, baseVal);
-  u32int value2 = vmLoad(WORD, baseVal + 4);
+  u32int value = vmLoad(context, WORD, baseVal);
+  u32int value2 = vmLoad(context, WORD, baseVal + 4);
   storeGuestGPR(regDest, value, context);
   storeGuestGPR(regDest + 1, value2, context);
 
@@ -134,7 +134,7 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
   DEBUG(INTERPRETER_ARM_STORE_SYNC, "armStrexInstruction: address = %#.8x, valToStore = %#.8x, "
       "valueFromReg %#.8x" EOL, address, valToStore, regT);
 
-  vmStore(WORD, address, valToStore);
+  vmStore(context, WORD, address, valToStore);
   // operation succeeded updating memory, flag regD (0 - updated, 1 - fail)
   storeGuestGPR(regD, 0, context);
 
@@ -163,7 +163,7 @@ u32int armStrexbInstruction(GCONTXT *context, u32int instruction)
   u32int address = loadGuestGPR(regN, context);
 
   u32int valToStore = loadGuestGPR(regT, context);
-  vmStore(BYTE, address, valToStore & 0xFF);
+  vmStore(context, BYTE, address, valToStore & 0xFF);
 
   storeGuestGPR(regD, 0, context);
 
@@ -199,7 +199,7 @@ u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
   u32int address = loadGuestGPR(regN, context);
 
   u32int valToStore = loadGuestGPR(regT, context);
-  vmStore(HALFWORD, address, valToStore & 0xFFFF);
+  vmStore(context, HALFWORD, address, valToStore & 0xFFFF);
   storeGuestGPR(regD, 0, context);
 
   return getRealPC(context) + ARM_INSTRUCTION_SIZE;
@@ -247,13 +247,13 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
   bool littleEndian = TRUE;
   if (littleEndian)
   {
-    vmStore(WORD, address, valToStore2);
-    vmStore(WORD, address+4, valToStore1);
+    vmStore(context, WORD, address, valToStore2);
+    vmStore(context, WORD, address+4, valToStore1);
   }
   else
   {
-    vmStore(WORD, address, valToStore1);
-    vmStore(WORD, address+4, valToStore2);
+    vmStore(context, WORD, address, valToStore1);
+    vmStore(context, WORD, address+4, valToStore2);
   }
   storeGuestGPR(regD, 0, context);
 

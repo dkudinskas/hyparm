@@ -8,6 +8,124 @@
 #include "vm/omap35xx/prm.h"
 
 
+/* PRM module instances live at these physical addresses */
+#define IVA2_PRM                      0x48306000
+#define OCP_System_Reg_PRM            0x48306800
+#define MPU_PRM                       0x48306900
+#define CORE_PRM                      0x48306A00
+#define SGX_PRM                       0x48306B00
+#define WKUP_PRM                      0x48306C00
+#define Clock_Control_Reg_PRM         0x48306D00
+#define DSS_PRM                       0x48306E00
+#define CAM_PRM                       0x48306F00
+#define PER_PRM                       0x48307000
+#define EMU_PRM                       0x48307100
+#define Global_Reg_PRM                0x48307200
+#define NEON_PRM                      0x48307300
+#define USBHOST_PRM                   0x48307400
+
+
+/************************************/
+/* REGISTER DEFINITIONS and offsets */
+/************************************/
+// COMMON REGISTER OFFSETS
+#define RM_RSTCTRL               0x00000050 // reset control, RW
+#define RM_RSTST                 0x00000058 // reset status, RW
+#define PM_WKEN                  0x000000A0 // wakeup events enable, RW
+#define PM_MPUGRPSEL             0x000000A4 // select group of modules that wakeup MPU, RW
+#define PM_IVA2GRPSEL            0x000000A8 // select group of modules that wakeup IVA, RW
+#define PM_WKST                  0x000000B0 // wakeup events status, RW
+#define PM_WKDEP                 0x000000C8 // wakeup disable / enable, RW
+#define PM_PWSTCTRL              0x000000E0 // power state transition, RW
+#define PM_PWSTST                0x000000E4 // power state status, R/O
+#define PM_PREPWSTST             0x000000E8 // previous power state status, RW
+
+// MODULE SPECIFIC OFFSETS
+// IVA2 register offsets
+#define PRM_IRQSTATUS_IVA2       0x000000F8 // IRQ status, RW
+#define PRM_IRQENABLE_IVA2       0x000000FC // IRQ enable, RW
+// OCP_system_reg register offsets
+#define PRM_REVISION_OCP           0x00000004 // revision number, R/O
+#define PRM_SYSCONFIG_OCP          0x00000014 // various parameters for the i-face, RW
+#define PRM_SYSCONFIG_OCP_RESERVED 0xFFFFFFFE
+#define PRM_SYSCONFIG_OCP_AUTOIDLE 0x00000001
+#define PRM_IRQSTATUS_MPU_OCP      0x00000018 // IRQ status, RW
+#define PRM_IRQENABLE_MPU_OCP      0x0000001C // IRQ enable, RW
+// MPU register offsets
+#define PM_EVGENCTRL_MPU         0x000000D4 // event generator control, RW
+#define PM_EVGENONTIM_MPU        0x000000D8 // sets the ON count duration of the gen., RW
+#define PM_EVGENOFFTIM_MPU       0x000000DC // sets the OFF count duration of the gen., RW
+// CORE register offsets
+#define PM_WKST3_CORE            0x000000B8 // wakeup events status, RW
+#define PM_WKEN3_CORE            0x000000F0 // wakeup enable, RW
+#define PM_IVA2GRPSEL3_CORE      0x000000F4 // select group of modules that wakeup MPU, RW
+#define PM_MPUGRPSEL3_CORE       0x000000F8 // select group of modules that wakeup IVA2, RW
+// Clock_Control_Reg register offsets
+#define PRM_CLKSEL               0x00000040 // select system clock frequency, RW
+#define PRM_CLKOUT_CTRL          0x00000070 // SYS_CLKOUT1 pin control, RW
+// Global_Reg register offsets
+#define PRM_VC_SMPS_SA           0x00000020 // setting I2C slave addR of the Power IC, RW
+#define PRM_VC_SMPS_VOL_RA       0x00000024 // setting voltage conf reg address for VDD channels, RW
+#define PRM_VC_SMPS_CMD_RA       0x00000028 // setting ON/Retention/OFF cmnd conf reg addr for VDD, RW
+#define PRM_VC_CMD_VAL_0         0x0000002C // ON/Retention/OFF voltage level values for 1st VDD, RW
+#define PRM_VC_CMD_VAL_1         0x00000030 // ON/Retention/OFF voltage level values for 2nd VDD, RW
+#define PRM_VC_CH_CONF           0x00000034 // config pointers for both VDD channels, RW
+#define PRM_VC_I2C_CFG           0x00000038 // config pointers for both VDD channels, RW
+#define PRM_VC_BYPASS_VAL        0x0000003C // programming the PowerIC dev using bypass i-face, RW
+#define PRM_RSTCTRL              0x00000050 // Global software and DPLL3 reset control, RW
+#define PRM_RSTTIME              0x00000054 // Reset duration control, RW
+#define PRM_RSTST                0x00000058 // reset status, RW
+#define PRM_VOLTCTRL             0x00000060 // direct control on the external power IC, RW
+#define PRM_SRAM_PCHARGE         0x00000064 // setting the pre-charge time of the SRAM, RW
+#define PRM_CLKSRC_CTRL          0x00000070 // control over the device source clock, RW
+#define PRM_OBSR                 0x00000080 // logs observable signals, R/O
+#define PRM_VOLTSETUP1           0x00000090 // setting setup time of VDD1 & VDD2 regulators, RW
+#define PRM_VOLTOFFSET           0x00000094 // controlling the sys_offmode signal upon wake-up, RW
+#define PRM_CLKSETUP             0x00000098 // setup time of the oscillator system clock (sys_clk), RW
+#define PRM_POLCTRL              0x0000009C // polarity of device outputs control signals.
+#define PRM_VOLTSETUP2           0x000000A0 // overall setup time of VDD1 and VDD2 regulators, RW
+
+/*
+ * UNKNOWN REGISTER OFFSET
+ * This uknown register offset is used by some linux kernels.
+ * It tries to to read-modify-write this registers
+ *   which belong to no module.
+ */
+#define PM_UNKNOWN               0x00000044 // unknown register
+
+
+/* per-module loads */
+static u32int loadCamPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadClockControlPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadCorePrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadDssPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadEmuPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadGlobalRegPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadIva2Prm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadMpuPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadNeonPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadOcpSystemPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadPerPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadSgxPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadUsbhostPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+static u32int loadWakeUpPrm(struct PowerAndResetManager *prm, u32int physicalAddress);
+
+/* per-module stores */
+static void storeCamPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeClockControlPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeCorePrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeDssPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeEmuPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeIva2Prm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeMpuPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeNeonPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeOcpSystemPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storePerPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeSgxPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeUsbhostPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeWakeUpPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+
+
 void initPrm(virtualMachine *vm)
 {
   // init function: setup device, reset register values to defaults!
@@ -93,912 +211,957 @@ void initPrm(virtualMachine *vm)
   vm->prMan = prm;
 }
 
-/*************************************************************************
- *                           Load  Functions                             *
- *************************************************************************/
-u32int loadPrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadPrm(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  u32int val = 0;
-
-  DEBUG(VP_OMAP_35XX_PRM, "%s load from physical address: %.8x, vAddr %.8x, aSize %x" EOL,
+  DEBUG(VP_OMAP_35XX_PRM, "%s load from physical address: %#.8x, vAddr %#.8x, aSize %x" EOL,
       dev->deviceName, phyAddr, virtAddr, (u32int)size);
 
-  if (size != WORD)
-  {
-    // only word access allowed in these modules
-    DIE_NOW(NULL, "PRM: invalid access size.");
-  }
+  ASSERT(size == WORD, ERROR_BAD_ACCESS_SIZE);
 
-  u32int base = phyAddr & 0xFFFFFF00;
+  struct PowerAndResetManager *const prm = context->vm.prMan;
+  const u32int base = phyAddr & 0xFFFFFF00;
   switch (base)
   {
     case Clock_Control_Reg_PRM:
-    {
-      val = loadClockControlPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadClockControlPrm(prm, phyAddr);
     case Global_Reg_PRM:
-    {
-      val = loadGlobalRegPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadGlobalRegPrm(prm, phyAddr);
     case IVA2_PRM:
-    {
-      val = loadIva2Prm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadIva2Prm(prm, phyAddr);
     case OCP_System_Reg_PRM:
-    {
-      val = loadOcpSystemPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadOcpSystemPrm(prm, phyAddr);
     case MPU_PRM:
-    {
-      val = loadMpuPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadMpuPrm(prm, phyAddr);
     case CORE_PRM:
-    {
-      val = loadCorePrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadCorePrm(prm, phyAddr);
     case SGX_PRM:
-    {
-      val = loadSgxPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadSgxPrm(prm, phyAddr);
     case WKUP_PRM:
-    {
-      val = loadWakeUpPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadWakeUpPrm(prm, phyAddr);
     case DSS_PRM:
-    {
-      val = loadDssPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadDssPrm(prm, phyAddr);
     case CAM_PRM:
-    {
-      val = loadCamPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadCamPrm(prm, phyAddr);
     case PER_PRM:
-    {
-      val = loadPerPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadPerPrm(prm, phyAddr);
     case EMU_PRM:
-    {
-      val = loadEmuPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadEmuPrm(prm, phyAddr);
     case NEON_PRM:
-    {
-      val = loadNeonPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadNeonPrm(prm, phyAddr);
     case USBHOST_PRM:
-    {
-      val = loadUsbhostPrm(dev, virtAddr, phyAddr);
-      break;
-    }
+      return loadUsbhostPrm(prm, phyAddr);
     default:
     {
-      printf("PRM: virtual address %#.8x physical address %#.8x" EOL, virtAddr, phyAddr);
-      DIE_NOW(NULL, "PRM: invalid base module.");
+      printf("virtual address %#.8x physical address %#.8x" EOL, virtAddr, phyAddr);
+      DIE_NOW(NULL, "invalid base module");
     }
   }
-  return val;
 }
 
-
-u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
+static u32int loadCamPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
 {
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - Clock_Control_Reg_PRM;
-  switch(reg)
-  {
-    case PRM_CLKSEL:
-    {
-      val = prMan->prmClkSelReg;
-      break;
-    }
-    case PRM_CLKOUT_CTRL:
-    {
-      val = prMan->prmClkoutCtrlReg;
-      break;
-    }
-    case PM_WKDEP:
-    case PM_PWSTST:
-    case PM_UNKNOWN:
-    {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
-      break;
-    }
-    default:
-    {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-    }
-  }
-  DEBUG(VP_OMAP_35XX_PRM, "loadClockControlPrm reg %x value %.8x" EOL, reg, val);
-  return val;
-}
-
-
-u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - Global_Reg_PRM;
-
-  switch (reg)
-  {
-    case PRM_VC_SMPS_SA:
-    {
-      val = prMan->prmVcSmpsSa;
-      break;
-    }
-    case PRM_VC_SMPS_VOL_RA:
-    {
-      val = prMan->prmVcSmpsVolRa;
-      break;
-    }
-    case PRM_VC_SMPS_CMD_RA:
-    {
-      val = prMan->prmVcSmpsCmdRa;
-      break;
-    }
-    case PRM_VC_CMD_VAL_0:
-    {
-      val = prMan->prmVcCmdVal0;
-      break;
-    }
-    case PRM_VC_CMD_VAL_1:
-    {
-      val = prMan->prmVcCmdVal1;
-      break;
-    }
-    case PRM_VC_CH_CONF:
-    {
-      val = prMan->prmVcChConf;
-      break;
-    }
-    case PRM_VC_I2C_CFG:
-    {
-      val = prMan->prmVcI2cCfg;
-      break;
-    }
-    case PRM_VC_BYPASS_VAL:
-    {
-      val = prMan->prmVcBypassVal;
-      break;
-    }
-    case PRM_RSTCTRL:
-    {
-      val = prMan->prmRstCtrl;
-      break;
-    }
-    case PRM_RSTTIME:
-    {
-      val = prMan->prmRstTime;
-      break;
-    }
-    case PRM_RSTST:
-    {
-      val = prMan->prmRstState;
-      break;
-    }
-    case PRM_VOLTCTRL:
-    {
-      val = prMan->prmVoltCtrl;
-      break;
-    }
-    case PRM_SRAM_PCHARGE:
-    {
-      val = prMan->prmSramPcharge;
-      break;
-    }
-    case PRM_CLKSRC_CTRL:
-    {
-      val = prMan->prmClkSrcCtrl;
-      break;
-    }
-    case PRM_OBSR:
-    {
-      val = prMan->prmObsr;
-      break;
-    }
-    case PRM_VOLTSETUP1:
-    {
-      val = prMan->prmVoltSetup1;
-      break;
-    }
-    case PRM_VOLTOFFSET:
-    {
-      val = prMan->prmVoltOffset;
-      break;
-    }
-    case PRM_CLKSETUP:
-    {
-      val = prMan->prmClkSetup;
-      break;
-    }
-    case PRM_POLCTRL:
-    {
-      val = prMan->prmPolCtrl;
-      break;
-    }
-    case PRM_VOLTSETUP2:
-    {
-      val = prMan->prmVoltSetup2;
-      break;
-    }
-    default:
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-  } // switch ends
-  DEBUG(VP_OMAP_35XX_PRM, "loadGlobalRegPrm reg %x value %.8x" EOL, reg, val);
-  return val;
-}
-
-
-u32int loadIva2Prm(device *dev, u32int address, u32int phyAddr)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - IVA2_PRM;
-  switch (reg)
+  const u32int registerOffset = physicalAddress - CAM_PRM;
+  u32int value = 0;
+  switch (registerOffset)
   {
     case PM_WKDEP:
     {
-      val = prMan->prmWkdepIva2;
+      value = prm->prmWkdepCam;
       break;
     }
     case PM_PWSTCTRL:
     {
-      val = prMan->prmPwstctrlIva2;
+      value = prm->prmPwstctrlCam;
       break;
     }
     case PM_PWSTST:
     {
-      val = prMan->prmPwststIva2;
+      value = prm->prmPwststCam;
       break;
     }
+#ifdef CONFIG_GUEST_ANDROID
     case PM_UNKNOWN:
     {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
       break;
     }
+#endif
+    default:
+    {
+      printf("offset %x" EOL, registerOffset);
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
+  DEBUG(VP_OMAP_35XX_PRM, "loadCamPrm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
+}
+
+static u32int loadClockControlPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
+{
+  const u32int registerOffset = physicalAddress - Clock_Control_Reg_PRM;
+  u32int value = 0;
+  switch (registerOffset)
+  {
+    case PRM_CLKSEL:
+    {
+      value = prm->prmClkSelReg;
+      break;
+    }
+    case PRM_CLKOUT_CTRL:
+    {
+      value = prm->prmClkoutCtrlReg;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_WKDEP:
+    case PM_PWSTST:
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+    {
+      printf("offset %x" EOL, registerOffset);
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
+  DEBUG(VP_OMAP_35XX_PRM, "loadClockControlPrm reg %x value %#.8x" EOL, registerOffset, value);
+  return value;
+}
+
+static u32int loadCorePrm(struct PowerAndResetManager *prm, u32int physicalAddress)
+{
+  const u32int registerOffset = physicalAddress - CORE_PRM;
+  u32int value = 0;
+  switch (registerOffset)
+  {
+    case PM_PWSTCTRL:
+    {
+      value = prm->prmPwstctrlCore;
+      break;
+    }
+    case PM_PWSTST:
+    {
+      value = prm->prmPwststCore;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+    {
+      printf("offset %x" EOL, registerOffset);
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
+  DEBUG(VP_OMAP_35XX_PRM, "loadCorePrm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
+}
+
+static u32int loadDssPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
+{
+  const u32int registerOffset = physicalAddress - DSS_PRM;
+  u32int value = 0;
+  switch (registerOffset)
+  {
+    case PM_WKDEP:
+    {
+      value = prm->prmWkdepDss;
+      break;
+    }
+    case PM_PWSTCTRL:
+    {
+      value = prm->prmPwstctrlDss;
+      break;
+    }
+    case PM_PWSTST:
+    {
+      value = prm->prmPwststDss;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+    {
+      printf("offset %x" EOL, registerOffset);
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
+  DEBUG(VP_OMAP_35XX_PRM, "loadDssPrm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
+}
+
+static u32int loadEmuPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
+{
+  const u32int registerOffset = physicalAddress - EMU_PRM;
+  u32int value = 0;
+  switch (registerOffset)
+  {
+    case PM_PWSTST:
+    {
+      value = prm->prmPwststEmu;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+    {
+      printf("offset %x" EOL, registerOffset);
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
+  DEBUG(VP_OMAP_35XX_PRM, "loadEmuPrm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
+}
+
+static u32int loadGlobalRegPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
+{
+  const u32int registerOffset = physicalAddress - Global_Reg_PRM;
+  u32int value = 0;
+  switch (registerOffset)
+  {
+    case PRM_VC_SMPS_SA:
+    {
+      value = prm->prmVcSmpsSa;
+      break;
+    }
+    case PRM_VC_SMPS_VOL_RA:
+    {
+      value = prm->prmVcSmpsVolRa;
+      break;
+    }
+    case PRM_VC_SMPS_CMD_RA:
+    {
+      value = prm->prmVcSmpsCmdRa;
+      break;
+    }
+    case PRM_VC_CMD_VAL_0:
+    {
+      value = prm->prmVcCmdVal0;
+      break;
+    }
+    case PRM_VC_CMD_VAL_1:
+    {
+      value = prm->prmVcCmdVal1;
+      break;
+    }
+    case PRM_VC_CH_CONF:
+    {
+      value = prm->prmVcChConf;
+      break;
+    }
+    case PRM_VC_I2C_CFG:
+    {
+      value = prm->prmVcI2cCfg;
+      break;
+    }
+    case PRM_VC_BYPASS_VAL:
+    {
+      value = prm->prmVcBypassVal;
+      break;
+    }
+    case PRM_RSTCTRL:
+    {
+      value = prm->prmRstCtrl;
+      break;
+    }
+    case PRM_RSTTIME:
+    {
+      value = prm->prmRstTime;
+      break;
+    }
+    case PRM_RSTST:
+    {
+      value = prm->prmRstState;
+      break;
+    }
+    case PRM_VOLTCTRL:
+    {
+      value = prm->prmVoltCtrl;
+      break;
+    }
+    case PRM_SRAM_PCHARGE:
+    {
+      value = prm->prmSramPcharge;
+      break;
+    }
+    case PRM_CLKSRC_CTRL:
+    {
+      value = prm->prmClkSrcCtrl;
+      break;
+    }
+    case PRM_OBSR:
+    {
+      value = prm->prmObsr;
+      break;
+    }
+    case PRM_VOLTSETUP1:
+    {
+      value = prm->prmVoltSetup1;
+      break;
+    }
+    case PRM_VOLTOFFSET:
+    {
+      value = prm->prmVoltOffset;
+      break;
+    }
+    case PRM_CLKSETUP:
+    {
+      value = prm->prmClkSetup;
+      break;
+    }
+    case PRM_POLCTRL:
+    {
+      value = prm->prmPolCtrl;
+      break;
+    }
+    case PRM_VOLTSETUP2:
+    {
+      value = prm->prmVoltSetup2;
+      break;
+    }
+    default:
+    {
+      printf("offset %x" EOL, registerOffset);
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
+  DEBUG(VP_OMAP_35XX_PRM, "loadGlobalRegPrm reg %x value %#.8x" EOL, registerOffset, value);
+  return value;
+}
+
+static u32int loadIva2Prm(struct PowerAndResetManager *prm, u32int physicalAddress)
+{
+  const u32int registerOffset = physicalAddress - IVA2_PRM;
+  u32int value = 0;
+  switch (registerOffset)
+  {
+    case PM_WKDEP:
+    {
+      value = prm->prmWkdepIva2;
+      break;
+    }
+    case PM_PWSTCTRL:
+    {
+      value = prm->prmPwstctrlIva2;
+      break;
+    }
+    case PM_PWSTST:
+    {
+      value = prm->prmPwststIva2;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
     case RM_RSTCTRL:
     case RM_RSTST:
     case PM_PREPWSTST:
     case PRM_IRQSTATUS_IVA2:
     case PRM_IRQENABLE_IVA2:
     {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      printf("offset %x" EOL, registerOffset);
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
     default:
     {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      printf("offset %x" EOL, registerOffset);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
-  DEBUG(VP_OMAP_35XX_PRM, "loadIva2Prm reg %x value %.8x" EOL, reg, val);
-  return val;
+  DEBUG(VP_OMAP_35XX_PRM, "loadIva2Prm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
 }
 
-
-u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
+static u32int loadMpuPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
 {
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - OCP_System_Reg_PRM;
-
-  switch (reg)
-  {
-    case PRM_REVISION_OCP:
-    {
-      val = prMan->prmRevisionOcp;
-      break;
-    }
-    case PRM_SYSCONFIG_OCP:
-    {
-      val = prMan->prmSysConfigOcp;
-      break;
-    }
-    case PRM_IRQSTATUS_MPU_OCP:
-    {
-      val = prMan->prmIrqStatusMpuOcp;
-      break;
-    }
-    case PRM_IRQENABLE_MPU_OCP:
-    {
-      val = prMan->prmIrqEnableMpuOcp;
-      break;
-    }
-    default:
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-  } // switch ends
-  DEBUG(VP_OMAP_35XX_PRM, "loadOcpSystemPrm reg %x value %.8x" EOL, reg, val);
-  return val;
-}
-
-
-u32int loadMpuPrm(device *dev, u32int address, u32int phyAddr)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - MPU_PRM;
-  switch (reg)
+  const u32int registerOffset = physicalAddress - MPU_PRM;
+  u32int value = 0;
+  switch (registerOffset)
   {
     case PM_WKDEP:
     {
-      val = prMan->prmWkdepMpu;
+      value = prm->prmWkdepMpu;
       break;
     }
     case PM_PWSTCTRL:
     {
-      val = prMan->prmPwstctrlMpu;
+      value = prm->prmPwstctrlMpu;
       break;
     }
     case PM_PWSTST:
     {
-      val = prMan->prmPwststMpu;
+      value = prm->prmPwststMpu;
       break;
     }
+#ifdef CONFIG_GUEST_ANDROID
     case PM_UNKNOWN:
     {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
       break;
     }
+#endif
     case RM_RSTST:
     case PM_EVGENCTRL_MPU:
     case PM_EVGENONTIM_MPU:
     case PM_EVGENOFFTIM_MPU:
     case PM_PREPWSTST:
     {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      printf("offset %x" EOL, registerOffset);
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
     default:
     {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      printf("offset %x" EOL, registerOffset);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
-  DEBUG(VP_OMAP_35XX_PRM, "loadMpuPrm reg %x value %.8x" EOL, reg, val);
-  return val;
+  DEBUG(VP_OMAP_35XX_PRM, "loadMpuPrm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
 }
 
-
-u32int loadCorePrm(device *dev, u32int address, u32int phyAddr)
+static u32int loadNeonPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
 {
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - CORE_PRM;
-  switch (reg)
+  const u32int registerOffset = physicalAddress - NEON_PRM;
+  u32int value = 0;
+  switch (registerOffset)
   {
+    case PM_WKDEP:
+    {
+      value = prm->prmWkdepNeon;
+      break;
+    }
     case PM_PWSTCTRL:
     {
-      val = prMan->prmPwstctrlCore;
+      value = prm->prmPwstctrlNeon;
       break;
     }
     case PM_PWSTST:
     {
-      val = prMan->prmPwststCore;
+      value = prm->prmPwststNeon;
       break;
     }
-    case PM_WKDEP:
+#ifdef CONFIG_GUEST_ANDROID
     case PM_UNKNOWN:
     {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+    {
+      printf("offset %x" EOL, registerOffset);
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
+  DEBUG(VP_OMAP_35XX_PRM, "loadNeonPrm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
+}
+
+static u32int loadOcpSystemPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
+{
+  const u32int registerOffset = physicalAddress - OCP_System_Reg_PRM;
+  u32int value = 0;
+  switch (registerOffset)
+  {
+    case PRM_REVISION_OCP:
+    {
+      value = prm->prmRevisionOcp;
+      break;
+    }
+    case PRM_SYSCONFIG_OCP:
+    {
+      value = prm->prmSysConfigOcp;
+      break;
+    }
+    case PRM_IRQSTATUS_MPU_OCP:
+    {
+      value = prm->prmIrqStatusMpuOcp;
+      break;
+    }
+    case PRM_IRQENABLE_MPU_OCP:
+    {
+      value = prm->prmIrqEnableMpuOcp;
       break;
     }
     default:
     {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      printf("offset %x" EOL, registerOffset);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
-  DEBUG(VP_OMAP_35XX_PRM, "loadCorePrm reg %x value %.8x" EOL, reg, val);
-  return val;
+  DEBUG(VP_OMAP_35XX_PRM, "loadOcpSystemPrm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
 }
 
-
-u32int loadSgxPrm(device *dev, u32int address, u32int phyAddr)
+static u32int loadPerPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
 {
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - SGX_PRM;
-  switch (reg)
+  const u32int registerOffset = physicalAddress - PER_PRM;
+  u32int value = 0;
+  switch (registerOffset)
   {
     case PM_PWSTCTRL:
     {
-      val = prMan->prmPwstctrlSgx;
+      value = prm->prmPwstctrlPer;
       break;
     }
     case PM_PWSTST:
     {
-      val = prMan->prmPwststSgx;
+      value = prm->prmPwststPer;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+    {
+      printf("offset %x" EOL, registerOffset);
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
+  DEBUG(VP_OMAP_35XX_PRM, "loadPerPrm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
+}
+
+static u32int loadSgxPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
+{
+  const u32int registerOffset = physicalAddress - SGX_PRM;
+  u32int value = 0;
+  switch (registerOffset)
+  {
+    case PM_PWSTCTRL:
+    {
+      value = prm->prmPwstctrlSgx;
+      break;
+    }
+    case PM_PWSTST:
+    {
+      value = prm->prmPwststSgx;
       break;
     }
     case PM_WKDEP:
     {
-      val = prMan->prmWkdepSgx;
+      value = prm->prmWkdepSgx;
       break;
     }
+#ifdef CONFIG_GUEST_ANDROID
     case PM_UNKNOWN:
     {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
       break;
     }
+#endif
     default:
     {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      printf("offset %x" EOL, registerOffset);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
-  DEBUG(VP_OMAP_35XX_PRM, "loadSgxPrm reg %x value %.8x" EOL, reg, val);
-  return val;
+  DEBUG(VP_OMAP_35XX_PRM, "loadSgxPrm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
 }
 
-
-u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
+static u32int loadUsbhostPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
 {
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
+  const u32int registerOffset = physicalAddress - USBHOST_PRM;
+  u32int value = 0;
+  switch (registerOffset)
+  {
+    case PM_WKDEP:
+    {
+      value = prm->prmWkdepUsbhost;
+      break;
+    }
+    case PM_PWSTCTRL:
+    {
+      value = prm->prmPwstctrlUsbhost;
+      break;
+    }
+    case PM_PWSTST:
+    {
+      value = prm->prmPwststUsbhost;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+    {
+      printf("offset %x" EOL, registerOffset);
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
+  DEBUG(VP_OMAP_35XX_PRM, "loadUsbhostPrm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
+}
 
-  u32int val = 0;
-  u32int reg = phyAddr - WKUP_PRM;
-  switch (reg)
+static u32int loadWakeUpPrm(struct PowerAndResetManager *prm, u32int physicalAddress)
+{
+  const u32int registerOffset = physicalAddress - WKUP_PRM;
+  u32int value = 0;
+  switch (registerOffset)
   {
     case PM_WKEN:
     {
-      val = prMan->prmWkenWkup;
+      value = prm->prmWkenWkup;
       break;
     }
     case PM_MPUGRPSEL:
     {
-      val = prMan->prmMpugrpselWkup;
+      value = prm->prmMpugrpselWkup;
       break;
     }
     case PM_IVA2GRPSEL:
     {
-      val = prMan->prmIva2grpselWkup;
+      value = prm->prmIva2grpselWkup;
       break;
     }
     case PM_WKST:
     {
-      val = prMan->prmWkstWkup;
+      value = prm->prmWkstWkup;
       break;
     }
+#ifdef CONFIG_GUEST_ANDROID
     case PM_WKDEP:
     case PM_PWSTCTRL:
     case PM_PWSTST:
-    {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
-      break;
-    }
     case PM_UNKNOWN:
     {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
       break;
     }
+#endif
     default:
     {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
+      printf("offset %x" EOL, registerOffset);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
-  DEBUG(VP_OMAP_35XX_PRM, "loadWakeUpPrm reg %x value %.8x" EOL, reg, val);
-  return val;
+  DEBUG(VP_OMAP_35XX_PRM, "loadWakeUpPrm offset %x value %#.8x" EOL, registerOffset, value);
+  return value;
 }
 
-u32int loadDssPrm(device *dev, u32int address, u32int phyAddr)
+void storePrm(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - DSS_PRM;
-  switch (reg)
-  {
-    case PM_WKDEP:
-    {
-      val = prMan->prmWkdepDss;
-      break;
-    }
-    case PM_PWSTCTRL:
-    {
-      val = prMan->prmPwstctrlDss;
-      break;
-    }
-    case PM_PWSTST:
-    {
-      val = prMan->prmPwststDss;
-      break;
-    }
-    case PM_UNKNOWN:
-    {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
-      break;
-    }
-    default:
-    {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-    }
-  }
-  DEBUG(VP_OMAP_35XX_PRM, "loadDssPrm reg %x value %.8x" EOL, reg, val);
-  return val;
-}
-
-u32int loadCamPrm(device *dev, u32int address, u32int phyAddr)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - CAM_PRM;
-  switch (reg)
-  {
-    case PM_WKDEP:
-    {
-      val = prMan->prmWkdepCam;
-      break;
-    }
-    case PM_PWSTCTRL:
-    {
-      val = prMan->prmPwstctrlCam;
-      break;
-    }
-    case PM_PWSTST:
-    {
-      val = prMan->prmPwststCam;
-      break;
-    }
-    case PM_UNKNOWN:
-    {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
-      break;
-    }
-    default:
-    {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-    }
-  }
-  DEBUG(VP_OMAP_35XX_PRM, "loadCamPrm reg %x value %.8x" EOL, reg, val);
-  return val;
-}
-
-u32int loadPerPrm(device *dev, u32int address, u32int phyAddr)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - PER_PRM;
-  switch (reg)
-  {
-    case PM_PWSTCTRL:
-    {
-      val = prMan->prmPwstctrlPer;
-      break;
-    }
-    case PM_PWSTST:
-    {
-      val = prMan->prmPwststPer;
-      break;
-    }
-    case PM_WKDEP:
-    case PM_UNKNOWN:
-    {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
-      break;
-    }
-    default:
-    {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-    }
-  }
-  DEBUG(VP_OMAP_35XX_PRM, "loadPerPrm reg %x value %.8x" EOL, reg, val);
-  return val;
-}
-
-u32int loadEmuPrm(device *dev, u32int address, u32int phyAddr)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - EMU_PRM;
-  switch (reg)
-  {
-    case PM_PWSTST:
-    {
-      val = prMan->prmPwststEmu;
-      break;
-    }
-    case PM_WKDEP:
-    case PM_UNKNOWN:
-    {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
-      break;
-    }
-    default:
-    {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-    }
-  }
-  DEBUG(VP_OMAP_35XX_PRM, "loadEmuPrm reg %x value %.8x" EOL, reg, val);
-  return val;
-}
-
-u32int loadNeonPrm(device *dev, u32int address, u32int phyAddr)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - NEON_PRM;
-  switch (reg)
-  {
-    case PM_WKDEP:
-    {
-      val = prMan->prmWkdepNeon;
-      break;
-    }
-    case PM_PWSTCTRL:
-    {
-      val = prMan->prmPwstctrlNeon;
-      break;
-    }
-    case PM_PWSTST:
-    {
-      val = prMan->prmPwststNeon;
-      break;
-    }
-    case PM_UNKNOWN:
-    {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
-      break;
-    }
-    default:
-    {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-    }
-  }
-  DEBUG(VP_OMAP_35XX_PRM, "loadNeonPrm reg %x value %.8x" EOL, reg, val);
-  return val;
-}
-
-u32int loadUsbhostPrm(device *dev, u32int address, u32int phyAddr)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int val = 0;
-  u32int reg = phyAddr - USBHOST_PRM;
-  switch (reg)
-  {
-    case PM_WKDEP:
-    {
-      val = prMan->prmWkdepUsbhost;
-      break;
-    }
-    case PM_PWSTCTRL:
-    {
-      val = prMan->prmPwstctrlUsbhost;
-      break;
-    }
-    case PM_PWSTST:
-    {
-      val = prMan->prmPwststUsbhost;
-      break;
-    }
-    case PM_UNKNOWN:
-    {
-      printf("%s: loading invalid register." EOL, __func__);
-      val = 0;
-      break;
-    }
-    default:
-    {
-      printf("reg %#.8x addr %#.8x phy %#.8x" EOL, reg, address, phyAddr);
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-    }
-  }
-  DEBUG(VP_OMAP_35XX_PRM, "loadUsbhostPrm reg %x value %.8x" EOL, reg, val);
-  return val;
-}
-
-/*************************************************************************
- *                           Store Functions                             *
- *************************************************************************/
-void storePrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
-{
-  DEBUG(VP_OMAP_35XX_PRM, "%s store to pAddr: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL,
+  DEBUG(VP_OMAP_35XX_PRM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %x, val %#.8x" EOL,
       dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
-  if (size != WORD)
-  {
-    // only word access allowed in these modules
-    DIE_NOW(NULL, "invalid access size");
-  }
+  ASSERT(size == WORD, ERROR_BAD_ACCESS_SIZE);
 
-  u32int base = phyAddr & 0xFFFFFF00;
+  struct PowerAndResetManager *const prm = context->vm.prMan;
+  const u32int base = phyAddr & 0xFFFFFF00;
   switch (base)
   {
     case Clock_Control_Reg_PRM:
     {
-      storeClockControlPrm(dev, virtAddr, phyAddr, value);
-      break;
-    }
-    case Global_Reg_PRM:
-    {
-      storeGlobalRegPrm(dev, virtAddr, phyAddr, value);
+      storeClockControlPrm(prm, phyAddr, value);
       break;
     }
     case IVA2_PRM:
     {
-      storeIva2Prm(dev, virtAddr, phyAddr, value);
+      storeIva2Prm(prm, phyAddr, value);
       break;
     }
     case OCP_System_Reg_PRM:
     {
-      storeOcpSystemPrm(dev, virtAddr, phyAddr, value);
+      storeOcpSystemPrm(prm, phyAddr, value);
       break;
     }
     case MPU_PRM:
     {
-      storeMpuPrm(dev, virtAddr, phyAddr, value);
+      storeMpuPrm(prm, phyAddr, value);
       break;
     }
     case CORE_PRM:
     {
-      storeCorePrm(dev, virtAddr, phyAddr, value);
+      storeCorePrm(prm, phyAddr, value);
       break;
     }
     case SGX_PRM:
     {
-      storeSgxPrm(dev, virtAddr, phyAddr, value);
+      storeSgxPrm(prm, phyAddr, value);
       break;
     }
     case WKUP_PRM:
     {
-      storeWakeUpPrm(dev, virtAddr, phyAddr, value);
+      storeWakeUpPrm(prm, phyAddr, value);
       break;
     }
     case DSS_PRM:
     {
-      storeDssPrm(dev, virtAddr, phyAddr, value);
+      storeDssPrm(prm, phyAddr, value);
       break;
     }
     case CAM_PRM:
     {
-      storeCamPrm(dev, virtAddr, phyAddr, value);
+      storeCamPrm(prm, phyAddr, value);
       break;
     }
     case PER_PRM:
     {
-      storePerPrm(dev, virtAddr, phyAddr, value);
+      storePerPrm(prm, phyAddr, value);
       break;
     }
     case EMU_PRM:
     {
-      storeEmuPrm(dev, virtAddr, phyAddr, value);
+      storeEmuPrm(prm, phyAddr, value);
       break;
     }
     case NEON_PRM:
     {
-      storeNeonPrm(dev, virtAddr, phyAddr, value);
+      storeNeonPrm(prm, phyAddr, value);
       break;
     }
     case USBHOST_PRM:
     {
-      storeUsbhostPrm(dev, virtAddr, phyAddr, value);
+      storeUsbhostPrm(prm, phyAddr, value);
       break;
     }
+    case Global_Reg_PRM:
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     default:
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
 
-void storeClockControlPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+static void storeCamPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
 {
-  u32int reg = phyAddr - Clock_Control_Reg_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeClockControlPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
-  switch (reg)
-  {
-    case PM_WKDEP:
-    case PM_UNKNOWN:
-    {
-      printf("%s: storing to invalid register." EOL, __func__);
-      break;
-    }
-    default:
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-  }
-}
-
-void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int value)
-{
-  printf("Store to: %s at address %.8x value %.8x" EOL, dev->deviceName, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-}
-
-void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int reg = phyAddr - IVA2_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeIva2Prm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
-  switch (reg)
+  const u32int registerOffset = physicalAddress - CAM_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeCamPrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
   {
     case PM_WKDEP:
     {
-      prMan->prmWkdepIva2 = value;
+      prm->prmWkdepCam = value;
       break;
     }
     case PM_PWSTCTRL:
     {
-      prMan->prmPwstctrlIva2 = value;
+      prm->prmPwstctrlCam = value;
       break;
     }
+#ifdef CONFIG_GUEST_ANDROID
     case PM_UNKNOWN:
     {
-      printf("%s: storing to invalid register." EOL, __func__);
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
       break;
     }
+#endif
     default:
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
 
-void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+static void storeClockControlPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
 {
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
+  const u32int registerOffset = physicalAddress - Clock_Control_Reg_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeClockControlPrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
+  {
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
+}
 
-  u32int reg = phyAddr - OCP_System_Reg_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeOcpSystemPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
-  switch (reg)
+static void storeCorePrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
+{
+  const u32int registerOffset = physicalAddress - CORE_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeCorePrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
+  {
+    case PM_PWSTCTRL:
+    {
+      prm->prmPwstctrlCore = value;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
+}
+
+static void storeDssPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
+{
+  const u32int registerOffset = physicalAddress - DSS_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeDssPrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
+  {
+    case PM_WKDEP:
+    {
+      prm->prmWkdepDss = value;
+      break;
+    }
+    case PM_PWSTCTRL:
+    {
+      prm->prmPwstctrlDss = value;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
+}
+
+static void storeEmuPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
+{
+  const u32int registerOffset = physicalAddress - EMU_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeEmuPrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
+  {
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_WKDEP:
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+  }
+}
+
+static void storeIva2Prm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
+{
+  const u32int registerOffset = physicalAddress - IVA2_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeIva2Prm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
+  {
+    case PM_WKDEP:
+    {
+      prm->prmWkdepIva2 = value;
+      break;
+    }
+    case PM_PWSTCTRL:
+    {
+      prm->prmPwstctrlIva2 = value;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
+}
+
+static void storeMpuPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
+{
+  const u32int registerOffset = physicalAddress - MPU_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeMpuPrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
+  {
+    case PM_WKDEP:
+    {
+      prm->prmWkdepMpu = value;
+      break;
+    }
+    case PM_PWSTCTRL:
+    {
+      prm->prmPwstctrlMpu = value;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
+}
+
+static void storeNeonPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
+{
+  const u32int registerOffset = physicalAddress - NEON_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeNeonPrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
+  {
+    case PM_WKDEP:
+    {
+      prm->prmWkdepNeon = value;
+      break;
+    }
+    case PM_PWSTCTRL:
+    {
+      prm->prmPwstctrlNeon = value;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
+    default:
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+  }
+}
+
+static void storeOcpSystemPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
+{
+  const u32int registerOffset = physicalAddress - OCP_System_Reg_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeOcpSystemPrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
   {
     case PRM_REVISION_OCP:
     {
@@ -1007,7 +1170,7 @@ void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int valu
     }
     case PRM_SYSCONFIG_OCP:
     {
-      prMan->prmSysConfigOcp = value & PRM_SYSCONFIG_OCP_AUTOIDLE; // all other bits are reserved
+      prm->prmSysConfigOcp = value & PRM_SYSCONFIG_OCP_AUTOIDLE; // all other bits are reserved
       break;
     }
     case PRM_IRQSTATUS_MPU_OCP:
@@ -1025,270 +1188,101 @@ void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int valu
   } // switch ends
 }
 
-void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+static void storePerPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
 {
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int reg = phyAddr - MPU_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeMpuPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
-  switch (reg)
+  const u32int registerOffset = physicalAddress - PER_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storePerPrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
   {
-    case PM_WKDEP:
-    {
-      prMan->prmWkdepMpu = value;
-      break;
-    }
     case PM_PWSTCTRL:
     {
-      prMan->prmPwstctrlMpu = value;
+      prm->prmPwstctrlPer = value;
       break;
     }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_WKDEP:
     case PM_UNKNOWN:
     {
-      printf("%s: storing to invalid register." EOL, __func__);
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
       break;
     }
+#endif
     default:
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
 
-void storeCorePrm(device * dev, u32int address, u32int phyAddr, u32int value)
+static void storeSgxPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
 {
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int reg = phyAddr - CORE_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeCorePrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
-  switch (reg)
+  const u32int registerOffset = physicalAddress - SGX_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeSgxPrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
   {
     case PM_PWSTCTRL:
     {
-      prMan->prmPwstctrlCore = value;
+      prm->prmPwstctrlSgx = value;
       break;
     }
     case PM_WKDEP:
-    case PM_UNKNOWN:
     {
-      printf("%s: storing to invalid register." EOL, __func__);
+      prm->prmWkdepSgx = value;
       break;
     }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_UNKNOWN:
+    {
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
+      break;
+    }
+#endif
     default:
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
 
-void storeSgxPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+static void storeUsbhostPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
 {
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int reg = phyAddr - SGX_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeSgxPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
-  switch (reg)
+  const u32int registerOffset = physicalAddress - USBHOST_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeUsbhostPrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
   {
-    case PM_PWSTCTRL:
-    {
-      prMan->prmPwstctrlSgx = value;
-      break;
-    }
     case PM_WKDEP:
     {
-      prMan->prmWkdepSgx = value;
+      prm->prmWkdepUsbhost = value;
       break;
     }
+    case PM_PWSTCTRL:
+    {
+      prm->prmPwstctrlUsbhost = value;
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
     case PM_UNKNOWN:
     {
-      printf("%s: storing to invalid register." EOL, __func__);
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
       break;
     }
+#endif
     default:
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 }
 
-void storeWakeUpPrm(device * dev, u32int address, u32int phyAddr, u32int value)
+static void storeWakeUpPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
 {
-  u32int reg = phyAddr - WKUP_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeWakeUpPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
-  switch (reg)
+  const u32int registerOffset = physicalAddress - WKUP_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "storeWakeUpPrm: offset %x value %#.8x" EOL, registerOffset, value);
+  switch (registerOffset)
   {
+#ifdef CONFIG_GUEST_ANDROID
     case PM_WKDEP:
     case PM_PWSTCTRL:
     case PM_UNKNOWN:
     {
-      printf("%s: storing to invalid register." EOL, __func__);
+      DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
       break;
     }
-    default:
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-  }
-}
-
-void storeDssPrm(device * dev, u32int address, u32int phyAddr, u32int value)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int reg = phyAddr - DSS_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeDssPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
-  switch (reg)
-  {
-    case PM_WKDEP:
-    {
-      prMan->prmWkdepDss = value;
-      break;
-    }
-    case PM_PWSTCTRL:
-    {
-      prMan->prmPwstctrlDss = value;
-      break;
-    }
-    case PM_UNKNOWN:
-    {
-      printf("%s: storing to invalid register." EOL, __func__);
-      break;
-    }
-    default:
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-  }
-}
-
-void storeCamPrm(device * dev, u32int address, u32int phyAddr, u32int value)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int reg = phyAddr - CAM_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeCamPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
-  switch (reg)
-  {
-    case PM_WKDEP:
-    {
-      prMan->prmWkdepCam = value;
-      break;
-    }
-    case PM_PWSTCTRL:
-    {
-      prMan->prmPwstctrlCam = value;
-      break;
-    }
-    case PM_UNKNOWN:
-    {
-      printf("%s: storing to invalid register." EOL, __func__);
-      break;
-    }
-    default:
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-  }
-}
-
-void storePerPrm(device * dev, u32int address, u32int phyAddr, u32int value)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int reg = phyAddr - PER_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storePerPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-        value);
-  switch (reg)
-  {
-    case PM_PWSTCTRL:
-    {
-      prMan->prmPwstctrlPer = value;
-      break;
-    }
-    case PM_WKDEP:
-    case PM_UNKNOWN:
-    {
-      printf("%s: storing to invalid register." EOL, __func__);
-      break;
-    }
-    default:
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-  }
-}
-
-void storeEmuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
-{
-  u32int reg = phyAddr - EMU_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeEmuPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-        value);
-  switch (reg)
-  {
-    case PM_WKDEP:
-    case PM_UNKNOWN:
-    {
-      printf("%s: storing to invalid register." EOL, __func__);
-      break;
-    }
-    default:
-      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-  }
-}
-
-void storeNeonPrm(device * dev, u32int address, u32int phyAddr, u32int value)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int reg = phyAddr - NEON_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeNeonPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
-  switch (reg)
-  {
-    case PM_WKDEP:
-    {
-      prMan->prmWkdepNeon = value;
-      break;
-    }
-    case PM_PWSTCTRL:
-    {
-      prMan->prmPwstctrlNeon = value;
-      break;
-    }
-    case PM_UNKNOWN:
-    {
-      printf("%s: storing to invalid register." EOL, __func__);
-      break;
-    }
-    default:
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
-  }
-}
-
-void storeUsbhostPrm(device * dev, u32int address, u32int phyAddr, u32int value)
-{
-  GCONTXT* context = getGuestContext();
-  struct PowerAndResetManager* prMan = context->vm.prMan;
-
-  u32int reg = phyAddr - USBHOST_PRM;
-  DEBUG(VP_OMAP_35XX_PRM, "%s: storeUsbhostPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
-      value);
-  switch (reg)
-  {
-    case PM_WKDEP:
-    {
-      prMan->prmWkdepUsbhost = value;
-      break;
-    }
-    case PM_PWSTCTRL:
-    {
-      prMan->prmPwstctrlUsbhost = value;
-      break;
-    }
-    case PM_UNKNOWN:
-    {
-      printf("%s: storing to invalid register." EOL, __func__);
-      break;
-    }
+#endif
     default:
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }

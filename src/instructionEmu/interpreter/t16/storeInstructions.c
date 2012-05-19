@@ -19,7 +19,7 @@ u32int t16StrInstruction(GCONTXT *context, u32int instruction)
   DEBUG(INTERPRETER_T16_STORE, "t16StrInstruction: regsrc=%x, regdst=%x, address=%#.8x, value="
       "%#.8x" EOL, regSrc, regDst, offsetAddress, valueToStore);
 
-  vmStore(WORD, offsetAddress, valueToStore);
+  vmStore(context, WORD, offsetAddress, valueToStore);
 
   return context->R15 + T16_INSTRUCTION_SIZE;
 }
@@ -37,7 +37,7 @@ u32int t16StrSpInstruction(GCONTXT *context, u32int instruction)
   DEBUG(INTERPRETER_T16_STORE, "t16StrSpInstruction: regsrc=%x, imm32=%#.8x, address=%#.8x, value="
       "%#.8x" EOL, regSrc, imm32, offsetAddress, valueToStore);
 
-  vmStore(WORD, offsetAddress, valueToStore);
+  vmStore(context, WORD, offsetAddress, valueToStore);
 
   return context->R15 + T16_INSTRUCTION_SIZE;
 }
@@ -66,7 +66,7 @@ u32int t16StrbInstruction(GCONTXT * context, u32int instruction)
   u32int offsetAddress = baseAddress + imm32;
   u32int valueToStore = loadGuestGPR(regSrc, context);
 
-  vmStore(BYTE, offsetAddress, valueToStore & 0xFF);
+  vmStore(context, BYTE, offsetAddress, valueToStore & 0xFF);
 
   return context->R15 + T16_INSTRUCTION_SIZE;
 }
@@ -96,7 +96,7 @@ u32int t16StrhInstruction(GCONTXT *context, u32int instruction)
   u32int offsetAddress = baseAddress + offset;
   u32int valueToStore = loadGuestGPR(regSrc, context);
 
-  vmStore(HALFWORD, offsetAddress, valueToStore & 0xFFFF);
+  vmStore(context, HALFWORD, offsetAddress, valueToStore & 0xFFFF);
 
   return context->R15 + T16_INSTRUCTION_SIZE;
 }
@@ -118,7 +118,7 @@ u32int t16PushInstruction(GCONTXT *context, u32int instruction)
   {
     valueLoaded = loadGuestGPR(GPR_LR, context);
     clearTranslationCacheByAddress(&context->translationCache, address);
-    vmStore(WORD, address, valueLoaded);
+    vmStore(context, WORD, address, valueLoaded);
     address -= 4;
   }
 
@@ -132,7 +132,7 @@ u32int t16PushInstruction(GCONTXT *context, u32int instruction)
       valueLoaded = loadGuestGPR(i, context);
       // emulating store. Validate cache if needed
       clearTranslationCacheByAddress(&context->translationCache, address);
-      vmStore(WORD, address, valueLoaded);
+      vmStore(context, WORD, address, valueLoaded);
       address -= 4;
     }
   } // for ends

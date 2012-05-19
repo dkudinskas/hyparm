@@ -96,14 +96,14 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
   ASSERT((address & 0x3) == 0, "Rd [Rn, Rm/#imm] unaligned address!");
 
   // P = 0 and W == 1 then STR as if user mode
-  if (preOrPost == 0 && writeBack != 0 && shouldDataAbort(FALSE, TRUE, address))
+  if (preOrPost == 0 && writeBack != 0 && shouldDataAbort(context, FALSE, TRUE, address))
   {
     return getRealPC(context);
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
   valueToStore = (regSrc == GPR_PC) ? (valueToStore + 8) : valueToStore;
-  vmStore(WORD, address, valueToStore);
+  vmStore(context, WORD, address, valueToStore);
 
   // wback = (P = 0) or (W = 1)
   bool wback = !preOrPost || writeBack;
@@ -198,13 +198,13 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
   }
 
   // P = 0 and W == 1 then STR as if user mode -- only continue if usr can write
-  if (!preOrPost && writeBack && shouldDataAbort(FALSE, TRUE, address))
+  if (!preOrPost && writeBack && shouldDataAbort(context, FALSE, TRUE, address))
   {
     return getRealPC(context);
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
-  vmStore(BYTE, address, valueToStore & 0xFF);
+  vmStore(context, BYTE, address, valueToStore & 0xFF);
 
   // wback = (P = 0) or (W = 1)
   bool wback = !preOrPost || writeBack;
@@ -314,7 +314,7 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
 
   ASSERT((address & 0x1) == 0, "Rd [Rn, Rm/#imm] unaligned address!");
 
-  vmStore(HALFWORD, address, valueToStore & 0xFFFF);
+  vmStore(context, HALFWORD, address, valueToStore & 0xFFFF);
 
   // wback = (P = 0) or (W = 1)
   bool wback = !preOrPost || writeBack;
@@ -423,8 +423,8 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
   DEBUG(INTERPRETER_ARM_STORE, "armStrdInstruction: store address = %#.8x, values %#.8x %#.8x" EOL,
       address, valueToStore, valueToStore2);
 
-  vmStore(WORD, address, valueToStore);
-  vmStore(WORD, address+4, valueToStore2);
+  vmStore(context, WORD, address, valueToStore);
+  vmStore(context, WORD, address+4, valueToStore2);
 
   if (wback)
   {
@@ -512,7 +512,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
       // emulating store. Validate cache if needed
       clearTranslationCacheByAddress(&context->translationCache, address);
       // *(address)= R[i];
-      vmStore(WORD, address, valueLoaded);
+      vmStore(context, WORD, address, valueLoaded);
       address = address + 4;
     }
   } // for ends
@@ -522,7 +522,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
     // emulating store. Validate cache if needed
     clearTranslationCacheByAddress(&context->translationCache, address);
     // *(address)= PC+8 - architectural feature due to pipeline..
-    vmStore(WORD, address, (loadGuestGPR(15, context) + 8));
+    vmStore(context, WORD, address, (loadGuestGPR(15, context) + 8));
   }
 
   // if writeback then baseReg = baseReg - 4 * number of registers to store;

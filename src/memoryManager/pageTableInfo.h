@@ -18,11 +18,13 @@ struct PageTableMetaData
 };
 typedef struct PageTableMetaData ptInfo;
 
+typedef struct guestContext GCONTXT;
 
-void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u32int mapped, bool host);
-ptInfo* getPageTableInfo(pageTableEntry* firstLevelEntry);
-void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host);
-void dumpPageTableInfo(void) __cold__;
-void invalidatePageTableInfo(void);
+
+void addPageTableInfo(GCONTXT *context, pageTableEntry* entry, u32int virtual, u32int physical, u32int mapped, bool host);
+ptInfo* getPageTableInfo(GCONTXT *context, pageTableEntry* firstLevelEntry);
+void removePageTableInfo(GCONTXT *context, pageTableEntry* firstLevelEntry, bool host);
+void dumpPageTableInfo(GCONTXT *context) __cold__;
+void invalidatePageTableInfo(GCONTXT *context);
 
 #endif

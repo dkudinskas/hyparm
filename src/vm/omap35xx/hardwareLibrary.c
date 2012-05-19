@@ -29,12 +29,13 @@
 #include "vm/omap35xx/wdtimer.h"
 #endif
 
+
 static bool attachDevice(device *parent, device *child) __cold__;
 static device *createDevice(const char *devName, bool isBus, u32int addrStart, u32int addrEnd,
                             device *parent, LOAD_FUNCTION ldFn, STORE_FUNCTION stFn) __cold__;
 static inline bool isAddressInDevice(u32int address, device *dev);
-static u32int loadGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int physAddr);
-static void storeGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int physAddr, u32int value);
+static u32int loadGeneric(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int physAddr);
+static void storeGeneric(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int physAddr, u32int value);
 
 
 static bool attachDevice(device *parent, device *child)
@@ -186,7 +187,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto pmModuleError;
   }
-  initProtectionMechanism();
+  initProtectionMechanism(&context->vm);
 
   // L3INT: SDRAM Memory Scheduler
   device *smsModule = createDevice("L3_SMS", FALSE,
@@ -196,7 +197,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto smsModuleError;
   }
-  initSms();
+  initSms(&context->vm);
 
   // L3INT: SDRAM Controller subsystem
   device *sdrcModule = createDevice("L3_SDRC", FALSE,
@@ -206,7 +207,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto sdrcModuleError;
   }
-  initSdrc();
+  initSdrc(&context->vm);
 #endif /* CONFIG_GUEST_ANDROID */
 
   // Q1: LEVEL4 INTERCONNECT (L4INT, parent Q1)
@@ -282,7 +283,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto mmc1Error;
   }
-  initMmc(1);
+  initMmc(&context->vm, 1);
 
   // L4INT_CORE: MMC/SD/SDIO2
   device *mmc2 = createDevice("SD_MMC2", FALSE, SD_MMC2, (u32int) (SD_MMC2 - 1 + SD_MMC2_SIZE), l4IntCore,
@@ -291,7 +292,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto mmc2Error;
   }
-  initMmc(2);
+  initMmc(&context->vm, 2);
 
   // L4INT_CORE: MMC/SD/SDIO3
   device *mmc3 = createDevice("SD_MMC1", FALSE, SD_MMC3, (u32int) (SD_MMC3 - 1 + SD_MMC3_SIZE), l4IntCore,
@@ -300,7 +301,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto mmc3Error;
   }
-  initMmc(3);
+  initMmc(&context->vm, 3);
 #endif /* CONFIG_GUEST_ANDROID */
 
   // L4INT_CORE: interrupt controller
@@ -331,7 +332,6 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto dmTimerError;
   }
-  initDmTimer();
 #endif /* CONFIG_GUEST_ANDROID */
 
   // L4_CORE_WAKEUP: power and reset manager
@@ -351,7 +351,6 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto ctrlModIDError;
   }
-  initControlModule();
 
   // L4_CORE_WAKEUP: general purpose I/O 1
   device *gpio1 = createDevice("GPIO1", FALSE, GPIO1, (u32int) (GPIO1 - 1 + GPIO1_SIZE),
@@ -370,7 +369,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto wdtimer2Error;
   }
-  initWDTimer2();
+  initWDTimer2(&context->vm);
 #else
   device *wdtimer2 = createDevice("WDTIMER2", FALSE, WDTIMER2, (u32int)(WDTIMER2 - 1 + WDTIMER2_SIZE),
                                   l4CoreWakeupInt, &loadGeneric, &storeGeneric);
@@ -594,7 +593,7 @@ static inline bool isAddressInDevice(u32int address, device *dev)
 /**************************************
  * generic LOAD/STORE functions       *
  **************************************/
-static u32int loadGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+static u32int loadGeneric(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   if (dev->isBus)
   {
@@ -605,7 +604,7 @@ static u32int loadGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int
       if (isAddressInDevice(phyAddr, dev->attachedDevices[index]))
       {
         // hit the address range!
-        return dev->attachedDevices[index]->loadFunction(dev->attachedDevices[index], size, virtAddr, phyAddr);
+        return dev->attachedDevices[index]->loadFunction(context, dev->attachedDevices[index], size, virtAddr, phyAddr);
       }
     }
     printf("Load from %s address %.8x physical %.8x" EOL, dev->deviceName, virtAddr, phyAddr);
@@ -621,7 +620,7 @@ static u32int loadGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int
   return 0;
 }
 
-static void storeGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+static void storeGeneric(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   if (dev->isBus)
   {
@@ -632,7 +631,7 @@ static void storeGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int 
       if (isAddressInDevice(phyAddr, dev->attachedDevices[index]))
       {
         // hit the address range!
-        dev->attachedDevices[index]->storeFunction(dev->attachedDevices[index], size, virtAddr, phyAddr, value);
+        dev->attachedDevices[index]->storeFunction(context, dev->attachedDevices[index], size, virtAddr, phyAddr, value);
         return;
       }
     }
@@ -648,16 +647,14 @@ static void storeGeneric(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int 
   }
 }
 
-u32int vmLoad(ACCESS_SIZE size, u32int virtAddr)
+u32int vmLoad(GCONTXT *gc, ACCESS_SIZE size, u32int virtAddr)
 {
-  GCONTXT *gc = getGuestContext();
-  u32int physAddr = getPhysicalAddress(gc->virtAddrEnabled ? gc->pageTables->shadowActive : gc->pageTables->hypervisor, virtAddr);
-  return gc->hardwareLibrary->loadFunction(gc->hardwareLibrary, size, virtAddr, physAddr);
+  u32int physAddr = getPhysicalAddress(gc, gc->virtAddrEnabled ? gc->pageTables->shadowActive : gc->pageTables->hypervisor, virtAddr);
+  return gc->hardwareLibrary->loadFunction(gc, gc->hardwareLibrary, size, virtAddr, physAddr);
 }
 
-void vmStore(ACCESS_SIZE size, u32int virtAddr, u32int value)
+void vmStore(GCONTXT *gc, ACCESS_SIZE size, u32int virtAddr, u32int value)
 {
-  GCONTXT *gc = getGuestContext();
-  u32int physAddr = getPhysicalAddress(gc->virtAddrEnabled ? gc->pageTables->shadowActive : gc->pageTables->hypervisor, virtAddr);
-  gc->hardwareLibrary->storeFunction(gc->hardwareLibrary, size, virtAddr, physAddr, value);
+  u32int physAddr = getPhysicalAddress(gc, gc->virtAddrEnabled ? gc->pageTables->shadowActive : gc->pageTables->hypervisor, virtAddr);
+  gc->hardwareLibrary->storeFunction(gc, gc->hardwareLibrary, size, virtAddr, physAddr, value);
 }

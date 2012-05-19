@@ -7,7 +7,27 @@
 #include "memoryManager/memoryConstants.h" // for BEAGLE_RAM_START/END
 
 
-u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+#define UNDEFINED_EXCEPTION_INSTR    0x4020FFC8 // Undefined PC = [0x4020FFE4]
+#define SWI_EXCEPTION_INSTR          0x4020FFCC // SWI PC = [0x4020FFE8]
+#define PREFETCH_ABT_EXCEPTION_INSTR 0x4020FFD0 // Pre-fetch abort PC = [0x4020FFEC]
+#define DATA_ABT_EXCEPTION_INSTR     0x4020FFD4 // Data abort PC = [0x4020FFF0]
+#define UNUSED_EXCEPTION_INSTR       0x4020FFD8 // Unused PC = [0x4020FFF4]
+#define IRQ_EXCEPTION_INSTR          0x4020FFDC // IRQ PC = [0x4020FFF8]
+#define FIQ_EXCEPTION_INSTR          0x4020FFE0 // FIQ PC = [0x4020FFFC]
+
+#define UNDEFINED_EXCEPTION_ADDR      0x4020FFE4
+#define SWI_EXCEPTION_ADDR            0x4020FFE8
+#define PREFETCH_ABT_EXCEPTION_ADDR   0x4020FFEC
+#define DATA_ABT_EXCEPTION_ADDR       0x4020FFF0
+#define UNUSED_EXCEPTION_ADDR         0x4020FFF4
+#define IRQ_EXCEPTION_ADDR            0x4020FFF8
+#define FIQ_EXCEPTION_ADDR            0x4020FFFC
+
+
+static void registerGuestHandler(GCONTXT *gc, u32int address, u32int value);
+
+
+u32int loadSramInternal(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   u32int val = 0;
@@ -44,7 +64,7 @@ u32int loadSramInternal(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int 
   return val;
 }
 
-void storeSramInternal(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeSramInternal(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DEBUG(VP_OMAP_35XX_SRAM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
       dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
@@ -54,7 +74,7 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int p
     case WORD:
       if ( (phyAddr >= 0x4020FFC8) && (phyAddr <= 0x4020FFFC) )
       {
-        registerGuestHandler(phyAddr, value);
+        registerGuestHandler(context, phyAddr, value);
       }
       else
       {
@@ -95,9 +115,8 @@ void storeSramInternal(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int p
   }
 }
 
-void registerGuestHandler(u32int address, u32int value)
+static void registerGuestHandler(GCONTXT *gc, u32int address, u32int value)
 {
-  GCONTXT* gc = getGuestContext();
   DEBUG(VP_OMAP_35XX_SRAM, "INTERNAL SRAM: guest registering ");
   switch (address)
   {

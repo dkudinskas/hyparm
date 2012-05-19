@@ -2,7 +2,7 @@
 #define __VM__OMAP35XX__OMAP35XX_H__
 
 
-typedef struct EmumulatedVirtualMachine
+typedef struct EmulatedVirtualMachine
 {
   struct ClockManager* clockMan;
   struct Gpio* gpio[6];
@@ -15,6 +15,17 @@ typedef struct EmumulatedVirtualMachine
   struct SystemControlModule* sysCtrlModule;
   struct Uart* uart[3];
   struct SynchronizedTimer32k* timer32k;
+#ifdef CONFIG_GUEST_ANDROID
+  struct Mmc *mmc[3];
+  struct PmRt     *pmrt;
+  struct PmGpmc   *pmgpmc;
+  struct PmOcmRam *pmocmram;
+  struct PmOcmRom *pmocmrom;
+  struct PmIva    *pmiva;
+  struct Sdrc *sdrc;
+  struct Sms *sms;
+  struct WatchdogTimer *wdtimer2;
+#endif
 } virtualMachine;
 
 #endif

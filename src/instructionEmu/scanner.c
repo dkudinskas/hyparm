@@ -256,7 +256,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
   mmuInvIcacheByMVAtoPOU((u32int)end);
 #warning Investigate: MMAN says its mmuCleanDcacheByMVAtoPOC on the line below
   mmuCleanDCacheByMVAtoPOU((u32int)end);
-  guestWriteProtect((u32int)start, (u32int)end);
+  guestWriteProtect(context, (u32int)start, (u32int)end);
 }
 
 #ifdef CONFIG_THUMB2
@@ -444,7 +444,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
   /*
    * FIXME: is end still correct for the case endIs16Bit == FALSE?
    */
-  guestWriteProtect((u32int)start, (u32int)end);
+  guestWriteProtect(context, (u32int)start, (u32int)end);
 }
 
 #endif /* CONFIG_THUMB2 */
@@ -543,7 +543,7 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
   /*
    * Protect guest against self-modification.
    */
-  guestWriteProtect((u32int)startAddress, (u32int)instruction);
+  guestWriteProtect(context, (u32int)startAddress, (u32int)instruction);
 }
 
 /*

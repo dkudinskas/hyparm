@@ -149,10 +149,8 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
  * we intercept the guest setting Translation Table Base Register
  * this address is PHYSICAL!
  **/
-void guestSetPageTableBase(u32int ttbr)
+void guestSetPageTableBase(GCONTXT *gc, u32int ttbr)
 {
-  GCONTXT *gc = getGuestContext();
-
   DEBUG(MM_ADDRESSING, "guestSetPageTableBase: ttbr %#.8x @ pc %#.8x" EOL, ttbr, gc->R15);
 
   gc->pageTables->guestPhysical = (simpleEntry *)ttbr;
@@ -168,11 +166,9 @@ void guestSetPageTableBase(u32int ttbr)
  * guest is turning on the MMU. this means, virtual memory is being turned on!
  * lots of work to do!
  **/
-void guestEnableMMU()
+void guestEnableMMU(GCONTXT *context)
 {
   DEBUG(MM_ADDRESSING, "guestEnableMMU: guest turning on virtual memory" EOL);
-
-  GCONTXT *context = getGuestContext();
 
   if (context->pageTables->guestPhysical == 0)
   {
@@ -193,26 +189,23 @@ void guestEnableMMU()
  * guest is turning OFF the MMU.
  * what?
  **/
-void guestDisableMMU()
+void guestDisableMMU(GCONTXT *context)
 {
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
-void guestSetContextID(u32int contextid)
+void guestSetContextID(GCONTXT *context, u32int contextid)
 {
   DEBUG(MM_ADDRESSING, "guestSetContextID: value %x" EOL, contextid);
 
-  GCONTXT* context = getGuestContext();
   context->pageTables->contextID = (contextid & 0xFF);
 }
 
 /**
  * switching guest addressing from privileged to user mode
  **/
-void privToUserAddressing()
+void privToUserAddressing(GCONTXT *context)
 {
-  GCONTXT *context = getGuestContext();
-
   DEBUG(MM_ADDRESSING, "privToUserAddressing: set shadowActive to %p" EOL, context->pageTables->shadowUser);
 
   // invalidate the whole block cache
@@ -226,7 +219,7 @@ void privToUserAddressing()
     simpleEntry* entry = getEntryFirst(context->pageTables->shadowActive, (u32int)context->pageTables->guestVirtual);
     if (entry->type == FAULT)
     {
-      bool mapped = shadowMap((u32int)context->pageTables->guestVirtual);
+      bool mapped = shadowMap(context, (u32int)context->pageTables->guestVirtual);
       if (!mapped)
       {
         DIE_NOW(context, "privToUserAddressing: couldn't shadow map guest page table." EOL);
@@ -250,10 +243,8 @@ void privToUserAddressing()
 /**
  * switching guest addressing from user to privileged mode
  **/
-void userToPrivAddressing()
+void userToPrivAddressing(GCONTXT *context)
 {
-  GCONTXT *context = getGuestContext();
-
   DEBUG(MM_ADDRESSING, "userToPrivAddressing: set shadowActive to %p" EOL, context->pageTables->shadowPriv);
 
   // invalidate the whole block cache
@@ -266,7 +257,7 @@ void userToPrivAddressing()
     simpleEntry* entry = getEntryFirst(context->pageTables->shadowActive, (u32int)context->pageTables->guestVirtual);
     if (entry->type == FAULT)
     {
-      bool mapped = shadowMap((u32int)context->pageTables->guestVirtual);
+      bool mapped = shadowMap(context, (u32int)context->pageTables->guestVirtual);
       if (!mapped)
       {
         DIE_NOW(context, "privToUserAddressing: couldn't shadow map guest page table." EOL);
@@ -300,11 +291,9 @@ void initialiseShadowPageTables(GCONTXT *gc)
   mmuClearDataCache();
   mmuDataMemoryBarrier();
 
-#ifdef CONFIG_GUEST_ANDROID
   //FIXME: Henri: Why should these structures be invalidated?
-  //invalidatePageTableInfo();
-#else
-  invalidatePageTableInfo();
+#ifndef CONFIG_GUEST_ANDROID
+  invalidatePageTableInfo(gc);
 #endif /* CONFIG_GUEST_ANDROID */
 
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: invalidatePageTableInfo() done." EOL);
@@ -344,9 +333,8 @@ void initialiseShadowPageTables(GCONTXT *gc)
  * guest has modified domain access control register.
  * look through any shadowed entries we must update now
  **/
-void changeGuestDACR(u32int oldVal, u32int newVal)
+void changeGuestDACR(GCONTXT *context, u32int oldVal, u32int newVal)
 {
-  GCONTXT *context = getGuestContext();
   if (context->virtAddrEnabled)
   {
     simpleEntry* ttbrBackup = mmuGetTTBR0();
@@ -378,13 +366,13 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
           DEBUG(MM_ADDRESSING, "changeGuestDACR: %x: sPTE %08x gPTE %08x needs AP bits remapped" EOL, y, *(u32int *)shadowPriv, *(u32int *)guest);
           if (guest->type == SECTION)
           {
-            mapAPBitsSection((sectionEntry*)guest, shadowPriv, (y << 20));
+            mapAPBitsSection(context, (sectionEntry*)guest, shadowPriv, (y << 20));
             DEBUG(MM_ADDRESSING, "changeGuestDACR: remapped to %08x" EOL, *(u32int*)shadowPriv);
           }
           else if (guest->type == PAGE_TABLE)
           {
             DEBUG(MM_ADDRESSING, "changeGuestDACR: remap AP for page table entry" EOL);
-            mapAPBitsPageTable((pageTableEntry*)guest, (pageTableEntry*)shadowPriv);
+            mapAPBitsPageTable(context, (pageTableEntry*)guest, (pageTableEntry*)shadowPriv);
           }
         } // if DACR for PT entry domain changed ends 
       } // shadowUser
@@ -404,13 +392,13 @@ void changeGuestDACR(u32int oldVal, u32int newVal)
           DEBUG(MM_ADDRESSING, "changeGuestDACR: %x: sPTE %08x gPTE %08x needs AP bits remapped" EOL, y, *(u32int*)shadowPriv, *(u32int*)guest);
           if (guest->type == SECTION)
           {
-            mapAPBitsSection((sectionEntry*)guest, shadowUser, (y << 20));
+            mapAPBitsSection(context, (sectionEntry*)guest, shadowUser, (y << 20));
             DEBUG(MM_ADDRESSING, "changeGuestDACR: remapped to %08x" EOL, *(u32int *)shadowUser);
           }
           else if (guest->type == PAGE_TABLE)
           {
             DEBUG(MM_ADDRESSING, "changeGuestDACR: remap AP for page table entry" EOL);
-            mapAPBitsPageTable((pageTableEntry*)guest, (pageTableEntry*)shadowUser);
+            mapAPBitsPageTable(context, (pageTableEntry*)guest, (pageTableEntry*)shadowUser);
           }
         } // if DACR for PT entry domain changed ends 
       } // shadowUser

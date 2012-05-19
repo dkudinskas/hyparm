@@ -222,8 +222,9 @@ static void initialiseRegister(CREG *crb, Coprocessor15Register reg, u32int valu
   crb[reg].valid = TRUE;
 }
 
-void setCregVal(CREG *registerBank, u32int registerIndex, u32int value)
+void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
 {
+  CREG *const registerBank = context->coprocRegBank;
   if (unlikely(!registerBank[registerIndex].valid))
   {
     // guest writing to a register that is not valid yet! investigate
@@ -285,42 +286,34 @@ void setCregVal(CREG *registerBank, u32int registerIndex, u32int value)
       if (((oldVal & SYS_CTRL_MMU_ENABLE) == 0) && ((value & SYS_CTRL_MMU_ENABLE) != 0))
       {
         DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - MMU enable." EOL);
-        guestEnableMMU();
+        guestEnableMMU(context);
       }
       else if (((oldVal & SYS_CTRL_MMU_ENABLE)!=0) && ((value & SYS_CTRL_MMU_ENABLE)==0))
       {
         DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - MMU disable." EOL);
-        guestDisableMMU();
+        guestDisableMMU(context);
       }
 
       //Interupt handler remap
       if (((oldVal & SYS_CTRL_HIGH_VECS) == 0) && ((value & SYS_CTRL_HIGH_VECS) != 0))
       {
         DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - high interrupt vector set." EOL);
-        (getGuestContext())->guestHighVectorSet = TRUE;
+        context->guestHighVectorSet = TRUE;
       }
       else if (((oldVal & SYS_CTRL_HIGH_VECS) != 0) && ((value & SYS_CTRL_HIGH_VECS) == 0))
       {
         DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - low interrupt vector set." EOL);
-        (getGuestContext())->guestHighVectorSet = FALSE;
+        context->guestHighVectorSet = FALSE;
       }
 
-      if ((value & SYS_CTRL_ACCESS_FLAG) != 0)
-      {
-        DIE_NOW(NULL, "CP15: SysCtrl - set access flag, investigate.\n");
-      }
-      if ((value & SYS_CTRL_HW_ACC_FLAG) != 0)
-      {
-        DIE_NOW(NULL, "CP15: SysCtrl - set hw access flag, investigate.\n");
-      }
+      ASSERT(!(value & SYS_CTRL_ACCESS_FLAG), ERROR_NOT_IMPLEMENTED);
+      ASSERT(!(value & SYS_CTRL_HW_ACC_FLAG), ERROR_NOT_IMPLEMENTED);
+      ASSERT(!(value & SYS_CTRL_VECT_INTERRUPT), ERROR_NOT_IMPLEMENTED);
+
       if ((value & SYS_CTRL_TEX_REMAP) != 0)
       {
 //      DIE_NOW(NULL, "CP15: SysCtrl - set tex remap, investigate.\n");
         printf("WARNING: CP15: SysCtrl - set tex remap" EOL);
-      }
-      if ((value & SYS_CTRL_VECT_INTERRUPT) != 0)
-      {
-        DIE_NOW(NULL, "CP15: SysCtrl - set interrupt vector, investigate.\n");
       }
       break;
     }
@@ -328,11 +321,10 @@ void setCregVal(CREG *registerBank, u32int registerIndex, u32int value)
     {
       DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: TTBR0 write %x" EOL, value);
       // must calculate: bits 31 to (14-N) give TTBR value. N is [0:2] of TTBCR!
-      u32int ttbcr = getCregVal(registerBank, CP15_TTBCR);
-      u32int N = ttbcr & 0x7;
+      u32int N = registerBank[CP15_TTBCR].value & 0x7;
       u32int bottomBitNumber = 14 - N;
       u32int mask = ~((1 << bottomBitNumber)-1);
-      guestSetPageTableBase(value & mask);
+      guestSetPageTableBase(context, value & mask);
       break;
     }
     case CP15_TTBR1:
@@ -352,7 +344,7 @@ void setCregVal(CREG *registerBank, u32int registerIndex, u32int value)
       if (oldVal != value)
       {
         DEBUG(INTERPRETER_ANY_COPROC, "CP15: DACR change val %x old DACR %x" EOL, value, oldVal);
-        changeGuestDACR(oldVal, value);
+        changeGuestDACR(context, oldVal, value);
       }
       break;
     }
@@ -542,7 +534,7 @@ void setCregVal(CREG *registerBank, u32int registerIndex, u32int value)
     {
       // CONTEXTID: context ID register
       DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: WARN: CONTEXTID value %x" EOL, value);
-      guestSetContextID(value);
+      guestSetContextID(context, value);
       break;
     }
     case CP15_TPIDRURW:

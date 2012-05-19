@@ -117,11 +117,8 @@
 #define Q3_SDRC_SMS_SIZE             0x20000000
 
 
-struct guestContext;
-
-
 device *createHardwareLibrary(struct guestContext *context) __cold__;
-u32int vmLoad(ACCESS_SIZE size, u32int virtAddr);
-void vmStore(ACCESS_SIZE size, u32int virtAddr, u32int value);
+u32int vmLoad(struct guestContext *gc, ACCESS_SIZE size, u32int virtAddr);
+void vmStore(struct guestContext *gc, ACCESS_SIZE size, u32int virtAddr, u32int value);
 
 #endif

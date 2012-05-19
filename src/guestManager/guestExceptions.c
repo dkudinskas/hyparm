@@ -24,7 +24,7 @@ void deliverServiceCall(GCONTXT *context)
   DEBUG(GUEST_EXCEPTIONS, "deliverServiceCall: @ PC = %#.8x" EOL, context->R15);
   if (!isGuestInPrivMode(context))
   {
-    guestToPrivMode();
+    guestToPrivMode(context);
   }
   // 2. copy guest CPSR into SPSR_SVC
   context->SPSR_SVC = context->CPSR;
@@ -44,7 +44,7 @@ void deliverServiceCall(GCONTXT *context)
 #ifdef CONFIG_THUMB2
   }
   // 5. Clear or set Thumb bit according to SCTLR.TE
-  if (getCregVal(context->coprocRegBank, CP15_SCTRL) & SCTLR_TE)
+  if (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE)
   {
     context->CPSR |= PSR_T_BIT;
   }
@@ -72,7 +72,7 @@ static inline u32int getExceptionHandlerAddress(GCONTXT *context, u32int offset)
   }
   else
   {
-    u32int vbar = getCregVal(context->coprocRegBank, CP15_VBAR);
+    u32int vbar = context->coprocRegBank[CP15_VBAR].value;
     if (likely(vbar == 0))
     {
       // Hack: bypass boot ROM, SRAM, etc.
@@ -87,19 +87,17 @@ static inline u32int getExceptionHandlerAddress(GCONTXT *context, u32int offset)
   context->CPSR |= PSR_I_BIT;
 }
 
-void throwInterrupt(u32int irqNumber)
+void throwInterrupt(GCONTXT *context, u32int irqNumber)
 {
-  GCONTXT * context = getGuestContext();
-
   switch (irqNumber)
   {
     case GPT2_IRQ:
     {
       // gpt2 is dedicated to the guest. if irq is from gpt2
       // set it pending in emulated interrupt controller
-      setInterrupt(GPT1_IRQ);
+      setInterrupt(context, GPT1_IRQ);
       // are we forwarding the interrupt event?
-      if (isIrqPending() && ((context->CPSR & PSR_I_BIT) == 0))
+      if (isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -114,9 +112,9 @@ void throwInterrupt(u32int irqNumber)
     }
     case UART1_IRQ:
     {
-      setInterrupt(UART1_IRQ);
+      setInterrupt(context, UART1_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending() && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -126,9 +124,9 @@ void throwInterrupt(u32int irqNumber)
     }
     case UART2_IRQ:
     {
-      setInterrupt(UART2_IRQ);
+      setInterrupt(context, UART2_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending() && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -138,9 +136,9 @@ void throwInterrupt(u32int irqNumber)
     }
     case UART3_IRQ:
     {
-      setInterrupt(UART3_IRQ);
+      setInterrupt(context, UART3_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending() && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -169,7 +167,7 @@ void deliverInterrupt(GCONTXT *context)
   guestChangeMode(context->CPSR & PSR_MODE);
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
-  if (getCregVal(context->coprocRegBank, CP15_SCTRL) & SCTLR_TE)
+  if (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE)
   {
     context->CPSR |= PSR_T_BIT;
   }
@@ -192,7 +190,7 @@ void deliverDataAbort(GCONTXT *context)
   DEBUG(GUEST_EXCEPTIONS, "deliverDataAbort: @ PC = %#.8x" EOL, context->R15);
   if (!isGuestInPrivMode(context))
   {
-    guestToPrivMode();
+    guestToPrivMode(context);
   }
   // 1. reset abt pending flag
   context->guestDataAbtPending = FALSE;
@@ -203,7 +201,7 @@ void deliverDataAbort(GCONTXT *context)
   guestChangeMode(context->CPSR & PSR_MODE);
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
-  if (getCregVal(context->coprocRegBank, CP15_SCTRL) & SCTLR_TE)
+  if (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE)
   {
     context->CPSR |= PSR_T_BIT;
   }
@@ -231,9 +229,9 @@ void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isW
   }
   DEBUG(GUEST_EXCEPTIONS, "throwDataAbort: address %#.8x: faultType %#x, isWrite %x, dom %#x, @ PC"
       " %#.8x, dfsr %#.8x" EOL, address, faultType, isWrite, domain, context->R15, dfsr);
-  setCregVal(context->coprocRegBank, CP15_DFSR, dfsr);
+  context->coprocRegBank[CP15_DFSR].value = dfsr;
   // set CP15 Data Fault Address Register to 'address'
-  setCregVal(context->coprocRegBank, CP15_DFAR, address);
+  context->coprocRegBank[CP15_DFAR].value = address;
   // set guest abort pending flag, return
   context->guestDataAbtPending = TRUE;
 }
@@ -243,7 +241,7 @@ void deliverPrefetchAbort(GCONTXT *context)
   DEBUG(GUEST_EXCEPTIONS, "deliverPrefetchAbort: @ PC = %#.8x" EOL, context->R15);
   if (!isGuestInPrivMode(context))
   {
-    guestToPrivMode();
+    guestToPrivMode(context);
   }
   // 1. reset abt pending flag
   context->guestPrefetchAbtPending = FALSE;
@@ -254,7 +252,7 @@ void deliverPrefetchAbort(GCONTXT *context)
   guestChangeMode(context->CPSR & PSR_MODE);
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
-  if (getCregVal(context->coprocRegBank, CP15_SCTRL) & SCTLR_TE)
+  if (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE)
   {
     context->CPSR |= PSR_T_BIT;
   }
@@ -279,9 +277,9 @@ void throwPrefetchAbort(GCONTXT *context, u32int address, u32int faultType)
   DEBUG(GUEST_EXCEPTIONS, "throwPrefetchAbort: address %#.8x, faultType %#x, @ PC %#.8x, IFSR "
       "%#.8x" EOL, address, faultType, context->R15, ifsr);
 
-  setCregVal(context->coprocRegBank, CP15_IFSR, ifsr);
+  context->coprocRegBank[CP15_IFSR].value = ifsr;
   // set CP15 Data Fault Address Register to 'address'
-  setCregVal(context->coprocRegBank, CP15_IFAR, address);
+  context->coprocRegBank[CP15_IFAR].value = address;
   // set guest abort pending flag, return
   context->guestPrefetchAbtPending = TRUE;
 }

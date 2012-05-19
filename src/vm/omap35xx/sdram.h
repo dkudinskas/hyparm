@@ -4,22 +4,13 @@
 #include "common/compiler.h"
 #include "common/types.h"
 
-#include "vm/omap35xx/hardwareLibrary.h"
+#include "guestManager/guestContext.h"
+
+#include "vm/types.h"
 
 
 #define MEGABYTE_COUNT   4096
 
-
-
-typedef struct EmumulatedVirtualMachine virtualMachine;
-
-
-void initSdram(virtualMachine *vm) __cold__;
-
-u32int loadSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
-
-void dumpSdramStats(void);
 
 struct SdramController
 {
@@ -29,5 +20,10 @@ struct SdramController
 #endif
 };
 
-#endif
 
+void dumpSdramStats(struct SdramController *sdram);
+void initSdram(virtualMachine *vm) __cold__;
+u32int loadSdram(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeSdram(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+
+#endif /* __VM__OMAP_35XX__SDRAM_H__ */

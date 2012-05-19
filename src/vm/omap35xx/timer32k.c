@@ -8,6 +8,12 @@
 #include "vm/omap35xx/timer32k.h"
 
 
+#define TIMER32K_BASE              0x48320000
+
+#define REG_TIMER_32K_SYSCONFIG       0x0004
+#define REG_TIMER_32K_COUNTER         0x0010
+
+
 void initTimer32k(virtualMachine *vm)
 {
   struct SynchronizedTimer32k *timer32k = (struct SynchronizedTimer32k *)calloc(1, sizeof(struct SynchronizedTimer32k));
@@ -26,9 +32,9 @@ void initTimer32k(virtualMachine *vm)
   vm->timer32k = timer32k;
 }
 
-u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadTimer32k(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  struct SynchronizedTimer32k* timer32k = getGuestContext()->vm.timer32k;
+  struct SynchronizedTimer32k *const timer32k = context->vm.timer32k;
   u32int val = 0;
 
   DEBUG(VP_OMAP_35XX_TIMER32K, "%s load from physical address: %#.8x, vAddr %#.8x, aSize %#x" EOL,
@@ -66,7 +72,7 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyA
   return val;
 }
 
-void storeTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeTimer32k(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }

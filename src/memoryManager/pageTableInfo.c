@@ -6,11 +6,10 @@
 #include "memoryManager/pageTableInfo.h"
 
 
-void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u32int mapped, bool host)
+void addPageTableInfo(GCONTXT *context, pageTableEntry* entry, u32int virtual, u32int physical, u32int mapped, bool host)
 {
   DEBUG(MM_PAGE_TABLES, "addPageTableInfo: entry %#.8x @ %p, PA %#.8x VA %#.8x, mapped %#.8x host %x" EOL,
         *(u32int *)entry, entry, physical, virtual, mapped, host);
-  GCONTXT *context = getGuestContext();
 
   ptInfo *newEntry = (ptInfo *)malloc(sizeof(ptInfo));
   DEBUG(MM_PAGE_TABLES, "addPageTableInfo: new entry @ %p" EOL, newEntry);
@@ -46,16 +45,15 @@ void addPageTableInfo(pageTableEntry* entry, u32int virtual, u32int physical, u3
     }
     head->nextEntry = newEntry;
   }
-  dumpPageTableInfo();
+  dumpPageTableInfo(context);
   // done.
 }
 
 
-ptInfo *getPageTableInfo(pageTableEntry *firstLevelEntry)
+ptInfo *getPageTableInfo(GCONTXT *context, pageTableEntry *firstLevelEntry)
 {
   DEBUG(MM_PAGE_TABLES, "getPageTableInfo: first level entry ptr %p = %#.8x" EOL, firstLevelEntry,
         *(u32int *)firstLevelEntry);
-  GCONTXT* context = getGuestContext();
 
   // spt first
   ptInfo *head = context->pageTables->sptInfo;
@@ -88,11 +86,10 @@ ptInfo *getPageTableInfo(pageTableEntry *firstLevelEntry)
 }
 
 
-void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host)
+void removePageTableInfo(GCONTXT *context, pageTableEntry* firstLevelEntry, bool host)
 {
   DEBUG(MM_PAGE_TABLES, "removePageTableInfo: first level entry ptr %p = %#.8x" EOL,
         firstLevelEntry, *(u32int *)firstLevelEntry);
-  GCONTXT *context = getGuestContext();
 
   ptInfo *head = (host) ? context->pageTables->sptInfo : context->pageTables->gptInfo;
   ptInfo *prev = NULL;
@@ -136,12 +133,11 @@ void removePageTableInfo(pageTableEntry* firstLevelEntry, bool host)
 }
 
 
-void dumpPageTableInfo()
+void dumpPageTableInfo(GCONTXT *context)
 {
 #if CONFIG_DEBUG_MM_PAGE_TABLES
   printf("dumpPageTableInfo:" EOL);
 
-  GCONTXT* context = getGuestContext();
   // spt first
   ptInfo* head = context->pageTables->sptInfo;
   printf("sptInfo:" EOL);
@@ -163,10 +159,9 @@ void dumpPageTableInfo()
 }
 
 
-void invalidatePageTableInfo()
+void invalidatePageTableInfo(GCONTXT *context)
 {
   DEBUG(MM_PAGE_TABLES, "invalidatePageTableInfo:" EOL);
-  GCONTXT* context = getGuestContext();
   // spt first
   while (context->pageTables->sptInfo != NULL)
   {

@@ -4,33 +4,7 @@
 #include "common/compiler.h"
 #include "common/types.h"
 
-#include "vm/omap35xx/hardwareLibrary.h"
-
-
-/************************
- * REGISTER DEFINITIONS *
- ************************/
-
-#define SMS_REVISION                0
-#define SMS_SYSCONFIG            0x10
-#define SMS_SYSSTATUS            0x14
-#define SMS_RG_ATT(i)            (0x48 + ((i)*0x20))
-#define SMS_RG_RDPERM(i)         (0x50 + ((i)*0x20))
-#define SMS_RG_WRPERM(i)         (0x58 + ((i)*0x20))
-
-/**************************
- * STATIC REGISTER VALUES *
- **************************/
-
-#define SMS_REVISION_VALUE       0x30
-
-void initSms(void) __cold__;
-
-/* top load function */
-u32int loadSms(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-
-/* top store function */
-void storeSms(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+#include "vm/types.h"
 
 
 struct Sms
@@ -66,6 +40,10 @@ struct Sms
   u32int smsRgWrPerm7;
 };
 
+
+void initSms(virtualMachine *vm) __cold__;
+u32int loadSms(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeSms(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 #endif /* __VM__OMAP_35XX__SMS_H__ */
 

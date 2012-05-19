@@ -13,18 +13,18 @@ void initVirtualAddressing(GCONTXT *context) __cold__;
 u32int setProtection(u32int startAddr, u32int endAddr, u8int accessBits);
 
 /* intercept new process page table creation & create shadow PT */
-void guestSetPageTableBase(u32int ttbr);
-void guestEnableMMU(void);
-void guestDisableMMU(void);
+void guestSetPageTableBase(GCONTXT *gc, u32int ttbr);
+void guestEnableMMU(GCONTXT *context);
+void guestDisableMMU(GCONTXT *context);
 
-void guestSetContextID(u32int contextid);
+void guestSetContextID(GCONTXT *context, u32int contextid);
 
-void privToUserAddressing(void);
-void userToPrivAddressing(void);
+void privToUserAddressing(GCONTXT *context);
+void userToPrivAddressing(GCONTXT *context);
 
 void initialiseShadowPageTables(GCONTXT *gc);
 
-void changeGuestDACR(u32int oldVal, u32int newVal);
+void changeGuestDACR(GCONTXT *context, u32int oldVal, u32int newVal);
 
 void setExceptionVector(u32int guestMode);
 

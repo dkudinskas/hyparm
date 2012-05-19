@@ -191,7 +191,7 @@ void dumpGuestContext(const GCONTXT *context)
   printf("gc blockCopyCacheEnd: %p" EOL, context->translationCache.codeCacheLastEntry);
   printf("gc PCOfLastInstruction: %#.8x" EOL, context->PCOfLastInstruction);
 #endif
-  dumpSdramStats();
+  dumpSdramStats(context->vm.sdram);
 }
 
 
@@ -205,18 +205,18 @@ bool isGuestInPrivMode(GCONTXT * context)
 /**
  * switching from privileged to user mode
  **/
-void guestToUserMode()
+void guestToUserMode(GCONTXT *context)
 {
-  privToUserAddressing();
+  privToUserAddressing(context);
 }
 
 
 /**
  * switching from user to privileged mode
  **/
-void guestToPrivMode()
+void guestToPrivMode(GCONTXT *context)
 {
-  userToPrivAddressing();
+  userToPrivAddressing(context);
 }
 
 

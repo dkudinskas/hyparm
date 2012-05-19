@@ -62,7 +62,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
         printf("Guest enabling irqs globally!" EOL);
 #endif
         // chech interrupt controller if there is an interrupt pending
-        if (isIrqPending())
+        if (isIrqPending(context->vm.irqController))
         {
           context->guestIrqPending = TRUE;
         }
@@ -77,7 +77,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
         printf("Guest enabling FIQs globally!" EOL);
 #endif
         // chech interrupt controller if there is an interrupt pending
-        if (isFiqPending())
+        if (isFiqPending(context->vm.irqController))
         {
           // context->guestFiqPending = TRUE; : IMPLEMENT!!
           DIE_NOW(context, ERROR_NOT_IMPLEMENTED);

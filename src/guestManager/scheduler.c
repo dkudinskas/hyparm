@@ -33,7 +33,7 @@ void guestIdle(GCONTXT * context)
   // enable interrupts if they were disabled...
   enableInterrupts();
 
-  while (!isIrqPending())
+  while (!isIrqPending(context->vm.irqController))
   {
     // delay
     volatile u32int i = 0;

@@ -12,6 +12,51 @@
 
 #define ADDRESS_MASK  0xFFFFF000
 
+/************************
+ * REGISTER DEFINITIONS *
+ ************************/
+#define GPIO_REVISION            0x000
+
+#define GPIO_SYSCONFIG           0x010
+#define GPIO_SYSCONFIG_RESERVED     0xFFFFFFE0
+#define GPIO_SYSCONFIG_IDLEMODE     0x00000018
+#define GPIO_SYSCONFIG_ENAWAKEUP    0x00000004
+#define GPIO_SYSCONFIG_SOFTRESET    0x00000002
+#define GPIO_SYSCONFIG_AUTOIDLE     0x00000001
+
+#define GPIO_SYSSTATUS           0x014
+#define GPIO_SYSSTATUS_RESERVED     0xFFFFFFFE
+#define GPIO_SYSSTATUS_RESETDONE    0x00000001
+
+#define GPIO_IRQSTATUS1          0x018
+#define GPIO_IRQENABLE1          0x01C
+#define GPIO_WAKEUPENABLE        0x020
+#define GPIO_IRQSTATUS2          0x028
+#define GPIO_IRQENABLE2          0x02C
+
+#define GPIO_CTRL                0x030
+#define GPIO_CTRL_RESERVED          0xFFFFFFF8
+#define GPIO_CTRL_GATERATIO         0x00000006
+#define GPIO_CTRL_DISABLEMOD        0x00000001
+
+#define GPIO_OE                  0x034
+#define GPIO_DATAIN              0x038
+#define GPIO_DATAOUT             0x03C
+#define GPIO_LEVELDETECT0        0x040
+#define GPIO_LEVELDETECT1        0x044
+#define GPIO_RISINGDETECT        0x048
+#define GPIO_FALLINGDETECT       0x04C
+#define GPIO_DEBOUNCENABLE       0x050
+#define GPIO_DEBOUNCINGTIME      0x054
+#define GPIO_CLEARIRQENABLE1     0x060
+#define GPIO_SETIRQENABLE1       0x064
+#define GPIO_CLEARIRQENABLE2     0x070
+#define GPIO_SETIRQENABLE2       0x074
+#define GPIO_CLEARWKUENA         0x080
+#define GPIO_SETWKUENA           0x084
+#define GPIO_CLEARDATAOUT        0x090
+#define GPIO_SETDATAOUT          0x094
+
 
 static inline s32int getIndexByAddress(u32int physicalAddress);
 static void reset(struct Gpio *gpio);
@@ -61,9 +106,8 @@ static inline s32int getIndexByAddress(u32int physicalAddress)
 }
 
 /* load function */
-u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress)
+u32int loadGpio(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress)
 {
-  GCONTXT *context = getGuestContext();
   const s32int index = getIndexByAddress(physicalAddress);
   u32int regOffset = physicalAddress & ~ADDRESS_MASK;
   if (index < 0)
@@ -217,7 +261,7 @@ static void reset(struct Gpio *gpio)
   gpio->gpioDebouncingTime  = 0x00000000;
 }
 
-void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress, u32int value)
+void storeGpio(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress, u32int value)
 {
   DEBUG(VP_OMAP_35XX_GPIO, "%s store to pAddr: %.8x, vAddr: %.8x, access size: %x, val %.8x" EOL,
       dev->deviceName, physicalAddress, virtualAddress, (u32int)size, value);
@@ -229,7 +273,6 @@ void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phys
     DIE_NOW(NULL, "cannot translate physical address to GPIO number");
   }
 
-  GCONTXT *context = getGuestContext();
   struct Gpio *gpio = context->vm.gpio[index];
   if (gpio->physicalId < 0)
   {

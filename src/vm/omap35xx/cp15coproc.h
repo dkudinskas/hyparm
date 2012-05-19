@@ -92,7 +92,7 @@ typedef struct coprocessorRegisterBankEntry
 
 CREG *createCRB(void) __cold__;
 u32int getCregVal(CREG *registerBank, u32int registerIndex);
-void setCregVal(CREG *registerBank, u32int registerIndex, u32int value);
+void setCregVal(GCONTXT *context, u32int registerIndex, u32int value);
 
 
 #endif /* __VM__OMAP_35XX__CP15_COPROC_H__ */

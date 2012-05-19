@@ -58,9 +58,8 @@ u32int *newLevelTwoPageTable()
  * meta data information from the list. only called for 2nd level SHADOW page
  * tables. we can't delete guest page tables, not our memory!
  **/
-void deleteLevelTwoPageTable(pageTableEntry *pageTable)
+void deleteLevelTwoPageTable(GCONTXT *context, pageTableEntry *pageTable)
 {
-  GCONTXT *context = getGuestContext();
   DEBUG(MM_PAGE_TABLES, "deleteLevelTwoPageTable: page table entry %#.8x @ %p" EOL,
         *(u32int *)pageTable, pageTable);
   // this can only be called on shadow second level page tables
@@ -305,6 +304,12 @@ void mapSection(simpleEntry *pageTable, u32int virtAddr, u32int physical, u8int 
 void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
                 u8int domain, u8int accessBits, u8int c, u8int b, u8int tex, u8int xn)
 {
+  /*
+   * FIXME This looks horribly wrong in a generic "map small page" that is also used for the
+   * hypervisor PT !?
+   */
+  GCONTXT *context = activeGuestContext;
+
   DEBUG(MM_PAGE_TABLES, "mapSmallPage: Virtual %#.8x, physical %#.8x, dom: %x, AP: %x, c: %x, "
         "b: %x, tex: %x, xn: %x" EOL, virtAddr, physical, domain, accessBits, c, b, tex, xn);
 
@@ -322,14 +327,14 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
 #ifdef CONFIG_DISABLE_HYPERVISOR_MEMORY_PROTECTION
       u32int pAddr = getPhysicalAddress(pageTable, (u32int)vAddr);
 #else
-      u32int pAddr = getGuestContext()->virtAddrEnabled
-                   ? getPhysicalAddress(pageTable, (u32int)vAddr) : (u32int)vAddr;
+      u32int pAddr = context->virtAddrEnabled
+                   ? getPhysicalAddress(context, pageTable, (u32int)vAddr) : (u32int)vAddr;
 #endif
       DEBUG(MM_PAGE_TABLES, "mapSmallPage: PT VA %p PA %#.8x" EOL, vAddr, pAddr);
       // store metadata
       addPageTableEntry((pageTableEntry*)first, (u32int)pAddr, domain);
       u32int mapped = ((u32int)first - (u32int)pageTable) << 18;
-      addPageTableInfo((pageTableEntry*)first, (u32int)vAddr, pAddr, mapped, TRUE);
+      addPageTableInfo(context, (pageTableEntry*)first, (u32int)vAddr, pAddr, mapped, TRUE);
       break;
     }
     case PAGE_TABLE:
@@ -354,7 +359,7 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
   }//switch
 
   // At this point we know its a 2nd level page table entry 
-  simpleEntry *second = getEntrySecond((pageTableEntry *)first, virtAddr);
+  simpleEntry *second = getEntrySecond(context, (pageTableEntry *)first, virtAddr);
   DEBUG(MM_PAGE_TABLES, "mapSmallPage: 2nd lvl entry @ %p = %#.8x" EOL, second, *(u32int *)second);
   // Again, we need to check the existing entry
   if (second->type == FAULT)
@@ -440,14 +445,14 @@ void addPageTableEntry(pageTableEntry* pageTableEntryPtr, u32int physical, u8int
 /**
  * Given a virtual address, retrieves the underlying physical address
  **/
-u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
+u32int getPhysicalAddress(GCONTXT *context, simpleEntry* pageTable, u32int virtAddr)
 {
   DEBUG(MM_PAGE_TABLES, "getPhysicalAddress for VA %#.8x in PT @ %p" EOL, virtAddr, pageTable);
   simpleEntry* entryFirst = getEntryFirst(pageTable, virtAddr);
   if (entryFirst->type == FAULT)
   {
     // may not be shadow mapped? try it.
-    if (!shadowMap(virtAddr))
+    if (!shadowMap(context, virtAddr))
     {
       printf("getPhysicalAddress for VA %#.8x in PT @ %#.8x" EOL, virtAddr, (u32int)pageTable);
       DIE_NOW(NULL, "failed to shadow map");
@@ -477,7 +482,7 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
     }
     case PAGE_TABLE:
     {
-      simpleEntry* entrySecond = getEntrySecond((pageTableEntry*)entryFirst, virtAddr);
+      simpleEntry* entrySecond = getEntrySecond(context, (pageTableEntry*)entryFirst, virtAddr);
       
       switch(entrySecond->type)
       {
@@ -488,7 +493,7 @@ u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr)
         // may not be shadow mapped? try it.
         case FAULT:
         {
-          if (!shadowMap(virtAddr))
+          if (!shadowMap(context, virtAddr))
           {
             printf("getPhysicalAddress for VA %#.8x in PT @ %#.8x" EOL, virtAddr, (u32int)pageTable);
             DIE_NOW(NULL, "failed to shadow map, lvl2");
@@ -537,7 +542,7 @@ simpleEntry* getEntryFirst(simpleEntry* pageTable, u32int virtAddr)
  * extract second level page table entry for a given virtual address
  * given a first level page table entry: this entry contains PA of 2nd lvl PT
  **/
-simpleEntry* getEntrySecond(pageTableEntry* firstLevelEntry, u32int virtAddr)
+simpleEntry* getEntrySecond(GCONTXT *context, pageTableEntry* firstLevelEntry, u32int virtAddr)
 {
   DEBUG(MM_PAGE_TABLES, "getEntrySecond: 1st lvl PTE %#.8x @ %p; VA %#.8x" EOL,
         *(u32int *)firstLevelEntry, firstLevelEntry, virtAddr);
@@ -545,12 +550,12 @@ simpleEntry* getEntrySecond(pageTableEntry* firstLevelEntry, u32int virtAddr)
   u32int index = (virtAddr & 0x000FF000) >> 10;
   // to look through the 2nd lvl page table, we need to access it using VA
   // but we only have the physical address! find VA in pt metadata cache
-  ptInfo* metadata = getPageTableInfo(firstLevelEntry);
+  ptInfo* metadata = getPageTableInfo(context, firstLevelEntry);
   if (metadata == 0)
   {
     printf("getEntrySecond: metadata not found. 1st lvl PTE %#.8x @ %p; VA %#.8x" EOL,
                             *(u32int*)firstLevelEntry, firstLevelEntry, virtAddr);
-    dumpPageTableInfo();
+    dumpPageTableInfo(context);
     DIE_NOW(NULL, "could not find PT2 metadata");
   }
   // however if this entry is a guest PT2 info, then virtAddr will not be set!
@@ -608,9 +613,8 @@ void splitSectionToSmallPages(simpleEntry* pageTable, u32int virtAddr)
  * check if a given virtual address is in any of the guest page tables.
  * a.k.a. the given address points to a page table entry
  **/
-bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr)
+bool isAddrInPageTable(GCONTXT *context, simpleEntry* pageTablePhys, u32int physAddr)
 {
-  GCONTXT *context = getGuestContext();
   DEBUG(MM_PAGE_TABLES, "isAddrInPageTable: is physAddr %#.8x in PT %p" EOL, physAddr, pageTablePhys);
   if (pageTablePhys == NULL)
   {
@@ -646,10 +650,8 @@ bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr)
  * Called from the instruction emulator when we have a permission abort
  * and the guest is writing to its own page table
  **/
-void pageTableEdit(u32int address, u32int newVal)
+void pageTableEdit(GCONTXT *context, u32int address, u32int newVal)
 {
-  GCONTXT* context = getGuestContext();
-
   u32int virtualAddress;
   bool firstLevelEntry;
   simpleEntry* oldGuestEntry = (simpleEntry*)address;
@@ -665,7 +667,7 @@ void pageTableEdit(u32int address, u32int newVal)
   {
     DIE_NOW(context, "guest virtual not set.");
   }
-  u32int physicalAddress = getPhysicalAddress(context->pageTables->guestVirtual, address);
+  u32int physicalAddress = getPhysicalAddress(context, context->pageTables->guestVirtual, address);
   DEBUG(MM_PAGE_TABLES, "PageTableEdit: address %#.8x newval: %#.8x" EOL, address, newVal);
   DEBUG(MM_PAGE_TABLES, "PageTableEdit: physical address of edit %#.8x, phys gPT %p" EOL,
         physicalAddress, context->pageTables->guestPhysical);
@@ -741,15 +743,15 @@ void pageTableEdit(u32int address, u32int newVal)
         if (oldGuestEntry->type == PAGE_TABLE)
         {
           // changing a page table to a section or fault, need to remove PT entry.
-          removePageTableInfo((pageTableEntry*)oldGuestEntry, FALSE);
-          shadowUnmapPageTable((pageTableEntry*)shadowPriv, (pageTableEntry*)oldGuestEntry, virtualAddress);
-          shadowUnmapPageTable((pageTableEntry*)shadowUser, (pageTableEntry*)oldGuestEntry, virtualAddress);
+          removePageTableInfo(context, (pageTableEntry*)oldGuestEntry, FALSE);
+          shadowUnmapPageTable(context, (pageTableEntry*)shadowPriv, (pageTableEntry*)oldGuestEntry, virtualAddress);
+          shadowUnmapPageTable(context, (pageTableEntry*)shadowUser, (pageTableEntry*)oldGuestEntry, virtualAddress);
         }
         else if (oldGuestEntry->type == SECTION)
         {
           // changing a page table to a section or fault, need to remove PT entry.
-          shadowUnmapSection((simpleEntry*)shadowPriv, (sectionEntry*)oldGuestEntry, virtualAddress);
-          shadowUnmapSection((simpleEntry*)shadowUser, (sectionEntry*)oldGuestEntry, virtualAddress);
+          shadowUnmapSection(context, (simpleEntry*)shadowPriv, (sectionEntry*)oldGuestEntry, virtualAddress);
+          shadowUnmapSection(context, (simpleEntry*)shadowUser, (sectionEntry*)oldGuestEntry, virtualAddress);
         }
         // nothing to do if old type was reserved.
       }
@@ -759,13 +761,13 @@ void pageTableEdit(u32int address, u32int newVal)
         {
           if (shadowUser->type != FAULT)
           {
-            shadowUser = getEntrySecond((pageTableEntry*)shadowUser, virtualAddress);
-            shadowUnmapSmallPage((smallPageEntry*)shadowUser, (smallPageEntry*)oldGuestEntry, virtualAddress);
+            shadowUser = getEntrySecond(context, (pageTableEntry*)shadowUser, virtualAddress);
+            shadowUnmapSmallPage(context, (smallPageEntry*)shadowUser, (smallPageEntry*)oldGuestEntry, virtualAddress);
           }
           if (shadowPriv->type != FAULT)
           {
-            shadowPriv = getEntrySecond((pageTableEntry*)shadowPriv, virtualAddress);
-            shadowUnmapSmallPage((smallPageEntry*)shadowPriv, (smallPageEntry*)oldGuestEntry, virtualAddress);
+            shadowPriv = getEntrySecond(context, (pageTableEntry*)shadowPriv, virtualAddress);
+            shadowUnmapSmallPage(context, (smallPageEntry*)shadowPriv, (smallPageEntry*)oldGuestEntry, virtualAddress);
           }
         }
         else
@@ -775,8 +777,8 @@ void pageTableEdit(u32int address, u32int newVal)
                           virtualAddress, *(u32int*)oldGuestEntry, *(u32int*)newGuestEntry);
           printf("pageTableEdit: shadowUser %#.8x @ %p shadowPriv %#.8x @ %p" EOL,
             *(u32int*)shadowUser, shadowUser, *(u32int*)shadowPriv, shadowPriv);
-          shadowUser = getEntrySecond((pageTableEntry*)shadowUser, virtualAddress);
-          shadowPriv = getEntrySecond((pageTableEntry*)shadowPriv, virtualAddress);
+          shadowUser = getEntrySecond(context, (pageTableEntry*)shadowUser, virtualAddress);
+          shadowPriv = getEntrySecond(context, (pageTableEntry*)shadowPriv, virtualAddress);
           printf("pageTableEdit: 2nd lvl shadowUser %#.8x @ %p shadowPriv %#.8x @ %p" EOL,
             *(u32int*)shadowUser, shadowUser, *(u32int*)shadowPriv, shadowPriv);
           DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
@@ -816,10 +818,10 @@ void pageTableEdit(u32int address, u32int newVal)
         case SECTION:
         {
           context->CPSR = cpsrPriv; 
-          editAttributesSection((sectionEntry*)oldGuestEntry, (sectionEntry*)newGuestEntry,
+          editAttributesSection(context, (sectionEntry*)oldGuestEntry, (sectionEntry*)newGuestEntry,
                                                                shadowPriv, virtualAddress);
           context->CPSR = cpsrUser; 
-          editAttributesSection((sectionEntry*)oldGuestEntry, (sectionEntry*)newGuestEntry,
+          editAttributesSection(context, (sectionEntry*)oldGuestEntry, (sectionEntry*)newGuestEntry,
                                                                shadowUser, virtualAddress);
           context->CPSR = cpsrBackup; 
           break;
@@ -880,7 +882,7 @@ void pageTableEdit(u32int address, u32int newVal)
 
 
 
-void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, simpleEntry* shadow, u32int virtual)
+void editAttributesSection(GCONTXT *context, sectionEntry* oldSection, sectionEntry* newSection, simpleEntry* shadow, u32int virtual)
 {
   // WARNING: shadow descriptor type might not correspond to guest descriptor type!!! 
   DEBUG(MM_PAGE_TABLES, "editAttributesSection: oldSection %#.8x, newSection %#.8x shadow %#.8x"
@@ -935,7 +937,7 @@ void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, s
   // even if shadow section was split to small pages, domain bits are the same
   if (oldSection->domain != newSection->domain)
   {
-    ((sectionEntry*)shadow)->domain = mapGuestDomain(newSection->domain);
+    ((sectionEntry*)shadow)->domain = mapGuestDomain(context, newSection->domain);
   }
 
   //Carefull of this one, field is used by the hypervisor
@@ -951,7 +953,7 @@ void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, s
 
   if ((oldSection->ap10 != newSection->ap10) || (oldSection->ap2 != newSection->ap2))
   {
-    mapAPBitsSection(newSection, (simpleEntry*)shadow, virtual);
+    mapAPBitsSection(context, newSection, (simpleEntry*)shadow, virtual);
   }
 
   if (oldSection->s != newSection->s)

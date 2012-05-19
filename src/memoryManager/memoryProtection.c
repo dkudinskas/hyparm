@@ -13,32 +13,31 @@
 /**
  * this function called when we want to make sure an address range is not writable by the guest
  **/
-void guestWriteProtect(u32int startAddress, u32int endAddress)
+void guestWriteProtect(GCONTXT *gc, u32int startAddress, u32int endAddress)
 {
 #ifdef MEM_PROT_DBG
   printf("guestWriteProtect: startAddress %x; endAddress %x\n", startAddress, endAddress);
 #endif
   // 1. get page table entry for this address
-  GCONTXT* gc = getGuestContext();
 
-  if(startAddress > endAddress)
+  if (startAddress > endAddress)
   {
-    DIE_NOW(gc, "guestWriteProtect: startAddress is great than the endAddress.");
+    DIE_NOW(NULL, "guestWriteProtect: startAddress is great than the endAddress.");
   }
 
   if (gc->virtAddrEnabled)
   {
-    writeProtectRange(gc->pageTables->shadowUser, startAddress, endAddress);
-    writeProtectRange(gc->pageTables->shadowPriv, startAddress, endAddress);
+    writeProtectRange(gc, gc->pageTables->shadowUser, startAddress, endAddress);
+    writeProtectRange(gc, gc->pageTables->shadowPriv, startAddress, endAddress);
   }
   else
   {
-    writeProtectRange(gc->pageTables->hypervisor, startAddress, endAddress);
+    writeProtectRange(gc, gc->pageTables->hypervisor, startAddress, endAddress);
   }
 }
 
 
-void writeProtectRange(simpleEntry* pageTable, u32int start, u32int end)
+void writeProtectRange(GCONTXT *gc, simpleEntry* pageTable, u32int start, u32int end)
 {
 #ifdef MEM_PROT_DBG
   printf("writeProtectRange: PT %x, start %x; end %x\n", pageTable, start, end);
@@ -82,7 +81,7 @@ void writeProtectRange(simpleEntry* pageTable, u32int start, u32int end)
         DIE_NOW(NULL, "writeProtectRange: Unrecognized first level entry. Error.");
     }
 
-    simpleEntry* secondEntry = getEntrySecond((pageTableEntry*)firstEntry, pageStartAddress);
+    simpleEntry* secondEntry = getEntrySecond(gc, (pageTableEntry*)firstEntry, pageStartAddress);
     switch(secondEntry->type)
     {
       case FAULT:
@@ -132,13 +131,11 @@ void writeProtectRange(simpleEntry* pageTable, u32int start, u32int end)
  * performs a full guest memory access fault checking sequence
  * if guest should abort, sets up the abort for the guest, returns TRUE
  **/
-bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
+bool shouldDataAbort(GCONTXT *context, bool privAccess, bool isWrite, u32int address)
 {
 #ifdef MEM_PROT_DBG
   printf("shouldDataAbort: priv %x, write %x, addr %x\n", privAccess, isWrite, address);
 #endif
-
-  GCONTXT* context = getGuestContext();
 
   simpleEntry* guestFirst = 0; 
   simpleEntry* guestSecond = 0;
@@ -149,7 +146,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
   simpleEntry* gpt = 0;
   u32int gpt2 = 0; // this is just a the physical address as unsigned int
   simpleEntry* spt = context->pageTables->shadowActive;
-  u32int sysCtrlReg = getCregVal(context->coprocRegBank, CP15_SCTRL);
+  u32int sysCtrlReg = context->coprocRegBank[CP15_SCTRL].value;
 
   if (sysCtrlReg & 0x00000002)
   {
@@ -287,7 +284,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 
   // check domain
   u32int dom  = ((sectionEntry*)guestFirst)->domain;
-  u32int dacr = getCregVal(context->coprocRegBank, CP15_DACR);
+  u32int dacr = context->coprocRegBank[CP15_DACR].value;
   u32int domBits = (dacr >> (dom*2)) & 0x3;
   
   switch (domBits)
@@ -448,12 +445,11 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
  * and hypervisor fails to shadow map the entry corresponding to the faulting address
  * it must be the case that the prefetch abort has to be forwarded to the guest
  **/
-bool shouldPrefetchAbort(bool privAccess, u32int address)
+bool shouldPrefetchAbort(GCONTXT *context, bool privAccess, u32int address)
 {
 #ifdef MEM_PROT_DBG
   printf("shouldPrefetchAbort(priv %x, address %08x)\n", privAccess, address);
 #endif
-  GCONTXT* context = getGuestContext();
 
   simpleEntry* guestFirst = 0; 
   simpleEntry* guestSecond = 0;
@@ -464,7 +460,7 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
   simpleEntry* gpt = 0;
   u32int gpt2 = 0; // this is just a the physical address as unsigned int
   simpleEntry* spt = context->pageTables->shadowActive;
-  u32int sysCtrlReg = getCregVal(context->coprocRegBank, CP15_SCTRL);
+  u32int sysCtrlReg = context->coprocRegBank[CP15_SCTRL].value;
 /*
   if (sysCtrlReg & 0x00000002)
   {
@@ -595,7 +591,7 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
   /* check domain: access type manager/client/no access          */ 
   /***************************************************************/
   u32int dom  = ((sectionEntry*)guestFirst)->domain;
-  u32int dacr = getCregVal(context->coprocRegBank, CP15_DACR);
+  u32int dacr = context->coprocRegBank[CP15_DACR].value;
   u32int domBits = (dacr >> (dom*2)) & 0x3;
   
   switch (domBits)

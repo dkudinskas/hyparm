@@ -8,18 +8,35 @@
 #include "vm/omap35xx/sms.h"
 
 
-struct Sms *sms;
+/************************
+ * REGISTER DEFINITIONS *
+ ************************/
 
-void initSms()
+#define SMS_REVISION                0
+#define SMS_SYSCONFIG            0x10
+#define SMS_SYSSTATUS            0x14
+#define SMS_RG_ATT(i)            (0x48 + ((i)*0x20))
+#define SMS_RG_RDPERM(i)         (0x50 + ((i)*0x20))
+#define SMS_RG_WRPERM(i)         (0x58 + ((i)*0x20))
+
+/**************************
+ * STATIC REGISTER VALUES *
+ **************************/
+
+#define SMS_REVISION_VALUE       0x30
+
+
+void initSms(virtualMachine *vm)
 {
   /**
    * initialization of SMS
    */
-  sms = (struct Sms *)calloc(1, sizeof(struct Sms));
+  struct Sms *const sms = (struct Sms *)calloc(1, sizeof(struct Sms));
   if (sms == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate SMS.");
   }
+  vm->sms = sms;
 
   DEBUG(VP_OMAP_35XX_SMS, "initSms @ %p" EOL, sms);
 
@@ -55,14 +72,11 @@ void initSms()
 }
 
 /* top load function */
-u32int loadSms(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadSms(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  if (size != WORD)
-  {
-    // only word access allowed in these modules
-    DIE_NOW(NULL, "Sms: invalid access size.");
-  }
+  ASSERT(size == WORD, ERROR_BAD_ACCESS_SIZE);
 
+  struct Sms *const sms = context->vm.sms;
   u32int regOffset = phyAddr - Q1_L3_SMS;
   u32int value = 0;
 
@@ -216,11 +230,12 @@ u32int loadSms(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 }
 
 /* top store function */
-void storeSms(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeSms(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DEBUG(VP_OMAP_35XX_SMS, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
       dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
+  struct Sms *const sms = context->vm.sms;
   u32int regOffset = phyAddr - Q1_L3_SMS;
 
   switch (regOffset)

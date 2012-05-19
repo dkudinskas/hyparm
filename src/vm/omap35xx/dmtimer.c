@@ -1,11 +1,7 @@
-#include "common/debug.h"
-#include "common/stddef.h"
-#include "common/stdlib.h"
-#include "common/string.h"
-
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/dmtimer.h"
+
 
 /*
  * Henri
@@ -16,21 +12,14 @@
  *
  * There's an option in the kernel config but disabling it breaks the build.
  */
-void initDmTimer()
-{
-  /*
-   * Nothing to initialize
-   */
-}
 
 
-u32int loadDmTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadDmTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   return 0;
 }
 
-
-void storeDmTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeDmTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  return;
+  // ignored
 }

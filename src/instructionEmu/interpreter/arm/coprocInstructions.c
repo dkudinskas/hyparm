@@ -41,7 +41,7 @@ u32int armMcrInstruction(GCONTXT *context, u32int instruction)
     u32int opcode2 = (instruction & 0x000000E0) >> 5;
     u32int regSrcNr = (instruction & 0x0000F000) >> 12;
     u32int srcVal = loadGuestGPR(regSrcNr, context);
-    setCregVal(context->coprocRegBank, CRB_INDEX(cRegSrc1, opcode1, cRegSrc2, opcode2), srcVal);
+    setCregVal(context, CRB_INDEX(cRegSrc1, opcode1, cRegSrc2, opcode2), srcVal);
   }
 
   return getRealPC(context) + ARM_INSTRUCTION_SIZE;

@@ -163,10 +163,12 @@ typedef struct guestContext
 
 
 /*
- * Gets the guest context pointer.
- * Defined in startup.s!
+ * Active guest context pointer; defined in startup.S
+ * WARNING: because it's volatile, EVERY use of this variable will cause a LOAD or STORE. So keep
+ * it sane and make a copy as non-volatile when using it. On the other hand, make sure to keep this
+ * one volatile to avoid funky compiler optimizations.
  */
-extern GCONTXT *getGuestContext(void);
+extern GCONTXT *volatile activeGuestContext;
 
 
 GCONTXT *createGuestContext(void) __cold__;
@@ -177,10 +179,10 @@ void dumpGuestContext(const GCONTXT * gc) __cold__;
 bool isGuestInPrivMode(GCONTXT *context);
 
 /* a function to to switch the guest to user mode */
-void guestToUserMode(void);
+void guestToUserMode(GCONTXT *context);
 
 /* a function to to switch the guest to privileged mode */
-void guestToPrivMode(void);
+void guestToPrivMode(GCONTXT *context);
 
 /* function to call when hypervisor changes guest modes. */
 void guestChangeMode(u32int guestMode);

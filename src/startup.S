@@ -197,20 +197,6 @@ setEmergencyExceptionVector:
 #endif /* CONFIG_EMERGENCY_EXCEPTION_VECTOR */
 
 
-.global getGuestContext
-getGuestContext:
-  LDR     R0, =guestContextSpace
-  LDR     R0, [R0]
-  BX      LR
-
-
-.global setGuestContext
-setGuestContext:
-  LDR     R1, =guestContextSpace
-  STR     R0, [R1]
-  BX      LR
-
-
 /*
  * get_emulated_mode
  *

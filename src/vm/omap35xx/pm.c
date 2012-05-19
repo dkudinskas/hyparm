@@ -8,23 +8,78 @@
 #include "vm/omap35xx/pm.h"
 
 
-struct PmRt     *pmrt;
-struct PmGpmc   *pmgpmc;
-struct PmOcmRam *pmocmram;
-struct PmOcmRom *pmocmrom;
-struct PmIva    *pmiva;
+/******************
+ * BASE REGISTERS *
+ ******************/
+
+#define PM_RT                 0x68010000  // Register target
+#define PM_GPMC               0x68012400  // General-purpose memory controller
+#define PM_OCM_RAM            0x68012800  // On-Chip RAM
+#define PM_OCM_ROM            0x68012C00  // On-Chip ROM
+#define PM_MAD2D              0x68013000
+#define PM_IVA2               0x68014000  // IVA2.2 subsystem
+
+/************************
+ * REGISTER DEFINITIONS *
+ ************************/
+
+#define PM_ERROR_LOG                0x20
+#define PM_CONTROL                  0x28
+#define PM_ERROR_CLEAR_SINGLE       0x30
+#define PM_ERROR_CLEAR_MULTI        0x38
+
+// PM_REQ_INFO_PERMISSION
+#define PM_REQ_INFO_PERMISSION_0    0x48
+#define PM_REQ_INFO_PERMISSION_1    0x68
+#define PM_REQ_INFO_PERMISSION_2    0x88
+#define PM_REQ_INFO_PERMISSION_3    0xA8
+#define PM_REQ_INFO_PERMISSION_4    0xC8
+#define PM_REQ_INFO_PERMISSION_5    0xE8
+#define PM_REQ_INFO_PERMISSION_6    0x108
+#define PM_REQ_INFO_PERMISSION_7    0x128
+
+// PM_READ_PERMISSION
+#define PM_READ_PERMISSION_0        0x50
+#define PM_READ_PERMISSION_1        0x70
+#define PM_READ_PERMISSION_2        0x90
+#define PM_READ_PERMISSION_3        0xB0
+#define PM_READ_PERMISSION_4        0xD0
+#define PM_READ_PERMISSION_5        0xF0
+#define PM_READ_PERMISSION_6        0x110
+#define PM_READ_PERMISSION_7        0x130
+
+// PM_WRITE_PERMISSION
+#define PM_WRITE_PERMISSION_0       0x58
+#define PM_WRITE_PERMISSION_1       0x78
+#define PM_WRITE_PERMISSION_2       0x98
+#define PM_WRITE_PERMISSION_3       0xB8
+#define PM_WRITE_PERMISSION_4       0xD8
+#define PM_WRITE_PERMISSION_5       0xF8
+#define PM_WRITE_PERMISSION_6       0x118
+#define PM_WRITE_PERMISSION_7       0x138
+
+// PM_ADDR_MATCH
+#define PM_ADDR_MATCH_0             0x60
+#define PM_ADDR_MATCH_1             0x80
+#define PM_ADDR_MATCH_2             0xA0
+#define PM_ADDR_MATCH_3             0xC0
+#define PM_ADDR_MATCH_4             0xE0
+#define PM_ADDR_MATCH_5             0x100
+#define PM_ADDR_MATCH_6             0x120
+#define PM_ADDR_MATCH_7             0x140
 
 
-void initProtectionMechanism()
+void initProtectionMechanism(virtualMachine *vm)
 {
   /**
    * initialization of PM_RT
    */
-  pmrt = (struct PmRt *)calloc(1, sizeof(struct PmRt));
+  struct PmRt *const pmrt = (struct PmRt *)calloc(1, sizeof(struct PmRt));
   if (pmrt == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate PM_RT.");
   }
+  vm->pmrt = pmrt;
 
   DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism: @ %p" EOL, pmrt);
 
@@ -43,11 +98,12 @@ void initProtectionMechanism()
   /**
    * initialization of PM_GPMC
    */
-  pmgpmc = (struct PmGpmc *)calloc(1, sizeof(struct PmGpmc));
+  struct PmGpmc *const pmgpmc = (struct PmGpmc *)calloc(1, sizeof(struct PmGpmc));
   if (pmgpmc == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate PM_GPMC.");
   }
+  vm->pmgpmc = pmgpmc;
 
   DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism: @ %p" EOL, pmgpmc);
 
@@ -82,11 +138,12 @@ void initProtectionMechanism()
   /**
    * initialization of PM_OCM_RAM
    */
-  pmocmram = (struct PmOcmRam *)calloc(1, sizeof(struct PmOcmRam));
+  struct PmOcmRam *const pmocmram = (struct PmOcmRam *)calloc(1, sizeof(struct PmOcmRam));
   if (pmocmram == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate PM_OCM_RAM.");
   }
+  vm->pmocmram = pmocmram;
 
   DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism: @ %p" EOL, pmocmram);
 
@@ -123,11 +180,12 @@ void initProtectionMechanism()
   /**
    * initialization of PM_OCM_ROM
    */
-  pmocmrom = (struct PmOcmRom *)calloc(1, sizeof(struct PmOcmRom));
+  struct PmOcmRom *const pmocmrom = (struct PmOcmRom *)calloc(1, sizeof(struct PmOcmRom));
   if (pmocmrom == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate PM_RT.");
   }
+  vm->pmocmrom = pmocmrom;
 
   DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism: @ %p" EOL, pmocmrom);
 
@@ -143,11 +201,12 @@ void initProtectionMechanism()
   /**
    * initialization of PM_IVA
    */
-  pmiva = (struct PmIva *)calloc(1, sizeof(struct PmIva));
+  struct PmIva *const pmiva = (struct PmIva *)calloc(1, sizeof(struct PmIva));
   if (pmiva == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate PM_IVA.");
   }
+  vm->pmiva = pmiva;
 
   DEBUG(VP_OMAP_35XX_PM, "initProtectionMechanism: @ %p" EOL, pmiva);
 
@@ -169,7 +228,7 @@ void initProtectionMechanism()
 }
 
 /* top load function */
-u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   if (size != WORD)
   {
@@ -182,6 +241,7 @@ u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u
 
   if (phyAddr >= PM_RT && phyAddr < PM_GPMC)
   {
+    struct PmRt *const pmrt = context->vm.pmrt;
     regOffset = phyAddr - PM_RT;
 
     switch (regOffset)
@@ -228,6 +288,7 @@ u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u
   }
   else if (phyAddr >= PM_GPMC && phyAddr < PM_OCM_RAM)
   {
+    struct PmGpmc *const pmgpmc = context->vm.pmgpmc;
     regOffset = phyAddr - PM_GPMC;
 
     switch (regOffset)
@@ -346,6 +407,7 @@ u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u
   }
   else if (phyAddr >= PM_OCM_RAM && phyAddr < PM_OCM_ROM)
   {
+    struct PmOcmRam *const pmocmram = context->vm.pmocmram;
     regOffset = phyAddr - PM_OCM_RAM;
 
     switch (regOffset)
@@ -464,6 +526,7 @@ u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u
   }
   else if (phyAddr >= PM_OCM_ROM && phyAddr < PM_MAD2D)
   {
+    struct PmOcmRom *const pmocmrom = context->vm.pmocmrom;
     regOffset = phyAddr - PM_OCM_ROM;
 
     switch (regOffset)
@@ -510,6 +573,7 @@ u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u
   }
   else if (phyAddr >= PM_IVA2 && phyAddr < (Q1_L3_PM + Q1_L3_PM_SIZE))
   {
+    struct PmIva *const pmiva = context->vm.pmiva;
     regOffset = phyAddr - PM_IVA2;
 
     switch (regOffset)
@@ -586,7 +650,7 @@ u32int loadProtectionMechanism(device *dev, ACCESS_SIZE size, u32int virtAddr, u
 }
 
 /* top store function */
-void storeProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DEBUG(VP_OMAP_35XX_PM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
       dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
@@ -595,6 +659,7 @@ void storeProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u
 
   if (phyAddr >= PM_RT && phyAddr < PM_GPMC)
   {
+    struct PmRt *const pmrt = context->vm.pmrt;
     regOffset = phyAddr - PM_RT;
 
     switch (regOffset)
@@ -635,6 +700,7 @@ void storeProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u
   }
   else if (phyAddr >= PM_GPMC && phyAddr < PM_OCM_RAM)
   {
+    struct PmGpmc *const pmgpmc = context->vm.pmgpmc;
     regOffset = phyAddr - PM_GPMC;
 
     switch (regOffset)
@@ -747,6 +813,7 @@ void storeProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u
   }
   else if (phyAddr >= PM_OCM_RAM && phyAddr < PM_OCM_ROM)
   {
+    struct PmOcmRam *const pmocmram = context->vm.pmocmram;
     regOffset = phyAddr - PM_OCM_RAM;
 
     switch (regOffset)
@@ -859,6 +926,7 @@ void storeProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u
   }
   else if (phyAddr >= PM_OCM_ROM && phyAddr < PM_MAD2D)
   {
+    struct PmOcmRom *const pmocmrom = context->vm.pmocmrom;
     regOffset = phyAddr - PM_OCM_ROM;
 
     switch (regOffset)
@@ -899,6 +967,7 @@ void storeProtectionMechanism(device * dev, ACCESS_SIZE size, u32int virtAddr, u
   }
   else if (phyAddr >= PM_IVA2 && phyAddr < (Q1_L3_PM + Q1_L3_PM_SIZE))
   {
+    struct PmIva *const pmiva = context->vm.pmiva;
     regOffset = phyAddr - PM_IVA2;
 
     switch (regOffset)

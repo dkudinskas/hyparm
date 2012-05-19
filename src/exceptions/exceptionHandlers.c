@@ -195,14 +195,14 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     {
       // guest was in privileged mode, after interpreting switched to user mode.
       // return from exception, CPS or MSR. act accordingly
-      guestToUserMode();
+      guestToUserMode(context);
     }
     else if (((cpsrOld & PSR_MODE) == PSR_USR_MODE) &&
              ((cpsrNew & PSR_MODE) != PSR_USR_MODE))
     {
       // guest was in user mode. we hit a guest SVC. switch guest to privileged mode
       // return from exception, CPS or MSR. act accordingly
-      guestToPrivMode();
+      guestToPrivMode(context);
     }
   }
 
@@ -319,7 +319,7 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
     case dfsTranslationSection:
     case dfsTranslationPage:
     {
-      dabtTranslationFault(getGuestContext(), dfsr, dfar);
+      dabtTranslationFault(activeGuestContext, dfsr, dfar);
       break;
     }
     case dfsAlignmentFault:
@@ -380,7 +380,7 @@ GCONTXT *prefetchAbort(GCONTXT *context)
     case ifsTranslationTableWalk2ndLvllSynchExtAbt:
 #ifdef CONFIG_GUEST_FREERTOS
     {
-      if (shouldPrefetchAbort(isGuestInPrivMode(context), ifar))
+      if (shouldPrefetchAbort(context, isGuestInPrivMode(context), ifar))
       {
         deliverPrefetchAbort(context);
         setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_FREERTOS);
@@ -476,7 +476,7 @@ GCONTXT *irq(GCONTXT *context)
     }
     case GPT2_IRQ:
     {
-      throwInterrupt(activeIrqNumber);
+      throwInterrupt(context, activeIrqNumber);
       /*
        * FIXME: figure out which interrupt to clear and then clear the right one?
        */
@@ -500,7 +500,7 @@ GCONTXT *irq(GCONTXT *context)
       u8int c = serialGetcAsync();
       acknowledgeIrqBE();
       // forward character to emulated UART
-      uartPutRxByte(c, 3);
+      uartPutRxByte(context, c, 3);
       break;
     }
     default:
@@ -523,6 +523,7 @@ GCONTXT *irq(GCONTXT *context)
 
 void irqPrivileged()
 {
+  GCONTXT *const context = activeGuestContext;
   incrementIrqCounter();
 
   // Get the number of the highest priority active IRQ/FIQ
@@ -537,13 +538,13 @@ void irqPrivileged()
     }
     case GPT2_IRQ:
     {
-      throwInterrupt(activeIrqNumber);
+      throwInterrupt(context, activeIrqNumber);
       /*
        * FIXME: figure out which interrupt to clear and then clear the right one?
        */
       gptBEClearOverflowInterrupt(2);
 #ifdef CONFIG_GUEST_FREERTOS
-      if (getGuestContext()->os == GUEST_OS_FREERTOS)
+      if (context->os == GUEST_OS_FREERTOS)
       {
         gptBEResetCounter(2);
         gptBEClearMatchInterrupt(2);
@@ -561,7 +562,7 @@ void irqPrivileged()
       u8int c = serialGetcAsync();
       acknowledgeIrqBE();
       // forward character to emulated UART
-      uartPutRxByte(c, 3);
+      uartPutRxByte(context, c, 3);
       break;
     }
     default:
@@ -588,13 +589,13 @@ void fiq(void)
 
 
 
-void dabtPermissionFault(GCONTXT * gc, DFSR dfsr, u32int dfar)
+void dabtPermissionFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
 {
   // Check if the addr we have faulted on is caused by
   // a memory protection the hypervisor has enabled
   if (gc->virtAddrEnabled)
   {
-    if (shouldDataAbort(isGuestInPrivMode(gc), dfsr.WnR, dfar))
+    if (shouldDataAbort(gc, isGuestInPrivMode(gc), dfsr.WnR, dfar))
     {
       deliverDataAbort(gc);
       setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION);
@@ -631,7 +632,7 @@ void dabtPermissionFault(GCONTXT * gc, DFSR dfsr, u32int dfar)
 }
 
 
-void dabtTranslationFault(GCONTXT * gc, DFSR dfsr, u32int dfar)
+void dabtTranslationFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
 {
   /* if we hit this - that means that:
      mem access address corresponding 1st level page table entry FAULT/reserved
@@ -639,10 +640,10 @@ void dabtTranslationFault(GCONTXT * gc, DFSR dfsr, u32int dfar)
      see if translation fault should be forwarded to the guest!
      if THAT fails, then really panic.
    */
-  if (!shadowMap(dfar))
+  if (!shadowMap(gc, dfar))
   {
     // failed to shadow map!
-    if (shouldDataAbort(isGuestInPrivMode(gc), dfsr.WnR, dfar))
+    if (shouldDataAbort(gc, isGuestInPrivMode(gc), dfsr.WnR, dfar))
     {
       deliverDataAbort(gc);
       setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_TRANSLATION);
@@ -657,7 +658,7 @@ void dabtTranslationFault(GCONTXT * gc, DFSR dfsr, u32int dfar)
 }
 
 
-void iabtTranslationFault(GCONTXT * gc, IFSR ifsr, u32int ifar)
+void iabtTranslationFault(GCONTXT *gc, IFSR ifsr, u32int ifar)
 {
   /* if we hit this - that means that:
      mem access address corresponding 1st level page table entry FAULT/reserved
@@ -665,10 +666,10 @@ void iabtTranslationFault(GCONTXT * gc, IFSR ifsr, u32int ifar)
      see if translation fault should be forwarded to the guest!
      if THAT fails, then really panic.
    */
-  if (!shadowMap(ifar))
+  if (!shadowMap(gc, ifar))
   {
     // failed to shadow map!
-    if (shouldPrefetchAbort(isGuestInPrivMode(gc), ifar))
+    if (shouldPrefetchAbort(gc, isGuestInPrivMode(gc), ifar))
     {
       deliverPrefetchAbort(gc);
       setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_TRANSLATION);

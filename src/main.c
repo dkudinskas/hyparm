@@ -70,8 +70,6 @@ void main(s32int argc, char *argv[]) __cold__;
 static void processCommandLine(struct runtimeConfiguration *config, s32int argc, char *argv[]) __cold__;
 static bool stringToAddress(const char *str, u32int *address) __cold__;
 
-extern void setGuestContext(GCONTXT *gContext);
-
 
 #ifdef CONFIG_MMC
 fatfs mainFilesystem;
@@ -131,7 +129,7 @@ void main(s32int argc, char *argv[])
 
   /* initialize guest context */
   GCONTXT *context = createGuestContext();
-  setGuestContext(context);
+  activeGuestContext = context;
 
   /* Setup MMU for Hypervisor
    * NOTE: assumes guest context is set up in full (PT info + T$) */

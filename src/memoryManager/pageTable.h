@@ -135,13 +135,16 @@ struct smallPageDescriptor
 typedef struct smallPageDescriptor smallPageEntry;
 
 
+typedef struct guestContext GCONTXT;
+
+
 void dumpTranslationTable(simpleEntry *table) __cold__;
 
 
 /*************** rewritten functions *********************/
 simpleEntry *newLevelOnePageTable(void);
 u32int* newLevelTwoPageTable(void);
-void deleteLevelTwoPageTable(pageTableEntry* pageTable);
+void deleteLevelTwoPageTable(GCONTXT *context, pageTableEntry* pageTable);
 
 void mapHypervisorMemory(simpleEntry* ptd);
 
@@ -160,17 +163,17 @@ void addSmallPageEntry(smallPageEntry* smallPageEntryPtr, u32int physical,
         u8int accessBits, u8int cacheable, u8int bufferable, u8int tex, u8int xn);
 void addPageTableEntry(pageTableEntry* pageTableEntryPtr, u32int physical, u8int domain);
 
-u32int getPhysicalAddress(simpleEntry* pageTable, u32int virtAddr);
+u32int getPhysicalAddress(GCONTXT *context, simpleEntry* pageTable, u32int virtAddr);
 simpleEntry* getEntryFirst(simpleEntry* pageTable, u32int virtAddr);
-simpleEntry* getEntrySecond(pageTableEntry* firstLevelEntry, u32int virtAddr);
+simpleEntry* getEntrySecond(GCONTXT *context, pageTableEntry* firstLevelEntry, u32int virtAddr);
 
 void splitSectionToSmallPages(simpleEntry* pageTable, u32int virtAddr);
 
-bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr);
+bool isAddrInPageTable(GCONTXT *context, simpleEntry* pageTablePhys, u32int physAddr);
 
-void pageTableEdit(u32int address, u32int newVal);
+void pageTableEdit(GCONTXT *context, u32int address, u32int newVal);
 
-void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, simpleEntry* shadow, u32int virtual);
+void editAttributesSection(GCONTXT *context, sectionEntry* oldSection, sectionEntry* newSection, simpleEntry* shadow, u32int virtual);
 void editAttributesPageTable(pageTableEntry* oldTable, pageTableEntry* newTable, pageTableEntry* shadowTable, u32int virtual);
 void editAttributesSmallPage(smallPageEntry* oldPage, smallPageEntry* newPage, smallPageEntry* shadowPage, u32int virtual);
 

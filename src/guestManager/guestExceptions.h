@@ -18,7 +18,7 @@
 // hypercall handler deals with it.
 void deliverServiceCall(GCONTXT *context);
 
-void throwInterrupt(u32int irqNumber);
+void throwInterrupt(GCONTXT *context, u32int irqNumber);
 void deliverInterrupt(GCONTXT *context);
 
 void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isWrite, u32int domain);

@@ -3,8 +3,6 @@
 #include "common/stdlib.h"
 #include "common/string.h"
 
-#include "guestManager/guestContext.h"
-
 #include "vm/omap35xx/sdram.h"
 
 
@@ -38,9 +36,8 @@ void initSdram(virtualMachine *vm)
 #endif
 }
 
-void dumpSdramStats()
+void dumpSdramStats(struct SdramController *sdram)
 {
-  struct SdramController* sdram = getGuestContext()->vm.sdram;
 #ifdef CONFIG_SDRAM_STORE_COUNTER
   printf("Store trace:" EOL);
 
@@ -56,7 +53,7 @@ void dumpSdramStats()
 }
 
 
-u32int loadSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadSdram(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   u32int val = 0;
 
@@ -92,9 +89,8 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr
 }
 
 
-void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeSdram(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  GCONTXT* context = getGuestContext();
   struct SdramController* sdram = context->vm.sdram;
 
   DEBUG(VP_OMAP_35XX_SDRAM, "%s store to physical address: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x"
@@ -112,9 +108,9 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr,
       // I presume page table edits only happen in full word accesses... dont they?
       if (context->virtAddrEnabled)
       {
-        if (isAddrInPageTable(context->pageTables->guestPhysical, phyAddr))
+        if (isAddrInPageTable(context, context->pageTables->guestPhysical, phyAddr))
         {
-          pageTableEdit(virtAddr, value);
+          pageTableEdit(context, virtAddr, value);
         }
       }
       // store the value...

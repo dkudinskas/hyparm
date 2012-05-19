@@ -49,7 +49,7 @@ u32int t32LdrshImmediate12Instruction(GCONTXT *context, u32int instruction)
   u32int baseAddress = loadGuestGPR(regSrc, context);
   u32int offsetAddress = baseAddress + imm12;
 
-  storeGuestGPR(regDst, vmLoad(HALFWORD, offsetAddress) & 0xFFFF, context);
+  storeGuestGPR(regDst, vmLoad(context, HALFWORD, offsetAddress) & 0xFFFF, context);
   return context->R15 + T32_INSTRUCTION_SIZE;
 }
 

@@ -52,7 +52,7 @@ u32int t16LdrInstruction(GCONTXT *context, u32int instruction)
     DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
-  storeGuestGPR(regDst, vmLoad(WORD, offsetAddress), context);
+  storeGuestGPR(regDst, vmLoad(context, WORD, offsetAddress), context);
   return context->R15 + T16_INSTRUCTION_SIZE;
 }
 
@@ -80,7 +80,7 @@ u32int t16LdrbInstruction(GCONTXT *context, u32int instruction)
 
   u32int baseAddress = loadGuestGPR(regSrc, context);
   u32int offsetAddress = baseAddress + offset;
-  storeGuestGPR(regDst, vmLoad(BYTE, offsetAddress) & 0xFF, context);
+  storeGuestGPR(regDst, vmLoad(context, BYTE, offsetAddress) & 0xFF, context);
   return context->R15 + T16_INSTRUCTION_SIZE;
 }
 
@@ -112,13 +112,13 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
     // if current register set
     if (((regList >> i) & 0x1) == 0x1)
     {
-      storeGuestGPR(i, vmLoad(WORD, baseAddress), context);
+      storeGuestGPR(i, vmLoad(context, WORD, baseAddress), context);
       baseAddress = baseAddress + 4;
     }
   } // for ends
 
   // and now take care of the PC
-  nextPC = vmLoad(WORD, baseAddress);
+  nextPC = vmLoad(context, WORD, baseAddress);
   baseAddress += 4;
 
   // thumb always updates the SP

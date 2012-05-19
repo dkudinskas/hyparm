@@ -1,53 +1,45 @@
 #include "common/debug.h"
-#include "common/stddef.h"
 #include "common/stdlib.h"
-#include "common/string.h"
-
-#include "drivers/beagle/beGPTimer.h"
-#include "drivers/beagle/beIntc.h"
 
 #include "guestManager/guestContext.h"
 
-#include "vm/omap35xx/clockManager.h"
 #include "vm/omap35xx/wdtimer.h"
 
 
-struct WatchdogTimer *wdtimer2;
+// register offsets and bit values
+#define WDT_WIDR            0x00
+#define WDT_WD_SYSCONFIG    0x10
+#define WDT_WD_SYSSTATUS    0x14
+#define WDT_WISR            0x18
+#define WDT_WIER            0x1C
+#define WDT_WCLR            0x24
+#define WDT_WCRR            0x28
+#define WDT_WLDR            0x2C
+#define WDT_WTGR            0x30
+#define WDT_WWPS            0x34
+#define WDT_WSPR            0x48
 
 
-void initWDTimer2()
+static void resetWatchdogTimer(struct WatchdogTimer *wt);
+
+
+void initWDTimer2(virtualMachine *vm)
 {
   // init function: setup device, reset register values to defaults!
-  wdtimer2 = (struct WatchdogTimer *)calloc(1, sizeof(struct WatchdogTimer));
-  if (wdtimer2 == NULL)
+  vm->wdtimer2 = (struct WatchdogTimer *)calloc(1, sizeof(struct WatchdogTimer));
+  if (vm->wdtimer2 == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate MPU watchdog timer (WDT2).");
   }
 
-  DEBUG(VP_OMAP_35XX_WDTIMER, "Initializing watchdog timer at %p" EOL, wdtimer2);
+  DEBUG(VP_OMAP_35XX_WDTIMER, "Initializing watchdog timer at %p" EOL, vm->wdtimer2);
 
-  resetWDTimer2();
+  resetWatchdogTimer(vm->wdtimer2);
 }
 
-void resetWDTimer2(void)
+u32int loadWDTimer2(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  // reset to default register values
-  wdtimer2->widr =        0x31;
-  wdtimer2->wdSysconfig = 0;
-  wdtimer2->wdSysstatus = 0x1;
-  wdtimer2->wisr =        0;
-  wdtimer2->wier =        0;
-  wdtimer2->wclr =        0x20;
-  wdtimer2->wcrr =        0;
-  wdtimer2->wldr =        0xFFFB0000;
-  wdtimer2->wtgr =        0;
-  wdtimer2->wwps =        0;
-  wdtimer2->wspr =        0;
-}
-
-
-u32int loadWDTimer2(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
-{
+  struct WatchdogTimer *const wt = context->vm.wdtimer2;
   u32int value = 0;
   u32int reg = phyAddr - WDTIMER2;
 
@@ -55,12 +47,12 @@ u32int loadWDTimer2(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyA
   {
     case WDT_WD_SYSCONFIG:
     {
-      value = wdtimer2->wdSysconfig;
+      value = wt->wdSysconfig;
       break;
     }
     case WDT_WWPS:
     {
-      value = wdtimer2->wwps;
+      value = wt->wwps;
       break;
     }
     default:
@@ -76,8 +68,9 @@ u32int loadWDTimer2(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyA
 }
 
 
-void storeWDTimer2(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeWDTimer2(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
+  struct WatchdogTimer *const wt = context->vm.wdtimer2;
   u32int reg = phyAddr - WDTIMER2;
 
   DEBUG(VP_OMAP_35XX_WDTIMER, "%s: storing reg %x value %.8x" EOL, __func__, reg, value);
@@ -86,12 +79,12 @@ void storeWDTimer2(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAd
   {
     case WDT_WD_SYSCONFIG:
     {
-      wdtimer2->wdSysconfig = value;
+      wt->wdSysconfig = value;
       break;
     }
     case WDT_WSPR:
     {
-      wdtimer2->wspr = value;
+      wt->wspr = value;
       break;
     }
     default:
@@ -102,3 +95,18 @@ void storeWDTimer2(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAd
   }
 }
 
+void resetWatchdogTimer(struct WatchdogTimer *wt)
+{
+  // reset to default register values
+  wt->widr =        0x31;
+  wt->wdSysconfig = 0;
+  wt->wdSysstatus = 0x1;
+  wt->wisr =        0;
+  wt->wier =        0;
+  wt->wclr =        0x20;
+  wt->wcrr =        0;
+  wt->wldr =        0xFFFB0000;
+  wt->wtgr =        0;
+  wt->wwps =        0;
+  wt->wspr =        0;
+}
