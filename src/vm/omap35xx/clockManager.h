@@ -4,7 +4,10 @@
 #include "common/compiler.h"
 #include "common/types.h"
 
-#include "vm/omap35xx/hardwareLibrary.h"
+#include "vm/types.h"
+
+
+typedef struct EmumulatedVirtualMachine virtualMachine;
 
 
 /* CM module instances live at these physical addresses */
@@ -149,7 +152,7 @@
 #define CM_FCLKEN_PER_EN_MCBSP2        0x00000001
 #define CM_ICLKEN_PER               0x00000010 // control interface clock, RW
 #define CM_ICLKEN_PER_RESERVED         0xFFFC0000
-#define CM_ICLKEN_PER_GPIO6            0x00020000
+#define CM_ICLKEN_PER_GPIO6        struct genericDevice    0x00020000
 #define CM_ICLKEN_PER_GPIO5            0x00010000
 #define CM_ICLKEN_PER_GPIO4            0x00008000
 #define CM_ICLKEN_PER_GPIO3            0x00004000
@@ -241,7 +244,7 @@
 #define CM_CLKSTST_USBHOST          0x0000004C // interface clock activity status, R/O
 
 
-void initClockManager(void) __cold__;
+void initClockManager(virtualMachine *vm) __cold__;
 
 /* top load function */
 u32int loadClockManager(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);

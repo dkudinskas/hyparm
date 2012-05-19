@@ -35,12 +35,9 @@ GCONTXT *createGuestContext(void)
       context->coprocRegBank);
 
   /*
-   * Initialise block copy cache
+   * Initialise translation cache
    */
   initialiseTranslationCache(context);
-#ifdef CONFIG_BLOCK_COPY
-  DEBUG(GUEST_CONTEXT, "createGuestContext: block copy cache @ %p" EOL, context->translationCache.codeCache);
-#endif
 
   // virtual machine page table structs
   context->pageTables = (pageTablesVM *)calloc(1, sizeof(pageTablesVM));
@@ -48,10 +45,13 @@ GCONTXT *createGuestContext(void)
   {
     DIE_NOW(context, "Failed to allocate page tables struct");
   }
-  DEBUG(GUEST_CONTEXT, "allocateGuestContext: page tables @ %p" EOL, context->pageTables);
+  DEBUG(GUEST_CONTEXT, "createGuestContext: page tables @ %p" EOL, context->pageTables);
+
+  // virtual machine struct
+  DEBUG(GUEST_CONTEXT, "createGuestContext: virtual machine @ %p" EOL, &context->vm);
 
   // Initialise virtual hardware devices
-  context->hardwareLibrary = createHardwareLibrary();
+  context->hardwareLibrary = createHardwareLibrary(context);
   if (context->hardwareLibrary == NULL)
   {
     DIE_NOW(context, "Hardware library initialisation failed.");
@@ -157,11 +157,12 @@ void dumpGuestContext(const GCONTXT *context)
   printf("IRQ: %#.8x" EOL, context->guestIrqHandler);
   printf("FIQ: %#.8x" EOL, context->guestFiqHandler);
   printf("Hardware library: not core dumping just yet" EOL);
+  printf("Virtual Machine structure at %p" EOL, &context->vm);
   printf("Interrupt pending: %x" EOL, context->guestIrqPending);
   printf("Data abort pending: %x" EOL, context->guestDataAbtPending);
   printf("Prefetch abort pending: %x" EOL, context->guestPrefetchAbtPending);
   printf("Guest idle: %x" EOL, context->guestIdle);
-  printf("Block cache at: %#.8x" EOL, (u32int)context->translationCache.metaCache);
+  printf("Metacache at: %p" EOL, context->translationCache.metaCache);
 
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
   printf("Block trace:" EOL);
@@ -216,4 +217,14 @@ void guestToUserMode()
 void guestToPrivMode()
 {
   userToPrivAddressing();
+}
+
+
+/**
+ * guest is switching modes.
+ **/
+void guestChangeMode(u32int guestMode)
+{
+  // we must make sure the correct exception vector is set.
+  setExceptionVector(guestMode);
 }

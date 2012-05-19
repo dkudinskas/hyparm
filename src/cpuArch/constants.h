@@ -56,6 +56,7 @@
 #define PSR_FIQ_MODE                0x11
 #define PSR_IRQ_MODE                0x12
 #define PSR_SVC_MODE                0x13
+#define PSR_MON_MODE                0X16
 #define PSR_ABT_MODE                0x17
 #define PSR_UND_MODE                0x1b
 #define PSR_SYS_MODE                0x1f

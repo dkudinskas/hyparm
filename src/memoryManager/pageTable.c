@@ -230,6 +230,7 @@ void mapHypervisorMemory(simpleEntry *pageTable)
   /*
    * Finally... map hypervisor memory.
    */
+#ifndef CONFIG_DISABLE_HYPERVISOR_MEMORY_PROTECTION
   mapRange(pageTable, HYPERVISOR_TEXT_BEGIN_ADDRESS, HYPERVISOR_TEXT_BEGIN_ADDRESS,
            HYPERVISOR_TEXT_END_ADDRESS, HYPERVISOR_ACCESS_DOMAIN, PRIV_RO_USR_NO, TRUE,
            FALSE, 0, FALSE);
@@ -253,6 +254,10 @@ void mapHypervisorMemory(simpleEntry *pageTable)
            TRUE);
   mapRange(pageTable, RAM_XN_POOL_BEGIN, RAM_XN_POOL_BEGIN, RAM_XN_POOL_END,
            HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+#else
+  mapRange(pageTable, HYPERVISOR_BEGIN_ADDRESS, HYPERVISOR_BEGIN_ADDRESS, MEMORY_END_ADDR,
+           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+#endif
 }
 
 /**
@@ -306,7 +311,6 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
   // First check 1st Level page table entry
   simpleEntry* first = getEntryFirst(pageTable, virtAddr);
   DEBUG(MM_PAGE_TABLES, "mapSmallPage: first entry %#.8x @ %p" EOL, *(u32int *)first, first);
-  GCONTXT* gc = getGuestContext();
   switch(first->type)
   {
     case FAULT:
@@ -314,8 +318,13 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
       DEBUG(MM_PAGE_TABLES, "mapSmallPage: entry for given VA is FAULT. Creating new" EOL);
       // we need a new second level page table. This gives a virtual address allocated
       u32int *vAddr = newLevelTwoPageTable();
-      // need to get the physical address (assume 1:1 mapping will follow in case MMU is disabled)
-      u32int pAddr = gc->virtAddrEnabled ? getPhysicalAddress(pageTable, (u32int)vAddr) : (u32int)vAddr;
+      // need to get the physical address
+#ifdef CONFIG_DISABLE_HYPERVISOR_MEMORY_PROTECTION
+      u32int pAddr = getPhysicalAddress(pageTable, (u32int)vAddr);
+#else
+      u32int pAddr = getGuestContext()->virtAddrEnabled
+                   ? getPhysicalAddress(pageTable, (u32int)vAddr) : (u32int)vAddr;
+#endif
       DEBUG(MM_PAGE_TABLES, "mapSmallPage: PT VA %p PA %#.8x" EOL, vAddr, pAddr);
       // store metadata
       addPageTableEntry((pageTableEntry*)first, (u32int)pAddr, domain);
@@ -633,7 +642,6 @@ bool isAddrInPageTable(simpleEntry* pageTablePhys, u32int physAddr)
   return FALSE; 
 }
 
-
 /**
  * Called from the instruction emulator when we have a permission abort
  * and the guest is writing to its own page table
@@ -877,7 +885,6 @@ void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, s
   // WARNING: shadow descriptor type might not correspond to guest descriptor type!!! 
   DEBUG(MM_PAGE_TABLES, "editAttributesSection: oldSection %#.8x, newSection %#.8x shadow %#.8x"
         EOL, *(u32int *)oldSection, *(u32int *)newSection, *(u32int *)shadow);
-  GCONTXT *context = getGuestContext();
 
   if (shadow->type == FAULT)
   {
@@ -975,7 +982,6 @@ void editAttributesSmallPage(smallPageEntry* oldPage, smallPageEntry* newPage, s
 {
   DEBUG(MM_PAGE_TABLES, "editAttributesSmallPage: oldPage %#.8x, newPage %#.8x shadowPage %#.8x"
         EOL, *(u32int *)oldPage, *(u32int *)newPage, *(u32int *)shadowPage);
-  GCONTXT *context = getGuestContext();
 
   if (shadowPage->type == FAULT)
   {

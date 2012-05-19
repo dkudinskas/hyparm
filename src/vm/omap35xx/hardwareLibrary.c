@@ -6,26 +6,28 @@
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/clockManager.h"
-#include "vm/omap35xx/dmtimer.h"
 #include "vm/omap35xx/gpio.h"
 #include "vm/omap35xx/gpmc.h"
 #include "vm/omap35xx/gptimer.h"
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/intc.h"
-#include "vm/omap35xx/mmc.h"
-#include "vm/omap35xx/pm.h"
 #include "vm/omap35xx/prm.h"
-#include "vm/omap35xx/sdrc.h"
 #include "vm/omap35xx/sdma.h"
 #include "vm/omap35xx/sdram.h"
-#include "vm/omap35xx/sms.h"
 #include "vm/omap35xx/sramInternal.h"
 #include "vm/omap35xx/sysControlModule.h"
 #include "vm/omap35xx/timer32k.h"
 #include "vm/omap35xx/uart.h"
 #include "vm/omap35xx/controlModule.h"
-#include "vm/omap35xx/wdtimer.h"
 
+#ifdef CONFIG_GUEST_ANDROID
+#include "vm/omap35xx/dmtimer.h"
+#include "vm/omap35xx/mmc.h"
+#include "vm/omap35xx/pm.h"
+#include "vm/omap35xx/sdrc.h"
+#include "vm/omap35xx/sms.h"
+#include "vm/omap35xx/wdtimer.h"
+#endif
 
 static bool attachDevice(device *parent, device *child) __cold__;
 static device *createDevice(const char *devName, bool isBus, u32int addrStart, u32int addrEnd,
@@ -88,7 +90,7 @@ static device *createDevice(const char *devName, bool isBus, u32int addrStart, u
   return dev;
 }
 
-device *createHardwareLibrary()
+device *createHardwareLibrary(GCONTXT *context)
 {
   /*
    * Here we allocate all device structures. If any allocation fails, deallocation happens in
@@ -173,8 +175,9 @@ device *createHardwareLibrary()
   {
     goto gpmcModuleError;
   }
-  initGpmc();
+  initGpmc(&context->vm);
 
+#ifdef CONFIG_GUEST_ANDROID
   // L3INT: Protection Mechanism (PM)
   device *pmModule = createDevice("L3_PM", FALSE, Q1_L3_PM, (u32int)(Q1_L3_PM + Q1_L3_PM_SIZE - 1),
                                   l3Interconnect, &loadProtectionMechanism,
@@ -204,7 +207,7 @@ device *createHardwareLibrary()
     goto sdrcModuleError;
   }
   initSdrc();
-
+#endif /* CONFIG_GUEST_ANDROID */
 
   // Q1: LEVEL4 INTERCONNECT (L4INT, parent Q1)
   device *l4Interconnect = createDevice("L4_INTERCONNECT", TRUE, Q1_L4_INTERCONNECT,
@@ -232,7 +235,7 @@ device *createHardwareLibrary()
   {
     goto sysCtrlModError;
   }
-  initSysControlModule();
+  initSysControlModule(&context->vm);
 
   // L4INT_CORE: clock manager (and DPLL)
   device *clockManager = createDevice("CLOCK_MAN", FALSE, CLOCK_MANAGER,
@@ -242,7 +245,7 @@ device *createHardwareLibrary()
   {
     goto clockManagerError;
   }
-  initClockManager();
+  initClockManager(&context->vm);
 
   // L4INT_CORE: SDMA
   device *sdmaModule = createDevice("SDMA", FALSE, SDMA, (u32int) (SDMA - 1 + SDMA_SIZE),
@@ -251,7 +254,7 @@ device *createHardwareLibrary()
   {
     goto sdmaModuleError;
   }
-  initSdma();
+  initSdma(&context->vm);
 
   // L4INT_CORE: uart1
   device *uart1 = createDevice("UART1", FALSE, UART1, (u32int) (UART1 - 1 + UART1_SIZE), l4IntCore,
@@ -260,7 +263,7 @@ device *createHardwareLibrary()
   {
     goto uart1Error;
   }
-  initUart(1);
+  initUart(&context->vm, 1);
 
   // L4INT_CORE: uart2
   device *uart2 = createDevice("UART2", FALSE, UART2, (u32int) (UART2 - 1 + UART2_SIZE), l4IntCore,
@@ -269,8 +272,9 @@ device *createHardwareLibrary()
   {
     goto uart2Error;
   }
-  initUart(2);
+  initUart(&context->vm, 2);
 
+#ifdef CONFIG_GUEST_ANDROID
   // L4INT_CORE: MMC/SD/SDIO1
   device *mmc1 = createDevice("SD_MMC1", FALSE, SD_MMC1, (u32int) (SD_MMC1 - 1 + SD_MMC1_SIZE), l4IntCore,
                                &loadMmc, &storeMmc);
@@ -297,6 +301,7 @@ device *createHardwareLibrary()
     goto mmc3Error;
   }
   initMmc(3);
+#endif /* CONFIG_GUEST_ANDROID */
 
   // L4INT_CORE: interrupt controller
   device *intc = createDevice("INTC", FALSE, INTERRUPT_CONTROLLER,
@@ -306,7 +311,7 @@ device *createHardwareLibrary()
   {
     goto intcError;
   }
-  initIntc();
+  initIntc(&context->vm);
 
   // L4INT_CORE: core wakeup interconnect
   device *l4CoreWakeupInt = createDevice("L4_CORE_WAKEUP_INT", TRUE, L4_CORE_WAKEUP_INT,
@@ -317,6 +322,7 @@ device *createHardwareLibrary()
     goto l4CoreWakeupIntError;
   }
 
+#ifdef CONFIG_GUEST_ANDROID
   // L4_CORE_WAKEUP: dual-mode timer
   device *dmTimer = createDevice("DM_TIMER", FALSE, DM_TIMER, (u32int)(DM_TIMER + DM_TIMER_SIZE-1),
                                  l4CoreWakeupInt, &loadDmTimer, &storeDmTimer);
@@ -326,15 +332,16 @@ device *createHardwareLibrary()
     goto dmTimerError;
   }
   initDmTimer();
+#endif /* CONFIG_GUEST_ANDROID */
 
   // L4_CORE_WAKEUP: power and reset manager
-  device *prm =  createDevice("PRM", FALSE, PRM, (u32int)(PRM - 1 + PRM_SIZE), l4CoreWakeupInt,
-                              &loadPrm, &storePrm);
+  device *prm = createDevice("PRM", FALSE, PRM, (u32int)(PRM - 1 + PRM_SIZE), l4CoreWakeupInt,
+                             &loadPrm, &storePrm);
   if (prm == NULL)
   {
     goto prmError;
   }
-  initPrm();
+  initPrm(&context->vm);
 
   // L4_CORE_CONTROL: control module ID
   device * ctrlModID = createDevice("CONTROL_MODULE_ID", FALSE, CONTROL_MODULE_ID,
@@ -353,9 +360,10 @@ device *createHardwareLibrary()
   {
     goto gpio1Error;
   }
-  initGpio(1);
+  initGpio(&context->vm, 1);
 
   // L4_CORE_WAKEUP: watchdog timer 2
+#ifdef CONFIG_GUEST_ANDROID
   device *wdtimer2 = createDevice("WDTIMER2", FALSE, WDTIMER2, (u32int)(WDTIMER2 - 1 + WDTIMER2_SIZE),
                                   l4CoreWakeupInt, &loadWDTimer2, &storeWDTimer2);
   if (wdtimer2 == NULL)
@@ -363,6 +371,14 @@ device *createHardwareLibrary()
     goto wdtimer2Error;
   }
   initWDTimer2();
+#else
+  device *wdtimer2 = createDevice("WDTIMER2", FALSE, WDTIMER2, (u32int)(WDTIMER2 - 1 + WDTIMER2_SIZE),
+                                  l4CoreWakeupInt, &loadGeneric, &storeGeneric);
+  if (wdtimer2 == NULL)
+  {
+    goto wdtimer2Error;
+  }
+#endif /* CONFIG_GUEST_ANDROID */
 
   // L4_CORE_WAKEUP: general purpose timer 1
   device *gptimer1 = createDevice("GPTIMER1", FALSE, GPTIMER1, (u32int)(GPTIMER1 - 1 + GPTIMER1_SIZE),
@@ -371,7 +387,7 @@ device *createHardwareLibrary()
   {
     goto gptimer1Error;
   }
-  initGPTimer();
+  initGPTimer(&context->vm);
 
   // L4_CORE_WAKEUP: 32 Kiloherz synchronised timer
   device *timer32k = createDevice("32kTIMER", FALSE, TIMER_32K,
@@ -381,7 +397,7 @@ device *createHardwareLibrary()
   {
     goto timer32kError;
   }
-  initTimer32k();
+  initTimer32k(&context->vm);
 
   // L4 interconnect: L4 interconnect peripherals
   device *l4IntPer = createDevice("L4_INT_PER", TRUE, Q1_L4_INT_PER,
@@ -399,7 +415,7 @@ device *createHardwareLibrary()
   {
     goto uart3Error;
   }
-  initUart(3);
+  initUart(&context->vm, 3);
 
   // L4_INT_PER: general purpose I/O 2
   device *gpio2 = createDevice("GPIO2", FALSE, GPIO2, (u32int)(GPIO2 - 1 + GPIO2_SIZE), l4IntPer,
@@ -408,7 +424,7 @@ device *createHardwareLibrary()
   {
     goto gpio2Error;
   }
-  initGpio(2);
+  initGpio(&context->vm, 2);
 
   // L4_INT_PER: general purpose I/O 3
   device *gpio3 = createDevice("GPIO3", FALSE, GPIO3, (u32int)(GPIO3 - 1 + GPIO3_SIZE), l4IntPer,
@@ -417,7 +433,7 @@ device *createHardwareLibrary()
   {
     goto gpio3Error;
   }
-  initGpio(3);
+  initGpio(&context->vm, 3);
 
   // L4_INT_PER: general purpose I/O 4
   device *gpio4 = createDevice("GPIO4", FALSE, GPIO4, (u32int)(GPIO4 - 1 + GPIO4_SIZE), l4IntPer,
@@ -426,7 +442,7 @@ device *createHardwareLibrary()
   {
     goto gpio4Error;
   }
-  initGpio(4);
+  initGpio(&context->vm, 4);
 
   // L4_INT_PER: general purpose I/O 5
   device *gpio5 = createDevice("GPIO5", FALSE, GPIO5, (u32int)(GPIO5 - 1 + GPIO5_SIZE), l4IntPer,
@@ -435,8 +451,8 @@ device *createHardwareLibrary()
   {
     goto gpio5Error;
   }
-  initGpio(5);
-  connectGpio(5, 5);
+  initGpio(&context->vm, 5);
+  connectGpio(&context->vm, 5, 5);
 
   // L4_INT_PER: general purpose I/O 6
   device *gpio6 = createDevice("GPIO6", FALSE, GPIO6, (u32int)(GPIO6 - 1 + GPIO6_SIZE), l4IntPer,
@@ -445,7 +461,7 @@ device *createHardwareLibrary()
   {
     goto gpio6Error;
   }
-  initGpio(6);
+  initGpio(&context->vm, 6);
 
   // QUARTER 2
   device *q2bus = createDevice("Q2Bus", TRUE, QUARTER2, (u32int) (QUARTER2 - 1 + QUARTER_SIZE),
@@ -463,7 +479,7 @@ device *createHardwareLibrary()
   {
     goto sdramModuleError;
   }
-  initSdram();
+  initSdram(&context->vm);
 
   // QUARTER 3
   device *q3bus = createDevice("Q3Bus", TRUE, QUARTER3, (u32int)(QUARTER3 - 1 + QUARTER_SIZE),
@@ -511,18 +527,22 @@ gpio1Error:
 ctrlModIDError:
   free(prm);
 prmError:
+#ifdef CONFIG_GUEST_ANDROID
   free(dmTimer);
 dmTimerError:
+#endif /* CONFIG_GUEST_ANDROID */
   free(l4CoreWakeupInt);
 l4CoreWakeupIntError:
   free(intc);
 intcError:
+#ifdef CONFIG_GUEST_ANDROID
   free(mmc3);
 mmc3Error:
   free(mmc2);
 mmc2Error:
   free(mmc1);
 mmc1Error:
+#endif /* CONFIG_GUEST_ANDROID */
   free(uart2);
 uart2Error:
   free(uart1);
@@ -537,12 +557,14 @@ sysCtrlModError:
 l4IntCoreError:
   free(l4Interconnect);
 l4InterconnectError:
+#ifdef CONFIG_GUEST_ANDROID
   free(sdrcModule);
 sdrcModuleError:
   free(smsModule);
 smsModuleError:
   free(pmModule);
 pmModuleError:
+#endif /* CONFIG_GUEST_ANDROID */
   free(gpmcModule);
 gpmcModuleError:
   free(l3Interconnect);

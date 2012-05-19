@@ -1,17 +1,34 @@
 #include "common/debug.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
+#include "common/string.h"
 
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/timer32k.h"
 
 
-static u32int timer32SysconfReg = 0;
-static u32int counterVal = 0;
+void initTimer32k(virtualMachine *vm)
+{
+  struct SynchronizedTimer32k *timer32k = (struct SynchronizedTimer32k *)calloc(1, sizeof(struct SynchronizedTimer32k));
+  if (timer32k == NULL)
+  {
+    DIE_NOW(NULL, "Failed to allocate 32Khz sync timer struct.");
+  }
 
+  DEBUG(VP_OMAP_35XX_TIMER32K, "Initializing 32kHz synchronized timer at %p" EOL, timer32k);
+
+  // sysconf value is emulated. Reset to zero
+  timer32k->timer32SysconfReg = 0;
+  volatile u32int * memPtr = (u32int *)(TIMER32K_BASE + REG_TIMER_32K_COUNTER);
+  timer32k->counterVal = *memPtr;
+  
+  vm->timer32k = timer32k;
+}
 
 u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
+  struct SynchronizedTimer32k* timer32k = getGuestContext()->vm.timer32k;
   u32int val = 0;
 
   DEBUG(VP_OMAP_35XX_TIMER32K, "%s load from physical address: %#.8x, vAddr %#.8x, aSize %#x" EOL,
@@ -22,7 +39,7 @@ u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyA
     u32int regAddr = phyAddr - TIMER_32K; 
     if (regAddr == REG_TIMER_32K_SYSCONFIG)
     {
-      val = timer32SysconfReg;
+      val = timer32k->timer32SysconfReg;
       DEBUG(VP_OMAP_35XX_TIMER32K, "%s load sys cfg value %#x" EOL, dev->deviceName, val);
     }
     else if (regAddr == REG_TIMER_32K_COUNTER)
@@ -54,10 +71,3 @@ void storeTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAd
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
-void initTimer32k()
-{
-  // sysconf value is emulated. Reset to zero
-  timer32SysconfReg = 0;
-  volatile u32int * memPtr = (u32int *)(TIMER32K_BASE + REG_TIMER_32K_COUNTER);
-  counterVal = *memPtr;
-}

@@ -48,7 +48,6 @@ static void addEntry(const char *file, const char *line, const char *function, c
     allocatorLogLast->nextEntry = e;
   }
   allocatorLogLast = e;
-  //dumpAllocatorBookkeeping();
 }
 
 void checkedFree(const char *file, const char *line, const char *function, void *ptr)
@@ -160,18 +159,14 @@ static entry *findEntry(void *ptr)
   /*
    * Do a reverse lookup in the log...
    */
-  printf("Find entry: last=%p" EOL, allocatorLogLast);
   entry *e = allocatorLogLast;
   while (e != NULL)
   {
-    printf("entry ptr: %p" EOL, e->pointer);
     if (e->pointer == ptr)
     {
-      printf("match" EOL);
       return e;
     }
     e = e->prevEntry;
-    printf("Find entry: next=%p" EOL, e);
   }
   return NULL;
 }

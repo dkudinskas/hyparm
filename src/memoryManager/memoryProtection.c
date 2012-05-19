@@ -1,7 +1,6 @@
 #include "common/assert.h"
 #include "common/debug.h"
 #include "common/stddef.h"
-#include "common/string.h"
 
 #include "guestManager/guestContext.h"
 #include "guestManager/guestExceptions.h"
@@ -181,8 +180,9 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 #ifdef MEM_PROT_DBG
     printf("shouldDataAbort: backed up entry %08x @ %p\n", backupFirst, shadowFirst);
 #endif
-    addSectionEntry((sectionEntry *)shadowFirst, (u32int)context->pageTables->guestPhysical,
-                    HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+    mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical,
+               (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
+               HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
     mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
     gpt = context->pageTables->guestPhysical;
 #ifdef MEM_PROT_DBG
@@ -229,8 +229,8 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 #ifdef MEM_PROT_DBG
       printf("shouldDataAbort: backed up PT2 entry %08x @ %p\n", backupSecond, shadowSecond);
 #endif
-      addSectionEntry((sectionEntry *)shadowSecond, gpt2,
-                      HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+      mapSection(context->pageTables->shadowActive, gpt2, gpt2, HYPERVISOR_ACCESS_DOMAIN,
+                 HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
       mmuInvalidateUTLBbyMVA(gpt2);
 
       // now PT2 is shadow mapped 1-2-1 VA/PA. can extract second level entry.
@@ -439,7 +439,6 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
     mmuInvalidateUTLBbyMVA(gpt2);
     mmuDataMemoryBarrier();
   }
-//  mmuInvalidateUTLB();
   return returnValue;
 }
 
@@ -492,8 +491,9 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
     // hack a 1-2-1 mapping for now.
     shadowFirst = getEntryFirst(spt, (u32int)context->pageTables->guestPhysical);
     backupFirst = *(u32int*)shadowFirst;
-    addSectionEntry((sectionEntry *)shadowFirst, (u32int)context->pageTables->guestPhysical,
-                    HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+    mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical,
+               (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
+               HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
     mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
     gpt = context->pageTables->guestPhysical;
 #ifdef MEM_PROT_DBG
@@ -540,8 +540,8 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
 #ifdef MEM_PROT_DBG
       printf("shouldPrefetchAbort: backed up PT2 entry %08x @ %p\n", backupSecond, shadowSecond);
 #endif
-      addSectionEntry((sectionEntry *)shadowSecond, gpt2,
-                      HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+      mapSection(context->pageTables->shadowActive, gpt2, gpt2, HYPERVISOR_ACCESS_DOMAIN,
+                 HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
       mmuInvalidateUTLBbyMVA(gpt2);
 
       // now PT2 is shadow mapped 1-2-1 VA/PA. can extract second level entry.

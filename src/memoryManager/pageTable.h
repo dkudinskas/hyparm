@@ -137,6 +137,7 @@ typedef struct smallPageDescriptor smallPageEntry;
 
 void dumpTranslationTable(simpleEntry *table) __cold__;
 
+
 /*************** rewritten functions *********************/
 simpleEntry *newLevelOnePageTable(void);
 u32int* newLevelTwoPageTable(void);

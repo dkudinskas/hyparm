@@ -182,7 +182,7 @@
 #define GPMC_SYSCONFIG_MASK                            0x00000019
 #define GPMC_SYSCONFIG_SOFTRESET                       0x00000002
 
-void initGpmc(void) __cold__;
+void initGpmc(virtualMachine *vm) __cold__;
 
 /* top load function */
 u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);

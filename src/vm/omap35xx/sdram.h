@@ -13,7 +13,10 @@
 #define SDRAM_STORE_COUNTER
 
 
-void initSdram(void) __cold__;
+typedef struct EmumulatedVirtualMachine virtualMachine;
+
+
+void initSdram(virtualMachine *vm) __cold__;
 
 u32int loadSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);

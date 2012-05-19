@@ -1,7 +1,6 @@
 #ifndef __COMMON__DEBUG_H__
 #define __COMMON__DEBUG_H__
 
-#include "common/compiler.h"
 #include "common/stdarg.h"
 #include "common/stdio.h"
 #include "common/types.h"

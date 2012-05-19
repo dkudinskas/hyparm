@@ -324,7 +324,7 @@
 
 
 
-void initSysControlModule(void) __cold__;
+void initSysControlModule(virtualMachine *vm) __cold__;
 
 /* top load function */
 u32int loadSysCtrlModule(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);

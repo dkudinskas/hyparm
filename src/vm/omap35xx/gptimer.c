@@ -12,24 +12,23 @@
 #include "vm/omap35xx/gptimer.h"
 
 
-struct GeneralPurposeTimer * gptimer;
+static void resetGPTimer(struct GeneralPurposeTimer *gptimer);
 
 
-void initGPTimer()
+void initGPTimer(virtualMachine *vm)
 {
-  // init function: setup device, reset register values to defaults!
-  gptimer = (struct GeneralPurposeTimer *)calloc(1, sizeof(struct GeneralPurposeTimer));
+  struct GeneralPurposeTimer *gptimer = (struct GeneralPurposeTimer *)calloc(1, sizeof(struct GeneralPurposeTimer));
   if (gptimer == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate general purpose timer.");
   }
+  vm->gptimer = gptimer;
 
   DEBUG(VP_OMAP_35XX_GPTIMER, "Initializing General Purpose timer at %p" EOL, gptimer);
-
-  resetGPTimer();
+  resetGPTimer(gptimer);
 }
 
-void resetGPTimer(void)
+void resetGPTimer(struct GeneralPurposeTimer *gptimer)
 {
   // reset to default register values
   gptimer->gptTiocpCfg = 0x00000000;

@@ -212,6 +212,7 @@ void mmuSetDomain(u8int domain, access_type access);
 void mmuSetTexRemap(bool enable);
 void mmuSetContextID(u32int asid);
 
+void mmuSetExceptionVector(u32int vectorBase);
 
 u32int getDFAR(void);
 DFSR getDFSR(void);

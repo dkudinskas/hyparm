@@ -154,25 +154,13 @@ enum UART_REG_ACCESS_MODE
 
 typedef enum UART_REG_ACCESS_MODE uartMode;
 
-void initUart(u32int uartID) __cold__;
-
-void resetUart(u32int uartID);
+void initUart(virtualMachine *vm, u32int uartID) __cold__;
 
 u32int loadUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 
 void storeUart(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
-void setUartMode(u32int uartID);
-
-uartMode getUartMode(u32int uartID);
-
-void uartTxByte(u8int byte, u32int uartID);
-
-u8int uartRxByte(u32int uartID);
-
 void uartPutRxByte(u8int byte, u32int uardID);
-
-void setIrqFlags(u32int flags, u32int uartID);
 
 struct Uart
 {

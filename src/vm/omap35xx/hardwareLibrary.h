@@ -4,6 +4,8 @@
 #include "common/compiler.h"
 #include "common/types.h"
 
+#include "vm/types.h"
+
 
 #define QUARTER_SIZE               0x40000000
 
@@ -115,35 +117,10 @@
 #define Q3_SDRC_SMS_SIZE             0x20000000
 
 
-typedef enum loadStoreAccessSize
-{
-  BYTE,
-  HALFWORD,
-  WORD,
-} ACCESS_SIZE;
-
-typedef struct genericDevice device;
-
-typedef u32int (*LOAD_FUNCTION)(device *, ACCESS_SIZE, u32int, u32int);
-typedef void (*STORE_FUNCTION)(device *, ACCESS_SIZE, u32int, u32int, u32int);
-
-#define MAX_NR_ATTACHED  20
-
-struct genericDevice
-{
-  const char *deviceName;
-  bool isBus;
-  u32int startAddressMapped;
-  u32int endAddressMapped;
-  device *parentDevice;
-  u32int nrOfAttachedDevs;
-  device *attachedDevices[MAX_NR_ATTACHED];
-  LOAD_FUNCTION loadFunction;
-  STORE_FUNCTION storeFunction;
-};
+struct guestContext;
 
 
-device *createHardwareLibrary(void) __cold__;
+device *createHardwareLibrary(struct guestContext *context) __cold__;
 u32int vmLoad(ACCESS_SIZE size, u32int virtAddr);
 void vmStore(ACCESS_SIZE size, u32int virtAddr, u32int value);
 

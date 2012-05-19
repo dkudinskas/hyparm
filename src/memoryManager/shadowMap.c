@@ -7,6 +7,7 @@
 #include "guestManager/guestContext.h"
 
 #include "memoryManager/memoryConstants.h"
+#include "memoryManager/memoryProtection.h"
 #include "memoryManager/mmu.h"
 #include "memoryManager/shadowMap.h"
 
@@ -20,37 +21,12 @@ bool shadowMap(u32int virtAddr)
   GCONTXT *context = getGuestContext();
   DEBUG(MM_SHADOWING, "shadowMap: virtual address %#.8x" EOL, virtAddr);
 
-  u32int backupEntry = 0;
-  u32int tempEntry = 0;
-  bool backedUp = FALSE;
   bool success = FALSE;
-  simpleEntry* tempFirst = NULL;
   simpleEntry* spt = context->pageTables->shadowActive;
+  simpleEntry* gpt = context->pageTables->guestPhysical;
 
-  simpleEntry* gpt = NULL;
-  if (context->pageTables->guestVirtual != NULL)
-  {
-    // cool. we have the VA already! use it. 
-    DEBUG(MM_SHADOWING, "shadowMap: guestVirtual PT set, %p" EOL, context->pageTables->guestVirtual);
-    gpt = context->pageTables->guestVirtual;
-  }
-  else
-  {
-    DEBUG(MM_SHADOWING, "shadowMap: guestVirtual PT not set. hack a 1-2-1 of %p" EOL,
-          context->pageTables->guestPhysical);
-    // crap, we haven't shadow mapped the gPT VA->PA mapping yet.
-    // hack a 1-2-1 mapping for now.
-    tempFirst = getEntryFirst(spt, (u32int)context->pageTables->guestPhysical);
-    backupEntry = *(u32int*)tempFirst;
-    DEBUG(MM_SHADOWING, "shadowMap: VA %#.8x backed up entry %#.8x @ %p" EOL, virtAddr, backupEntry, tempFirst);
-    addSectionEntry((sectionEntry *)tempFirst, (u32int)context->pageTables->guestPhysical,
-                    HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
-    mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
-    gpt = context->pageTables->guestPhysical;
-    tempEntry = *(u32int*)tempFirst;
-    DEBUG(MM_SHADOWING, "shadowMap: gpt now set to %p" EOL, gpt);
-    backedUp = TRUE;
-  }
+  simpleEntry* ttbrBackup = mmuGetTTBR0();
+  mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
 
   simpleEntry* guestFirst = getEntryFirst(gpt, virtAddr);
   DEBUG(MM_SHADOWING, "shadowMap: VA %08x first entry %08x @ %p" EOL, virtAddr, *(u32int*)guestFirst, guestFirst);
@@ -60,7 +36,8 @@ bool shadowMap(u32int virtAddr)
     case SECTION:
     {
       DEBUG(MM_SHADOWING, "shadowMap: guest first level entry section" EOL);
-      u32int virtual = ((u32int)guestFirst - (u32int)context->pageTables->guestVirtual) << 18;
+      u32int virtual = ((u32int)guestFirst - (u32int)gpt) << 18;
+      DEBUG(MM_SHADOWING, "shadowMap: virtual address mapped %#.8x" EOL, virtual);
       sectionEntry* guestSection = (sectionEntry*)guestFirst;
       sectionEntry* shadowSection  = (sectionEntry*)getEntryFirst(spt, virtAddr);
       shadowMapSection(guestSection, shadowSection, virtual);
@@ -77,11 +54,10 @@ bool shadowMap(u32int virtAddr)
       {
         case FAULT:
         {
-          // PT2 is not shadowmapped yet
           DEBUG(MM_SHADOWING, "shadowMap: shadow 1st lvl entry fault. need to shadowmap PT2" EOL);
           pageTableEntry* shadowPageTable  = (pageTableEntry*)shadowFirst;
           pageTableEntry* guestPageTable = (pageTableEntry*)guestFirst;
-          shadowMapPageTable(guestPageTable, guestPageTable, shadowPageTable);
+          shadowMapPageTable(guestPageTable, shadowPageTable);
           //FIXME: Henri: This TLB flush should not be necessary
           mmuPageTableEdit((u32int)shadowPageTable, (virtAddr & SECTION_MASK));
           break;
@@ -116,27 +92,18 @@ bool shadowMap(u32int virtAddr)
 
       // now we are sure the PT2 is shadow mapped
       // we must try to shadow map the small page
-      // hack a 1-2-1 mapping of the gPT2 to shadow-copy an entry
-      // will remove the temporary mapping afterwards
-      u32int gptPhysAddr = getPhysicalAddress(context->pageTables->hypervisor, 
-                                 (((pageTableEntry*)guestFirst)->addr << 10));
-      simpleEntry* shadow = getEntryFirst(context->pageTables->shadowActive, gptPhysAddr);
-      u32int backup = *(u32int*)shadow;
-      DEBUG(MM_SHADOWING, "shadowMap: backed up PT2 entry %#.8x @ %p" EOL, backup, shadow);
-      addSectionEntry((sectionEntry *)shadow, gptPhysAddr, HYPERVISOR_ACCESS_DOMAIN,
-                      HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
-      mmuInvalidateUTLBbyMVA(gptPhysAddr);
-
+      u32int gptPhysAddr = (((pageTableEntry*)guestFirst)->addr) << 10;
       u32int index = (virtAddr & 0x000FF000) >> 10;
       u32int guestSecondPtr = gptPhysAddr | index;
-      simpleEntry* guestSecond = (simpleEntry*)guestSecondPtr;
-      DEBUG(MM_SHADOWING, "shadowMap: guest 2nd lvl entry %#.8x @ %p" EOL, *(u32int*)guestSecond, guestSecond);
-      switch (guestSecond->type)
+      simpleEntry* guestSecondEntry = (simpleEntry*)guestSecondPtr;
+      DEBUG(MM_SHADOWING, "shadowMap: guest 2nd lvl entry %#.8x @ %p" EOL,
+            *(u32int*)guestSecondEntry, guestSecondEntry);
+      switch (guestSecondEntry->type)
       {
         case SMALL_PAGE:
         case SMALL_PAGE_3:
         {
-          smallPageEntry* guestSmallPage = (smallPageEntry*)guestSecond;
+          smallPageEntry* guestSmallPage = (smallPageEntry*)guestSecondEntry;
           smallPageEntry* shadowSmallPage = (smallPageEntry*)getEntrySecond((pageTableEntry*)shadowFirst, virtAddr);
           shadowMapSmallPage(guestSmallPage, shadowSmallPage, ((pageTableEntry*)guestFirst)->domain);
           mmuPageTableEdit((u32int)shadowSmallPage, (virtAddr & SMALL_PAGE_MASK));
@@ -156,11 +123,6 @@ bool shadowMap(u32int virtAddr)
           break;
         }
       }
-      // restore backed up entry
-      *(u32int*)shadow = backup;
-      DEBUG(MM_SHADOWING, "shadowMap: restored 2nd lvl backed up entry %#.8x @ %p" EOL, backup, shadow);
-      mmuInvalidateUTLBbyMVA(gptPhysAddr);
-      mmuDataMemoryBarrier();
       break;
     }
     case RESERVED:
@@ -176,25 +138,7 @@ bool shadowMap(u32int virtAddr)
     }
   }
 
-  // exception case: we backed up the entry, but shadowed that exact entry. 
-  // dont want to restore old entry then!!
-  if (backedUp)
-  {
-    if (tempEntry == *(u32int*)tempFirst)
-    {
-      // if we dont have gPT1 VA we must have backed up the lvl1 entry. restore now
-      *(u32int*)tempFirst = backupEntry;
-      mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
-      DEBUG(MM_SHADOWING, "shadowMap: restore backed up entry %#.8x @ %p" EOL, backupEntry,
-            tempFirst);
-    }
-    else
-    {
-      DEBUG(MM_SHADOWING, "shadowMap: tempEntry %#.8x, guestFirst %#.8x. DONT RESTORE" EOL,
-            tempEntry, *(u32int*)tempFirst);
-    }
-  }
-
+  mmuSetTTBR0(ttbrBackup, 0x100 | context->pageTables->contextID);
   return success;
 }
 
@@ -212,22 +156,30 @@ void shadowMapSection(sectionEntry* guest, sectionEntry* shadow, u32int virtual)
   bool peripheral = FALSE;
   GCONTXT* context = getGuestContext();
 
-  if(guest->superSection)
+  if (guest->superSection)
   {
     // copy supersection unimplemented
     DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
-  // Address mapping
   u32int guestPhysAddr = guest->addr << 20;
   if ((guestPhysAddr < MEMORY_START_ADDR) || (guestPhysAddr >= MEMORY_END_ADDR))
   {
-    DEBUG(MM_SHADOWING, "shadowMapSection: guestPhysAddr %#.8x" EOL, guestPhysAddr);
+    // mapping a peripheral?
     peripheral = TRUE;
     if (shadow->type != FAULT)
     {
       DIE_NOW(context, "shadowMapSection: peripheral mapping already exists!");
     }
+  }
+
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
+  u32int endAddr = MEMORY_END_ADDR;
+  // if the hypervisor memory starts/ends in this section, panic
+  if ( ((guestPhysAddr >= startAddr) && (guestPhysAddr <= endAddr)) ||
+      (((guestPhysAddr+SECTION_SIZE-1) >= startAddr) && ((guestPhysAddr+SECTION_SIZE-1) <= endAddr)) )
+  {
+    DIE_NOW(context, "shadowMapSection: guest mapping physical address the hypervisor lives in\n");
   }
 
   sectionEntry* host = (sectionEntry*)getEntryFirst(context->pageTables->hypervisor, guestPhysAddr);
@@ -261,12 +213,11 @@ void shadowMapSection(sectionEntry* guest, sectionEntry* shadow, u32int virtual)
   shadow->type = SECTION;
   shadow->addr = host->addr;
   shadow->c = peripheral ? 0 : guest->c;
-//  shadow->c = guest->c;
   shadow->b = 0;
-  shadow->s = 0;//guest->s;
+  shadow->s = 0;
   shadow->tex = 0b100;
   shadow->nG = guest->nG;
-  shadow->ns = 0; //guest->ns;
+  shadow->ns = 0;
   shadow->domain = GUEST_ACCESS_DOMAIN;
   DEBUG(MM_SHADOWING, "shadowMapSection: Shadow entry now @ %p = %#.8x" EOL, shadow,
         *(u32int *)shadow);
@@ -321,16 +272,18 @@ void shadowUnmapSection(simpleEntry* shadow, sectionEntry* guest, u32int virtual
   if ((physAddr < MEMORY_START_ADDR) || (physAddr >= MEMORY_END_ADDR))
   {
     printf("shadowUnmapSection: physAddr %08x" EOL, physAddr);
-    DIE_NOW(context, "shadowUnmapSection: not a RAM address, doublecheck" EOL);
+    DIE_NOW(context, "shadowUnmapSection: not a RAM address, doublecheck");
   }
 
   // would gladly remove this entry, but must check if the guest didnt decide
   // to remove pte that maps the for the hypervisor
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
-  DEBUG(MM_SHADOWING, "shadowUnmapSection: VA %#.8x PA %#.8x" EOL, virtual, physAddr);
-  if ((HYPERVISOR_BEGIN_ADDRESS <= virtual) && (virtual <= endAddr))
+  // if the hypervisor memory starts/ends in this section, panic
+  if ( ((physAddr >= startAddr) && (physAddr <= endAddr)) ||
+      (((physAddr+SECTION_SIZE-1) >= startAddr) && ((physAddr+SECTION_SIZE-1) <= endAddr)) )
   {
-    DIE_NOW(context, "shadowUnmapSection: Guest trying to unmap an address the hypervisor lives in" EOL);
+    DIE_NOW(context, "shadowUnmapSection: Guest trying to unmap an address the hypervisor lives in");
   }
 
   // Need to flush block cache at these addresses first
@@ -366,11 +319,10 @@ void shadowUnmapSection(simpleEntry* shadow, sectionEntry* guest, u32int virtual
  * takes pointers to guest and shadow page table PAGE_TABLE type entries
  * creates a new shadow 2nd level page table and copies the guest mapping
  **/
-void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTableEntry* shadow)
+void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* shadow)
 {
   DEBUG(MM_SHADOWING, "shadowMapPageTable guest %#.8x @ %p, shadow %#.8x @ %p" EOL,
         *(u32int *)guest, guest, *(u32int *)shadow, shadow);
-  DEBUG(MM_SHADOWING, "shadowMapPageTable old guest %#.8x @ %p" EOL, *(u32int *)guestOld, guestOld);
 
   GCONTXT *context = getGuestContext();
   u32int sptVirtAddr = 0;
@@ -422,7 +374,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
   } // shadow switch
 
   u32int mapped = (getPageTableInfo(shadow))->mappedMegabyte;
-  addPageTableInfo((pageTableEntry*)guestOld, 0, guest->addr << 10, mapped, FALSE);
+  addPageTableInfo((pageTableEntry*)guest, 0, guest->addr << 10, mapped, FALSE);
 
   // ok. we must scan the shadow PT looking for previously shadow mapped entries
   // that point to this new guest 2nd lvl page table. if found, write-protect
@@ -486,7 +438,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
     } // host PAGE_TABLE
 
     context->pageTables->shadowActive = shadowPriv;
-    if (shadowPriv[i].type == SECTION)
+    if ((shadowPriv[i].type == SECTION) && (shadowUser[i].domain != HYPERVISOR_ACCESS_DOMAIN))
     {
       sectionEntry *sectionPtr = (sectionEntry *)&shadowPriv[i];
       u32int section = sectionPtr->addr << 20;
@@ -501,7 +453,7 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
         guestWriteProtect(virtualAddress, virtualAddress + PT2_SIZE - 1);
       }
     }
-    else if (shadowPriv[i].type == PAGE_TABLE)
+    else if ((shadowPriv[i].type == PAGE_TABLE) && (shadowUser[i].domain != HYPERVISOR_ACCESS_DOMAIN))
     {
       pageTableEntry* pageTablePtr = (pageTableEntry*)&shadowPriv[i];
       ptInfo* metadata = getPageTableInfo(pageTablePtr);
@@ -539,7 +491,9 @@ void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTab
   context->pageTables->shadowActive = shadowActiveBackup;
 }
 
-
+/**
+ * this function removes a shadow 2nd lvl page table
+ **/
 void shadowUnmapPageTable(pageTableEntry *shadow, pageTableEntry *guest, u32int virtual)
 {
   DEBUG(MM_SHADOWING, "shadowUnmapPageTable: shadow %#.8x @ %p, guest %#.8x @ %p, VA %#.8x" EOL,
@@ -553,11 +507,36 @@ void shadowUnmapPageTable(pageTableEntry *shadow, pageTableEntry *guest, u32int 
 
   // would gladly remove this entry, but must check if the guest didnt decide
   // to remove pte that maps the for the hypervisor
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
-  if ((HYPERVISOR_BEGIN_ADDRESS <= virtual) && (virtual <= endAddr))
+
+  ptInfo* metadata = getPageTableInfo(shadow);
+  if (metadata == 0)
   {
-    DIE_NOW(NULL, "shadowUnmapPageTable: Guest trying to unmap an address the hypervisor lives in");
+    DIE_NOW(0, "shadowUnMapPageTable: sPT2 metadata not found while checking AP\n");
   }
+  simpleEntry* tempPageTable = (simpleEntry*)(metadata->virtAddr);
+  u32int y = 0;
+  for (y = 0; y < PT2_ENTRIES; y++)
+  {
+    if (tempPageTable[y].type != FAULT)
+    {
+      if(tempPageTable[y].type == LARGE_PAGE)
+      {
+        DIE_NOW(0, "shadowUnMapPageTable: found guest LARGE_PAGE entry, investigate.\n");
+      }
+      else
+      {
+        // if the hypervisor memory starts/ends in this page, panic
+        u32int guestPhysAddr = ((smallPageEntry*)tempPageTable)[y].addr << 12;
+        if ( ((guestPhysAddr >= startAddr) && (guestPhysAddr <= endAddr)) ||
+            (((guestPhysAddr+SMALL_PAGE_SIZE-1) >= startAddr) && ((guestPhysAddr+SMALL_PAGE_SIZE-1) <= endAddr)) )
+        {
+          DIE_NOW(context, "shadowUnmapSection: Guest trying to unmap an address the hypervisor lives in\n");
+        }
+      }
+    } // !fault
+  } // for loop
 
   // validate block cache...
   GCONTXT *context = getGuestContext();
@@ -594,13 +573,9 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
 
   bool peripheral = FALSE;
 
-  // Address mapping: guest entry points to guest physical. Translate to host physical
   u32int guestPhysical = (guest->addr << 12) & SMALL_PAGE_MASK;
-
-  // Address mapping
   if ((guestPhysical < MEMORY_START_ADDR) || (guestPhysical >= MEMORY_END_ADDR))
   {
-    DEBUG(MM_SHADOWING, "shadowMapSmallPage: guestPhysical %#.8x" EOL, guestPhysical);
     peripheral = TRUE;
     if (shadow->type != FAULT)
     {
@@ -609,8 +584,16 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
   }
 
   GCONTXT *context = getGuestContext();
-  simpleEntry* hostEntry = getEntryFirst(context->pageTables->hypervisor, guestPhysical);
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
+  u32int endAddr = MEMORY_END_ADDR;
+  // if the hypervisor memory starts/ends in this section, panic
+  if ( ((guestPhysical >= startAddr) && (guestPhysical <= endAddr)) ||
+      (((guestPhysical+SMALL_PAGE_SIZE-1) >= startAddr) && ((guestPhysical+SMALL_PAGE_SIZE-1) <= endAddr)) )
+  {
+    DIE_NOW(context, "shadowMapSmallPage: guest mapping physical address the hypervisor lives in\n");
+  }
 
+  simpleEntry* hostEntry = (simpleEntry*)getEntryFirst(context->pageTables->hypervisor, guestPhysical);
   u32int hostPhysical = 0;
   switch (hostEntry->type)
   {
@@ -669,10 +652,9 @@ void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int do
   }
 
   shadow->c = peripheral ? 0 : guest->c;
-//  shadow->c = guest->c;
-  shadow->b = 0; //guest->b;
+  shadow->b = 0;
   shadow->tex = 0b100;
-  shadow->s = 0; //guest->s;
+  shadow->s = 0;
   shadow->nG = guest->nG;
 
   DEBUG(MM_SHADOWING, "shadowMapSmallPage: Shadow at the end @ %p = %#.8x" EOL, shadow,
@@ -703,12 +685,15 @@ void shadowUnmapSmallPage(smallPageEntry* shadow, smallPageEntry* guest, u32int 
     DIE_NOW(NULL, "shadowUnmapSmallPage: not a RAM address, doublecheck");
   }
   DEBUG(MM_SHADOWING, "shadowUnmapSmallPage: VA %#.8x PA %#.8x" EOL, virtual, physAddr);
-  // would gladly remove this entry, but must check if the guest didnt decide
-  // to remove pte that maps the for the hypervisor
+
+
+  // if the hypervisor memory starts/ends in this page, panic
+  u32int startAddr = HYPERVISOR_BEGIN_ADDRESS;
   u32int endAddr = MEMORY_END_ADDR;
-  if ((HYPERVISOR_BEGIN_ADDRESS <= virtual) && (virtual <= endAddr))
+  if ( ((physAddr >= startAddr) && (physAddr <= endAddr)) ||
+      (((physAddr+SMALL_PAGE_SIZE-1) >= startAddr) && ((physAddr+SMALL_PAGE_SIZE-1) <= endAddr)) )
   {
-    DIE_NOW(NULL, "shadowUnmapSmallPage: Guest trying to unmap an address the hypervisor lives in\n");
+    DIE_NOW(NULL, "guest trying to unmap an address the hypervisor lives in");
   }
 
   // Need to flush block cache at these addresses first
@@ -863,6 +848,8 @@ void mapAPBitsSection(sectionEntry* guest, simpleEntry* shadow, u32int virtual)
   {
     // 1st level page table lives in this section!
     DEBUG(MM_SHADOWING, "mapAPBitsSection: vAddr maps to memory that contains a 1st lvl gPT" EOL);
+    // 'virtual' is the virtual address that this section maps. add offset of PT1 in this section
+    // get a correct full PT1 virtual address in this section and write-protect it.
     u32int virtualAddress =  virtual | (((u32int)context->pageTables->guestPhysical) & (~SECTION_MASK));
     DEBUG(MM_SHADOWING, "mapAPBitsSection: guest PT virtual address is %#.8x" EOL, virtualAddress);
     guestWriteProtect(virtualAddress, virtualAddress+PT1_SIZE-1);
@@ -900,16 +887,10 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
         *(u32int *)guest, guest, *(u32int *)shadow, shadow);
   GCONTXT* context = getGuestContext();
 
-  // hack a 1-2-1 mapping of the gPT2 to shadow-copy any valid entries
-  // then remove the temporary mapping afterwards
+  simpleEntry* ttbrBackup = mmuGetTTBR0();
+  mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
+
   u32int gptPhysAddr = getPhysicalAddress(context->pageTables->hypervisor, (guest->addr << 10));
-  simpleEntry* first = getEntryFirst(context->pageTables->shadowActive, gptPhysAddr);
-  u32int backupEntry = *(u32int*)first;
-  DEBUG(MM_SHADOWING, "mapAPBitsPageTable: backed up entry %08x @ %p" EOL, backupEntry, first);
-  addSectionEntry((sectionEntry *)first, gptPhysAddr, HYPERVISOR_ACCESS_DOMAIN,
-                  HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
-  mmuInvalidateUTLBbyMVA(gptPhysAddr);
-  mmuDataMemoryBarrier();
 
   u32int guestVA  = gptPhysAddr;
   ptInfo* metadata = getPageTableInfo(shadow);
@@ -927,7 +908,8 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
     simpleEntry *guestEntry  = (simpleEntry *)(guestVA + i * 4);
     simpleEntry *shadowEntry = (simpleEntry *)(shadowVA + i * 4);
 
-    switch (guestEntry->type)
+    // we only care about shadow-mapped second level entries 
+    switch (shadowEntry->type)
     {
       case FAULT:
       {
@@ -951,10 +933,8 @@ void mapAPBitsPageTable(pageTableEntry* guest, pageTableEntry* shadow)
       }
     } // switch ends
   } // for ends
-  *(u32int *)first = backupEntry;
-  DEBUG(MM_SHADOWING, "mapAPBitsPageTable: restored entry %#.8x @ %p" EOL, backupEntry, first);
-  mmuInvalidateUTLBbyMVA(gptPhysAddr);
-  mmuDataMemoryBarrier();
+
+  mmuSetTTBR0(ttbrBackup, 0x100 | context->pageTables->contextID);
 }
 
 
@@ -987,7 +967,6 @@ void mapAPBitsSmallPage(u32int dom, smallPageEntry* guest, smallPageEntry* shado
       (guestPhysical <  (u32int)context->pageTables->guestPhysical + PT1_SIZE))
   {
     // 1st level page table lives in this small page!
-    // guestWriteProtect(vAddr, vAddr + SMALL_PAGE_SIZE - 1);
     DIE_NOW(context, "mapAPBitsSmallPage: guest mapped a page to its 1st lvl PT!");
   }
 
@@ -1002,7 +981,6 @@ void mapAPBitsSmallPage(u32int dom, smallPageEntry* guest, smallPageEntry* shado
     if ((guestPhysical >= (u32int)head->physAddr) &&
         (guestPhysical <  (u32int)head->physAddr + PT2_SIZE))
     {
-      // guestWriteProtect(vAddr, vAddr + SMALL_PAGE_SIZE - 1);
       DIE_NOW(context, "mapAPBitsSmallPage: guest mapped a small page to its 2nd lvl PT!");
       break;
     }
@@ -1042,8 +1020,8 @@ u32int mapExecuteNeverBit(u32int guestDomain, u32int xn)
 
 
 /**
- * Needs putting somewhere more appropriate, perhaps its own file
- * once we implement guest domain mapping (held in CP15?/guestContext?)
+ * should map guest domain to host domain. currently all guest domains get squeezed
+ * into one host GUEST_ACCESS_DOMAIN, so this function remains unused.
  **/
 u8int mapGuestDomain(u8int guestDomain)
 {

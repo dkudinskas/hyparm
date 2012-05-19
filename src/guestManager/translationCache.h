@@ -185,14 +185,7 @@ __macro__ MetaCacheEntry *getMetaCacheEntry(TranslationCache *tc, u32int metaInd
 // 32bit mix function
 __macro__ u32int getMetaCacheIndex(u32int startAddress)
 {
-  startAddress = ~startAddress + (startAddress << 15); // key = (key << 15) - key - 1;
-  startAddress = startAddress ^ (startAddress >> 12);
-  startAddress = startAddress + (startAddress << 2);
-  startAddress = startAddress ^ (startAddress >> 4);
-  startAddress = startAddress * 2057; // key = (key + (key << 3)) + (key << 11);
-  startAddress = startAddress ^ (startAddress >> 16);
-  startAddress >>= 2;
-  return (startAddress & (TRANSLATION_CACHE_META_SIZE_N - 1));
+  return (startAddress >> 2) & (TRANSLATION_CACHE_META_SIZE_N - 1);
 }
 
 #endif /* __GUEST_MANAGER__TRANSLATION_CACHE_H__ */

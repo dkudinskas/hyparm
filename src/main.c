@@ -220,6 +220,7 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
     switch (p->argumentId)
     {
       case CL_OPTION_GUEST_OS:
+      {
         if (hadGuestOption)
         {
           printf("Error: duplicate option: guest OS '%s'" EOL, p->value);
@@ -233,7 +234,8 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
         {
           config->guestOS = GUEST_OS_LINUX;
         }
-        else if (strcmp(p->value, CL_VALUE_GUEST_OS_TEST) == 0) {
+        else if (strcmp(p->value, CL_VALUE_GUEST_OS_TEST) == 0)
+        {
           config->guestOS = GUEST_OS_TEST;
         }
         else
@@ -243,7 +245,9 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
         }
         hadGuestOption = TRUE;
         break;
+      }
       case CL_OPTION_GUEST_KERNEL:
+      {
         if (config->guestKernelAddress)
         {
           printf("Error: duplicate option: kernel address '%s'" EOL, p->value);
@@ -255,7 +259,9 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
           success = FALSE;
         }
         break;
+      }
       case CL_OPTION_GUEST_INITRD:
+      {
         if (config->guestInitialRAMDiskAddress)
         {
           printf("Error: duplicate option: RAM disk address '%s'" EOL, p->value);
@@ -267,10 +273,13 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
           success = FALSE;
         }
         break;
+      }
       default:
+      {
         printf("Error: unrecognized option '%s'" EOL, p->value);
         success = FALSE;
         break;
+      }
     }
   }
   freeCommandLine(commandLine);

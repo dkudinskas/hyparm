@@ -30,6 +30,7 @@ void deliverServiceCall(GCONTXT *context)
   context->SPSR_SVC = context->CPSR;
   // 3. put guest CPSR in SVC mode
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_SVC_MODE;
+  guestChangeMode(context->CPSR & PSR_MODE);
   // 4. set LR to PC+4
 #ifdef CONFIG_THUMB2
   if (context->CPSR & PSR_T_BIT)// Were we on Thumb?
@@ -82,6 +83,8 @@ static inline u32int getExceptionHandlerAddress(GCONTXT *context, u32int offset)
       return vbar + offset;
     }
   }
+  // update AFI bits for SVC:
+  context->CPSR |= PSR_I_BIT;
 }
 
 void throwInterrupt(u32int irqNumber)
@@ -91,6 +94,7 @@ void throwInterrupt(u32int irqNumber)
   switch (irqNumber)
   {
     case GPT2_IRQ:
+    {
       // gpt2 is dedicated to the guest. if irq is from gpt2
       // set it pending in emulated interrupt controller
       setInterrupt(GPT1_IRQ);
@@ -107,7 +111,9 @@ void throwInterrupt(u32int irqNumber)
         DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: guest is not ready to handle IRQ: %#.8x" EOL, irqNumber);
       }
       break;
+    }
     case UART1_IRQ:
+    {
       setInterrupt(UART1_IRQ);
       // are we forwarding the interrupt event?
       if ( isIrqPending() && ((context->CPSR & PSR_I_BIT) == 0) )
@@ -117,7 +123,9 @@ void throwInterrupt(u32int irqNumber)
         context->guestIrqPending = TRUE;
       }
       break;
+    }
     case UART2_IRQ:
+    {
       setInterrupt(UART2_IRQ);
       // are we forwarding the interrupt event?
       if ( isIrqPending() && ((context->CPSR & PSR_I_BIT) == 0) )
@@ -127,7 +135,9 @@ void throwInterrupt(u32int irqNumber)
         context->guestIrqPending = TRUE;
       }
       break;
+    }
     case UART3_IRQ:
+    {
       setInterrupt(UART3_IRQ);
       // are we forwarding the interrupt event?
       if ( isIrqPending() && ((context->CPSR & PSR_I_BIT) == 0) )
@@ -137,6 +147,7 @@ void throwInterrupt(u32int irqNumber)
         context->guestIrqPending = TRUE;
       }
       break;
+    }
     default:
       DIE_NOW(context, "throwInterrupt: from unknown source.");
   }
@@ -155,7 +166,7 @@ void deliverInterrupt(GCONTXT *context)
   context->SPSR_IRQ = context->CPSR;
   // 3. put guest CPSR in IRQ mode
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_IRQ_MODE;
-
+  guestChangeMode(context->CPSR & PSR_MODE);
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
   if (getCregVal(context->coprocRegBank, CP15_SCTRL) & SCTLR_TE)
@@ -189,6 +200,7 @@ void deliverDataAbort(GCONTXT *context)
   context->SPSR_ABT = context->CPSR;
   // 3. put guest CPSR in ABT mode
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
+  guestChangeMode(context->CPSR & PSR_MODE);
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
   if (getCregVal(context->coprocRegBank, CP15_SCTRL) & SCTLR_TE)
@@ -239,6 +251,7 @@ void deliverPrefetchAbort(GCONTXT *context)
   context->SPSR_ABT = context->CPSR;
   // 3. put guest CPSR in ABT mode
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
+  guestChangeMode(context->CPSR & PSR_MODE);
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
   if (getCregVal(context->coprocRegBank, CP15_SCTRL) & SCTLR_TE)

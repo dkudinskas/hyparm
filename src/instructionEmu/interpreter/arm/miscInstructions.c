@@ -124,6 +124,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
     oldCpsr &= ~PSR_MODE;
     oldCpsr |= newMode;
     DIE_NOW(context, "guest is changing execution modes. To What?");
+    guestChangeMode(oldCpsr & PSR_MODE);
   }
   context->CPSR = oldCpsr;
 
@@ -141,7 +142,7 @@ u32int armDmbInstruction(GCONTXT *context, u32int instruction)
   /* DMB is weaker than DSB */
   printf("Warning: DMB (ignored)!" EOL);
 #endif
-  return context->R15 + ARM_INSTRUCTION_SIZE;
+  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armDsbInstruction(GCONTXT *context, u32int instruction)
@@ -227,6 +228,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   u32int cpsrOrSpsr = (instruction & 0x00400000); // if 0 then cpsr, !0 then spsr
   u32int fieldMsk =   (instruction & 0x000F0000) >> 16;
 
+  bool changedMode = FALSE;
   u32int value = 0;
 
   if (!evaluateConditionCode(context, instrCC))
@@ -293,6 +295,10 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
     ASSERT((oldValue & PSR_T_BIT) == (value & PSR_T_BIT), "MSR toggle THUMB bit");
 #endif
 
+    if ((value & PSR_MODE) != (oldValue & PSR_MODE))
+    {
+      changedMode = TRUE;
+    }
     // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x000000FF);
     // clear old fields!
@@ -341,6 +347,10 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   {
     // CPSR!
     context->CPSR = oldValue;
+    if (changedMode)
+    {
+      guestChangeMode(context->CPSR & PSR_MODE);
+    }
   }
   else
   {

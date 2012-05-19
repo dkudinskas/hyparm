@@ -62,7 +62,10 @@ config BLOCK_COPY
 
 choice
   prompt "Memory allocator"
-  default MEMORY_ALLOCATOR_TLSF
+  default MEMORY_ALLOCATOR_LEGACY
+
+config MEMORY_ALLOCATOR_LEGACY
+  bool "Legacy (no free)"
 
 config MEMORY_ALLOCATOR_NAIVE
   bool "Naive (no free)"
@@ -610,5 +613,8 @@ menu "Miscellaneous hacks"
 
 config CLI
   bool "Command-line interface"
+
+config DISABLE_HYPERVISOR_MEMORY_PROTECTION
+  bool "Disable hypervisor memory protection"
 
 endmenu

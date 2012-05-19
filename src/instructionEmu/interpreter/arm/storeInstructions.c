@@ -4,6 +4,8 @@
 
 #include "instructionEmu/interpreter/arm/storeInstructions.h"
 
+#include "memoryManager/memoryProtection.h"
+
 
 u32int armStrInstruction(GCONTXT *context, u32int instruction)
 {

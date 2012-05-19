@@ -91,7 +91,7 @@
  */
 #define PM_UNKNOWN               0x00000044 // unknown register
 
-void initPrm(void) __cold__;
+void initPrm(virtualMachine *vm) __cold__;
 
 /* top load function */
 u32int loadPrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);

@@ -53,9 +53,9 @@
 #define GPIO_SETDATAOUT          0x094
 
 
-void connectGpio(u32int gpioNumber, u32int physicalGpioNumber) __cold__;
+void connectGpio(virtualMachine *vm, u32int gpioNumber, u32int physicalGpioNumber) __cold__;
 
-void initGpio(u32int gpioNumber) __cold__;
+void initGpio(virtualMachine *vm, u32int gpioNumber) __cold__;
 
 u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress);
 

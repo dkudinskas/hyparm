@@ -9,25 +9,25 @@
 #include "vm/omap35xx/timer32k.h"
 
 
-struct Sdma * sdma;
-
 static inline u32int getChannelNumber(u32int regOffs);
+static void resetSdma(struct Sdma *sdma);
 
 
-void initSdma()
+void initSdma(virtualMachine *vm)
 {
   // init function: setup device, reset register values to defaults!
-  sdma = (struct Sdma *)calloc(1, sizeof(struct Sdma));
+  struct Sdma *sdma = (struct Sdma *)calloc(1, sizeof(struct Sdma));
   if (sdma == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate sdma.");
   }
+  vm->sdma = sdma;
 
   DEBUG(VP_OMAP_35XX_SDMA, "Initializing Sdma at %p size %#x" EOL, sdma, sizeof(struct Sdma));
-  resetSdma();
+  resetSdma(sdma);
 }
 
-void resetSdma()
+static void resetSdma(struct Sdma *sdma)
 {
   sdma->irqStatusL0      = 0x00000000;
   sdma->irqStatusL1      = 0x00000000;
@@ -72,15 +72,20 @@ void resetSdma()
 
 u32int loadSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct Sdma* sdma = context->vm.sdma;
+
   u32int value = 0;
   u32int regOffs = phyAddr - SDMA;
   bool found = FALSE;
   switch (regOffs)
   {
     case SDMA_REVISION:
+    {
       value = SDMA_REVISION_NUMBER;
       found = TRUE;
       break;
+    }
     case SDMA_IRQENABLE_L0:
     {
       value = sdma->irqEnableL0;
@@ -167,6 +172,9 @@ u32int loadSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 
 void storeSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct Sdma* sdma = context->vm.sdma;
+
   u32int regOffs = phyAddr - SDMA;
   bool found = FALSE;
 
@@ -175,9 +183,12 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
   switch (regOffs)
   {
     case SDMA_REVISION:
+    {
       DIE_NOW(NULL, "SDMA storing to revision register (read only)");
       break;
+    }
     case SDMA_GCR:
+    {
       if (sdma->gcr != value)
       {
         DIE_NOW(NULL, "SDMA storing value to GCR!");
@@ -185,6 +196,7 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       sdma->gcr = value;
       found = TRUE;
       break;
+    }
     case SDMA_IRQENABLE_L0:
     {
       if (sdma->irqEnableL0 != value)
@@ -255,12 +267,14 @@ void storeSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
   switch (indexedRegOffs+0x80)
   {
     case SDMA_CCRi:
+    {
       if ((value & SDMA_CCRi_ENABLE) == SDMA_CCRi_ENABLE)
       {
         printf("%s: Warning - enabling channel %x" EOL, dev->deviceName, channelIndex);
       }
       sdma->chIndexedRegs[channelIndex].ccr = value;
       break;
+    }
     case SDMA_CLNK_CTRLi:
       sdma->chIndexedRegs[channelIndex].clnkCtrl = value;
       break;

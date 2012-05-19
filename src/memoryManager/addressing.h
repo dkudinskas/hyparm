@@ -26,4 +26,6 @@ void initialiseShadowPageTables(GCONTXT *gc);
 
 void changeGuestDACR(u32int oldVal, u32int newVal);
 
+void setExceptionVector(u32int guestMode);
+
 #endif /* __MEMORY_MANAGER__ADDRESSING_H__ */

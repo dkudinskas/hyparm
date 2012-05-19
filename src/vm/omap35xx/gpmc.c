@@ -8,11 +8,10 @@
 #include "vm/omap35xx/gpmc.h"
 
 
-struct Gpmc * gpmc;
 
-void initGpmc()
+void initGpmc(virtualMachine *vm)
 {
-  gpmc = (struct Gpmc *)calloc(1, sizeof(struct Gpmc));
+  struct Gpmc *gpmc = (struct Gpmc *)calloc(1, sizeof(struct Gpmc));
   if (gpmc == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate GPMC.");
@@ -56,6 +55,8 @@ void initGpmc()
   gpmc->gpmcEccControl = 0x00000000;
   gpmc->gpmcEccSizeConfig = 0x00000000; // OMAP reference manual: 0x3fcff000
   // TODO: add rest
+
+  vm->gpmc = gpmc;
 }
 
 /* top load function */
@@ -66,6 +67,9 @@ u32int loadGpmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
     // only word access allowed in these modules
     DIE_NOW(NULL, "Gpmc: invalid access size.");
   }
+
+  GCONTXT* context = getGuestContext();
+  struct Gpmc* gpmc = context->vm.gpmc;
 
   u32int regOffset = phyAddr - Q1_L3_GPMC;
   u32int val = 0;
@@ -164,9 +168,13 @@ void storeGpmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
   DEBUG(VP_OMAP_35XX_GPMC, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
       dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
+  GCONTXT* context = getGuestContext();
+  struct Gpmc* gpmc = context->vm.gpmc;
+
   switch (phyAddr - Q1_L3_GPMC)
   {
     case GPMC_SYSCONFIG:
+    {
       // TODO
       printf("WARN writing to GPMC_SYSCONFIG %#.8x" EOL, value);
       if (value & GPMC_SYSCONFIG_SOFTRESET)
@@ -175,6 +183,7 @@ void storeGpmc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, 
       }
       gpmc->gpmcSysConfig = value & GPMC_SYSCONFIG_MASK;
       break;
+    }
     case GPMC_SYSSTATUS:
       DIE_NOW(NULL, "store to read-only register");
       break;

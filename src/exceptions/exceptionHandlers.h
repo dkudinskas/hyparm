@@ -53,7 +53,7 @@ void resetSvcCounter(void);
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code);
 
 GCONTXT *dataAbort(GCONTXT *context);
-void dataAbortPrivileged(u32int pc);
+void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr);
 
 GCONTXT *undefined(GCONTXT *context);
 void undefinedPrivileged(void);

@@ -8,11 +8,9 @@
 #include "vm/omap35xx/sdram.h"
 
 
-struct SdramController * sdram;
-
-void initSdram(void)
+void initSdram(virtualMachine *vm)
 {
-  sdram = (struct SdramController *)calloc(1, sizeof(struct SdramController));
+  struct SdramController *sdram = (struct SdramController *)calloc(1, sizeof(struct SdramController));
   if (sdram == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate SDRAM instance");
@@ -20,6 +18,8 @@ void initSdram(void)
   DEBUG(VP_OMAP_35XX_SDRAM, "Sdram instance at %p" EOL, sdram);
 
   sdram->enabled = 1;
+
+  vm->sdram = sdram;
 
 #ifdef SDRAM_STORE_COUNTER
   u32int *storeTrace = (u32int *)calloc(MEGABYTE_COUNT, sizeof(u32int));
@@ -40,6 +40,7 @@ void initSdram(void)
 
 void dumpSdramStats()
 {
+  struct SdramController* sdram = getGuestContext()->vm.sdram;
 #ifdef SDRAM_STORE_COUNTER
   printf("Store trace:" EOL);
 
@@ -93,10 +94,11 @@ u32int loadSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr
 
 void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct SdramController* sdram = context->vm.sdram;
+
   DEBUG(VP_OMAP_35XX_SDRAM, "%s store to physical address: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x"
       EOL, dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
-//  fprintf("%s store to physical address: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x\n",
-//         dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
 #ifdef SDRAM_STORE_COUNTER
   u32int index = (virtAddr >> 20) & 0xFFF;
@@ -108,9 +110,12 @@ void storeSdram(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr,
     case WORD:
     {
       // I presume page table edits only happen in full word accesses... dont they?
-      if (isAddrInPageTable(getGuestContext()->pageTables->guestPhysical, phyAddr))
+      if (context->virtAddrEnabled)
       {
-        pageTableEdit(virtAddr, value);
+        if (isAddrInPageTable(context->pageTables->guestPhysical, phyAddr))
+        {
+          pageTableEdit(virtAddr, value);
+        }
       }
       // store the value...
       u32int * memPtr = (u32int*)virtAddr;

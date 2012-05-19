@@ -8,90 +8,89 @@
 #include "vm/omap35xx/prm.h"
 
 
-struct PowerAndResetManager * prMan;
-
-void initPrm(void)
+void initPrm(virtualMachine *vm)
 {
   // init function: setup device, reset register values to defaults!
-  prMan = (struct PowerAndResetManager *)calloc(1, sizeof(struct PowerAndResetManager));
-  if (prMan == NULL)
+  struct PowerAndResetManager *prm = (struct PowerAndResetManager *)calloc(1, sizeof(struct PowerAndResetManager));
+  if (prm == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate power and reset manager.");
   }
 
-  DEBUG(VP_OMAP_35XX_PRM, "Initializing Power and reset manager at %p" EOL, prMan);
+  DEBUG(VP_OMAP_35XX_PRM, "Initializing Power and reset manager at %p" EOL, prm);
 
   // Clock Control registers
-  prMan->prmClkSelReg = 0x3;
-  prMan->prmClkoutCtrlReg = 0x80;
+  prm->prmClkSelReg = 0x3;
+  prm->prmClkoutCtrlReg = 0x80;
   // Global reg prm registers
-  prMan->prmVcSmpsSa = 0;
-  prMan->prmVcSmpsVolRa = 0;
-  prMan->prmVcSmpsCmdRa = 0;
-  prMan->prmVcCmdVal0 = 0;
-  prMan->prmVcCmdVal1 = 0;
-  prMan->prmVcChConf = 0;
-  prMan->prmVcI2cCfg = 0x18; // ([3]I2C bus high speed mode, [4] repeated start operation mode)
-  prMan->prmVcBypassVal = 0;
-  prMan->prmRstCtrl = 0;
-  prMan->prmRstTime = 0x1006; // [12:8] rstTime2, [0:7] rstTime1
-  prMan->prmRstState = 0x1;
-  prMan->prmVoltCtrl = 0;
-  prMan->prmSramPcharge = 0x50; // sram precharge duration in clk cycles
-  prMan->prmClkSrcCtrl = 0x80;
-  prMan->prmObsr = 0;
-  prMan->prmVoltSetup1 = 0;
-  prMan->prmVoltOffset = 0;
-  prMan->prmClkSetup = 0;
-  prMan->prmPolCtrl = 0xA;
-  prMan->prmVoltSetup2 = 0;
+  prm->prmVcSmpsSa = 0;
+  prm->prmVcSmpsVolRa = 0;
+  prm->prmVcSmpsCmdRa = 0;
+  prm->prmVcCmdVal0 = 0;
+  prm->prmVcCmdVal1 = 0;
+  prm->prmVcChConf = 0;
+  prm->prmVcI2cCfg = 0x18; // ([3]I2C bus high speed mode, [4] repeated start operation mode)
+  prm->prmVcBypassVal = 0;
+  prm->prmRstCtrl = 0;
+  prm->prmRstTime = 0x1006; // [12:8] rstTime2, [0:7] rstTime1
+  prm->prmRstState = 0x1;
+  prm->prmVoltCtrl = 0;
+  prm->prmSramPcharge = 0x50; // sram precharge duration in clk cycles
+  prm->prmClkSrcCtrl = 0x80;
+  prm->prmObsr = 0;
+  prm->prmVoltSetup1 = 0;
+  prm->prmVoltOffset = 0;
+  prm->prmClkSetup = 0;
+  prm->prmPolCtrl = 0xA;
+  prm->prmVoltSetup2 = 0;
   // IVA2 registers
-  prMan->prmWkdepIva2    = 0xB3;
-  prMan->prmPwstctrlIva2 = 0xFF0F07;
-  prMan->prmPwststIva2   = 0xFF7;
+  prm->prmWkdepIva2    = 0xB3;
+  prm->prmPwstctrlIva2 = 0xFF0F07;
+  prm->prmPwststIva2   = 0xFF7;
   // OCP_system_reg REGISTERS
-  prMan->prmRevisionOcp     = 0x10;
-  prMan->prmSysConfigOcp    = 0x1;
-  prMan->prmIrqStatusMpuOcp = 0x0;
-  prMan->prmIrqEnableMpuOcp = 0x0;
+  prm->prmRevisionOcp     = 0x10;
+  prm->prmSysConfigOcp    = 0x1;
+  prm->prmIrqStatusMpuOcp = 0x0;
+  prm->prmIrqEnableMpuOcp = 0x0;
   // MPU registers
-  prMan->prmWkdepMpu    = 0xA5;
-  prMan->prmPwstctrlMpu = 0x30107;
-  prMan->prmPwststMpu   = 0xC7;
+  prm->prmWkdepMpu    = 0xA5;
+  prm->prmPwstctrlMpu = 0x30107;
+  prm->prmPwststMpu   = 0xC7;
   // CORE registers
-  prMan->prmPwstctrlCore = 0xF0307;
-  prMan->prmPwststCore   = 0xF7;
+  prm->prmPwstctrlCore = 0xF0307;
+  prm->prmPwststCore   = 0xF7;
   // SGX registers
-  prMan->prmWkdepSgx    = 0x16;
-  prMan->prmPwstctrlSgx = 0x30107;
-  prMan->prmPwststSgx   = 0x3;
+  prm->prmWkdepSgx    = 0x16;
+  prm->prmPwstctrlSgx = 0x30107;
+  prm->prmPwststSgx   = 0x3;
   // Wakeup registers
-  prMan->prmWkenWkup       = 0x3CB;
-  prMan->prmMpugrpselWkup  = 0x3CB;
-  prMan->prmIva2grpselWkup = 0;
-  prMan->prmWkstWkup       = 0;
+  prm->prmWkenWkup       = 0x3CB;
+  prm->prmMpugrpselWkup  = 0x3CB;
+  prm->prmIva2grpselWkup = 0;
+  prm->prmWkstWkup       = 0;
   // DSS registers
-  prMan->prmWkdepDss    = 0x16;
-  prMan->prmPwstctrlDss = 0x30107;
-  prMan->prmPwststDss   = 0x3;
+  prm->prmWkdepDss    = 0x16;
+  prm->prmPwstctrlDss = 0x30107;
+  prm->prmPwststDss   = 0x3;
   // CAM registers
-  prMan->prmWkdepCam    = 0x16;
-  prMan->prmPwstctrlCam = 0x30107;
-  prMan->prmPwststCam   = 0x3;
+  prm->prmWkdepCam    = 0x16;
+  prm->prmPwstctrlCam = 0x30107;
+  prm->prmPwststCam   = 0x3;
   // PER registers
-  prMan->prmPwstctrlPer = 0x30107;
-  prMan->prmPwststPer   = 0x7;
+  prm->prmPwstctrlPer = 0x30107;
+  prm->prmPwststPer   = 0x7;
   // EMU registers
-  prMan->prmPwststEmu = 0xC3;
+  prm->prmPwststEmu = 0xC3;
   // NEON registers
-  prMan->prmWkdepNeon    = 0x2;
-  prMan->prmPwstctrlNeon = 0x7;
-  prMan->prmPwststNeon   = 0x3;
+  prm->prmWkdepNeon    = 0x2;
+  prm->prmPwstctrlNeon = 0x7;
+  prm->prmPwststNeon   = 0x3;
   // USBHOST registers
-  prMan->prmWkdepUsbhost    = 0x17;
-  prMan->prmPwstctrlUsbhost = 0x30107;
-  prMan->prmPwststUsbhost   = 0x3;
+  prm->prmWkdepUsbhost    = 0x17;
+  prm->prmPwstctrlUsbhost = 0x30107;
+  prm->prmPwststUsbhost   = 0x3;
 
+  vm->prMan = prm;
 }
 
 /*************************************************************************
@@ -195,6 +194,9 @@ u32int loadPrm(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 
 u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - Clock_Control_Reg_PRM;
   switch(reg)
@@ -230,8 +232,12 @@ u32int loadClockControlPrm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - Global_Reg_PRM;
+
   switch (reg)
   {
     case PRM_VC_SMPS_SA:
@@ -344,6 +350,9 @@ u32int loadGlobalRegPrm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadIva2Prm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - IVA2_PRM;
   switch (reg)
@@ -391,8 +400,12 @@ u32int loadIva2Prm(device *dev, u32int address, u32int phyAddr)
 
 u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - OCP_System_Reg_PRM;
+
   switch (reg)
   {
     case PRM_REVISION_OCP:
@@ -425,6 +438,9 @@ u32int loadOcpSystemPrm(device * dev, u32int address, u32int phyAddr)
 
 u32int loadMpuPrm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - MPU_PRM;
   switch (reg)
@@ -472,6 +488,9 @@ u32int loadMpuPrm(device *dev, u32int address, u32int phyAddr)
 
 u32int loadCorePrm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - CORE_PRM;
   switch (reg)
@@ -506,6 +525,9 @@ u32int loadCorePrm(device *dev, u32int address, u32int phyAddr)
 
 u32int loadSgxPrm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - SGX_PRM;
   switch (reg)
@@ -544,6 +566,9 @@ u32int loadSgxPrm(device *dev, u32int address, u32int phyAddr)
 
 u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - WKUP_PRM;
   switch (reg)
@@ -594,6 +619,9 @@ u32int loadWakeUpPrm(device *dev, u32int address, u32int phyAddr)
 
 u32int loadDssPrm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - DSS_PRM;
   switch (reg)
@@ -631,6 +659,9 @@ u32int loadDssPrm(device *dev, u32int address, u32int phyAddr)
 
 u32int loadCamPrm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - CAM_PRM;
   switch (reg)
@@ -668,6 +699,9 @@ u32int loadCamPrm(device *dev, u32int address, u32int phyAddr)
 
 u32int loadPerPrm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - PER_PRM;
   switch (reg)
@@ -701,6 +735,9 @@ u32int loadPerPrm(device *dev, u32int address, u32int phyAddr)
 
 u32int loadEmuPrm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - EMU_PRM;
   switch (reg)
@@ -729,6 +766,9 @@ u32int loadEmuPrm(device *dev, u32int address, u32int phyAddr)
 
 u32int loadNeonPrm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - NEON_PRM;
   switch (reg)
@@ -766,6 +806,9 @@ u32int loadNeonPrm(device *dev, u32int address, u32int phyAddr)
 
 u32int loadUsbhostPrm(device *dev, u32int address, u32int phyAddr)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int val = 0;
   u32int reg = phyAddr - USBHOST_PRM;
   switch (reg)
@@ -919,6 +962,9 @@ void storeGlobalRegPrm(device * dev, u32int address, u32int phyAddr, u32int valu
 
 void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int reg = phyAddr - IVA2_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storeIva2Prm: store reg %x value %.8x" EOL, dev->deviceName, reg,
       value);
@@ -946,6 +992,9 @@ void storeIva2Prm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int reg = phyAddr - OCP_System_Reg_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storeOcpSystemPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
       value);
@@ -978,6 +1027,9 @@ void storeOcpSystemPrm(device * dev, u32int address, u32int phyAddr, u32int valu
 
 void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int reg = phyAddr - MPU_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storeMpuPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
       value);
@@ -1005,6 +1057,9 @@ void storeMpuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeCorePrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int reg = phyAddr - CORE_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storeCorePrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
       value);
@@ -1028,6 +1083,9 @@ void storeCorePrm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeSgxPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int reg = phyAddr - SGX_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storeSgxPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
       value);
@@ -1074,6 +1132,9 @@ void storeWakeUpPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeDssPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int reg = phyAddr - DSS_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storeDssPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
       value);
@@ -1101,6 +1162,9 @@ void storeDssPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeCamPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int reg = phyAddr - CAM_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storeCamPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
       value);
@@ -1128,6 +1192,9 @@ void storeCamPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storePerPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int reg = phyAddr - PER_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storePerPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
         value);
@@ -1169,6 +1236,9 @@ void storeEmuPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeNeonPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int reg = phyAddr - NEON_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storeNeonPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
       value);
@@ -1196,6 +1266,9 @@ void storeNeonPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 
 void storeUsbhostPrm(device * dev, u32int address, u32int phyAddr, u32int value)
 {
+  GCONTXT* context = getGuestContext();
+  struct PowerAndResetManager* prMan = context->vm.prMan;
+
   u32int reg = phyAddr - USBHOST_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "%s: storeUsbhostPrm: store reg %x value %.8x" EOL, dev->deviceName, reg,
       value);

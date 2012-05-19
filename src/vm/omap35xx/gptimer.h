@@ -128,9 +128,7 @@
 #define TLDR1MS  0xFFFFFFE0
 
 
-void initGPTimer(void) __cold__;
-
-void resetGPTimer(void);
+void initGPTimer(virtualMachine *vm) __cold__;
 
 u32int loadGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 void storeGPTimer(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);

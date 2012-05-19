@@ -1,43 +1,5 @@
 #include "cpuArch/constants.h"
-
-/* Standard definitions */
-.equ GC_R0_OFFS,        0x00
-.equ GC_R1_OFFS,        0x04
-.equ GC_R2_OFFS,        0x08
-.equ GC_R3_OFFS,        0x0C
-.equ GC_R4_OFFS,        0x10
-.equ GC_R5_OFFS,        0x14
-.equ GC_R6_OFFS,        0x18
-.equ GC_R7_OFFS,        0x1C
-.equ GC_R8_OFFS,        0x20
-.equ GC_R9_OFFS,        0x24
-.equ GC_R10_OFFS,       0x28
-.equ GC_R11_OFFS,       0x2C
-.equ GC_R12_OFFS,       0x30
-.equ GC_R13_OFFS,       0x34
-.equ GC_R14_OFFS,       0x38
-.equ GC_R15_OFFS,       0x3C
-.equ GC_CPSR_OFFS,      0x40
-.equ GC_R8_FIQ_OFFS,    0x44
-.equ GC_R9_FIQ_OFFS,    0x48
-.equ GC_R10_FIQ_OFFS,   0x4C
-.equ GC_R11_FIQ_OFFS,   0x50
-.equ GC_R12_FIQ_OFFS,   0x54
-.equ GC_R13_FIQ_OFFS,   0x58
-.equ GC_R14_FIQ_OFFS,   0x5C
-.equ GC_SPSR_FIQ_OFFS,  0x60
-.equ GC_R13_SVC_OFFS,   0x64
-.equ GC_R14_SVC_OFFS,   0x68
-.equ GC_SPSR_SVC_OFFS,  0x6C
-.equ GC_R13_ABT_OFFS,   0x70
-.equ GC_R14_ABT_OFFS,   0x74
-.equ GC_SPSR_ABT_OFFS,  0x78
-.equ GC_R13_IRQ_OFFS,   0x7C
-.equ GC_R14_IRQ_OFFS,   0x80
-.equ GC_SPSR_IRQ_OFFS,  0x84
-.equ GC_R13_UND_OFFS,   0x88
-.equ GC_R14_UND_OFFS,   0x8C
-.equ GC_SPSR_UND_OFFS,  0x90
+#include "guestManager/guestConstants.h"
 
 
 .text
@@ -94,7 +56,7 @@ zeroFillBSS$:
      * The security extensions introduce a register to set the exception vector base address (VBAR).
      * On the TI OMAP 35xx, this eliminates a few branches through the NAND and the SRAM.
      */
-    LDR     R2, =exceptionVectorBase
+    LDR     R2, =svcVector
     MCR     P15, 0, R2, C12, C0, 0
 #else
   .err @ Architectures without the security extensions are not supported
@@ -123,17 +85,84 @@ zeroFillBSS$:
 #ifdef CONFIG_ARCH_EXT_SECURITY
 
   .balign 0x20
-
   .global exceptionVectorBase
 exceptionVectorBase:
   B       exceptionVectorBase
   B       undHandler
   B       svcHandler
-  B       pabthandler
+  B       pabtHandler
   B       dabtHandler
   B       monHandler
   B       irqHandler
   B       fiqHandler
+
+  .balign 0x20
+  .global abortVector
+abortVector:
+  B       abortReset
+  B       abortUndefined
+  B       abortSvc
+  B       abortPrefetch
+  B       abortDataAbort
+  B       abortMonitor
+  B       abortIrq
+  B       abortFiq
+
+  .balign 0x20
+  .global svcVector
+svcVector:
+  B       svcReset
+  B       svcUndefined
+  B       svcSvc
+  B       svcPrefetch
+  B       svcDataAbort
+  B       svcMonitor
+  B       svcIrq
+  B       svcFiq
+
+  .balign 0x20
+  .global irqVector
+irqVector:
+  B       irqReset
+  B       irqUndefined
+  B       irqSvc
+  B       irqPrefetch
+  B       irqDataAbort
+  B       irqMonitor
+  B       irqIrq
+  B       irqFiq
+
+  .balign 0x20
+  .global usrVector
+usrVector:
+  B       usrReset
+  B       usrUndefined
+  B       usrSvc
+  B       usrPrefetch
+  B       usrDataAbort
+  B       usrMonitor
+  B       usrIrq
+  B       usrFiq
+
+  .balign 0x20
+  .global undVector
+undVector:
+  B       undReset
+  B       undUndefined
+  B       undSvc
+  B       undPrefetch
+  B       undDataAbort
+  B       undMonitor
+  B       undIrq
+  B       undFiq
+
+#include "exceptions/abortVector.S.inc"
+#include "exceptions/svcVector.S.inc"
+#include "exceptions/irqVector.S.inc"
+#include "exceptions/usrVector.S.inc"
+#include "exceptions/undVector.S.inc"
+
+  .ltorg
 
 #endif /* CONFIG_ARCH_EXT_SECURITY */
 
@@ -494,8 +523,11 @@ dabtHandler:
 
     /*
      * Pointer to guest context is already in R0!
+     * Handle abort in SVC mode.
      */
+    CPS    PSR_SVC_MODE
     BL     dataAbort
+    CPS    PSR_ABT_MODE
 
     /* We came from usr mode (emulation or not of guest state) lets restore it and try that faulting instr again*/
     restore_r0_r14
@@ -504,18 +536,20 @@ dabtHandler:
 
 .global dabtHandlerPriv
 dabtHandlerPriv:
+  /* we backed up the LR to hold the SPSR */
   POP    {LR}
+  /* link register is last pc+8 */
   SUB    LR, LR, #8
-  STMFD  SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R14}
+  /* save common registers and return address. */
+  PUSH    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, LR}
   /* PC of the aborting instruction in @param1 of C handler */
   MOV    R0, LR
+  MOV    R1, SP
+  MRS    R2, SPSR
+  AND    R2, R2, #PSR_MODE
   BL     dataAbortPrivileged
-  /* LR is adjusted on the top of the stack, pop it into PC (exc return)*/
-  LDMFD    SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, PC}^
-
-  /* should never hit this */
-dabtPrivLoop:
-  B      dabtPrivLoop
+  POP    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, LR}
+  MOVS   PC, LR
 
 
 .global undHandler
@@ -549,8 +583,8 @@ undPrivLoop:
   B      undPrivLoop
 
 
-.global pabthandler
-pabthandler:
+.global pabtHandler
+pabtHandler:
   /* We can NOT assume that the abort is guest code */
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
@@ -643,15 +677,15 @@ irqHandler:
   /* End restore code */
 
 irqHandlerPriv:
-  pop     {LR} /* we backed up the LR to hold the SPSR */
-  /* link register is last pc+8. need to return to the which?? instruction */
-  sub     LR, LR, #4
+  /* we backed up the LR to hold the SPSR */
+  POP     {LR} 
+  /* link register is last pc+4. */
+  SUB     LR, LR, #4
   /* save common registers and return address. */
-  push    {lr}
-  push    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
+  PUSH    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, LR}
   BL      irqPrivileged
-  pop     {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
-  ldm     sp!, {pc}^
+  POP     {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, LR}
+  MOVS    PC, LR
 
 
 .global fiqHandler

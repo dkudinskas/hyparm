@@ -14,29 +14,26 @@
 
 
 static inline s32int getIndexByAddress(u32int physicalAddress);
-static void reset(u32int index);
+static void reset(struct Gpio *gpio);
 
 
-struct Gpio *gpio[6];
-
-
-void connectGpio(u32int gpioNumber, u32int physicalGpioNumber)
+void connectGpio(virtualMachine *vm, u32int gpioNumber, u32int physicalGpioNumber)
 {
-  gpio[gpioNumber - 1]->physicalId = physicalGpioNumber - 1;
+  vm->gpio[gpioNumber - 1]->physicalId = physicalGpioNumber - 1;
 }
 
-void initGpio(u32int gpioNumber)
+void initGpio(virtualMachine *vm, u32int gpioNumber)
 {
-  u32int index = gpioNumber - 1;
-  gpio[index] = (struct Gpio *)calloc(1, sizeof(struct Gpio));
-  if (gpio[index] == NULL)
+  const s32int index = gpioNumber - 1;
+  vm->gpio[index] = (struct Gpio *)calloc(1, sizeof(struct Gpio));
+  if (vm->gpio[index] == NULL)
   {
     DIE_NOW(NULL, "Failed to allocate Gpio.");
   }
 
-  DEBUG(VP_OMAP_35XX_GPIO, "initGpio: GPIO%x @ %p" EOL, gpioNumber, gpio[index]);
-  gpio[index]->physicalId = -1;
-  reset(index);
+  DEBUG(VP_OMAP_35XX_GPIO, "initGpio: GPIO%x @ %p" EOL, gpioNumber, vm->gpio[index]);
+  vm->gpio[index]->physicalId = -1;
+  reset(vm->gpio[index]);
 }
 
 /*
@@ -66,15 +63,17 @@ static inline s32int getIndexByAddress(u32int physicalAddress)
 /* load function */
 u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress)
 {
-  s32int index = getIndexByAddress(physicalAddress);
+  GCONTXT *context = getGuestContext();
+  const s32int index = getIndexByAddress(physicalAddress);
   u32int regOffset = physicalAddress & ~ADDRESS_MASK;
   if (index < 0)
   {
     DIE_NOW(NULL, "cannot translate physical address to GPIO number");
   }
 
+  struct Gpio *gpio = context->vm.gpio[index];
   u32int val = 0;
-  if (gpio[index]->physicalId < 0)
+  if (gpio->physicalId < 0)
   {
     /*
      * This is a virtual GPIO without physical counterpart.
@@ -82,67 +81,67 @@ u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phy
     switch (regOffset)
     {
       case GPIO_REVISION:
-        val = gpio[index]->gpioRevision;
+        val = gpio->gpioRevision;
         break;
       case GPIO_SYSCONFIG:
-        val = gpio[index]->gpioSysConfig;
+        val = gpio->gpioSysConfig;
         break;
       case GPIO_SYSSTATUS:
-        val = gpio[index]->gpioSysStatus;
+        val = gpio->gpioSysStatus;
         break;
       case GPIO_IRQSTATUS1:
-        val = gpio[index]->gpioIrqStatus1;
+        val = gpio->gpioIrqStatus1;
         break;
       case GPIO_IRQENABLE1:
       case GPIO_CLEARIRQENABLE1:
       case GPIO_SETIRQENABLE1:
-        val = gpio[index]->gpioIrqEnable1;
+        val = gpio->gpioIrqEnable1;
         break;
       case GPIO_WAKEUPENABLE:
       case GPIO_CLEARWKUENA:
       case GPIO_SETWKUENA:
-        val = gpio[index]->gpioWakeupEnable;
+        val = gpio->gpioWakeupEnable;
         break;
       case GPIO_IRQSTATUS2:
-        val = gpio[index]->gpioIrqStatus2;
+        val = gpio->gpioIrqStatus2;
         break;
       case GPIO_IRQENABLE2:
       case GPIO_CLEARIRQENABLE2:
       case GPIO_SETIRQENABLE2:
-        val = gpio[index]->gpioIrqEnable2;
+        val = gpio->gpioIrqEnable2;
         break;
       case GPIO_CTRL:
-        val = gpio[index]->gpioCtrl;
+        val = gpio->gpioCtrl;
         break;
       case GPIO_OE:
-        val = gpio[index]->gpioOE;
+        val = gpio->gpioOE;
         break;
       case GPIO_DATAIN:
         printf("Warning: guest reading from disconnected GPIO" EOL);
-        val = gpio[index]->gpioDataIn;
+        val = gpio->gpioDataIn;
         break;
       case GPIO_DATAOUT:
       case GPIO_CLEARDATAOUT:
       case GPIO_SETDATAOUT:
-        val = gpio[index]->gpioDataOut;
+        val = gpio->gpioDataOut;
         break;
       case GPIO_LEVELDETECT0:
-        val = gpio[index]->gpioLvlDetect0;
+        val = gpio->gpioLvlDetect0;
         break;
       case GPIO_LEVELDETECT1:
-        val = gpio[index]->gpioLvlDetect1;
+        val = gpio->gpioLvlDetect1;
         break;
       case GPIO_RISINGDETECT:
-        val = gpio[index]->gpioRisingDetect;
+        val = gpio->gpioRisingDetect;
         break;
       case GPIO_FALLINGDETECT:
-        val = gpio[index]->gpioFallingDetect;
+        val = gpio->gpioFallingDetect;
         break;
       case GPIO_DEBOUNCENABLE:
-        val = gpio[index]->gpioDebounceEnable;
+        val = gpio->gpioDebounceEnable;
         break;
       case GPIO_DEBOUNCINGTIME:
-        val = gpio[index]->gpioDebouncingTime;
+        val = gpio->gpioDebouncingTime;
         break;
       default:
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
@@ -181,7 +180,7 @@ u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phy
       case GPIO_SETWKUENA:
       case GPIO_CLEARDATAOUT:
       case GPIO_SETDATAOUT:
-        val = beGetGPIO(regOffset, gpio[index]->physicalId);
+        val = beGetGPIO(regOffset, gpio->physicalId);
         break;
       default:
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
@@ -192,30 +191,30 @@ u32int loadGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phy
   return val;
 }
 
-static void reset(u32int index)
+static void reset(struct Gpio *gpio)
 {
   /*
    * Reset registers to default values
    * WARNING: DO NOT CLEAR mapping to physical GPIO
    */
-  gpio[index]->gpioRevision        = 0x00000025;
-  gpio[index]->gpioSysConfig       = 0x00000000;
-  gpio[index]->gpioSysStatus       = 0x00000001;
-  gpio[index]->gpioIrqStatus1      = 0x00000000;
-  gpio[index]->gpioIrqEnable1      = 0x00000000;
-  gpio[index]->gpioWakeupEnable    = 0x00000000;
-  gpio[index]->gpioIrqStatus2      = 0x00000000;
-  gpio[index]->gpioIrqEnable2      = 0x00000000;
-  gpio[index]->gpioCtrl            = 0x00000002;
-  gpio[index]->gpioOE              = 0xFFFFFFFF;
-  gpio[index]->gpioDataIn          = 0x00000000;
-  gpio[index]->gpioDataOut         = 0x00000000;
-  gpio[index]->gpioLvlDetect0      = 0x00000000;
-  gpio[index]->gpioLvlDetect1      = 0x00000000;
-  gpio[index]->gpioRisingDetect    = 0x00000000;
-  gpio[index]->gpioFallingDetect   = 0x00000000;
-  gpio[index]->gpioDebounceEnable  = 0x00000000;
-  gpio[index]->gpioDebouncingTime  = 0x00000000;
+  gpio->gpioRevision        = 0x00000025;
+  gpio->gpioSysConfig       = 0x00000000;
+  gpio->gpioSysStatus       = 0x00000001;
+  gpio->gpioIrqStatus1      = 0x00000000;
+  gpio->gpioIrqEnable1      = 0x00000000;
+  gpio->gpioWakeupEnable    = 0x00000000;
+  gpio->gpioIrqStatus2      = 0x00000000;
+  gpio->gpioIrqEnable2      = 0x00000000;
+  gpio->gpioCtrl            = 0x00000002;
+  gpio->gpioOE              = 0xFFFFFFFF;
+  gpio->gpioDataIn          = 0x00000000;
+  gpio->gpioDataOut         = 0x00000000;
+  gpio->gpioLvlDetect0      = 0x00000000;
+  gpio->gpioLvlDetect1      = 0x00000000;
+  gpio->gpioRisingDetect    = 0x00000000;
+  gpio->gpioFallingDetect   = 0x00000000;
+  gpio->gpioDebounceEnable  = 0x00000000;
+  gpio->gpioDebouncingTime  = 0x00000000;
 }
 
 void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress, u32int value)
@@ -230,7 +229,9 @@ void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phys
     DIE_NOW(NULL, "cannot translate physical address to GPIO number");
   }
 
-  if (gpio[index]->physicalId < 0)
+  GCONTXT *context = getGuestContext();
+  struct Gpio *gpio = context->vm.gpio[index];
+  if (gpio->physicalId < 0)
   {
     /*
      * This is a virtual GPIO without physical counterpart.
@@ -246,131 +247,131 @@ void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phys
         if ((value & GPIO_SYSCONFIG_SOFTRESET) == GPIO_SYSCONFIG_SOFTRESET)
         {
           DEBUG(VP_OMAP_35XX_GPIO, "GPIO: soft reset" EOL);
-          reset(index);
+          reset(gpio);
         }
-        gpio[index]->gpioSysConfig = (value & ~(GPIO_SYSCONFIG_RESERVED | GPIO_SYSCONFIG_SOFTRESET));
+        gpio->gpioSysConfig = (value & ~(GPIO_SYSCONFIG_RESERVED | GPIO_SYSCONFIG_SOFTRESET));
         break;
       case GPIO_IRQSTATUS1:
         if (value != 0xffffffff)
         {
           DIE_NOW(NULL, "clearing random interrupts 1");
         }
-        gpio[index]->gpioIrqStatus1 = gpio[index]->gpioIrqStatus1 & ~value;
+        gpio->gpioIrqStatus1 = gpio->gpioIrqStatus1 & ~value;
         break;
       case GPIO_IRQENABLE1:
         if (value != 0)
         {
           DIE_NOW(NULL, "enabling interrupt 1");
         }
-        gpio[index]->gpioIrqEnable1 = value;
+        gpio->gpioIrqEnable1 = value;
         break;
       case GPIO_IRQSTATUS2:
         if (value != 0xffffffff)
         {
           DIE_NOW(NULL, "clearing random interrupts 2");
         }
-        gpio[index]->gpioIrqStatus2 = gpio[index]->gpioIrqStatus2 & ~value;
+        gpio->gpioIrqStatus2 = gpio->gpioIrqStatus2 & ~value;
         break;
       case GPIO_IRQENABLE2:
         if (value != 0)
         {
           DIE_NOW(NULL, "enabling interrupt 2");
         }
-        gpio[index]->gpioIrqEnable2 = value;
+        gpio->gpioIrqEnable2 = value;
         break;
       case GPIO_CTRL:
         if ((value & GPIO_CTRL_DISABLEMOD) == GPIO_CTRL_DISABLEMOD)
         {
           DIE_NOW(NULL, "disabling module! investigate.");
         }
-        gpio[index]->gpioCtrl = value & ~GPIO_CTRL_RESERVED;
+        gpio->gpioCtrl = value & ~GPIO_CTRL_RESERVED;
         break;
       case GPIO_OE:
         printf("Warning: guest enabling output on disconnected GPIO" EOL);
-        gpio[index]->gpioOE = value;
+        gpio->gpioOE = value;
         break;
       case GPIO_DATAOUT:
         printf("Warning: guest writing to disconnected GPIO" EOL);
-        gpio[index]->gpioDataOut = value;
+        gpio->gpioDataOut = value;
         break;
       case GPIO_LEVELDETECT0:
         if (value != 0)
         {
           DIE_NOW(NULL, "enabling low-level detection");
         }
-        gpio[index]->gpioLvlDetect0 = value;
+        gpio->gpioLvlDetect0 = value;
         break;
       case GPIO_LEVELDETECT1:
         if (value != 0)
         {
           DIE_NOW(NULL, "enabling high-level detection");
         }
-        gpio[index]->gpioLvlDetect1 = value;
+        gpio->gpioLvlDetect1 = value;
         break;
       case GPIO_RISINGDETECT:
         if (value != 0)
         {
           DIE_NOW(NULL, "enabling rising-edge detection");
         }
-        gpio[index]->gpioRisingDetect = value;
+        gpio->gpioRisingDetect = value;
         break;
       case GPIO_FALLINGDETECT:
         if (value != 0)
         {
           DIE_NOW(NULL, "enabling falling-edge detection");
         }
-        gpio[index]->gpioFallingDetect = value;
+        gpio->gpioFallingDetect = value;
         break;
       case GPIO_DEBOUNCENABLE:
       {
-        if (gpio[index]->gpioDebounceEnable == value)
+        if (gpio->gpioDebounceEnable == value)
         {
           printf("%s: unimplemented store to gpioDebounceEnable" EOL, __func__);
         }
         break;
       }
       case GPIO_CLEARIRQENABLE1:
-        if ((gpio[index]->gpioIrqEnable1 & value))
+        if ((gpio->gpioIrqEnable1 & value))
         {
           DIE_NOW(NULL, "clearing interrupt 1");
-          gpio[index]->gpioIrqEnable1 &= ~value;
+          gpio->gpioIrqEnable1 &= ~value;
         }
         break;
       case GPIO_SETIRQENABLE1:
-        if ((gpio[index]->gpioIrqEnable1 | value) != value)
+        if ((gpio->gpioIrqEnable1 | value) != value)
         {
           DIE_NOW(NULL, "enabling interrupt 1");
-          gpio[index]->gpioIrqEnable1 |= value;
+          gpio->gpioIrqEnable1 |= value;
         }
         break;
       case GPIO_CLEARIRQENABLE2:
-        if ((gpio[index]->gpioIrqEnable2 & value))
+        if ((gpio->gpioIrqEnable2 & value))
         {
           DIE_NOW(NULL, "clearing interrupt 2");
-          gpio[index]->gpioIrqEnable2 &= ~value;
+          gpio->gpioIrqEnable2 &= ~value;
         }
         break;
       case GPIO_SETIRQENABLE2:
-        if ((gpio[index]->gpioIrqEnable2 | value) != value)
+        if ((gpio->gpioIrqEnable2 | value) != value)
         {
           DIE_NOW(NULL, "enabling interrupt 2");
-          gpio[index]->gpioIrqEnable2 |= value;
+          gpio->gpioIrqEnable2 |= value;
         }
         break;
       case GPIO_CLEARWKUENA:
-        if ((gpio[index]->gpioWakeupEnable & value))
+        if ((gpio->gpioWakeupEnable & value))
         {
           DIE_NOW(NULL, "clearing wake-up enable");
-          gpio[index]->gpioIrqEnable2 &= ~value;
+          gpio->gpioIrqEnable2 &= ~value;
         }
         break;
       case GPIO_CLEARDATAOUT:
         printf("Warning: guest writing to disconnected GPIO" EOL);
-        gpio[index]->gpioDataOut &= ~value;
+        gpio->gpioDataOut &= ~value;
         break;
       case GPIO_SETDATAOUT:
         printf("Warning: guest writing to disconnected GPIO" EOL);
-        gpio[index]->gpioDataOut |= value;
+        gpio->gpioDataOut |= value;
         break;
       case GPIO_WAKEUPENABLE:
       case GPIO_DEBOUNCINGTIME:
@@ -398,28 +399,29 @@ void storeGpio(device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int phys
       case GPIO_DATAOUT:
       case GPIO_CLEARDATAOUT:
       case GPIO_SETDATAOUT:
-        beStoreGPIO(regOffset, value, gpio[index]->physicalId);
+        beStoreGPIO(regOffset, value, gpio->physicalId);
         break;
       case GPIO_IRQSTATUS1:
         if (value != 0xffffffff)
         {
           DIE_NOW(NULL, "clearing random interrupts 1");
         }
-        beStoreGPIO(regOffset, value, gpio[index]->physicalId);
+        beStoreGPIO(regOffset, value, gpio->physicalId);
         break;
       case GPIO_IRQENABLE1:
         if (value != 0)
         {
           DIE_NOW(NULL, "enabling interrupt 1");
         }
-        beStoreGPIO(regOffset, value, gpio[index]->physicalId);
+        beStoreGPIO(regOffset, value, gpio->physicalId);
         break;
       case GPIO_DEBOUNCENABLE:
       {
-        if (gpio[index]->gpioDebounceEnable == value)
-        {
-          printf("%s: unimplemented store to gpioDebounceEnable" EOL, __func__);
-        }
+#ifdef CONFIG_GUEST_ANDROID
+        beStoreGPIO(regOffset, value, gpio->physicalId);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
         break;
       }
       case GPIO_WAKEUPENABLE:

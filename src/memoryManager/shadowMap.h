@@ -11,7 +11,7 @@ bool shadowMap(u32int virtAddr);
 void shadowMapSection(sectionEntry* guest, sectionEntry* shadow, u32int virtual);
 void shadowUnmapSection(simpleEntry* shadow, sectionEntry* guest, u32int virtual);
 
-void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* guestOld, pageTableEntry* shadow);
+void shadowMapPageTable(pageTableEntry* guest, pageTableEntry* shadow);
 void shadowUnmapPageTable(pageTableEntry* shadow, pageTableEntry* guest, u32int virtual);
 
 void shadowMapSmallPage(smallPageEntry* guest, smallPageEntry* shadow, u32int dom);

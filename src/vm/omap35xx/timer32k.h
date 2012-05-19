@@ -15,6 +15,12 @@
 u32int loadTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 void storeTimer32k(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
-void initTimer32k(void) __cold__;
+void initTimer32k(virtualMachine *vm) __cold__;
+
+struct SynchronizedTimer32k
+{
+  u32int timer32SysconfReg;
+  u32int counterVal;
+};
 
 #endif

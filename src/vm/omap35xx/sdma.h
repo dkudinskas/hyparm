@@ -56,9 +56,7 @@
 #define SDMA_COLORi          0x000000C4 //+(i*0x60) channel DMA color key
 
 
-void initSdma(void) __cold__;
-
-void resetSdma(void);
+void initSdma(virtualMachine *vm) __cold__;
 
 u32int loadSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 void storeSdma(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);

@@ -419,7 +419,12 @@ void mmuSetContextID(u32int asid)
   __asm__ __volatile__("mcr p15, 0, %0, c13, c0, 1": :"r"(asid));
 }
 
-
+void mmuSetExceptionVector(u32int vectorBase)
+{
+  DEBUG(MM_MMU, "mmuSetExceptionVector: %08x" EOL, vectorBase);
+  __asm__ __volatile__("mcr p15, 0, %0, c12, c0, 0": :"r"(vectorBase));
+  mmuInstructionSync();
+}
 
 u32int getDFAR()
 {
@@ -460,6 +465,8 @@ IFSR getIFSR()
 
 void mmuPageTableEdit(u32int entryAddr, u32int pageAddr)
 {
+  DEBUG(MM_MMU, "mmuPageTableEdit: entry address %08x page address %08x" EOL, entryAddr, pageAddr);
+
   mmuCleanDcacheByMVAtoPOC(entryAddr);
   mmuDataSyncBarrier();
   mmuInvalidateUTLBbyMVA(pageAddr);

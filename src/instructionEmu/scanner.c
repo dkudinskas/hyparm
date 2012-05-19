@@ -15,6 +15,7 @@
 
 #include "instructionEmu/interpreter/internals.h"
 
+#include "memoryManager/memoryProtection.h"
 #include "memoryManager/mmu.h"
 #include "memoryManager/pageTable.h"
 
@@ -253,6 +254,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
    * ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1
    */
   mmuInvIcacheByMVAtoPOU((u32int)end);
+#warning Investigate: MMAN says its mmuCleanDcacheByMVAtoPOC on the line below
   mmuCleanDCacheByMVAtoPOU((u32int)end);
   guestWriteProtect((u32int)start, (u32int)end);
 }
@@ -439,6 +441,9 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
     end--;
   }
 
+  /*
+   * FIXME: is end still correct for the case endIs16Bit == FALSE?
+   */
   guestWriteProtect((u32int)start, (u32int)end);
 }
 

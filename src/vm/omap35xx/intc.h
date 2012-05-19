@@ -172,7 +172,7 @@ M_IRQ_95 Reserved       Reserved
 #define INTCPS_THRESHOLD_SPURIOUS       0xFFFFFF00 // [31:8] spurious FIQ flag
 #define INTCPS_THRESHOLD_FLAG           0x000000FF // [7:0] current fiq priority
 
-#define REG_INTCPS_ITR0          0x00000080 // RO show raw irq input status before masking
+#define REG_INTCPS_ITR0          0x00000080 // RO show raw irq input status bstoreIntcefore masking
 #define INTCPS_ITR0_ITR                 0xFFFFFFFF // [31:0] interrupt status before masking
 #define REG_INTCPS_ITR1          0x000000a0 // RO show raw irq input status before masking
 #define INTCPS_ITR0_ITR                 0xFFFFFFFF // [31:0] interrupt status before masking
@@ -328,9 +328,7 @@ M_IRQ_95 Reserved       Reserved
 #define REG_INTCPS_ILR95          0x0000027C //
 
 
-void initIntc(void) __cold__;
-
-void intcReset(void);
+void initIntc(virtualMachine *vm) __cold__;
 
 /* top load function */
 u32int loadIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
@@ -338,27 +336,15 @@ u32int loadIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 /* top store function */
 void storeIntc(device * dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
-void maskInterrupt(u32int interruptNumber);
-
-bool isGuestIrqMasked(u32int interruptNumber);
-
-void unmaskInterrupt(u32int interruptNumber);
-
-u32int getIrqNumber(void);
-
 void setInterrupt(u32int irqNum);
 
 void clearInterrupt(u32int irqNum);
-
-void acknowledgeIrq(void);
 
 bool isIrqPending(void);
 
 bool isFiqPending(void);
 
 void intcDumpRegisters(void);
-
-u32int prioritySortIrqs(void);
 
 struct InterruptController
 {
