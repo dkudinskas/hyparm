@@ -766,6 +766,8 @@ topStackGap:
 /*
  * 32-bit space for the guest context pointer. Must be initialized to zero at start!
  */
+.global activeGuestContext
+activeGuestContext:
 guestContextSpace:
   .space 4
 
