@@ -23,6 +23,8 @@
 #define PT1_ALIGN_BITS         14
 #define PT2_ALIGN_MASK         0xFFFFFC00
 #define PT2_ALIGN_BITS         10
+#define SUPER_SECTION_SIZE     0x01000000
+#define SUPER_SECTION_MASK     0xFF000000
 #define SECTION_SIZE           0x00100000
 #define SECTION_MASK           0xFFF00000
 #define LARGE_PAGE_SIZE        0x00010000

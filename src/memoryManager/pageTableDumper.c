@@ -57,6 +57,10 @@ struct region
   bool nonGlobal;
   bool nonSecure;
   bool shareable;
+  bool containsSuperSections;
+  bool containsSections;
+  bool containsLargePages;
+  bool containsSmallPages;
 };
 
 struct state
@@ -200,8 +204,8 @@ static void dumpL1Table(l1Descriptor *l1Table)
              * Supersection always has domain = 0.
              */
             extendRegion(&s, s.currentL1Entry->superSection.physicalAddress_31_24 << 24,
-                         SECTION_SIZE * 16, ((s.currentL1Entry->superSection.accessPermissions_2 << 2)
-                                             | (s.currentL1Entry->superSection.accessPermissions_1_0)),
+                         SUPER_SECTION_SIZE, ((s.currentL1Entry->superSection.accessPermissions_2 << 2)
+                                              | (s.currentL1Entry->superSection.accessPermissions_1_0)),
                          0, s.currentL1Entry->superSection.regionAttributes,
                          s.currentL1Entry->superSection.bufferable,
                          s.currentL1Entry->superSection.cacheable,
@@ -374,7 +378,7 @@ static void endRegion(struct state *s)
       break;
     }
   }
-  printf("%.8x-%.8x -> %.8x-%.8x D%x %s%s %s%s%s%s%s%s%s%s" EOL,
+  printf("%.8x-%.8x -> %.8x-%.8x D%x %s%s %s%s%s%s%s%s%s%s %s%s%s%s" EOL,
       s->currentRegion.physicalStartAddress, s->currentRegion.physicalEndAddress,
       s->currentRegion.virtualStartAddress, s->currentRegion.virtualEndAddress,
       s->currentRegion.domain,
@@ -384,7 +388,11 @@ static void endRegion(struct state *s)
       (s->currentRegion.regionAttributes & 0b001 ? "1" : "0"),
       (s->currentRegion.cacheable ? "C" : "-"), (s->currentRegion.bufferable ? "B" : "-"),
       (s->currentRegion.shareable ? "S" : "-"), (s->currentRegion.nonGlobal ? "-" : "G"),
-      (s->currentRegion.nonSecure ? "-" : "Z"));
+      (s->currentRegion.nonSecure ? "-" : "Z"),
+      (s->currentRegion.containsSuperSections ? "!" : "-"),
+      (s->currentRegion.containsSections ? "$" : "-"),
+      (s->currentRegion.containsLargePages ? "P" : "-"),
+      (s->currentRegion.containsSmallPages ? "p" : "-"));
   /*
    * Blank for next round...
    */
@@ -432,6 +440,32 @@ static void extendRegion(struct state *s, u32int physicalStartAddress, u32int si
      */
     s->currentRegion.physicalEndAddress += size;
     s->currentRegion.virtualEndAddress += size;
+  }
+  /*
+   * Update contains* fields
+   */
+  switch (size)
+  {
+    case SUPER_SECTION_SIZE:
+    {
+      s->currentRegion.containsSuperSections = TRUE;
+      break;
+    }
+    case SECTION_SIZE:
+    {
+      s->currentRegion.containsSections = TRUE;
+      break;
+    }
+    case LARGE_PAGE_SIZE:
+    {
+      s->currentRegion.containsLargePages = TRUE;
+      break;
+    }
+    case SMALL_PAGE_SIZE:
+    {
+      s->currentRegion.containsSmallPages = TRUE;
+      break;
+    }
   }
 }
 
