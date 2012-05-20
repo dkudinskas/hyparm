@@ -331,7 +331,7 @@ static void resolveCacheConflict(TranslationCache *tc, u32int metaIndex)
    */
   DEBUG(BLOCK_CACHE, "resolveCacheConflict: M$ collision at index %#x" EOL, metaIndex);
 
-  incrementCollisionCounter();
+  incrementCollisionCounter(tc);
 
 #ifdef CONFIG_BLOCK_COPY
   removeCodeCacheEntry(tc, &tc->metaCache[metaIndex]);
