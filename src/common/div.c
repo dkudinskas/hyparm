@@ -25,10 +25,12 @@ typedef u64int u64intPair __attribute__((vector_size(16)));
 
 
 /*
- * ARM EABI-defined division routines.
+ * ARM EABI-defined routines.
  * Do not alter the signature of the following functions.
  */
 
+u64int __aeabi_llsl(u64int value, s32int amount);
+u64int __aeabi_llsr(u64int value, s32int amount);
 u32int __aeabi_uidiv(u32int dividend, u32int divisor) __attribute__((externally_visible));
 u32intPair __aeabi_uidivmod(u32int dividend, u32int divisor) __attribute__((externally_visible));
 u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor) __attribute__((externally_visible));
@@ -108,6 +110,22 @@ static u64int uldiv_recursive(u64int dividend, u64int divisor, u64int acc);
     return dividend < divisor ? acc : self(dividend, divisor, acc);                                \
   }
 
+
+/*
+ * 64-bit logical shift left. This function only needs to work for amounts in 0..63.
+ */
+u64int __aeabi_llsl(u64int value, s32int amount)
+{
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+}
+
+/*
+ * 64-bit logical shift right. This function only needs to work for amounts in 0..63.
+ */
+u64int __aeabi_llsr(u64int value, s32int amount)
+{
+  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+}
 
 /*
  * 32-bit unsigned integer division. The quotient is returned in r0.
