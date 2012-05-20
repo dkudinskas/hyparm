@@ -62,75 +62,75 @@ typedef enum PageTableEntryType pageType;
  ***************************************************************/
 struct simpleDescriptor
 {
-  u32int type:2; //1-0
-  u32int:3; // 4-2 Ignored
-  u32int domain:4; // 8-5 domain
-  u32int imp:1; // 9 imp use to indicate memory protection is active
-  u32int:8; // 17-10 Ignored
-  u32int superSection:1; //18
-  u32int:13; //31-19 Ignored
+  unsigned type:2; //1-0
+  unsigned:3; // 4-2 Ignored
+  unsigned domain:4; // 8-5 domain
+  unsigned imp:1; // 9 imp use to indicate memory protection is active
+  unsigned:8; // 17-10 Ignored
+  unsigned superSection:1; //18
+  unsigned:13; //31-19 Ignored
 };
 typedef struct simpleDescriptor simpleEntry;
 
 struct pageTableDescriptor
 {
-  u16int type:2; //1-0
-  u16int sbz2:1; //2 b bit
-  u16int ns:1; //3
-  u16int sbz:1;  //4 xn (execute never)
-  u16int domain:4; //8-5
-  u16int imp:1; //9 implementation defined
-  u32int addr:22; //31-10
+  unsigned type:2; //1-0
+  unsigned sbz2:1; //2 b bit
+  unsigned ns:1; //3
+  unsigned sbz:1;  //4 xn (execute never)
+  unsigned domain:4; //8-5
+  unsigned imp:1; //9 implementation defined
+  unsigned addr:22; //31-10
 };
 typedef struct pageTableDescriptor pageTableEntry;
 
 struct sectionDescriptor
 {
-  u16int type:2; //1-0
-  u16int b:1; //2
-  u16int c:1; //3
-  u16int xn:1; //4
-  u16int domain:4; //8-5
-  u16int imp:1; //9 implementation defined
-  u16int ap10:2; //11-10 bits 1:0 of the access permission field
-  u16int tex:3; //14-12
-  u16int ap2:1; //15 - bit 2 of the access permission field
-  u16int s:1; //16
-  u16int nG:1; //17
-  u16int superSection:1; //18 - set to 0 for a section, 1 for a supersection
-  u16int ns:1; //19
-  u16int addr:12; //31-20
+  unsigned type:2; //1-0
+  unsigned b:1; //2
+  unsigned c:1; //3
+  unsigned xn:1; //4
+  unsigned domain:4; //8-5
+  unsigned imp:1; //9 implementation defined
+  unsigned ap10:2; //11-10 bits 1:0 of the access permission field
+  unsigned tex:3; //14-12
+  unsigned ap2:1; //15 - bit 2 of the access permission field
+  unsigned s:1; //16
+  unsigned nG:1; //17
+  unsigned superSection:1; //18 - set to 0 for a section, 1 for a supersection
+  unsigned ns:1; //19
+  unsigned addr:12; //31-20
 };
 typedef struct sectionDescriptor sectionEntry;
 
 struct largePageDescriptor
 {
-  u16int type:2; //1-1 0b01 for large pT
-  u16int b:1; //2
-  u16int c:1; //3
-  u16int ap10:2; //5-4 AP[1:0]
-  u16int sbz:3; //8-6
-  u16int ap2:1; //9 AP[2]
-  u16int s:1; //10
-  u16int nG:1; //11
-  u16int tex:3; //14-12 tex[2:0]
-  u16int xn:1; //15
-  u16int addr:16; //31-16
+  unsigned type:2; //1-1 0b01 for large pT
+  unsigned b:1; //2
+  unsigned c:1; //3
+  unsigned ap10:2; //5-4 AP[1:0]
+  unsigned sbz:3; //8-6
+  unsigned ap2:1; //9 AP[2]
+  unsigned s:1; //10
+  unsigned nG:1; //11
+  unsigned tex:3; //14-12 tex[2:0]
+  unsigned xn:1; //15
+  unsigned addr:16; //31-16
 };
 typedef struct largePageDescriptor largePageEntry;
 
 struct smallPageDescriptor
 {
-  u16int xn:1; //0
-  u16int type:1; //1 set to 1 for small pT
-  u16int b:1; //2
-  u16int c:1; //3
-  u16int ap10:2; //5-4 AP[1:0]
-  u16int tex:3; //8-6 tex[2:0]
-  u16int ap2:1; //9 AP[2]
-  u16int s:1; //10
-  u16int nG:1; //11
-  u32int addr:20; //31-12
+  unsigned xn:1; //0
+  unsigned type:1; //1 set to 1 for small pT
+  unsigned b:1; //2
+  unsigned c:1; //3
+  unsigned ap10:2; //5-4 AP[1:0]
+  unsigned tex:3; //8-6 tex[2:0]
+  unsigned ap2:1; //9 AP[2]
+  unsigned s:1; //10
+  unsigned nG:1; //11
+  unsigned addr:20; //31-12
 };
 typedef struct smallPageDescriptor smallPageEntry;
 
@@ -156,11 +156,14 @@ void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
                 u8int domain, u8int accessBits, bool c, bool b, u8int tex, bool executeNever);
 void mapSmallPage(simpleEntry* pageTable, u32int virtAddr, u32int physical,
                 u8int domain, u8int accessBits, u8int c, u8int b, u8int tex, u8int xn);
-
+void mapLargePage(simpleEntry *pageTable, u32int virtAddr, u32int physical, u8int domain,
+                  u8int accessBits, bool c, bool b, u8int tex, bool executeNever);
 void addSectionEntry(sectionEntry *sectionEntryPtr, u32int physAddr, u8int domain,
                      u8int accessBits, bool cacheable, bool bufferable, u8int tex, bool executeNever);
 void addSmallPageEntry(smallPageEntry* smallPageEntryPtr, u32int physical,
         u8int accessBits, u8int cacheable, u8int bufferable, u8int tex, u8int xn);
+void addLargePageEntry(largePageEntry *entry, u32int physical, u8int accessBits, bool cacheable,
+                       bool bufferable, u8int tex, bool executeNever);
 void addPageTableEntry(pageTableEntry* pageTableEntryPtr, u32int physical, u8int domain);
 
 u32int getPhysicalAddress(GCONTXT *context, simpleEntry* pageTable, u32int virtAddr);

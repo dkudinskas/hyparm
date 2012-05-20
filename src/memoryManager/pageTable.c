@@ -118,6 +118,15 @@ u32int mapRange(simpleEntry *pageTable, u32int virtualStartAddress, u32int physi
       physicalStartAddress += SECTION_SIZE;
       virtualStartAddress += SECTION_SIZE;
     }
+    else if (isAlignedToMaskN(physicalStartAddress, LARGE_PAGE_MASK)
+             && (physicalEndAddress - physicalStartAddress) >= LARGE_PAGE_SIZE)
+    {
+      /* 64 kB, map a large page -- may involve creation of an L2 table */
+      mapLargePage(pageTable, virtualStartAddress, physicalStartAddress, domain, accessBits,
+                   cacheable, bufferable, regionAttributes, executeNever);
+      physicalStartAddress += LARGE_PAGE_SIZE;
+      virtualStartAddress += LARGE_PAGE_SIZE;
+    }
     else
     {
       /* 4 kB, map a small page -- may involve creation of an L2 table */
@@ -379,6 +388,92 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
 
 
 /**
+ * Add a large page mapping of given virtual to physical address
+ * into a second page table
+ **/
+void mapLargePage(simpleEntry *pageTable, u32int virtAddr, u32int physical, u8int domain,
+                  u8int accessBits, bool cacheable, bool bufferable, u8int tex, bool executeNever)
+{
+  /*
+   * FIXME This looks horribly wrong in a generic "map small page" that is also used for the
+   * hypervisor PT !?
+   */
+  GCONTXT *context = activeGuestContext;
+
+  DEBUG(MM_PAGE_TABLES, "mapLargePage: Virtual %#.8x, physical %#.8x, dom: %x, AP: %x, c: %x, "
+        "b: %x, tex: %x, xn: %x" EOL, virtAddr, physical, domain, accessBits, cacheable,
+        bufferable, tex, executeNever);
+
+  // First check 1st Level page table entry
+  simpleEntry* first = getEntryFirst(pageTable, virtAddr);
+  DEBUG(MM_PAGE_TABLES, "mapLargePage: first entry %#.8x @ %p" EOL, *(u32int *)first, first);
+  switch (first->type)
+  {
+    case FAULT:
+    {
+      DEBUG(MM_PAGE_TABLES, "mapLargePage: entry for given VA is FAULT. Creating new" EOL);
+      // we need a new second level page table. This gives a virtual address allocated
+      u32int *vAddr = newLevelTwoPageTable();
+      // need to get the physical address
+#ifdef CONFIG_DISABLE_HYPERVISOR_MEMORY_PROTECTION
+      u32int pAddr = getPhysicalAddress(context, pageTable, (u32int)vAddr);
+#else
+      u32int pAddr = context->virtAddrEnabled
+                   ? getPhysicalAddress(context, pageTable, (u32int)vAddr) : (u32int)vAddr;
+#endif
+      DEBUG(MM_PAGE_TABLES, "mapLargePage: PT VA %p PA %#.8x" EOL, vAddr, pAddr);
+      // store metadata
+      addPageTableEntry((pageTableEntry*)first, (u32int)pAddr, domain);
+      u32int mapped = ((u32int)first - (u32int)pageTable) << 18;
+      addPageTableInfo(context, (pageTableEntry*)first, (u32int)vAddr, pAddr, mapped, TRUE);
+      break;
+    }
+    case PAGE_TABLE:
+    {
+      // if existing mapping is pageTable type, we're ok already
+      DEBUG(MM_PAGE_TABLES, "mapLargePage: entry for given VA is pageTable. Correct, first time" EOL);
+      break;
+    }
+    case SECTION:
+    {
+      printf("mapLargePage: Virtual %#.8x, physical %#.8x, dom: %x, AP: %x, c: %x, b: %x, tex: %x, xn: %x" EOL,
+             virtAddr, physical, domain, accessBits, cacheable, bufferable, tex, executeNever);
+      printf("mapLargePage: first entry %#.8x @ %p" EOL, *(u32int*)first, first);
+      DIE_NOW(NULL, "adding page table entry on top of existing section entry");
+      break;
+    }
+    case RESERVED:
+    default:
+    {
+      DIE_NOW(NULL, "adding page table entry on top of existing reserved entry");
+    }
+  }//switch
+
+  // At this point we know its a 2nd level page table entry
+  simpleEntry *second = getEntrySecond(context, (pageTableEntry *)first, virtAddr);
+  // Again, we need to check the existing entry, but now there's 16 of them
+  // Don't bother doing it transaction-style since we crash and burn upon any error anyhow
+  for (simpleEntry *const limit = second + 16; second < limit; ++second)
+  {
+    DEBUG(MM_PAGE_TABLES, "mapLargePage: 2nd lvl entry @ %p = %#.8x" EOL, second, *(u32int *)second);
+    if (second->type == FAULT)
+    {
+      DEBUG(MM_PAGE_TABLES, "mapLargePage: 2nd Level FAULT. Creating new large entry" EOL);
+      addLargePageEntry((largePageEntry*)second, physical, accessBits, cacheable, bufferable, tex, executeNever);
+    }
+    else //Existing small or large page
+    {
+      printf("mapLargePage: Virtual %#.8x, physical %#.8x, dom: %x, AP: %x, c: %x, b: %x, tex: %x, xn: %x" EOL,
+             virtAddr, physical, domain, accessBits, cacheable, bufferable, tex, executeNever);
+      printf("mapLargePage: first entry %#.8x @ %p" EOL, *(u32int*)first, first);
+      printf("mapLargePage: 2nd lvl entry @ %#.8x = %#.8x" EOL, (u32int)second, *(u32int*)second);
+      DIE_NOW(NULL, "adding over existing entry");
+    }
+  }
+}
+
+
+/**
  * adds a section entry at a given place in the first level page table
  **/
 void addSectionEntry(sectionEntry *sectionEntryPtr, u32int physAddr, u8int domain,
@@ -421,6 +516,27 @@ void addSmallPageEntry(smallPageEntry* smallPageEntryPtr, u32int physical,
   smallPageEntryPtr->xn = xn;
   DEBUG(MM_PAGE_TABLES, "addSmallPageEntry: Small descriptor written: %#.8x @ %p" EOL,
         *(u32int *)smallPageEntryPtr, smallPageEntryPtr);
+}
+
+
+/**
+ * adds a large page entry at a given place in the second level page table
+ **/
+void addLargePageEntry(largePageEntry *entry, u32int physical, u8int accessBits, bool cacheable,
+                       bool bufferable, u8int tex, bool executeNever)
+{
+  entry->addr = (physical >> 16);
+  entry->nG = 0;
+  entry->s = 0;
+  entry->ap2 = accessBits >> 2;
+  entry->tex = (tex & 0x7);
+  entry->ap10 = accessBits & 0x3;
+  entry->c = cacheable;
+  entry->b = bufferable;
+  entry->type = 1;
+  entry->xn = executeNever;
+  DEBUG(MM_PAGE_TABLES, "addLargePageEntry: large descriptor written: %#.8x @ %p" EOL,
+        *(u32int *)entry, entry);
 }
 
 
@@ -486,10 +602,6 @@ u32int getPhysicalAddress(GCONTXT *context, simpleEntry* pageTable, u32int virtA
       
       switch(entrySecond->type)
       {
-        case LARGE_PAGE:
-        {
-          DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-        }
         // may not be shadow mapped? try it.
         case FAULT:
         {
@@ -498,6 +610,11 @@ u32int getPhysicalAddress(GCONTXT *context, simpleEntry* pageTable, u32int virtA
             printf("getPhysicalAddress for VA %#.8x in PT @ %#.8x" EOL, virtAddr, (u32int)pageTable);
             DIE_NOW(NULL, "failed to shadow map, lvl2");
           }
+        }
+        case LARGE_PAGE:
+        {
+          largePageEntry *largePage = (largePageEntry *)entrySecond;
+          return (largePage->addr << 16) | (virtAddr & ~LARGE_PAGE_MASK);
         }
         case SMALL_PAGE: //fall through
         case SMALL_PAGE_3:
