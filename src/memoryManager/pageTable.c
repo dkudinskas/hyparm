@@ -325,7 +325,7 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
       u32int *vAddr = newLevelTwoPageTable();
       // need to get the physical address
 #ifdef CONFIG_DISABLE_HYPERVISOR_MEMORY_PROTECTION
-      u32int pAddr = getPhysicalAddress(pageTable, (u32int)vAddr);
+      u32int pAddr = getPhysicalAddress(context, pageTable, (u32int)vAddr);
 #else
       u32int pAddr = context->virtAddrEnabled
                    ? getPhysicalAddress(context, pageTable, (u32int)vAddr) : (u32int)vAddr;
