@@ -313,7 +313,6 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
       if ((value & SYS_CTRL_TEX_REMAP) != 0)
       {
 //      DIE_NOW(NULL, "CP15: SysCtrl - set tex remap, investigate.\n");
-        printf("WARNING: CP15: SysCtrl - set tex remap" EOL);
       }
       break;
     }
