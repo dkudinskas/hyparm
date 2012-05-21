@@ -76,8 +76,8 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
   if (target == PT_TARGET_HYPERVISOR)
   {
     // 1:1 Map the entire of physical memory
-    mapRange(pageTablePtr, MEMORY_START_ADDR, MEMORY_START_ADDR, HYPERVISOR_BEGIN_ADDRESS,
-             GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+    mapRegion(pageTablePtr, MEMORY_START_ADDR, MEMORY_START_ADDR, HYPERVISOR_BEGIN_ADDRESS,
+              GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
 
     // clock manager
     mapSmallPage(pageTablePtr, BE_CLOCK_MANAGER, BE_CLOCK_MANAGER,
@@ -135,12 +135,10 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
   {
     const u32int codeAddress = (u32int)context->translationCache.codeCache;
     const u32int spillAddress = (u32int)context->translationCache.spillPage;
-    mapRange(pageTablePtr, codeAddress, codeAddress,
-             codeAddress + SMALL_PAGE_SIZE, GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RO, FALSE, FALSE, 0,
-             FALSE);
-    mapRange(pageTablePtr, spillAddress, spillAddress,
-             spillAddress + SMALL_PAGE_SIZE, GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RW, FALSE, FALSE, 0,
-             TRUE);
+    mapRegion(pageTablePtr, codeAddress, codeAddress, codeAddress + SMALL_PAGE_SIZE,
+              GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RO, FALSE, FALSE, 0, FALSE);
+    mapRegion(pageTablePtr, spillAddress, spillAddress, spillAddress + SMALL_PAGE_SIZE,
+              GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RW, FALSE, FALSE, 0, TRUE);
   }
 #endif
 }

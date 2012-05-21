@@ -150,9 +150,9 @@ void deleteLevelTwoPageTable(GCONTXT *context, pageTableEntry* pageTable);
 
 void mapHypervisorMemory(simpleEntry* ptd);
 
-u32int mapRange(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
-                u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,
-                bool bufferable, u8int regionAttributes, bool executeNever);
+u32int mapRegion(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
+                 u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,
+                 bool bufferable, u8int regionAttributes, bool executeNever);
 
 void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
                 u8int domain, u8int accessBits, bool c, bool b, u8int tex, bool executeNever);

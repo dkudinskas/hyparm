@@ -99,9 +99,9 @@ void deleteLevelTwoPageTable(GCONTXT *context, pageTableEntry *pageTable)
   } // while ends
 }
 
-u32int mapRange(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
-                u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,
-                bool bufferable, u8int regionAttributes, bool executeNever)
+u32int mapRegion(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
+                 u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,
+                 bool bufferable, u8int regionAttributes, bool executeNever)
 {
   ASSERT(isAlignedToMaskN(physicalStartAddress, SMALL_PAGE_MASK), "bad alignment");
   /*
@@ -148,123 +148,180 @@ u32int mapRange(simpleEntry *pageTable, u32int virtualStartAddress, u32int physi
 void mapHypervisorMemory(simpleEntry *pageTable)
 {
   DEBUG(MM_PAGE_TABLES, "mapHypervisorMemory in page table %p" EOL, pageTable);
+#ifndef CONFIG_DISABLE_HYPERVISOR_MEMORY_PROTECTION
   /*
    * Make use of MMU protection mechanisms to protect the hypervisor against guests and itself.
    * Make as few memory as possible executable: only the code of the hypervisor and instruction
-   * caches, if we have them (only with block copy -- TODO).
+   * caches, if we have them (only with block copy). See linker.h for information on how the
+   * hypervisor memory image is split and how different parts should be mapped.
    *
-   * First of all, make sure the stuff we get from the linker makes sense (it usually either works
-   * or dies, but sometimes silently messes up):
+   * WARNING: the implementation below relies on things being done in a particular order. Do not
+   *          randomly swap things around and read the comments.
+   *
+   * 1   We need to make sure that the stuff we get from the linker makes sense (the linker usually
+   *     either works or dies, but sometimes silently messes up). Because the information we need
+   *     is only determined at link-time, we cannot use static assertions (and the point is to
+   *     check from the C code... which is where we actually use the information from the linker).
+   *     This also protects against potentially harmful modifications of the linker script.
+   *
+   * 1.1 Make sure that all the ELF sections and dynamic allocation pools are in the order we
+   *     expect them to be.
    */
-  ASSERT(MEMORY_START_ADDR <= HYPERVISOR_BEGIN_ADDRESS, "bad linker symbols");
-  ASSERT(HYPERVISOR_BEGIN_ADDRESS < HYPERVISOR_END_ADDRESS, "bad linker symbols");
-  ASSERT(HYPERVISOR_END_ADDRESS <= MEMORY_END_ADDR, "bad linker symbols");
-  ASSERT(HYPERVISOR_BEGIN_ADDRESS == HYPERVISOR_TEXT_BEGIN_ADDRESS, "bad linker symbols");
-  ASSERT(HYPERVISOR_TEXT_BEGIN_ADDRESS < HYPERVISOR_TEXT_END_ADDRESS, "bad linker symbols");
-  ASSERT(HYPERVISOR_TEXT_END_ADDRESS <= HYPERVISOR_RO_XN_BEGIN_ADDRESS, "bad linker symbols");
-  ASSERT(HYPERVISOR_RO_XN_BEGIN_ADDRESS < HYPERVISOR_RO_XN_END_ADDRESS, "bad linker symbols");
-  ASSERT(HYPERVISOR_RO_XN_BEGIN_ADDRESS <= HYPERVISOR_RW_XN_BEGIN_ADDRESS, "bad linker symbols");
-  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS < HYPERVISOR_RW_XN_END_ADDRESS, "bad linker symbols");
-  ASSERT(HYPERVISOR_RW_XN_END_ADDRESS == HYPERVISOR_END_ADDRESS, "bad linker symbols");
-  ASSERT(HYPERVISOR_RW_XN_END_ADDRESS <= RAM_XN_POOL_BEGIN, "bad linker symbols");
-  ASSERT(RAM_XN_POOL_BEGIN < RAM_XN_POOL_END, "bad linker symbols");
-  ASSERT(RAM_XN_POOL_END <= MEMORY_END_ADDR, "bad linker symbols");
-#ifdef CONFIG_BLOCK_COPY
-  ASSERT(RAM_XN_POOL_END < RAM_CODE_CACHE_POOL_BEGIN, "bad linker symbols");
-  ASSERT(RAM_CODE_CACHE_POOL_BEGIN < RAM_CODE_CACHE_POOL_END, "bad linker symbols");
-  ASSERT(RAM_CODE_CACHE_POOL_END <= MEMORY_END_ADDR, "bad linker symbols");
-#endif
+  ASSERT(MEMORY_START_ADDR <= HYPERVISOR_BEGIN_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_BEGIN_ADDRESS < HYPERVISOR_END_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_END_ADDRESS <= MEMORY_END_ADDR, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_BEGIN_ADDRESS == HYPERVISOR_TEXT_BEGIN_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_TEXT_BEGIN_ADDRESS < HYPERVISOR_TEXT_END_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_TEXT_END_ADDRESS <= HYPERVISOR_RO_XN_BEGIN_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_RO_XN_BEGIN_ADDRESS < HYPERVISOR_RO_XN_END_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_RO_XN_BEGIN_ADDRESS <= HYPERVISOR_RW_XN_BEGIN_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS < HYPERVISOR_RW_XN_END_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_RW_XN_END_ADDRESS == HYPERVISOR_END_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_RW_XN_END_ADDRESS <= RAM_CODE_CACHE_POOL_BEGIN, ERROR_NOT_IMPLEMENTED);
+  ASSERT(RAM_CODE_CACHE_POOL_BEGIN < RAM_CODE_CACHE_POOL_END, ERROR_NOT_IMPLEMENTED);
+  ASSERT(RAM_CODE_CACHE_POOL_END <= RAM_XN_POOL_BEGIN, ERROR_NOT_IMPLEMENTED);
+  ASSERT(RAM_XN_POOL_BEGIN < RAM_XN_POOL_END, ERROR_NOT_IMPLEMENTED);
+  ASSERT(RAM_XN_POOL_END <= MEMORY_END_ADDR, ERROR_NOT_IMPLEMENTED);
   /*
-   * Now make sure the linker followed our alignment constraints:
+   * 1.2 Now, we have to make sure that the linker followed our alignment constraints. Without
+   *     these constraints, regions with a separate purpose cannot be mapped with different
+   *     attributes (access bits, XN, ...).
+   *
+   * NOTE: we also check whether the .text section is aligned on a section boundary (1 MB) because
+   *       it is the start of the hypervisor.
    */
-  ASSERT(isAlignedToMaskN(HYPERVISOR_TEXT_BEGIN_ADDRESS, SMALL_PAGE_MASK),
-         "executable section not aligned on small page boundary");
-  ASSERT(isAlignedToMaskN(HYPERVISOR_RO_XN_BEGIN_ADDRESS, SMALL_PAGE_MASK),
-         "non-executable read-only section not aligned on small page boundary");
-  ASSERT(isAlignedToMaskN(HYPERVISOR_RW_XN_BEGIN_ADDRESS, SMALL_PAGE_MASK),
-           "non-executable read-write sections not aligned on small page boundary");
-  ASSERT(isAlignedToMaskN(RAM_XN_POOL_BEGIN, SMALL_PAGE_MASK),
-         "non-executable RAM pool not aligned on small page boundary");
-  ASSERT(isAlignedToMaskN(RAM_XN_POOL_END, SMALL_PAGE_MASK),
-         "non-executable RAM pool not aligned on small page boundary");
-#ifdef CONFIG_BLOCK_COPY
-  ASSERT(isAlignedToMaskN(RAM_CODE_CACHE_POOL_BEGIN, SMALL_PAGE_MASK),
-         "executable RAM pool not aligned on small page boundary");
-  ASSERT(isAlignedToMaskN(RAM_CODE_CACHE_POOL_END, SMALL_PAGE_MASK),
-         "executable RAM pool not aligned on small page boundary");
-#endif
+  ASSERT(isAlignedToMaskN(HYPERVISOR_TEXT_BEGIN_ADDRESS, SECTION_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(HYPERVISOR_RO_XN_BEGIN_ADDRESS, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(HYPERVISOR_RW_XN_BEGIN_ADDRESS, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(RAM_CODE_CACHE_POOL_BEGIN, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(RAM_CODE_CACHE_POOL_END, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(RAM_XN_POOL_BEGIN, SECTION_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(RAM_XN_POOL_END, SECTION_MASK), ERROR_NOT_IMPLEMENTED);
   /*
-   * Stacks must be non-executable, and should be protected against overflow by leaving gaps (fault
-   * entries) in the translation table. Stacks and gaps must reside in one of the data sections and
-   * must be aligned on small page boundaries! Gaps must directly precede their associated stack.
-   * This implies stack size must be a multiple of small page size.
+   * 1.3 We also want to protect our stacks in multiple ways:
+   *     - they must not be executable;
+   *     - we must be able to detect stack overflow and underflow.
+   *
+   *     Stacks on ARM are fully descending. This means that the beginning of the stack has the
+   *     highest address, and the end has the lowest address. A stack overflow occurs when data is
+   *     pushed on a stack beyond its end address; an underflow occurs when data is popped beyond
+   *     its starting point. We can easily protect against overflow and underflow by not mapping
+   *     the surrounding memory. We call these surrounding areas 'stack gaps'.
+   *
+   *     The smallest memory region we can map is a small page (4 kB). If we want to protect the
+   *     stacks as described above, this means that each stack must be a multiple of 4 kB in size,
+   *     and must be surrounded by two regions of 4 kB each, which are not mapped. Then, every
+   *     stack overflow and underflow will cause a translation fault.
+   *
+   *     Stacks and stack gaps are 'allocated' in startup.S and reside in '.bss' -- at least, that
+   *     is how it should be. For each stack, the preceeding gap is named after that stack. The
+   *     last stack gap is called TOP_STACK_GAP.
+   *
+   *     Once again, the implementation for mapping the stacks is based on a fixed order, so first
+   *     of all we verify that:
+   *     - the stack gaps are in the expected ELF section / location;
+   *     - the stack gaps are aligned to and sized like small pages;
+   *     - the stack gaps occur in the expected order (as described above);
+   *     - the stacks are aligned to small pages;
+   *     - the stacks are in the expected ELF section / location;
+   *     - the stacks occur in the expected order (SVC < ABT < UND < IRQ < FIQ).
    */
-  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= ABT_STACK_GAP, "bad stack layout");
-  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= FIQ_STACK_GAP, "bad stack layout");
-  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= IRQ_STACK_GAP, "bad stack layout");
-  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= SVC_STACK_GAP, "bad stack layout");
-  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= UND_STACK_GAP, "bad stack layout");
-  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= TOP_STACK_GAP, "bad stack layout");
-  ASSERT(isAlignedToMaskN(ABT_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
-  ASSERT(isAlignedToMaskN(FIQ_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
-  ASSERT(isAlignedToMaskN(IRQ_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
-  ASSERT(isAlignedToMaskN(SVC_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
-  ASSERT(isAlignedToMaskN(UND_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
-  ASSERT(isAlignedToMaskN(TOP_STACK_GAP, SMALL_PAGE_MASK), "bad stack gap alignment");
-  ASSERT((ABT_STACK_GAP + SMALL_PAGE_SIZE) == ABT_STACK_LB, "bad stack gap position");
-  ASSERT((FIQ_STACK_GAP + SMALL_PAGE_SIZE) == FIQ_STACK_LB, "bad stack gap position");
-  ASSERT((IRQ_STACK_GAP + SMALL_PAGE_SIZE) == IRQ_STACK_LB, "bad stack gap position");
-  ASSERT((SVC_STACK_GAP + SMALL_PAGE_SIZE) == SVC_STACK_LB, "bad stack gap position");
-  ASSERT((UND_STACK_GAP + SMALL_PAGE_SIZE) == UND_STACK_LB, "bad stack gap position");
-  ASSERT(isAlignedToMaskN(ABT_STACK_UB, SMALL_PAGE_MASK), "bad stack alignment");
-  ASSERT(isAlignedToMaskN(FIQ_STACK_UB, SMALL_PAGE_MASK), "bad stack alignment");
-  ASSERT(isAlignedToMaskN(IRQ_STACK_UB, SMALL_PAGE_MASK), "bad stack alignment");
-  ASSERT(isAlignedToMaskN(SVC_STACK_UB, SMALL_PAGE_MASK), "bad stack alignment");
-  ASSERT(isAlignedToMaskN(UND_STACK_UB, SMALL_PAGE_MASK), "bad stack alignment");
-  ASSERT(ABT_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
-  ASSERT(FIQ_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
-  ASSERT(IRQ_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
-  ASSERT(SVC_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
-  ASSERT(UND_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
-  ASSERT((TOP_STACK_GAP + SMALL_PAGE_SIZE) <= HYPERVISOR_RW_XN_END_ADDRESS, "bad stack layout");
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= ABT_STACK_GAP, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= FIQ_STACK_GAP, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= IRQ_STACK_GAP, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= SVC_STACK_GAP, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= UND_STACK_GAP, ERROR_NOT_IMPLEMENTED);
+  ASSERT(HYPERVISOR_RW_XN_BEGIN_ADDRESS <= TOP_STACK_GAP, ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(ABT_STACK_GAP, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(FIQ_STACK_GAP, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(IRQ_STACK_GAP, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(SVC_STACK_GAP, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(UND_STACK_GAP, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(TOP_STACK_GAP, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT((ABT_STACK_GAP + SMALL_PAGE_SIZE) == ABT_STACK_LB, ERROR_NOT_IMPLEMENTED);
+  ASSERT((FIQ_STACK_GAP + SMALL_PAGE_SIZE) == FIQ_STACK_LB, ERROR_NOT_IMPLEMENTED);
+  ASSERT((IRQ_STACK_GAP + SMALL_PAGE_SIZE) == IRQ_STACK_LB, ERROR_NOT_IMPLEMENTED);
+  ASSERT((SVC_STACK_GAP + SMALL_PAGE_SIZE) == SVC_STACK_LB, ERROR_NOT_IMPLEMENTED);
+  ASSERT((UND_STACK_GAP + SMALL_PAGE_SIZE) == UND_STACK_LB, ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(ABT_STACK_UB, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(FIQ_STACK_UB, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(IRQ_STACK_UB, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(SVC_STACK_UB, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(isAlignedToMaskN(UND_STACK_UB, SMALL_PAGE_MASK), ERROR_NOT_IMPLEMENTED);
+  ASSERT(ABT_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(FIQ_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(IRQ_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(SVC_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(UND_STACK_UB <= HYPERVISOR_RW_XN_END_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT((TOP_STACK_GAP + SMALL_PAGE_SIZE) <= HYPERVISOR_RW_XN_END_ADDRESS, ERROR_NOT_IMPLEMENTED);
+  ASSERT(SVC_STACK_UB == ABT_STACK_GAP, ERROR_NOT_IMPLEMENTED);
+  ASSERT(ABT_STACK_UB == UND_STACK_GAP, ERROR_NOT_IMPLEMENTED);
+  ASSERT(UND_STACK_UB == IRQ_STACK_GAP, ERROR_NOT_IMPLEMENTED);
+  ASSERT(IRQ_STACK_UB == FIQ_STACK_GAP, ERROR_NOT_IMPLEMENTED);
+  ASSERT(FIQ_STACK_UB == TOP_STACK_GAP, ERROR_NOT_IMPLEMENTED);
   /*
-   * Hardcoded stack order... have some ASSERTs ready for when someone decides to change startup.S.
+   * 2   We should be careful about mapping small pages. All hypervisor translation tables are
+   *     allocated from the non-executable dynamic memory allocation pool. When mapping small or
+   *     large pages, a level 2 translation table (TT) is required. The mapping function expects
+   *     the memory in which this level 2 TT resides to be mapped in the active L1 TT. Therefore,
+   *     we must first map the pool from which TTs are allocated without using any L2 TTs, i.e.
+   *     using sections only. Patching the mapping functions with extra checks to work around this
+   *     problem is wasteful as this particular corner case is only hit when setting up new
+   *     translation tables.
+   *
+   * NOTE: this is why RAM_XN_POOL_BEGIN and RAM_XN_POOL_END must be aligned on a section boundary.
    */
-  ASSERT(SVC_STACK_UB == ABT_STACK_GAP, "hardcoded stack layout was modified; update required");
-  ASSERT(ABT_STACK_UB == UND_STACK_GAP, "hardcoded stack layout was modified; update required");
-  ASSERT(UND_STACK_UB == IRQ_STACK_GAP, "hardcoded stack layout was modified; update required");
-  ASSERT(IRQ_STACK_UB == FIQ_STACK_GAP, "hardcoded stack layout was modified; update required");
-  ASSERT(FIQ_STACK_UB == TOP_STACK_GAP, "hardcoded stack layout was modified; update required");
+  mapRegion(pageTable, RAM_XN_POOL_BEGIN, RAM_XN_POOL_BEGIN, RAM_XN_POOL_END,
+            HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
   /*
-   * Finally... map hypervisor memory.
+   * 3   Last but not least, we can map the rest of the hypervisor. Guests must not be able to
+   *     access any of the regions mapped below.
+   *
+   * 3.1 We start by mapping '.text', the executable code. This region should be executable, and
+   *     read-only for the hypervisor.
    */
-#ifndef CONFIG_DISABLE_HYPERVISOR_MEMORY_PROTECTION
-  mapRange(pageTable, HYPERVISOR_TEXT_BEGIN_ADDRESS, HYPERVISOR_TEXT_BEGIN_ADDRESS,
-           HYPERVISOR_TEXT_END_ADDRESS, HYPERVISOR_ACCESS_DOMAIN, PRIV_RO_USR_NO, TRUE,
-           FALSE, 0, FALSE);
-  mapRange(pageTable, HYPERVISOR_RO_XN_BEGIN_ADDRESS, HYPERVISOR_RO_XN_BEGIN_ADDRESS,
-           HYPERVISOR_RO_XN_END_ADDRESS, HYPERVISOR_ACCESS_DOMAIN, PRIV_RO_USR_NO, TRUE, FALSE, 0,
-           TRUE);
-  mapRange(pageTable, HYPERVISOR_RW_XN_BEGIN_ADDRESS, HYPERVISOR_RW_XN_BEGIN_ADDRESS,
-           SVC_STACK_GAP, HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
-  mapRange(pageTable, SVC_STACK_LB, SVC_STACK_LB, SVC_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
-           PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
-  mapRange(pageTable, ABT_STACK_LB, ABT_STACK_LB, ABT_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
-           PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
-  mapRange(pageTable, UND_STACK_LB, UND_STACK_LB, UND_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
-           PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
-  mapRange(pageTable, IRQ_STACK_LB, IRQ_STACK_LB, IRQ_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
-           PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
-  mapRange(pageTable, FIQ_STACK_LB, FIQ_STACK_LB, FIQ_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
-           PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
-  mapRange(pageTable, TOP_STACK_GAP + SMALL_PAGE_SIZE, TOP_STACK_GAP + SMALL_PAGE_SIZE,
-           HYPERVISOR_RW_XN_END_ADDRESS, HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0,
-           TRUE);
-  mapRange(pageTable, RAM_XN_POOL_BEGIN, RAM_XN_POOL_BEGIN, RAM_XN_POOL_END,
-           HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRegion(pageTable, HYPERVISOR_TEXT_BEGIN_ADDRESS, HYPERVISOR_TEXT_BEGIN_ADDRESS,
+            HYPERVISOR_TEXT_END_ADDRESS, HYPERVISOR_ACCESS_DOMAIN, PRIV_RO_USR_NO, TRUE,
+            FALSE, 0, FALSE);
+  /*
+   * 3.2 Next, we map '.rodata', statically allocated read-only data. This region must not be
+   *     executable, and must be read-only for the hypervisor.
+   */
+  mapRegion(pageTable, HYPERVISOR_RO_XN_BEGIN_ADDRESS, HYPERVISOR_RO_XN_BEGIN_ADDRESS,
+            HYPERVISOR_RO_XN_END_ADDRESS, HYPERVISOR_ACCESS_DOMAIN, PRIV_RO_USR_NO, TRUE, FALSE, 0,
+            TRUE);
+  /*
+   * 3.3 We map all statically-allocated read/write data. This includes '.data' and '.bss', and
+   *     hence the stacks and stack gaps. Since stacks and stack gaps may reside somewhere in the
+   *     middle of '.bss', first map the region before the first stack gap. Next, skip all gaps
+   *     and map the stacks, and finally, map the region following the last stack gap.
+   */
+  mapRegion(pageTable, HYPERVISOR_RW_XN_BEGIN_ADDRESS, HYPERVISOR_RW_XN_BEGIN_ADDRESS,
+            SVC_STACK_GAP, HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRegion(pageTable, SVC_STACK_LB, SVC_STACK_LB, SVC_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
+            PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRegion(pageTable, ABT_STACK_LB, ABT_STACK_LB, ABT_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
+            PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRegion(pageTable, UND_STACK_LB, UND_STACK_LB, UND_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
+            PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRegion(pageTable, IRQ_STACK_LB, IRQ_STACK_LB, IRQ_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
+            PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRegion(pageTable, FIQ_STACK_LB, FIQ_STACK_LB, FIQ_STACK_UB, HYPERVISOR_ACCESS_DOMAIN,
+            PRIV_RW_USR_NO, TRUE, FALSE, 0, TRUE);
+  mapRegion(pageTable, TOP_STACK_GAP + SMALL_PAGE_SIZE, TOP_STACK_GAP + SMALL_PAGE_SIZE,
+            HYPERVISOR_RW_XN_END_ADDRESS, HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_NO, TRUE, FALSE, 0,
+            TRUE);
+  /*
+   * NOTE: The dynamic allocation pool for executable memory is NOT mapped here. It is meant to
+   *       contain per-guest code caches, and must be mapped for each guest independently to ensure
+   *       guests cannot read or execute from each other's caches.
+   */
 #else
-  mapRange(pageTable, HYPERVISOR_BEGIN_ADDRESS, HYPERVISOR_BEGIN_ADDRESS, MEMORY_END_ADDR,
-           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+  /*
+   * Memory protection is disabled -- map the entire hypervisor read/write and executable.
+   */
+  mapRegion(pageTable, HYPERVISOR_BEGIN_ADDRESS, HYPERVISOR_BEGIN_ADDRESS, MEMORY_END_ADDR,
+            HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
 #endif
 }
 
@@ -333,12 +390,7 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
       // we need a new second level page table. This gives a virtual address allocated
       u32int *vAddr = newLevelTwoPageTable();
       // need to get the physical address
-#ifdef CONFIG_DISABLE_HYPERVISOR_MEMORY_PROTECTION
       u32int pAddr = getPhysicalAddress(context, pageTable, (u32int)vAddr);
-#else
-      u32int pAddr = context->virtAddrEnabled
-                   ? getPhysicalAddress(context, pageTable, (u32int)vAddr) : (u32int)vAddr;
-#endif
       DEBUG(MM_PAGE_TABLES, "mapSmallPage: PT VA %p PA %#.8x" EOL, vAddr, pAddr);
       // store metadata
       addPageTableEntry((pageTableEntry*)first, (u32int)pAddr, domain);
@@ -415,12 +467,7 @@ void mapLargePage(simpleEntry *pageTable, u32int virtAddr, u32int physical, u8in
       // we need a new second level page table. This gives a virtual address allocated
       u32int *vAddr = newLevelTwoPageTable();
       // need to get the physical address
-#ifdef CONFIG_DISABLE_HYPERVISOR_MEMORY_PROTECTION
       u32int pAddr = getPhysicalAddress(context, pageTable, (u32int)vAddr);
-#else
-      u32int pAddr = context->virtAddrEnabled
-                   ? getPhysicalAddress(context, pageTable, (u32int)vAddr) : (u32int)vAddr;
-#endif
       DEBUG(MM_PAGE_TABLES, "mapLargePage: PT VA %p PA %#.8x" EOL, vAddr, pAddr);
       // store metadata
       addPageTableEntry((pageTableEntry*)first, (u32int)pAddr, domain);
