@@ -494,8 +494,9 @@ void printPrefetchAbort()
   u32int ifar = getIFAR();
   u32int faultStatus = ifsr.fs3_0 | (ifsr.fs4 << 4);
 
+  u32int* ifsrVal = (u32int*)&ifsr;
   printf("Prefetch Abort Address: %08x" EOL, ifar);
-  printf("Fault status register: %#.8x" EOL, *(u32int *)&ifsr);
+  printf("Fault status register: %#.8x" EOL, *ifsrVal);
   printf("Fault type: ");
   printf("%s", prefetchAbtFaultString[faultStatus]);
   printf(" (%x),  External: %x" EOL, faultStatus, ifsr.ExT);

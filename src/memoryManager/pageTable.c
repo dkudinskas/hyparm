@@ -919,7 +919,6 @@ void pageTableEdit(u32int address, u32int newVal)
   GCONTXT* context = getGuestContext();
 
   u32int virtualAddress;
-  pageTableEntry* pageTableEntryGuest = 0;
   bool firstLevelEntry;
   simpleEntry* oldGuestEntry = (simpleEntry*)address;
   simpleEntry* newGuestEntry = (simpleEntry*)&newVal;
@@ -982,7 +981,6 @@ void pageTableEdit(u32int address, u32int newVal)
     {
       DIE_NOW(context, "pageTableEdit: guestVirtual not set\n");
     }
-    pageTableEntryGuest = head->firstLevelEntry;
     virtualAddress = ((u32int)head->firstLevelEntry - (u32int)context->pageTables->guestVirtual) << 18;
     virtualAddress |= ((address & 0x3FC) << 10);
 #ifdef PAGE_TABLE_DBG
@@ -1166,7 +1164,6 @@ void editAttributesSection(sectionEntry* oldSection, sectionEntry* newSection, s
   printf("editAttributesSection: oldSection %08x, newSection %08x shadow %08x\n",
          *(u32int*)oldSection, *(u32int*)newSection, *(u32int*)shadow);
 #endif
-  GCONTXT* context = getGuestContext();
 
   if (shadow->type == FAULT)
   {
@@ -1266,7 +1263,6 @@ void editAttributesSmallPage(smallPageEntry* oldPage, smallPageEntry* newPage, s
   printf("editAttributesSmallPage: oldPage %08x, newPage %08x shadowPage %08x\n",
          *(u32int*)oldPage, *(u32int*)newPage, *(u32int*)shadowPage);
 #endif
-  GCONTXT* context = getGuestContext();
 
   if (shadowPage->type == FAULT)
   {

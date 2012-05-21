@@ -141,13 +141,8 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 
   simpleEntry* guestFirst = 0; 
   simpleEntry* guestSecond = 0;
-  simpleEntry* shadowFirst = 0;
-  simpleEntry* shadowSecond = 0;
-  u32int backupFirst = 0;
-  u32int backupSecond = 0;
   simpleEntry* gpt = 0;
   u32int gpt2 = 0; // this is just a the physical address as unsigned int
-  simpleEntry* spt = context->pageTables->shadowActive;
   u32int sysCtrlReg = getCregVal(1, 0, 0, 0, &context->coprocRegBank[0]);
 
   if (sysCtrlReg & 0x00000002)
@@ -157,37 +152,10 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 //    DIE_NOW(context, "shouldDataAbort: alignment checking enabled! unimplemented.\n");
   }
 
+  simpleEntry* ttbrBackup = mmuGetTTBR0();
+  mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
 
-  if (context->pageTables->guestVirtual != 0)
-  {
-    // cool. we have the VA already! use it. 
-#ifdef MEM_PROT_DBG
-    printf("shouldDataAbort: guestVirtual PT set, %p\n", context->pageTables->guestVirtual);
-#endif
-    gpt = context->pageTables->guestVirtual;
-  }
-  else
-  {
-#ifdef MEM_PROT_DBG
-    printf("shouldDataAbort: guestVirtual PT not set. hack a 1-2-1 of %p\n",
-                                  context->pageTables->guestPhysical);
-#endif
-    // crap, we haven't shadow mapped the gPT VA->PA mapping yet.
-    // hack a 1-2-1 mapping for now.
-    shadowFirst = getEntryFirst(spt, (u32int)context->pageTables->guestPhysical);
-    backupFirst = *(u32int*)shadowFirst;
-#ifdef MEM_PROT_DBG
-    printf("shouldDataAbort: backed up entry %08x @ %p\n", backupFirst, shadowFirst);
-#endif
-    mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
-              (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
-    mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
-    gpt = context->pageTables->guestPhysical;
-#ifdef MEM_PROT_DBG
-    printf("shouldDataAbort: gpt now set to %p\n", gpt);
-#endif
-  }
+  gpt = context->pageTables->guestPhysical;
 
   bool returnValue = FALSE;
 
@@ -220,19 +188,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
     case PAGE_TABLE:
     {
       // must check 2nd level PT entry
-      // have to read guest 2nd lvl page table: hack a 1-2-1 memory mapping
-      // in the shadow page table.
       gpt2 = (((pageTableEntry*)guestFirst)->addr) << 10;
-      shadowSecond = getEntryFirst(context->pageTables->shadowActive, gpt2);
-      backupSecond = *(u32int*)shadowSecond;
-#ifdef MEM_PROT_DBG
-      printf("shouldDataAbort: backed up PT2 entry %08x @ %p\n", backupSecond, shadowSecond);
-#endif
-      mapSection(context->pageTables->shadowActive, gpt2, gpt2,
-           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
-      mmuInvalidateUTLBbyMVA(gpt2);
-
-      // now PT2 is shadow mapped 1-2-1 VA/PA. can extract second level entry.
       u32int index = (address & 0x000FF000) >> 10;
       u32int entryAddress = gpt2 | index;
       guestSecond = (simpleEntry*)entryAddress;
@@ -251,28 +207,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
 
   if (returnValue)
   {
-    // we already know we have a guest translation fault! restore backed up entry, return
-    if (shadowFirst != 0)
-    {
-      *(u32int*)shadowFirst = backupFirst;
-#ifdef MEM_PROT_DBG
-      printf("shouldDataAbort: restored entry %08x @ %p\n", backupFirst, shadowFirst);
-#endif
-      mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
-      mmuDataMemoryBarrier();
-    }
-    if (shadowSecond != 0)
-    {
-      // we had to backup an entry for a gPT2 as well. restore now
-      // restore hacked entry to shadow page table.
-      *(u32int*)shadowSecond = backupSecond;
-#ifdef MEM_PROT_DBG
-      printf("shouldDataAbort: restored PT2 entry %08x @ %p\n", backupSecond, shadowSecond);
-#endif
-      mmuInvalidateUTLBbyMVA(gpt2);
-      mmuDataMemoryBarrier();
-    }
-    // and return
+    mmuSetTTBR0(ttbrBackup, 0x100 | context->pageTables->contextID);
     return returnValue;
   }
 
@@ -417,26 +352,7 @@ bool shouldDataAbort(bool privAccess, bool isWrite, u32int address)
     } // case CLIENT ends
   } // switch domain bits ends
 
-  if (shadowFirst != 0)
-  {
-    *(u32int*)shadowFirst = backupFirst;
-#ifdef MEM_PROT_DBG
-    printf("shouldDataAbort: restored entry %08x @ %p\n", backupFirst, shadowFirst);
-#endif
-    mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
-    mmuDataMemoryBarrier();
-  }
-  if (shadowSecond != 0)
-  {
-    // we had to backup an entry for a gPT2 as well. restore now
-    // restore hacked entry to shadow page table.
-    *(u32int*)shadowSecond = backupSecond;
-#ifdef MEM_PROT_DBG
-    printf("shouldDataAbort: restored PT2 entry %08x @ %p\n", backupSecond, shadowSecond);
-#endif
-    mmuInvalidateUTLBbyMVA(gpt2);
-    mmuDataMemoryBarrier();
-  }
+  mmuSetTTBR0(ttbrBackup, 0x100 | context->pageTables->contextID);
   return returnValue;
 }
 
@@ -455,49 +371,21 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
 
   simpleEntry* guestFirst = 0; 
   simpleEntry* guestSecond = 0;
-  simpleEntry* shadowFirst = 0;
-  simpleEntry* shadowSecond = 0;
-  u32int backupFirst = 0;
-  u32int backupSecond = 0;
   simpleEntry* gpt = 0;
   u32int gpt2 = 0; // this is just a the physical address as unsigned int
-  simpleEntry* spt = context->pageTables->shadowActive;
   u32int sysCtrlReg = getCregVal(1, 0, 0, 0, &context->coprocRegBank[0]);
-/*
+
   if (sysCtrlReg & 0x00000002)
   {
     // guest enabled alignment checking (SCTRL.A) enabled
     // check alignment: if misaligned abort (alignment fault)
 //    DIE_NOW(context, "shouldDataAbort: alignment checking enabled! unimplemented.\n");
-  }*/
+  }
 
-  if (context->pageTables->guestVirtual != 0)
-  {
-    // cool. we have the VA already! use it. 
-#ifdef MEM_PROT_DBG
-    printf("shouldPrefetchAbort: guestVirtual PT set, %p\n", context->pageTables->guestVirtual);
-#endif
-    gpt = context->pageTables->guestVirtual;
-  }
-  else
-  {
-#ifdef MEM_PROT_DBG
-    printf("shouldPrefetchAbort: guestVirtual PT not set. hack a 1-2-1 of %p\n",
-                                  context->pageTables->guestPhysical);
-#endif
-    // crap, we haven't shadow mapped the gPT VA->PA mapping yet.
-    // hack a 1-2-1 mapping for now.
-    shadowFirst = getEntryFirst(spt, (u32int)context->pageTables->guestPhysical);
-    backupFirst = *(u32int*)shadowFirst;
-    mapSection(context->pageTables->shadowActive, (u32int)context->pageTables->guestPhysical, 
-              (u32int)context->pageTables->guestPhysical, HYPERVISOR_ACCESS_DOMAIN,
-              HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
-    mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
-    gpt = context->pageTables->guestPhysical;
-#ifdef MEM_PROT_DBG
-    printf("shouldPrefetchAbort: gpt now set to %p\n", gpt);
-#endif
-  }
+  simpleEntry* ttbrBackup = mmuGetTTBR0();
+  mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
+
+  gpt = context->pageTables->guestPhysical;
 
   bool returnValue = FALSE;
 
@@ -530,19 +418,7 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
     case PAGE_TABLE:
     {
       // must check 2nd level PT entry
-      // have to read guest 2nd lvl page table: hack a 1-2-1 memory mapping
-      // in the shadow page table.
       gpt2 = (((pageTableEntry*)guestFirst)->addr) << 10;
-      shadowSecond = getEntryFirst(context->pageTables->shadowActive, gpt2);
-      backupSecond = *(u32int*)shadowSecond;
-#ifdef MEM_PROT_DBG
-      printf("shouldPrefetchAbort: backed up PT2 entry %08x @ %p\n", backupSecond, shadowSecond);
-#endif
-      mapSection(context->pageTables->shadowActive, gpt2, gpt2,
-           HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, 0);
-      mmuInvalidateUTLBbyMVA(gpt2);
-
-      // now PT2 is shadow mapped 1-2-1 VA/PA. can extract second level entry.
       u32int index = (address & 0x000FF000) >> 10;
       u32int entryAddress = gpt2 | index;
       guestSecond = (simpleEntry*)entryAddress;
@@ -562,22 +438,7 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
   // if we are prefetch aborting with Translation Fault, return already, exception thrown.
   if (returnValue)
   {
-    // if we hacked a 1-2-1 entry of the guest first level page table, restore
-    if (shadowFirst != 0)
-    {
-      *(u32int*)shadowFirst = backupFirst;
-      mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
-      mmuDataMemoryBarrier();
-    }
-    if (shadowSecond != 0)
-    {
-      // we had to backup an entry for a gPT2 as well. restore now
-      // restore hacked entry to shadow page table.
-      *(u32int*)shadowSecond = backupSecond;
-      mmuInvalidateUTLBbyMVA(gpt2);
-      mmuDataMemoryBarrier();
-    }
-    // and return
+    mmuSetTTBR0(ttbrBackup, 0x100 | context->pageTables->contextID);
     return returnValue;
   }
 
@@ -694,21 +555,6 @@ bool shouldPrefetchAbort(bool privAccess, u32int address)
     } // DACR client case ends
   } // switch domBits ends
 
-  // if we dont have gPT1 VA we must have backed up the lvl1 entry. restore now
-  if (shadowFirst != 0)
-  {
-    *(u32int*)shadowFirst = backupFirst;
-    mmuInvalidateUTLBbyMVA((u32int)context->pageTables->guestPhysical);
-    mmuDataMemoryBarrier();
-  }
-  if (shadowSecond != 0)
-  {
-    // we had to backup an entry for a gPT2 as well. restore now
-    // restore hacked entry to shadow page table.
-    *(u32int*)shadowSecond = backupSecond;
-    mmuInvalidateUTLBbyMVA(gpt2);
-    mmuDataMemoryBarrier();
-  }
-  mmuInvalidateUTLB();
+  mmuSetTTBR0(ttbrBackup, 0x100 | context->pageTables->contextID);
   return returnValue;
 }
