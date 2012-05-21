@@ -33,11 +33,12 @@ undSvc:
 
   POP     {LR}
 
-  /* load guest CPSR into R1 to save condition flags */
+  /* load guest CPSR into R1 to save everything but AIF flags */
   LDR     R1, [R0, #GC_CPSR_OFFS]
-  AND     R1, #0x0FFFFFFF
+  MOVW    R3, #0x1DF
+  AND     R1, R3
   MRS     R2, SPSR
-  AND     R2, #0xF0000000
+  BIC     R2, R3
   ORR     R1, R1, R2
   STR     R1, [R0, #GC_CPSR_OFFS]
 
@@ -111,30 +112,22 @@ contUndSvc:
   PUSH    {R0}
   /* Get guest CPSR into R0 */
   LDR     R0, [LR, #GC_CPSR_OFFS]
-#ifdef CONFIG_THUMB2
-  /* Construct SPSR in R0: restore condition flags from the CPSR in the guest context
-   * set user mode, disable asynchronous aborts and FIQs
-   * but enable IRQs, and restore the Thumb bit */
-  TST     R0, #PSR_T_BIT
-  AND     R0, R0, #PSR_CC_FLAGS_NZCV
-  ORREQ   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
-  ORRNE   R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT | PSR_T_BIT)
-  MSR     SPSR, R0
-  /* Also update guest PC when guest is in Thumb mode, then save SPSR */
-  LDR     LR, [LR, #GC_R15_OFFS]
-  SUBNE   LR, LR, #2
-  POP     {R0}
-#else
-  /* Construct SPSR in R0: restore condition flags from guest CPSR
-   * set user mode, disable async aborts and FIQs, but enable IRQs, then save to SPSR */
-  AND     R0, R0, #PSR_CC_FLAGS_NZCV
-  ORR     R0, R0, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
-  MSR     SPSR, R0
-  POP     {R0}
 
+  /* get next guest pc in lr */
   LDR     LR, [LR, #GC_R15_OFFS]
+  
+  /* Construct SPSR in R0: set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and
+    restore all other fields from the CPSR*/
+  BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
+  ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
+  MSR     SPSR, R0
+  POP     {R0}
+#ifdef CONFIG_THUMB2
+  STMDB   SP, {LR}
+  LDMDB   SP, {PC}^
+#else
+  MOVS    PC, LR
 #endif
-  MOVS      PC, LR
 
 
 /***************************************************/
