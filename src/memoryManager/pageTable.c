@@ -317,7 +317,7 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
    * FIXME This looks horribly wrong in a generic "map small page" that is also used for the
    * hypervisor PT !?
    */
-  GCONTXT *context = activeGuestContext;
+  GCONTXT *context = getActiveGuestContext();
 
   DEBUG(MM_PAGE_TABLES, "mapSmallPage: Virtual %#.8x, physical %#.8x, dom: %x, AP: %x, c: %x, "
         "b: %x, tex: %x, xn: %x" EOL, virtAddr, physical, domain, accessBits, c, b, tex, xn);
@@ -398,7 +398,7 @@ void mapLargePage(simpleEntry *pageTable, u32int virtAddr, u32int physical, u8in
    * FIXME This looks horribly wrong in a generic "map small page" that is also used for the
    * hypervisor PT !?
    */
-  GCONTXT *context = activeGuestContext;
+  GCONTXT *context = getActiveGuestContext();
 
   DEBUG(MM_PAGE_TABLES, "mapLargePage: Virtual %#.8x, physical %#.8x, dom: %x, AP: %x, c: %x, "
         "b: %x, tex: %x, xn: %x" EOL, virtAddr, physical, domain, accessBits, cacheable,

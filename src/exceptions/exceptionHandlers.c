@@ -319,7 +319,7 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
     case dfsTranslationSection:
     case dfsTranslationPage:
     {
-      dabtTranslationFault(activeGuestContext, dfsr, dfar);
+      dabtTranslationFault(getActiveGuestContext(), dfsr, dfar);
       break;
     }
     case dfsAlignmentFault:
@@ -523,7 +523,7 @@ GCONTXT *irq(GCONTXT *context)
 
 void irqPrivileged()
 {
-  GCONTXT *const context = activeGuestContext;
+  GCONTXT *const context = getActiveGuestContext();
   incrementIrqCounter();
 
   // Get the number of the highest priority active IRQ/FIQ

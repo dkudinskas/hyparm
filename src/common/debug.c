@@ -111,7 +111,7 @@ void dieNowF(const char *file, u32int line, const char *caller, const char *form
   va_end(args);
   printf(EOL);
 
-  const GCONTXT *const context = activeGuestContext;
+  const GCONTXT *const context = getActiveGuestContext();
   if (context != NULL)
   {
     dumpGuestContext(context);
