@@ -189,8 +189,9 @@ irqDataAbort:
   /* Load CPSR value from guest context */
   /* previously there was no separate implementation of this for THUMB. */
   /* is that correct? die, and checkit out if we hit it. */
-thumbModeAbort:
-  B       thumbModeAbort
+  .global irqThumbModeAbort
+irqThumbModeAbort:
+  B       irqThumbModeAbort
 #else
   SUB     R2, R2, #8
 #endif
