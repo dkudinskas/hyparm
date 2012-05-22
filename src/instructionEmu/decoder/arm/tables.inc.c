@@ -28,10 +28,8 @@
 static struct decodingTableEntry armBranchBlockTransferInstructions[] =
 {
   // STM traps if ^ postfix, otherwise pass through
-  ENTRY(IRC_REPLACE, armStmInstruction,         NULL,                   0x08400000, 0x0e500000, "STM {regList}^"),
-  // FIXME: PC CAN BE IN REGLIST blockcopy bug!!
-  ENTRY(IRC_SAFE,    armStmInstruction,         armStmPCInstruction,    0x08800000, 0x0ff00000, "STMIA {regList}"),
-  ENTRY(IRC_SAFE,    armStmInstruction,         armStmPCInstruction,    0x08000000, 0x0e100000, "STM {regList}"),
+  ENTRY(IRC_REPLACE, armStmInstruction,         NULL,                   0x08400000, 0x0e500000, "STM.. {regList}^"),
+  ENTRY(IRC_SAFE,    armStmInstruction,         armStmPCInstruction,    0x08000000, 0x0e500000, "STM.. {regList}"),
   // POP LDM syntax, only care if PC in reglist
   ENTRY(IRC_REPLACE, armLdmInstruction,         NULL,                   0x08bd8000, 0x0fff8000, "LDM SP, {...r15}"),
   ENTRY(IRC_SAFE,    armLdmInstruction,         NULL,                   0x08bd0000, 0x0fff0000, "LDM SP, {reglist}"),
