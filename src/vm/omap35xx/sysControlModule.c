@@ -326,18 +326,18 @@
 #define OMAP3530_CHIPID                                0x00000C00
 
 
-static u32int loadInterfaceScm(device * dev, u32int address, u32int phyAddr);
-static u32int loadPadconfsScm(struct SystemControlModule *sysCtrlModule, device * dev, u32int address, u32int phyAddr);
-static u32int loadGeneralScm(struct SystemControlModule *sysCtrlModule, device * dev, u32int address, u32int phyAddr);
-static u32int loadMemWkupScm(device * dev, u32int address, u32int phyAddr);
-static u32int loadPadconfsWkupScm(struct SystemControlModule *sysCtrlModule, device * dev, u32int address, u32int phyAddr);
-static u32int loadGeneralWkupScm(device * dev, u32int address, u32int phyAddr);
-static void storeInterfaceScm(device * dev, u32int address, u32int phyAddr, u32int value);
-static void storePadconfsScm(device * dev, u32int address, u32int phyAddr, u32int value);
-static void storeGeneralScm(device * dev, u32int address, u32int phyAddr, u32int value);
-static void storeMemWkupScm(device * dev, u32int address, u32int phyAddr, u32int value);
-static void storePadconfsWkupScm(device * dev, u32int address, u32int phyAddr, u32int value);
-static void storeGeneralWkupScm(device * dev, u32int address, u32int phyAddr, u32int value);
+static u32int loadInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr);
+static u32int loadPadconfsScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr);
+static u32int loadGeneralScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr);
+static u32int loadMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr);
+static u32int loadPadconfsWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr);
+static u32int loadGeneralWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr);
+static void storeInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
+static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
+static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
+static void storeMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
+static void storePadconfsWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
+static void storeGeneralWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
 
 
 void initSysControlModule(virtualMachine *vm)
@@ -684,37 +684,37 @@ u32int loadSysCtrlModule(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int
   if ((alignedAddr >= SYS_CTRL_MOD_INTERFACE)
       && (alignedAddr < (SYS_CTRL_MOD_INTERFACE + SYS_CTRL_MOD_INTERFACE_SIZE)))
   {
-    val = loadInterfaceScm(dev, virtAddr, phyAddr);
+    val = loadInterfaceScm(scm, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS)
         && (alignedAddr < (SYS_CTRL_MOD_PADCONFS + SYS_CTRL_MOD_PADCONFS_SIZE)))
   {
-    val = loadPadconfsScm(scm, dev, virtAddr, phyAddr);
+    val = loadPadconfsScm(scm, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_GENERAL)
         && (alignedAddr < (SYS_CTRL_MOD_GENERAL + SYS_CTRL_MOD_GENERAL_SIZE)))
   {
-    val = loadGeneralScm(scm, dev, virtAddr, phyAddr);
+    val = loadGeneralScm(scm, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_MEM_WKUP)
         && (alignedAddr < (SYS_CTRL_MOD_MEM_WKUP + SYS_CTRL_MOD_MEM_WKUP_SIZE)))
   {
-    val = loadMemWkupScm(dev, virtAddr, phyAddr);
+    val = loadMemWkupScm(scm, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS_WKUP)
         && (alignedAddr < (SYS_CTRL_MOD_PADCONFS_WKUP + SYS_CTRL_MOD_PADCONFS_WKUP_SIZE)))
   {
-    val = loadPadconfsWkupScm(scm, dev, virtAddr, phyAddr);
+    val = loadPadconfsWkupScm(scm, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_GENERAL_WKUP)
         && (alignedAddr < (SYS_CTRL_MOD_GENERAL_WKUP + SYS_CTRL_MOD_GENERAL_WKUP_SIZE)))
   {
-    val = loadGeneralWkupScm(dev, virtAddr, phyAddr);
+    val = loadGeneralWkupScm(scm, virtAddr, phyAddr);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS_ETK)
         && (alignedAddr < (SYS_CTRL_MOD_PADCONFS_ETK + SYS_CTRL_MOD_PADCONFS_ETK_SIZE)))
   {
-    val = loadPadconfsScm(scm, dev, virtAddr, phyAddr);
+    val = loadPadconfsScm(scm, virtAddr, phyAddr);
   }
   else
   {
@@ -745,15 +745,15 @@ u32int loadSysCtrlModule(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int
   return val;
 }
 
-static u32int loadInterfaceScm(device *dev, u32int address, u32int phyAddr)
+static u32int loadInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr)
 {
-  printf("%s load from pAddr: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr, address);
+  printf("Load from pAddr: %#.8x, vAddr %#.8x" EOL, phyAddr, address);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
 
-static u32int loadPadconfsScm(struct SystemControlModule *sysCtrlModule, device *dev, u32int address, u32int phyAddr)
+static u32int loadPadconfsScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr)
 {
 
   u32int val = 0;
@@ -1529,7 +1529,7 @@ static u32int loadPadconfsScm(struct SystemControlModule *sysCtrlModule, device 
 }
 
 
-static u32int loadGeneralScm(struct SystemControlModule *sysCtrlModule, device *dev, u32int address, u32int phyAddr)
+static u32int loadGeneralScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr)
 {
   u32int val = 0;
   u32int reg = phyAddr - SYS_CTRL_MOD_GENERAL;
@@ -1556,7 +1556,7 @@ static u32int loadGeneralScm(struct SystemControlModule *sysCtrlModule, device *
 }
 
 
-static u32int loadMemWkupScm(device *dev, u32int address, u32int phyAddr)
+static u32int loadMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr)
 {
   u32int val = 0;
   u32int reg = phyAddr - SYS_CTRL_MOD_MEM_WKUP;
@@ -1576,7 +1576,7 @@ static u32int loadMemWkupScm(device *dev, u32int address, u32int phyAddr)
 }
 
 
-static u32int loadPadconfsWkupScm(struct SystemControlModule *sysCtrlModule, device *dev, u32int address, u32int phyAddr)
+static u32int loadPadconfsWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr)
 {
   u32int val = 0;
   u32int reg = phyAddr - SYS_CTRL_MOD_PADCONFS_WKUP;
@@ -1656,9 +1656,9 @@ static u32int loadPadconfsWkupScm(struct SystemControlModule *sysCtrlModule, dev
 }
 
 
-static u32int loadGeneralWkupScm(device *dev, u32int address, u32int phyAddr)
+static u32int loadGeneralWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr)
 {
-  printf("%s load from pAddr: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr, address);
+  printf("Load from pAddr: %#.8x, vAddr %#.8x" EOL, phyAddr, address);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   return 0;
 }
@@ -1669,70 +1669,91 @@ void storeSysCtrlModule(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int 
   DEBUG(VP_OMAP_35XX_SCM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %x, value %#.8x" EOL,
       dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
 
-  if ((phyAddr >= SYS_CTRL_MOD_INTERFACE) && (phyAddr < (SYS_CTRL_MOD_INTERFACE + 36)))
+  struct SystemControlModule *scm = context->vm.sysCtrlModule;
+
+#ifndef CONFIG_GUEST_ANDROID
+  if (size != WORD)
   {
-    storeInterfaceScm(dev, virtAddr, phyAddr, value);
+    // only word access allowed in these modules
+    DIE_NOW(NULL, "SysControlModule: invalid access size.");
   }
-  else if ( (phyAddr >= SYS_CTRL_MOD_PADCONFS) && (phyAddr < (SYS_CTRL_MOD_PADCONFS + 564)))
+#endif
+
+  u32int alignedAddr = phyAddr & ~0x3;
+
+  if ((alignedAddr >= SYS_CTRL_MOD_INTERFACE)
+      && (alignedAddr < (SYS_CTRL_MOD_INTERFACE + SYS_CTRL_MOD_INTERFACE_SIZE)))
   {
-    storePadconfsScm(dev, virtAddr, phyAddr, value);
+    storeInterfaceScm(scm, virtAddr, phyAddr, value);
   }
-  else if ( (phyAddr >= SYS_CTRL_MOD_GENERAL) && (phyAddr < (SYS_CTRL_MOD_GENERAL + 767)))
+  else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS)
+        && (alignedAddr < (SYS_CTRL_MOD_PADCONFS + SYS_CTRL_MOD_PADCONFS_SIZE)))
   {
-    storeGeneralScm(dev, virtAddr, phyAddr, value);
+    storePadconfsScm(scm, virtAddr, phyAddr, value);
   }
-  else if ( (phyAddr >= SYS_CTRL_MOD_MEM_WKUP) && (phyAddr < (SYS_CTRL_MOD_MEM_WKUP + 1024)))
+  else if ((alignedAddr >= SYS_CTRL_MOD_GENERAL)
+        && (alignedAddr < (SYS_CTRL_MOD_GENERAL + SYS_CTRL_MOD_GENERAL_SIZE)))
   {
-    storeMemWkupScm(dev, virtAddr, phyAddr, value);
+    storeGeneralScm(scm, virtAddr, phyAddr, value);
   }
-  else if ( (phyAddr >= SYS_CTRL_MOD_PADCONFS_WKUP) && (phyAddr < (SYS_CTRL_MOD_PADCONFS_WKUP + 80)))
+  else if ((alignedAddr >= SYS_CTRL_MOD_MEM_WKUP)
+        && (alignedAddr < (SYS_CTRL_MOD_MEM_WKUP + SYS_CTRL_MOD_MEM_WKUP_SIZE)))
   {
-    storePadconfsWkupScm(dev, virtAddr, phyAddr, value);
+    storeMemWkupScm(scm, virtAddr, phyAddr, value);
   }
-  else if ( (phyAddr >= SYS_CTRL_MOD_GENERAL_WKUP) && (phyAddr < (SYS_CTRL_MOD_GENERAL_WKUP + 31)))
+  else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS_WKUP)
+        && (alignedAddr < (SYS_CTRL_MOD_PADCONFS_WKUP + SYS_CTRL_MOD_PADCONFS_WKUP_SIZE)))
   {
-    storeGeneralWkupScm(dev, virtAddr, phyAddr, value);
+    storePadconfsWkupScm(scm, virtAddr, phyAddr, value);
+  }
+  else if ((alignedAddr >= SYS_CTRL_MOD_GENERAL_WKUP)
+        && (alignedAddr < (SYS_CTRL_MOD_GENERAL_WKUP + SYS_CTRL_MOD_GENERAL_WKUP_SIZE)))
+  {
+    storeGeneralWkupScm(scm, virtAddr, phyAddr, value);
+  }
+  else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS_ETK)
+        && (alignedAddr < (SYS_CTRL_MOD_PADCONFS_ETK + SYS_CTRL_MOD_PADCONFS_ETK_SIZE)))
+  {
+    storePadconfsScm(scm, virtAddr, phyAddr, value);
   }
   else
   {
-    printf("%s store to pAddr: %#.8x, vAddr %#.8x, aSize %x, value %#.8x" EOL,
-        dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
     DIE_NOW(NULL, "Invalid base module.");
   }
 }
 
-static void storeInterfaceScm(device *dev, u32int address, u32int phyAddr, u32int value)
+static void storeInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
+  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
-static void storePadconfsScm(device *dev, u32int address, u32int phyAddr, u32int value)
+static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
+  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
-static void storeGeneralScm(device *dev, u32int address, u32int phyAddr, u32int value)
+static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
+  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
-static void storeMemWkupScm(device *dev, u32int address, u32int phyAddr, u32int value)
+static void storeMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
+  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
-static void storePadconfsWkupScm(device *dev, u32int address, u32int phyAddr, u32int value)
+static void storePadconfsWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
+  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
-static void storeGeneralWkupScm(device *dev, u32int address, u32int phyAddr, u32int value)
+static void storeGeneralWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
 {
-  printf("%s: Store to address %#.8x, value %#.8x" EOL, dev->deviceName, address, value);
+  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
