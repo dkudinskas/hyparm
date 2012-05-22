@@ -138,7 +138,7 @@ $(KCONFIG_CONFIG):
   CFLAGS-$(CONFIG_OLEVEL_2) += -O2
   CFLAGS-$(CONFIG_OLEVEL_3) += -O3
 
-  CFLAGS-$(BUILD_ANALYZE_FUNCTIONS) += -Wsuggest-attribute=pure -Wsuggest-attribute=const -Wsuggest-attribute=noreturn
+  CFLAGS-$(CONFIG_BUILD_ANALYZE_FUNCTIONS) += -Wsuggest-attribute=pure -Wsuggest-attribute=const -Wsuggest-attribute=noreturn
 
   CFLAGS-$(CONFIG_BUILD_SSP) += -fstack-protector-all -Wstack-protector
 
