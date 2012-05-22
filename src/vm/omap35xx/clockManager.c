@@ -1497,6 +1497,17 @@ static void storeIva2Cm(struct ClockManager *cm, u32int physicalAddress, u32int 
       break;
     }
     case CM_FCLKEN_IVA2:
+    {
+      if (cm->cmFClkEnIva2Reg != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmFClkEnIva2Reg" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case CM_CLKEN_PLL_IVA2:
     case CM_IDLEST_IVA2:
     case CM_IDLEST_PLL_IVA2:
