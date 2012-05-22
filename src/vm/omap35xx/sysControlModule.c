@@ -1755,8 +1755,1828 @@ static void storeInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int 
 
 static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
 {
-  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+  u32int regOffset = phyAddr - SYS_CTRL_MOD_PADCONFS;
+
+  DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, regOffset, value);
+  switch (regOffset)
+  {
+    case CONTROL_PADCONF_SDRC_D0:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D2:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D4:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD4 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD4" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D6:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD6 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD6" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D8:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD8 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD8" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D10:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD10 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD10" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D12:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD12 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD12" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D14:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD14 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD14" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D16:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD16 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD16" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D18:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD18 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD18" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D20:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD20 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD20" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D22:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD22 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD22" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D24:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD24 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD24" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D26:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD26 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD26" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D28:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD28 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD28" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_D30:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcD30 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD30" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_CLK:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcClk != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcClk" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_DQS1:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcDqs1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcDqs1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_DQS3:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcDqs3 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcDqs3" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_A2:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcA2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_A4:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcA4 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA4" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_A6:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcA6 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA6" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_A8:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcA8 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA8" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_A10:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcA10 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA10" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D1:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcD1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D3:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcD3 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD3" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D5:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcD5 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD5" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D7:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcD7 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD7" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D9:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcD9 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD9" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D11:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcD11 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD11" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D13:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcD13 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD13" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_D15:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcD15 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD15" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NCS1:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcNcs1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NCS3:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcNcs3 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs3" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NCS5:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcNcs5 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs5" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NCS7:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcNcs7 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs7" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NADV_ALE:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcAle != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcAle" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NWE:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcNwe != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNwe" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_NBE1:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcNbe1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNbe1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_WAIT0:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcWait0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcWait0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_GPMC_WAIT2:
+    {
+      if (sysCtrlModule->ctrlPadConfGpmcWait2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcWait2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_PCLK:
+    {
+      if (sysCtrlModule->ctrlPadConfDssPclk != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssPclk" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_VSYNC:
+    {
+      if (sysCtrlModule->ctrlPadConfDssVsync != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssVsync" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA0:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA2:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA4:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData4 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData4" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA6:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData6 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData6" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA8:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData8 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData8" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA10:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData10 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData10" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA12:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData12 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData12" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA14:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData14 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData14" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA16:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData16 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData16" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA18:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData18 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData18" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA20:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData20 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData20" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_DSS_DATA22:
+    {
+      if (sysCtrlModule->ctrlPadConfDssData22 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData22" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CAM_HS:
+    {
+      if (sysCtrlModule->ctrlPadConfCamHs != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamHs" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CAM_XCLKA:
+    {
+      if (sysCtrlModule->ctrlPadConfCamXclka != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamXclka" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CAM_FLD:
+    {
+      if (sysCtrlModule->ctrlPadConfCamFld != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamFld" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D1:
+    {
+      if (sysCtrlModule->ctrlPadConfCamD1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D3:
+    {
+      if (sysCtrlModule->ctrlPadConfCamD3 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD3" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D5:
+    {
+      if (sysCtrlModule->ctrlPadConfCamD5 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD5" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D7:
+    {
+      if (sysCtrlModule->ctrlPadConfCamD7 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD7" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D9:
+    {
+      if (sysCtrlModule->ctrlPadConfCamD9 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD9" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CAM_D11:
+    {
+      if (sysCtrlModule->ctrlPadConfCamD11 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD11" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CAM_WEN:
+    {
+      if (sysCtrlModule->ctrlPadConfCamWen != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamWen" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CSI2_DX0:
+    {
+      if (sysCtrlModule->ctrlPadConfCsi2Dx0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCsi2Dx0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_CSI2_DX1:
+    {
+      if (sysCtrlModule->ctrlPadConfCsi2Dx1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCsi2Dx1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCBSP2_FSX:
+    {
+      if (sysCtrlModule->ctrlPadConfMcbsp2Fsx != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp2Fsx" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCBSP2_DR:
+    {
+      if (sysCtrlModule->ctrlPadConfMcbsp2Dr != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp2Dr" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MMC1_CLK:
+    {
+      if (sysCtrlModule->ctrlPadConfMmc1Clk != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Clk" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MMC1_DAT0:
+    {
+      if (sysCtrlModule->ctrlPadConfMmc1Dat0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MMC1_DAT2:
+    {
+      if (sysCtrlModule->ctrlPadConfMmc1Dat2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MMC1_DAT4:
+    {
+      if (sysCtrlModule->ctrlPadConfMmc1Dat4 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat4" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MMC1_DAT6:
+    {
+      if (sysCtrlModule->ctrlPadConfMmc1Dat6 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat6" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MMC2_CLK:
+    {
+      if (sysCtrlModule->ctrlPadConfMmc2Clk != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Clk" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MMC2_DAT0:
+    {
+      if (sysCtrlModule->ctrlPadConfMmc2Dat0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MMC2_DAT2:
+    {
+      if (sysCtrlModule->ctrlPadConfMmc2Dat2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MMC2_DAT4:
+    {
+      if (sysCtrlModule->ctrlPadConfMmc2Dat4 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat4" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MMC2_DAT6:
+    {
+      if (sysCtrlModule->ctrlPadConfMmc2Dat6 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat6" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCBSP3_DX:
+    {
+      if (sysCtrlModule->ctrlPadConfMcbsp3Dx != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp3Dx" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCBSP3_CLKX:
+    {
+      if (sysCtrlModule->ctrlPadConfMcbsp3Clkx != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp3Clkx" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_UART2_CTS:
+    {
+      if (sysCtrlModule->ctrlPadConfUart2Cts != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart2Cts" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_UART2_TX:
+    {
+      if (sysCtrlModule->ctrlPadConfUart2Tx != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart2Tx" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_UART1_TX:
+    {
+      if (sysCtrlModule->ctrlPadConfUart1Tx != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart1Tx" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_UART1_CTS:
+    {
+      if (sysCtrlModule->ctrlPadConfUart1Cts != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart1Cts" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCBSP4_CLKX:
+    {
+      if (sysCtrlModule->ctrlPadConfMcbsp4Clkx != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp4Clkx" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCBSP4_DX:
+    {
+      if (sysCtrlModule->ctrlPadConfMcbsp4Dx != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp4Dx" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCBSP1_CLKR:
+    {
+      if (sysCtrlModule->ctrlPadConfMcbsp1Clkr != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp1Clkr" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCBSP1_DX:
+    {
+      if (sysCtrlModule->ctrlPadConfMcbsp1Dx != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp1Dx" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCBSP_CLKS:
+    {
+      if (sysCtrlModule->ctrlPadConfMcbspClks != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbspClks" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCBSP1_CLKX:
+    {
+      if (sysCtrlModule->ctrlPadConfMcbsp1Clkx != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp1Clkx" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_UART3_RTS_SD:
+    {
+      if (sysCtrlModule->ctrlPadConfUart3RtsSd != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart3RtsSd" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_UART3_TX_IRTX:
+    {
+      if (sysCtrlModule->ctrlPadConfUart3TxIrtx != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart3TxIrtx" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_STP:
+    {
+      if (sysCtrlModule->ctrlPadConfHsusb0Stp != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Stp" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_NXT:
+    {
+      if (sysCtrlModule->ctrlPadConfHsusb0Nxt != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Nxt" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_DATA1:
+    {
+      if (sysCtrlModule->ctrlPadConfHsusb0Data1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_DATA3:
+    {
+      if (sysCtrlModule->ctrlPadConfHsusb0Data3 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data3" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_DATA5:
+    {
+      if (sysCtrlModule->ctrlPadConfHsusb0Data5 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data5" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_HSUSB0_DATA7:
+    {
+      if (sysCtrlModule->ctrlPadConfHsusb0Data7 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data7" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_I2C1_SDA:
+    {
+      if (sysCtrlModule->ctrlPadConfI2c1Sda != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfI2c1Sda" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_I2C2_SDA:
+    {
+      if (sysCtrlModule->ctrlPadConfI2c2Sda != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfI2c2Sda" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_I2C3_SDA:
+    {
+      if (sysCtrlModule->ctrlPadConfI2c3Sda != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfI2c3Sda" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCSPI1_CLK:
+    {
+      if (sysCtrlModule->ctrlPadConfMcspi1Clk != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Clk" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCSPI1_SOMI:
+    {
+      if (sysCtrlModule->ctrlPadConfMcspi1Somi != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Somi" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCSPI1_CS1:
+    {
+      if (sysCtrlModule->ctrlPadConfMcspi1Cs1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Cs1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCSPI1_CS3:
+    {
+      if (sysCtrlModule->ctrlPadConfMcspi1Cs3 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Cs3" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCSPI2_SIMO:
+    {
+      if (sysCtrlModule->ctrlPadConfMcspi2Simo != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi2Simo" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_MCSPI2_CS0:
+    {
+      if (sysCtrlModule->ctrlPadConfMcspi2Cs0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi2Cs0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SYS_NIRQ:
+    {
+      if (sysCtrlModule->ctrlPadConfSysNirq != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSysNirq" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD0:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD2:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD4:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad4 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad4" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD6:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad6 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad6" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD8:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad8 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad8" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD10:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad10 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad10" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD12:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad12 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad12" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD14:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad14 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad14" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD16:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad16 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad16" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD18:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad18 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad18" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD20:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad20 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad20" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD22:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad22 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad22" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD24:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad24 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad24" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD26:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad26 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad26" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD28:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad28 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad28" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD30:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad30 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad30" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD32:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad32 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad32" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD34:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad34 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad34" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MCAD36:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMcad36 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad36" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_NRESPWRON:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dNrespwron != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dNrespwron" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_ARMNIRQ:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dArmnirq != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dArmnirq" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_SPINT:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dSpint != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSpint" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_DMAREQ0:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dDmareq0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dDmareq0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_DMAREQ2:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dDmareq2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dDmareq2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_NTRST:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dNtrst != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dNtrst" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_TDO:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dTdo != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dTdo" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_TCK:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dTck != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dTck" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_MSTDBY:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dMstdby != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMstdby" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_IDLEACK:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dIdleack != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dIdleack" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_SWRITE:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dSwrite != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSwrite" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_SREAD:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dSread != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSread" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SAD2D_SBUSFLAG:
+    {
+      if (sysCtrlModule->ctrlPadConfSad2dSbusflag != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSbusflag" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_SDRC_CKE1:
+    {
+      if (sysCtrlModule->ctrlPadConfSdrcCke1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcCke1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_ETK_CLK:
+    {
+      if (sysCtrlModule->ctrlPadConfEtkClk != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkClk" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D0:
+    {
+      if (sysCtrlModule->ctrlPadConfEtkD0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D2:
+    {
+      if (sysCtrlModule->ctrlPadConfEtkD2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D4:
+    {
+      if (sysCtrlModule->ctrlPadConfEtkD4 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD4" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D6:
+    {
+      if (sysCtrlModule->ctrlPadConfEtkD6 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD6" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D8:
+    {
+      if (sysCtrlModule->ctrlPadConfEtkD8 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD8" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D10:
+    {
+      if (sysCtrlModule->ctrlPadConfEtkD10 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD10" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D12:
+    {
+      if (sysCtrlModule->ctrlPadConfEtkD12 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD12" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PADCONF_ETK_D14:
+    {
+      if (sysCtrlModule->ctrlPadConfEtkD14 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD14" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    default:
+    {
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
 }
 
 static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
