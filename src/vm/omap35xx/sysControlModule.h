@@ -11,7 +11,8 @@ struct SystemControlModule
 {
   // registers
   // SYS_CTRL_MOD_INTERFACE      0x48002000 base, 36 bytes length
-  // TODO
+  u32int ctrlRevision;
+  u32int ctrlSysconfig;
 
   // SYS_CTRL_MOD_PADCONFS       0x48002030 base, 564 bytes length
   u32int ctrlPadConfSdrcD0;

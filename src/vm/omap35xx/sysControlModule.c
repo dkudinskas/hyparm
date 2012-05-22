@@ -352,7 +352,8 @@ void initSysControlModule(virtualMachine *vm)
 
   // register default values
   // SYS_CTRL_MOD_INTERFACE      0x48002000 base, 36 bytes length
-  // TODO
+  scm->ctrlRevision  = 0x10;
+  scm->ctrlSysconfig = 0;
 
   // SYS_CTRL_MOD_PADCONFS       0x48002030 base, 564 bytes length
   scm->ctrlPadConfSdrcD0   = 0x01000100;
@@ -1724,8 +1725,32 @@ void storeSysCtrlModule(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int 
 
 static void storeInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
 {
-  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+  u32int regOffset = phyAddr - SYS_CTRL_MOD_INTERFACE;
+
+  DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, regOffset, value);
+  switch (regOffset)
+  {
+    case CONTROL_SYSCONFIG:
+    {
+      if (sysCtrlModule->ctrlSysconfig != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlSysconfig" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_REVISION:
+    {
+      DIE_NOW(NULL, "Store to ead-only register");
+    }
+    default:
+    {
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
 }
 
 static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
