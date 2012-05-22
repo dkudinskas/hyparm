@@ -266,9 +266,9 @@
 #define CONTROL_CORE_DPLL_SPREADING                    0x000001E4
 #define CONTROL_PER_DPLL_SPREADING                     0x000001E8
 #define CONTROL_USBHOST_DPLL_SPREADING                 0x000001EC
-#define CONTROL_SECURE_SDRC_SHARING                    0x000001F0
-#define CONTROL_SECURE_SDRC_MCFG0                      0x000001F4
-#define CONTROL_SECURE_SDRC_MCFG1                      0x000001F8
+#define CONTROL_SDRC_SHARING                           0x000001F0
+#define CONTROL_SDRC_MCFG0                             0x000001F4
+#define CONTROL_SDRC_MCFG1                             0x000001F8
 #define CONTROL_MODEM_FW_CONFIGURATION_LOCK            0x000001FC
 #define CONTROL_MODEM_MEMORY_RESOURCES_CONF            0x00000200
 #define CONTROL_MODEM_GPMC_DT_FW_REQ_INFO              0x00000204
@@ -539,12 +539,12 @@ void initSysControlModule(virtualMachine *vm)
   scm->ctrlMsuspendMux3 = 0x00000000;
   scm->ctrlMsuspendMux4 = 0x00000000;
   scm->ctrlMsuspendMux5 = 0x00000000;
-  scm->ctrlSecCtrl = 0x00001881;
+  scm->ctrlProtCtrl = 0x00001881;
   scm->ctrlDevConf1 = 0x00000000;
   scm->ctrlCsiRxfe = 0x00000000;
-  scm->ctrlSecStatus = 0x00000000;
-  scm->ctrlSecErrStatus = 0x00000000;
-  scm->ctrlSecErrStatusDbg = 0x00000000;
+  scm->ctrlProtStatus = 0x00000000;
+  scm->ctrlProtErrStatus = 0x00000000;
+  scm->ctrlProtErrStatusDebug = 0x00000000;
   scm->ctrlStatus = 0x0000030f;
   scm->ctrlGpStatus = 0x00000000;
   scm->ctrlRpubKeyH0 = 0x00000000;
@@ -610,9 +610,9 @@ void initSysControlModule(virtualMachine *vm)
   scm->ctrlCoreDpllSpreading = 0x00000040;
   scm->ctrlPerDpllSpreading = 0x00000040;
   scm->ctrlUsbhostDpllSpreading = 0x00000040;
-  scm->ctrlSecSdrcSharing = 0x00002700;
-  scm->ctrlSecSdrcMcfg0 = 0x00300000;
-  scm->ctrlSecSdrcMcfg1 = 0x00300000;
+  scm->ctrlSdrcSharing = 0x00002700;
+  scm->ctrlSdrcMcfg0 = 0x00300000;
+  scm->ctrlSdrcMcfg1 = 0x00300000;
   scm->ctrlModemFwConfLock = 0x00000000;
   scm->ctrlModemMemResConf = 0x00000000;
   scm->ctrlModemGpmcDtFwReqInfo = 0x0000ffff;
@@ -620,8 +620,8 @@ void initSysControlModule(virtualMachine *vm)
   scm->ctrlModemGpmcDtFwWr = 0x0000ffff;
   scm->ctrlModemGpmcBootCode = 0x00000000;
   scm->ctrlModemSmsRgAtt1 = 0xffffffff;
-  scm->ctrlModemSmsRgRdPerm1 = 0x0000ffff;
-  scm->ctrlModemSmsRgWrPerm1 = 0x0000ffff;
+  scm->ctrlModemSmsRgRdperm1 = 0x0000ffff;
+  scm->ctrlModemSmsRgWrperm1 = 0x0000ffff;
   scm->ctrlModemD2dFwDbgMode = 0x00000000;
   scm->ctrlDpfOcmRamFwAddrMatch = 0x00000000;
   scm->ctrlDpfOcmRamFwReqinfo = 0x00000000;
@@ -634,7 +634,7 @@ void initSysControlModule(virtualMachine *vm)
   scm->ctrlDpfReg1Iva2FwWr = 0x00000000;
   scm->ctrlApeFwDefSecLock = 0x00000000;
   scm->ctrlOcmRomSecDbg = 0x00000000;
-  scm->ctrlExtSecCtrl = 0x00000002;
+  scm->ctrlExtProtCtrl = 0x00000002;
   scm->ctrlPbiasLite = 0x00000b87;
   scm->ctrlCsi = 0x03200000;
   scm->ctrlDpfMad2dFwAddrMatch = 0x00000000;
@@ -1761,8 +1761,837 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int a
 
 static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
 {
-  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+  u32int regOffset = phyAddr - SYS_CTRL_MOD_GENERAL;
+
+  DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, regOffset, value);
+  switch (regOffset)
+  {
+    case CONTROL_PADCONF_OFF:
+    {
+      if (sysCtrlModule->ctrlPadConfOff != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlPadConfOff" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DEVCONF0:
+    {
+      if (sysCtrlModule->ctrlDevConf0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDevConf0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MEM_DFTRW0:
+    {
+      if (sysCtrlModule->ctrlMemDftrw0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMemDftrw0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MEM_DFTRW1:
+    {
+      if (sysCtrlModule->ctrlMemDftrw1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMemDftrw1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MSUSPENDMUX_0:
+    {
+      if (sysCtrlModule->ctrlMsuspendMux0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MSUSPENDMUX_1:
+    {
+      if (sysCtrlModule->ctrlMsuspendMux1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MSUSPENDMUX_2:
+    {
+      if (sysCtrlModule->ctrlMsuspendMux2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MSUSPENDMUX_3:
+    {
+      if (sysCtrlModule->ctrlMsuspendMux3 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux3" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MSUSPENDMUX_4:
+    {
+      if (sysCtrlModule->ctrlMsuspendMux4 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux4" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MSUSPENDMUX_5:
+    {
+      if (sysCtrlModule->ctrlMsuspendMux5 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux5" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PROT_CTRL:
+    {
+      if (sysCtrlModule->ctrlProtCtrl != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProtCtrl" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DEVCONF1:
+    {
+      if (sysCtrlModule->ctrlDevConf1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDevConf1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_CSIRXFE:
+    {
+      if (sysCtrlModule->ctrlCsiRxfe != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlCsiRxfe" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PROT_STATUS:
+    {
+      if (sysCtrlModule->ctrlProtStatus != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProtStatus" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PROT_ERR_STATUS:
+    {
+      if (sysCtrlModule->ctrlProtErrStatus != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProtErrStatus" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PROT_ERR_STATUS_DEBUG:
+    {
+      if (sysCtrlModule->ctrlProtErrStatusDebug != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProtErrStatusDebug" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_FUSE_OPP1_VDD2:
+    {
+      if (sysCtrlModule->ctrlFuseOpp1Vdd2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlFuseOpp1Vdd2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_FUSE_OPP2_VDD2:
+    {
+      if (sysCtrlModule->ctrlFuseOpp2Vdd2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlFuseOpp2Vdd2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_FUSE_OPP3_VDD2:
+    {
+      if (sysCtrlModule->ctrlFuseOpp3Vdd2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlFuseOpp3Vdd2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_IVA2_BOOTADDR:
+    {
+      if (sysCtrlModule->ctrlIva2Bootaddr != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlIva2Bootaddr" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_IVA2_BOOTMOD:
+    {
+      if (sysCtrlModule->ctrlIva2Bootmod != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlIva2Bootmod" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DEBOBS_0:
+    {
+      if (sysCtrlModule->ctrlDebobs0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DEBOBS_1:
+    {
+      if (sysCtrlModule->ctrlDebobs1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DEBOBS_2:
+    {
+      if (sysCtrlModule->ctrlDebobs2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DEBOBS_3:
+    {
+      if (sysCtrlModule->ctrlDebobs3 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs3" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DEBOBS_4:
+    {
+      if (sysCtrlModule->ctrlDebobs4 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs4" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DEBOBS_5:
+    {
+      if (sysCtrlModule->ctrlDebobs5 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs5" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DEBOBS_6:
+    {
+      if (sysCtrlModule->ctrlDebobs6 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs6" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DEBOBS_7:
+    {
+      if (sysCtrlModule->ctrlDebobs7 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs7" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DEBOBS_8:
+    {
+      if (sysCtrlModule->ctrlDebobs8 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs8" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PROG_IO0:
+    {
+      if (sysCtrlModule->ctrlProgIO0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProgIO0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PROG_IO1:
+    {
+      if (sysCtrlModule->ctrlProgIO1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProgIO1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_WKUP_CTRL:
+    {
+      if (sysCtrlModule->ctrlWkupCtrl != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlWkupCtrl" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DSS_DPLL_SPREADING:
+    {
+      if (sysCtrlModule->ctrlDssDpllSpreading != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDssDpllSpreading" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_CORE_DPLL_SPREADING:
+    {
+      if (sysCtrlModule->ctrlCoreDpllSpreading != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlCoreDpllSpreading" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PER_DPLL_SPREADING:
+    {
+      if (sysCtrlModule->ctrlPerDpllSpreading != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlPerDpllSpreading" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_USBHOST_DPLL_SPREADING:
+    {
+      if (sysCtrlModule->ctrlUsbhostDpllSpreading != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlUsbhostDpllSpreading" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_SDRC_SHARING:
+    {
+      if (sysCtrlModule->ctrlSdrcSharing != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlSdrcSharing" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_SDRC_MCFG0:
+    {
+      if (sysCtrlModule->ctrlSdrcMcfg0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlSdrcMcfg0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_SDRC_MCFG1:
+    {
+      if (sysCtrlModule->ctrlSdrcMcfg1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlSdrcMcfg1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MODEM_FW_CONFIGURATION_LOCK:
+    {
+      if (sysCtrlModule->ctrlModemFwConfLock != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemFwConfLock" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MODEM_MEMORY_RESOURCES_CONF:
+    {
+      if (sysCtrlModule->ctrlModemMemResConf != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemMemResConf" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MODEM_GPMC_DT_FW_REQ_INFO:
+    {
+      if (sysCtrlModule->ctrlModemGpmcDtFwReqInfo != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemGpmcDtFwReqInfo" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MODEM_GPMC_DT_FW_RD:
+    {
+      if (sysCtrlModule->ctrlModemGpmcDtFwRd != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemGpmcDtFwRd" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MODEM_GPMC_DT_FW_WR:
+    {
+      if (sysCtrlModule->ctrlModemGpmcDtFwWr != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemGpmcDtFwWr" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MODEM_GPMC_BOOT_CODE:
+    {
+      if (sysCtrlModule->ctrlModemGpmcBootCode != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemGpmcBootCode" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MODEM_SMS_RG_ATT1:
+    {
+      if (sysCtrlModule->ctrlModemSmsRgAtt1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemSmsRgAtt1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MODEM_SMS_RG_RDPERM1:
+    {
+      if (sysCtrlModule->ctrlModemSmsRgRdperm1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemSmsRgRdperm1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MODEM_SMS_RG_WRPERM1:
+    {
+      if (sysCtrlModule->ctrlModemSmsRgWrperm1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemSmsRgWrperm1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_MODEM_D2D_FW_DEBUG_MODE:
+    {
+      if (sysCtrlModule->ctrlModemD2dFwDbgMode != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemD2dFwDbgMode" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_OCM_RAM_FW_ADDR_MATCH:
+    {
+      if (sysCtrlModule->ctrlDpfOcmRamFwAddrMatch != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfOcmRamFwAddrMatch" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_OCM_RAM_FW_REQINFO:
+    {
+      if (sysCtrlModule->ctrlDpfOcmRamFwReqinfo != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfOcmRamFwReqinfo" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_OCM_RAM_FW_WR:
+    {
+      if (sysCtrlModule->ctrlDpfOcmRamFwWr != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfOcmRamFwWr" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_REGION4_GPMC_FW_ADDR_MATCH:
+    {
+      if (sysCtrlModule->ctrlDpfReg4GpmcFwAddrMatch != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg4GpmcFwAddrMatch" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_REGION4_GPMC_FW_REQINFO:
+    {
+      if (sysCtrlModule->ctrlDpfReg4GpmcFwReqinfo != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg4GpmcFwReqinfo" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_REGION4_GPMC_FW_WR:
+    {
+      if (sysCtrlModule->ctrlDpfReg4GpmcFwWr != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg4GpmcFwWr" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_REGION1_IVA2_FW_ADDR_MATCH:
+    {
+      if (sysCtrlModule->ctrlDpfReg1Iva2FwAddrMatch != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg1Iva2FwAddrMatch" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_REGION1_IVA2_FW_REQINFO:
+    {
+      if (sysCtrlModule->ctrlDpfReg1Iva2FwReqinfo != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg1Iva2FwReqinfo" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_REGION1_IVA2_FW_WR:
+    {
+      if (sysCtrlModule->ctrlDpfReg1Iva2FwWr != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg1Iva2FwWr" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_APE_FW_DEFAULT_SECURE_LOCK:
+    {
+      if (sysCtrlModule->ctrlApeFwDefSecLock != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlApeFwDefSecLock" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_OCMROM_SECURE_DEBUG:
+    {
+      if (sysCtrlModule->ctrlOcmRomSecDbg != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlOcmRomSecDbg" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_EXT_PROT_CONTROL:
+    {
+      if (sysCtrlModule->ctrlExtProtCtrl != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlExtProtCtrl" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_PBIAS_LITE:
+    {
+      if (sysCtrlModule->ctrlPbiasLite != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlPbiasLite" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_CSI:
+    {
+      if (sysCtrlModule->ctrlCsi != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlCsi" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_MAD2D_FW_ADDR_MATCH:
+    {
+      if (sysCtrlModule->ctrlDpfMad2dFwAddrMatch != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfMad2dFwAddrMatch" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_MAD2D_FW_REQINFO:
+    {
+      if (sysCtrlModule->ctrlDpfMad2dFwReqinfo != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfMad2dFwReqinfo" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_DPF_MAD2D_FW_WR:
+    {
+      if (sysCtrlModule->ctrlDpfMad2dFwWr != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfMad2dFwWr" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CONTROL_STATUS:
+    case CONTROL_GENERAL_PURPOSE_STATUS:
+    case CONTROL_RPUB_KEY_H_0:
+    case CONTROL_RPUB_KEY_H_1:
+    case CONTROL_RPUB_KEY_H_2:
+    case CONTROL_RPUB_KEY_H_3:
+    case CONTROL_RPUB_KEY_H_4:
+    case CONTROL_USB_CONF_0:
+    case CONTROL_USB_CONF_1:
+    case CONTROL_FUSE_OPP1_VDD1:
+    case CONTROL_FUSE_OPP2_VDD1:
+    case CONTROL_FUSE_OPP3_VDD1:
+    case CONTROL_FUSE_OPP4_VDD1:
+    case CONTROL_FUSE_OPP5_VDD1:
+    {
+      DIE_NOW(NULL, "Store to read-only register");
+    }
+    default:
+    {
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
+  }
 }
 
 static void storeMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
