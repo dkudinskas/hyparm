@@ -197,12 +197,12 @@
 #define CONTROL_MSUSPENDMUX_3                          0x0000002C
 #define CONTROL_MSUSPENDMUX_4                          0x00000030
 #define CONTROL_MSUSPENDMUX_5                          0x00000034
-#define CONTROL_SEC_CTRL                               0x00000040
+#define CONTROL_PROT_CTRL                              0x00000040
 #define CONTROL_DEVCONF1                               0x00000068
 #define CONTROL_CSIRXFE                                0x0000006C
-#define CONTROL_SEC_STATUS                             0x00000070
-#define CONTROL_SEC_ERR_STATUS                         0x00000074
-#define CONTROL_SEC_ERR_STATUS_DEBUG                   0x00000078
+#define CONTROL_PROT_STATUS                            0x00000070
+#define CONTROL_PROT_ERR_STATUS                        0x00000074
+#define CONTROL_PROT_ERR_STATUS_DEBUG                  0x00000078
 #define CONTROL_STATUS                                 0x00000080
 #define CONTROL_GENERAL_PURPOSE_STATUS                 0x00000084
 #define CONTROL_RPUB_KEY_H_0                           0x00000090
@@ -290,7 +290,7 @@
 #define CONTROL_DPF_REGION1_IVA2_FW_WR                 0x00000248
 #define CONTROL_APE_FW_DEFAULT_SECURE_LOCK             0x0000024C
 #define CONTROL_OCMROM_SECURE_DEBUG                    0x00000250
-#define CONTROL_EXT_SEC_CONTROL                        0x00000264
+#define CONTROL_EXT_PROT_CONTROL                       0x00000264
 #define CONTROL_PBIAS_LITE                             0x000002B0
 #define CONTROL_CSI                                    0x000002C0
 #define CONTROL_DPF_MAD2D_FW_ADDR_MATCH                0x000002C8
@@ -1744,7 +1744,7 @@ static void storeInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int 
     }
     case CONTROL_REVISION:
     {
-      DIE_NOW(NULL, "Store to ead-only register");
+      DIE_NOW(NULL, "Store to read-only register");
     }
     default:
     {
