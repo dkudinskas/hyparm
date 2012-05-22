@@ -69,7 +69,7 @@
 #define INTCPS_THRESHOLD_SPURIOUS       0xFFFFFF00 // [31:8] spurious FIQ flag
 #define INTCPS_THRESHOLD_FLAG           0x000000FF // [7:0] current fiq priority
 
-#define REG_INTCPS_ITR0          0x00000080 // RO show raw irq input status bstoreIntcefore masking
+#define REG_INTCPS_ITR0          0x00000080 // RO show raw irq input status before masking
 #define INTCPS_ITR0_ITR                 0xFFFFFFFF // [31:0] interrupt status before masking
 #define REG_INTCPS_ITR1          0x000000a0 // RO show raw irq input status before masking
 #define INTCPS_ITR0_ITR                 0xFFFFFFFF // [31:0] interrupt status before masking
