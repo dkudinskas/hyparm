@@ -438,42 +438,42 @@ static u32int loadCamCm(struct ClockManager *cm, u32int physicalAddress)
   u32int value = 0;
   switch (registerOffset)
   {
-    case CM_FCLKEN_DSS:
+    case CM_FCLKEN_CAM:
     {
       value = cm->cmFclkEnCam;
       break;
     }
-    case CM_ICLKEN_DSS:
+    case CM_ICLKEN_CAM:
     {
       value = cm->cmIclkEnCam;
       break;
     }
-    case CM_IDLEST_DSS:
+    case CM_IDLEST_CAM:
     {
       value = cm->cmIdleStCam;
       break;
     }
-    case CM_AUTOIDLE_DSS:
+    case CM_AUTOIDLE_CAM:
     {
       value = cm->cmAutoIdleCam;
       break;
     }
-    case CM_CLKSEL_DSS:
+    case CM_CLKSEL_CAM:
     {
       value = cm->cmClkSelCam;
       break;
     }
-    case CM_SLEEPDEP_DSS:
+    case CM_SLEEPDEP_CAM:
     {
       value = cm->cmSleepDepCam;
       break;
     }
-    case CM_CLKSTCTRL_DSS:
+    case CM_CLKSTCTRL_CAM:
     {
       value = cm->cmClkStCtrlCam;
       break;
     }
-    case CM_CLKSTST_DSS:
+    case CM_CLKSTST_CAM:
     {
       value = cm->cmClkStStCam;
       break;
