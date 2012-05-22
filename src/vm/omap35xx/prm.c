@@ -116,6 +116,7 @@ static void storeClockControlPrm(struct PowerAndResetManager *prm, u32int physic
 static void storeCorePrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
 static void storeDssPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
 static void storeEmuPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
+static void storeGlobalRegPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
 static void storeIva2Prm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
 static void storeMpuPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
 static void storeNeonPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value);
@@ -162,6 +163,8 @@ void initPrm(virtualMachine *vm)
   prm->prmPolCtrl = 0xA;
   prm->prmVoltSetup2 = 0;
   // IVA2 registers
+  prm->prmRstctrlIva2  = 0x7;
+  prm->prmRststIva2    = 0x1;
   prm->prmWkdepIva2    = 0xB3;
   prm->prmPwstctrlIva2 = 0xFF0F07;
   prm->prmPwststIva2   = 0xFF7;
@@ -171,13 +174,18 @@ void initPrm(virtualMachine *vm)
   prm->prmIrqStatusMpuOcp = 0x0;
   prm->prmIrqEnableMpuOcp = 0x0;
   // MPU registers
+  prm->prmRststMpu    = 0x1;
   prm->prmWkdepMpu    = 0xA5;
   prm->prmPwstctrlMpu = 0x30107;
   prm->prmPwststMpu   = 0xC7;
   // CORE registers
-  prm->prmPwstctrlCore = 0xF0307;
-  prm->prmPwststCore   = 0xF7;
+  prm->prmRststCore       = 0x1;
+  prm->prmIva2grpselCore  = 0xC33FFE10;
+  prm->prmPwstctrlCore    = 0xF0307;
+  prm->prmPwststCore      = 0xF7;
+  prm->prmIva2grpsel3Core = 0x4;
   // SGX registers
+  prm->prmRststSgx    = 0x1;
   prm->prmWkdepSgx    = 0x16;
   prm->prmPwstctrlSgx = 0x30107;
   prm->prmPwststSgx   = 0x3;
@@ -187,23 +195,34 @@ void initPrm(virtualMachine *vm)
   prm->prmIva2grpselWkup = 0;
   prm->prmWkstWkup       = 0;
   // DSS registers
+  prm->prmRststDss    = 0x1;
+  prm->prmWkenDss     = 0x1;
   prm->prmWkdepDss    = 0x16;
   prm->prmPwstctrlDss = 0x30107;
   prm->prmPwststDss   = 0x3;
   // CAM registers
+  prm->prmRststCam    = 0x1;
   prm->prmWkdepCam    = 0x16;
   prm->prmPwstctrlCam = 0x30107;
   prm->prmPwststCam   = 0x3;
   // PER registers
-  prm->prmPwstctrlPer = 0x30107;
-  prm->prmPwststPer   = 0x7;
+  prm->prmRststPer      = 0x1;
+  prm->prmWkenPer       = 0x3EFFF;
+  prm->prmMpugrpselPer  = 0x3EFFF;
+  prm->prmIva2grpselPer = 0x3EFFF;
+  prm->prmWkdepPer      = 0x27;
+  prm->prmPwstctrlPer   = 0x30107;
+  prm->prmPwststPer     = 0x7;
   // EMU registers
+  prm->prmRststEmu  = 0x1;
   prm->prmPwststEmu = 0xC3;
   // NEON registers
+  prm->prmRststNeon    = 0x1;
   prm->prmWkdepNeon    = 0x2;
   prm->prmPwstctrlNeon = 0x7;
   prm->prmPwststNeon   = 0x3;
   // USBHOST registers
+  prm->prmRststUsbhost    = 0x1;
   prm->prmWkdepUsbhost    = 0x17;
   prm->prmPwstctrlUsbhost = 0x30107;
   prm->prmPwststUsbhost   = 0x3;
@@ -938,6 +957,11 @@ void storePrm(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, 
       storeEmuPrm(prm, phyAddr, value);
       break;
     }
+    case Global_Reg_PRM:
+    {
+      storeGlobalRegPrm(prm, phyAddr, value);
+      break;
+    }
     case NEON_PRM:
     {
       storeNeonPrm(prm, phyAddr, value);
@@ -948,8 +972,6 @@ void storePrm(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, 
       storeUsbhostPrm(prm, phyAddr, value);
       break;
     }
-    case Global_Reg_PRM:
-      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     default:
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
@@ -961,6 +983,18 @@ static void storeCamPrm(struct PowerAndResetManager *prm, u32int physicalAddress
   DEBUG(VP_OMAP_35XX_PRM, "storeCamPrm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case RM_RSTST:
+    {
+      if (prm->prmRststCam != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmRststCam" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case PM_WKDEP:
     {
       prm->prmWkdepCam = value;
@@ -1008,10 +1042,57 @@ static void storeCorePrm(struct PowerAndResetManager *prm, u32int physicalAddres
   DEBUG(VP_OMAP_35XX_PRM, "storeCorePrm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case RM_RSTST:
+    {
+      if (prm->prmRststCore != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmRststCore" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case PM_IVA2GRPSEL:
+    {
+      if (prm->prmIva2grpselCore != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmIva2grpselCore" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case PM_PWSTCTRL:
     {
       prm->prmPwstctrlCore = value;
       break;
+    }
+    case PM_IVA2GRPSEL3_CORE:
+    {
+      if (prm->prmIva2grpsel3Core != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmIva2grpsel3Core" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case PM_WKEN:
+    case PM_MPUGRPSEL:
+    case PM_WKST:
+    case PM_WKST3_CORE:
+    case PM_PWSTST:
+    case PM_PREPWSTST:
+    case PM_WKEN3_CORE:
+    case PM_MPUGRPSEL3_CORE:
+    {
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
 #ifdef CONFIG_GUEST_ANDROID
     case PM_WKDEP:
@@ -1032,6 +1113,30 @@ static void storeDssPrm(struct PowerAndResetManager *prm, u32int physicalAddress
   DEBUG(VP_OMAP_35XX_PRM, "storeDssPrm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case RM_RSTST:
+    {
+      if (prm->prmRststDss != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmRststDss" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case PM_WKEN:
+    {
+      if (prm->prmWkenDss != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmWkdepDss" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case PM_WKDEP:
     {
       prm->prmWkdepDss = value;
@@ -1041,6 +1146,11 @@ static void storeDssPrm(struct PowerAndResetManager *prm, u32int physicalAddress
     {
       prm->prmPwstctrlDss = value;
       break;
+    }
+    case PM_PWSTST:
+    case PM_PREPWSTST:
+    {
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
 #ifdef CONFIG_GUEST_ANDROID
     case PM_UNKNOWN:
@@ -1060,6 +1170,18 @@ static void storeEmuPrm(struct PowerAndResetManager *prm, u32int physicalAddress
   DEBUG(VP_OMAP_35XX_PRM, "storeEmuPrm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case RM_RSTST:
+    {
+      if (prm->prmRststEmu != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmRststEmu" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
 #ifdef CONFIG_GUEST_ANDROID
     case PM_WKDEP:
     case PM_UNKNOWN:
@@ -1073,12 +1195,81 @@ static void storeEmuPrm(struct PowerAndResetManager *prm, u32int physicalAddress
   }
 }
 
+static void storeGlobalRegPrm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
+{
+  const u32int registerOffset = physicalAddress - Global_Reg_PRM;
+  DEBUG(VP_OMAP_35XX_PRM, "%s: offset %x value %#.8x" EOL, __func__, registerOffset, value);
+  switch (registerOffset)
+  {
+    case PRM_CLKSRC_CTRL:
+    {
+      if (prm->prmClkSrcCtrl != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmClkSrcCtrl" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case PRM_VC_SMPS_SA:
+    case PRM_VC_SMPS_VOL_RA:
+    case PRM_VC_SMPS_CMD_RA:
+    case PRM_VC_CMD_VAL_0:
+    case PRM_VC_CMD_VAL_1:
+    case PRM_VC_CH_CONF:
+    case PRM_VC_I2C_CFG:
+    case PRM_VC_BYPASS_VAL:
+    case PRM_RSTCTRL:
+    case PRM_RSTTIME:
+    case PRM_RSTST:
+    case PRM_VOLTCTRL:
+    case PRM_SRAM_PCHARGE:
+    case PRM_OBSR:
+    case PRM_VOLTSETUP1:
+    case PRM_VOLTOFFSET:
+    case PRM_CLKSETUP:
+    case PRM_POLCTRL:
+    case PRM_VOLTSETUP2:
+    default:
+    {
+      printf("offset %x value %#.8x" EOL, registerOffset, value);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+    }
+  }
+}
+
 static void storeIva2Prm(struct PowerAndResetManager *prm, u32int physicalAddress, u32int value)
 {
   const u32int registerOffset = physicalAddress - IVA2_PRM;
   DEBUG(VP_OMAP_35XX_PRM, "storeIva2Prm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case RM_RSTCTRL:
+    {
+      if (prm->prmRstctrlIva2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmRstctrlIva2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case RM_RSTST:
+    {
+      if (prm->prmRststIva2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmRststIva2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case PM_WKDEP:
     {
       prm->prmWkdepIva2 = value;
@@ -1107,6 +1298,18 @@ static void storeMpuPrm(struct PowerAndResetManager *prm, u32int physicalAddress
   DEBUG(VP_OMAP_35XX_PRM, "storeMpuPrm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case RM_RSTST:
+    {
+      if (prm->prmRststMpu != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmRststMpu" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case PM_WKDEP:
     {
       prm->prmWkdepMpu = value;
@@ -1116,6 +1319,15 @@ static void storeMpuPrm(struct PowerAndResetManager *prm, u32int physicalAddress
     {
       prm->prmPwstctrlMpu = value;
       break;
+    }
+    case PM_EVGENCTRL_MPU:
+    case PM_EVGENONTIM_MPU:
+    case PM_EVGENOFFTIM_MPU:
+    case PM_PWSTST:
+    case PM_PREPWSTST:
+    {
+      printf("offset %x value %#.8x" EOL, registerOffset, value);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
 #ifdef CONFIG_GUEST_ANDROID
     case PM_UNKNOWN:
@@ -1135,6 +1347,18 @@ static void storeNeonPrm(struct PowerAndResetManager *prm, u32int physicalAddres
   DEBUG(VP_OMAP_35XX_PRM, "storeNeonPrm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case RM_RSTST:
+    {
+      if (prm->prmRststNeon != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmRststNeon" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case PM_WKDEP:
     {
       prm->prmWkdepNeon = value;
@@ -1175,12 +1399,26 @@ static void storeOcpSystemPrm(struct PowerAndResetManager *prm, u32int physicalA
     }
     case PRM_IRQSTATUS_MPU_OCP:
     {
-      DIE_NOW(NULL, "store to IRQSTATUS. investigate.");
+      if (prm->prmIrqStatusMpuOcp != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmIrqStatusMpuOcp" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
       break;
     }
     case PRM_IRQENABLE_MPU_OCP:
     {
-      DIE_NOW(NULL, "store to IRQENABLE. investigate.");
+      if (prm->prmIrqEnableMpuOcp != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmIrqEnableMpuOcp" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
       break;
     }
     default:
@@ -1194,13 +1432,76 @@ static void storePerPrm(struct PowerAndResetManager *prm, u32int physicalAddress
   DEBUG(VP_OMAP_35XX_PRM, "storePerPrm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case RM_RSTST:
+    {
+      if (prm->prmRststPer != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmRststPer" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case PM_WKEN:
+    {
+      if (prm->prmWkenPer != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmWkdepDss" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case PM_MPUGRPSEL:
+    {
+      if (prm->prmMpugrpselPer != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmMpugrpselPer" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case PM_IVA2GRPSEL:
+    {
+      if (prm->prmIva2grpselPer != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmIva2grpselPer" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case PM_WKDEP:
+      if (prm->prmWkdepPer != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmWkdepDss" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
     case PM_PWSTCTRL:
     {
       prm->prmPwstctrlPer = value;
       break;
     }
+    case PM_WKST:
+    case PM_PWSTST:
+    case PM_PREPWSTST:
+    {
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+    }
 #ifdef CONFIG_GUEST_ANDROID
-    case PM_WKDEP:
     case PM_UNKNOWN:
     {
       DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to invalid register %x" EOL, __func__, registerOffset);
@@ -1218,6 +1519,18 @@ static void storeSgxPrm(struct PowerAndResetManager *prm, u32int physicalAddress
   DEBUG(VP_OMAP_35XX_PRM, "storeSgxPrm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case RM_RSTST:
+    {
+      if (prm->prmRststSgx != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmRststSgx" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case PM_PWSTCTRL:
     {
       prm->prmPwstctrlSgx = value;
@@ -1246,6 +1559,18 @@ static void storeUsbhostPrm(struct PowerAndResetManager *prm, u32int physicalAdd
   DEBUG(VP_OMAP_35XX_PRM, "storeUsbhostPrm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case RM_RSTST:
+    {
+      if (prm->prmRststUsbhost != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmRststUsbhost" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case PM_WKDEP:
     {
       prm->prmWkdepUsbhost = value;
@@ -1274,7 +1599,22 @@ static void storeWakeUpPrm(struct PowerAndResetManager *prm, u32int physicalAddr
   DEBUG(VP_OMAP_35XX_PRM, "storeWakeUpPrm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case PM_IVA2GRPSEL:
+    {
+      if (prm->prmIva2grpselWkup != value)
+      {
 #ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring store to prmIva2grpselWkup" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+#ifdef CONFIG_GUEST_ANDROID
+    case PM_WKEN:
+    case PM_MPUGRPSEL:
+    case PM_WKST:
     case PM_WKDEP:
     case PM_PWSTCTRL:
     case PM_UNKNOWN:

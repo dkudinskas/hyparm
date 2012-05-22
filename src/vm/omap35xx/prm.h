@@ -35,6 +35,8 @@ struct PowerAndResetManager
   u32int prmPolCtrl;
   u32int prmVoltSetup2;
   // IVA2 registers
+  u32int prmRstctrlIva2;
+  u32int prmRststIva2;
   u32int prmWkdepIva2;
   u32int prmPwstctrlIva2;
   u32int prmPwststIva2;
@@ -44,13 +46,18 @@ struct PowerAndResetManager
   u32int prmIrqStatusMpuOcp;
   u32int prmIrqEnableMpuOcp;
   // MPU registers
+  u32int prmRststMpu;
   u32int prmWkdepMpu;
   u32int prmPwstctrlMpu;
   u32int prmPwststMpu;
   // CORE registers
+  u32int prmRststCore;
+  u32int prmIva2grpselCore;
   u32int prmPwstctrlCore;
   u32int prmPwststCore;
+  u32int prmIva2grpsel3Core;
   // SGX registers
+  u32int prmRststSgx;
   u32int prmWkdepSgx;
   u32int prmPwstctrlSgx;
   u32int prmPwststSgx;
@@ -60,23 +67,34 @@ struct PowerAndResetManager
   u32int prmIva2grpselWkup;
   u32int prmWkstWkup;
   // DSS registers
+  u32int prmRststDss;
+  u32int prmWkenDss;
   u32int prmWkdepDss;
   u32int prmPwstctrlDss;
   u32int prmPwststDss;
   // CAM registers
+  u32int prmRststCam;
   u32int prmWkdepCam;
   u32int prmPwstctrlCam;
   u32int prmPwststCam;
   // PER registers
+  u32int prmRststPer;
+  u32int prmWkenPer;
+  u32int prmMpugrpselPer;
+  u32int prmIva2grpselPer;
+  u32int prmWkdepPer;
   u32int prmPwstctrlPer;
   u32int prmPwststPer;
   // EMU registers
+  u32int prmRststEmu;
   u32int prmPwststEmu;
   // NEON registers
+  u32int prmRststNeon;
   u32int prmWkdepNeon;
   u32int prmPwstctrlNeon;
   u32int prmPwststNeon;
   // USBHOST registers
+  u32int prmRststUsbhost;
   u32int prmWkdepUsbhost;
   u32int prmPwstctrlUsbhost;
   u32int prmPwststUsbhost;
