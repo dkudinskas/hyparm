@@ -1317,13 +1317,24 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
 #endif
       }
       break;
+    case CM_AUTOIDLE1_CORE:
+    {
+      if (cm->cmAutoIdle1Core != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdle1Core" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case CM_FCLKEN3_CORE:
     case CM_ICLKEN2_CORE:
     case CM_ICLKEN3_CORE:
     case CM_IDLEST1_CORE:
     case CM_IDLEST2_CORE:
     case CM_IDLEST3_CORE:
-    case CM_AUTOIDLE1_CORE:
     case CM_AUTOIDLE2_CORE:
     case CM_AUTOIDLE3_CORE:
     case CM_CLKSEL_CORE:

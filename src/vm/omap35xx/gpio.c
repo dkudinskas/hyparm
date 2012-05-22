@@ -59,7 +59,7 @@
 
 
 static inline s32int getIndexByAddress(u32int physicalAddress);
-static void reset(struct Gpio *gpio);
+static void reset(struct Gpio *gpio, s32int index);
 
 
 void connectGpio(virtualMachine *vm, u32int gpioNumber, u32int physicalGpioNumber)
@@ -78,7 +78,7 @@ void initGpio(virtualMachine *vm, u32int gpioNumber)
 
   DEBUG(VP_OMAP_35XX_GPIO, "initGpio: GPIO%x @ %p" EOL, gpioNumber, vm->gpio[index]);
   vm->gpio[index]->physicalId = -1;
-  reset(vm->gpio[index]);
+  reset(vm->gpio[index], index);
 }
 
 /*
@@ -235,7 +235,7 @@ u32int loadGpio(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtualA
   return val;
 }
 
-static void reset(struct Gpio *gpio)
+static void reset(struct Gpio *gpio, s32int index)
 {
   /*
    * Reset registers to default values
@@ -251,7 +251,7 @@ static void reset(struct Gpio *gpio)
   gpio->gpioIrqEnable2      = 0x00000000;
   gpio->gpioCtrl            = 0x00000002;
   gpio->gpioOE              = 0xFFFFFFFF;
-  gpio->gpioDataIn          = 0x00000000;
+  gpio->gpioDataIn          = index == 5 ? 0x04802900 : 0x00000000;
   gpio->gpioDataOut         = 0x00000000;
   gpio->gpioLvlDetect0      = 0x00000000;
   gpio->gpioLvlDetect1      = 0x00000000;
@@ -284,13 +284,15 @@ void storeGpio(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtualAd
       case GPIO_REVISION:
       case GPIO_SYSSTATUS:
       case GPIO_DATAIN:
+      {
         DEBUG(VP_OMAP_35XX_GPIO, "GPIO: ignoring store to read-only register");
         break;
+      }
       case GPIO_SYSCONFIG:
         if ((value & GPIO_SYSCONFIG_SOFTRESET) == GPIO_SYSCONFIG_SOFTRESET)
         {
           DEBUG(VP_OMAP_35XX_GPIO, "GPIO: soft reset" EOL);
-          reset(gpio);
+          reset(gpio, index);
         }
         gpio->gpioSysConfig = (value & ~(GPIO_SYSCONFIG_RESERVED | GPIO_SYSCONFIG_SOFTRESET));
         break;
