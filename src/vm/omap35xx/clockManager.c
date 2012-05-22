@@ -1533,6 +1533,28 @@ static void storeMpuCm(struct ClockManager *cm, u32int physicalAddress, u32int v
       }
       break;
     }
+    case CM_AUTOIDLE_PLL_MPU:
+    {
+      if (cm->cmAutoidlePllMpuReg != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoidlePllMpuReg" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CM_CLKEN_PLL_MPU:
+    case CM_IDLEST_MPU:
+    case CM_IDLEST_PLL_MPU:
+    case CM_CLKSEL1_PLL_MPU:
+    case CM_CLKSEL2_PLL_MPU:
+    case CM_CLKSTST_MPU:
+    {
+      printf("offset %x value %#.8x" EOL, registerOffset, value);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+    }
     default:
     {
       printf("offset %x value %#.8x" EOL, registerOffset, value);
