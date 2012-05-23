@@ -11,7 +11,8 @@ struct SystemControlModule
 {
   // registers
   // SYS_CTRL_MOD_INTERFACE      0x48002000 base, 36 bytes length
-  // TODO
+  u32int ctrlRevision;
+  u32int ctrlSysconfig;
 
   // SYS_CTRL_MOD_PADCONFS       0x48002030 base, 564 bytes length
   u32int ctrlPadConfSdrcD0;
@@ -197,12 +198,12 @@ struct SystemControlModule
   u32int ctrlMsuspendMux3;
   u32int ctrlMsuspendMux4;
   u32int ctrlMsuspendMux5;
-  u32int ctrlSecCtrl;
+  u32int ctrlProtCtrl;
   u32int ctrlDevConf1;
   u32int ctrlCsiRxfe;
-  u32int ctrlSecStatus;
-  u32int ctrlSecErrStatus;
-  u32int ctrlSecErrStatusDbg;
+  u32int ctrlProtStatus;
+  u32int ctrlProtErrStatus;
+  u32int ctrlProtErrStatusDebug;
   u32int ctrlStatus;
   u32int ctrlGpStatus;
   u32int ctrlRpubKeyH0;
@@ -268,9 +269,9 @@ struct SystemControlModule
   u32int ctrlCoreDpllSpreading;
   u32int ctrlPerDpllSpreading;
   u32int ctrlUsbhostDpllSpreading;
-  u32int ctrlSecSdrcSharing;
-  u32int ctrlSecSdrcMcfg0;
-  u32int ctrlSecSdrcMcfg1;
+  u32int ctrlSdrcSharing;
+  u32int ctrlSdrcMcfg0;
+  u32int ctrlSdrcMcfg1;
   u32int ctrlModemFwConfLock;
   u32int ctrlModemMemResConf;
   u32int ctrlModemGpmcDtFwReqInfo;
@@ -278,8 +279,8 @@ struct SystemControlModule
   u32int ctrlModemGpmcDtFwWr;
   u32int ctrlModemGpmcBootCode;
   u32int ctrlModemSmsRgAtt1;
-  u32int ctrlModemSmsRgRdPerm1;
-  u32int ctrlModemSmsRgWrPerm1;
+  u32int ctrlModemSmsRgRdperm1;
+  u32int ctrlModemSmsRgWrperm1;
   u32int ctrlModemD2dFwDbgMode;
   u32int ctrlDpfOcmRamFwAddrMatch;
   u32int ctrlDpfOcmRamFwReqinfo;
@@ -292,7 +293,7 @@ struct SystemControlModule
   u32int ctrlDpfReg1Iva2FwWr;
   u32int ctrlApeFwDefSecLock;
   u32int ctrlOcmRomSecDbg;
-  u32int ctrlExtSecCtrl;
+  u32int ctrlExtProtCtrl;
   u32int ctrlPbiasLite;
   u32int ctrlCsi;
   u32int ctrlDpfMad2dFwAddrMatch;

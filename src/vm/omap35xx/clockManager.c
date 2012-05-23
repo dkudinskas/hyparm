@@ -1497,6 +1497,17 @@ static void storeIva2Cm(struct ClockManager *cm, u32int physicalAddress, u32int 
       break;
     }
     case CM_FCLKEN_IVA2:
+    {
+      if (cm->cmFClkEnIva2Reg != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmFClkEnIva2Reg" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case CM_CLKEN_PLL_IVA2:
     case CM_IDLEST_IVA2:
     case CM_IDLEST_PLL_IVA2:
@@ -1532,6 +1543,28 @@ static void storeMpuCm(struct ClockManager *cm, u32int physicalAddress, u32int v
 #endif
       }
       break;
+    }
+    case CM_AUTOIDLE_PLL_MPU:
+    {
+      if (cm->cmAutoidlePllMpuReg != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoidlePllMpuReg" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CM_CLKEN_PLL_MPU:
+    case CM_IDLEST_MPU:
+    case CM_IDLEST_PLL_MPU:
+    case CM_CLKSEL1_PLL_MPU:
+    case CM_CLKSEL2_PLL_MPU:
+    case CM_CLKSTST_MPU:
+    {
+      printf("offset %x value %#.8x" EOL, registerOffset, value);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
     default:
     {
