@@ -438,42 +438,42 @@ static u32int loadCamCm(struct ClockManager *cm, u32int physicalAddress)
   u32int value = 0;
   switch (registerOffset)
   {
-    case CM_FCLKEN_DSS:
+    case CM_FCLKEN_CAM:
     {
       value = cm->cmFclkEnCam;
       break;
     }
-    case CM_ICLKEN_DSS:
+    case CM_ICLKEN_CAM:
     {
       value = cm->cmIclkEnCam;
       break;
     }
-    case CM_IDLEST_DSS:
+    case CM_IDLEST_CAM:
     {
       value = cm->cmIdleStCam;
       break;
     }
-    case CM_AUTOIDLE_DSS:
+    case CM_AUTOIDLE_CAM:
     {
       value = cm->cmAutoIdleCam;
       break;
     }
-    case CM_CLKSEL_DSS:
+    case CM_CLKSEL_CAM:
     {
       value = cm->cmClkSelCam;
       break;
     }
-    case CM_SLEEPDEP_DSS:
+    case CM_SLEEPDEP_CAM:
     {
       value = cm->cmSleepDepCam;
       break;
     }
-    case CM_CLKSTCTRL_DSS:
+    case CM_CLKSTCTRL_CAM:
     {
       value = cm->cmClkStCtrlCam;
       break;
     }
-    case CM_CLKSTST_DSS:
+    case CM_CLKSTST_CAM:
     {
       value = cm->cmClkStStCam;
       break;
@@ -1167,6 +1167,28 @@ static void storeCamCm(struct ClockManager *cm, u32int physicalAddress, u32int v
       }
       break;
     }
+    case CM_AUTOIDLE_CAM:
+    {
+      if (cm->cmAutoIdleCam != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdleCam" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CM_FCLKEN_CAM:
+    case CM_ICLKEN_CAM:
+    case CM_IDLEST_CAM:
+    case CM_CLKSEL_CAM:
+    case CM_SLEEPDEP_CAM:
+    case CM_CLKSTST_CAM:
+    {
+      printf("offset %x value %#.8x" EOL, registerOffset, value);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+    }
     default:
     {
       printf("offset %x value %#.8x" EOL, registerOffset, value);
@@ -1329,14 +1351,36 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
       }
       break;
     }
+    case CM_AUTOIDLE2_CORE:
+    {
+      if (cm->cmAutoIdle2Core != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdle2Core" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CM_AUTOIDLE3_CORE:
+    {
+      if (cm->cmAutoIdle3Core != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdle3Core" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case CM_FCLKEN3_CORE:
     case CM_ICLKEN2_CORE:
     case CM_ICLKEN3_CORE:
     case CM_IDLEST1_CORE:
     case CM_IDLEST2_CORE:
     case CM_IDLEST3_CORE:
-    case CM_AUTOIDLE2_CORE:
-    case CM_AUTOIDLE3_CORE:
     case CM_CLKSEL_CORE:
     case CM_CLKSTST_CORE:
     {
@@ -1369,6 +1413,28 @@ static void storeDssCm(struct ClockManager *cm, u32int physicalAddress, u32int v
 #endif
       }
       break;
+    }
+    case CM_AUTOIDLE_DSS:
+    {
+      if (cm->cmAutoIdleDss != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdleDss" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CM_FCLKEN_DSS:
+    case CM_ICLKEN_DSS:
+    case CM_IDLEST_DSS:
+    case CM_CLKSEL_DSS:
+    case CM_SLEEPDEP_DSS:
+    case CM_CLKSTST_DSS:
+    {
+      printf("offset %x value %#.8x" EOL, registerOffset, value);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
     default:
     {
@@ -1417,6 +1483,29 @@ static void storeIva2Cm(struct ClockManager *cm, u32int physicalAddress, u32int 
 #endif
       }
       break;
+    }
+    case CM_AUTOIDLE_PLL_IVA2:
+    {
+      if (cm->cmAutoidlePllIva2Reg != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoidlePllIva2Reg" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case CM_FCLKEN_IVA2:
+    case CM_CLKEN_PLL_IVA2:
+    case CM_IDLEST_IVA2:
+    case CM_IDLEST_PLL_IVA2:
+    case CM_CLKSEL1_PLL_IVA2:
+    case CM_CLKSEL2_PLL_IVA2:
+    case CM_CLKSTST_IVA2:
+    {
+      printf("offset %x value %#.8x" EOL, registerOffset, value);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
     default:
     {
@@ -1516,7 +1605,11 @@ static void storePerCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmAutoIdlePer != value)
       {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdlePer" EOL, __func__);
+#else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
       }
       break;
     }
@@ -1621,6 +1714,15 @@ static void storeUsbHostCm(struct ClockManager *cm, u32int physicalAddress, u32i
       }
       break;
     }
+    case CM_FCLKEN_USBHOST:
+    case CM_ICLKEN_USBHOST:
+    case CM_IDLEST_USBHOST:
+    case CM_SLEEPDEP_USBHOST:
+    case CM_CLKSTST_USBHOST:
+    {
+      printf("offset %x value %#.8x" EOL, registerOffset, value);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+    }
     default:
     {
       printf("offset %x value %#.8x" EOL, registerOffset, value);
@@ -1715,7 +1817,11 @@ static void storeWkupCm(struct ClockManager *cm, u32int physicalAddress, u32int 
     {
       if (cm->cmAutoIdleWkup != value)
       {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdleWkup" EOL, __func__);
+#else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
       }
       break;
     }
