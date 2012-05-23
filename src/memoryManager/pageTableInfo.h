@@ -4,6 +4,8 @@
 #include "common/compiler.h"
 #include "common/types.h"
 
+#include "guestManager/types.h"
+
 #include "memoryManager/pageTable.h"
 
 
@@ -17,8 +19,6 @@ struct PageTableMetaData
   struct PageTableMetaData *nextEntry;
 };
 typedef struct PageTableMetaData ptInfo;
-
-typedef struct guestContext GCONTXT;
 
 
 void addPageTableInfo(GCONTXT *context, pageTableEntry* entry, u32int virtual, u32int physical, u32int mapped, bool host);

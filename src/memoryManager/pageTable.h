@@ -6,6 +6,8 @@
 
 #include "drivers/beagle/memoryMap.h"
 
+#include "guestManager/types.h"
+
 
 #define PT1_ENTRIES        4096
 #define PT2_ENTRIES         256
@@ -135,9 +137,6 @@ struct smallPageDescriptor
   unsigned addr:20; //31-12
 };
 typedef struct smallPageDescriptor smallPageEntry;
-
-
-typedef struct guestContext GCONTXT;
 
 
 void dumpTranslationTable(simpleEntry *table) __cold__;

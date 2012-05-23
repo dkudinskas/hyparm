@@ -5,6 +5,7 @@
 #include "common/types.h"
 
 #include "guestManager/translationCache.h"
+#include "guestManager/types.h"
 
 #include "instructionEmu/decoder.h"
 
@@ -80,7 +81,7 @@ struct VirtualMachinePageTables
 };
 
 
-typedef struct guestContext
+struct guestContext
 {
   u32int R0;
   u32int R1;
@@ -159,7 +160,7 @@ typedef struct guestContext
 
   u32int PCOfLastInstruction;/*This will contain the value the program counter should have when the last instruction is executing*/
 #endif
-} GCONTXT;
+};
 
 
 /*
