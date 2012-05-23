@@ -17,12 +17,12 @@ static u32int loadGeneralScm(struct SystemControlModule *sysCtrlModule, u32int p
 static u32int loadMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int physicalAddress);
 static u32int loadPadconfsWkupScm(struct SystemControlModule *sysCtrlModule, u32int physicalAddress);
 static u32int loadGeneralWkupScm(struct SystemControlModule *sysCtrlModule, u32int physicalAddress);
-static void storeInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
-static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
-static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
-static void storeMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
-static void storePadconfsWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
-static void storeGeneralWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value);
+static void storeInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value);
+static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value);
+static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value);
+static void storeMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value);
+static void storePadconfsWkupScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value);
+static void storeGeneralWkupScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value);
 
 
 void initSysControlModule(virtualMachine *vm)
@@ -1361,37 +1361,37 @@ void storeSysCtrlModule(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int 
   if ((alignedAddr >= SYS_CTRL_MOD_INTERFACE)
       && (alignedAddr < (SYS_CTRL_MOD_INTERFACE + SYS_CTRL_MOD_INTERFACE_SIZE)))
   {
-    storeInterfaceScm(scm, virtAddr, phyAddr, value);
+    storeInterfaceScm(scm, phyAddr, value);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS)
         && (alignedAddr < (SYS_CTRL_MOD_PADCONFS + SYS_CTRL_MOD_PADCONFS_SIZE)))
   {
-    storePadconfsScm(scm, virtAddr, phyAddr, value);
+    storePadconfsScm(scm, phyAddr, value);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_GENERAL)
         && (alignedAddr < (SYS_CTRL_MOD_GENERAL + SYS_CTRL_MOD_GENERAL_SIZE)))
   {
-    storeGeneralScm(scm, virtAddr, phyAddr, value);
+    storeGeneralScm(scm, phyAddr, value);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_MEM_WKUP)
         && (alignedAddr < (SYS_CTRL_MOD_MEM_WKUP + SYS_CTRL_MOD_MEM_WKUP_SIZE)))
   {
-    storeMemWkupScm(scm, virtAddr, phyAddr, value);
+    storeMemWkupScm(scm, phyAddr, value);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS_WKUP)
         && (alignedAddr < (SYS_CTRL_MOD_PADCONFS_WKUP + SYS_CTRL_MOD_PADCONFS_WKUP_SIZE)))
   {
-    storePadconfsWkupScm(scm, virtAddr, phyAddr, value);
+    storePadconfsWkupScm(scm, phyAddr, value);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_GENERAL_WKUP)
         && (alignedAddr < (SYS_CTRL_MOD_GENERAL_WKUP + SYS_CTRL_MOD_GENERAL_WKUP_SIZE)))
   {
-    storeGeneralWkupScm(scm, virtAddr, phyAddr, value);
+    storeGeneralWkupScm(scm, phyAddr, value);
   }
   else if ((alignedAddr >= SYS_CTRL_MOD_PADCONFS_ETK)
         && (alignedAddr < (SYS_CTRL_MOD_PADCONFS_ETK + SYS_CTRL_MOD_PADCONFS_ETK_SIZE)))
   {
-    storePadconfsScm(scm, virtAddr, phyAddr, value);
+    storePadconfsScm(scm, phyAddr, value);
   }
   else
   {
@@ -1399,7 +1399,7 @@ void storeSysCtrlModule(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int 
   }
 }
 
-static void storeInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
+static void storeInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value)
 {
   u32int regOffset = phyAddr - SYS_CTRL_MOD_INTERFACE;
 
@@ -1429,7 +1429,7 @@ static void storeInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int 
   }
 }
 
-static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
+static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value)
 {
   u32int regOffset = phyAddr - SYS_CTRL_MOD_PADCONFS;
 
@@ -3255,7 +3255,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int a
   }
 }
 
-static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
+static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value)
 {
   u32int regOffset = phyAddr - SYS_CTRL_MOD_GENERAL;
 
@@ -4090,20 +4090,20 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ad
   }
 }
 
-static void storeMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
+static void storeMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value)
 {
-  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
+  printf("Store to address %#.8x, value %#.8x" EOL, phyAddr, value);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
-static void storePadconfsWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
+static void storePadconfsWkupScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value)
 {
-  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
+  printf("Store to address %#.8x, value %#.8x" EOL, phyAddr, value);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
 
-static void storeGeneralWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
+static void storeGeneralWkupScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value)
 {
-  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
+  printf("Store to address %#.8x, value %#.8x" EOL, phyAddr, value);
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
