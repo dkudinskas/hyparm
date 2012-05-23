@@ -1,0 +1,27 @@
+/*
+ * LDRH immediate with PC, a.k.a. literal
+ */
+
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+MOVW   r0, 0xBEEF
+MOVW   r1, 0xDEAD
+LDRH   r2, [PC, #4]
+LDRH   r3, [PC, #2]
+B      meat
+.word 0xDEADBEEF
+
+meat:
+CMP    r0, r2
+CMPEQ  r1, r3
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1

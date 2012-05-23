@@ -1,0 +1,30 @@
+/*
+ * LDRD immediate
+ */
+
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+B      meat
+.word  0xCAFEBABE
+.word  0xDEADBEEF
+
+meat:
+LDRD   r0, r1, [pc, #-16]
+MOVW   r2, 0xBEEF
+MOVT   r2, 0xDEAD
+MOVW   r3, 0xBABE
+MOVT   r3, 0xCAFE
+
+CMP    r0, r3
+CMPEQ  r1, r2
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1

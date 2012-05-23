@@ -1,0 +1,7 @@
+*.bin
+*.dump
+*.elf
+*.map
+*.o
+*.out
+*.tst

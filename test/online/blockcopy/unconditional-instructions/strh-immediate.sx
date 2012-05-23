@@ -1,0 +1,26 @@
+/*
+ * STRH immediate with PC, a.k.a. literal
+ */
+
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+MOVW   r0, 0xBEEF
+MOVT   r0, 0xDEAD
+STRH   r0, [PC, #202]
+/* construct PC of above instruction in r1, given that load address = 0x80000000 */
+MOVW   r1, #0x10
+MOVT   r1, #0x8000 
+LDRH   r1, [r1, #202]
+BFC    r0, #16, #16
+CMP    r0, r1
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1
