@@ -32,6 +32,9 @@ void deliverServiceCall(GCONTXT *context)
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_SVC_MODE;
   guestChangeMode(context->CPSR & PSR_MODE);
   // 4. set LR to PC+4
+#ifdef CONFIG_BLOCK_COPY
+#warning Need to set LR
+#endif
 #ifdef CONFIG_THUMB2
   if (context->CPSR & PSR_T_BIT)// Were we on Thumb?
   {
@@ -177,6 +180,9 @@ void deliverInterrupt(GCONTXT *context)
   }
 #endif
   // 5. set LR to PC+4
+#ifdef CONFIG_BLOCK_COPY
+#warning Need to set LR
+#endif
   context->R14_IRQ = context->R15 + LR_OFFSET_IRQ;
   // 6. set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_IRQ);
@@ -211,6 +217,9 @@ void deliverDataAbort(GCONTXT *context)
   }
 #endif
   // 5. set LR to PC+8
+#ifdef CONFIG_BLOCK_COPY
+#warning Need to set LR
+#endif
   context->R14_ABT = context->R15 + LR_OFFSET_DATA_ABT;
   // 6. set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_DABT);
@@ -262,6 +271,9 @@ void deliverPrefetchAbort(GCONTXT *context)
   }
 #endif
   // 5. set LR to PC+4
+#ifdef CONFIG_BLOCK_COPY
+#warning Need to set LR
+#endif
   context->R14_ABT = context->R15 + LR_OFFSET_PREFETCH_ABT;
   // 6. set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_PABT);

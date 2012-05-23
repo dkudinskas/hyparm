@@ -3,3 +3,5 @@ define BLOCK_COPY_DEBUG
 when raising exception in guest, make sure LR is correct!!!
 - mechanism for calculating correct PC is in place
 - now need to patch the exception delivery routines to make sure correct LR is set!
+
+make private headers for devices in vm/omap ... #defines in C files = messy
