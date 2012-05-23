@@ -1095,6 +1095,7 @@ static void storeCorePrm(struct PowerAndResetManager *prm, u32int physicalAddres
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
 #ifdef CONFIG_GUEST_ANDROID
+    case RM_RSTCTRL:
     case PM_WKDEP:
     case PM_UNKNOWN:
     {
@@ -1103,7 +1104,10 @@ static void storeCorePrm(struct PowerAndResetManager *prm, u32int physicalAddres
     }
 #endif
     default:
-      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    {
+      printf("offset %x value %#.8x" EOL, registerOffset, value);
+      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+    }
   }
 }
 

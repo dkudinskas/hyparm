@@ -357,6 +357,10 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       DIE_NOW(NULL, "store to read-only register");
       break;
     default:
+    {
+      printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+          virtAddr, (u32int)size);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
   }
 }

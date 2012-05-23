@@ -95,6 +95,31 @@ u32int loadSdrc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       value = sdrc->sysConfig;
       break;
     }
+    case SDRC_SYSSTATUS:
+    {
+      value = sdrc->sysStatus;
+      break;
+    }
+    case SDRC_CS_CFG:
+    {
+      value = sdrc->csCfg;
+      break;
+    }
+    case SDRC_SHARING:
+    {
+      value = sdrc->sharing;
+      break;
+    }
+    case SDRC_ERR_ADDR:
+    {
+      value = sdrc->errAddr;
+      break;
+    }
+    case SDRC_ERR_TYPE:
+    {
+      value = sdrc->errType;
+      break;
+    }
     case SDRC_DLLA_CTRL:
     {
       value = sdrc->dllaCtrl;
@@ -110,6 +135,56 @@ u32int loadSdrc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       value = sdrc->powerReg;
       break;
     }
+    case SDRC_MCFG(0):
+      {
+        value = sdrc->mcfg0;
+        break;
+      }
+    case SDRC_MCFG(1):
+    {
+      value = sdrc->mcfg1;
+      break;
+    }
+    case SDRC_MR(0):
+    {
+      value = sdrc->mr0;
+      break;
+    }
+    case SDRC_MR(1):
+    {
+      value = sdrc->mr1;
+      break;
+    }
+    case SDRC_EMR2(0):
+    {
+      value = sdrc->emr20;
+      break;
+    }
+    case SDRC_EMR2(1):
+    {
+      value = sdrc->emr21;
+      break;
+    }
+    case SDRC_ACTIM_CTRLA(0):
+    {
+      value = sdrc->actimCtrla0;
+      break;
+    }
+    case SDRC_ACTIM_CTRLA(1):
+    {
+      value = sdrc->actimCtrla1;
+      break;
+    }
+    case SDRC_ACTIM_CTRLB(0):
+    {
+      value = sdrc->actimCtrlb0;
+      break;
+    }
+    case SDRC_ACTIM_CTRLB(1):
+    {
+      value = sdrc->actimCtrlb1;
+      break;
+    }
     case SDRC_RFR_CTRL(0):
     {
       value = sdrc->rfrCtrl0;
@@ -120,11 +195,21 @@ u32int loadSdrc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       value = sdrc->rfrCtrl1;
       break;
     }
+    case SDRC_MANUAL(0):
+      {
+        value = sdrc->manual0;
+        break;
+      }
+    case SDRC_MANUAL(1):
+    {
+      value = sdrc->manual1;
+      break;
+    }
     default:
     {
       printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
           virtAddr, (u32int)size);
-      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+      DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
 

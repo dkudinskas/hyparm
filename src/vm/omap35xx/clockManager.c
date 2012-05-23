@@ -1454,7 +1454,11 @@ static void storeEmuCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmClkStCtrlEmu != value)
       {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkStCtrlEmu" EOL, __func__);
+#else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
       }
       break;
     }
