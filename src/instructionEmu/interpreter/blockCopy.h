@@ -14,12 +14,17 @@ void armRestoreRegisterFromSpill(TranslationCache *tc, ARMTranslationInfo *block
 void armWritePCToRegister(TranslationCache *tc, ARMTranslationInfo *block, u32int conditionCode, u32int reg, u32int pc);
 
 /* function to find a register that is not one of the arguments */
+__macro__ u32int getOtherRegister(u32int usedRegister);
 __macro__ u32int getOtherRegisterOf2(u32int usedRegister1, u32int usedRegister2);
 __macro__ u32int getOtherRegisterOf3(u32int usedRegister1, u32int usedRegister2, u32int usedRegister3);
 
 
-/* Function will return a register different from usedRegisterX
- * obviously, always returns 0, 1 or 2 for any 2 registers */
+// Function will return a register different from usedRegisterX
+__macro__ u32int getOtherRegister(u32int usedRegister)
+{
+  return !usedRegister;
+}
+// obviously, always returns 0, 1 or 2 for any 2 registers */
 __macro__ u32int getOtherRegisterOf2(u32int usedRegister1, u32int usedRegister2)
 {
   return countTrailingZeros(~((1 << usedRegister1) | (1 << usedRegister2)));
