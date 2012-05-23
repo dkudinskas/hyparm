@@ -296,6 +296,7 @@ void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *messa
 }
 
 /* function to load a register value, evaluates modes. */
+#warning "ALL calls to loadGuestGPR MUST be checked because regSrc=GPR_PC is inconsistent"
 u32int loadGuestGPR(u32int regSrc, GCONTXT *context)
 {
   /*

@@ -27,6 +27,14 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
       "%x regdest=%x regsrc=%x" EOL, regOrImm, preOrPost, incOrDec, writeBack, regDst, regSrc);
 
   u32int baseAddress = loadGuestGPR(regDst, context);
+#ifndef CONFIG_BLOCK_COPY
+  /*
+   * FIXME: major inconsistency: loadGuestGPR(GPR_PC) reads actual instruction address without
+   * CONFIG_BLOCK_COPY and correct PC value with CONFIG_BLOCK_COPY.
+   */
+#warning "loadGuestGPR hack for STR (literal)"
+  baseAddress += (regDst == GPR_PC ? 2 * ARM_INSTRUCTION_SIZE : 0);
+#endif
   u32int valueToStore = loadGuestGPR(regSrc, context);
   u32int offsetAddress;
 
@@ -102,7 +110,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
-  valueToStore = (regSrc == GPR_PC) ? (valueToStore + 8) : valueToStore;
+  valueToStore = (regSrc == GPR_PC) ? (valueToStore + 2 * ARM_INSTRUCTION_SIZE) : valueToStore;
   vmStore(context, WORD, address, valueToStore);
 
   // wback = (P = 0) or (W = 1)
@@ -138,11 +146,21 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
   u32int valueToStore;
 
   ASSERT(regSrc != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+
+  baseAddress = loadGuestGPR(regDst, context);
+#ifndef CONFIG_BLOCK_COPY
+  /*
+   * FIXME: major inconsistency: loadGuestGPR(GPR_PC) reads actual instruction address without
+   * CONFIG_BLOCK_COPY and correct PC value with CONFIG_BLOCK_COPY.
+   */
+#warning "loadGuestGPR hack for STRB (literal)"
+  baseAddress += (regDst == GPR_PC ? 2 * ARM_INSTRUCTION_SIZE : 0);
+#endif
+
   if (!regOrImm)
   {
     // immediate case
     u32int imm32 = instruction & 0x00000FFF;
-    baseAddress = loadGuestGPR(regDst, context);
     valueToStore = loadGuestGPR(regSrc, context) & 0xFF;
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec)
@@ -158,7 +176,6 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
   {
     // register case
     u32int regDst2 = instruction & 0x0000000F;
-    baseAddress = loadGuestGPR(regDst, context);
     u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
     valueToStore = loadGuestGPR(regSrc, context) & 0xFF;
     // regDest2 == PC then UNPREDICTABLE
@@ -250,15 +267,24 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
   u32int baseAddress;
   u32int valueToStore;
 
+  baseAddress = loadGuestGPR(regDst, context);
+  valueToStore = loadGuestGPR(regSrc, context);
+
+#ifndef CONFIG_BLOCK_COPY
+  /*
+   * FIXME: major inconsistency: loadGuestGPR(GPR_PC) reads actual instruction address without
+   * CONFIG_BLOCK_COPY and correct PC value with CONFIG_BLOCK_COPY.
+   */
+#warning "loadGuestGPR hack for STRH (literal)"
+  baseAddress += (regDst == GPR_PC ? 2 * ARM_INSTRUCTION_SIZE : 0);
+#endif
+
   if (regOrImm != 0)
   {
     // immediate case
     u32int imm4Top = instruction & 0x00000F00;
     u32int imm4Bottom = instruction & 0x0000000F;
     u32int imm32 = (imm4Top >> 4) | imm4Bottom; // imm field to +/- offset
-
-    baseAddress = loadGuestGPR(regDst, context);
-    valueToStore = loadGuestGPR(regSrc, context);
 
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec != 0)
@@ -275,8 +301,7 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
     // register case
     u32int regDst2 = instruction & 0x0000000F;
     u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
-    baseAddress = loadGuestGPR(regDst, context);
-    valueToStore = loadGuestGPR(regSrc, context);
+
     // regDest2 == PC then UNPREDICTABLE
     ASSERT(regDst2 != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
