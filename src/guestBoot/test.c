@@ -60,8 +60,8 @@ void bootTest(GCONTXT *context, u32int imageAddress)
   const u32int endAddress = loadAddress + sizeInBytes;
   const u32int pattern = 0x88442211;
   DEBUG(STARTUP, "Filling guest memory with pattern %#.8x...", pattern);
-  memset((void *)MEMORY_START_ADDR, pattern, loadAddress - MEMORY_START_ADDR);
-  memset((void *)endAddress, pattern, HYPERVISOR_BEGIN_ADDRESS - endAddress);
+  memsetWide((void *)MEMORY_START_ADDR, pattern, loadAddress - MEMORY_START_ADDR);
+  memsetWide((void *)endAddress, pattern, HYPERVISOR_BEGIN_ADDRESS - endAddress);
   DEBUG(STARTUP, " done" EOL);
 
   bootGuest(context, GUEST_OS_TEST, entryPoint);
