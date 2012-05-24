@@ -1402,6 +1402,18 @@ static void storeDssCm(struct ClockManager *cm, u32int physicalAddress, u32int v
   DEBUG(VP_OMAP_35XX_CM, "storeDssCm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
+    case CM_ICLKEN_DSS:
+    {
+      if (cm->cmIclkEnDss != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmIclkEnDss" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     case CM_CLKSTCTRL_DSS:
     {
       if (cm->cmClkStCtrlDss != value)
@@ -1427,7 +1439,6 @@ static void storeDssCm(struct ClockManager *cm, u32int physicalAddress, u32int v
       break;
     }
     case CM_FCLKEN_DSS:
-    case CM_ICLKEN_DSS:
     case CM_IDLEST_DSS:
     case CM_CLKSEL_DSS:
     case CM_SLEEPDEP_DSS:
