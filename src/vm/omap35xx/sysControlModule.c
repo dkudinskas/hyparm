@@ -1247,7 +1247,7 @@ static u32int loadMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int p
   u32int value = 0;
 
   value = sysCtrlModule->ctrlSaveRestoreMem[registerOffset];
-  DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, offset, val);
+  DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, registerOffset, value);
   return value;
 }
 
