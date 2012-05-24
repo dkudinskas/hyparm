@@ -641,8 +641,9 @@ void initSysControlModule(virtualMachine *vm)
   scm->ctrlDpfMad2dFwReqinfo = 0x00000000;
   scm->ctrlDpfMad2dFwWr = 0x00000000;
   scm->ctrlIdCode = 0x3b7ae02f; // offs 0x00307F94, phys 0x4830A204 out of range
+
   // SYS_CTRL_MOD_MEM_WKUP       0x48002600 base, 1024 bytes length
-  // this is just a memory blob of 1k
+  scm->ctrlSaveRestoreMem = (u32int *)calloc(SYS_CTRL_MOD_MEM_WKUP_SIZE, sizeof(u8int));
 
   // SYS_CTRL_MOD_PADCONFS_WKUP  0x48002A00 base, 80 bytes length
   scm->ctrlPadConfI2c4Scl      = 0x01180118;
@@ -1560,19 +1561,10 @@ static u32int loadGeneralScm(struct SystemControlModule *sysCtrlModule, u32int a
 static u32int loadMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr)
 {
   u32int val = 0;
-  u32int reg = phyAddr - SYS_CTRL_MOD_MEM_WKUP;
+  u32int offset = phyAddr - SYS_CTRL_MOD_MEM_WKUP;
 
-  switch (reg & ~0x3)
-  {
-    default:
-    {
-      printf("%s: >>-----> unimplemented reg addr %#.8x" EOL, __func__, phyAddr);
-      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-      break;
-    }
-  }
-
-  DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, reg, val);
+  val = sysCtrlModule->ctrlSaveRestoreMem[offset];
+  DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, offset, val);
   return val;
 }
 
@@ -4416,8 +4408,10 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ad
 
 static void storeMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)
 {
-  printf("Store to address %#.8x, value %#.8x" EOL, address, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+  u32int offset = phyAddr - SYS_CTRL_MOD_MEM_WKUP;
+  DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, offset, value);
+
+  sysCtrlModule->ctrlSaveRestoreMem[offset] = value;
 }
 
 static void storePadconfsWkupScm(struct SystemControlModule *sysCtrlModule, u32int address, u32int phyAddr, u32int value)

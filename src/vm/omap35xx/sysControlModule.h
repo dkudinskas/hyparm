@@ -299,8 +299,10 @@ struct SystemControlModule
   u32int ctrlDpfMad2dFwAddrMatch;
   u32int ctrlDpfMad2dFwReqinfo;
   u32int ctrlDpfMad2dFwWr;
-  u32int ctrlIdCode; // offs 0x00307F94, phys 0x4830A204 out of range// SYS_CTRL_MOD_MEM_WKUP       0x48002600 base, 1024 bytes length
+  u32int ctrlIdCode; // offs 0x00307F94, phys 0x4830A204 out of range
+  // SYS_CTRL_MOD_MEM_WKUP       0x48002600 base, 1024 bytes length
   // this is just a memory blob of 1k
+  u32int *ctrlSaveRestoreMem;
   // SYS_CTRL_MOD_PADCONFS_WKUP  0x48002A00 base, 80 bytes length
   u32int ctrlPadConfI2c4Scl;
   u32int ctrlPadConfSys32k;
