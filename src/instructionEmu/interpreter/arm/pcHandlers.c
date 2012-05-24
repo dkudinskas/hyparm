@@ -287,7 +287,8 @@ void armShiftPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32i
 
   if (operandRegister == GPR_PC)
   {
-    ASSERT(destinationRegister != GPR_PC, "Rd=PC must trap");
+    // This implementation expects Rd=PC to trap
+    ASSERT(destinationRegister != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
     DEBUG(TRANSLATION, "armShiftPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
           "Rm=%x" EOL, instruction, pc, conditionCode, destinationRegister, operandRegister);
