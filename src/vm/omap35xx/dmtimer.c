@@ -13,10 +13,18 @@
  * There's an option in the kernel config but disabling it breaks the build.
  */
 
+#define DM_TIMER_RESET  0x48304014
 
 u32int loadDmTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  return 0;
+  if (phyAddr == DM_TIMER_RESET)
+  {
+    return 1;
+  }
+  else
+  {
+    return 0;
+  }
 }
 
 void storeDmTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
