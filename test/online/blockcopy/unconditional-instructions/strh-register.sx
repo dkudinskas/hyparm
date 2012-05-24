@@ -13,7 +13,7 @@ _start:
 MOVW   r0, 0xBEEF
 MOVT   r0, 0xDEAD
 MOVW   r2, #1001
-STRH   r0, [PC, r2]
+.word 0xE18F00B2 /* STRH   r0, [PC, r2] */
 /* construct PC of above instruction in r1, given that load address = 0x80000000 */
 MOVW   r1, #0x14
 MOVT   r1, #0x8000 
