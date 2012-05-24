@@ -10,6 +10,11 @@
  * tries to initialize this device.
  * See: arch/arm/plat-omap/dmtimer.c
  *
+ * Note 1: It seems this is the General-Purpose Timer 12 described in the
+ *         OMAP35x manual spruf98d.pdf. GPT12 was later removed from the manual.
+ *
+ * Note 2: GP Timers are renamed to DM (Dual-Mode) Timers in OMAP4
+ *
  * There's an option in the kernel config but disabling it breaks the build.
  */
 
