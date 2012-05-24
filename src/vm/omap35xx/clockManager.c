@@ -1215,6 +1215,10 @@ static void storeClockControlCm(struct ClockManager *cm, u32int physicalAddress,
       {
 #ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkEn2Pll" EOL, __func__);
+        if ((value & 0x7) == 0x7)
+        {
+          cm->cmIdleSt2CkGen |= 0x1;
+        }
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
