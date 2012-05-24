@@ -6,9 +6,12 @@
 #include "instructionEmu/interpreter/internals.h"
 
 
+static u32int *getHighGPRegisterPointer(GCONTXT *context, u32int registerIndex);
+
+
 u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *instrString)
 {
-  u32int nextPC = getRealPC(context);
+  u32int nextPC = getNativeInstructionPointer(context);
   u32int regDest = (instr & 0x0000F000) >> 12;
 
   if (regDest != GPR_PC)
@@ -17,7 +20,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
   }
 
 #ifdef DATA_PROC_TRACE
-  printf("%s: %#.8x @ %#.8x" EOL, instrString, instr, getRealPC(context));
+  printf("%s: %#.8x @ %#.8x" EOL, instrString, instr, getNativeInstructionPointer(context));
 #endif
 
   if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instr)))
@@ -42,24 +45,12 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
       {
         case ADD:
         {
-          nextPC = loadGuestGPR(regSrc, context) + armExpandImm12(imm12);
-#ifndef CONFIG_BLOCK_COPY
-          if (regSrc == GPR_PC)
-          {
-            nextPC += 8;
-          }
-#endif
+          nextPC = getGPRegister(context, regSrc) + armExpandImm12(imm12);
           break;
         }
         case SUB:
         {
-          nextPC = loadGuestGPR(regSrc, context) - armExpandImm12(imm12);
-#ifndef CONFIG_BLOCK_COPY
-          if (regSrc == GPR_PC)
-          {
-            nextPC += 8;
-          }
-#endif
+          nextPC = getGPRegister(context, regSrc) - armExpandImm12(imm12);
           break;
         }
         default:
@@ -86,13 +77,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
           {
             DIE_NOW(context, "arithmetic: reg case return from exception case unimplemented.\n");
           }
-          nextPC = loadGuestGPR(regSrc, context) + shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
-#ifndef CONFIG_BLOCK_COPY
-          if (regSrc == GPR_PC)
-          {
-            nextPC += 8;
-          }
-#endif
+          nextPC = getGPRegister(context, regSrc) + shiftVal(getGPRegister(context, regSrc2), shiftType, shamt, &carryFlag);
           break;
         }
         case SUB:
@@ -102,20 +87,14 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
           {
             DIE_NOW(context, "arithmetic: reg case return from exception case unimplemented.\n");
           }
-          nextPC = loadGuestGPR(regSrc, context) - shiftVal(loadGuestGPR(regSrc2, context), shiftType, shamt, &carryFlag);
-#ifndef CONFIG_BLOCK_COPY
-          if (regSrc == GPR_PC)
-          {
-            nextPC += 8;
-          }
-#endif
+          nextPC = getGPRegister(context, regSrc) - shiftVal(getGPRegister(context, regSrc2), shiftType, shamt, &carryFlag);
           break;
         }
         case MOV:
         {
           // cant be shifted - mov shifted reg is a pseudo instr
-          ASSERT(shamt == 0, "MOV PC, Rn cant be shifted - that is a pseudo instr");
-          nextPC = loadGuestGPR(regSrc2, context);
+          ASSERT(shamt == 0, ERROR_BAD_ARGUMENTS);
+          nextPC = getGPRegister(context, regSrc2);
           break;
         }
         default:
@@ -187,7 +166,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
   }
   else
   {
-    nextPC = getRealPC(context) + ARM_INSTRUCTION_SIZE;
+    nextPC = getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
     return nextPC;
   }
 }
@@ -291,88 +270,63 @@ bool evaluateConditionCode(GCONTXT *context, u32int conditionCode)
 
 void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
 {
-  printf("%#.8x @ %#.8x should not have trapped!" EOL, instruction, getRealPC(context));
+  printf("%#.8x @ %#.8x should not have trapped!" EOL, instruction, getNativeInstructionPointer(context));
   DIE_NOW(context, message);
 }
 
-/* function to load a register value, evaluates modes. */
-#warning "ALL calls to loadGuestGPR MUST be checked because regSrc=GPR_PC is inconsistent"
-u32int loadGuestGPR(u32int regSrc, GCONTXT *context)
+u32int getGPRegister(GCONTXT *context, u32int sourceRegister)
 {
-  /*
-   * FIXME: use context as first argument like every other func
-   */
-  u32int guestMode = context->CPSR & PSR_MODE;
-  u32int value = 0;
+  if (sourceRegister < 8)
+  {
+    return getLowGPRegister(context, sourceRegister);
+  }
 
-#ifdef CONFIG_BLOCK_COPY
-  if (regSrc < 8)
+  if (sourceRegister == GPR_PC)
   {
-    // dont care about modes here. just get the value.
-    u32int * ldPtr = &(context->R0);
-    ldPtr = (u32int*)( (u32int)ldPtr + 4 * regSrc);
-    value = *ldPtr;
+    return getNativeProgramCounter(context);
   }
-  else if (regSrc == 15)
+
+  return *(getHighGPRegisterPointer(context, sourceRegister));
+}
+
+static u32int *getHighGPRegisterPointer(GCONTXT *context, u32int registerIndex)
+{
+  const u32int guestMode = context->CPSR & PSR_MODE;
+  if (registerIndex <= 12)
   {
-    //The function loadGuestGPR is only called when emulation of a critical instruction is done (last instruction of cacheblock)
-	value = context->PCOfLastInstruction+8;//Do +8 because PC is 2 instruction behind
+    return ((guestMode == PSR_FIQ_MODE ? &context->R8_FIQ : &context->R8) + registerIndex - 8);
   }
-#else
-  if ((regSrc < 8) || (regSrc == 15))
+
+  switch (guestMode)
   {
-    // dont care about modes here. just get the value.
-    u32int * ldPtr = &(context->R0);
-    ldPtr = (u32int*)( (u32int)ldPtr + 4 * regSrc);
-    value = *ldPtr;
+    case PSR_USR_MODE:
+    case PSR_SYS_MODE:
+      return registerIndex == 13 ? &context->R13_USR : &context->R14_USR;
+    case PSR_FIQ_MODE:
+      return registerIndex == 13 ? &context->R13_FIQ : &context->R14_FIQ;
+    case PSR_IRQ_MODE:
+      return registerIndex == 13 ? &context->R13_IRQ : &context->R14_IRQ;
+    case PSR_SVC_MODE:
+      return registerIndex == 13 ? &context->R13_SVC : &context->R14_SVC;
+    case PSR_ABT_MODE:
+      return registerIndex == 13 ? &context->R13_ABT : &context->R14_ABT;
+    case PSR_UND_MODE:
+      return registerIndex == 13 ? &context->R13_UND : &context->R14_UND;
+    default:
+      DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
+  } // switch ends
+}
+
+void setGPRegister(GCONTXT *context, u32int destinationRegister, u32int value)
+{
+  if (destinationRegister < 8 || destinationRegister == GPR_PC)
+  {
+    setLowGPRegister(context, destinationRegister, value);
   }
-#endif
   else
   {
-    u32int * ldPtr = 0;
-    if ( (regSrc >=8) && (regSrc <= 12) )
-    {
-      if (guestMode == PSR_FIQ_MODE)
-      {
-        ldPtr = &(context->R8_FIQ);
-      }
-      else
-      {
-        ldPtr = &(context->R8);
-      }
-      value = ldPtr[regSrc-8];
-    }
-    else
-    {
-      // R13 / R14 left
-      switch (guestMode)
-      {
-        case PSR_USR_MODE:
-        case PSR_SYS_MODE:
-          ldPtr = (regSrc == 13) ? (&(context->R13_USR)) : (&(context->R14_USR));
-          break;
-        case PSR_FIQ_MODE:
-          ldPtr = (regSrc == 13) ? (&(context->R13_FIQ)) : (&(context->R14_FIQ));
-          break;
-        case PSR_IRQ_MODE:
-          ldPtr = (regSrc == 13) ? (&(context->R13_IRQ)) : (&(context->R14_IRQ));
-          break;
-        case PSR_SVC_MODE:
-          ldPtr = (regSrc == 13) ? (&(context->R13_SVC)) : (&(context->R14_SVC));
-          break;
-        case PSR_ABT_MODE:
-          ldPtr = (regSrc == 13) ? (&(context->R13_ABT)) : (&(context->R14_ABT));
-          break;
-        case PSR_UND_MODE:
-          ldPtr = (regSrc == 13) ? (&(context->R13_UND)) : (&(context->R14_UND));
-          break;
-        default:
-          DIE_NOW(context, "loadGuestGPR: invalid CPSR mode!");
-      } // switch ends
-      value = *ldPtr;
-    } // R13/R14 ends
-  } // mode specific else ends
-  return value;
+    *(getHighGPRegisterPointer(context, destinationRegister)) = value;
+  }
 }
 
 // rotate right function
@@ -431,69 +385,7 @@ u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int * carryFlag)
   return retVal;
 }
 
-/* function to store a register value, evaluates modes. */
-void storeGuestGPR(u32int regDest, u32int value, GCONTXT *context)
-{
-  /*
-   * FIXME: use context as first argument like every other func
-   */
-  u32int guestMode = (context->CPSR) & PSR_MODE;
 
-  if ((regDest < 8) || (regDest == 15))
-  {
-    // dont care about modes here. just store.
-    u32int * strPtr = &(context->R0);
-    strPtr = (u32int*)( (u32int)strPtr + 4 * regDest);
-    *strPtr = value;
-    return;
-  }
-  else
-  {
-    u32int * strPtr = 0;
-    if ( (regDest >=8) && (regDest <= 12) )
-    {
-      if (guestMode == PSR_FIQ_MODE)
-      {
-        strPtr = &(context->R8_FIQ);
-      }
-      else
-      {
-        strPtr = &(context->R8);
-      }
-      strPtr[regDest-8] = value;
-      return;
-    }
-    else
-    {
-      // R13 / R14 left
-      switch (guestMode)
-      {
-        case PSR_USR_MODE:
-        case PSR_SYS_MODE:
-          strPtr = (regDest == 13) ? (&(context->R13_USR)) : (&(context->R14_USR));
-          break;
-        case PSR_FIQ_MODE:
-          strPtr = (regDest == 13) ? (&(context->R13_FIQ)) : (&(context->R14_FIQ));
-          break;
-        case PSR_IRQ_MODE:
-          strPtr = (regDest == 13) ? (&(context->R13_IRQ)) : (&(context->R14_IRQ));
-          break;
-        case PSR_SVC_MODE:
-          strPtr = (regDest == 13) ? (&(context->R13_SVC)) : (&(context->R14_SVC));
-          break;
-        case PSR_ABT_MODE:
-          strPtr = (regDest == 13) ? (&(context->R13_ABT)) : (&(context->R14_ABT));
-          break;
-        case PSR_UND_MODE:
-          strPtr = (regDest == 13) ? (&(context->R13_UND)) : (&(context->R14_UND));
-          break;
-        default:
-          DIE_NOW(context, "storeGuestGPR: invalid CPSR mode!");
-      } // switch ends
-      *strPtr = value;
-    } // R13/R14 ends
-  } // mode specific else ends
-}
 
 #ifdef CONFIG_GUEST_TEST
 

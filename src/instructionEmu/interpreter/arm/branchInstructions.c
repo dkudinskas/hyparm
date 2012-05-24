@@ -5,21 +5,27 @@
 #include "instructionEmu/interpreter/arm/branchInstructions.h"
 
 
+enum
+{
+  BLX_RM_INDEX = 0
+};
+
+
 u32int armBInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG(INTERPRETER_ARM_BRANCH, "armBInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
   u32int link = instruction & 0x0F000000;
   u32int offset = signExtend((instruction & 0x00FFFFFF) << 2, 26);
-  u32int currPC = getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  u32int currPC = getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   if (link == 0x0B000000)
   {
-    storeGuestGPR(14, currPC, context);
+    setGPRegister(context, GPR_LR, currPC);
   }
   return currPC + ARM_INSTRUCTION_SIZE + offset;
 }
@@ -34,12 +40,13 @@ u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
   DEBUG(INTERPRETER_ARM_BRANCH, "armBlxImmediateInstruction: %#.8x @ %#.8x" EOL, instruction,
       context->R15);
 
+  u32int currPC = getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   u32int offset = signExtend(((instruction & 0x00FFFFFF) << 2) | (instruction & 0x01000000) >> 23, 26);
 
   context->CPSR |= PSR_T_BIT;
-  storeGuestGPR(GPR_LR, context->R15 + ARM_INSTRUCTION_SIZE, context);
+  setGPRegister(context, GPR_LR, currPC);
 
-  return context->R15 + (2 * ARM_INSTRUCTION_SIZE) + offset;
+  return currPC + ARM_INSTRUCTION_SIZE + offset;
 #else
   DIE_NOW(context, "armBlxImmediateInstruction: Thumb is disabled (CONFIG_THUMB2 not set)");
 #endif
@@ -49,18 +56,17 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG(INTERPRETER_ARM_BRANCH, "armBlxRegisterInstruction: %#.8x @ %#.8x" EOL, instruction,
         context->R15);
 
-  u32int regDest = (instruction & 0x0000000F); // holds dest addr and mode bit
-
-  ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-
-  u32int destinationAddress = loadGuestGPR(regDest, context);
-  storeGuestGPR(GPR_LR, getRealPC(context) + ARM_INSTRUCTION_SIZE, context);
+  // Rm holds target address and mode bit for interworking branch
+  const u32int targetRegister = ARM_EXTRACT_REGISTER(instruction, BLX_RM_INDEX);
+  ASSERT(targetRegister != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  u32int destinationAddress = getGPRegister(context, targetRegister);
+  setGPRegister(context, GPR_LR, getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE);
 
   if (destinationAddress & 1)
   {
@@ -73,7 +79,8 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
   }
   else
   {
-    ASSERT((destinationAddress & 2) == 0, "branch to unaligned ARM address")
+    // Branch to unaligned ARM address!
+    ASSERT((destinationAddress & 2) == 0, ERROR_UNPREDICTABLE_INSTRUCTION)
   }
 
   return destinationAddress;
@@ -83,13 +90,14 @@ u32int armBxInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG(INTERPRETER_ARM_BRANCH, "armBxInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
-  u32int regDest = instruction & 0x0000000F;
-  u32int destinationAddress = loadGuestGPR(regDest, context);
+  // Rm holds target address and mode bit for interworking branch -- Rm can be PC!
+  const u32int targetRegister = ARM_EXTRACT_REGISTER(instruction, BLX_RM_INDEX);
+  u32int destinationAddress = getGPRegister(context, targetRegister);
 
   /*
    * Check if switching to thumb mode
@@ -105,7 +113,8 @@ u32int armBxInstruction(GCONTXT *context, u32int instruction)
   }
   else
   {
-    ASSERT((destinationAddress & 2) == 0, "branch to unaligned ARM address");
+    // Branch to unaligned ARM address!
+    ASSERT((destinationAddress & 2) == 0, ERROR_UNPREDICTABLE_INSTRUCTION);
   }
 
   return destinationAddress;

@@ -46,10 +46,10 @@ u32int t32LdrshImmediate12Instruction(GCONTXT *context, u32int instruction)
   u32int regSrc = (instruction & 0x000F0000)>>16;
   u32int regDst = (instruction & 0x0000F000)>>12;
   u32int imm12 = (instruction & 0x00000FFF);
-  u32int baseAddress = loadGuestGPR(regSrc, context);
+  u32int baseAddress = getGPRegister(context, regSrc);
   u32int offsetAddress = baseAddress + imm12;
 
-  storeGuestGPR(regDst, vmLoad(context, HALFWORD, offsetAddress) & 0xFFFF, context);
+  setGPRegister(context, regDst, vmLoad(context, HALFWORD, offsetAddress) & 0xFFFF);
   return context->R15 + T32_INSTRUCTION_SIZE;
 }
 

@@ -53,7 +53,7 @@ u32int t32MrsInstruction(GCONTXT *context, u32int instruction)
     }
   }
 
-  storeGuestGPR(reg, value, context);
+  setGPRegister(context, reg, value);
 
   return context->R15 + T32_INSTRUCTION_SIZE;
 }

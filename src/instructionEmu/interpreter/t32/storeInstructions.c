@@ -12,14 +12,17 @@ u32int t32StrbInstruction(GCONTXT * context, u32int instruction)
   u32int regSrc = (instruction & 0x0000F000) >> 12;
   u32int regDst = (instruction & 0x000F0000) >> 16;
   u32int imm32 = (instruction & 0x000000FF);
-  u32int baseAddress = loadGuestGPR(regDst, context);
-  u32int valueToStore = loadGuestGPR(regSrc, context);
+  u32int baseAddress = getGPRegister(context, regDst);
+  u32int valueToStore = getGPRegister(context, regSrc);
 
   u32int preOrPost;
   u32int incOrDec;
   u32int writeBack;
   u32int offsetAddress = 0;
   u32int address = 0;
+
+  ASSERT(regSrc != GPR_SP && regSrc != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regDst != GPR_PC, "UNDEFINED");
 
   if ((instruction & THUMB32_STRB_IMM12_MASK) == THUMB32_STRB_IMM12)
   {
@@ -68,7 +71,7 @@ u32int t32StrbInstruction(GCONTXT * context, u32int instruction)
   if (writeBack)
   {
     DEBUG(INTERPRETER_T32_STORE, "t32StrbInstruction: storing %#.8x to %#.8x" EOL, address, regDst);
-    storeGuestGPR(regDst, valueToStore, context);
+    setGPRegister(context, regDst, valueToStore);
   }
 
   return context->R15 + T32_INSTRUCTION_SIZE;
@@ -82,9 +85,9 @@ u32int t32StrhImmediateInstruction(GCONTXT *context, u32int instruction)
   u32int regDst = (instruction & 0x000F0000) >> 16;
 
   u32int imm12 = (instruction & 0x00000FFF);
-  u32int baseAddress = loadGuestGPR(regDst, context);
+  u32int baseAddress = getGPRegister(context, regDst);
   u32int offsetAddress = baseAddress + imm12;
-  u32int valueToStore = loadGuestGPR(regSrc, context);
+  u32int valueToStore = getGPRegister(context, regSrc);
 
   vmStore(context, HALFWORD, offsetAddress, valueToStore & 0xFFFF);
   return context->R15 + T32_INSTRUCTION_SIZE;
@@ -99,11 +102,11 @@ u32int t32StrhRegisterInstruction(GCONTXT *context, u32int instruction)
 
   u32int regDst2 = (instruction & 0x0000000F);
   u8int shift = (instruction & 0x00000030) >> 4;
-  u32int baseAddress = loadGuestGPR(regDst, context);
-  u32int offsetAddress = loadGuestGPR(regDst2, context);
+  u32int baseAddress = getGPRegister(context, regDst);
+  u32int offsetAddress = getGPRegister(context, regDst2);
   offsetAddress = baseAddress + (offsetAddress << shift);
 
-  vmStore(context, HALFWORD, offsetAddress, loadGuestGPR(regSrc, context) & 0xFFFF);
+  vmStore(context, HALFWORD, offsetAddress, getGPRegister(context, regSrc) & 0xFFFF);
   return context->R15 + T32_INSTRUCTION_SIZE;
 }
 
@@ -119,13 +122,11 @@ u32int t32StrdImmediateInstruction(GCONTXT *context, u32int instruction)
   u32int regDst = (instruction & 0x000F0000)>>16;
   u32int imm8 = (instruction & 0x000000FF)<<2;
 
-  u32int baseAddress = loadGuestGPR(regDst, context);
-  u32int valueToStore = loadGuestGPR(regSrc, context);
-  u32int valueToStore2 = loadGuestGPR(regSrc2, context);
-
+  u32int baseAddress = getGPRegister(context, regDst);
+  u32int valueToStore = getGPRegister(context, regSrc);
+  u32int valueToStore2 = getGPRegister(context, regSrc2);
 
   u32int offsetAddress = baseAddress;
-
 
   // if 1 then increment, else decrement
   if (upDown)
@@ -147,7 +148,7 @@ u32int t32StrdImmediateInstruction(GCONTXT *context, u32int instruction)
 
   if (writeback)
   {
-    storeGuestGPR(regDst, offsetAddress, context);
+    setGPRegister(context, regDst, offsetAddress);
   }
 
   return context->R15 + T32_INSTRUCTION_SIZE;

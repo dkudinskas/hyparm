@@ -106,7 +106,7 @@ u32int armSxthInstruction(GCONTXT *context, u32int instruction)
   if (evaluateConditionCode(context, instrCC))
   {
     /* load the least 16bits from the source register */
-    value=(loadGuestGPR(regSrc,context) & 0x0000FFFF);
+    value=(getGPRegister(context, regSrc) & 0x0000FFFF);
     /* ARM7-A : page 729 */
     switch (rotate)
     {
@@ -126,7 +126,7 @@ u32int armSxthInstruction(GCONTXT *context, u32int instruction)
     /* Extend it to 32bit */
     value = value<<16;
     /* Store it */
-    storeGuestGPR(regDest,value,context);
+    setGPRegister(context, regDest, value);
   }
   return context->R15 + 4;
 #endif

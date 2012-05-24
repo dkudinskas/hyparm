@@ -12,7 +12,7 @@ u32int t16BImmediate8Instruction(GCONTXT *context, u32int instruction)
    */
   DEBUG_TRACE(INTERPRETER_T16_BRANCH, context, instruction);
   u32int conditionCode = (instruction >> 8) & 0xF;
-  if (conditionCode == 0xE)
+  if (conditionCode == CC_AL)
   {
     DIE_NOW(context, "UNDEFINED");
   }
@@ -38,11 +38,11 @@ u32int t16BlxRegisterInstruction(GCONTXT *context, u32int instruction)
   u32int regDest = (instruction & 0x0078) >> 3;
   ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
-  u32int destinationAddress = loadGuestGPR(regDest, context);
+  u32int destinationAddress = getGPRegister(context, regDest);
 
   u32int nextInstrAddress = context->R15 + T16_INSTRUCTION_SIZE;
   nextInstrAddress |= 0x1;
-  storeGuestGPR(GPR_LR, nextInstrAddress, context);
+  setGPRegister(context, GPR_LR, nextInstrAddress);
 
   /*
    * Return to ARM mode if the LSB is not set; also make sure the target address is word-aligned.
@@ -67,7 +67,7 @@ u32int t16BxInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_T16_BRANCH, context, instruction);
   u32int regDest = (instruction & 0x0078) >> 3;
-  u32int destinationAddress = loadGuestGPR(regDest, context);
+  u32int destinationAddress = getGPRegister(context, regDest);
   /*
    * Return to ARM mode if the LSB is not set; also make sure the target address is word-aligned.
    */
@@ -77,7 +77,8 @@ u32int t16BxInstruction(GCONTXT *context, u32int instruction)
   }
   else if (destinationAddress & 2)
   {
-    DIE_NOW(context, "unpredictable branch to unaligned ARM address");
+    // unpredictable branch to unaligned ARM address
+    DIE_NOW(context, ERROR_UNPREDICTABLE_INSTRUCTION);
   }
   else
   {

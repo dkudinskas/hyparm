@@ -11,7 +11,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -26,16 +26,8 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
   DEBUG(INTERPRETER_ARM_STORE, "armStrInstruction: regOrImm=%x preOrPost=%x incOrDec=%x writeBack="
       "%x regdest=%x regsrc=%x" EOL, regOrImm, preOrPost, incOrDec, writeBack, regDst, regSrc);
 
-  u32int baseAddress = loadGuestGPR(regDst, context);
-#ifndef CONFIG_BLOCK_COPY
-  /*
-   * FIXME: major inconsistency: loadGuestGPR(GPR_PC) reads actual instruction address without
-   * CONFIG_BLOCK_COPY and correct PC value with CONFIG_BLOCK_COPY.
-   */
-#warning "loadGuestGPR hack for STR (literal)"
-  baseAddress += (regDst == GPR_PC ? 2 * ARM_INSTRUCTION_SIZE : 0);
-#endif
-  u32int valueToStore = loadGuestGPR(regSrc, context);
+  u32int baseAddress = getGPRegister(context, regDst);
+  u32int valueToStore = getGPRegister(context, regSrc);
   u32int offsetAddress;
 
   if (regOrImm == 0)
@@ -60,13 +52,12 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
   {
     // register case
     u32int regDst2 = instruction & 0x0000000F;
-    u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
+    ASSERT(regDst2 != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+    u32int offsetRegisterValue = getGPRegister(context, regDst2);
 
     DEBUG(INTERPRETER_ARM_STORE, "armStrInstruction: regDst2=%x, baseAddress=%#.8x, "
         "offsetRegisterValue=%x, valueToStore=%x" EOL, regDst2, baseAddress, offsetRegisterValue,
         valueToStore);
-
-    ASSERT(regDst2 != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
@@ -106,11 +97,10 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
   // P = 0 and W == 1 then STR as if user mode
   if (preOrPost == 0 && writeBack != 0 && shouldDataAbort(context, FALSE, TRUE, address))
   {
-    return getRealPC(context);
+    return getNativeInstructionPointer(context);
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
-  valueToStore = (regSrc == GPR_PC) ? (valueToStore + 2 * ARM_INSTRUCTION_SIZE) : valueToStore;
   vmStore(context, WORD, address, valueToStore);
 
   // wback = (P = 0) or (W = 1)
@@ -121,16 +111,16 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
     ASSERT(regDst != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
     ASSERT(regDst != regSrc, ERROR_UNPREDICTABLE_INSTRUCTION);
     // Rn = offsetAddr;
-    storeGuestGPR(regDst, offsetAddress, context);
+    setGPRegister(context, regDst, offsetAddress);
   }
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrbInstruction(GCONTXT * context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -147,21 +137,13 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
 
   ASSERT(regSrc != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
-  baseAddress = loadGuestGPR(regDst, context);
-#ifndef CONFIG_BLOCK_COPY
-  /*
-   * FIXME: major inconsistency: loadGuestGPR(GPR_PC) reads actual instruction address without
-   * CONFIG_BLOCK_COPY and correct PC value with CONFIG_BLOCK_COPY.
-   */
-#warning "loadGuestGPR hack for STRB (literal)"
-  baseAddress += (regDst == GPR_PC ? 2 * ARM_INSTRUCTION_SIZE : 0);
-#endif
+  baseAddress = getGPRegister(context, regDst);
 
   if (!regOrImm)
   {
     // immediate case
     u32int imm32 = instruction & 0x00000FFF;
-    valueToStore = loadGuestGPR(regSrc, context) & 0xFF;
+    valueToStore = getGPRegister(context, regSrc) & 0xFF;
     // offsetAddress = if increment then base + imm32 else base - imm32
     if (incOrDec)
     {
@@ -176,10 +158,9 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
   {
     // register case
     u32int regDst2 = instruction & 0x0000000F;
-    u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
-    valueToStore = loadGuestGPR(regSrc, context) & 0xFF;
-    // regDest2 == PC then UNPREDICTABLE
     ASSERT(regDst2 != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+    u32int offsetRegisterValue = getGPRegister(context, regDst2);
+    valueToStore = getGPRegister(context, regSrc) & 0xFF;
 
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
@@ -217,7 +198,7 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
   // P = 0 and W == 1 then STR as if user mode -- only continue if usr can write
   if (!preOrPost && writeBack && shouldDataAbort(context, FALSE, TRUE, address))
   {
-    return getRealPC(context);
+    return getNativeInstructionPointer(context);
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
@@ -231,16 +212,16 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
     ASSERT(regDst != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
     ASSERT(regDst != regSrc, ERROR_UNPREDICTABLE_INSTRUCTION);
     // Rn = offsetAddr;
-    storeGuestGPR(regDst, offsetAddress, context);
+    setGPRegister(context, regDst, offsetAddress);
   }
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrhInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -258,26 +239,14 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
     DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
   }
 
-  if (regSrc == GPR_PC)
-  {
-    DIE_NOW(context, "source register PC UNPREDICTABLE case");
-  }
+  ASSERT(regSrc != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int offsetAddress;
   u32int baseAddress;
   u32int valueToStore;
 
-  baseAddress = loadGuestGPR(regDst, context);
-  valueToStore = loadGuestGPR(regSrc, context);
-
-#ifndef CONFIG_BLOCK_COPY
-  /*
-   * FIXME: major inconsistency: loadGuestGPR(GPR_PC) reads actual instruction address without
-   * CONFIG_BLOCK_COPY and correct PC value with CONFIG_BLOCK_COPY.
-   */
-#warning "loadGuestGPR hack for STRH (literal)"
-  baseAddress += (regDst == GPR_PC ? 2 * ARM_INSTRUCTION_SIZE : 0);
-#endif
+  baseAddress = getGPRegister(context, regDst);
+  valueToStore = getGPRegister(context, regSrc);
 
   if (regOrImm != 0)
   {
@@ -300,10 +269,8 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
   {
     // register case
     u32int regDst2 = instruction & 0x0000000F;
-    u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
-
-    // regDest2 == PC then UNPREDICTABLE
     ASSERT(regDst2 != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+    u32int offsetRegisterValue = getGPRegister(context, regDst2);
 
     // (shift_t, shift_n) = (SRType_LSL, 0);
     u32int shiftAmount = 0;
@@ -349,16 +316,16 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
     ASSERT(regDst != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
     ASSERT(regDst != regSrc, ERROR_UNPREDICTABLE_INSTRUCTION);
     // Rn = offsetAddr;
-    storeGuestGPR(regDst, offsetAddress, context);
+    setGPRegister(context, regDst, offsetAddress);
   }
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrdInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -367,24 +334,20 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
   u32int upDown = instruction & 0x00800000;
   u32int regOrImm = instruction & 0x00400000;
   u32int writeback = instruction & 0x00200000; // 0 = reg, !0 = imm
-  u32int regDst = (instruction & 0x000F0000) >> 16;
-  u32int regSrc = (instruction & 0x0000F000) >> 12;
+  u32int regDst = ARM_EXTRACT_REGISTER(instruction, 16);
+  u32int regSrc = ARM_EXTRACT_REGISTER(instruction, 12);
   u32int regSrc2 = regSrc + 1;
-
-  ASSERT((regSrc & 1) == 0, ERROR_UNPREDICTABLE_INSTRUCTION);
-
-  u32int offsetAddress = 0;
-  u32int baseAddress = loadGuestGPR(regDst, context);
-  u32int valueToStore = loadGuestGPR(regSrc, context);
-  u32int valueToStore2 = loadGuestGPR(regSrc2, context);
-
   u32int wback = (prePost == 0) || (writeback != 0);
 
-  // P = 0 and W == 1 then STR as if user mode
-  ASSERT(prePost || !writeback, ERROR_UNPREDICTABLE_INSTRUCTION);
-
+  ASSERT(!(regSrc & 1), ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(regSrc != GPR_LR, ERROR_UNPREDICTABLE_INSTRUCTION);
+  ASSERT(prePost || !writeback, ERROR_BAD_ARGUMENTS); // P = 0 and W == 1 then STR as if user mode
   ASSERT(!wback || (regDst != GPR_PC && regDst != regSrc && regDst != regSrc2), ERROR_UNPREDICTABLE_INSTRUCTION);
-  ASSERT(regSrc2 != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+
+  u32int offsetAddress = 0;
+  u32int baseAddress = getGPRegister(context, regDst);
+  u32int valueToStore = getGPRegister(context, regSrc);
+  u32int valueToStore2 = getGPRegister(context, regSrc2);
 
   if (regOrImm != 0)
   {
@@ -409,9 +372,8 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
   {
     // register case
     u32int regDst2 = instruction & 0x0000000F;
-    u32int offsetRegisterValue = loadGuestGPR(regDst2, context);
-    // regDest2 == PC then UNPREDICTABLE
     ASSERT(regDst2 != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+    u32int offsetRegisterValue = getGPRegister(context, regDst2);
 
     // if increment then base + offset else base - offset
     if (upDown != 0)
@@ -439,12 +401,6 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
     address = baseAddress;
   }
 
-  // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
-  if (regSrc == GPR_PC)
-  {
-    valueToStore += 8;
-  }
-
   DEBUG(INTERPRETER_ARM_STORE, "armStrdInstruction: store address = %#.8x, values %#.8x %#.8x" EOL,
       address, valueToStore, valueToStore2);
 
@@ -454,9 +410,9 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
   if (wback)
   {
     // Rn = offsetAddr;
-    storeGuestGPR(regDst, offsetAddress, context);
+    setGPRegister(context, regDst, offsetAddress);
   }
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 
@@ -481,7 +437,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -491,9 +447,13 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
   u32int forceUser = instruction & 0x00400000;
   u32int writeback = instruction & 0x00200000;
 
-  u32int baseReg = (instruction & 0x000F0000) >> 16;
+  u32int baseReg = ARM_EXTRACT_REGISTER(instruction, 16);
+  ASSERT(baseReg != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+
   u32int regList = instruction & 0x0000FFFF;
-  u32int baseAddress = loadGuestGPR(baseReg, context);
+  ASSERT(regList, ERROR_UNPREDICTABLE_INSTRUCTION);
+
+  u32int baseAddress = getGPRegister(context, baseReg);
 
   u32int savedCPSR = 0;
   if (forceUser != 0)
@@ -503,52 +463,38 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
     context->CPSR = (context->CPSR & ~0x1f) | PSR_USR_MODE;
   }
 
-  u32int address = 0;
+  u32int address = baseAddress;
   if (!upDown && prePost) // STM decrement before
   {
     // address = baseAddress - 4*(number of registers to store);
-    address = baseAddress - 4 * countBitsSet(regList);
+    address -= 4 * countBitsSet(regList);
   }
   else if (!upDown && !prePost) // STM decrement after
   {
     // address = baseAddress - 4*(number of registers to store) + 4;
-    address = baseAddress - 4 * countBitsSet(regList) + 4;
+    address -= 4 * countBitsSet(regList) - 4;
   }
   else if (upDown && prePost) // STM increment before
   {
     // address = baseAddress + 4 - will be incremented as we go
-    address = baseAddress + 4;
-  }
-  else if (upDown && !prePost) // STM increment after
-  {
-    // address = baseAddress - will be incremented as we go
-    address = baseAddress;
+    address += 4;
   }
 
-  int i;
-  for (i = 0; i < 15; i++)
+  for (int i = 0; i <= GPR_PC; i++)
   {
     // if current register set
     if (((regList >> i) & 0x1) == 0x1)
     {
-      u32int valueLoaded = loadGuestGPR(i, context);
+      u32int valueLoaded = getGPRegister(context, i);
       DEBUG(INTERPRETER_ARM_STORE, "armStmInstruction: *(%#.8x) = R[%x] = %#.8x" EOL, address, i,
           valueLoaded);
       // emulating store. Validate cache if needed
       clearTranslationCacheByAddress(&context->translationCache, address);
       // *(address)= R[i];
       vmStore(context, WORD, address, valueLoaded);
-      address = address + 4;
+      address += 4;
     }
   } // for ends
-  // if store PC...
-  if ((regList >> 15) & 0x1)
-  {
-    // emulating store. Validate cache if needed
-    clearTranslationCacheByAddress(&context->translationCache, address);
-    // *(address)= PC+8 - architectural feature due to pipeline..
-    vmStore(context, WORD, address, (loadGuestGPR(15, context) + 8));
-  }
 
   // if writeback then baseReg = baseReg - 4 * number of registers to store;
   if (writeback != 0)
@@ -556,14 +502,14 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
     if (upDown == 0)
     {
       // decrement
-      baseAddress = baseAddress - 4 * countBitsSet(regList);
+      baseAddress -= 4 * countBitsSet(regList);
     }
     else
     {
       // increment
-      baseAddress = baseAddress + 4 * countBitsSet(regList);
+      baseAddress += 4 * countBitsSet(regList);
     }
-    storeGuestGPR(baseReg, baseAddress, context);
+    setGPRegister(context, baseReg, baseAddress);
   }
 
   // if we stored to user mode registers, lets restore the CPSR
@@ -572,5 +518,5 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
     context->CPSR = savedCPSR;
   }
 
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }

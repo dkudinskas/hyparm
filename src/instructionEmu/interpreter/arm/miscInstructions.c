@@ -34,7 +34,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
   u32int affectF    = (instruction & 0x00000040) >>  6;
   u32int newMode    =  instruction & 0x0000001F;
 #ifdef ARM_INSTR_TRACE
-  printf("CPS instr %08x @ %08x" EOL, instruction, getRealPC(context));
+  printf("CPS instr %08x @ %08x" EOL, instruction, getNativeInstructionPointer(context));
 #endif
 
   ASSERT(imod != 0 || changeMode != 0, ERROR_UNPREDICTABLE_INSTRUCTION);
@@ -128,7 +128,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
   }
   context->CPSR = oldCpsr;
 
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armDbgInstruction(GCONTXT *context, u32int instruction)
@@ -142,7 +142,7 @@ u32int armDmbInstruction(GCONTXT *context, u32int instruction)
   /* DMB is weaker than DSB */
   printf("Warning: DMB (ignored)!" EOL);
 #endif
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armDsbInstruction(GCONTXT *context, u32int instruction)
@@ -150,7 +150,7 @@ u32int armDsbInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: DSB (ignored)!" EOL);
 #endif
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armIsbInstruction(GCONTXT *context, u32int instruction)
@@ -158,7 +158,7 @@ u32int armIsbInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: ISB (ignored)!" EOL);
 #endif
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armMrsInstruction(GCONTXT *context, u32int instruction)
@@ -167,7 +167,7 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
   int regDest  = (instruction & 0x0000F000) >> 12;
 
 #ifdef ARM_INSTR_TRACE
-  printf("MRS instr %08x @ %08x" EOL, instruction, getRealPC(context));
+  printf("MRS instr %08x @ %08x" EOL, instruction, getNativeInstructionPointer(context));
 #endif
 
   ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
@@ -215,15 +215,14 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
         value = context->CPSR & ~PSR_EXEC_BITS;
       }
     }
-    storeGuestGPR(regDest, value, context);
+    setGPRegister(context, regDest, value);
   } // condition met ends
 
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armMsrInstruction(GCONTXT *context, u32int instruction)
 {
-  u32int instrCC =    (instruction & 0xF0000000) >> 28;
   u32int regOrImm =   (instruction & 0x02000000); // if 1 then imm12, 0 then Reg
   u32int cpsrOrSpsr = (instruction & 0x00400000); // if 0 then cpsr, !0 then spsr
   u32int fieldMsk =   (instruction & 0x000F0000) >> 16;
@@ -231,9 +230,9 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   bool changedMode = FALSE;
   u32int value = 0;
 
-  if (!evaluateConditionCode(context, instrCC))
+  if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   }
 
   if (regOrImm == 0)
@@ -241,7 +240,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
     // register case
     u32int regSrc = instruction & 0x0000000F;
     ASSERT(regSrc != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-    value = loadGuestGPR(regSrc, context);
+    value = getGPRegister(context, regSrc);
   }
   else
   {
@@ -340,7 +339,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   }
 
 #ifdef ARM_INSTR_TRACE
-  printf("MSR instr %08x @ %08x" EOL, instruction, getRealPC(context));
+  printf("MSR instr %08x @ %08x" EOL, instruction, getNativeInstructionPointer(context));
 #endif
   // got the final value to write in u32int oldValue. where do we write it thou..?
   if (cpsrOrSpsr == 0)
@@ -376,7 +375,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
     }
   }
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armPldInstruction(GCONTXT *context, u32int instruction)
@@ -384,7 +383,7 @@ u32int armPldInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: PLD!" EOL);
 #endif
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armPliInstruction(GCONTXT *context, u32int instruction)
@@ -392,7 +391,7 @@ u32int armPliInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: PLI!" EOL);
 #endif
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armRfeInstruction(GCONTXT *context, u32int instruction)
@@ -429,7 +428,7 @@ u32int armWfiInstruction(GCONTXT *context, u32int instruction)
 {
   // stop guest execution...
   guestIdle(context);
-  return getRealPC(context) + ARM_INSTRUCTION_SIZE;
+  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armYieldInstruction(GCONTXT *context, u32int instruction)

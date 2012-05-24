@@ -57,7 +57,7 @@ u32int t32BlInstruction(GCONTXT *context, u32int instruction)
   offset = signExtend(offset, 25);
 
   u32int currentPC = context->R15 + T32_INSTRUCTION_SIZE;
-  storeGuestGPR(GPR_LR, currentPC | 1, context);
+  setGPRegister(context, GPR_LR, currentPC | 1);
   return currentPC + offset;
 }
 
@@ -84,7 +84,7 @@ u32int t32BlxImmediateInstruction(GCONTXT *context, u32int instruction)
    * In Thumb-32, R15 points to the first halfword, so LR must be 4+1(T) bytes ahead
    */
   u32int currentPC = context->R15 + T32_INSTRUCTION_SIZE;
-  storeGuestGPR(GPR_LR, currentPC | 1, context);
+  setGPRegister(context, GPR_LR, currentPC | 1);
   /*
    * Make sure to return a word-aligned address
    */
