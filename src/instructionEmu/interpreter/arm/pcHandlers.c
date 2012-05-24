@@ -99,7 +99,8 @@ void armDPImmRegRSR(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, 
 
   if (replaceN || replaceM)
   {
-    ASSERT(destinationRegister != GPR_PC, "Rd=PC must trap");
+    // This implementation expects Rd=PC to trap
+    ASSERT(destinationRegister != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
     DEBUG(TRANSLATION, "armDPImmRegRSR: translating %#.8x @ %#.8x with cond=%x, immediateForm=%x, "
           "Rd=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, immediateForm,
@@ -229,7 +230,8 @@ void armLdrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
       {
         if ((instruction & LDRD_BIT))
         {
-          ASSERT(destinationRegister != GPR_LR, "Rt2=PC unpredictable");
+          // LDRD writes to 2 registers; if the first is LR the next is PC: unpredictable!
+          ASSERT(destinationRegister != GPR_LR, ERROR_UNPREDICTABLE_INSTRUCTION);
         }
         if ((instruction & LDRH_LDRD_IMMEDIATE_FORM_BIT))
         {
@@ -239,7 +241,7 @@ void armLdrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
       /* no break */
       case LDR_LDRB_REGISTER_FORM_BITS:
       {
-        ASSERT(offsetRegister != GPR_PC, "Rm=PC unpredictable");
+        ASSERT(offsetRegister != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
         spill = offsetRegister == destinationRegister;
         break;
       }
@@ -286,7 +288,8 @@ void armMovPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
    */
   if (sourceRegister == GPR_PC)
   {
-    ASSERT(destinationRegister != GPR_PC, "Rd=PC must trap");
+    // This implementation expects Rd=PC to trap
+    ASSERT(destinationRegister != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
     DEBUG(TRANSLATION, "armMovPCInstruction: translating %#.8x @ %#.8x with cond=%x, S=%x, Rd=%x, "
           "Rm=%x" EOL, instruction, pc, conditionCode, setFlags, destinationRegister,
