@@ -76,8 +76,10 @@ void *memmove(void *destination, const void *source, u32int count)
 /**
 * memory set
 */
-void *memset(void *destination, u32int value, u32int count)
+void *memset(void *destination, s32int value, u32int count)
 {
+  /* memset should treat value as unsigned char */
+  const uchar fill = (uchar)value;
   /* Test whether destination is word aligned & whether count is a multiple of 4 */
   if (((u32int)destination & 0x3F) && ((count & 0x3) == count))
   {
@@ -85,7 +87,7 @@ void *memset(void *destination, u32int value, u32int count)
     u32int *dst = (u32int *)destination;
 
     /* Turn the byte into a word pattern */
-    u32int wordPattern = (value || (value << 8) || (value << 16) || (value << 24));
+    u32int wordPattern = (fill || (fill << 8) || (fill << 16) || (fill << 24));
 
     count = count >> 2;
 
@@ -96,14 +98,40 @@ void *memset(void *destination, u32int value, u32int count)
   }
   else
   {
-#warning "BUG: memset treats value as byte for the unaligned case; reimplement"
     //Standard bytewise memset
     char *dst = (char*) destination;
 
     while (count--)
     {
-      *dst++ = value;
+      *dst++ = fill;
     }
+  }
+  return destination;
+}
+
+/*
+ * Non-standard memset to write words...
+ */
+void *memsetWide(void *destination, u32int value, u32int count)
+{
+  u32int alignment;
+  uchar *bytePointer = destination;
+  uchar *const byteEnd = ((uchar *)destination) + count;
+  u32int *const wordEnd = ((u32int *)destination) + ((count - ((u32int)byteEnd & 0b11)) >> 2);
+  while ((alignment = ((u32int)bytePointer & 0b11)) && bytePointer < byteEnd)
+  {
+    *(bytePointer++) = value >> (alignment << 3);
+  }
+  u32int *wordPointer = (u32int *)bytePointer;
+  while (wordPointer < wordEnd)
+  {
+    *(wordPointer++) = value;
+  }
+  bytePointer = (uchar *)wordPointer;
+  while (bytePointer < byteEnd)
+  {
+    alignment = ((u32int)bytePointer & 0b11);
+    *(bytePointer++) = value >> (alignment << 3);
   }
   return destination;
 }

@@ -9,7 +9,8 @@ void *memcpy(void *destination, const void *source, u32int count);
 
 void *memmove(void *destination, const void *source, u32int count);
 
-void *memset(void *destination, u32int value, u32int count);
+void *memset(void *destination, s32int value, u32int count);
+void *memsetWide(void *destination, u32int value, u32int count);
 
 char *strcpy(char *dest, const char *src);
 

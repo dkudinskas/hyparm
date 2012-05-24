@@ -1,0 +1,35 @@
+/*
+ * STMDA Rn, {lr,pc}
+ */
+
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+/* r1 will be chosen as substitute register for pc */
+MOV    r0, #0x81000000
+MOV    r1, #0
+MOV    lr, r0
+STMDA  r0, {lr,pc}
+/* r0 (no writeback) and r1 (substitute) must still hold their original value */
+CMP    r0, lr
+BNE    fail
+CMP    r1, #0
+BNE    fail
+/* construct PC of STM instruction in r1, given that load address = 0x80000000 */
+MOVW   r1, #0x14
+MOVT   r1, #0x8000
+/* 'decrement after' implies registers start at the address in r0 - 4, load this */
+LDR    r2, [r0, #-4]
+CMP    lr, r2
+LDREQ  r3, [r0]
+CMPEQ  r1, r3
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1

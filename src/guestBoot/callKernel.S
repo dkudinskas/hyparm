@@ -31,6 +31,7 @@ callKernel:
   /* Load the entry point onto the stack, then use the Load PC + copy SPSR to CPSR to jump into USR mode */
   LDR    SP, =svcStack
   STMDB  SP, {r3}
+
   /*
    * Prevent leaking hypervisor data to guest (this also improves determinism)
    */

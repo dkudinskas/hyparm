@@ -18,6 +18,8 @@ enum
   LDRH_LDRD_IMMEDIATE_FORM_BIT = 1 << 22,
   LDRD_BIT = 1 << 6,
 
+  STM_ADDRESS_MODE_B_BIT = 1 << 24,
+  STM_ADDRESS_MODE_I_BIT = 1 << 23,
   STM_REGISTERS_MASK = 0xFFFF,
   STM_REGISTERS_PC_BIT = 1 << GPR_PC,
   STM_WRITEBACK_BIT = 1 << 21,
@@ -33,8 +35,43 @@ enum
   RM_INDEX = 0,
   RN_INDEX = 16,
 
-  SETFLAGS_BIT = 1 << 20
+  SETFLAGS_BIT = 1 << 20,
+
+  STR_IMMEDIATE_BASE_VALUE = 0x04000000,
+  SUB_IMMEDIATE_BASE_VALUE = 0x02400000
 };
+
+typedef union
+{
+  struct armStrImmediateInstruction
+  {
+    unsigned immediate : 12;
+    unsigned sourceRegister : 4;
+    unsigned baseRegister : 4;
+    unsigned : 1;
+    unsigned writeBackIfNotIndex : 1;
+    unsigned : 1;
+    unsigned add : 1;
+    unsigned index : 1;
+    unsigned : 3;
+    unsigned conditionCode : 4;
+  } fields;
+  u32int value;
+} ARMStrImmediateInstruction;
+
+typedef union
+{
+  struct armSubImmediateInstruction
+  {
+    unsigned immediate : 12;
+    unsigned destinationRegister : 4;
+    unsigned operandRegister : 4;
+    unsigned setFlags : 1;
+    unsigned : 7;
+    unsigned conditionCode : 4;
+  } fields;
+  u32int value;
+} ARMSubImmediateInstruction;
 
 
 /*
@@ -62,7 +99,8 @@ void armDPImmRegRSR(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, 
 
   if (replaceN || replaceM)
   {
-    ASSERT(destinationRegister != GPR_PC, "Rd=PC must trap");
+    // This implementation expects Rd=PC to trap
+    ASSERT(destinationRegister != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
     DEBUG(TRANSLATION, "armDPImmRegRSR: translating %#.8x @ %#.8x with cond=%x, immediateForm=%x, "
           "Rd=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, immediateForm,
@@ -192,7 +230,8 @@ void armLdrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
       {
         if ((instruction & LDRD_BIT))
         {
-          ASSERT(destinationRegister != GPR_LR, "Rt2=PC unpredictable");
+          // LDRD writes to 2 registers; if the first is LR the next is PC: unpredictable!
+          ASSERT(destinationRegister != GPR_LR, ERROR_UNPREDICTABLE_INSTRUCTION);
         }
         if ((instruction & LDRH_LDRD_IMMEDIATE_FORM_BIT))
         {
@@ -202,7 +241,7 @@ void armLdrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
       /* no break */
       case LDR_LDRB_REGISTER_FORM_BITS:
       {
-        ASSERT(offsetRegister != GPR_PC, "Rm=PC unpredictable");
+        ASSERT(offsetRegister != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
         spill = offsetRegister == destinationRegister;
         break;
       }
@@ -249,7 +288,8 @@ void armMovPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
    */
   if (sourceRegister == GPR_PC)
   {
-    ASSERT(destinationRegister != GPR_PC, "Rd=PC must trap");
+    // This implementation expects Rd=PC to trap
+    ASSERT(destinationRegister != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
     DEBUG(TRANSLATION, "armMovPCInstruction: translating %#.8x @ %#.8x with cond=%x, S=%x, Rd=%x, "
           "Rm=%x" EOL, instruction, pc, conditionCode, setFlags, destinationRegister,
@@ -287,7 +327,8 @@ void armShiftPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32i
 
   if (operandRegister == GPR_PC)
   {
-    ASSERT(destinationRegister != GPR_PC, "Rd=PC must trap");
+    // This implementation expects Rd=PC to trap
+    ASSERT(destinationRegister != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
     DEBUG(TRANSLATION, "armShiftPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
           "Rm=%x" EOL, instruction, pc, conditionCode, destinationRegister, operandRegister);
@@ -307,62 +348,200 @@ void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
 {
   if ((instruction & STM_REGISTERS_PC_BIT))
   {
-    ASSERT(ARM_EXTRACT_REGISTER(instruction, RN_INDEX) != GPR_PC, "Rn=PC unpredictable");
-
+    const u32int baseRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
+    const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
+    ASSERT(baseRegister != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
+    u32int scratchRegister;
     /*
-     * How to perform similar STM on all registers except PC, if any:
-     *
-     * instruction &= ~STM_REGISTERS_PC_BIT;
-     * if ((instruction & STM_REGISTERS_MASK) != 0)
-     * {
-     *   currBlockCopyCacheAddr = updateCodeCachePointer(tc, currBlockCopyCacheAddr);
-     *   *currBlockCopyCacheAddr = instruction;
-     * }
-     *
-     * We must also store PC. How all of this works together depends on STM variant (IA/DA/DB/IB)!
-     * All translated instructions inherit condition code from original.
-     *
-     * regcnt := countBitsSet(*instructionAddr & STM_REGISTERS_MASK)
-     *
-     * STMIA:
-     * perform STMIA Rn, registers without PC
-     * backup Rtemp, set to PC
-     * if W=0: STR Rtemp, [Rn, #(4*(regcnt-1))] (offset)
-     * if W=1: STR Rtemp, [Rn], #4 (post-indexed)
-     * restore Rtemp
-     *
-     * STMDA (double check this):
-     * perform SUB Rn, Rn, #4
-     * perform STMDA Rn, registers without PC
-     * backup Rtemp, set to PC
-     * if W=0: STR Rtemp, [Rn, #4]! (pre-indexed)
-     * if W=1: STR Rtemp, [Rn, #(4*regcnt)] (offset)
-     * restore Rtemp
-     * or ALTERNATIVE without SUB: replace STMDA by STMDB this will start at one word lower anyway...
-     *                             be careful with writeback, offsets must be correct!!!
-     *
-     * STMDB is similar to STMDA, but it starts writing at address= Rn-4*regcnt
-     *                            instead of Rn-4*regcnt+4 ==> 1 word LOWER in memory
-     * perform SUB Rn, Rn, #4 (required in this case)
-     * perform STMDB Rn, registers without PC
-     * backup Rtemp, set to PC
-     * if W=0: ...
-     * if W=1: ...
-     * restore Rtemp
-     *
-     * STMIB similar to STMIA but starts at Rn+4
-     * perform STMIB Rn, registers without PC
-     * backup Rtemp, set to PC
-     * if W=0: STR offset
-     * if W=1: STR PRE-indexed
-     * restore Rtemp
+     * The highest-numbered register is always stored to the highest memory address. Given that the
+     * PC is included in the list, it is the PC that will be stored at the highest memory address.
+     * If any lower-numbered register not in the list is higher-numbered than all the registers in
+     * the list, we can use it as substitute for the PC. However, we cannot make use of the base
+     * register. Hence, we look for the lowest available register, and increment it if we hit the
+     * base register. If that's still lower-numbered than the PC, we have a suitable substitute.
      */
-    DIE_NOW(NULL, "STM.. Rn, ..-PC not implemented");
+    const u32int remainingRegisters = instruction & STM_REGISTERS_MASK & ~STM_REGISTERS_PC_BIT;
+    scratchRegister = findLastBitSet(remainingRegisters);
+    if (scratchRegister == baseRegister)
+    {
+      scratchRegister++;
+    }
+    if (scratchRegister < GPR_PC)
+    {
+      /*
+       * We have found a substitute register for the PC, different from the base register.
+       */
+      DEBUG(TRANSLATION, "armStmPCInstruction: substituting r%u for PC" EOL, scratchRegister);
+      armBackupRegisterToSpill(tc, block, conditionCode, scratchRegister);
+      armWritePCToRegister(tc, block, conditionCode, scratchRegister, pc);
+      block->code = updateCodeCachePointer(tc, block->code);
+      *block->code = (instruction & ~STM_REGISTERS_PC_BIT) | (1 << scratchRegister);
+      block->code++;
+    }
+    else
+    {
+      /*
+       * We could not find a suitable substitute register for the PC. The most generic solution
+       * here is to split the STM instruction into an equivalent sequence of STM without the PC and
+       * STR of the PC value. Using STM for storing the PC value is possible but complicates things
+       * as STM cannot take an immediate offset, which we'd require for the case without writeback.
+       * This can in turn be solved by adding extra ADD/SUB instructions as required, but those can
+       * mostly be avoided when using STR.
+       *
+       * NOTE: if we end up here, there MUST be registers other than PC in the list (otherwise, we
+       *       would have found a substitute register).
+       *
+       * The exact sequence in which an STM is split depends on the memory address mode encoded in
+       * the instruction (DA/DB/IA/IB).
+       */
+      const bool before = instruction & STM_ADDRESS_MODE_B_BIT;
+      const bool writeback = instruction & STM_WRITEBACK_BIT;
+      DEBUG(TRANSLATION, "armStmPCInstruction: before=%x, writeback=%x, Rn=r%u, remaining=%#.4x "
+            "(cannot substitute PC)" EOL, before, writeback, baseRegister, remainingRegisters);
+      if (instruction & STM_ADDRESS_MODE_I_BIT)
+      {
+        /*
+         * For STMIA/STMIB (increment after or before):
+         * - the lowest-numbered register is written at the address in Rn (IA) or Rn + 4 (IB);
+         * - each next register is written at offset 4 of the last one;
+         * - if writeback is set, Rn is incremented by 4*countBitsSet(registers).
+         *
+         * First perform STMIA/STMIB for all remaining registers:
+         */
+        block->code = updateCodeCachePointer(tc, block->code);
+        *block->code = instruction & ~STM_REGISTERS_PC_BIT;
+        block->code++;
+        /*
+         * Find another register, spill it and use it for the PC value
+         */
+        scratchRegister = getOtherRegister(baseRegister);
+        DEBUG(TRANSLATION, "armStmPCInstruction: spilling and reusing r%u" EOL, scratchRegister);
+        armBackupRegisterToSpill(tc, block, conditionCode, scratchRegister);
+        armWritePCToRegister(tc, block, conditionCode, scratchRegister, pc);
+        /*
+         * Add an STR instruction to write the PC value now stored in the scratch register. We need
+         * to consider four different cases here:
+         *
+         *                     Where to write PC:    Final value of Rn:    STR (immediate) variant:
+         * STMIA Rn,  regs:    R[n]'     + 4*(#r-1)  keep                  offset       (P=1, W=0)
+         * STMIA Rn!, regs:    R[n]'                 add 4                 post-indexed (P=0, W=0)
+         * STMIB Rn,  regs:    R[n]' + 4 + 4*(#r-1)  keep                  offset       (P=1, W=0)
+         * STMIB Rn!  regs:    R[n]' + 4             add 4                 pre-indexed  (P=1, W=1)
+         *
+         * R[n]' denotes the value in Rn after performing the STM with (#r-1) registers.
+         */
+        ARMStrImmediateInstruction strPCInstruction = { .value = STR_IMMEDIATE_BASE_VALUE };
+        strPCInstruction.fields.add = 1;
+        strPCInstruction.fields.baseRegister = baseRegister;
+        strPCInstruction.fields.conditionCode = conditionCode;
+        strPCInstruction.fields.immediate = (before || writeback ? 4 : 0)
+                                          + (writeback ? 0 : 4 * countBitsSet(remainingRegisters));
+        strPCInstruction.fields.index = before || !writeback;
+        strPCInstruction.fields.sourceRegister = scratchRegister;
+        strPCInstruction.fields.writeBackIfNotIndex = before && writeback;
+        block->code = updateCodeCachePointer(tc, block->code);
+        *block->code = strPCInstruction.value;
+        block->code++;
+        DEBUG(TRANSLATION, "armStmPCInstruction: split off PC in STR instruction: %#.8x" EOL,
+              strPCInstruction.value);
+      }
+      else
+      {
+        /*
+         * For STMDA/STMDB (decrement after or before):
+         * - the lowest-numbered register is written at the address in
+         *   > Rn - 4*countBitsSet(registers) + 4 (DA)
+         *   > Rn - 4*countBitsSet(registers)     (DB)
+         * - each next register is written at offset 4 of the last one;
+         * - if writeback is set, Rn is decremented by 4*countBitsSet(registers).
+         *
+         * When we omit the PC from the list of registers, the starting address is increased by 4!
+         * Hence, we have to modify the starting address upfront.
+         *
+         * Where to write PC relative to R[n] (original) and R[n]' (after writeback, given that the
+         * starting address was modified to be correct):
+         *
+         *                     Rel. R[n]    Relative to R[n]'     Final value
+         * STMDA Rn,  regs:    R[n]         R[n]'                 R[n]' = R[n]
+         * STMDA Rn!, regs:    R[n]         R[n]'     + 4 * #r    R[n]' = R[n] - 4 * #r
+         * STMDB Rn,  regs:    R[n] - 4     R[n]' - 4             R[n]' = R[n]
+         * STMDB Rn!  regs:    R[n] - 4     R[n]' - 4 + 4 * #r    R[n]' = R[n] - 4 * #r
+         *
+         * If there are remaining registers, we need to:
+         * - Subtract 4 from Rn;
+         * - Perform STMDA/STMDB with remaining registers;
+         * - For the writeback case, Rn will now be correct, otherwise add 4 to Rn.
+         * Even though we could use the STR to do the subtraction upfront, to preserve the order of
+         * memory accesses observed by the guest we put the STR last. When the PC is written on a
+         * page different from the other registers, the guest would otherwise be able to observe
+         * our alteration by causing and inspecting data aborts on those pages.
+         *
+         * First, we add 'SUB Rn, Rn, #4':
+         */
+        ARMSubImmediateInstruction adjustBaseRegisterInstruction = { .value = SUB_IMMEDIATE_BASE_VALUE };
+        adjustBaseRegisterInstruction.fields.conditionCode = conditionCode;
+        adjustBaseRegisterInstruction.fields.destinationRegister = baseRegister;
+        adjustBaseRegisterInstruction.fields.immediate = 4;
+        adjustBaseRegisterInstruction.fields.operandRegister = baseRegister;
+        block->code = updateCodeCachePointer(tc, block->code);
+        *block->code = adjustBaseRegisterInstruction.value;
+        block->code++;
+        DEBUG(TRANSLATION, "armStmPCInstruction: adjusting base address with SUB Rn, Rn, #4: %#.8x"
+              EOL, adjustBaseRegisterInstruction.value);
+        /*
+         * Now perform STMDA/STMDB on remaining registers
+         */
+        printf ("STMDx: %#.8x" EOL, instruction & ~STM_REGISTERS_PC_BIT);
+        block->code = updateCodeCachePointer(tc, block->code);
+        *block->code = instruction & ~STM_REGISTERS_PC_BIT;
+        block->code++;
+        /*
+         * Find another register, spill it and use it for the PC value
+         */
+        scratchRegister = getOtherRegister(baseRegister);
+        DEBUG(TRANSLATION, "armStmPCInstruction: spilling and reusing r%u" EOL, scratchRegister);
+        armBackupRegisterToSpill(tc, block, conditionCode, scratchRegister);
+        armWritePCToRegister(tc, block, conditionCode, scratchRegister, pc);
+        /*
+         * Add an STR instruction to write the PC value now stored in the scratch register. We need
+         * to consider four different cases here:
+         *
+         *                   Write PC at:      Immediate  Final Rn:         STR (imm.) variant:
+         * STMDA Rn,  regs:  R[n]'         +4   4         R[n]'   +4(S)     pre-indexed  (P=1, W=1)
+         * STMDA Rn!, regs:  R[n]'   +4*#r      4*(#r)    R[n]'             offset       (P=1, W=0)
+         * STMDB Rn,  regs:  R[n]'-4       +4   4         R[n]'   +4(S)     post-indexed (P=0, W=0)
+         * STMDB Rn!  regs:  R[n]'-4 +4*#r      4*(#r-1)  R[n]'             offset       (P=1, W=0)
+         *
+         * R[n]' denotes the value in Rn after performing the above STM with (#r-1) registers.
+         */
+        ARMStrImmediateInstruction strPCInstruction = { .value = STR_IMMEDIATE_BASE_VALUE };
+        strPCInstruction.fields.add = TRUE;
+        strPCInstruction.fields.baseRegister = baseRegister;
+        strPCInstruction.fields.conditionCode = conditionCode;
+        strPCInstruction.fields.immediate = (!before || !writeback ? 4 : 0)
+                                          + (writeback ? 4 * countBitsSet(remainingRegisters) : 0);
+        strPCInstruction.fields.index = !before || writeback;
+        strPCInstruction.fields.sourceRegister = scratchRegister;
+        strPCInstruction.fields.writeBackIfNotIndex = !before && !writeback;
+        block->code = updateCodeCachePointer(tc, block->code);
+        *block->code = strPCInstruction.value;
+        block->code++;
+        DEBUG(TRANSLATION, "armStmPCInstruction: split off PC in STR instruction: %#.8x" EOL,
+              strPCInstruction.value);
+      }
+    }
+    /*
+     * Restore register; done.
+     */
+    armRestoreRegisterFromSpill(tc, block, conditionCode, scratchRegister);
+  }
+  else
+  {
+    block->code = updateCodeCachePointer(tc, block->code);
+    *block->code = instruction;
+    block->code++;
   }
 
-  block->code = updateCodeCachePointer(tc, block->code);
-  *block->code = instruction;
-  block->code++;
   block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
   block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
 }
