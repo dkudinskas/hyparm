@@ -39,4 +39,4 @@ u32int loadGpio(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtualA
 
 void storeGpio(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress, u32int value);
 
-#endif
+#endif /* __VM__OMAP_35XX__GPIO_H__ */
