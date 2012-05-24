@@ -96,6 +96,7 @@ void *memset(void *destination, u32int value, u32int count)
   }
   else
   {
+#warning "BUG: memset treats value as byte for the unaligned case; reimplement"
     //Standard bytewise memset
     char *dst = (char*) destination;
 

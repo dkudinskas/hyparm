@@ -1,0 +1,24 @@
+/*
+ * LDRB register
+ */
+
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+MOV    r1, #3
+LDRB   r0, [PC, r1]
+B      compare
+.word 0xb4b3b2b1
+
+compare:
+CMP    r0, #0xb4
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1

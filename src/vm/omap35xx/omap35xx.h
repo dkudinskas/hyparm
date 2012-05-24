@@ -2,7 +2,7 @@
 #define __VM__OMAP35XX__OMAP35XX_H__
 
 
-typedef struct EmulatedVirtualMachine
+struct EmulatedVirtualMachine
 {
   struct ClockManager* clockMan;
   struct Gpio* gpio[6];
@@ -26,6 +26,6 @@ typedef struct EmulatedVirtualMachine
   struct Sms *sms;
   struct WatchdogTimer *wdtimer2;
 #endif
-} virtualMachine;
+};
 
 #endif

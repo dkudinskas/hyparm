@@ -32,11 +32,12 @@
 #else
 
 __macro__ void *checkedCalloc(const char *file, const char *line, const char *function,
-                              u32int numberOfElements, u32int elementSize);
+                              u32int numberOfElements, u32int elementSize)  __malloc__;
 void checkedFree(const char *file, const char *line, const char *function, void *ptr);
-void *checkedMalloc(const char *file, const char *line, const char *function, u32int size);
+void *checkedMalloc(const char *file, const char *line, const char *function, u32int size)
+                   __malloc__;
 void *checkedMemalign(const char *file, const char *line, const char *function, u32int alignment,
-                      u32int size);
+                      u32int size) __malloc__;
 void *checkedRealloc(const char *file, const char *line, const char *function, void *ptr,
                      u32int size);
 
@@ -57,10 +58,10 @@ void *checkedRealloc(const char *file, const char *line, const char *function, v
 /*
  * WARNING: do NOT invoke the following functions directly!
  */
-__macro__ void *uncheckedCalloc(u32int numberOfElements, u32int elementSize);
+__macro__ void *uncheckedCalloc(u32int numberOfElements, u32int elementSize) __malloc__;
 void uncheckedFree(void *ptr);
-void *uncheckedMalloc(u32int size);
-void *uncheckedMemalign(u32int alignment, u32int size);
+void *uncheckedMalloc(u32int size) __malloc__;
+void *uncheckedMemalign(u32int alignment, u32int size) __malloc__;
 void *uncheckedRealloc(void *ptr, u32int size);
 
 

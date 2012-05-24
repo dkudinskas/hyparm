@@ -1,6 +1,5 @@
 /*
- * LDRD (register) is used to load data from a base address + offset, both stored in registers.
- * Similar instructions are LDR, LDRB, LDRH, STR, STRB, STRH and STRD.
+ * LDRD register
  */
 
 .syntax unified

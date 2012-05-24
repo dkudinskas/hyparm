@@ -1,6 +1,5 @@
 /*
- * LDR (literal) is used to load data from literal pools.
- * Similar instructions are LDRB, LDRH, LDRD, STR, STRB, STRH and STRD.
+ * LDR immediate with PC, a.k.a. literal
  */
 
 .syntax unified

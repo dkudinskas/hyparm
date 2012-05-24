@@ -1,0 +1,26 @@
+/*
+ * STR register
+ */
+
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+MOVW   r0, 0xBEEF
+MOVT   r0, 0xDEAD
+MOV    r2, #1000
+STR    r0, [PC, r2]
+/* construct PC of above instruction in r1, given that load address = 0x80000000 */
+MOVW   r1, #0x14
+MOVT   r1, #0x8000 
+LDR    r1, [r1, r2]
+CMP    r0, r1
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1

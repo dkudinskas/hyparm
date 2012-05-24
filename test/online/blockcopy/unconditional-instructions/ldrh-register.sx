@@ -1,0 +1,29 @@
+/*
+ * LDRH register
+ */
+
+.syntax unified
+
+.text
+.arm
+
+.global _start
+_start:
+
+MOVW   r10, 0xBEEF
+MOVW   r11, 0xDEAD
+MOV    r0, #4
+MOV    r3, #2
+.word 0xE19F10B0  /* gas cannot assemble LDRH r1, [PC, r0] */
+.word 0xE19F20B3  /* gas cannot assemble LDRH r2, [PC, r3] */
+B      meat
+.word 0xDEADBEEF
+
+meat:
+CMP    r10, r1
+CMPEQ  r11, r2
+BNE    fail
+BKPT   #0
+
+fail:
+BKPT   #1
