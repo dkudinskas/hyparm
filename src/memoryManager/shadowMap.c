@@ -328,7 +328,8 @@ void shadowMapPageTable(GCONTXT *context, pageTableEntry* guest, pageTableEntry*
     case FAULT:
     {
       // need to allocate a new shadow page table!
-      if ((sptVirtAddr = (u32int)memalign(1 << PT2_ALIGN_BITS, PT2_SIZE)) == 0)
+      sptVirtAddr = (u32int)memalign(1 << PT2_ALIGN_BITS, PT2_SIZE);
+      if (sptVirtAddr == 0)
       {
         DIE_NOW(context, "failed to allocate 2lvl shadow page table");
       }
