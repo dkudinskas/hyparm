@@ -33,8 +33,8 @@ disableMMU:
   MRC     p15, 0, r0, c1, c0, 0
   BIC     r0, r0, #1
   MCR     p15, 0, r0, c1, c0, 0
-  ISB     SY
-  DSB     SY
+  ISB
+  DSB
   BX      LR
 .endfunc
 
