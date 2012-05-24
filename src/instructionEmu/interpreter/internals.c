@@ -6,7 +6,13 @@
 #include "instructionEmu/interpreter/internals.h"
 
 
+// take shift type field from instr, return shift type
+static u32int decodeShift(u32int instrShiftType);
+
 static u32int *getHighGPRegisterPointer(GCONTXT *context, u32int registerIndex);
+
+// rotate right function
+static u32int rorVal(u32int value, u32int ramt)  __constant__;
 
 
 u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *instrString)
@@ -183,7 +189,7 @@ u32int armExpandImm12(u32int imm12)
 }
 
 // take shift type field from instr, return shift type
-u32int decodeShift(u32int instrShiftType)
+static u32int decodeShift(u32int instrShiftType)
 {
   instrShiftType = instrShiftType & 0x3;
   switch (instrShiftType)

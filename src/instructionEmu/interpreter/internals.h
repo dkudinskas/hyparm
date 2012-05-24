@@ -62,9 +62,6 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
 /* expand immediate12 field of instruction */
 u32int armExpandImm12(u32int imm12) __constant__;
 
-// take shift type field from instr, return shift type
-u32int decodeShift(u32int instrShiftType) __constant__;
-
 // take the imm5 shift amount and shift type field from instr
 // returns shift type, and adjusts shift amount
 u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int *shamt);
@@ -86,9 +83,6 @@ __macro__ u32int getVirtualProgramCounter(const GCONTXT *context) __pure__;
 
 void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
   __attribute__((noinline,noreturn));
-
-// rotate right function
-u32int rorVal(u32int value, u32int ramt)  __constant__;
 
 /* function to store a register value in r0--r7,r15 */
 __macro__ void setLowGPRegister(GCONTXT *context, u32int destinationRegister, u32int value);
