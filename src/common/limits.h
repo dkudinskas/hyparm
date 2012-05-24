@@ -6,4 +6,6 @@
  */
 #define CHAR_BIT __CHAR_BIT__
 
+#define U8INT_MAX   0xFF
+
 #endif

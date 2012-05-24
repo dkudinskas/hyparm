@@ -356,7 +356,203 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     case GPMC_SYSSTATUS:
       DIE_NOW(NULL, "store to read-only register");
       break;
+    case GPMC_CONFIG1_0:
+    {
+      if (gpmc->gpmcConfig1_0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG7_0:
+    {
+      if (gpmc->gpmcConfig7_0 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_0" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG1_1:
+    {
+      if (gpmc->gpmcConfig1_1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG7_1:
+    {
+      if (gpmc->gpmcConfig7_1 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_1" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG1_2:
+    {
+      if (gpmc->gpmcConfig1_2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG7_2:
+    {
+      if (gpmc->gpmcConfig7_2 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_2" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG1_3:
+    {
+      if (gpmc->gpmcConfig1_3 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_3" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG7_3:
+    {
+      if (gpmc->gpmcConfig7_3 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_3" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG1_4:
+    {
+      if (gpmc->gpmcConfig1_4 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_4" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG7_4:
+    {
+      if (gpmc->gpmcConfig7_4 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_4" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG1_5:
+    {
+      if (gpmc->gpmcConfig1_5 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_5" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG7_5:
+    {
+      if (gpmc->gpmcConfig7_5 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_5" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG1_6:
+    {
+      if (gpmc->gpmcConfig1_6 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_6" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG7_6:
+    {
+      if (gpmc->gpmcConfig7_6 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_6" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG1_7:
+    {
+      if (gpmc->gpmcConfig1_7 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_7" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
+    case GPMC_CONFIG7_7:
+    {
+      if (gpmc->gpmcConfig7_7 != value)
+      {
+#ifdef CONFIG_GUEST_ANDROID
+        DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_7" EOL, __func__);
+#else
+        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+      }
+      break;
+    }
     default:
+    {
+      printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+          virtAddr, (u32int)size);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
   }
 }

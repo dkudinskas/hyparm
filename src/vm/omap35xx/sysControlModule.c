@@ -326,8 +326,9 @@ void initSysControlModule(virtualMachine *vm)
   scm->ctrlDpfMad2dFwReqinfo = 0x00000000;
   scm->ctrlDpfMad2dFwWr = 0x00000000;
   scm->ctrlIdCode = 0x3b7ae02f; // offs 0x00307F94, phys 0x4830A204 out of range
+
   // SYS_CTRL_MOD_MEM_WKUP       0x48002600 base, 1024 bytes length
-  // this is just a memory blob of 1k
+  scm->ctrlSaveRestoreMem = (u32int *)calloc(SYS_CTRL_MOD_MEM_WKUP_SIZE, sizeof(u8int));
 
   // SYS_CTRL_MOD_PADCONFS_WKUP  0x48002A00 base, 80 bytes length
   scm->ctrlPadConfI2c4Scl      = 0x01180118;
@@ -1244,14 +1245,8 @@ static u32int loadMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int p
 {
   const u32int registerOffset = physicalAddress - SYS_CTRL_MOD_MEM_WKUP;
   u32int value = 0;
-  switch (registerOffset & ~0x3)
-  {
-    default:
-    {
-      printf("%s: >>-----> unimplemented reg addr %#.8x" EOL, __func__, physicalAddress);
-      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-    }
-  }
+
+  value = sysCtrlModule->ctrlSaveRestoreMem[registerOffset];
   DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, registerOffset, value);
   return value;
 }
@@ -1411,7 +1406,7 @@ static void storeInterfaceScm(struct SystemControlModule *sysCtrlModule, u32int 
       if (sysCtrlModule->ctrlSysconfig != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlSysconfig" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlSysconfig" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1441,7 +1436,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1453,7 +1448,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1465,7 +1460,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD4 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD4" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD4" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1477,7 +1472,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD6 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD6" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD6" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1489,7 +1484,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD8 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD8" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD8" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1501,7 +1496,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD10 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD10" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD10" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1513,7 +1508,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD12 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD12" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD12" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1525,7 +1520,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD14 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD14" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD14" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1537,7 +1532,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD16 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD16" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD16" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1549,7 +1544,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD18 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD18" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD18" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1561,7 +1556,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD20 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD20" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD20" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1573,7 +1568,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD22 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD22" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD22" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1585,7 +1580,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD24 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD24" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD24" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1597,7 +1592,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD26 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD26" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD26" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1609,7 +1604,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD28 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD28" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD28" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1621,7 +1616,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcD30 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD30" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcD30" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1633,7 +1628,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcClk != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcClk" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcClk" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1645,7 +1640,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcDqs1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcDqs1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcDqs1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1657,7 +1652,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcDqs3 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcDqs3" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcDqs3" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1669,7 +1664,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcA2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1681,7 +1676,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcA4 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA4" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA4" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1693,7 +1688,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcA6 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA6" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA6" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1705,7 +1700,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcA8 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA8" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA8" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1717,7 +1712,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcA10 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA10" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcA10" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1729,7 +1724,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcD1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1741,7 +1736,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcD3 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD3" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD3" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1753,7 +1748,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcD5 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD5" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD5" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1765,7 +1760,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcD7 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD7" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD7" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1777,7 +1772,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcD9 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD9" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD9" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1789,7 +1784,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcD11 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD11" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD11" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1801,7 +1796,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcD13 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD13" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD13" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1813,7 +1808,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcD15 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD15" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcD15" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1825,7 +1820,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcNcs1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1837,7 +1832,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcNcs3 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs3" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs3" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1849,7 +1844,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcNcs5 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs5" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs5" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1861,7 +1856,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcNcs7 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs7" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNcs7" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1873,7 +1868,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcAle != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcAle" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcAle" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1885,7 +1880,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcNwe != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNwe" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNwe" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1897,7 +1892,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcNbe1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNbe1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcNbe1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1909,7 +1904,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcWait0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcWait0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcWait0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1921,7 +1916,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfGpmcWait2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcWait2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfGpmcWait2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1933,7 +1928,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssPclk != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssPclk" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssPclk" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1945,7 +1940,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssVsync != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssVsync" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssVsync" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1957,7 +1952,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1969,7 +1964,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1981,7 +1976,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData4 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData4" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData4" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -1993,7 +1988,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData6 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData6" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData6" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2005,7 +2000,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData8 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData8" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData8" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2017,7 +2012,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData10 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData10" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData10" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2029,7 +2024,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData12 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData12" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData12" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2041,7 +2036,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData14 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData14" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData14" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2053,7 +2048,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData16 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData16" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData16" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2065,7 +2060,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData18 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData18" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData18" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2077,7 +2072,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData20 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData20" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData20" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2089,7 +2084,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfDssData22 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData22" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfDssData22" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2101,7 +2096,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCamHs != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamHs" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamHs" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2113,7 +2108,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCamXclka != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamXclka" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamXclka" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2125,7 +2120,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCamFld != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamFld" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamFld" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2137,7 +2132,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCamD1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2149,7 +2144,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCamD3 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD3" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD3" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2161,7 +2156,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCamD5 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD5" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD5" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2173,7 +2168,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCamD7 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD7" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD7" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2185,7 +2180,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCamD9 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD9" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD9" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2197,7 +2192,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCamD11 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD11" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamD11" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2209,7 +2204,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCamWen != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamWen" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCamWen" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2221,7 +2216,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCsi2Dx0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCsi2Dx0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCsi2Dx0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2233,7 +2228,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfCsi2Dx1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCsi2Dx1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfCsi2Dx1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2245,7 +2240,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcbsp2Fsx != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp2Fsx" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp2Fsx" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2257,7 +2252,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcbsp2Dr != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp2Dr" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp2Dr" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2269,7 +2264,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMmc1Clk != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Clk" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Clk" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2281,7 +2276,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMmc1Dat0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2293,7 +2288,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMmc1Dat2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2305,7 +2300,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMmc1Dat4 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat4" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat4" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2317,7 +2312,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMmc1Dat6 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat6" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc1Dat6" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2329,7 +2324,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMmc2Clk != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Clk" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Clk" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2341,7 +2336,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMmc2Dat0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2353,7 +2348,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMmc2Dat2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2365,7 +2360,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMmc2Dat4 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat4" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat4" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2377,7 +2372,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMmc2Dat6 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat6" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMmc2Dat6" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2389,7 +2384,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcbsp3Dx != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp3Dx" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp3Dx" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2401,7 +2396,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcbsp3Clkx != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp3Clkx" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp3Clkx" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2413,7 +2408,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfUart2Cts != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart2Cts" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart2Cts" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2425,7 +2420,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfUart2Tx != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart2Tx" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart2Tx" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2437,7 +2432,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfUart1Tx != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart1Tx" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart1Tx" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2449,7 +2444,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfUart1Cts != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart1Cts" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart1Cts" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2461,7 +2456,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcbsp4Clkx != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp4Clkx" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp4Clkx" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2473,7 +2468,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcbsp4Dx != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp4Dx" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp4Dx" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2485,7 +2480,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcbsp1Clkr != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp1Clkr" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp1Clkr" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2497,7 +2492,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcbsp1Dx != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp1Dx" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp1Dx" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2509,7 +2504,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcbspClks != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbspClks" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbspClks" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2521,7 +2516,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcbsp1Clkx != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp1Clkx" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcbsp1Clkx" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2533,7 +2528,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfUart3RtsSd != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart3RtsSd" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart3RtsSd" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2545,7 +2540,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfUart3TxIrtx != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart3TxIrtx" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfUart3TxIrtx" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2557,7 +2552,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfHsusb0Stp != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Stp" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Stp" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2569,7 +2564,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfHsusb0Nxt != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Nxt" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Nxt" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2581,7 +2576,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfHsusb0Data1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2593,7 +2588,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfHsusb0Data3 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data3" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data3" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2605,7 +2600,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfHsusb0Data5 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data5" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data5" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2617,7 +2612,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfHsusb0Data7 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data7" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfHsusb0Data7" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2629,7 +2624,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfI2c1Sda != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfI2c1Sda" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfI2c1Sda" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2641,7 +2636,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfI2c2Sda != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfI2c2Sda" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfI2c2Sda" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2653,7 +2648,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfI2c3Sda != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfI2c3Sda" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfI2c3Sda" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2665,7 +2660,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcspi1Clk != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Clk" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Clk" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2677,7 +2672,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcspi1Somi != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Somi" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Somi" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2689,7 +2684,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcspi1Cs1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Cs1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Cs1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2701,7 +2696,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcspi1Cs3 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Cs3" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi1Cs3" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2713,7 +2708,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcspi2Simo != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi2Simo" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi2Simo" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2725,7 +2720,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfMcspi2Cs0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi2Cs0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfMcspi2Cs0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2737,7 +2732,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSysNirq != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSysNirq" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSysNirq" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2749,7 +2744,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2761,7 +2756,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2773,7 +2768,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad4 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad4" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad4" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2785,7 +2780,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad6 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad6" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad6" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2797,7 +2792,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad8 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad8" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad8" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2809,7 +2804,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad10 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad10" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad10" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2821,7 +2816,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad12 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad12" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad12" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2833,7 +2828,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad14 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad14" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad14" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2845,7 +2840,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad16 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad16" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad16" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2857,7 +2852,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad18 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad18" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad18" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2869,7 +2864,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad20 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad20" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad20" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2881,7 +2876,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad22 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad22" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad22" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2893,7 +2888,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad24 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad24" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad24" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2905,7 +2900,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad26 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad26" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad26" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2917,7 +2912,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad28 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad28" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad28" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2929,7 +2924,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad30 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad30" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad30" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2941,7 +2936,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad32 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad32" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad32" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2953,7 +2948,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad34 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad34" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad34" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2965,7 +2960,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMcad36 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad36" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMcad36" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2977,7 +2972,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dNrespwron != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dNrespwron" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dNrespwron" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -2989,7 +2984,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dArmnirq != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dArmnirq" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dArmnirq" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3001,7 +2996,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dSpint != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSpint" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSpint" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3013,7 +3008,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dDmareq0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dDmareq0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dDmareq0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3025,7 +3020,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dDmareq2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dDmareq2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dDmareq2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3037,7 +3032,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dNtrst != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dNtrst" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dNtrst" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3049,7 +3044,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dTdo != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dTdo" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dTdo" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3061,7 +3056,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dTck != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dTck" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dTck" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3073,7 +3068,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dMstdby != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMstdby" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dMstdby" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3085,7 +3080,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dIdleack != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dIdleack" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dIdleack" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3097,7 +3092,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dSwrite != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSwrite" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSwrite" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3109,7 +3104,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dSread != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSread" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSread" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3121,7 +3116,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSad2dSbusflag != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSbusflag" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSad2dSbusflag" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3133,7 +3128,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfSdrcCke1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcCke1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfSdrcCke1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3145,7 +3140,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfEtkClk != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkClk" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkClk" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3157,7 +3152,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfEtkD0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3169,7 +3164,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfEtkD2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3181,7 +3176,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfEtkD4 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD4" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD4" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3193,7 +3188,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfEtkD6 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD6" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD6" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3205,7 +3200,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfEtkD8 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD8" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD8" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3217,7 +3212,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfEtkD10 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD10" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD10" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3229,7 +3224,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfEtkD12 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD12" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD12" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3241,7 +3236,7 @@ static void storePadconfsScm(struct SystemControlModule *sysCtrlModule, u32int p
       if (sysCtrlModule->ctrlPadConfEtkD14 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD14" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to sysCtrlModule->ctrlPadConfEtkD14" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3267,7 +3262,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlPadConfOff != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlPadConfOff" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlPadConfOff" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3279,7 +3274,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDevConf0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDevConf0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDevConf0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3291,7 +3286,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlMemDftrw0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMemDftrw0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlMemDftrw0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3303,7 +3298,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlMemDftrw1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMemDftrw1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlMemDftrw1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3315,7 +3310,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlMsuspendMux0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlMsuspendMux0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3327,7 +3322,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlMsuspendMux1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlMsuspendMux1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3339,7 +3334,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlMsuspendMux2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlMsuspendMux2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3351,7 +3346,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlMsuspendMux3 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux3" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlMsuspendMux3" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3363,7 +3358,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlMsuspendMux4 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux4" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlMsuspendMux4" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3375,7 +3370,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlMsuspendMux5 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlMsuspendMux5" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlMsuspendMux5" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3387,7 +3382,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlProtCtrl != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProtCtrl" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlProtCtrl" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3399,7 +3394,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDevConf1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDevConf1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDevConf1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3411,7 +3406,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlCsiRxfe != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlCsiRxfe" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlCsiRxfe" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3423,7 +3418,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlProtStatus != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProtStatus" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlProtStatus" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3435,7 +3430,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlProtErrStatus != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProtErrStatus" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlProtErrStatus" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3447,7 +3442,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlProtErrStatusDebug != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProtErrStatusDebug" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlProtErrStatusDebug" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3459,7 +3454,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlFuseOpp1Vdd2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlFuseOpp1Vdd2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlFuseOpp1Vdd2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3471,7 +3466,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlFuseOpp2Vdd2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlFuseOpp2Vdd2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlFuseOpp2Vdd2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3483,7 +3478,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlFuseOpp3Vdd2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlFuseOpp3Vdd2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlFuseOpp3Vdd2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3495,7 +3490,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlIva2Bootaddr != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlIva2Bootaddr" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlIva2Bootaddr" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3507,7 +3502,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlIva2Bootmod != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlIva2Bootmod" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlIva2Bootmod" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3519,7 +3514,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDebobs0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDebobs0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3531,7 +3526,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDebobs1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDebobs1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3543,7 +3538,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDebobs2 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs2" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDebobs2" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3555,7 +3550,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDebobs3 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs3" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDebobs3" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3567,7 +3562,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDebobs4 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs4" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDebobs4" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3579,7 +3574,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDebobs5 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs5" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDebobs5" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3591,7 +3586,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDebobs6 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs6" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDebobs6" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3603,7 +3598,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDebobs7 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs7" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDebobs7" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3615,7 +3610,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDebobs8 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDebobs8" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDebobs8" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3627,7 +3622,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlProgIO0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProgIO0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlProgIO0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3639,7 +3634,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlProgIO1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlProgIO1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlProgIO1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3651,7 +3646,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlWkupCtrl != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlWkupCtrl" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlWkupCtrl" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3663,7 +3658,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDssDpllSpreading != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDssDpllSpreading" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDssDpllSpreading" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3675,7 +3670,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlCoreDpllSpreading != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlCoreDpllSpreading" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlCoreDpllSpreading" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3687,7 +3682,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlPerDpllSpreading != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlPerDpllSpreading" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlPerDpllSpreading" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3699,7 +3694,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlUsbhostDpllSpreading != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlUsbhostDpllSpreading" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlUsbhostDpllSpreading" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3711,7 +3706,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlSdrcSharing != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlSdrcSharing" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlSdrcSharing" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3723,7 +3718,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlSdrcMcfg0 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlSdrcMcfg0" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlSdrcMcfg0" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3735,7 +3730,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlSdrcMcfg1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlSdrcMcfg1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlSdrcMcfg1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3747,7 +3742,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlModemFwConfLock != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemFwConfLock" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlModemFwConfLock" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3759,7 +3754,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlModemMemResConf != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemMemResConf" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlModemMemResConf" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3771,7 +3766,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlModemGpmcDtFwReqInfo != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemGpmcDtFwReqInfo" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlModemGpmcDtFwReqInfo" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3783,7 +3778,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlModemGpmcDtFwRd != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemGpmcDtFwRd" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlModemGpmcDtFwRd" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3795,7 +3790,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlModemGpmcDtFwWr != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemGpmcDtFwWr" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlModemGpmcDtFwWr" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3807,7 +3802,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlModemGpmcBootCode != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemGpmcBootCode" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlModemGpmcBootCode" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3819,7 +3814,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlModemSmsRgAtt1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemSmsRgAtt1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlModemSmsRgAtt1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3831,7 +3826,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlModemSmsRgRdperm1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemSmsRgRdperm1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlModemSmsRgRdperm1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3843,7 +3838,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlModemSmsRgWrperm1 != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemSmsRgWrperm1" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlModemSmsRgWrperm1" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3855,7 +3850,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlModemD2dFwDbgMode != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlModemD2dFwDbgMode" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlModemD2dFwDbgMode" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3867,7 +3862,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfOcmRamFwAddrMatch != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfOcmRamFwAddrMatch" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfOcmRamFwAddrMatch" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3879,7 +3874,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfOcmRamFwReqinfo != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfOcmRamFwReqinfo" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfOcmRamFwReqinfo" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3891,7 +3886,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfOcmRamFwWr != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfOcmRamFwWr" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfOcmRamFwWr" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3903,7 +3898,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfReg4GpmcFwAddrMatch != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg4GpmcFwAddrMatch" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfReg4GpmcFwAddrMatch" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3915,7 +3910,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfReg4GpmcFwReqinfo != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg4GpmcFwReqinfo" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfReg4GpmcFwReqinfo" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3927,7 +3922,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfReg4GpmcFwWr != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg4GpmcFwWr" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfReg4GpmcFwWr" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3939,7 +3934,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfReg1Iva2FwAddrMatch != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg1Iva2FwAddrMatch" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfReg1Iva2FwAddrMatch" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3951,7 +3946,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfReg1Iva2FwReqinfo != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg1Iva2FwReqinfo" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfReg1Iva2FwReqinfo" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3963,7 +3958,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfReg1Iva2FwWr != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfReg1Iva2FwWr" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfReg1Iva2FwWr" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3975,7 +3970,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlApeFwDefSecLock != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlApeFwDefSecLock" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlApeFwDefSecLock" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3987,7 +3982,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlOcmRomSecDbg != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlOcmRomSecDbg" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlOcmRomSecDbg" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -3999,7 +3994,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlExtProtCtrl != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlExtProtCtrl" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlExtProtCtrl" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -4011,7 +4006,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlPbiasLite != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlPbiasLite" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlPbiasLite" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -4023,7 +4018,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlCsi != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlCsi" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlCsi" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -4035,7 +4030,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfMad2dFwAddrMatch != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfMad2dFwAddrMatch" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfMad2dFwAddrMatch" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -4047,7 +4042,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfMad2dFwReqinfo != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfMad2dFwReqinfo" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfMad2dFwReqinfo" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -4059,7 +4054,7 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
       if (sysCtrlModule->ctrlDpfMad2dFwWr != value)
       {
 #ifdef CONFIG_GUEST_ANDROID
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to ctrlDpfMad2dFwWr" EOL, __func__);
+        DEBUG(VP_OMAP_35XX_SCM, "%s: ignoring store to ctrlDpfMad2dFwWr" EOL, __func__);
 #else
         DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif
@@ -4092,8 +4087,10 @@ static void storeGeneralScm(struct SystemControlModule *sysCtrlModule, u32int ph
 
 static void storeMemWkupScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value)
 {
-  printf("Store to address %#.8x, value %#.8x" EOL, phyAddr, value);
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+  u32int offset = phyAddr - SYS_CTRL_MOD_MEM_WKUP;
+  DEBUG(VP_OMAP_35XX_SCM, "%s reg %x value %#.8x" EOL, __func__, offset, value);
+
+  sysCtrlModule->ctrlSaveRestoreMem[offset] = value;
 }
 
 static void storePadconfsWkupScm(struct SystemControlModule *sysCtrlModule, u32int phyAddr, u32int value)

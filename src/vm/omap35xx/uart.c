@@ -542,7 +542,7 @@ void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       if (uart->mode == configB)
       {
         // store XON1_ADDR1
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+        uart->xon1 = value;
       }
       else
       {
@@ -585,7 +585,7 @@ void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       if (uart->mode == configB)
       {
         // store XON2_ADDR2
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+        uart->xon2 = value;
       }
       else
       {
@@ -598,7 +598,17 @@ void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     }
     case UART_MSR_REG:
     {
-      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+      if (uart->mode == configB
+          && (!(uart->efr & UART_EFR_ENHANCED_EN) || !(uart->efr & UART_EFR_ENHANCED_EN)))
+      {
+        // store XOFF1
+        uart->xoff1 = value & U8INT_MAX;
+      }
+      else
+      {
+        // store TCR
+        uart->tcr = value & U8INT_MAX;
+      }
       break;
     }
     case UART_SPR_REG:
