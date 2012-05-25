@@ -1,9 +1,8 @@
+#include "instructionEmu/translator.h"
+
 #include "instructionEmu/decoder/arm/structs.h"
 
-#include "instructionEmu/interpreter/blockCopy.h"
 #include "instructionEmu/interpreter/internals.h"
-
-#include "instructionEmu/translator/arm/pcHandlers.h"
 
 
 /*

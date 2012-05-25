@@ -1,5 +1,5 @@
-#ifndef __INSTRUCTION_EMU__INTERPRETER__INTERPRETER_H__
-#define __INSTRUCTION_EMU__INTERPRETER__INTERPRETER_H__
+#ifndef __INSTRUCTION_EMU__INTERPRETER_H__
+#define __INSTRUCTION_EMU__INTERPRETER_H__
 
 #include "instructionEmu/interpreter/common.h"
 
@@ -14,15 +14,6 @@
 #include "instructionEmu/interpreter/arm/saturatingAddSubInstructions.h"
 #include "instructionEmu/interpreter/arm/storeInstructions.h"
 #include "instructionEmu/interpreter/arm/syncInstructions.h"
-
-
-#ifdef CONFIG_BLOCK_COPY
-
-#include "instructionEmu/interpreter/blockCopy.h"
-
-#include "instructionEmu/interpreter/translator/pcHandlers.h"
-
-#endif /* CONFIG_BLOCK_COPY */
 
 
 #ifdef CONFIG_THUMB2
@@ -42,4 +33,4 @@
 
 #endif /* CONFIG_THUMB2 */
 
-#endif /* __INSTRUCTION_EMU__INTERPRETER__INTERPRETER_H__ */
+#endif /* __INSTRUCTION_EMU__INTERPRETER_H__ */

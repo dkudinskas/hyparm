@@ -13,11 +13,11 @@
 #include "instructionEmu/scanner.h"
 #include "instructionEmu/translationInfo.h"
 
-#ifdef CONFIG_BLOCK_COPY
-#include "instructionEmu/interpreter/blockCopy.h"
-#endif
-
 #include "instructionEmu/interpreter/internals.h"
+
+#ifdef CONFIG_BLOCK_COPY
+#include "instructionEmu/translator/blockCopy.h"
+#endif
 
 #include "memoryManager/memoryProtection.h"
 #include "memoryManager/mmu.h"

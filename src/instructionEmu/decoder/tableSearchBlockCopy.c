@@ -4,6 +4,10 @@
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/interpreter.h"
 
+#ifdef CONFIG_BLOCK_COPY
+#include "instructionEmu/translator.h"
+#endif
+
 
 struct decodingTable
 {

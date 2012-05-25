@@ -2,8 +2,7 @@
 
 #include "cpuArch/constants.h"
 
-#include "instructionEmu/interpreter/blockCopy.h"
-#include "instructionEmu/interpreter/internals.h"
+#include "instructionEmu/translator/blockCopy.h"
 
 
 void armBackupRegisterToSpill(TranslationCache *tc, ARMTranslationInfo *block, u32int conditionCode, u32int reg)
