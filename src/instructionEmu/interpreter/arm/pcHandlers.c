@@ -1,3 +1,5 @@
+#include "instructionEmu/decoder/arm/structs.h"
+
 #include "instructionEmu/interpreter/blockCopy.h"
 #include "instructionEmu/interpreter/internals.h"
 
@@ -36,42 +38,7 @@ enum
   RN_INDEX = 16,
 
   SETFLAGS_BIT = 1 << 20,
-
-  STR_IMMEDIATE_BASE_VALUE = 0x04000000,
-  SUB_IMMEDIATE_BASE_VALUE = 0x02400000
 };
-
-typedef union
-{
-  struct armStrImmediateInstruction
-  {
-    unsigned immediate : 12;
-    unsigned sourceRegister : 4;
-    unsigned baseRegister : 4;
-    unsigned : 1;
-    unsigned writeBackIfNotIndex : 1;
-    unsigned : 1;
-    unsigned add : 1;
-    unsigned index : 1;
-    unsigned : 3;
-    unsigned conditionCode : 4;
-  } fields;
-  u32int value;
-} ARMStrImmediateInstruction;
-
-typedef union
-{
-  struct armSubImmediateInstruction
-  {
-    unsigned immediate : 12;
-    unsigned destinationRegister : 4;
-    unsigned operandRegister : 4;
-    unsigned setFlags : 1;
-    unsigned : 7;
-    unsigned conditionCode : 4;
-  } fields;
-  u32int value;
-} ARMSubImmediateInstruction;
 
 
 /*
