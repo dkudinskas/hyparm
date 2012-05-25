@@ -39,7 +39,8 @@ sub main
   my $configFile = abs_path("$path/../build/config.h");
 
   my $f = readFile($cdtProject);
-  if ($f =~ /\Q<option id="gnu.c.compiler.option.preprocessor.def.symbols.\E([0-9]+)\Q" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">\E/)
+
+  if ($f =~ /\Q<option id="gnu.c.compiler.option.preprocessor.def.symbols.\E([0-9]+)"( name="Defined symbols \(-D\)")?\Q superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">\E/)
   {
     my $listStart = $+[0];
     my $rem = substr $f, $listStart;
@@ -67,6 +68,10 @@ sub main
       print "OK\n";
       return 0;
     }
+  }
+  else
+  {
+    print "Error: cannot find symbols tag\n";
   }
 
   print "Failed\n";
