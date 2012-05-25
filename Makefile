@@ -194,6 +194,9 @@ HYPARM_DIRS-y := common common/memoryAllocator cpuArch drivers/beagle exceptions
                  guestManager instructionEmu instructionEmu/decoder instructionEmu/interpreter \
                  memoryManager vm/omap35xx
 
+# General
+HYPARM_DIRS-$(CONFIG_BLOCK_COPY) += instructionEmu/translator
+
 # Debugging
 HYPARM_DIRS-$(CONFIG_MMC) += io io/fs
 

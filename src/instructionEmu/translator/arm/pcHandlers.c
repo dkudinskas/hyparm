@@ -3,7 +3,7 @@
 #include "instructionEmu/interpreter/blockCopy.h"
 #include "instructionEmu/interpreter/internals.h"
 
-#include "instructionEmu/interpreter/arm/pcHandlers.h"
+#include "instructionEmu/translator/arm/pcHandlers.h"
 
 
 /*

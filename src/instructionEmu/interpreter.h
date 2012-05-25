@@ -20,7 +20,7 @@
 
 #include "instructionEmu/interpreter/blockCopy.h"
 
-#include "instructionEmu/interpreter/arm/pcHandlers.h"
+#include "instructionEmu/interpreter/translator/pcHandlers.h"
 
 #endif /* CONFIG_BLOCK_COPY */
 
