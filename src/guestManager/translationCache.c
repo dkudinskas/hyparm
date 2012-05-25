@@ -127,7 +127,10 @@ static void clearMetaCache(TranslationCache *tc)
    */
   for (u32int i = 0; i < TRANSLATION_CACHE_META_SIZE_N; i++)
   {
-    removeCacheEntry(tc, &tc->metaCache[i]);
+    if (tc->metaCache[i].type != MCE_TYPE_INVALID)
+    {
+      removeCacheEntry(tc, &tc->metaCache[i]);
+    }
   }
 }
 
