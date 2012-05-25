@@ -5,3 +5,5 @@ when raising exception in guest, make sure LR is correct!!!
 - now need to patch the exception delivery routines to make sure correct LR is set!
 
 make private headers for devices in vm/omap ... #defines in C files = messy
+
+with guest vmem off, a (priv) translation fault in the hypervisor is delivered to the guest! wtf?
