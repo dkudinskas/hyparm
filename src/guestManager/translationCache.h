@@ -26,14 +26,23 @@
 #define TRANSLATION_CACHE_MEMORY_PER_BITMAP_BIT   (TRANSLATION_CACHE_MEMORY_PER_BITMAP / 32) // should be 8 megabytes
 
 
-enum
+typedef enum
 {
   PC_REMAP_NO_INCREMENT = 0b00,
   PC_REMAP_INCREMENT = 0b01,
   PC_REMAP_INCREMENT_TWO = 0b10,
   PC_REMAP_LOOKUP = 0b11,
+} PCRemapAction;
 
+enum
+{
   PC_REMAP_BIT_COUNT = 2,
+
+  PC_REMAP_BITMAP_SIZE_BITS = 256,
+  PC_REMAP_BITMAP_SIZE_N = PC_REMAP_BITMAP_SIZE_BITS / 32,
+
+  PC_REMAP_BITMAP_MAX_INSTRUCTIONS = PC_REMAP_BITMAP_SIZE_BITS / PC_REMAP_BIT_COUNT,
+
   PC_REMAP_MASK = 0b11,
 };
 
@@ -116,11 +125,8 @@ typedef struct metaCacheEntry
    * For Thumb we can do the same trick per halfword (with +2 and +4, and add bits << 1).
    *
    * NOTE: this only works when we DO NOT MIX ARM AND THUMB code IN ONE translated BLOCK.
-   *
-   * The bitmap below is 64-bit, which means it can contain information of at most 32 ARM or Thumb
-   * 16-bit instructions.
    */
-  u64int pcRemapBitmap;
+  u32int pcRemapBitmap[PC_REMAP_BITMAP_SIZE_N];
 #endif
   InstructionHandler hdlFunct;
 } MetaCacheEntry;

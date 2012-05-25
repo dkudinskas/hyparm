@@ -502,23 +502,22 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
   struct decodingTableEntry *decodedInstruction;
   for (; (decodedInstruction = decodeArmInstruction(*instruction))->replace == IRC_SAFE; ++instruction)
   {
+    setPCMapping(&block, PC_REMAP_INCREMENT);
     if (armIsPCInsensitiveInstruction(*instruction) || decodedInstruction->pcHandler == NULL)
     {
       DEBUG(SCANNER, "instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instruction, instruction);
-      writeToCodeCache(&context->translationCache, &block, *instruction);
-      block.metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block.pcRemapBitmapShift;
-      block.pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
+      armWriteToCodeCache(&context->translationCache, &block, *instruction);
     }
     else
     {
       decodedInstruction->pcHandler(&context->translationCache, &block, (u32int)instruction, *instruction);
     }
   }
-  ASSERT(block.pcRemapBitmapShift < (sizeof(block.metaEntry.pcRemapBitmap) * CHAR_BIT), "block too long");
   /*
    * Next instruction must be translated into hypercall.
    */
-  writeToCodeCache(&context->translationCache, &block, INSTR_SWI | ((metaIndex + 1) << 8));
+  setPCMapping(&block, PC_REMAP_INCREMENT);
+  armWriteToCodeCache(&context->translationCache, &block, INSTR_SWI | ((metaIndex + 1) << 8));
   context->endOfBlockInstr = *instruction;
   context->hdlFunct = decodedInstruction->handler;
   context->lastNativeEndAddress = (u32int)instruction;
@@ -532,12 +531,14 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
   {
     block.metaEntry.codeSize = (u32int)context->translationCache.codeCacheLastEntry
                              - (u32int)block.metaEntry.code + (u32int)block.code
-                             - (u32int)context->translationCache.codeCache;
+                             - (u32int)context->translationCache.codeCache
+                             - ARM_INSTRUCTION_SIZE;
     DEBUG(SCANNER, "Block exceeding end: blockCopyCacheSize=%#.8x" EOL, block.metaEntry.codeSize);
   }
   else
   {
-    block.metaEntry.codeSize = (u32int)block.code - (u32int)block.metaEntry.code;
+    block.metaEntry.codeSize = (u32int)block.code - (u32int)block.metaEntry.code
+                             - ARM_INSTRUCTION_SIZE;
   }
   block.metaEntry.endAddress = (u32int)instruction;
   block.metaEntry.hyperedInstruction = context->endOfBlockInstr,

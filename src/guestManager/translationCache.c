@@ -68,7 +68,7 @@ void addMetaCacheEntry(TranslationCache *tc, u32int index, MetaCacheEntry *entry
     resolveCacheConflict(tc, index);
   }
   tc->metaCache[index] = *entry;
-  tc->codeCacheNextEntry = (CodeCacheEntry *)((u32int)entry->code + (u32int)entry->codeSize);
+  tc->codeCacheNextEntry = (CodeCacheEntry *)((u32int)&entry->code->codeStart + (u32int)entry->codeSize);
 
   // set bitmap entry to executed
   setExecBitMap(tc, entry->endAddress);
@@ -205,8 +205,9 @@ static u32int findMetaCacheEntry(const TranslationCache *tc, u32int address)
 u32int getOriginPC(TranslationCache *tc, u32int metaIndex, u32int codeCacheAddress)
 {
   const MetaCacheEntry *const entry = &tc->metaCache[metaIndex];
-  const u32int codeStart = (u32int)entry->code;
-  ASSERT(codeCacheAddress >= codeStart && (codeStart + entry->codeSize) < codeCacheAddress,
+  const u32int codeStart = (u32int)&entry->code->codeStart;
+
+  ASSERT(codeCacheAddress >= codeStart && (codeStart + entry->codeSize) > codeCacheAddress,
          "C$ address out of bounds");
 
   u32int granularity;
@@ -228,11 +229,11 @@ u32int getOriginPC(TranslationCache *tc, u32int metaIndex, u32int codeCacheAddre
       DIE_NOW(NULL, "invalid M$ entry type");
   }
 
-  u32int origin = entry->startAddress;
+  u32int origin = entry->startAddress - granularity;
   for (u32int address = (u32int)entry->code, shift = 0; address < codeCacheAddress;
        address += granularity, shift += 2)
   {
-    const u32int remapValue = (entry->pcRemapBitmap >> shift) & PC_REMAP_MASK;
+    const u32int remapValue = (entry->pcRemapBitmap[shift >> 5] >> (shift & 0x1F)) & PC_REMAP_MASK;
     switch (remapValue)
     {
       case PC_REMAP_LOOKUP:
@@ -450,13 +451,14 @@ static void removeCodeCacheEntry(const TranslationCache *tc, const MetaCacheEntr
   /*
    * Is the block contiguous or split?
    */
-  const u32int codeEndAddress = (u32int)metaEntry->code + metaEntry->codeSize;
+  const u32int codeEndAddress = (u32int)&metaEntry->code->codeStart + metaEntry->codeSize;
+  metaEntry->code->metaIndex = 0;
   if (codeEndAddress < (u32int)tc->codeCacheLastEntry)
   {
     /*
      * Contiguous. Zero-fill the whole block at once.
      */
-    memset(metaEntry->code, 0, metaEntry->codeSize);
+    memset(&metaEntry->code->codeStart, 0, metaEntry->codeSize);
   }
   else
   {
@@ -464,7 +466,7 @@ static void removeCodeCacheEntry(const TranslationCache *tc, const MetaCacheEntr
      * Split block!
      */
     u32int firstChunkSize = (u32int)tc->codeCacheLastEntry - codeEndAddress;
-    memset(metaEntry->code, 0, firstChunkSize);
+    memset(&metaEntry->code->codeStart, 0, firstChunkSize);
     memset(tc->codeCache, 0, metaEntry->codeSize - firstChunkSize);
   }
 }
