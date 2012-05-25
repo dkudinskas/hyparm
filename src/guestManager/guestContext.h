@@ -158,7 +158,7 @@ struct guestContext
 
 #ifdef CONFIG_BLOCK_COPY
 
-  u32int PCOfLastInstruction;/*This will contain the value the program counter should have when the last instruction is executing*/
+  u32int lastNativeEndAddress;/*This will contain the value the program counter should have when the last instruction is executing*/
 #endif
 };
 

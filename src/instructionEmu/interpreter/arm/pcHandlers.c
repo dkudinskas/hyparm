@@ -117,7 +117,6 @@ void armDPImmRegRSR(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, 
     {
       const u32int scratchRegister = getOtherRegisterOf3(destinationRegister, operandNRegister, operandMRegister);
       armBackupRegisterToSpill(tc, block, conditionCode, scratchRegister);
-      block->code = updateCodeCachePointer(tc, block->code);
       pcRegister = scratchRegister;
       restoreFromSpill = TRUE;
     }
@@ -135,9 +134,7 @@ void armDPImmRegRSR(TranslationCache *tc, ARMTranslationInfo *block, u32int pc, 
     }
   }
 
-  block->code = updateCodeCachePointer(tc, block->code);
-  *block->code = instruction;
-  block->code++;
+  writeToCodeCache(tc, block, instruction);
 
   if (restoreFromSpill)
   {
@@ -187,9 +184,7 @@ void armDPImmRegRSRNoDest(TranslationCache *tc, ARMTranslationInfo *block, u32in
     }
   }
 
-  block->code = updateCodeCachePointer(tc, block->code);
-  *block->code = instruction;
-  block->code++;
+  writeToCodeCache(tc, block, instruction);
 
   if (replaceN || replaceM)
   {
@@ -251,7 +246,6 @@ void armLdrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
     {
       const u32int scratchRegister = getOtherRegisterOf2(destinationRegister, offsetRegister);
       armBackupRegisterToSpill(tc, block, conditionCode, scratchRegister);
-      block->code = updateCodeCachePointer(tc, block->code);
       pcRegister = scratchRegister;
     }
 
@@ -259,9 +253,7 @@ void armLdrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
     instruction = ARM_SET_REGISTER(instruction, RN_INDEX, pcRegister);
   }
 
-  block->code = updateCodeCachePointer(tc, block->code);
-  *block->code = instruction;
-  block->code++;
+  writeToCodeCache(tc, block, instruction);
 
   if (spill)
   {
@@ -298,16 +290,13 @@ void armMovPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
     armWritePCToRegister(tc, block, conditionCode, destinationRegister, pc);
     if (!(instruction & SETFLAGS_BIT))
     {
-      block->code++;
       block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << (block->pcRemapBitmapShift - PC_REMAP_BIT_COUNT);
       return;
     }
     instruction = ARM_SET_REGISTER(instruction, RM_INDEX, destinationRegister);
   }
 
-  block->code = updateCodeCachePointer(tc, block->code);
-  *block->code = instruction;
-  block->code++;
+  writeToCodeCache(tc, block, instruction);
   block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
   block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
 }
@@ -337,9 +326,7 @@ void armShiftPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32i
     instruction = ARM_SET_REGISTER(instruction, RM_INDEX, destinationRegister);
   }
 
-  block->code = updateCodeCachePointer(tc, block->code);
-  *block->code = instruction;
-  block->code++;
+  writeToCodeCache(tc, block, instruction);
   block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
   block->pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
 }
@@ -374,9 +361,7 @@ void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
       DEBUG(TRANSLATION, "armStmPCInstruction: substituting r%u for PC" EOL, scratchRegister);
       armBackupRegisterToSpill(tc, block, conditionCode, scratchRegister);
       armWritePCToRegister(tc, block, conditionCode, scratchRegister, pc);
-      block->code = updateCodeCachePointer(tc, block->code);
-      *block->code = (instruction & ~STM_REGISTERS_PC_BIT) | (1 << scratchRegister);
-      block->code++;
+      writeToCodeCache(tc, block, (instruction & ~STM_REGISTERS_PC_BIT) | (1 << scratchRegister));
     }
     else
     {
@@ -408,9 +393,7 @@ void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
          *
          * First perform STMIA/STMIB for all remaining registers:
          */
-        block->code = updateCodeCachePointer(tc, block->code);
-        *block->code = instruction & ~STM_REGISTERS_PC_BIT;
-        block->code++;
+        writeToCodeCache(tc, block, instruction & ~STM_REGISTERS_PC_BIT);
         /*
          * Find another register, spill it and use it for the PC value
          */
@@ -439,9 +422,7 @@ void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
         strPCInstruction.fields.index = before || !writeback;
         strPCInstruction.fields.sourceRegister = scratchRegister;
         strPCInstruction.fields.writeBackIfNotIndex = before && writeback;
-        block->code = updateCodeCachePointer(tc, block->code);
-        *block->code = strPCInstruction.value;
-        block->code++;
+        writeToCodeCache(tc, block, strPCInstruction.value);
         DEBUG(TRANSLATION, "armStmPCInstruction: split off PC in STR instruction: %#.8x" EOL,
               strPCInstruction.value);
       }
@@ -483,18 +464,14 @@ void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
         adjustBaseRegisterInstruction.fields.destinationRegister = baseRegister;
         adjustBaseRegisterInstruction.fields.immediate = 4;
         adjustBaseRegisterInstruction.fields.operandRegister = baseRegister;
-        block->code = updateCodeCachePointer(tc, block->code);
-        *block->code = adjustBaseRegisterInstruction.value;
-        block->code++;
+        writeToCodeCache(tc, block, adjustBaseRegisterInstruction.value);
         DEBUG(TRANSLATION, "armStmPCInstruction: adjusting base address with SUB Rn, Rn, #4: %#.8x"
               EOL, adjustBaseRegisterInstruction.value);
         /*
          * Now perform STMDA/STMDB on remaining registers
          */
         printf ("STMDx: %#.8x" EOL, instruction & ~STM_REGISTERS_PC_BIT);
-        block->code = updateCodeCachePointer(tc, block->code);
-        *block->code = instruction & ~STM_REGISTERS_PC_BIT;
-        block->code++;
+        writeToCodeCache(tc, block, instruction & ~STM_REGISTERS_PC_BIT);
         /*
          * Find another register, spill it and use it for the PC value
          */
@@ -523,9 +500,7 @@ void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
         strPCInstruction.fields.index = !before || writeback;
         strPCInstruction.fields.sourceRegister = scratchRegister;
         strPCInstruction.fields.writeBackIfNotIndex = !before && !writeback;
-        block->code = updateCodeCachePointer(tc, block->code);
-        *block->code = strPCInstruction.value;
-        block->code++;
+        writeToCodeCache(tc, block, strPCInstruction.value);
         DEBUG(TRANSLATION, "armStmPCInstruction: split off PC in STR instruction: %#.8x" EOL,
               strPCInstruction.value);
       }
@@ -537,9 +512,7 @@ void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
   }
   else
   {
-    block->code = updateCodeCachePointer(tc, block->code);
-    *block->code = instruction;
-    block->code++;
+    writeToCodeCache(tc, block, instruction);
   }
 
   block->metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block->pcRemapBitmapShift;
@@ -606,7 +579,6 @@ void armStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
     }
 
     armBackupRegisterToSpill(tc, block, conditionCode, scratchRegister);
-    block->code = updateCodeCachePointer(tc, block->code);
     armWritePCToRegister(tc, block, conditionCode, scratchRegister, pc);
 
     if (replaceSource)
@@ -620,9 +592,7 @@ void armStrPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
     }
   }
 
-  block->code = updateCodeCachePointer(tc, block->code);
-  *block->code = instruction;
-  block->code++;
+  writeToCodeCache(tc, block, instruction);
 
   if (replaceSource || replaceBase)
   {

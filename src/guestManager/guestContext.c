@@ -189,7 +189,7 @@ void dumpGuestContext(const GCONTXT *context)
   printf("gc blockCopyCache: %p" EOL, context->translationCache.codeCache);
   printf("gc blockCopyCache next: %p" EOL, context->translationCache.codeCacheNextEntry);
   printf("gc blockCopyCacheEnd: %p" EOL, context->translationCache.codeCacheLastEntry);
-  printf("gc PCOfLastInstruction: %#.8x" EOL, context->PCOfLastInstruction);
+  printf("gc PCOfLastInstruction: %#.8x" EOL, context->lastNativeEndAddress);
 #endif
   dumpSdramStats(context->vm.sdram);
 }

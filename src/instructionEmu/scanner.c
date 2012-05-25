@@ -13,6 +13,10 @@
 #include "instructionEmu/scanner.h"
 #include "instructionEmu/translationInfo.h"
 
+#ifdef CONFIG_BLOCK_COPY
+#include "instructionEmu/interpreter/blockCopy.h"
+#endif
+
 #include "instructionEmu/interpreter/internals.h"
 
 #include "memoryManager/memoryProtection.h"
@@ -155,7 +159,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     }
     context->R15 = (u32int)addressInBlockCopyCache;
     //But also the PC of the last instruction of the block should be set
-    context->PCOfLastInstruction = (u32int)meta->endAddress;
+    context->lastNativeEndAddress = (u32int)meta->endAddress;
 #endif
     return;
   }
@@ -501,7 +505,7 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
     if (armIsPCInsensitiveInstruction(*instruction) || decodedInstruction->pcHandler == NULL)
     {
       DEBUG(SCANNER, "instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instruction, instruction);
-      *(block.code++) = *instruction;
+      writeToCodeCache(&context->translationCache, &block, *instruction);
       block.metaEntry.pcRemapBitmap |= PC_REMAP_INCREMENT << block.pcRemapBitmapShift;
       block.pcRemapBitmapShift += PC_REMAP_BIT_COUNT;
     }
@@ -509,16 +513,15 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
     {
       decodedInstruction->pcHandler(&context->translationCache, &block, (u32int)instruction, *instruction);
     }
-    block.code = updateCodeCachePointer(&context->translationCache, block.code);
   }
   ASSERT(block.pcRemapBitmapShift < (sizeof(block.metaEntry.pcRemapBitmap) * CHAR_BIT), "block too long");
   /*
    * Next instruction must be translated into hypercall.
    */
-  *(block.code++) = INSTR_SWI | ((metaIndex + 1) << 8);
+  writeToCodeCache(&context->translationCache, &block, INSTR_SWI | ((metaIndex + 1) << 8));
   context->endOfBlockInstr = *instruction;
   context->hdlFunct = decodedInstruction->handler;
-  context->PCOfLastInstruction = (u32int)instruction;
+  context->lastNativeEndAddress = (u32int)instruction;
   DEBUG(SCANNER, "EOB %p instr %#.8x SWIcode %#.2x hdlrFuncPtr %p" EOL, instruction,
       context->endOfBlockInstr, metaIndex, context->hdlFunct);
   /*

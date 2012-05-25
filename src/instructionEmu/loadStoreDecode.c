@@ -16,10 +16,10 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
 #ifdef CONFIG_BLOCK_COPY
   // save the PCOfLastInstruction. The emulationfunctions make use of this value to calculate the next PC so R15 should be stored here temporary
   // but after the abort the PCOfLastInstruction should be back a valid value since the next emulation function will make use of this!
-  u32int PCOfLastInstructionBackup = context->PCOfLastInstruction;
+  u32int PCOfLastInstructionBackup = context->lastNativeEndAddress;
 
   //emulate methods will take PCOfLastInstruction from context, put it there
-  context->PCOfLastInstruction = context->R15;
+  context->lastNativeEndAddress = context->R15;
 #endif
 
 #ifdef CONFIG_THUMB2
@@ -267,6 +267,6 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
     }
   }
 #ifdef CONFIG_BLOCK_COPY
-  context->PCOfLastInstruction = PCOfLastInstructionBackup;
+  context->lastNativeEndAddress = PCOfLastInstructionBackup;
 #endif
 }

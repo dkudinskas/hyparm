@@ -107,7 +107,7 @@ __macro__ u32int getLowGPRegister(const GCONTXT *context, u32int sourceRegister)
 __macro__ u32int getNativeInstructionPointer(const GCONTXT *context)
 {
 #ifdef CONFIG_BLOCK_COPY
-  return context->PCOfLastInstruction;
+  return context->lastNativeEndAddress;
 #else
   return context->R15;
 #endif
