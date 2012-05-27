@@ -1,0 +1,76 @@
+/*
+ * Test return address on data abort (depends on PC remapping).
+ */
+.syntax unified
+
+.text
+.arm
+
+.global _start
+
+_start:
+
+B go
+
+forceDataAbort:
+/* cause data abort */
+LDR     r2, [r1, #-1] 
+BKPT    #1
+
+go:
+/* configure exception vector */
+CPSID   if
+ADR     r0, vector
+MCR     p15, 0, r0, c12, c0, 0
+
+/* map current MB in translation table as section (cacheable, priv. access) */
+LDR     r0, =translationTable
+ADD     r1, r0, #(2048*4)
+MOV     r2, #0x80000000
+ORR     r2, r2, #0xa
+ORR     r2, r2, #0x400
+STR     r2, [r1]
+
+/* set up dacr, ttbcr, ttbr0 */
+MOV     r1, #1
+MCR     p15, 0, r1, c3, c0, 0
+MCR     p15, 0, r0, c2, c0, 0
+MOV     r0, #0
+MCR     p15, 0, r0, c2, c0, 2
+
+/* enable MMU */
+MRC     p15, 0, r0, c1, c0, 0
+ORR     r0, r0, r1
+MCR     p15, 0, r0, c1, c0, 0
+ISB     SY
+
+B forceDataAbort
+
+.ltorg
+
+handleException:
+/* construct expected return address in r0 */
+MOV     r0, #0x80000000
+ADD     r0, r0, #0xc
+CMP     r0, lr
+BNE     fail
+BKPT    #0
+
+fail:
+BKPT    #2
+
+.balign 0x20
+vector:
+BKPT    #3
+BKPT    #4
+BKPT    #5
+BKPT    #6
+B       handleException
+BKPT    #7
+BKPT    #8
+BKPT    #9
+
+/* 16 kB L1 short-descriptor translation table */
+.balign (4 * 4096), 0xFF
+translationTable:
+.space (4 * 4096), 0
