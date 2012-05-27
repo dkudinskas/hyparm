@@ -33,17 +33,20 @@ void deliverServiceCall(GCONTXT *context)
   guestChangeMode(context->CPSR & PSR_MODE);
   // 4. set LR to PC+4
 #ifdef CONFIG_BLOCK_COPY
-#warning Need to set LR
-#endif
+  const u32int metaIndex = findMetaCacheEntryByCodeCacheAddress(&context->translationCache, context->R15);
+  context->R14_SVC = getOriginPC(&context->translationCache, metaIndex, context->R15);
+#else
+  context->R14_SVC = context->R15;
+#endif /* CONFIG_BLOCK_COPY */
 #ifdef CONFIG_THUMB2
   if (context->CPSR & PSR_T_BIT)// Were we on Thumb?
   {
-    context->R14_SVC = context->R15 + T16_INSTRUCTION_SIZE;
+    context->R14_SVC += T16_INSTRUCTION_SIZE;
   }
   else
   {
-#endif
-    context->R14_SVC = context->R15 + ARM_INSTRUCTION_SIZE;
+#endif /* CONFIG_THUMB2 */
+    context->R14_SVC += ARM_INSTRUCTION_SIZE;
 #ifdef CONFIG_THUMB2
   }
   // 5. Clear or set Thumb bit according to SCTLR.TE
@@ -55,7 +58,7 @@ void deliverServiceCall(GCONTXT *context)
   {
     context->CPSR &= ~PSR_T_BIT;
   }
-#endif
+#endif /* CONFIG_THUMB2 */
   // 6. set PC to guest svc handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_SVC);
   // update AFI bits for SVC:
@@ -181,9 +184,12 @@ void deliverInterrupt(GCONTXT *context)
 #endif
   // 5. set LR to PC+4
 #ifdef CONFIG_BLOCK_COPY
-#warning Need to set LR
+  const u32int metaIndex = findMetaCacheEntryByCodeCacheAddress(&context->translationCache, context->R15);
+  context->R14_IRQ = getOriginPC(&context->translationCache, metaIndex, context->R15);
+#else
+  context->R14_IRQ = context->R15;
 #endif
-  context->R14_IRQ = context->R15 + LR_OFFSET_IRQ;
+  context->R14_IRQ += LR_OFFSET_IRQ;
   // 6. set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_IRQ);
   // update AFI bits for IRQ:
@@ -275,9 +281,12 @@ void deliverPrefetchAbort(GCONTXT *context)
 #endif
   // 5. set LR to PC+4
 #ifdef CONFIG_BLOCK_COPY
-#warning Need to set LR
+  const u32int metaIndex = findMetaCacheEntryByCodeCacheAddress(&context->translationCache, context->R15);
+  context->R14_ABT = getOriginPC(&context->translationCache, metaIndex, context->R15);
+#else
+  context->R14_ABT = context->R15;
 #endif
-  context->R14_ABT = context->R15 + LR_OFFSET_PREFETCH_ABT;
+  context->R14_ABT += LR_OFFSET_PREFETCH_ABT;
   // 6. set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_PABT);
   // update AFI bits for IRQ:
