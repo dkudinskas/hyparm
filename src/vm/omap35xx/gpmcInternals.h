@@ -167,7 +167,7 @@
 /**************************
  * STATIC REGISTER VALUES *
  **************************/
-#define GPMC_REVISION_VALUE                            0x00000000
+#define GPMC_REVISION_VALUE                            0x00000050
 
 
 /***********************

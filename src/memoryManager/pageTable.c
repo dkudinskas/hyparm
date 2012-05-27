@@ -382,7 +382,7 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
   // First check 1st Level page table entry
   simpleEntry* first = getEntryFirst(pageTable, virtAddr);
   DEBUG(MM_PAGE_TABLES, "mapSmallPage: first entry %#.8x @ %p" EOL, *(u32int *)first, first);
-  switch(first->type)
+  switch (first->type)
   {
     case FAULT:
     {
