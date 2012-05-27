@@ -45,7 +45,7 @@ static inline void incrementCollisionCounter(TranslationCache *tc)
 
 static void clearExecBitMap(TranslationCache *tc, u32int address);
 static void clearMetaCache(TranslationCache *tc);
-static u32int findMetaCacheEntry(const TranslationCache *tc, u32int address);
+static u32int findMetaCacheEntryByNativeAddress(const TranslationCache *tc, u32int address);
 static bool isBitmapSetForAddress(const TranslationCache *tc, u32int address);
 static void removeCacheEntry(TranslationCache *tc, MetaCacheEntry *entry);
 static void removeCodeCacheEntry(const TranslationCache *tc, const MetaCacheEntry *metaEntry);
@@ -145,7 +145,7 @@ void clearTranslationCacheByAddress(TranslationCache *tc, u32int address)
   if (isBitmapSetForAddress(tc, address))
   {
     u32int cacheIndex;
-    while ((cacheIndex = findMetaCacheEntry(tc, address)) != (u32int)-1)
+    while ((cacheIndex = findMetaCacheEntryByNativeAddress(tc, address)) != (u32int)-1)
     {
       removeCacheEntry(tc, &tc->metaCache[cacheIndex]);
     }
@@ -186,7 +186,7 @@ void dumpMetaCacheEntryByIndex(TranslationCache *tc, u32int metaIndex)
 /* input: any address, might be start, end of block or somewhere in the middle... */
 /* output: first cache entry index for the block where this address falls into */
 /* output: if no such block, return -1 (0xFFFFFFFF) */
-static u32int findMetaCacheEntry(const TranslationCache *tc, u32int address)
+static u32int findMetaCacheEntryByNativeAddress(const TranslationCache *tc, u32int address)
 {
   for (u32int i = 0; i < TRANSLATION_CACHE_META_SIZE_N; i++)
   {
@@ -204,6 +204,23 @@ static u32int findMetaCacheEntry(const TranslationCache *tc, u32int address)
 
 
 #ifdef CONFIG_BLOCK_COPY
+
+u32int findMetaCacheEntryByCodeCacheAddress(const TranslationCache *tc, u32int address)
+{
+  for (u32int i = 0; i < TRANSLATION_CACHE_META_SIZE_N; i++)
+  {
+    if (tc->metaCache[i].type != MCE_TYPE_INVALID
+        && (u32int)&tc->metaCache[i].code->codeStart <= address
+        && ((u32int)&tc->metaCache[i].code->codeStart) + tc->metaCache[i].codeSize > address)
+    {
+      // addr falls in-between start-end. found a matching entry.
+      DEBUG(BLOCK_CACHE, "findMetaCacheEntryByCodeCacheAddress: found entry %#x for address %#.8x"
+            EOL, i, address);
+      return i;
+    }
+  }
+  return (u32int)-1;
+}
 
 u32int getOriginPC(TranslationCache *tc, u32int metaIndex, u32int codeCacheAddress)
 {

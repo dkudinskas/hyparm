@@ -218,9 +218,12 @@ void deliverDataAbort(GCONTXT *context)
 #endif
   // 5. set LR to PC+8
 #ifdef CONFIG_BLOCK_COPY
-#warning Need to set LR
+  const u32int metaIndex = findMetaCacheEntryByCodeCacheAddress(&context->translationCache, context->R15);
+  context->R14_ABT = getOriginPC(&context->translationCache, metaIndex, context->R15);
+#else
+  context->R14_ABT = context->R15;
 #endif
-  context->R14_ABT = context->R15 + LR_OFFSET_DATA_ABT;
+  context->R14_ABT += LR_OFFSET_DATA_ABT;
   // 6. set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_DABT);
   // update AFI bits for IRQ:

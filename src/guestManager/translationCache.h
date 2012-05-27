@@ -153,6 +153,7 @@ void clearTranslationCacheByAddressRange(TranslationCache *tc, u32int startAddre
 void dumpMetaCacheEntry(MetaCacheEntry *entry) __cold__;
 void dumpMetaCacheEntryByIndex(TranslationCache *tc, u32int metaIndex) __cold__;
 
+u32int findMetaCacheEntryByCodeCacheAddress(const TranslationCache *tc, u32int address);
 u32int getOriginPC(TranslationCache *tc, u32int metaIndex, u32int codeCacheAddress);
 
 __macro__ MetaCacheEntry *getMetaCacheEntry(TranslationCache *tc, u32int metaIndex, u32int startAddress);

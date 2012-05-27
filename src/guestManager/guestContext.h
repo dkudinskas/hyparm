@@ -158,6 +158,7 @@ struct guestContext
 
 #ifdef CONFIG_BLOCK_COPY
 
+  // TODO: add MetaCacheEntry *currentMetaEntry; instead of using findMetaCacheEntry
   u32int lastNativeEndAddress;/*This will contain the value the program counter should have when the last instruction is executing*/
 #endif
 };
