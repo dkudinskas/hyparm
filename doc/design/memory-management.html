@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="../styles/common.css" rel="stylesheet" type="text/css" />
+  <link href="../styles/content.css" rel="stylesheet" type="text/css" />
+  <script src="../scripts/mootools-core-1.4.3-full-nocompat.js" type="text/javascript"></script>
+  <script src="../scripts/content.js" type="text/javascript"></script>
+  <title>Memory Management</title>
+</head>
+<body>
+
+<h1>Memory Management</h1>
+
+<p>
+This section describes the design and implementation of the memory management module.
+</p>
+
+<h2>Page Tables</h2>
+
+<p>
+ARM MMU supports virtual memory by translating virtual addresses to physical using <em>page tables</em>. The page tables can be 2 levels deep at maximum. Each entry is 32 bits wide. There are 4096 first level entries, making the first level entry 16kB big. The address of the first entry is the base page table address that must be registered with the MMU. Each entry corresponds to a megabyte of virtual memory, 0x000XXXXX to 0xFFFXXXXX. A first level entry can directly map a megabyte of virtual memory (section), or point to a second level smaller page table. Second level entries provide finer grained memory mapping, where entries can map 64kB large pages or 4kB small pages. Second level page tables are 1kB in size.
+<br/>
+Apart from providing memory mapping, each entry has many extra attributes, defining the memory range access permissions or usage. For example, the memory space can be mapped as non-executable (XN bit), cachable in L1/L2 caches (C bit), and others. 3 important bits of the page table entry are access permissions. They can configure access to be read-writeable, read-only or no-access for privileged mode and user mode access. In addition to this, each megabyte of virtual memory is assigned to a domain (DOM bits). Domains provide a higher level memory access modifier mechanism. There are 16 domains, manageded by the MMU, configured using the domain access control register (DACR). A domain can be set to no-access, client-access, manager-access or reserved. No-access means that all currently active page table entries, that have their DOM bits set to this corresponding domain, will abort all memory access to the address range. In this case, the 3 access permission bits are ignored and not cheched by the MMU. Client access tells the MMU to carry on checking these access permission bits to decide if the memory access should be allowed. Manager access also ignored the access permission bits, however it allows all accesses without further checks. 
+</p>
+
+<h2>Shadow-mapping</h2>
+
+<p>The hypervisor must be run privileged, and the guest deprivileged. The memory mapping mechanism provided by the MMU does not provide an easy way to map the hypervisor and the guest together, retaining correct access permissions, equivalent to native execution. This requires a shadow map.
+<br/>
+A shadow map is a new virtual address map managed by the hypervisor. Once the guest is trying to add an entry to its internal memory map, the hypervisor parses this new entry, modifies access permissions accordingly and adds a new entry to the shadow map. Since only the hypervisor runs privileged, 'privileged mode' access permission bits allow all access for the hypervisor - it must be able to access all hardware resources. This leaves only the 'user mode' access permission bits in the shadow page table entry to map guest access modifiers correctly (guest domain access control register configuration and corresponding guest page table entry access permission bits).
+<br/>
+This is significant. Once the guest hits user mode, it would try to map the kernel as read-write for privileged access and as no-access for user access. To maintain equivalence with native execution, the hypervisor must make sure that all memory reads and writes that abort natively must abort virtualized as well. Since only user mode access modifier is available in the shadow map, the VMM must take the strictest possible access permissions from the guest entry and copy them to the shadow entry acces permission bits. However, this is not feasable performance wise. Such a mapping would mean that the hypervisor gets more data aborts, and then must check guest state to evaluate wether to allow this operation or not. In the case of kernel mapping, no-access modifier must be chosen. But this means that every single instruction fetch would data abort - no-access modifier prohibits reading. A data abort on every kernel instruction would make running such a system impossible. A solution to this problem is <em>double shadowing</em>.
+</p>
+
+<h2>Double-shadowing</h2>
+
+<p>Double-shadowing technique has bee developed to work around the limitations of the ARM MMU address mapping mechanism. The essence of it is creating not one shadow-map, but two at once, for <em>each</em> guest memory map. One shadow-map will be active within the MMU when the guest is running privileged, another one - when guest is running user mode. This provides two shadow page table entries for each guest page table entry. In turn, it allows easier mapping of guest access permissions. Guest privileged mode access permission modifier is copied to shadow-privileged entry, guest user mode access permission modifier is copied to shadow-user page table entry. This avoid the problem of prefetch aborting when even reading a memory range is prohibited.</p>
+
+<h2>On-demand shadowing</h2>
+
+<p>This algorithm is designed to reduce the workload of shadow mapping guest entries. The guest will add many entries to its page tables. However, this does not mean that the virtual addresses mapped will actually be used during execution. By ignoring all page table writes by the guest (not adding appropriate shadow mappings) a lot of unnecessary work can be avoided. Once a virtual address is used by the guest, if it has not been shadow mapped, it will cause a data or prefetch abort. This exception is caught by the hypervisor. In turn, it tries to shadow map the entry corresponding to the faulting virtual address. If succeeded, the operation is retried, if not, the abort exception is forwarded to the guest. Therefore, at any given time, only a subset of guest page table entries are actually shadow mapped.</p>
+
+<h2>Implementation structure</h2>
+
+<p>The memory management code is split to different files according to functionality. 
+<em>Addressing.c</em> contains the top level functions to handle MMU On/off operations, changes to translate table base address registers, exception vector changes.<br/>
+<em>memoryProtection.c</em> contains code to deal with changes of guest domain access control register, and has functions to protect a memory range from guest write operations.<br/>
+<em>pageTable.c</em> handles all underying page table modification operations, like adding new entries, modifying existing entries or identifying a guest page table edit operation.<br/>
+<em>shadowMap.c</em> contains the code to on-demand shadow map or remove shadow page table entries, be it first or second level.<br/>
+<em>mmu.c</em> contains the functions to handle underlying MMU operations, like cleaing caches, tlb entries, changing virtual memory configuration.</p>
+
+<p>There are several base page table pointers valid at any given point of execution. The data structure holding all of them and all of the required information about virtual memory resides in the guest context.</p>
+<code>struct VirtualMachinePageTables<br/>
+{<br/>
+  simpleEntry* hypervisor;<br/>
+  simpleEntry* guestVirtual;<br/>
+  simpleEntry* guestPhysical;<br/>
+  simpleEntry* shadowPriv;<br/>
+  simpleEntry* shadowUser;<br/>
+  simpleEntry* shadowActive;<br/>
+  u32int contextID;<br/>
+  ptInfo* sptInfo;<br/>
+  ptInfo* gptInfo;<br/>
+};<br/></code>
+
+<p><em>hypervisor</em> page table is the underying page table, which maps all RAM and devices as 1-2-1 entries. Used during execution of the guest - when the guest provides only the physical address. The active shadow  page table is switched to the hypervisor page table, such that the hypervisor can do the access using guest physical address. It is also used as a normal underying base page table when the guest does not enable the MMU, and therefore, there is no guest virtual memory and no shadow maps are required. In this case, memory protection of executed guest code is applied on this hypervisor page table.<br/>
+<em>guestVirtual</em> is the guest virtual address to access guest page table directly. This variable can be not set.<br/>
+<em>guestPhysical</em> is the guest physical address of the guest base page table. It is acquired when the guest writes to the TTBAR0 OR TTBAR1 virtual MMU registers.<br/>
+<em>shadowPriv</em and <em>shadowUser</em> are base page table addresses to the double-shadow map algorithm described above, one for guest privileged, one for guest virtual execution modes.
+<em>contextID</em> variable holds the currently active guest context id (which coprises of process ID and ASID).
+<em>sptInfo</em> and <em>gptInfo</em> variable point to linked lists of meta-data describing second level page tables. This meta-data is structured like this:</p>
+<code>struct PageTableMetaData<br/>
+{<br/>
+  pageTableEntry *firstLevelEntry;<br/>
+  u32int virtAddr;<br/<>
+  u32int physAddr;<br/>
+  u32int mappedMegabyte;<br/>
+  bool host;<br/>
+  struct PageTableMetaData *nextEntry;<br/>
+};<br/></code>
+<p>This structure contains a pointer to the first level page table entry which maps a second level entry. It also has the physical address of the 2nd level page table, extracted from this first level entry, and may have it's virtual address (if the 2nd level page table is not a guest 2nd lvl page table, but a shadow 2nd lvl page table). Also has the virtual address megabyte that the first level entry maps, and an indicator wether this metadata information is about a guest 2nd level page table, or about a host (shadow) 2nd level page table.<br/>
+2nd level page tables are found when shadow mapping guest 2nd level page tables, and addPageTableInfo() function must be called with the appropriate parameters to add new entries to the linked lists. 2nd level page tables can also be added when splitting up shadow section-mappings to small-page mappings for fine-grained memory protection. In this case, addPageTableInfo() must be called for the host (shadow) 2nd level page table, however there is no correspoding guest page table to register with the gptInfo structure.</p>
+
+
+</body>
+</html>
