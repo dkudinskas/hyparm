@@ -258,7 +258,6 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
    * ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1
    */
   mmuInvIcacheByMVAtoPOU((u32int)end);
-#warning Investigate: MMAN says its mmuCleanDcacheByMVAtoPOC on the line below
   mmuCleanDCacheByMVAtoPOU((u32int)end);
   guestWriteProtect(context, (u32int)start, (u32int)end);
 }
