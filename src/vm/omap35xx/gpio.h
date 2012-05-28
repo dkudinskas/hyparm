@@ -31,7 +31,7 @@ struct Gpio
 };
 
 
-void connectGpio(virtualMachine *vm, u32int gpioNumber, u32int physicalGpioNumber) __cold__;
+void connectGpio(struct Gpio *gpio, u32int physicalGpioNumber) __cold__;
 
 void initGpio(virtualMachine *vm, u32int gpioNumber) __cold__;
 

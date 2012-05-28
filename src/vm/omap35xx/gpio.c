@@ -15,9 +15,9 @@ static inline s32int getIndexByAddress(u32int physicalAddress);
 static void reset(struct Gpio *gpio, s32int index);
 
 
-void connectGpio(virtualMachine *vm, u32int gpioNumber, u32int physicalGpioNumber)
+void connectGpio(struct Gpio *gpio, u32int physicalGpioNumber)
 {
-  vm->gpio[gpioNumber - 1]->physicalId = physicalGpioNumber - 1;
+  gpio->physicalId = physicalGpioNumber - 1;
 }
 
 void initGpio(virtualMachine *vm, u32int gpioNumber)

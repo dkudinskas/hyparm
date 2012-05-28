@@ -451,7 +451,7 @@ device *createHardwareLibrary(GCONTXT *context)
     goto gpio5Error;
   }
   initGpio(&context->vm, 5);
-  connectGpio(&context->vm, 5, 5);
+  connectGpio(context->vm.gpio[5 - 1], 5);
 
   // L4_INT_PER: general purpose I/O 6
   device *gpio6 = createDevice("GPIO6", FALSE, GPIO6, (u32int)(GPIO6 - 1 + GPIO6_SIZE), l4IntPer,
