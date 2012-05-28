@@ -206,9 +206,6 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
     u32int svcCode = instruction & 0x00FFFFFF;
     if (svcCode > 0xFF)
     {
-      /*
-       * NIELS: the following code looks fishy to say the least ?!
-       */
       // we hit a SWI that we placed ourselves as EOB. retrieve the real EOB...
       u32int svcCacheIndex = (svcCode >> 8) - 1;
       if (svcCacheIndex >= TRANSLATION_CACHE_META_SIZE_N)
