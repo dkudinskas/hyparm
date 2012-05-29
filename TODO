@@ -1,4 +1,5 @@
 Code management:
+- private repository (github?). remove all fork-repositories from public access
 - make tags for working android, working freertos
 - make tags for working patching
 
@@ -10,6 +11,10 @@ Decoder/Encoder (>=2 weeks of work)
 - adapt autodecoder
 
 Merge Cosmin's code (>= 2 weeks of work)
+- update to use new memory management
+- fix: kernel with SD driver, no guest SD access selected, report to guest 'no sd card present'
+- fix: hypervisor SD card access selected, debug to SD card
+- tests/unit test
 
 Small annoyances
 - get rid of freertos ifdefs ! (<= 1 day)
@@ -34,11 +39,22 @@ Translation run-time
 
 Unit test framework
 
-Overhead measurements: identifying inefficiences in the rest of the codebase
+
+Overhead measurements: 
+1. Identifying inefficiences in the rest of the codebase
 - table search decoder
 - drop legacy allocator
 - decoder used in load/store emulation
 - linked list for pagetableinfo -> too slow , interval trees? (future)
+- TLB and cache management
+2. measuring
+- analyse/improve/verify cosmins profiler.
+- measure a single context switch overhead
+- measure average hypercall overhead/maximum hypercall overhead#
+- measure interrupt overheads
+- measure other exception frequency/overhead
+- (for paper) count unnecessary page table entries shadow mapped before, measure shadow mapping work overhead; count the amount of entries shadow mapped only on-demand.
+
 
 Memory management
 - Run bash, see what happens
