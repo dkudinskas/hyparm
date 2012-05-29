@@ -62,10 +62,7 @@ config BLOCK_COPY
 
 choice
   prompt "Memory allocator"
-  default MEMORY_ALLOCATOR_LEGACY
-
-config MEMORY_ALLOCATOR_LEGACY
-  bool "Legacy (no free)"
+  default MEMORY_ALLOCATOR_NAIVE
 
 config MEMORY_ALLOCATOR_NAIVE
   bool "Naive (no free)"

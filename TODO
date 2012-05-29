@@ -36,7 +36,6 @@ Unit test framework
 
 Overhead measurements: identifying inefficiences in the rest of the codebase
 - table search decoder
-- drop legacy allocator
 - decoder used in load/store emulation
 - linked list for pagetableinfo -> too slow , interval trees? (future)
 
