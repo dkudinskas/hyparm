@@ -538,8 +538,8 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
  * in thumb PC is always aligned to a 4 byte boundary when used in LDR
  * we will DABT on spill location store
  * to make sure no guest has an abs addr into the spill location we need to verify that
- * LR points to a hypervisor-placed spill store, if not its a store hardcoded into guest
- * this may require a bitmap
+ * upon a data abort the LR received by the hypervisor points to a hypervisor-placed spill store,
+ * if not its a store hardcoded into guest -> this may require a bitmap
  */
 void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaIndex)
 {
@@ -573,11 +573,11 @@ void scanAndCopyArmBlock(GCONTXT *context, u32int *startAddress, u32int metaInde
     setPCMapping(&block, PC_REMAP_INCREMENT);
     if (armIsPCInsensitiveInstruction(*instruction) || decodedInstruction->pcHandler == NULL)
     {
-      DEBUG(SCANNER, "instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instruction, instruction);
       armWriteToCodeCache(&context->translationCache, &block, *instruction);
     }
     else
     {
+      DEBUG(SCANNER, "instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instruction, instruction);
       decodedInstruction->pcHandler(&context->translationCache, &block, (u32int)instruction, *instruction);
     }
   }
