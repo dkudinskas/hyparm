@@ -36,7 +36,7 @@ SECTIONS
 		*(.text)
 	} > RAM
 
-	. = ALIGN(4K);
+	. = ALIGN(64K);
 	.rodata . :
 	{
 		__TEXT_END__ = ABSOLUTE(.);
@@ -44,7 +44,7 @@ SECTIONS
 		*(.rodata)
 	} > RAM
 
-	. = ALIGN(4K);
+	. = ALIGN(64K);
 	.data . :
 	{
 		__RODATA_END__ = ABSOLUTE(.);
@@ -73,7 +73,7 @@ SECTIONS
 	 * Executable dynamic allocation pool (for code caches). This pool must be mapped separately,
 	 * so its size must be a multiple of the small page size.
 	 */
-	. = ALIGN(4K);
+	. = ALIGN(64K);
 	__RAM_CODE_CACHE_POOL_BEGIN__ = .;
 	. += 8K;
 	__RAM_CODE_CACHE_POOL_END__ = .;
