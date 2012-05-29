@@ -80,17 +80,21 @@ extern void callKernel(s32int, s32int, struct tag *tagList, u32int entryPoint) _
 
 void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
 {
-#if defined(CONFIG_GUEST_TEST) && defined(CONFIG_THUMB2)
   /*
    * If LSB of entryPoint is 1 switch to thumb mode and make LSB 0
    */
   if ((entryPoint & 1) == 1)
   {
+#ifdef CONFIG_THUMB2
     DEBUG(STARTUP, "bootGuest: switching to thumb mode" EOL);
     entryPoint &= ~1;
     context->CPSR |= PSR_T_BIT;
-  }
 #endif
+  }
+  else
+  {
+    DIE_NOW(NULL, "entry point with Thumb bit set but CONFIG_THUMB2 disabled");
+  }
 
   DEBUG(STARTUP, "bootGuest: entryPoint = %#.8x" EOL, entryPoint);
   /*
@@ -120,7 +124,7 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
   DEBUG(STARTUP, "bootGuest: entry point adjusted to first instruction in C$ @ %#.8x" EOL, entryPoint);
 #endif
 
-#if defined(CONFIG_GUEST_TEST) && defined(CONFIG_THUMB2)
+#ifdef CONFIG_THUMB2
   /*
    * When thumb mode set LSB of entryPoint to 1.
    * In callKernel the SPSR thumb bit will be set.
@@ -129,7 +133,7 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
   {
     entryPoint |= 1;
   }
-#endif
+#endif /* CONFIG_THUMB2 */
 
   DEBUG(STARTUP, "bootGuest: callKernel" EOL);
   callKernel(0, BOARD_MACHINE_ID, getTagListBaseAddress(), entryPoint);

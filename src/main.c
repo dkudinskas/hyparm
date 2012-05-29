@@ -22,6 +22,10 @@
 #include "drivers/beagle/beMMC.h"
 #endif
 
+#include "guestBoot/image.h"
+#include "guestBoot/linux.h"
+#include "guestBoot/test.h"
+
 #include "guestManager/guestContext.h"
 
 #include "instructionEmu/scanner.h"
@@ -35,11 +39,6 @@
 #ifdef CONFIG_GUEST_FREERTOS
 #include "guestBoot/freertos.h"
 #endif
-#ifdef CONFIG_GUEST_TEST
-#include "guestBoot/test.h"
-#endif
-#include "guestBoot/linux.h"
-#include "guestBoot/image.h"
 
 #include "memoryManager/addressing.h"
 
@@ -181,11 +180,6 @@ void main(s32int argc, char *argv[])
   // does not return
   switch (config.guestOS)
   {
-#ifdef CONFIG_GUEST_TEST
-    case GUEST_OS_TEST:
-      bootTest(context, config.guestKernelAddress);
-      break;
-#endif
 #ifdef CONFIG_GUEST_FREERTOS
     case GUEST_OS_FREERTOS:
       bootFreeRtos(context, config.guestKernelAddress);
@@ -193,6 +187,9 @@ void main(s32int argc, char *argv[])
 #endif
     case GUEST_OS_LINUX:
       bootLinux(context, config.guestKernelAddress, config.guestInitialRAMDiskAddress);
+      break;
+    case GUEST_OS_TEST:
+      bootTest(context, config.guestKernelAddress);
       break;
     default:
       printf("Error: unsupported guest OS %#x", config.guestOS);

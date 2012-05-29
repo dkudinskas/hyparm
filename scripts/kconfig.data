@@ -165,9 +165,6 @@ config GUEST_ANDROID
 config GUEST_FREERTOS
   bool "FreeRTOS"
 
-config GUEST_TEST
-  bool "Unit testing"
-
 endmenu
 
 menuconfig DEBUGGING_HACKS

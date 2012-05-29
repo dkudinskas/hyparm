@@ -17,14 +17,14 @@ callKernel:
   BIC    r4, #PSR_MODE
   ORR    r4, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
 
-#ifdef CONFIG_GUEST_TEST
+#ifdef CONFIG_THUMB2
   /*
    * If the LSB of the entry point is set, set the Thumb flag in the SPSR.
    */
   TST    r3, #0x1
   BICNE  r3, r3, #0x1
   ORRNE  r4, #PSR_T_BIT
-#endif
+#endif /* CONFIG_THUMB2 */
 
   MSR    SPSR, r4
 
