@@ -1,30 +1,53 @@
-define BLOCK_COPY_DEBUG
+Code management:
+- make tags for working android, working freertos
+- make tags for working patching
 
-when raising exception in guest, make sure LR is correct!!!
-- mechanism for calculating correct PC is in place
-- now need to patch the exception delivery routines to make sure correct LR is set!
+Finish terminal application
 
-make private headers for devices in vm/omap ... #defines in C files = messy
+FIND A NAME AND LICENSE
 
-with guest vmem off, a (priv) translation fault in the hypervisor is delivered to the guest! wtf?
+Decoder/Encoder (>=2 weeks of work)
+- adapt autodecoder
 
+Merge Cosmin's code (>= 2 weeks of work)
 
-get rid of freertos ifdefs !
+Small annoyances
+- get rid of freertos ifdefs ! (<= 1 day)
+- get the guest working with vmem off & on/off switching (1 week)
+  with guest vmem off, a (priv) translation fault in the hypervisor is delivered to the guest! wtf?
+- add script ot dump text/data/bss/malloc region sizes after comp (< 1 day)
+  how much space left for malloc?
 
-linked list for pagetableinfo -> too slow , interval trees?
+Translation run-time
+1. implement infrastructure: structs, function stubs.. (<= 1 week)
+   BLOG/BLOB
+   code cache -> code store
+   metadata cache -> basicblocklog
+2. pc mapping & instruction translations
+   - remove is sensitive check by adding extra field(s) in decoder
+   - when raising exception in guest, make sure LR is correct, and when returning, make sure we recover from incorrect reg values,...
+3. DEADBEEF spill (depends on BLOB implementation)
+4. small stuff:
+- define BLOCK_COPY_DEBUG -> CONFIG_DEBUG_TRANSLATION
+- figure out why BKPT in user mode causes PABT and whether we can work around that (CP14 reg?)
+- verify original unit tests by Peter still work
 
-check original unit tests by Peter
+Unit test framework
 
-remove is sensitive check by adding extra field(s) in decoder
+Overhead measurements: identifying inefficiences in the rest of the codebase
+- table search decoder
+- drop legacy allocator
+- decoder used in load/store emulation
+- linked list for pagetableinfo -> too slow , interval trees? (future)
 
-count the number of instructions that must spill by extra entries in the table search decoder for in place rewriting
+Memory management
+- Run bash, see what happens
 
-code cache -> code store
-
-metadata cache -> basicblocklog
-
-can we measure the average block size during boot 
-find the N longest blocks
+TODO measurements
+- count the number of instructions that must spill by extra entries in the table search decoder for in place rewriting
+- can we measure the average block size during boot 
+- find the N longest blocks
+- count how many times we need mapping PC for LR
 
 blog: 
 guest original start/size(16bit)
@@ -35,12 +58,6 @@ EOB instruction+handler
 
 blob (section):
 code only
-
-TODO: count how many times we need mapping PC for LR
-
-how much space left for malloc?
-
-add script ot dump text/data/bss/malloc region sizes after comp
 
 use 'hashing' for translation cache, but function is monotonic in guest addr
 ==> O(1) lookup
