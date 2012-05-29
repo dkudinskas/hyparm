@@ -17,6 +17,7 @@ Small annoyances
   with guest vmem off, a (priv) translation fault in the hypervisor is delivered to the guest! wtf?
 - add script ot dump text/data/bss/malloc region sizes after comp (< 1 day)
   how much space left for malloc?
+- Global hypervisor struct, statically allocated, to hold all current globals such as backend (driver) structs
 
 Translation run-time
 1. implement infrastructure: structs, function stubs.. (<= 1 week)
@@ -42,11 +43,11 @@ Overhead measurements: identifying inefficiences in the rest of the codebase
 Memory management
 - Run bash, see what happens
 
-TODO measurements
+Measurements
 - count the number of instructions that must spill by extra entries in the table search decoder for in place rewriting
-- can we measure the average block size during boot 
-- find the N longest blocks
 - count how many times we need mapping PC for LR
+- [DONE] can we measure the average block size during boot: use CONFIG_SCANNER_STATISTICS
+- [DONE] find the N longest blocks: use CONFIG_SCANNER_STATISTICS
 
 blog: 
 guest original start/size(16bit)
@@ -64,4 +65,3 @@ use 'hashing' for translation cache, but function is monotonic in guest addr
 scan: linear, but limited range
 
 gcontext keeps next blog index and next code store pointer
-
