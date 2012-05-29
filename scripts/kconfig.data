@@ -232,6 +232,10 @@ config SCANNER_EXTRA_CHECKS
   bool "Track call source and check for null pointers in scanner"
   depends on DEBUGGING_HACKS
 
+config SCANNER_STATISTICS
+  bool "Collect block size statistics in scanner"
+  depends on DEBUGGING_HACKS && !BLOCK_COPY && !THUMB2
+
 config GUEST_CONTEXT_BLOCK_TRACE
   bool "Store block trace in guest context"
   default y

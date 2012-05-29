@@ -53,6 +53,19 @@ ocdDisableMMU:
 .endfunc
 
 
+#ifdef CONFIG_SCANNER_STATISTICS
+.global ocdDumpScannerStatistics
+.func ocdDumpScannerStatistics
+ocdDumpScannerStatistics:
+  NOP
+  PUSH    {r0-r3,r12,lr}
+  BL      dumpScannerStatistics
+  POP     {r0-r3,r12,lr}
+  BKPT    #0
+.endfunc
+#endif /* CONFIG_SCANNER_STATISTICS */
+
+
 /*
  * ocdDumpLastTranslationTable
  *

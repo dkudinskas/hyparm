@@ -1,5 +1,6 @@
 #include "common/debug.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
 
 #include "cpuArch/constants.h"
 
@@ -95,6 +96,75 @@ void setScanBlockCallSource(u8int source)
 #define getScanBlockCallSource()  ((u8int)(-1))
 
 #endif /* CONFIG_SCANNER_EXTRA_CHECKS */
+
+
+#ifdef CONFIG_SCANNER_STATISTICS
+
+struct blockSizeFrequencyList;
+
+typedef struct blockSizeFrequencyList
+{
+  u32int size;
+  struct blockSizeFrequencyList *next;
+  u32int frequency;
+} BlockSizeFrequencyList;
+
+static BlockSizeFrequencyList *scanBlockSizes = NULL;
+
+static BlockSizeFrequencyList *createBlockSizeFrequencyList(u32int size, BlockSizeFrequencyList *next);
+void dumpScannerStatistics(void);
+static void reportBlockSize(u32int size);
+
+static BlockSizeFrequencyList *createBlockSizeFrequencyList(u32int size, BlockSizeFrequencyList *next)
+{
+  BlockSizeFrequencyList *entry = malloc(sizeof(BlockSizeFrequencyList));
+  entry->size = size;
+  entry->next = next;
+  entry->frequency = 1;
+  return entry;
+}
+
+void dumpScannerStatistics()
+{
+  printf("Block size    frequency" EOL);
+  for (BlockSizeFrequencyList *entry = scanBlockSizes; entry != NULL; entry = entry->next)
+  {
+    printf("%#.8x    #%#.8x" EOL, entry->size, entry->frequency);
+  }
+  printf(EOL);
+}
+
+static void reportBlockSize(u32int size)
+{
+  if (scanBlockSizes == NULL)
+  {
+    scanBlockSizes = createBlockSizeFrequencyList(size, NULL);
+  }
+  else
+  {
+    BlockSizeFrequencyList *entry = scanBlockSizes;
+    while (TRUE)
+    {
+      if (entry->size == size)
+      {
+        entry->frequency++;
+        break;
+      }
+      if (!entry->next || entry->next->size > size)
+      {
+	entry->next = createBlockSizeFrequencyList(size, entry->next);
+        break;
+      }
+      entry = entry->next;
+    }
+  }
+}
+
+#else
+
+#define reportBlockSize(size)
+
+#endif /* CONFIG_SCANNER_STATISTICS */
 
 
 #ifdef CONFIG_DEBUG_SCANNER_MARK_INTERVAL
@@ -200,6 +270,8 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
     end++;
   }
   instruction = *end;
+
+  reportBlockSize((end - start) + 1);
 
   if ((instruction & INSTR_SWI) == INSTR_SWI)
   {
