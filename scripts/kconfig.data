@@ -62,10 +62,7 @@ config BLOCK_COPY
 
 choice
   prompt "Memory allocator"
-  default MEMORY_ALLOCATOR_LEGACY
-
-config MEMORY_ALLOCATOR_LEGACY
-  bool "Legacy (no free)"
+  default MEMORY_ALLOCATOR_NAIVE
 
 config MEMORY_ALLOCATOR_NAIVE
   bool "Naive (no free)"
@@ -235,6 +232,12 @@ config SCANNER_EXTRA_CHECKS
 config SCANNER_STATISTICS
   bool "Collect block size statistics in scanner"
   depends on DEBUGGING_HACKS && !BLOCK_COPY && !THUMB2
+
+config SCANNER_STATISTICS_BIG_BLOCK_TRESHOLD
+  int "Big block treshold"
+  default 80
+  range 1 999
+  depends on DEBUGGING_HACKS && SCANNER_STATISTICS
 
 config GUEST_CONTEXT_BLOCK_TRACE
   bool "Store block trace in guest context"

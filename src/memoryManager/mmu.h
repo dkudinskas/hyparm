@@ -88,7 +88,7 @@ COMPILE_TIME_ASSERT((sizeof(struct dfsr) == sizeof(u32int)), _DFSR_struct_not_32
 COMPILE_TIME_ASSERT((sizeof(struct ifsr) == sizeof(u32int)), _IFSR_struct_not_32bit);
 COMPILE_TIME_ASSERT((sizeof(struct physicalAddressRegisterFault) == sizeof(u32int)), _PAR_fault_struct_not_32bit);
 COMPILE_TIME_ASSERT((sizeof(struct physicalAddressRegisterSuccess) == sizeof(u32int)), _PAR_success_struct_not_32bit);
-COMPILE_TIME_ASSERT((sizeof(struct systemControlRegister) == sizeof(u32int)), _SCTLR_struct_not_32bit);
+COMPILE_TIME_ASSERT((sizeof(struct systemControlRegister) == sizeof(u32int)), _SCTRL_struct_not_32bit);
 
 typedef struct dfsr DFSR;
 
@@ -229,9 +229,9 @@ void printPrefetchAbort(void) __cold__; //gets & prints the ifsr & ifar
 
 __macro__ bool isMmuEnabled()
 {
-  SystemControlRegister sctlr;
-  __asm__ __volatile__("MRC p15, 0, %0, c1, c0, 0":"=r"(sctlr));
-  return sctlr.bits.mmuEnable;
+  SystemControlRegister sctrl;
+  __asm__ __volatile__("MRC p15, 0, %0, c1, c0, 0":"=r"(sctrl));
+  return sctrl.bits.mmuEnable;
 }
 
 /*
