@@ -7,3 +7,45 @@ when raising exception in guest, make sure LR is correct!!!
 make private headers for devices in vm/omap ... #defines in C files = messy
 
 with guest vmem off, a (priv) translation fault in the hypervisor is delivered to the guest! wtf?
+
+
+get rid of freertos ifdefs !
+
+linked list for pagetableinfo -> too slow , interval trees?
+
+check original unit tests by Peter
+
+remove is sensitive check by adding extra field(s) in decoder
+
+count the number of instructions that must spill by extra entries in the table search decoder for in place rewriting
+
+code cache -> code store
+
+metadata cache -> basicblocklog
+
+can we measure the average block size during boot 
+find the N longest blocks
+
+blog: 
+guest original start/size(16bit)
+ptr to code store/size(16bit)
+ptr to address translation structure
+type:invalid/arm/thumb
+EOB instruction+handler
+
+blob (section):
+code only
+
+TODO: count how many times we need mapping PC for LR
+
+how much space left for malloc?
+
+add script ot dump text/data/bss/malloc region sizes after comp
+
+use 'hashing' for translation cache, but function is monotonic in guest addr
+==> O(1) lookup
+==> collisions..
+scan: linear, but limited range
+
+gcontext keeps next blog index and next code store pointer
+
