@@ -100,7 +100,15 @@ void setScanBlockCallSource(u8int source)
 
 #ifdef CONFIG_SCANNER_STATISTICS
 
+struct bigBlockList;
 struct blockSizeFrequencyList;
+
+typedef struct bigBlockList
+{
+  u32int startAddress;
+  u32int size;
+  struct bigBlockList *next;
+} BigBlockList;
 
 typedef struct blockSizeFrequencyList
 {
@@ -110,10 +118,11 @@ typedef struct blockSizeFrequencyList
 } BlockSizeFrequencyList;
 
 static BlockSizeFrequencyList *scanBlockSizes = NULL;
+static BigBlockList *bigBlocks = NULL;
 
 static BlockSizeFrequencyList *createBlockSizeFrequencyList(u32int size, BlockSizeFrequencyList *next);
 void dumpScannerStatistics(void);
-static void reportBlockSize(u32int size);
+static void reportBlockSize(u32int *start, u32int size);
 
 static BlockSizeFrequencyList *createBlockSizeFrequencyList(u32int size, BlockSizeFrequencyList *next)
 {
@@ -132,10 +141,20 @@ void dumpScannerStatistics()
     printf("%#.8x    #%#.8x" EOL, entry->size, entry->frequency);
   }
   printf(EOL);
+  printf("Big blocks" EOL);
+  for (BigBlockList *entry = bigBlocks; entry != NULL; entry = entry->next)
+  {
+    printf("@%#.8x--%#.8x: size %x" EOL, entry->startAddress,
+           entry->startAddress + 4 * (entry->size - 1), entry->size);
+  }
+  printf(EOL);
 }
 
-static void reportBlockSize(u32int size)
+static void reportBlockSize(u32int *start, u32int size)
 {
+  /*
+   * Increase frequency count
+   */
   if (scanBlockSizes == NULL)
   {
     scanBlockSizes = createBlockSizeFrequencyList(size, NULL);
@@ -152,17 +171,35 @@ static void reportBlockSize(u32int size)
       }
       if (!entry->next || entry->next->size > size)
       {
-	entry->next = createBlockSizeFrequencyList(size, entry->next);
+        entry->next = createBlockSizeFrequencyList(size, entry->next);
         break;
       }
       entry = entry->next;
     }
   }
+  /*
+   * Update big block toplist
+   */
+  if (size > CONFIG_SCANNER_STATISTICS_BIG_BLOCK_TRESHOLD)
+  {
+    for (BigBlockList *entry = bigBlocks; entry != NULL; entry = entry->next)
+    {
+      if (entry->startAddress == (u32int)start && entry->size == size)
+      {
+        return;
+      }
+    }
+    BigBlockList *bigBlock = malloc(sizeof(BigBlockList));
+    bigBlock->startAddress = (u32int)start;
+    bigBlock->size = size;
+    bigBlock->next = bigBlocks;
+    bigBlocks = bigBlock;
+  }
 }
 
 #else
 
-#define reportBlockSize(size)
+#define reportBlockSize(start, size)
 
 #endif /* CONFIG_SCANNER_STATISTICS */
 
@@ -271,7 +308,7 @@ static void scanArmBlock(GCONTXT *context, u32int *start, u32int cacheIndex)
   }
   instruction = *end;
 
-  reportBlockSize((end - start) + 1);
+  reportBlockSize(start, (end - start) + 1);
 
   if ((instruction & INSTR_SWI) == INSTR_SWI)
   {
