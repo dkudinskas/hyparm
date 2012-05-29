@@ -571,7 +571,7 @@ static void scanThumbBlock(GCONTXT *context, u16int *start, u32int cacheIndex)
  * for C$ size <= 4096 we can use ONE spill location at end of C$
  * for C$ size <= 8192 we use one at start and end
  * for any bigger C$ size ... embed in the middle
- * ....given that LDR literal can address any offset -4095..+4095 from the PC (in both arm &thumb2)
+ * ....given that LDR literal can address any offset -4095..+4095 from the PC (in both ARM & Thumb-2)
  * in thumb PC is always aligned to a 4 byte boundary when used in LDR
  * we will DABT on spill location store
  * to make sure no guest has an abs addr into the spill location we need to verify that
