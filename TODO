@@ -47,6 +47,7 @@ Overhead measurements:
 - decoder used in load/store emulation
 - linked list for pagetableinfo -> too slow , interval trees? (future)
 - TLB and cache management
+- shadow-maps are discarded upon the guest switching page tables
 2. measuring
 - analyse/improve/verify cosmins profiler.
 - measure a single context switch overhead
