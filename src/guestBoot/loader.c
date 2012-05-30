@@ -89,11 +89,9 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
     DEBUG(STARTUP, "bootGuest: switching to thumb mode" EOL);
     entryPoint &= ~1;
     context->CPSR |= PSR_T_BIT;
-#endif
-  }
-  else
-  {
+#else
     DIE_NOW(NULL, "entry point with Thumb bit set but CONFIG_THUMB2 disabled");
+#endif
   }
 
   DEBUG(STARTUP, "bootGuest: entryPoint = %#.8x" EOL, entryPoint);

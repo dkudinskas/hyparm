@@ -66,6 +66,9 @@ u32int armExpandImm12(u32int imm12) __constant__;
 // returns shift type, and adjusts shift amount
 u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int *shamt);
 
+// function to evaluate breakpoint value in unittests
+void evaluateBreakpointValue(GCONTXT *context, u32int value);
+
 /* a function to evaluate if a condition value is satisfied */
 bool evaluateConditionCode(GCONTXT *context, u32int conditionCode);
 
@@ -92,11 +95,6 @@ void setGPRegister(GCONTXT *context, u32int destinationRegister, u32int value);
 
 // generic any type shift function, changes input_parameter(carryFlag) value
 u32int shiftVal(u32int imm32, u8int shiftType, u32int shamt, u8int *carryFlag);
-
-#ifdef CONFIG_GUEST_TEST
-// function to evaluate breakpoint value in unittests
-void evalBkptVal(GCONTXT *context, u32int value);
-#endif
 
 
 __macro__ u32int getLowGPRegister(const GCONTXT *context, u32int sourceRegister)
