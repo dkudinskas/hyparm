@@ -99,6 +99,7 @@ void deleteLevelTwoPageTable(GCONTXT *context, pageTableEntry *pageTable)
   } // while ends
 }
 
+
 u32int mapRegion(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
                  u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,
                  bool bufferable, u8int regionAttributes, bool executeNever)
@@ -141,6 +142,7 @@ u32int mapRegion(simpleEntry *pageTable, u32int virtualStartAddress, u32int phys
    */
   return physicalStartAddress;
 }
+
 
 /**
  * Map hypervisor into given base page table in sections, 1-2-1 VA to PA
@@ -324,6 +326,7 @@ void mapHypervisorMemory(simpleEntry *pageTable)
             HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
 #endif
 }
+
 
 /**
  * Add a section mapping of given virtual to physical address
@@ -810,6 +813,7 @@ bool isAddrInPageTable(GCONTXT *context, simpleEntry* pageTablePhys, u32int phys
   return FALSE; 
 }
 
+
 /**
  * Called from the instruction emulator when we have a permission abort
  * and the guest is writing to its own page table
@@ -1045,7 +1049,6 @@ void pageTableEdit(GCONTXT *context, u32int address, u32int newVal)
 }
 
 
-
 void editAttributesSection(GCONTXT *context, sectionEntry* oldSection, sectionEntry* newSection, simpleEntry* shadow, u32int virtual)
 {
   // WARNING: shadow descriptor type might not correspond to guest descriptor type!!! 
@@ -1182,7 +1185,6 @@ void editAttributesSmallPage(smallPageEntry* oldPage, smallPageEntry* newPage, s
   if ((oldPage->ap10 != newPage->ap10) || (oldPage->ap2 != newPage->ap2))
   {
     DIE_NOW(context, "edit AP bits");
-//    mapAPBitsSection(newSection, (simpleEntry*)shadow, virtual);
   }
 
   if (oldPage->tex != newPage->tex)

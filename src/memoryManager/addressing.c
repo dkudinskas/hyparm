@@ -52,17 +52,22 @@ void initVirtualAddressing(GCONTXT *context)
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: done" EOL);
 }
 
+
 static void setupPageTable(GCONTXT *context, PageTableTarget target)
 {
   simpleEntry *pageTablePtr;
   switch (target)
   {
     case PT_TARGET_HYPERVISOR:
+    {
       pageTablePtr = context->pageTables->hypervisor;
       break;
+    }
     case PT_TARGET_GUEST_SHADOW_PRIVILEGED:
+    {
       pageTablePtr = context->pageTables->shadowPriv;
       break;
+    }
     case PT_TARGET_GUEST_SHADOW_UNPRIVILEGED:
       pageTablePtr = context->pageTables->shadowUser;
       break;
@@ -70,7 +75,7 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
       DIE_NOW(context, "bad target");
   }
 
-  //map in the hypervisor
+  // map in the hypervisor
   mapHypervisorMemory(pageTablePtr);
 
   if (target == PT_TARGET_HYPERVISOR)
