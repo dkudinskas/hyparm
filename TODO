@@ -23,6 +23,7 @@ Small annoyances
 - add script ot dump text/data/bss/malloc region sizes after comp (< 1 day)
   how much space left for malloc?
 - Global hypervisor struct, statically allocated, to hold all current globals such as backend (driver) structs
+- implement memory management support for guest MMU OFF case (1 week)
 
 Translation run-time
 1. implement infrastructure: structs, function stubs.. (<= 1 week)
@@ -48,6 +49,7 @@ Overhead measurements:
 - linked list for pagetableinfo -> too slow , interval trees? (future)
 - TLB and cache management
 - shadow-maps are discarded upon the guest switching page tables
+- MMC doesn't use DMA channels (host!) so host SD card usage is sloooow
 2. measuring
 - analyse/improve/verify cosmins profiler.
 - measure a single context switch overhead
