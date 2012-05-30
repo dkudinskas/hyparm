@@ -422,7 +422,6 @@ void armStmPCInstruction(TranslationCache *tc, ARMTranslationInfo *block, u32int
         /*
          * Now perform STMDA/STMDB on remaining registers
          */
-        printf ("STMDx: %#.8x" EOL, instruction & ~STM_REGISTERS_PC_BIT);
         armWriteToCodeCache(tc, block, instruction & ~STM_REGISTERS_PC_BIT);
         /*
          * Find another register, spill it and use it for the PC value
