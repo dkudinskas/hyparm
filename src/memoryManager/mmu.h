@@ -176,6 +176,8 @@ simpleEntry* mmuGetTTBR0(void);
 void mmuEnableVirtAddr(void);
 void mmuDisableVirtAddr(void);
 
+void mmuDisableAlignmentChecking(void);
+
 void mmuInvIcacheToPOU(void);
 void mmuInvIcacheByMVAtoPOU(u32int mva);
 

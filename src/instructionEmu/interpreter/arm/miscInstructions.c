@@ -8,16 +8,17 @@
 
 u32int armBkptInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_GUEST_TEST
-  u32int imm4 = instruction & 0x0000000F;
-  u32int imm12 = (instruction & 0x000FFF00) >> 4;
-  u32int val = imm12 | imm4;
+  if (unlikely(context->os == GUEST_OS_TEST))
+  {
+    u32int imm4 = instruction & 0x0000000F;
+    u32int imm12 = (instruction & 0x000FFF00) >> 4;
+    u32int val = imm12 | imm4;
 
-  evalBkptVal(context, val);
-  return context->R15 + ARM_INSTRUCTION_SIZE;
-#else
+    evaluateBreakpointValue(context, val);
+    return context->R15 + ARM_INSTRUCTION_SIZE;
+  }
+
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
-#endif
 }
 
 u32int armClzInstruction(GCONTXT *context, u32int instruction)

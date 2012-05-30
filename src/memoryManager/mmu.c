@@ -163,6 +163,14 @@ void mmuDisableVirtAddr()
      );
 }
 
+void mmuDisableAlignmentChecking()
+{
+  SystemControlRegister sctrl;
+  __asm__ __volatile__("MRC p15, 0, %0, c1, c0, 0":"=r"(sctrl));
+  sctrl.bits.alignmentCheckingEnable = 0;
+  __asm__ __volatile__("MCR p15, 0, %0, c1, c0, 0"::"r"(sctrl));
+}
+
 /**
  * clear and invalidate host instruction cache
  **/

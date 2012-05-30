@@ -5,6 +5,18 @@
 #include "instructionEmu/interpreter/t16/miscInstructions.h"
 
 
+u32int t16BkptInstruction(GCONTXT *context, u32int instruction)
+{
+  if (unlikely(context->os == GUEST_OS_TEST))
+  {
+    u32int val = instruction & 0x00FF;
+    evaluateBreakpointValue(context, val);
+    return context->R15 + T16_INSTRUCTION_SIZE;
+  }
+
+  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
+}
+
 u32int t16ItInstruction(GCONTXT *context, u32int instruction)
 {
   // Get ITSTATE from instruction
@@ -55,16 +67,4 @@ u32int t16UxtbInstruction(GCONTXT *context, u32int instruction)
 u32int t16UxthInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
-}
-
-u32int t16BkptInstruction(GCONTXT *context, u32int instruction)
-{
-#ifdef CONFIG_GUEST_TEST
-  u32int val = instruction & 0x00FF;
-
-  evalBkptVal(context, val);
-  return context->R15 + T16_INSTRUCTION_SIZE;
-#else
-  DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
-#endif
 }

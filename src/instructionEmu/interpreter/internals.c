@@ -6,6 +6,13 @@
 #include "instructionEmu/interpreter/internals.h"
 
 
+enum guestBreakPointValues
+{
+  BKPT_TEST_PASS = 0,
+  BKPT_DUMP_ACTIVE_SPT = 0xFFFF
+};
+
+
 // take shift type field from instr, return shift type
 static u32int decodeShift(u32int instrShiftType);
 
@@ -233,6 +240,35 @@ u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int * shamt)
   }
 }
 
+/*
+ * This function is used in unit tests. It evaluates the value passed to the BKPT instruction.
+ * Current values:
+ * 0      pass
+ * 0xFFFF print active shadow pagetable
+ * other  fail
+ */
+void evaluateBreakpointValue(GCONTXT *context, u32int value)
+{
+  switch (value)
+  {
+    case BKPT_TEST_PASS:
+    {
+      DIE_NOW(context, "test passed");
+    }
+    case BKPT_DUMP_ACTIVE_SPT:
+    {
+      dumpTranslationTable(context->pageTables->shadowActive);
+      break;
+    }
+    default:
+    {
+      printf("Breakpoint value %#.8x" EOL, value);
+      DIE_NOW(context, "test failed");
+    }
+  }
+  return;
+}
+
 bool evaluateConditionCode(GCONTXT *context, u32int conditionCode)
 {
   switch (conditionCode)
@@ -390,45 +426,3 @@ u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int * carryFlag)
   } // else
   return retVal;
 }
-
-
-
-#ifdef CONFIG_GUEST_TEST
-
-enum guestBreakPointValues
-{
-  BKPT_TEST_PASS = 0,
-  BKPT_DUMP_ACTIVE_SPT = 0xFFFF
-};
-
-
-/*
- * This function is used in unit tests. It evaluates the value passed to the BKPT instruction.
- * Current values:
- * 0      pass
- * 0xFFFF print active shadow pagetable
- * other  fail
- */
-void evalBkptVal(GCONTXT *context, u32int value)
-{
-  switch (value)
-  {
-    case BKPT_TEST_PASS:
-    {
-      DIE_NOW(context, "test passed");
-    }
-    case BKPT_DUMP_ACTIVE_SPT:
-    {
-      dumpTranslationTable(context->pageTables->shadowActive);
-      break;
-    }
-    default:
-    {
-      printf("Breakpoint value %#.8x" EOL, value);
-      DIE_NOW(context, "test failed");
-    }
-  }
-  return;
-}
-
-#endif /* CONFIG_GUEST_TEST */
