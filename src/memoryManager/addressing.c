@@ -104,17 +104,6 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
   }
 
-  //add section mapping for 0x14000 (base exception vectors)
-  const u32int exceptionHandlerAddr = 0x14000;
-  mapSmallPage(pageTablePtr, exceptionHandlerAddr, exceptionHandlerAddr,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 0);
-
-  // We will want to use the exception handler remap feature
-  // to put the page tables in the 0xffff0000 address space later
-  const u32int excHdlrSramStart = 0x4020ffd0;
-  mapSmallPage(pageTablePtr, excHdlrSramStart, excHdlrSramStart,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 0);
-
   // interrupt controller
   mapSmallPage(pageTablePtr, BE_IRQ_CONTROLLER, BE_IRQ_CONTROLLER,
                HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
@@ -194,7 +183,21 @@ void guestEnableMMU(GCONTXT *context)
  **/
 void guestDisableMMU(GCONTXT *context)
 {
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+  DEBUG(MM_ADDRESSING, "guestEnableMMU: guest turning off virtual memory" EOL);
+
+  context->pageTables->guestPhysical = 0;
+  context->pageTables->guestVirtual = 0;
+  context->pageTables->shadowPriv = 0;
+  context->pageTables->shadowUser = 0;
+  context->pageTables->shadowActive = 0;
+  context->pageTables->contextID = 0;
+
+  invalidatePageTableInfo(context);
+  context->pageTables->sptInfo = 0;
+  context->pageTables->gptInfo = 0;
+  context->virtAddrEnabled = FALSE;
+  
+  mmuInvalidateUTLB();
 }
 
 void guestSetContextID(GCONTXT *context, u32int contextid)
