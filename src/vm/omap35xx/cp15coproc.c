@@ -246,7 +246,9 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
     case CP15_MMFR1:
     case CP15_CCSIDR:
     case CP15_CLIDR:
+    {
       DIE_NOW(NULL, "read-only register");
+    }
     case CP15_CSSELR:
     {
       // write to CSSELR: cache size select register.
@@ -304,6 +306,17 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
       {
         DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - low interrupt vector set." EOL);
         context->guestHighVectorSet = FALSE;
+      }
+      
+      if (((oldVal & SYS_CTRL_ALIGNMENT) == 0) && ((value & SYS_CTRL_ALIGNMENT) != 0))
+      {
+        DEBUG(INTERPRETER_ANY_COPROC, "CP15: sysctrl align check set." EOL);
+        mmuToggleAlignCheck(TRUE);
+      }
+      else if (((oldVal & SYS_CTRL_ALIGNMENT) != 0) && ((value & SYS_CTRL_ALIGNMENT) == 0))
+      {
+        DEBUG(INTERPRETER_ANY_COPROC, "CP15: sysctrl align check unset." EOL);
+        mmuToggleAlignCheck(FALSE);
       }
 
       ASSERT(!(value & SYS_CTRL_ACCESS_FLAG), ERROR_NOT_IMPLEMENTED);

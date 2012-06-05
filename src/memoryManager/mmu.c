@@ -163,11 +163,18 @@ void mmuDisableVirtAddr()
      );
 }
 
-void mmuDisableAlignmentChecking()
+void mmuToggleAlignCheck(bool check)
 {
   SystemControlRegister sctrl;
   __asm__ __volatile__("MRC p15, 0, %0, c1, c0, 0":"=r"(sctrl));
-  sctrl.bits.alignmentCheckingEnable = 0;
+  if (check)
+  {
+    sctrl.bits.alignmentCheckingEnable = 1;
+  }
+  else
+  {
+    sctrl.bits.alignmentCheckingEnable = 0;
+  }
   __asm__ __volatile__("MCR p15, 0, %0, c1, c0, 0"::"r"(sctrl));
 }
 
