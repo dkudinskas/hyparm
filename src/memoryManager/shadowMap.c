@@ -329,7 +329,7 @@ void shadowMapPageTable(GCONTXT *context, pageTableEntry* guest, pageTableEntry*
     {
       // need to allocate a new shadow page table!
       sptVirtAddr = (u32int)memalign(1 << PT2_ALIGN_BITS, PT2_SIZE);
-      if (sptVirtAddr == NULL)
+      if (sptVirtAddr == 0)
       {
         DIE_NOW(context, "failed to allocate 2lvl shadow page table");
       }
@@ -626,7 +626,9 @@ void shadowMapSmallPage(GCONTXT *context, smallPageEntry* guest, smallPageEntry*
     case FAULT:
     case RESERVED:
     default:
+    {
       DIE_NOW(context, "shadowMapSmallPage: invalid entry found translating guestPA to hostPA.");
+    }
   }
   DEBUG(MM_SHADOWING, "shadowMapSmallPage: guest physical %#.8x maps to host physical %#.8x" EOL,
         guestPhysical, hostPhysical);

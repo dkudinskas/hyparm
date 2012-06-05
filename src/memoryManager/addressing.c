@@ -104,6 +104,12 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
   }
 
+  // We will want to use the exception handler remap feature
+  // to put the page tables in the 0xffff0000 address space later
+  const u32int excHdlrSramStart = 0x4020ffd0;
+  mapSmallPage(pageTablePtr, excHdlrSramStart, excHdlrSramStart,
+               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 0);
+
   // interrupt controller
   mapSmallPage(pageTablePtr, BE_IRQ_CONTROLLER, BE_IRQ_CONTROLLER,
                HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
