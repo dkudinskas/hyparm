@@ -93,6 +93,12 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
     // 32kHz synchronized timer
     mapSmallPage(pageTablePtr, BE_TIMER32K, BE_TIMER32K,
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0b000, 1);
+
+    // map in static RAM 1-2-1
+    const u32int staticRamStart = 0x40200000;
+    mapSection(pageTablePtr, staticRamStart, staticRamStart, HYPERVISOR_ACCESS_DOMAIN,
+                 HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
+
   }
   else
   {
@@ -104,11 +110,6 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
                  HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
   }
 
-  // We will want to use the exception handler remap feature
-  // to put the page tables in the 0xffff0000 address space later
-  const u32int excHdlrSramStart = 0x4020ffd0;
-  mapSmallPage(pageTablePtr, excHdlrSramStart, excHdlrSramStart,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 0);
 
   // interrupt controller
   mapSmallPage(pageTablePtr, BE_IRQ_CONTROLLER, BE_IRQ_CONTROLLER,
@@ -303,10 +304,7 @@ void initialiseShadowPageTables(GCONTXT *gc)
   mmuClearDataCache();
   mmuDataMemoryBarrier();
 
-  //FIXME: Henri: Why should these structures be invalidated?
-#ifndef CONFIG_GUEST_ANDROID
   invalidatePageTableInfo(gc);
-#endif /* CONFIG_GUEST_ANDROID */
 
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: invalidatePageTableInfo() done." EOL);
 
