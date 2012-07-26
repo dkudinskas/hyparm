@@ -1232,6 +1232,9 @@ static u32int loadGeneralScm(struct SystemControlModule *sysCtrlModule, u32int p
     case STATUS_REGISTER:
       value = OMAP3530_CHIPID;
       break;
+    case CONTROL_PBIAS_LITE:
+      value = sysCtrlModule->ctrlPbiasLite;
+      break;
     default:
       printf("loadGeneralScm: unimplemented reg addr %#.8x" EOL, physicalAddress);
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);

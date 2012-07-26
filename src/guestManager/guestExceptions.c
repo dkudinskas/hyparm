@@ -152,6 +152,126 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
       }
       break;
     }
+    case I2C1_IRQ:
+    {
+      setInterrupt(context, I2C1_IRQ);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    }
+    case I2C2_IRQ:
+    {
+      setInterrupt(context, I2C2_IRQ);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    }
+    case I2C3_IRQ:
+    {
+      setInterrupt(context, I2C3_IRQ);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    }
+    case MMC1_IRQ:
+    {
+      setInterrupt(context, MMC1_IRQ);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    }
+    case MMC2_IRQ:
+    {
+      setInterrupt(context, MMC2_IRQ);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    }
+    case MMC3_IRQ:
+    {
+      setInterrupt(context, MMC3_IRQ);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    }
+    case SDMA_IRQ_0:
+    {
+      setInterrupt(context, SDMA_IRQ_0);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    }
+    case SDMA_IRQ_1:
+    {
+      setInterrupt(context, SDMA_IRQ_1);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    }
+    case SDMA_IRQ_2:
+    {
+      setInterrupt(context, SDMA_IRQ_2);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    }
+    case SDMA_IRQ_3:
+    {
+      setInterrupt(context, SDMA_IRQ_3);
+      // are we forwarding the interrupt event?
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      {
+        // guest has enabled interrupts globally.
+        // set guest irq pending flag!
+        context->guestIrqPending = TRUE;
+      }
+      break;
+    }
     default:
       DIE_NOW(context, "throwInterrupt: from unknown source.");
   }

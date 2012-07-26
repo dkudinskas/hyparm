@@ -192,13 +192,13 @@ endif # ifneq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
 
 HYPARM_DIRS-y := common common/memoryAllocator cpuArch drivers/beagle exceptions guestBoot \
                  guestManager instructionEmu instructionEmu/decoder instructionEmu/interpreter \
-                 memoryManager vm/omap35xx
+                 memoryManager vm/omap35xx io
 
 # General
 HYPARM_DIRS-$(CONFIG_BLOCK_COPY) += instructionEmu/translator
 
 # Debugging
-HYPARM_DIRS-$(CONFIG_MMC) += io io/fs
+HYPARM_DIRS-$(CONFIG_MMC_LOG) += io/fs
 
 # Hacks
 HYPARM_DIRS-$(CONFIG_CLI) += cli

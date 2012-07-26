@@ -15,6 +15,8 @@ HYPARM_SRCS_C-y += vm/omap35xx/timer32k.c
 HYPARM_SRCS_C-y += vm/omap35xx/uart.c
 
 HYPARM_SRCS_C-$(CONFIG_GUEST_ANDROID) += vm/omap35xx/dmtimer.c
+HYPARM_SRCS_C-$(CONFIG_GUEST_ANDROID) += vm/omap35xx/twl4030.c
+HYPARM_SRCS_C-$(CONFIG_GUEST_ANDROID) += vm/omap35xx/i2c.c
 HYPARM_SRCS_C-$(CONFIG_GUEST_ANDROID) += vm/omap35xx/mmc.c
 HYPARM_SRCS_C-$(CONFIG_GUEST_ANDROID) += vm/omap35xx/pm.c
 HYPARM_SRCS_C-$(CONFIG_GUEST_ANDROID) += vm/omap35xx/sdrc.c

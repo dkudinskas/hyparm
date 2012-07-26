@@ -125,6 +125,10 @@ CREG *createCRB()
   /* DCCMVAC:
    * clean data cache line by MVA to PoC, write-only */
   initialiseRegister(crb, CP15_DCCMVAC, 0);
+  
+  /* CP15_DCIMVAC:
+   * invalidate data cache line (using MVA) */
+  initialiseRegister(crb, CP15_DCIMVAC, 0);
 
   /* DCCSW:
    * clean data cache line by set/way tSo PoC, write-only */
@@ -409,6 +413,12 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
     {
       // BPIALL: invalidate entire branch predictor array
       DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate entire branch predictor array (no effect)" EOL);
+      break;
+    }
+    case CP15_DCIMVAC:
+    {
+      // DCIMVAC: invalidate data cache line (using MVA)
+      DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: invalidate data cache line (using MVA)" EOL);
       break;
     }
     case CP15_DCCMVAC:

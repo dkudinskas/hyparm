@@ -3,11 +3,14 @@
 #include "common/stdlib.h"
 #include "common/string.h"
 
+#include "guestManager/guestExceptions.h"
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/sdma.h"
 #include "vm/omap35xx/sdmaInternals.h"
 #include "vm/omap35xx/timer32k.h"
+#include "vm/omap35xx/intc.h"
+#include "vm/omap35xx/mmc.h"
 
 
 static inline u32int getChannelNumber(u32int regOffs);
@@ -117,9 +120,29 @@ u32int loadSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       break;
     }
     case SDMA_IRQSTATUS_L0:
+    {
+      value = sdma->irqStatusL0;
+      found = TRUE;
+      break;
+    }
     case SDMA_IRQSTATUS_L1:
+    {
+      value = sdma->irqStatusL1;
+      found = TRUE;
+      break;
+    }
     case SDMA_IRQSTATUS_L2:
+    {
+      value = sdma->irqStatusL2;
+      found = TRUE;
+      break;
+    }
     case SDMA_IRQSTATUS_L3:
+    {
+      value = sdma->irqStatusL3;
+      found = TRUE;
+      break;
+    }
     case SDMA_SYSSTATUS:
     case SDMA_CAPS_0:
     case SDMA_CAPS_2:
@@ -139,14 +162,24 @@ u32int loadSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
   }
 
   // if we didnt hit the previous switch, maybe its one of the indexed registers
+  u32int channelIndex = getChannelNumber(regOffs);
   u32int indexedRegOffs = (regOffs - 0x80) % 0x60;
   switch (indexedRegOffs + 0x80)
   {
     case SDMA_CCRi:
+      value = sdma->chIndexedRegs[channelIndex].ccr;
+      found = TRUE;
+      break;
+    case SDMA_CSRi:
+      value = sdma->chIndexedRegs[channelIndex].csr;
+      found = TRUE;
+      break;
+    case SDMA_CSDPi:
+      found = TRUE;
+      value = sdma->chIndexedRegs[channelIndex].csdp;
+      break;
     case SDMA_CLNK_CTRLi:
     case SDMA_CICRi:
-    case SDMA_CSRi:
-    case SDMA_CSDPi:
     case SDMA_CENi:
     case SDMA_CFNi:
     case SDMA_CSSAi:
@@ -167,6 +200,17 @@ u32int loadSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       printf("loadSdma indexed reg %#x reg %#x" EOL, indexedRegOffs + 0x80, regOffs);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
+  
+  if (found)
+  {
+    DEBUG(VP_OMAP_35XX_SDMA, "%s: load from address %#.8x reg %#x value %#.8x" EOL, dev->deviceName,
+        virtAddr, regOffs, value);
+    return value;
+  }
+  
+  DIE_NOW(NULL, "SDMA load from unknown register");
+  
+  return 0;
 }
 
 
@@ -198,10 +242,7 @@ void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     }
     case SDMA_IRQENABLE_L0:
     {
-      if (sdma->irqEnableL0 != value)
-      {
-        printf("%s: unimplemented store to irqEnableL0" EOL, __func__);
-      }
+      sdma->irqEnableL0 = value;
       found = TRUE;
       break;
     }
@@ -242,9 +283,21 @@ void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       break;
     }
     case SDMA_IRQSTATUS_L0:
+      sdma->irqStatusL0 &= ~value;
+      found = TRUE;
+      break;
     case SDMA_IRQSTATUS_L1:
+      sdma->irqStatusL1 &= ~value;
+      found = TRUE;
+      break;
     case SDMA_IRQSTATUS_L2:
+      sdma->irqStatusL2 &= ~value;
+      found = TRUE;
+      break;
     case SDMA_IRQSTATUS_L3:
+      sdma->irqStatusL3 &= ~value;
+      found = TRUE;
+      break;
     case SDMA_SYSSTATUS:
     case SDMA_CAPS_0:
     case SDMA_CAPS_2:
@@ -263,13 +316,38 @@ void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
   // if we didnt hit the previous switch, maybe its one of the indexed registers
   u32int channelIndex = getChannelNumber(regOffs);
   u32int indexedRegOffs = (regOffs - 0x80) % 0x60;
+  bool   dispatched = FALSE;
   switch (indexedRegOffs+0x80)
   {
     case SDMA_CCRi:
     {
       if ((value & SDMA_CCRi_ENABLE) == SDMA_CCRi_ENABLE)
       {
-        printf("%s: Warning - enabling channel %x" EOL, dev->deviceName, channelIndex);
+        DEBUG(VP_OMAP_35XX_SDMA, "%s: Enabling channel %x" EOL, dev->deviceName, channelIndex);
+        
+        /* It would be cleaner to check the SDMA_SEL_SRC_DST_SYNC bit and use it to decide
+           if we should decide based on source or address. However, MMC transfers with
+           kernel 2.6.28-omap1 seem to sometimes synchronize on destination even if 
+           it's a mmc read */
+        switch (sdma->chIndexedRegs[channelIndex].cssa)
+        {
+          case SD_MMC1 + MMCHS_DATA:
+            mmcDoDmaXfer(context, 0, 0);
+            dispatched = TRUE;
+            break;
+        }
+       
+        if (!dispatched)
+        {
+          switch (sdma->chIndexedRegs[channelIndex].cdsa)
+          {
+            case SD_MMC1 + MMCHS_DATA:
+              mmcDoDmaXfer(context, 0, 0);
+              break;
+            default:
+              DIE_NOW(NULL, "DMA channel enabled for unknown source / destination");
+          }
+        }
       }
       sdma->chIndexedRegs[channelIndex].ccr = value;
       break;
@@ -335,4 +413,37 @@ void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
 static inline u32int getChannelNumber(u32int regOffs)
 {
   return ((regOffs - 0x80) / 0x60);
+}
+
+void sdmaThrowInterrupt(GCONTXT *context, u32int dmaChannel)
+{
+  struct Sdma *sdma = context->vm.sdma;
+
+  if ((1 << dmaChannel) & sdma->irqEnableL0)
+  {
+    sdma->irqStatusL0 = (1 << dmaChannel);
+    throwInterrupt(context, SDMA_IRQ_0);
+    DEBUG(VP_OMAP_35XX_SDMA, "Throwing interrupt for irqStatusL0\n");
+  }
+
+  if ((1 << dmaChannel) & sdma->irqEnableL1)
+  {
+    sdma->irqStatusL1 = (1 << dmaChannel);
+    throwInterrupt(context, SDMA_IRQ_1);
+    DEBUG(VP_OMAP_35XX_SDMA, "Throwing interrupt for irqStatusL1\n");
+  }
+
+  if ((1 << dmaChannel) & sdma->irqEnableL2)
+  {
+    sdma->irqStatusL2 = (1 << dmaChannel);
+    throwInterrupt(context, SDMA_IRQ_2);
+    DEBUG(VP_OMAP_35XX_SDMA, "Throwing interrupt for irqStatusL2\n");
+  }
+
+  if ((1 << dmaChannel) & sdma->irqEnableL3)
+  {
+    sdma->irqStatusL3 = (1 << dmaChannel);
+    throwInterrupt(context, SDMA_IRQ_3);
+    DEBUG(VP_OMAP_35XX_SDMA, "Throwing interrupt for irqStatusL3\n");
+  }
 }

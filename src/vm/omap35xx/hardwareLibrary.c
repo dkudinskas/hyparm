@@ -21,6 +21,7 @@
 #include "vm/omap35xx/controlModule.h"
 
 #ifdef CONFIG_GUEST_ANDROID
+#include "vm/omap35xx/i2c.h"
 #include "vm/omap35xx/dmtimer.h"
 #include "vm/omap35xx/mmc.h"
 #include "vm/omap35xx/pm.h"
@@ -276,6 +277,33 @@ device *createHardwareLibrary(GCONTXT *context)
   initUart(&context->vm, 2);
 
 #ifdef CONFIG_GUEST_ANDROID
+  // I2C1
+  device * i2c1 = createDevice("I2C1", FALSE, I2C1, (u32int) (I2C1 - 1 + I2C1_SIZE), l4IntCore,
+                               &loadI2c, &storeI2c);
+  if (i2c1 == NULL)
+  {
+    goto i2c1Error;
+  }
+  initI2c(&context->vm, 1);
+  
+  // I2C2
+  device * i2c2 = createDevice("I2C2", FALSE, I2C2, (u32int) (I2C2 - 1 + I2C2_SIZE), l4IntCore,
+                               &loadI2c, &storeI2c);
+  if (i2c2 == NULL)
+  {
+    goto i2c2Error;
+  }
+  initI2c(&context->vm, 2);
+  
+  // I2C3
+  device * i2c3 = createDevice("I2C3", FALSE, I2C3, (u32int) (I2C3 - 1 + I2C3_SIZE), l4IntCore,
+                               &loadI2c, &storeI2c);
+  if (i2c3 == NULL)
+  {
+    goto i2c3Error;
+  }
+  initI2c(&context->vm, 3);
+
   // L4INT_CORE: MMC/SD/SDIO1
   device *mmc1 = createDevice("SD_MMC1", FALSE, SD_MMC1, (u32int) (SD_MMC1 - 1 + SD_MMC1_SIZE), l4IntCore,
                                &loadMmc, &storeMmc);
@@ -283,7 +311,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto mmc1Error;
   }
-  initMmc(&context->vm, 1);
+  initVirtMmc(&context->vm, 1);
 
   // L4INT_CORE: MMC/SD/SDIO2
   device *mmc2 = createDevice("SD_MMC2", FALSE, SD_MMC2, (u32int) (SD_MMC2 - 1 + SD_MMC2_SIZE), l4IntCore,
@@ -292,7 +320,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto mmc2Error;
   }
-  initMmc(&context->vm, 2);
+  initVirtMmc(&context->vm, 2);
 
   // L4INT_CORE: MMC/SD/SDIO3
   device *mmc3 = createDevice("SD_MMC1", FALSE, SD_MMC3, (u32int) (SD_MMC3 - 1 + SD_MMC3_SIZE), l4IntCore,
@@ -301,7 +329,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto mmc3Error;
   }
-  initMmc(&context->vm, 3);
+  initVirtMmc(&context->vm, 3);
 #endif /* CONFIG_GUEST_ANDROID */
 
   // L4INT_CORE: interrupt controller
@@ -541,6 +569,12 @@ mmc3Error:
 mmc2Error:
   free(mmc1);
 mmc1Error:
+  free(i2c3);
+i2c3Error:
+  free(i2c2);
+i2c2Error:
+  free(i2c1);
+i2c1Error:
 #endif /* CONFIG_GUEST_ANDROID */
   free(uart2);
 uart2Error:

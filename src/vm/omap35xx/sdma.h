@@ -6,6 +6,7 @@
 
 #include "vm/types.h"
 
+#define SDMA_CHANNEL_COUNT   32
 
 typedef struct SdmaIndexedRegs
 {
@@ -46,12 +47,15 @@ struct Sdma
   u32int caps3;
   u32int caps4;
   u32int gcr;
-  ChannelRegisters chIndexedRegs[32]; 
+  ChannelRegisters chIndexedRegs[SDMA_CHANNEL_COUNT]; 
 };
 
 
 void initSdma(virtualMachine *vm) __cold__;
 u32int loadSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+void sdmaThrowInterrupt(GCONTXT *context, u32int dmaChannel);
+
+
 
 #endif /* __VM__OMAP35XX__SDMA_H__ */

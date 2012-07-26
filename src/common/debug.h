@@ -64,7 +64,7 @@ void dumpStack(void) __attribute__((naked));
 u32int printf(const char *fmt, ...) __attribute__((format(__printf__, 1, 2)));
 
 
-#ifdef CONFIG_MMC
+#ifdef CONFIG_MMC_LOG
 
 /* output to mmc */
 u32int fprintf(const char *fmt, ...) __attribute__((format(__printf__, 1, 2)));
