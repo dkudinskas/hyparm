@@ -166,7 +166,7 @@ bool shouldDataAbort(GCONTXT *context, bool privAccess, bool isWrite, u32int add
     case FAULT:
     {
 #ifdef MEM_PROT_DBG
-      printf("shouldDataAbort(): gpt entry lvl1 type FAULT!\n");
+      printf("shouldDataAbort: gpt entry lvl1 type FAULT!\n");
 #endif
       throwDataAbort(context, address, dfsTranslationSection, isWrite, ((sectionEntry*)guestFirst)->domain);
       returnValue = TRUE;

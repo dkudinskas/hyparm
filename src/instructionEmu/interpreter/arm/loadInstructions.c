@@ -88,13 +88,9 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
   ASSERT((address & 0x3) == 0, "Rd [Rn, Rm/#imm] unaligned address!");
 
   // P = 0 and W == 1 then LDR as if user mode
-  if ((preOrPost == 0) && (writeBack != 0))
+  if ((preOrPost == 0) && (writeBack != 0) && shouldDataAbort(context, FALSE, FALSE, address))
   {
-    bool abort = shouldDataAbort(context, FALSE, FALSE, address);
-    if (abort)
-    {
-      return getNativeInstructionPointer(context);
-    }
+    return getNativeInstructionPointer(context);
   }
 
   // DO the actual load from memory
@@ -116,7 +112,8 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
   }
   if (regDst == GPR_PC)
   {
-    return getNativeInstructionPointer(context);
+    // can't use lastGuestPC, thats stale. use the value just loaded into PC
+    return context->R15;
   }
   else
   {

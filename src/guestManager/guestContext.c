@@ -34,10 +34,14 @@ GCONTXT *createGuestContext(void)
   DEBUG(GUEST_CONTEXT, "createGuestContext: coprocessor register bank @ %p" EOL,
       context->coprocRegBank);
 
-  /*
-   * Initialise translation cache
-   */
-  initialiseTranslationCache(context);
+  // Initialise translator
+  context->translationStore = (TranslationStore*)malloc(sizeof(TranslationStore));
+  if (context->translationStore == NULL)
+  {
+    DIE_NOW(context, "Failed to allocate translation store");
+  }
+  DEBUG(GUEST_CONTEXT, "createGuestContext: translation store @ %p" EOL, context->translationStore);
+  initialiseTranslationStore(context->translationStore);
 
   // virtual machine page table structs
   context->pageTables = (pageTablesVM *)calloc(1, sizeof(pageTablesVM));
@@ -134,9 +138,6 @@ void dumpGuestContext(const GCONTXT *context)
     printf("----------" EOL);
   }
 
-  printf("endOfBlockInstr: %#.8x @ %p" EOL, context->endOfBlockInstr, &context->endOfBlockInstr);
-  printf("handler function addr: %#.8x" EOL, (u32int)context->hdlFunct);
-
   /* Virtual Memory */
   pageTablesVM *ptVM = context->pageTables;
   printf("virtual machine page table struct at %p" EOL, ptVM);
@@ -162,7 +163,7 @@ void dumpGuestContext(const GCONTXT *context)
   printf("Data abort pending: %x" EOL, context->guestDataAbtPending);
   printf("Prefetch abort pending: %x" EOL, context->guestPrefetchAbtPending);
   printf("Guest idle: %x" EOL, context->guestIdle);
-  printf("Metacache at: %p" EOL, context->translationCache.metaCache);
+  printf("Translation store at: %p" EOL, context->translationStore);
 
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
   printf("Block trace:" EOL);
@@ -184,13 +185,12 @@ void dumpGuestContext(const GCONTXT *context)
   }
 #endif
 
-#ifdef CONFIG_BLOCK_COPY
   /* BlockCache with copied code */
-  printf("gc blockCopyCache: %p" EOL, context->translationCache.codeCache);
-  printf("gc blockCopyCache next: %p" EOL, context->translationCache.codeCacheNextEntry);
-  printf("gc blockCopyCacheEnd: %p" EOL, context->translationCache.codeCacheLastEntry);
-  printf("gc PCOfLastInstruction: %#.8x" EOL, context->lastNativeEndAddress);
-#endif
+  printf("TS->basicBlockStore: %p\n", context->translationStore->basicBlockStore);
+  printf("TS->codeStore next: %p\n", context->translationStore->codeStore);
+  printf("TS->codeStore next free word: %p\n", context->translationStore->codeStoreFreePtr);
+  printf("guest PC Of Last guest Instruction: %08x\n", context->lastGuestPC);
+
   dumpSdramStats(context->vm.sdram);
 }
 

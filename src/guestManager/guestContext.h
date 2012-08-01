@@ -4,7 +4,7 @@
 #include "common/compiler.h"
 #include "common/types.h"
 
-#include "guestManager/translationCache.h"
+#include "guestManager/translationStore.h"
 #include "guestManager/types.h"
 
 #include "instructionEmu/decoder.h"
@@ -120,9 +120,8 @@ struct guestContext
   u32int R13_UND;
   u32int R14_UND;
   u32int SPSR_UND;
-  u32int endOfBlockInstr;
-  InstructionHandler hdlFunct;
   CREG * coprocRegBank;
+  TranslationStore* translationStore;
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
   u32int blockTrace[CONFIG_GUEST_CONTEXT_BLOCK_TRACE_SIZE];
   u32int blockTraceIndex;
@@ -154,13 +153,8 @@ struct guestContext
   /* for OS-specific quirks */
   enum guestOSType os;
 
-  TranslationCache translationCache;
-
-#ifdef CONFIG_BLOCK_COPY
-
-  // TODO: add MetaCacheEntry *currentMetaEntry; instead of using findMetaCacheEntry
-  u32int lastNativeEndAddress;/*This will contain the value the program counter should have when the last instruction is executing*/
-#endif
+  /* This will contain the guest PC of the last instruction in active BB*/
+  u32int lastGuestPC;
 };
 
 

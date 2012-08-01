@@ -69,10 +69,14 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
       break;
     }
     case PT_TARGET_GUEST_SHADOW_UNPRIVILEGED:
+    {
       pageTablePtr = context->pageTables->shadowUser;
       break;
+    }
     default:
+    {
       DIE_NOW(context, "bad target");
+    }
   }
 
   // map in the hypervisor
@@ -131,17 +135,11 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
   mapSmallPage(pageTablePtr, BE_UART3, BE_UART3,
                HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
 
-#ifdef CONFIG_BLOCK_COPY
   if (target != PT_TARGET_GUEST_SHADOW_UNPRIVILEGED)
   {
-    const u32int codeAddress = (u32int)context->translationCache.codeCache;
-    const u32int spillAddress = (u32int)context->translationCache.spillPage;
-    mapRegion(pageTablePtr, codeAddress, codeAddress, codeAddress + SMALL_PAGE_SIZE,
-              GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RO, FALSE, FALSE, 0, FALSE);
-    mapRegion(pageTablePtr, spillAddress, spillAddress, spillAddress + SMALL_PAGE_SIZE,
-              GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RW, FALSE, FALSE, 0, TRUE);
+    mapRegion(pageTablePtr, RAM_CODE_CACHE_POOL_BEGIN, RAM_CODE_CACHE_POOL_BEGIN, RAM_CODE_CACHE_POOL_END-1,
+              GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RO, TRUE, FALSE, 0, FALSE);
   }
-#endif
 }
 
 /**
@@ -214,6 +212,7 @@ void guestSetContextID(GCONTXT *context, u32int contextid)
   context->pageTables->contextID = (contextid & 0xFF);
 }
 
+
 /**
  * switching guest addressing from privileged to user mode
  **/
@@ -222,7 +221,6 @@ void privToUserAddressing(GCONTXT *context)
   DEBUG(MM_ADDRESSING, "privToUserAddressing: set shadowActive to %p" EOL, context->pageTables->shadowUser);
 
   // invalidate the whole block cache
-  clearTranslationCache(&context->translationCache);
 
   context->pageTables->shadowActive = context->pageTables->shadowUser;
   
@@ -261,7 +259,6 @@ void userToPrivAddressing(GCONTXT *context)
   DEBUG(MM_ADDRESSING, "userToPrivAddressing: set shadowActive to %p" EOL, context->pageTables->shadowPriv);
 
   // invalidate the whole block cache
-  clearTranslationCache(&context->translationCache);
 
   context->pageTables->shadowActive = context->pageTables->shadowPriv;
   if (context->pageTables->guestVirtual != 0)
@@ -299,7 +296,8 @@ void initialiseShadowPageTables(GCONTXT *gc)
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: create double-shadows!" EOL);
 
   // invalidate the whole block cache
-  clearTranslationCache(&gc->translationCache);
+  // don't need to clear the translationStore here, as entries are tagged with addressMap
+  // clearTranslationStore(&gc->translationStore);
 
   mmuClearDataCache();
   mmuDataMemoryBarrier();
@@ -422,69 +420,46 @@ void changeGuestDACR(GCONTXT *context, u32int oldVal, u32int newVal)
 
 void setExceptionVector(u32int guestMode)
 {
-#ifdef ADDRESSING_DEBUG
-  printf("setExceptionVector: mode %02x\n", guestMode);
-#endif
+  DEBUG(MM_ADDRESSING, "setExceptionVector: mode %02x" EOL, guestMode);
   switch (guestMode)
   {
     case PSR_USR_MODE:
     {
-#ifdef ADDRESSING_DEBUG
-      printf("setExceptionVector: USR, vector %08x\n", (u32int)&usrVector);
-#endif
+      DEBUG(MM_ADDRESSING, "setExceptionVector: USR, vector %08x" EOL, (u32int)&usrVector);
       mmuSetExceptionVector((u32int)&usrVector);
       break;
     }
     case PSR_IRQ_MODE:
     {
-#ifdef ADDRESSING_DEBUG
-      printf("setExceptionVector: IRQ, vector %08x\n", (u32int)&irqVector);
-#endif
+      DEBUG(MM_ADDRESSING, "setExceptionVector: IRQ, vector %08x" EOL, (u32int)&irqVector);
       mmuSetExceptionVector((u32int)&irqVector);
       break;
     }
     case PSR_SVC_MODE:
     {
-#ifdef ADDRESSING_DEBUG
-      printf("setExceptionVector: SVC, vector %08x\n", (u32int)&svcVector);
-#endif
+      DEBUG(MM_ADDRESSING, "setExceptionVector: SVC, vector %08x" EOL, (u32int)&svcVector);
       mmuSetExceptionVector((u32int)&svcVector);
       break;
     }
     case PSR_ABT_MODE:
     {
-#ifdef ADDRESSING_DEBUG
-      printf("setExceptionVector: ABORT, vector %08x\n", (u32int)&abortVector);
-#endif
+      DEBUG(MM_ADDRESSING, "setExceptionVector: ABORT, vector %08x" EOL, (u32int)&abortVector);
       mmuSetExceptionVector((u32int)&abortVector);
       break;
     }
     case PSR_UND_MODE:
     {
-#ifdef ADDRESSING_DEBUG
-      printf("setExceptionVector: UNDEFINED, vector %08x\n", (u32int)&undVector);
-#endif
+      DEBUG(MM_ADDRESSING, "setExceptionVector: UNDEFINED, vector %08x" EOL, (u32int)&undVector);
       mmuSetExceptionVector((u32int)&undVector);
       break;
     }
-//    case PSR_USR_MODE:
     case PSR_FIQ_MODE:
-//    case PSR_IRQ_MODE:
-//    case PSR_SVC_MODE:
     case PSR_MON_MODE:
-//    case PSR_ABT_MODE:
-//    case PSR_UND_MODE:
     case PSR_SYS_MODE:
     default:
     {
       printf("setExceptionVector: guestMode %03x\n", guestMode);
       DIE_NOW(0, "setExceptionVector: unimplemented\n");
     }
-/*    {
-#ifdef ADDRESSING_DEBUG
-      printf("setExceptionVector: default, vector %08x\n", (u32int)&exceptionVectorBase);
-#endif
-      mmuSetExceptionVector((u32int)&exceptionVectorBase);
-    }*/
   } // switch end
 }

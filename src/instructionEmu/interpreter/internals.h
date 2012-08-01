@@ -62,21 +62,27 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
 /* expand immediate12 field of instruction */
 u32int armExpandImm12(u32int imm12) __constant__;
 
+
 // take the imm5 shift amount and shift type field from instr
 // returns shift type, and adjusts shift amount
 u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int *shamt);
 
+
 // function to evaluate breakpoint value in unittests
 void evaluateBreakpointValue(GCONTXT *context, u32int value);
+
 
 /* a function to evaluate if a condition value is satisfied */
 bool evaluateConditionCode(GCONTXT *context, u32int conditionCode);
 
+
 /* function to load a register value from r0--r7 */
 __macro__ u32int getLowGPRegister(const GCONTXT *context, u32int sourceRegister) __pure__;
 
+
 /* function to load a register value from any register, evaluates modes. */
 u32int getGPRegister(GCONTXT *context, u32int sourceRegister);
+
 
 /* functions to get raw instruction pointer and PC value identical to native execution of guest */
 __macro__ u32int getNativeInstructionPointer(const GCONTXT *context) __pure__;
@@ -84,14 +90,18 @@ __macro__ u32int getNativeProgramCounter(const GCONTXT *context) __pure__;
 __macro__ u32int getVirtualInstructionPointer(const GCONTXT *context) __pure__;
 __macro__ u32int getVirtualProgramCounter(const GCONTXT *context) __pure__;
 
+
 void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
   __attribute__((noinline,noreturn));
+
 
 /* function to store a register value in r0--r7,r15 */
 __macro__ void setLowGPRegister(GCONTXT *context, u32int destinationRegister, u32int value);
 
+
 /* function to store a register value, evaluates modes. */
 void setGPRegister(GCONTXT *context, u32int destinationRegister, u32int value);
+
 
 // generic any type shift function, changes input_parameter(carryFlag) value
 u32int shiftVal(u32int imm32, u8int shiftType, u32int shamt, u8int *carryFlag);
@@ -102,14 +112,12 @@ __macro__ u32int getLowGPRegister(const GCONTXT *context, u32int sourceRegister)
   return *(&context->R0 + sourceRegister);
 }
 
+
 __macro__ u32int getNativeInstructionPointer(const GCONTXT *context)
 {
-#ifdef CONFIG_BLOCK_COPY
-  return context->lastNativeEndAddress;
-#else
-  return context->R15;
-#endif
+  return context->lastGuestPC;
 }
+
 
 __macro__ u32int getNativeProgramCounter(const GCONTXT *context)
 {
@@ -122,10 +130,12 @@ __macro__ u32int getNativeProgramCounter(const GCONTXT *context)
     return getNativeInstructionPointer(context) + offset;
 }
 
+
 __macro__ u32int getVirtualInstructionPointer(const GCONTXT *context)
 {
   return context->R15;
 }
+
 
 __macro__ u32int getVirtualProgramCounter(const GCONTXT *context)
 {
@@ -137,6 +147,7 @@ __macro__ u32int getVirtualProgramCounter(const GCONTXT *context)
 #endif
     return getVirtualInstructionPointer(context) + offset;
 }
+
 
 __macro__ void setLowGPRegister(GCONTXT *context, u32int destinationRegister, u32int value)
 {

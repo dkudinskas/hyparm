@@ -4,7 +4,7 @@
 
 
 /*********************************/
-/* ADD Rd, Rs, Rs2/imm, shiftAmt */
+/* ADC Rd, Rs, Rs2/imm, shiftAmt */
 /*********************************/
 u32int armAdcInstruction(GCONTXT *context, u32int instruction)
 {

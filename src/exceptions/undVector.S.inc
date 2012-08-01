@@ -13,7 +13,7 @@ undReset:
 /***************************************************/
 .global undUndefined
 undUndefined:
-  B   undUndefined
+  B      undUndefined
 
 
 /***************************************************/

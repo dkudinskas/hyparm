@@ -489,7 +489,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
       DEBUG(INTERPRETER_ARM_STORE, "armStmInstruction: *(%#.8x) = R[%x] = %#.8x" EOL, address, i,
           valueLoaded);
       // emulating store. Validate cache if needed
-      clearTranslationCacheByAddress(&context->translationCache, address);
+      clearTranslationsByAddress(context->translationStore, address);
       // *(address)= R[i];
       vmStore(context, WORD, address, valueLoaded);
       address += 4;

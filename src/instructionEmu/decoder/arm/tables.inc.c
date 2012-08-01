@@ -2,17 +2,6 @@
  * ARM decoding tables for the table search decoder
  */
 
-
-#ifndef CONFIG_BLOCK_COPY
-#define ENTRY(_replace, _handler, _pcHandler, _value, _mask, _instructionString)                  \
-  {                                                                                               \
-    .replace = _replace,                                                                          \
-    .handler = _handler,                                                                          \
-    .value = _value,                                                                              \
-    .mask = _mask,                                                                                \
-    .instructionString = _instructionString                                                       \
-  }
-#else
 #define ENTRY(_replace, _handler, _pcHandler, _value, _mask, _instructionString)                  \
   {                                                                                               \
     .replace = _replace,                                                                          \
@@ -22,7 +11,6 @@
     .mask = _mask,                                                                                \
     .instructionString = _instructionString                                                       \
   }
-#endif
 
 
 static struct decodingTableEntry armBranchBlockTransferInstructions[] =

@@ -56,10 +56,6 @@ config DECODER_TABLE_SEARCH
 
 endchoice
 
-config BLOCK_COPY
-  bool "Block copy"
-  depends on DECODER_TABLE_SEARCH
-
 choice
   prompt "Memory allocator"
   default MEMORY_ALLOCATOR_NAIVE
@@ -153,7 +149,7 @@ menu "Virtual hardware platform"
 
 config THUMB2
   bool "Thumb-2 instruction set"
-  depends on ARCH_V7_A && !BLOCK_COPY
+  depends on ARCH_V7_A 
 
 endmenu
 
@@ -228,7 +224,7 @@ config SCANNER_EXTRA_CHECKS
 
 config SCANNER_STATISTICS
   bool "Collect block size statistics in scanner"
-  depends on DEBUGGING_HACKS && !BLOCK_COPY && !THUMB2
+  depends on DEBUGGING_HACKS && !THUMB2
 
 config SCANNER_STATISTICS_BIG_BLOCK_TRESHOLD
   int "Big block treshold"
@@ -367,10 +363,14 @@ config DEBUG_SCANNER_EXTRA
 
 config DEBUG_TRANSLATION
   bool "Debug translation"
-  depends on DEBUG && BLOCK_COPY
+  depends on DEBUG
 
-config DEBUG_BLOCK_CACHE
-  bool "Debug block cache"
+config DEBUG_BLOCK_STORE
+  bool "Debug block store"
+  depends on DEBUG
+
+config DEBUG_TRANSLATION_STORE
+  bool "Debug translation store"
   depends on DEBUG
 
 config DEBUG_INTERPRETER

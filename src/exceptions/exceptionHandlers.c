@@ -172,7 +172,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     }
   }
 #else
-  if (code <= 0xFF)
+  if (code < 0x100)
   {
     DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt %#.2x @ %#.8x is a guest system call" EOL, code, context->R15);
     gSVC = TRUE;
@@ -188,7 +188,9 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   else
   {
     u32int cpsrOld = context->CPSR;
-    nextPC = context->hdlFunct(context, context->endOfBlockInstr);
+    u32int blockStoreIndex = code - 0x100;
+    BasicBlock* basicBlock = &context->translationStore->basicBlockStore[blockStoreIndex];
+    nextPC = basicBlock->handler(context, *basicBlock->guestEnd);
     u32int cpsrNew = context->CPSR;
     if (((cpsrOld & PSR_MODE) != PSR_USR_MODE) &&
         ((cpsrNew & PSR_MODE) == PSR_USR_MODE))
@@ -259,9 +261,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
 GCONTXT *dataAbort(GCONTXT *context)
 {
-  /*
-   * Make sure interrupts are disabled while we deal with data abort.
-   */
+  /* Make sure interrupts are disabled while we deal with data abort. */
   incrementDataAbortCounter();
   /* Encodings: Page 1289 & 1355 */
   u32int dfar = getDFAR();
@@ -299,9 +299,11 @@ GCONTXT *dataAbort(GCONTXT *context)
     case dfsTranslationTableWalkLvl1SyncParityErr:
     case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
+    {
       printf("unimplemented user data abort %#.8x" EOL, faultStatus);
       printDataAbort();
       DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
+    }
   }
   return context;
 }
@@ -313,6 +315,7 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
+
   u32int faultStatus = (dfsr.fs3_0) | (dfsr.fs4 << 4);
   switch(faultStatus)
   {
@@ -645,6 +648,21 @@ void dabtTranslationFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
     // failed to shadow map!
     if (shouldDataAbort(gc, isGuestInPrivMode(gc), dfsr.WnR, dfar))
     {
+      /*
+       * here we must find the correct guest PC to store in R14_ABT
+       * - if guest was running in user mode
+       *   then code was executed in place, and context has the correct gPC
+       * - if guest was privileged mode, guest code was executed from code store
+       *   then we must find correct guest PC
+       */
+      if (isGuestInPrivMode(gc))
+      {
+        printf("dabtTranslationFault: dfar %08x\n", dfar);
+        printf("dabtTranslationFault: guest data abort!\n");
+        printf("dabtTranslationFault: gc->r15 %08x lastPC %08x\n", gc->R15, gc->lastGuestPC);
+        DIE_NOW(gc, "dabtTranslationFault: guest privileged, stop point");
+      }
+
       deliverDataAbort(gc);
       setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_TRANSLATION);
       scanBlock(gc, gc->R15);

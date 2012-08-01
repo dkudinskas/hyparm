@@ -3,14 +3,13 @@
 
 #include "common/types.h"
 
-
-struct armTranslationInfo;
 struct guestContext;
-struct translationCache;
+struct TranslationStore;
+struct BasicBlockEntry;
 
 typedef u32int (*InstructionHandler)(struct guestContext *context, u32int instruction);
 
-typedef void (*PCInstructionHandler)(struct translationCache *tc, struct armTranslationInfo *block,
+typedef void (*PCInstructionHandler)(struct TranslationStore *ts, struct BasicBlockEntry *block,
                                      u32int pc, u32int instruction);
 
 typedef enum
@@ -19,19 +18,6 @@ typedef enum
   IRC_REPLACE = 1,
   IRC_LS_USER = 2
 } instructionReplaceCode;
-
-
-#ifndef CONFIG_BLOCK_COPY
-
-instructionReplaceCode decodeArmInstruction(u32int instruction, InstructionHandler *handler);
-
-#ifdef CONFIG_THUMB2
-
-instructionReplaceCode decodeThumbInstruction(u32int instruction, InstructionHandler *handler);
-
-#endif /* CONFIG_THUMB2 */
-
-#else
 
 struct decodingTableEntry
 {
@@ -45,7 +31,5 @@ struct decodingTableEntry
 
 
 struct decodingTableEntry *decodeArmInstruction(u32int instruction);
-
-#endif /* CONFIG_BLOCK_COPY */
 
 #endif

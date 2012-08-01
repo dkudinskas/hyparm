@@ -7,12 +7,22 @@
 svcReset:
   B       svcReset
 
+
 /***************************************************/
 /* undefined error handler, guest was in svc mode  */
 /***************************************************/
 .global svcUndefined
 svcUndefined:
-  B   svcUndefined
+  PUSH   {LR}
+  MRS    LR, SPSR
+  AND    LR, LR, #PSR_MODE
+  CMP    LR, #PSR_USR_MODE
+  BNE    undHandlerPriv /* Abort occured in Hypervisor (privileged) code */
+  
+  POP    {LR}
+  ADD    PC, LR, #4
+  
+  B      svcUndefined
 
 
 /***************************************************/

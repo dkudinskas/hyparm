@@ -117,10 +117,8 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
 
   cleanupBeforeBoot();
 
-#ifdef CONFIG_BLOCK_COPY
-  entryPoint = (u32int)&((CodeCacheEntry *)(context->translationCache.codeCache))->codeStart;
-  DEBUG(STARTUP, "bootGuest: entry point adjusted to first instruction in C$ @ %#.8x" EOL, entryPoint);
-#endif
+  entryPoint = (u32int)context->translationStore->codeStore;
+  DEBUG(STARTUP, "bootGuest: entry point adjusted to %08x" EOL, entryPoint);
 
 #ifdef CONFIG_THUMB2
   /*

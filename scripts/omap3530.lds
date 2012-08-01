@@ -75,7 +75,7 @@ SECTIONS
 	 */
 	. = ALIGN(64K);
 	__RAM_CODE_CACHE_POOL_BEGIN__ = .;
-	. += 8K;
+	. += 1024K;
 	__RAM_CODE_CACHE_POOL_END__ = .;
 
 	/*

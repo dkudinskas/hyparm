@@ -5,6 +5,7 @@
 #include "common/string.h"
 
 #include "guestManager/guestContext.h"
+#include "guestManager/translationStore.h"
 
 #include "memoryManager/memoryConstants.h"
 #include "memoryManager/memoryProtection.h"
@@ -282,10 +283,8 @@ void shadowUnmapSection(GCONTXT *context, simpleEntry* shadow, sectionEntry* gue
     DIE_NOW(context, "shadowUnmapSection: Guest trying to unmap an address the hypervisor lives in");
   }
 
-  // Need to flush block cache at these addresses first
-  // but which addresses to flush? shadow entries might have been fragmented to pages from a section...
-  // so flush address range that the guest mapped originally.
-  clearTranslationCacheByAddressRange(&context->translationCache, virtual, (virtual+SECTION_SIZE-1));
+  // Flush block cache at the address range that the guest mapped originally.
+  clearTranslationsByAddressRange(context->translationStore, virtual, (virtual+SECTION_SIZE-1));
   
   if (context->pageTables->guestVirtual != 0)
   {
@@ -414,7 +413,15 @@ void shadowMapPageTable(GCONTXT *context, pageTableEntry* guest, pageTableEntry*
         {
           if (tempPageTable[y].type == LARGE_PAGE)
           {
-            DIE_NOW(context, "found guest LARGE_PAGE entry, investigate");
+            largePageEntry* largePage = (largePageEntry*)&tempPageTable[y]; 
+            u32int phys = largePage->addr << 16;
+            u32int physPageTableMasked = gptPhysical & LARGE_PAGE_MASK;
+            if (phys == physPageTableMasked)
+            {
+              u32int virtualAddress = i << 20;
+              virtualAddress |= (y << 12);
+              guestWriteProtect(context, virtualAddress, virtualAddress + PT2_SIZE - 1);
+            }
           }
           else
           {
@@ -459,13 +466,22 @@ void shadowMapPageTable(GCONTXT *context, pageTableEntry* guest, pageTableEntry*
       }
       simpleEntry* tempPageTable = (simpleEntry*)(metadata->virtAddr);
       u32int y = 0;
+
       for (y = 0; y < PT2_ENTRIES; y++)
       {
         if (tempPageTable[y].type != FAULT)
         {
           if(tempPageTable[y].type == LARGE_PAGE)
           {
-            DIE_NOW(context, "shadowMapPageTable: found guest LARGE_PAGE entry, investigate");
+            largePageEntry* largePage = (largePageEntry*)&tempPageTable[y]; 
+            u32int phys = largePage->addr << 16;
+            u32int physPageTableMasked = gptPhysical & LARGE_PAGE_MASK;
+            if (phys == physPageTableMasked)
+            {
+              u32int virtualAddress = i << 20;
+              virtualAddress |= (y << 12);
+              guestWriteProtect(context, virtualAddress, virtualAddress + PT2_SIZE - 1);
+            }
           }
           else
           {
@@ -486,6 +502,7 @@ void shadowMapPageTable(GCONTXT *context, pageTableEntry* guest, pageTableEntry*
   } // for loop
   context->pageTables->shadowActive = shadowActiveBackup;
 }
+
 
 /**
  * this function removes a shadow 2nd lvl page table
@@ -534,8 +551,8 @@ void shadowUnmapPageTable(GCONTXT *context, pageTableEntry *shadow, pageTableEnt
     } // !fault
   } // for loop
 
-  // validate block cache...
-  clearTranslationCacheByAddressRange(&context->translationCache, virtual, (virtual+SECTION_SIZE-1));
+  // Flush block cache at the address range that the guest mapped originally.
+  clearTranslationsByAddressRange(context->translationStore, virtual, (virtual+SECTION_SIZE-1));
 
   if (context->pageTables->guestVirtual != NULL)
   {
@@ -692,10 +709,8 @@ void shadowUnmapSmallPage(GCONTXT *context, smallPageEntry* shadow, smallPageEnt
     DIE_NOW(NULL, "guest trying to unmap an address the hypervisor lives in");
   }
 
-  // Need to flush block cache at these addresses first
-  // but which addresses to flush? shadow entries might have been fragmented to pages from a section...
-  // so flush address range that the guest mapped originally.
-  clearTranslationCacheByAddressRange(&context->translationCache, virtual, (virtual+SMALL_PAGE_SIZE-1));
+  // Flush block cache at the address range that the guest mapped originally.
+  clearTranslationsSmallPage(context->translationStore, virtual, (virtual+SMALL_PAGE_SIZE-1));
 
   if (context->pageTables->guestVirtual != NULL)
   {

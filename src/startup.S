@@ -757,6 +757,15 @@ activeGuestContext:
 guestContextSpace:
   .space 4
 
+
+/*
+ * temporary location for register spilling!
+ */
+.global spillLocation
+spillLocation:
+  .space 4
+
+
 /*
  * Guard value for GCC stack-smashing protection (SSP).
  *

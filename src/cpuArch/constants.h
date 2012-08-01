@@ -23,6 +23,19 @@
 #define THUMB32_3                 0xF800
 
 
+#define GPR_R0                         0
+#define GPR_R1                         1
+#define GPR_R2                         2
+#define GPR_R3                         3
+#define GPR_R4                         4
+#define GPR_R5                         5
+#define GPR_R6                         6
+#define GPR_R7                         7
+#define GPR_R8                         8
+#define GPR_R9                         9
+#define GPR_R10                       10
+#define GPR_R11                       11
+#define GPR_R12                       12
 #define GPR_SP                        13
 #define GPR_LR                        14
 #define GPR_PC                        15

@@ -281,7 +281,7 @@ usrDataAbort:
   /* lets save the host abort mode LR, as we are not coming back to ABT mode! */
   MOV     R2, LR
 
-  /* guest context SVC mode R13/R14 register pointer in R1, save state  */
+  /* guest context user mode R13/R14 register pointer in R1, save state  */
   ADD     R1, R0, #GC_R13_OFFS
   CPS     PSR_SYS_MODE
   STMIA   R1, {R13, R14}

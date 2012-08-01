@@ -24,7 +24,7 @@ static u32int rorVal(u32int value, u32int ramt)  __constant__;
 
 u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *instrString)
 {
-  u32int nextPC = getNativeInstructionPointer(context);
+  u32int nextPC = 0;
   u32int regDest = (instr & 0x0000F000) >> 12;
 
   if (regDest != GPR_PC)
@@ -179,8 +179,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
   }
   else
   {
-    nextPC = getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
-    return nextPC;
+    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
   }
 }
 

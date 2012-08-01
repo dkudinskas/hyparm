@@ -32,12 +32,7 @@ void deliverServiceCall(GCONTXT *context)
   context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_SVC_MODE;
   guestChangeMode(context->CPSR & PSR_MODE);
   // 4. set LR to PC+4
-#ifdef CONFIG_BLOCK_COPY
-  const u32int metaIndex = findMetaCacheEntryByCodeCacheAddress(&context->translationCache, context->R15);
-  context->R14_SVC = getOriginPC(&context->translationCache, metaIndex, context->R15);
-#else
   context->R14_SVC = context->R15;
-#endif /* CONFIG_BLOCK_COPY */
 #ifdef CONFIG_THUMB2
   if (context->CPSR & PSR_T_BIT)// Were we on Thumb?
   {
@@ -65,33 +60,6 @@ void deliverServiceCall(GCONTXT *context)
   context->CPSR |= PSR_I_BIT;
 }
 
-static inline u32int getExceptionHandlerAddress(GCONTXT *context, u32int offset)
-{
-  /*
-   * If SCTLR.V == 0, the exception base address is controlled by VBAR, otherwise, 'Hivecs' are
-   * in use and the exception base address is fixed at EXC_VECT_HIGH_OFFS.
-   * WARNING: the calculation below is NOT valid for the monitor exception base address!
-   */
-  if (context->guestHighVectorSet)
-  {
-    return EXC_VECT_HIGH_OFFS + offset;
-  }
-  else
-  {
-    u32int vbar = context->coprocRegBank[CP15_VBAR].value;
-    if (likely(vbar == 0))
-    {
-      // Hack: bypass boot ROM, SRAM, etc.
-      return *(u32int *)((u32int)context + offsetof(GCONTXT, guestUndefinedHandler) + offset - 4);
-    }
-    else
-    {
-      return vbar + offset;
-    }
-  }
-  // update AFI bits for SVC:
-  context->CPSR |= PSR_I_BIT;
-}
 
 void throwInterrupt(GCONTXT *context, u32int irqNumber)
 {
@@ -107,7 +75,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
-        DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: enable guest interrupts" EOL);
+        DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: guest interrupts enabled!" EOL);
         context->guestIrqPending = TRUE;
       }
       else
@@ -153,7 +121,9 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
       break;
     }
     default:
+    {
       DIE_NOW(context, "throwInterrupt: from unknown source.");
+    }
   }
 }
 
@@ -183,13 +153,7 @@ void deliverInterrupt(GCONTXT *context)
   }
 #endif
   // 5. set LR to PC+4
-#ifdef CONFIG_BLOCK_COPY
-  const u32int metaIndex = findMetaCacheEntryByCodeCacheAddress(&context->translationCache, context->R15);
-  context->R14_IRQ = getOriginPC(&context->translationCache, metaIndex, context->R15);
-#else
-  context->R14_IRQ = context->R15;
-#endif
-  context->R14_IRQ += LR_OFFSET_IRQ;
+  context->R14_IRQ = context->R15 + LR_OFFSET_IRQ;
   // 6. set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_IRQ);
   // update AFI bits for IRQ:
@@ -223,18 +187,13 @@ void deliverDataAbort(GCONTXT *context)
   }
 #endif
   // 5. set LR to PC+8
-#ifdef CONFIG_BLOCK_COPY
-  const u32int metaIndex = findMetaCacheEntryByCodeCacheAddress(&context->translationCache, context->R15);
-  context->R14_ABT = getOriginPC(&context->translationCache, metaIndex, context->R15);
-#else
-  context->R14_ABT = context->R15;
-#endif
-  context->R14_ABT += LR_OFFSET_DATA_ABT;
+  context->R14_ABT = context->R15 + LR_OFFSET_DATA_ABT;
   // 6. set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_DABT);
   // update AFI bits for IRQ:
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
+
 
 void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isWrite, u32int domain)
 {
@@ -280,18 +239,13 @@ void deliverPrefetchAbort(GCONTXT *context)
   }
 #endif
   // 5. set LR to PC+4
-#ifdef CONFIG_BLOCK_COPY
-  const u32int metaIndex = findMetaCacheEntryByCodeCacheAddress(&context->translationCache, context->R15);
-  context->R14_ABT = getOriginPC(&context->translationCache, metaIndex, context->R15);
-#else
-  context->R14_ABT = context->R15;
-#endif
-  context->R14_ABT += LR_OFFSET_PREFETCH_ABT;
+  context->R14_ABT = context->R15 + LR_OFFSET_PREFETCH_ABT;
   // 6. set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_PABT);
   // update AFI bits for IRQ:
   context->CPSR |= PSR_A_BIT | PSR_I_BIT;
 }
+
 
 void throwPrefetchAbort(GCONTXT *context, u32int address, u32int faultType)
 {
@@ -306,4 +260,34 @@ void throwPrefetchAbort(GCONTXT *context, u32int address, u32int faultType)
   context->coprocRegBank[CP15_IFAR].value = address;
   // set guest abort pending flag, return
   context->guestPrefetchAbtPending = TRUE;
+}
+
+
+static inline u32int getExceptionHandlerAddress(GCONTXT *context, u32int offset)
+{
+  /*
+   * If SCTLR.V == 0, the exception base address is controlled by VBAR
+   * otherwise, 'Hivecs' are in use and the exception base address is fixed
+   * at EXC_VECT_HIGH_OFFS. WARNING: the calculation below is NOT valid for
+   * the monitor exception base address!
+   */
+  if (context->guestHighVectorSet)
+  {
+    return EXC_VECT_HIGH_OFFS + offset;
+  }
+  else
+  {
+    u32int vbar = context->coprocRegBank[CP15_VBAR].value;
+    if (likely(vbar == 0))
+    {
+      // Hack: bypass boot ROM, SRAM, etc.
+      return *(u32int *)((u32int)context + offsetof(GCONTXT, guestUndefinedHandler) + offset - 4);
+    }
+    else
+    {
+      return vbar + offset;
+    }
+  }
+  // update AFI bits for SVC:
+  context->CPSR |= PSR_I_BIT;
 }
