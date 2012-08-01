@@ -1,0 +1,80 @@
+#include "guestManager/translationStore.h"
+#include "guestManager/codeStore.h"
+
+#include "common/debug.h"
+#include "common/stdlib.h"
+#include "common/linker.h"
+
+#include "cpuArch/constants.h"
+
+
+void initialiseTranslationStore(TranslationStore* ts)
+{
+  DEBUG(TRANSLATION_STORE, "initialiseTranslationStore: translation store @ %p" EOL, ts);
+
+  ts->codeStore = (u32int*)RAM_CODE_CACHE_POOL_BEGIN;
+  DEBUG(TRANSLATION_STORE, "initialiseTranslationStore: code store @ %p\n", ts->codeStore);
+  memset(ts->codeStore, 0, RAM_CODE_CACHE_POOL_END-RAM_CODE_CACHE_POOL_BEGIN);
+
+  ts->codeStoreFreePtr = ts->codeStore;
+  DEBUG(TRANSLATION_STORE, "initialiseTranslationStore: code store free ptr @ %p\n", ts->codeStoreFreePtr);
+
+  DEBUG(TRANSLATION_STORE, "initialiseTranslationStore basic block entry size %x\n", sizeof(BasicBlock));
+  ts->basicBlockStore = (BasicBlock*)malloc(BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
+  if (ts->basicBlockStore == NULL)
+  {
+    DIE_NOW(context, "Failed to allocate code store");
+  }
+  DEBUG(TRANSLATION_STORE, "initialiseTranslationStore: basic block store @ %p\n", ts->basicBlockStore);
+  memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
+}
+
+
+void instructionToCodeStore(TranslationStore* ts, u32int instruction)
+{
+  *ts->codeStoreFreePtr = instruction;
+  DEBUG(TRANSLATION_STORE, "instructionToCodeStore: codeStore loc %p is now %08x\n",
+                                 ts->codeStoreFreePtr, *ts->codeStoreFreePtr);
+  ts->codeStoreFreePtr++;
+  if ((u32int)ts->codeStoreFreePtr >= RAM_CODE_CACHE_POOL_END)
+  {
+    DIE_NOW(0, "instructionToCodeStore: code store full!\n");
+  }
+}
+
+
+void clearTranslationsByAddress(TranslationStore* ts, u32int address)
+{
+  // stub
+}
+
+
+void clearTranslationsSmallPage(TranslationStore* ts, u32int addressStart, u32int addressEnd)
+{
+  u32int i = 0;
+  for (i = 0; i < BASIC_BLOCK_STORE_SIZE; i++)
+  {
+    u32int index = getBasicBlockStoreIndex(addressStart);
+    BasicBlock* block = getBasicBlockStoreEntry(ts, index);
+    if (block->type != BB_TYPE_INVALID)
+    {
+      invalidateBlock(block);
+    }
+  }
+}
+
+
+void clearTranslationsByAddressRange(TranslationStore* ts, u32int addressStart, u32int addressEnd)
+{
+  u32int i = 0;
+  for (i = 0; i < BASIC_BLOCK_STORE_SIZE; i++)
+  {
+    u32int guestStart = (u32int)(ts->basicBlockStore[i].guestStart);
+    u32int guestEnd = (u32int)(ts->basicBlockStore[i].guestEnd); 
+    if ( ((guestStart >= addressStart) && (guestStart <= addressEnd)) ||
+         ((guestEnd >= addressStart) && (guestEnd <= addressEnd)) )
+    {
+      memset((void*)&ts->basicBlockStore[i], 0, sizeof(BasicBlock));
+    } 
+  }
+}
