@@ -143,6 +143,17 @@ void gptBEEnable(u32int id)
   }
 }
 
+// Warning: this probably isn't very accurate
+void gptBESetPeriod(u32int id, u32int ms) {
+  u32int counter = 0xFFFFFFFF - ((10000 * ms) -1);
+  gptBEregWrite(id, GPT_REG_TLDR, counter);
+  gptBEregWrite(id, GPT_REG_TOWR, GPT_TOWR_OVF_WRAPPING & 1);
+  // write to trigger register - thus triggering internal counter value reset to TLDR
+  gptBEregWrite(id, GPT_REG_TTGR, 1);
+  // set autoreload
+  gptBEregWrite(id, GPT_REG_TCLR, (gptBEregRead(id, GPT_REG_TCLR) | GPT_TCLR_AUTORELOAD));
+}
+
 void gptBESet10msTick(u32int id)
 {
   if (!gptBEisExtended(id))

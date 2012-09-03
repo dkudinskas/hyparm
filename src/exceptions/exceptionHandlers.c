@@ -26,6 +26,9 @@
 #include "vm/omap35xx/intc.h"
 #include "vm/omap35xx/uart.h"
 
+#ifdef CONFIG_PROFILER
+#include "common/profiler.h"
+#endif
 
 #ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT
 
@@ -582,9 +585,36 @@ void irqPrivileged()
 }
 
 
-void fiq(void)
-{
+void fiq(u32int instAddr) {
+#ifdef CONFIG_PROFILER
+  GCONTXT *const context = getActiveGuestContext();
+  
+  u32int activeFiqNumber = getFiqNumberBE();
+  switch (activeFiqNumber)
+  {
+    case GPT3_IRQ:
+    {
+      u32int pAddr = getPhysicalAddress(context, context->pageTables->shadowActive, instAddr);
+      profilerRecord(pAddr);
+      //printf("lastAddr: %p\n", (void *)pAddr);
+      
+      gptBEClearOverflowInterrupt(3);
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "unimplemented FIQ handler.");
+  }
+  
+  acknowledgeFiqBE();
+  
+  // write barrier
+  asm volatile("MOV R0, #0\n\t"
+               "MCR P15, #0, R0, C7, C10, #4"
+               : : : "memory");
+               
+#else
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
 }
 
 

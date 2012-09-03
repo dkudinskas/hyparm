@@ -111,9 +111,26 @@ u32int getIrqNumberBE()
   return intcRegReadBE(REG_INTCPS_SIR_IRQ) & INTCPS_SIR_IRQ_ACTIVEIRQ;
 }
 
+u32int getFiqNumberBE()
+{
+  return intcRegReadBE(REG_INTCPS_SIR_FIQ) & INTCPS_SIR_FIQ_ACTIVEFIQ;
+}
+
 void acknowledgeIrqBE()
 {
   intcRegWriteBE(REG_INTCPS_CONTROL, INTCPS_CONTROL_NEWIRQAGR);
+}
+
+void acknowledgeFiqBE()
+{
+  intcRegWriteBE(REG_INTCPS_CONTROL, INTCPS_CONTROL_NEWFIQAGR);
+}
+
+void setInterruptMapping(u32int interruptNumber, u32int fiq)
+{
+  u32int reg = intcRegReadBE(REG_INTCPS_ILRm + interruptNumber * 0x4);
+  reg = (fiq) ? (reg | INTCPS_FIQNIRQ_FIQ) : (reg & (~INTCPS_FIQNIRQ_FIQ));
+  intcRegWriteBE(REG_INTCPS_ILRm + interruptNumber * 0x4,  reg);
 }
 
 void intcDumpRegistersBE()

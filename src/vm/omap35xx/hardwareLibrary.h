@@ -122,6 +122,8 @@
 #define Q3_SDRC_SMS                  0xE0000000
 #define Q3_SDRC_SMS_SIZE             0x20000000
 
+#define PROFILER                  0x48000000 
+#define PROFILER_SIZE             0x00002000
 
 device *createHardwareLibrary(struct guestContext *context) __cold__;
 u32int vmLoad(struct guestContext *gc, ACCESS_SIZE size, u32int virtAddr);

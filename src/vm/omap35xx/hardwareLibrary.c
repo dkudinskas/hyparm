@@ -30,6 +30,9 @@
 #include "vm/omap35xx/wdtimer.h"
 #endif
 
+#ifdef CONFIG_PROFILER
+#include "vm/omap35xx/profiler.h"
+#endif
 
 static bool attachDevice(device *parent, device *child) __cold__;
 static device *createDevice(const char *devName, bool isBus, u32int addrStart, u32int addrEnd,
@@ -515,6 +518,16 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto q3busError;
   }
+  
+#ifdef CONFIG_PROFILER
+  device *profiler = createDevice("Profiler", FALSE, PROFILER, 
+                                  (u32int)(PROFILER - 1 + PROFILER_SIZE), l4IntCore,
+                                  &loadProfilerInt, &storeProfilerInt);                       
+  if (profiler == NULL)
+  {
+    goto profilerError;
+  }
+#endif
 
   return topLevelBus;
 
@@ -522,6 +535,10 @@ device *createHardwareLibrary(GCONTXT *context)
    * Deallocation in reverse order to make sure no uninitialized pointer values are freed.
    * WARNING: this is required because pointers are NOT guaranteed to be NULL if uninitialized.
    */
+#ifdef CONFIG_PROFILER
+  free(profiler);
+profilerError:
+#endif
   free(q3bus);
 q3busError:
   free(sdramModule);

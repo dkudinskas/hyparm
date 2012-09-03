@@ -47,6 +47,9 @@
 #include "vm/omap35xx/cp15coproc.h"
 #include "vm/omap35xx/hardwareLibrary.h"
 
+#ifdef CONFIG_PROFILER
+#include "common/profiler.h"
+#endif
 
 #define CL_OPTION_FAST_UART          1
 #define CL_OPTION_GUEST_OS           2
@@ -183,6 +186,11 @@ void main(s32int argc, char *argv[])
     DIE_NOW(context, "Failed to open (create) debug stream file.");
   }
 #endif /* CONFIG_MMC_LOG */
+
+#ifdef CONFIG_PROFILER
+  profilerInit();
+  printf("Profiler started\n");
+#endif
 
   // does not return
   switch (config.guestOS)

@@ -118,8 +118,14 @@ contUndSvc:
   
   /* Construct SPSR in R0: set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and
     restore all other fields from the CPSR*/
+#ifdef CONFIG_PROFILER
+  BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
+  ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
+#endif
+
   MSR     SPSR, R0
   POP     {R0}
 #ifdef CONFIG_THUMB2

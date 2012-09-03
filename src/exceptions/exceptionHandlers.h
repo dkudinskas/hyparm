@@ -67,7 +67,7 @@ void monitorModePrivileged(void);
 GCONTXT *irq(GCONTXT *context);
 void irqPrivileged(void);
 
-void fiq(void);
+void fiq(u32int instAddr);
 
 void dabtTranslationFault(GCONTXT * gc, DFSR dfsr, u32int dfar);
 void dabtPermissionFault(GCONTXT * gc, DFSR dfsr, u32int dfar);
