@@ -215,8 +215,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 
   if ((getScanBlockCounter() & MARK_MASK) == 1)
   {
-    DEBUG(SCANNER_MARK, "scanBlock: #B = %#.16Lx; #DABT = %#.16Lx; #IRQ = %#.16Lx; startAddress = "
-        "%#.8x" EOL, getScanBlockCounter(), getDataAbortCounter(), getIrqCounter(), startAddress);
+    DEBUG(SCANNER_MARK, "scanBlock: #B = %#.16Lx; startAddress = %#.8x" EOL, getScanBlockCounter(), startAddress);
   }
   u32int blockIndex = getBasicBlockStoreIndex(startAddress);
   BasicBlock* basicBlock = getBasicBlockStoreEntry(context->translationStore, blockIndex);
