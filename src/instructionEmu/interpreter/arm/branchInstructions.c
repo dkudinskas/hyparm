@@ -13,6 +13,28 @@ enum
 
 u32int armBInstruction(GCONTXT *context, u32int instruction)
 {
+#ifdef COUNTER_BUILD
+  if ((instruction & 0xF0000000) == 0xE0000000)
+  {
+    context->branchNonconditional++;
+  }
+  else
+  {
+    context->branchConditional++;
+  }
+  context->branchImmediate++;
+
+  if ((instruction & 0x0F000000) == 0x0B000000)
+  {
+    context->branchLink++;
+  }
+  else
+  {
+    context->branchNonlink++;
+  }
+
+#endif
+
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
     return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
@@ -27,8 +49,10 @@ u32int armBInstruction(GCONTXT *context, u32int instruction)
   {
     setGPRegister(context, GPR_LR, currPC);
   }
+
   return currPC + ARM_INSTRUCTION_SIZE + offset;
 }
+
 
 u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
 {
@@ -52,8 +76,23 @@ u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
 #endif
 }
 
+
 u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
 {
+#ifdef COUNTER_BUILD
+  if ((instruction & 0xF0000000) == 0xE0000000)
+  {
+    context->branchNonconditional++;
+  }
+  else
+  {
+    context->branchConditional++;
+  }
+  context->branchRegister++;
+
+  context->branchLink++;
+#endif
+
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
     return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
@@ -66,6 +105,7 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
   const u32int targetRegister = ARM_EXTRACT_REGISTER(instruction, BLX_RM_INDEX);
   ASSERT(targetRegister != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
   u32int destinationAddress = getGPRegister(context, targetRegister);
+
   setGPRegister(context, GPR_LR, getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE);
 
   if (destinationAddress & 1)
@@ -86,8 +126,23 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
   return destinationAddress;
 }
 
+
 u32int armBxInstruction(GCONTXT *context, u32int instruction)
 {
+#ifdef COUNTER_BUILD
+  if ((instruction & 0xF0000000) == 0xE0000000)
+  {
+    context->branchNonconditional++;
+  }
+  else
+  {
+    context->branchConditional++;
+  }
+
+  context->branchNonlink++;
+  context->branchRegister++;
+#endif
+
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
     return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
@@ -119,6 +174,7 @@ u32int armBxInstruction(GCONTXT *context, u32int instruction)
 
   return destinationAddress;
 }
+
 
 u32int armBxjInstruction(GCONTXT *context, u32int instruction)
 {

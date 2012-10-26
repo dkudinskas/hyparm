@@ -101,11 +101,8 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
    */
   context->os = os;
   /*
-   * Reset exception counters and loop detector
+   * Reset loop detector
    */
-  resetDataAbortCounter();
-  resetIrqCounter();
-  resetSvcCounter();
   resetLoopDetector(context);
   /*
    * Scan initial block

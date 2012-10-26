@@ -116,6 +116,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
   return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
+
 u32int armStrbInstruction(GCONTXT * context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
@@ -321,6 +322,7 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
   return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
 }
 
+
 u32int armStrdInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
@@ -432,6 +434,7 @@ u32int armStrbtInstruction(GCONTXT *context, u32int instruction)
 {
   return armStrbInstruction(context, instruction);
 }
+
 
 u32int armStmInstruction(GCONTXT *context, u32int instruction)
 {

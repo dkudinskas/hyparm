@@ -39,8 +39,8 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   // UNIMPLEMENTED: SWP swap
   ENTRY(IRC_REPLACE, armSwpInstruction,         NULL,                   0x01000090, 0x0fb00ff0, "SWP"),
   // UNIMPLEMENTED:
-  ENTRY(0x2,         armStrhtInstruction,       NULL,                   0x006000b0, 0x0f7000f0, "STRHT instruction"),
-  ENTRY(0x2,         armLdrhtInstruction,       NULL,                   0x003000b0, 0x0f3000f0, "LDRHT instruction"),
+  ENTRY(IRC_LS_USER, armStrhtInstruction,       NULL,                   0x006000b0, 0x0f7000f0, "STRHT instruction"),
+  ENTRY(IRC_LS_USER, armLdrhtInstruction,       NULL,                   0x003000b0, 0x0f3000f0, "LDRHT instruction"),
   // store and load exclusive: must be emulated - user mode faults
   ENTRY(IRC_REPLACE, armLdrexbInstruction,      NULL,                   0x01d00f9f, 0x0ff00fff, "LDREXB"),
   ENTRY(IRC_REPLACE, armLdrexdInstruction,      NULL,                   0x01b00f9f, 0x0ff00fff, "LDREXD"),

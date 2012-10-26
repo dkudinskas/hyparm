@@ -202,16 +202,8 @@ config EMERGENCY_EXCEPTION_VECTOR
   default y
   depends on ARCH_EXT_SECURITY && DEBUGGING_HACKS
 
-config EXCEPTION_HANDLERS_COUNT_DATA_ABORT
-  bool "Count number of data aborts"
-  depends on DEBUGGING_HACKS
-
-config EXCEPTION_HANDLERS_COUNT_IRQ
-  bool "Count number of interrupts (IRQs)"
-  depends on DEBUGGING_HACKS
-
-config EXCEPTION_HANDLERS_COUNT_SVC
-  bool "Count number of software interrupts"
+config CONTEXT_SWITCH_COUNTERS
+  bool "Count number of hypercalls, data aborts, irqs and their causes"
   depends on DEBUGGING_HACKS
 
 config SCANNER_COUNT_BLOCKS

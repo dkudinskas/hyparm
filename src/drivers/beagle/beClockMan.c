@@ -39,7 +39,7 @@ inline void clkManRegWriteBE(u32int module, u32int regOffs, u32int value)
 
 void toggleTimerFclk(u32int clockID, bool enable)
 {
-  DEBUG(PP_OMAP_35XX_CM, "(CLK_MAN_BE: toggleTimerFclk(): timer %#x %s" EOL, clockID,
+  DEBUG(PP_OMAP_35XX_CM, "CLK_MAN_BE: toggleTimerFclk(): timer %#x %s" EOL, clockID,
       enable ? "enable" : "disable");
 
   if (clockID == 1)
@@ -55,8 +55,10 @@ void toggleTimerFclk(u32int clockID, bool enable)
     switch (clockID)
     {
       case 2:
+      {
         regVal = enable ? (regVal | CM_FCLKEN_PER_GPT2) : (regVal & ~CM_FCLKEN_PER_GPT2);
         break;
+      }
       case 3:
       case 4:
       case 5:
@@ -90,8 +92,10 @@ void setClockSource(u32int clockID, bool sysClock)
     switch (clockID)
     {
       case 2:
+      {
         regVal = sysClock ? (regVal | CM_CLKSEL_PER_GPT2) : (regVal & ~CM_CLKSEL_PER_GPT2);
         break;
+      }
       case 3:
       case 4:
       case 5:

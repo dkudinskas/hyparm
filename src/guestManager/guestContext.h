@@ -155,6 +155,90 @@ struct guestContext
 
   /* This will contain the guest PC of the last instruction in active BB*/
   u32int lastGuestPC;
+
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+  u32int svcCount;
+
+  u32int branchLink;
+  u32int branchNonlink;
+  u32int branchConditional;
+  u32int branchNonconditional;
+  u32int branchImmediate;
+  u32int branchRegister;
+
+  u32int svcGuest;
+  u32int armStmInstruction;
+  u32int armLdmInstruction;
+  u32int armLdrInstruction;
+  u32int armBInstruction;
+  u32int armSwpInstruction;
+  u32int armLdrexbInstruction;
+  u32int armLdrexdInstruction;
+  u32int armLdrexhInstruction;
+  u32int armStrexbInstruction;
+  u32int armStrexdInstruction;
+  u32int armStrexhInstruction;
+  u32int armLdrexInstruction;
+  u32int armStrexInstruction;
+  u32int armBxInstruction;
+  u32int armBxjInstruction;
+  u32int armBkptInstruction;
+  u32int armSmcInstruction;
+  u32int armBlxRegisterInstruction;
+  u32int armAndInstruction;
+  u32int armEorInstruction;
+  u32int armSubInstruction;
+  u32int armAddInstruction;
+  u32int armAdcInstruction;
+  u32int armSbcInstruction;
+  u32int armRscInstruction;
+  u32int armMsrInstruction;
+  u32int armMrsInstruction;
+  u32int armOrrInstruction;
+  u32int armMovInstruction;
+  u32int armLslInstruction;
+  u32int armLsrInstruction;
+  u32int armAsrInstruction;
+  u32int armRrxInstruction;
+  u32int armRorInstruction;
+  u32int armBicInstruction;
+  u32int armMvnInstruction;
+  u32int armYieldInstruction;
+  u32int armWfeInstruction;
+  u32int armWfiInstruction;
+  u32int armSevInstruction;
+  u32int armDbgInstruction;
+  u32int svcInstruction;
+  u32int armMrcInstruction;
+  u32int armMcrInstruction;
+  u32int armDmbInstruction;
+  u32int armDsbInstruction;
+  u32int armIsbInstruction;
+  u32int armClrexInstruction;
+  u32int armCpsInstruction;
+  u32int armRfeInstruction;
+  u32int armSetendInstruction;
+  u32int armSrsInstruction;
+  u32int armBlxImmediateInstruction;
+  u32int armPldInstruction;
+  u32int armPliInstruction;
+  u32int armStrbtInstruction;
+  u32int armStrhtInstruction;
+  u32int armStrtInstruction;
+  u32int armLdrbtInstruction;
+  u32int armLdrhtInstruction;
+  u32int armLdrtInstruction;
+  
+  u32int dabtCount;
+  u32int dabtPriv;
+  u32int dabtUser;
+  u32int pabtCount;
+  u32int pabtPriv;
+  u32int pabtUser;
+  u32int irqCount;
+  u32int irqPriv;
+  u32int irqUser;
+#endif
 };
 
 

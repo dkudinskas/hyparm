@@ -26,93 +26,14 @@
 #include "vm/omap35xx/intc.h"
 #include "vm/omap35xx/uart.h"
 
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+#include "instructionEmu/interpreter.h"
 
-#ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT
-
-u64int dataAbortCounter;
-
-static inline void incrementDataAbortCounter(void);
-
-u64int getDataAbortCounter()
-{
-  return dataAbortCounter;
-}
-
-static inline void incrementDataAbortCounter()
-{
-  dataAbortCounter++;
-}
-
-void resetDataAbortCounter()
-{
-  dataAbortCounter = 0;
-}
-
-#else
-
-#define incrementDataAbortCounter()
-
-#endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_DATA_ABORT */
-
-
-#ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_IRQ
-
-u64int irqCounter;
-
-static inline void incrementIrqCounter(void);
-
-u64int getIrqCounter()
-{
-  return irqCounter;
-}
-
-static inline void incrementIrqCounter()
-{
-  irqCounter++;
-}
-
-void resetIrqCounter()
-{
-  irqCounter = 0;
-}
-
-#else
-
-#define incrementIrqCounter()
-
-#endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_IRQ */
-
-
-#ifdef CONFIG_EXCEPTION_HANDLERS_COUNT_SVC
-
-u64int svcCounter;
-
-static inline void incrementSvcCounter(void);
-
-u64int getSvcCounter()
-{
-  return svcCounter;
-}
-
-static inline void incrementSvcCounter()
-{
-  svcCounter++;
-}
-
-void resetSvcCounter()
-{
-  svcCounter = 0;
-}
-
-#else
-
-#define incrementSvcCounter()
-
-#endif /* CONFIG_EXCEPTION_HANDLERS_COUNT_SVC */
+void registerSvc(InstructionHandler handler);
+#endif
 
 
 #ifdef CONFIG_LOOP_DETECTOR
-
 /*
  * We do not care about initializing this variable, because the loop detector is reset during boot.
  * If the initial value would evaluate to TRUE, an extra reset happens at start.
@@ -132,19 +53,18 @@ static inline void resetLoopDetectorIfNeeded(GCONTXT *context)
     mustResetLoopDetector = FALSE;
   }
 }
-
 #else
-
 #define delayResetLoopDetector()
 #define resetLoopDetectorIfNeeded(context)
-
 #endif /* CONFIG_LOOP_DETECTOR */
 
 
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 {
   disableInterrupts();
-  incrementSvcCounter();
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+  context->svcCount++;
+#endif
 
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
 
@@ -182,6 +102,9 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   // Do we need to forward it to the guest?
   if (gSVC)
   {
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+    context->svcGuest++;
+#endif
     deliverServiceCall(context);
     nextPC = context->R15;
   }
@@ -190,6 +113,9 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     u32int cpsrOld = context->CPSR;
     u32int blockStoreIndex = code - 0x100;
     BasicBlock* basicBlock = &context->translationStore->basicBlockStore[blockStoreIndex];
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+    registerSvc(basicBlock->handler);
+#endif
     nextPC = basicBlock->handler(context, *basicBlock->guestEnd);
     u32int cpsrNew = context->CPSR;
     if (((cpsrOld & PSR_MODE) != PSR_USR_MODE) &&
@@ -252,6 +178,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   }
   else
   {
+    // going to user mode.
     delayResetLoopDetector();
   }
   enableInterrupts();
@@ -262,7 +189,10 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 GCONTXT *dataAbort(GCONTXT *context)
 {
   /* Make sure interrupts are disabled while we deal with data abort. */
-  incrementDataAbortCounter();
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+  context->dabtCount++;
+  context->dabtUser++;
+#endif
   /* Encodings: Page 1289 & 1355 */
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
@@ -311,7 +241,10 @@ GCONTXT *dataAbort(GCONTXT *context)
 
 void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 {
-  incrementDataAbortCounter();
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+  getActiveGuestContext()->dabtCount++;
+  getActiveGuestContext()->dabtPriv++;
+#endif
 
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
@@ -345,10 +278,12 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
     case dfsTranslationTableWalkLvl1SyncParityErr:
     case dfsTranslationTableWalkLvl2SyncParityErr:
     default:
+    {
       printf("dataAbortPrivileged pc %08x addr %08x" EOL, pc, dfar);
       printDataAbort();
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       break;
+    }
   }
 }
 
@@ -364,10 +299,11 @@ void undefinedPrivileged(void)
 
 GCONTXT *prefetchAbort(GCONTXT *context)
 {
-  /*
-   * Make sure interrupts are disabled while we deal with prefetch abort.
-   */
-
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+  context->pabtCount++;
+  context->pabtUser++;
+#endif
+  // Make sure interrupts are disabled while we deal with prefetch abort.
   IFSR ifsr = getIFSR();
   u32int ifar = getIFAR();
   u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
@@ -407,14 +343,22 @@ GCONTXT *prefetchAbort(GCONTXT *context)
     case ifsTranslationTableWalk1stLvlSynchParityError:
     case ifsTranslationTableWalk2ndLvlSynchParityError:
     default:
+    {
       printPrefetchAbort();
       DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
+    }
   }
   return context;
 }
 
+
 void prefetchAbortPrivileged(void)
 {
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+  getActiveGuestContext()->pabtCount++;
+  getActiveGuestContext()->pabtPriv++;
+#endif
+
   IFSR ifsr = getIFSR();
   u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
   switch(faultStatus)
@@ -437,9 +381,11 @@ void prefetchAbortPrivileged(void)
     case ifsTranslationTableWalk1stLvlSynchParityError:
     case ifsTranslationTableWalk2ndLvlSynchParityError:
     default:
+    {
       printPrefetchAbort();
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-   }
+    }
+  }
 }
 
 GCONTXT *monitorMode(GCONTXT *context)
@@ -464,7 +410,10 @@ void monitorModePrivileged(void)
 
 GCONTXT *irq(GCONTXT *context)
 {
-  incrementIrqCounter();
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+  getActiveGuestContext()->irqCount++;
+  getActiveGuestContext()->irqUser++;
+#endif
 
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
@@ -527,7 +476,10 @@ GCONTXT *irq(GCONTXT *context)
 void irqPrivileged()
 {
   GCONTXT *const context = getActiveGuestContext();
-  incrementIrqCounter();
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+  context->irqCount++;
+  context->irqPriv++;
+#endif
 
   // Get the number of the highest priority active IRQ/FIQ
   u32int activeIrqNumber = getIrqNumberBE();
@@ -700,3 +652,280 @@ void iabtTranslationFault(GCONTXT *gc, IFSR ifsr, u32int ifar)
     }
   }
 }
+
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+void registerSvc(InstructionHandler handler)
+{
+  GCONTXT *context = getActiveGuestContext();
+  if (handler == armBInstruction)
+  {
+    context->armBInstruction++;
+  }
+  else if (handler == armBxInstruction)
+  {
+    context->armBxInstruction++;
+  }
+  else if (handler == armBxjInstruction)
+  {
+    context->armBxjInstruction++;
+  }
+  else if (handler == armBlxRegisterInstruction)
+  {
+    context->armBlxRegisterInstruction++;
+  }
+  else if (handler == armBlxImmediateInstruction)
+  {
+    context->armBlxImmediateInstruction++;
+  }
+
+  if (handler == armStmInstruction)
+  {
+    context->armStmInstruction++;
+  }
+  else if (handler == armLdmInstruction)
+  {
+    context->armLdmInstruction++;
+  }
+  else if (handler == armLdrInstruction)
+  {
+    context->armLdrInstruction++;
+  }
+  else if (handler == armBInstruction)
+  {
+    context->armBInstruction++;
+  }
+  else if (handler == armSwpInstruction)
+  {
+    context->armSwpInstruction++;
+  }
+  else if (handler == armLdrexbInstruction)
+  {
+    context->armLdrexbInstruction++;
+  }
+  else if (handler == armLdrexdInstruction)
+  {
+    context->armLdrexdInstruction++;
+  }
+  else if (handler == armLdrexhInstruction)
+  {
+    context->armLdrexhInstruction++;
+  }
+  else if (handler == armStrexbInstruction)
+  {
+    context->armStrexbInstruction++;
+  }
+  else if (handler == armStrexdInstruction)
+  {
+    context->armStrexdInstruction++;
+  }
+  else if (handler == armStrexhInstruction)
+  {
+    context->armStrexhInstruction++;
+  }
+  else if (handler == armLdrexInstruction)
+  {
+    context->armLdrexInstruction++;
+  }
+  else if (handler == armStrexInstruction)
+  {
+    context->armStrexInstruction++;
+  }
+  else if (handler == armBxInstruction)
+  {
+    context->armBxInstruction++;
+  }
+  else if (handler == armBxjInstruction)
+  {
+    context->armBxjInstruction++;
+  }
+  else if (handler == armBkptInstruction)
+  {
+    context->armBkptInstruction++;
+  }
+  else if (handler == armSmcInstruction)
+  {
+    context->armSmcInstruction++;
+  }
+  else if (handler == armBlxRegisterInstruction)
+  {
+    context->armBlxRegisterInstruction++;
+  }
+  else if (handler == armAndInstruction)
+  {
+    context->armAndInstruction++;
+  }
+  else if (handler == armEorInstruction)
+  {
+    context->armEorInstruction++;
+  }
+  else if (handler == armSubInstruction)
+  {
+    context->armSubInstruction++;
+  }
+  else if (handler == armAddInstruction)
+  {
+    context->armAddInstruction++;
+  }
+  else if (handler == armAdcInstruction)
+  {
+    context->armAdcInstruction++;
+  }
+  else if (handler == armSbcInstruction)
+  {
+    context->armSbcInstruction++;
+  }
+  else if (handler == armRscInstruction)
+  {
+    context->armRscInstruction++;
+  }
+  else if (handler == armMsrInstruction)
+  {
+    context->armMsrInstruction++;
+  }
+  else if (handler == armMrsInstruction)
+  {
+    context->armMrsInstruction++;
+  }
+  else if (handler == armOrrInstruction)
+  {
+    context->armOrrInstruction++;
+  }
+  else if (handler == armMovInstruction)
+  {
+    context->armMovInstruction++;
+  }
+  else if (handler == armLslInstruction)
+  {
+    context->armLslInstruction++;
+  }
+  else if (handler == armLsrInstruction)
+  {
+    context->armLsrInstruction++;
+  }
+  else if (handler == armAsrInstruction)
+  {
+    context->armAsrInstruction++;
+  }
+  else if (handler == armRrxInstruction)
+  {
+    context->armRrxInstruction++;
+  }
+  else if (handler == armRorInstruction)
+  {
+    context->armRorInstruction++;
+  }
+  else if (handler == armBicInstruction)
+  {
+    context->armBicInstruction++;
+  }
+  else if (handler == armMvnInstruction)
+  {
+    context->armMvnInstruction++;
+  }
+  else if (handler == armYieldInstruction)
+  {
+    context->armYieldInstruction++;
+  }
+  else if (handler == armWfeInstruction)
+  {
+    context->armWfeInstruction++;
+  }
+  else if (handler == armWfiInstruction)
+  {
+    context->armWfiInstruction++;
+  }
+  else if (handler == armSevInstruction)
+  {
+    context->armSevInstruction++;
+  }
+  else if (handler == armDbgInstruction)
+  {
+    context->armDbgInstruction++;
+  }
+  else if (handler == svcInstruction)
+  {
+    context->svcInstruction++;
+  }
+  else if (handler == armMrcInstruction)
+  {
+    context->armMrcInstruction++;
+  }
+  else if (handler == armMcrInstruction)
+  {
+    context->armMcrInstruction++;
+  }
+  else if (handler == armDmbInstruction)
+  {
+    context->armDmbInstruction++;
+  }
+  else if (handler == armDsbInstruction)
+  {
+    context->armDsbInstruction++;
+  }
+  else if (handler == armIsbInstruction)
+  {
+    context->armIsbInstruction++;
+  }
+  else if (handler == armClrexInstruction)
+  {
+    context->armClrexInstruction++;
+  }
+  else if (handler == armCpsInstruction)
+  {
+    context->armCpsInstruction++;
+  }
+  else if (handler == armRfeInstruction)
+  {
+    context->armRfeInstruction++;
+  }
+  else if (handler == armSetendInstruction)
+  {
+    context->armSetendInstruction++;
+  }
+  else if (handler == armSrsInstruction)
+  {
+    context->armSrsInstruction++;
+  }
+  else if (handler == armBlxImmediateInstruction)
+  {
+    context->armBlxImmediateInstruction++;
+  }
+  else if (handler == armPldInstruction)
+  {
+    context->armPldInstruction++;
+  }
+  else if (handler == armPliInstruction)
+  {
+    context->armPliInstruction++;
+  }
+  else if (handler == armStrbtInstruction)
+  {
+    context->armStrbtInstruction++;
+  }
+  else if (handler == armStrhtInstruction)
+  {
+    context->armStrhtInstruction++;
+  }
+  else if (handler == armStrtInstruction)
+  {
+    context->armStrtInstruction++;
+  }
+  else if (handler == armLdrbtInstruction)
+  {
+    context->armLdrbtInstruction++;
+  }
+  else if (handler == armLdrhtInstruction)
+  {
+    context->armLdrhtInstruction++;
+  }
+  else if (handler == armLdrtInstruction)
+  {
+    context->armLdrtInstruction++;
+  }
+  else
+  {
+    printf("handler = %p", handler);
+    DIE_NOW(context, "handler...");
+  }
+}
+#endif
