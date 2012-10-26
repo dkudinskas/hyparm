@@ -13,7 +13,7 @@ enum
 
 u32int armBInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef COUNTER_BUILD
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   if ((instruction & 0xF0000000) == 0xE0000000)
   {
     context->branchNonconditional++;
@@ -79,7 +79,7 @@ u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
 
 u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef COUNTER_BUILD
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   if ((instruction & 0xF0000000) == 0xE0000000)
   {
     context->branchNonconditional++;
@@ -129,7 +129,7 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
 
 u32int armBxInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef COUNTER_BUILD
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   if ((instruction & 0xF0000000) == 0xE0000000)
   {
     context->branchNonconditional++;
