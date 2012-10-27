@@ -186,7 +186,6 @@ static void reportBlockSize(u32int *start, u32int size)
 void scanBlock(GCONTXT *context, u32int startAddress)
 {
   incrementScanBlockCounter();
-  context->svcCount++;
 #ifdef CONFIG_SCANNER_EXTRA_CHECKS
   if (getScanBlockCallSource() == SCANNER_CALL_SOURCE_NOT_SET)
   {
