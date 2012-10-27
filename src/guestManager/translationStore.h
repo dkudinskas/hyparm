@@ -7,12 +7,21 @@
 #include "common/types.h"
 
 
+#define INSTR_SWI            0xEF000000U
+#define INSTR_SWI_THUMB      0x0000DF00U
+#define INSTR_NOP_THUMB      0x0000BF00U
+#define INSTR_SWI_THUMB_MASK 0x0000FF00U
+#define INSTR_SWI_THUMB_MIX  ((INSTR_SWI_THUMB << 16) | INSTR_NOP_THUMB)
+
+
+
 typedef struct TranslationStore
 {
   u32int* codeStore;
   u32int* codeStoreFreePtr;
   BasicBlock* basicBlockStore;
   u32int spillLocation;
+  bool stop;
 } TranslationStore;
 
 

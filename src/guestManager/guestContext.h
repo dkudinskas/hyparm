@@ -155,6 +155,9 @@ struct guestContext
 
   /* This will contain the guest PC of the last instruction in active BB*/
   u32int lastGuestPC;
+  u32int lastBasicBlockID;
+  u32int groupBlockVersion;
+  u32int unlinkCount;
 
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   u32int svcCount;

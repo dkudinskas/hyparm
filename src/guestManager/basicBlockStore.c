@@ -62,7 +62,7 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
     BasicBlock tempBlock = *basicBlock;
     
     // invalidate the basic block store
-    invalidateBlockStore(ts);
+    memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
     
     // restore basic block store entry    
     basicBlock->guestStart = tempBlock.guestStart;
@@ -81,10 +81,4 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
 void invalidateBlock(BasicBlock* block)
 {
   memset(block, 0, sizeof(BasicBlock));
-}
-
-
-void invalidateBlockStore(struct TranslationStore* ts)
-{
-  memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
 }

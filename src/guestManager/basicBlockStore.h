@@ -18,19 +18,24 @@ enum basicBlockEntryType
 {
   BB_TYPE_INVALID = 0,
   BB_TYPE_ARM,
-  BB_TYPE_THUMB
+  BB_TYPE_THUMB,
+  GB_TYPE_ARM,
+  GB_TYPE_THHUMB
 };
 typedef enum basicBlockEntryType basicBlockType;
 
 struct BasicBlockEntry
 {
+  basicBlockType type;
   u32int* guestStart;
   u32int* guestEnd;
   u32int* codeStoreStart;
   u32int codeStoreSize;
   InstructionHandler handler;
-  basicBlockType type;
   u32int addressMap;
+  u32int versionNumber;
+  u8int hotness;
+  bool oneHypercall;
 };
 typedef struct BasicBlockEntry BasicBlock;
 
@@ -41,7 +46,5 @@ BasicBlock* getBasicBlockStoreEntry(struct TranslationStore* ts, u32int index);
 void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, u32int instruction);
 
 void invalidateBlock(BasicBlock* block);
-
-void invalidateBlockStore(struct TranslationStore* ts);
 
 #endif

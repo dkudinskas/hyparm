@@ -11,6 +11,7 @@
 
 #include "exceptions/exceptionHandlers.h"
 
+#include "guestManager/basicBlockStore.h"
 #include "guestManager/guestExceptions.h"
 #include "guestManager/scheduler.h"
 
@@ -61,6 +62,10 @@ static inline void resetLoopDetectorIfNeeded(GCONTXT *context)
 
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 {
+  bool link = TRUE;
+  u32int nextPC = 0;
+  bool gSVC = FALSE;
+
   disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   context->svcCount++;
@@ -68,9 +73,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
 
-  // parse the instruction to find the start address of next block
-  u32int nextPC = 0;
-  bool gSVC = FALSE;
 
 #ifdef CONFIG_THUMB2
   /* Make sure that any SVC that is not part of the scanner
@@ -107,16 +109,22 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 #endif
     deliverServiceCall(context);
     nextPC = context->R15;
+    link = FALSE;
   }
   else
   {
     u32int cpsrOld = context->CPSR;
     u32int blockStoreIndex = code - 0x100;
-    BasicBlock* basicBlock = &context->translationStore->basicBlockStore[blockStoreIndex];
+    BasicBlock* basicBlock = getBasicBlockStoreEntry(context->translationStore, blockStoreIndex);
+    context->lastGuestPC = (u32int)basicBlock->guestEnd;
+
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
     registerSvc(basicBlock->handler);
 #endif
+
+    // interpret the instruction to find the start address of next block
     nextPC = basicBlock->handler(context, *basicBlock->guestEnd);
+
     u32int cpsrNew = context->CPSR;
     if (((cpsrOld & PSR_MODE) != PSR_USR_MODE) &&
         ((cpsrNew & PSR_MODE) == PSR_USR_MODE))
@@ -140,6 +148,8 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   }
 
   traceBlock(context, nextPC);
+
+  u32int lastPC = context->R15;
   context->R15 = nextPC;
 
   /* Maybe a timer interrupt is pending on real INTC but hasn't been acked yet */
@@ -148,13 +158,15 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     if ((context->CPSR & PSR_I_BIT) == 0)
     {
       deliverInterrupt(context);
+      link = FALSE;
     }
   }
   else if (context->guestDataAbtPending)
   {
     deliverDataAbort(context);
+    link = FALSE;
   }
-
+ 
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = %#.8x" EOL, nextPC);
 
   if ((context->CPSR & PSR_MODE) != PSR_USR_MODE)
@@ -174,6 +186,13 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     {
       setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
     }
+/*
+    if (link)
+    {
+      linkBlock(context, context->R15, lastPC, 
+                getBasicBlockStoreEntry(context->translationStore, code-0x100));
+    }
+*/
     scanBlock(context, context->R15);
   }
   else
@@ -388,6 +407,7 @@ void prefetchAbortPrivileged(void)
   }
 }
 
+
 GCONTXT *monitorMode(GCONTXT *context)
 {
   /*
@@ -398,6 +418,7 @@ GCONTXT *monitorMode(GCONTXT *context)
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
+
 void monitorModePrivileged(void)
 {
   /*
@@ -407,6 +428,7 @@ void monitorModePrivileged(void)
    */
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }
+
 
 GCONTXT *irq(GCONTXT *context)
 {
@@ -429,9 +451,16 @@ GCONTXT *irq(GCONTXT *context)
     case GPT2_IRQ:
     {
       throwInterrupt(context, activeIrqNumber);
-      /*
-       * FIXME: figure out which interrupt to clear and then clear the right one?
-       */
+      BasicBlock* block = getBasicBlockStoreEntry(context->translationStore, context->lastBasicBlockID);
+      // now we must unlink the current block if it is in a group block.
+      // to make sure the guest isn't waiting for our deferred interrupt forever
+      if (block->type == GB_TYPE_ARM)
+      {
+//        printf("irq: gpt2 irq in group block.\n");
+        unlinkAllBlocks(context);
+      }
+      
+      // FIXME: figure out which interrupt to clear and then clear the right one?
       gptBEClearOverflowInterrupt(2);
 #ifdef CONFIG_GUEST_FREERTOS
       if (context->os == GUEST_OS_FREERTOS)
@@ -607,14 +636,6 @@ void dabtTranslationFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
        * - if guest was privileged mode, guest code was executed from code store
        *   then we must find correct guest PC
        */
-      if (isGuestInPrivMode(gc))
-      {
-        printf("dabtTranslationFault: dfar %08x\n", dfar);
-        printf("dabtTranslationFault: guest data abort!\n");
-        printf("dabtTranslationFault: gc->r15 %08x lastPC %08x\n", gc->R15, gc->lastGuestPC);
-        DIE_NOW(gc, "dabtTranslationFault: guest privileged, stop point");
-      }
-
       deliverDataAbort(gc);
       setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_TRANSLATION);
       scanBlock(gc, gc->R15);

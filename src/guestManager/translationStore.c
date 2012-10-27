@@ -1,11 +1,15 @@
-#include "guestManager/translationStore.h"
-#include "guestManager/codeStore.h"
-
 #include "common/debug.h"
 #include "common/stdlib.h"
 #include "common/linker.h"
 
 #include "cpuArch/constants.h"
+
+#include "guestManager/translationStore.h"
+#include "guestManager/codeStore.h"
+
+#include "instructionEmu/scanner.h"
+
+#include "memoryManager/mmu.h"
 
 
 void initialiseTranslationStore(TranslationStore* ts)
@@ -27,6 +31,8 @@ void initialiseTranslationStore(TranslationStore* ts)
   }
   DEBUG(TRANSLATION_STORE, "initialiseTranslationStore: basic block store @ %p\n", ts->basicBlockStore);
   memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
+  
+  ts->stop = FALSE;
 }
 
 
@@ -46,11 +52,14 @@ void instructionToCodeStore(TranslationStore* ts, u32int instruction)
 void clearTranslationsByAddress(TranslationStore* ts, u32int address)
 {
   // stub
+//  printf("clearTranslationsByAddress unimplemented.\n");
+//  DIE_NOW(0, "clearTranslationsByAddress unimplemented.\n");
 }
 
 
 void clearTranslationsSmallPage(TranslationStore* ts, u32int addressStart, u32int addressEnd)
 {
+  DIE_NOW(0, "clearTranslationsSmallPage unimplemented.");
   u32int i = 0;
   for (i = 0; i < BASIC_BLOCK_STORE_SIZE; i++)
   {
@@ -66,15 +75,26 @@ void clearTranslationsSmallPage(TranslationStore* ts, u32int addressStart, u32in
 
 void clearTranslationsByAddressRange(TranslationStore* ts, u32int addressStart, u32int addressEnd)
 {
+  printf("clearTranslationsByAddressRange: address start %08x end %08x\n", addressStart, addressEnd);
+//  fprintf("clearTranslationsByAddressRange: address start %08x end %08x\n", addressStart, addressEnd);
   u32int i = 0;
+  /* we traverse the complete block translation store
+   * looking for blocks matching this address range.
+   * since there may be the case that part of a group block
+   * falls in this range, and we cant remove a single part of a group block
+   * inside the loop we unlink all current group-blocks. */ 
   for (i = 0; i < BASIC_BLOCK_STORE_SIZE; i++)
   {
+    if (ts->basicBlockStore[i].type == GB_TYPE_ARM)
+    {
+      unlinkBlock(&ts->basicBlockStore[i], i);
+    }
     u32int guestStart = (u32int)(ts->basicBlockStore[i].guestStart);
     u32int guestEnd = (u32int)(ts->basicBlockStore[i].guestEnd); 
     if ( ((guestStart >= addressStart) && (guestStart <= addressEnd)) ||
          ((guestEnd >= addressStart) && (guestEnd <= addressEnd)) )
     {
       memset((void*)&ts->basicBlockStore[i], 0, sizeof(BasicBlock));
-    } 
+    }
   }
 }

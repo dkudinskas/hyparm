@@ -4,6 +4,8 @@
 #include "common/stdlib.h"
 #include "common/string.h"
 
+#include "drivers/beagle/beClockMan.h"
+
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/omap35xx.h"
@@ -1581,10 +1583,12 @@ static void storeWkupCm(struct ClockManager *cm, u32int physicalAddress, u32int 
         if (isUnsettingBits(cm->cmFclkEnWkup, value, CM_FCLKEN_WKUP_ENGPT1))
         {
           printf("CM: warn: cmWkup disabling gptimer1 functional clock." EOL);
+          toggleTimerFclk(1, FALSE);
         }
         else if (isSettingBits(cm->cmFclkEnWkup, value, CM_FCLKEN_WKUP_ENGPT1))
         {
           printf("CM: warn: cmWkup enabling gptimer1 functional clock." EOL);
+          toggleTimerFclk(1, TRUE);
         }
         cm->cmFclkEnWkup = value;
       }
@@ -1657,10 +1661,12 @@ static void storeWkupCm(struct ClockManager *cm, u32int physicalAddress, u32int 
         if (isSettingBits(cm->cmIclkEnWkup, value, CM_CLKSEL_WKUP_GPT1))
         {
           printf("CM: warn: cmWkup set gptimer1 clock to system clock" EOL);
+          setClockSource(1, TRUE);
         }
         else if (isUnsettingBits(cm->cmIclkEnWkup, value, CM_CLKSEL_WKUP_GPT1))
         {
           printf("CM: warn: cmWkup set gptimer1 clock to 32kHz clock" EOL);
+          setClockSource(1, FALSE);
         }
       }
       cm->cmClkSelWkup = value;

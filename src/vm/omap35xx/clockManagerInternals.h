@@ -143,11 +143,11 @@
 #define CM_FCLKEN_PER_EN_MCBSP2        0x00000001
 #define CM_ICLKEN_PER               0x00000010 // control interface clock, RW
 #define CM_ICLKEN_PER_RESERVED         0xFFFC0000
-#define CM_ICLKEN_PER_GPIO6        struct genericDevice    0x00020000
+#define CM_ICLKEN_PER_GPIO6            0x00020000
 #define CM_ICLKEN_PER_GPIO5            0x00010000
 #define CM_ICLKEN_PER_GPIO4            0x00008000
 #define CM_ICLKEN_PER_GPIO3            0x00004000
-#define CM_ICLKEN_PER_GPloadGenericIO2            0x00002000
+#define CM_ICLKEN_PER_GPIO2            0x00002000
 #define CM_ICLKEN_PER_WDT3             0x00001000
 #define CM_ICLKEN_PER_UART3            0x00000800
 #define CM_ICLKEN_PER_GPT9             0x00000400

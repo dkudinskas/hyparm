@@ -127,6 +127,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
   }
 }
 
+
 void deliverInterrupt(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverInterrupt: @ PC = %#.8x" EOL, context->R15);
@@ -212,6 +213,7 @@ void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isW
   // set guest abort pending flag, return
   context->guestDataAbtPending = TRUE;
 }
+
 
 void deliverPrefetchAbort(GCONTXT *context)
 {

@@ -178,7 +178,6 @@ void dumpGuestContext(const GCONTXT *context)
   printf("Data abort pending: %x" EOL, context->guestDataAbtPending);
   printf("Prefetch abort pending: %x" EOL, context->guestPrefetchAbtPending);
   printf("Guest idle: %x" EOL, context->guestIdle);
-  printf("Translation store at: %p" EOL, context->translationStore);
 
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
   printf("Block trace:" EOL);
@@ -201,11 +200,12 @@ void dumpGuestContext(const GCONTXT *context)
 #endif
 
   /* BlockCache with copied code */
-  printf("TS->basicBlockStore: %p\n", context->translationStore->basicBlockStore);
-  printf("TS->codeStore next: %p\n", context->translationStore->codeStore);
-  printf("TS->codeStore next free word: %p\n", context->translationStore->codeStoreFreePtr);
+  printf("Translation store at: %p" EOL, context->translationStore);
+  printf("translationStore->basicBlockStore: %p\n", context->translationStore->basicBlockStore);
+  printf("translationStore->codeStore next: %p\n", context->translationStore->codeStore);
+  printf("translationStore->codeStore next free word: %p\n", context->translationStore->codeStoreFreePtr);
   printf("guest PC Of Last guest Instruction: %08x\n", context->lastGuestPC);
-
+  printf("svcCount %x\n", context->svcCount);
   dumpSdramStats(context->vm.sdram);
   
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS

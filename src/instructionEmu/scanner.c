@@ -11,6 +11,7 @@
 #endif
 
 #include "instructionEmu/decoder.h"
+#include "instructionEmu/decoder/arm/structs.h"
 #include "instructionEmu/scanner.h"
 
 #include "instructionEmu/interpreter/internals.h"
@@ -22,12 +23,7 @@
 #include "memoryManager/pageTable.h"
 
 
-#define INSTR_SWI            0xEF000000U
-#define INSTR_SWI_THUMB      0x0000DF00U
-#define INSTR_NOP_THUMB      0x0000BF00U
-#define INSTR_SWI_THUMB_MASK 0x0000FF00U
-#define INSTR_SWI_THUMB_MIX  ((INSTR_SWI_THUMB << 16) | INSTR_NOP_THUMB)
-
+static bool isBranch(u32int instruction);
 
 static void scanArmBlock(GCONTXT *context, u32int *guestStart, u32int blockStoreIndex, BasicBlock* basicBlock);
 static bool armIsPCInsensitiveInstruction(u32int instruction);
@@ -180,7 +176,6 @@ static void reportBlockSize(u32int *start, u32int size)
 #define reportBlockSize(start, size)
 #endif /* CONFIG_SCANNER_STATISTICS */
 
-
 #ifdef CONFIG_DEBUG_SCANNER_MARK_INTERVAL
 #define MARK_MASK  ((1 << CONFIG_DEBUG_SCANNER_MARK_INTERVAL) - 1)
 #else
@@ -190,26 +185,13 @@ static void reportBlockSize(u32int *start, u32int size)
 
 void scanBlock(GCONTXT *context, u32int startAddress)
 {
-  /*
-   * WARNING: startAddress is not checked! Data aborts may follow and hide bugs elsewhere.
-   */
   incrementScanBlockCounter();
-
+  context->svcCount++;
 #ifdef CONFIG_SCANNER_EXTRA_CHECKS
   if (getScanBlockCallSource() == SCANNER_CALL_SOURCE_NOT_SET)
   {
     DEBUG(SCANNER, "scanBlock: gc = %p, blkStartAddr = %#.8x" EOL, context, startAddress);
     DIE_NOW(context, "scanBlock() called from unknown source");
-  }
-  if (startAddress == 0)
-  {
-    DEBUG(SCANNER, "scanBlock: gc = %p, blkStartAddr = %.8x" EOL, context, startAddress);
-    DEBUG(SCANNER, "scanBlock: called from source %u" EOL, (u32int)scanBlockCallSource);
-    if (getScanBlockCounter())
-    {
-      DEBUG(SCANNER, "scanBlock: scanned block count is %#Lx" EOL, getScanBlockCounter());
-    }
-    DIE_NOW(context, "scanBlock() called with NULL pointer");
   }
 #endif /* CONFIG_SCANNER_EXTRA_CHECKS */
 
@@ -221,19 +203,24 @@ void scanBlock(GCONTXT *context, u32int startAddress)
   BasicBlock* basicBlock = getBasicBlockStoreEntry(context->translationStore, blockIndex);
   
   bool blockFound = FALSE;
-  
   u32int addressMap = context->virtAddrEnabled ? (u32int)context->pageTables->guestPhysical : 0;
-
   if (basicBlock->type != BB_TYPE_INVALID)
   {
-    if ((basicBlock->addressMap == addressMap)
-     && ((u32int)basicBlock->guestStart == startAddress))
+    if ((basicBlock->addressMap == addressMap) && ((u32int)basicBlock->guestStart == startAddress))
     {
       // entry valid, address map maches, and start address maches. really found!
       blockFound = TRUE;
     }
     else
     {
+      // conflict!
+      if (basicBlock->type == GB_TYPE_ARM)
+      {
+        context->groupBlockVersion++;
+//        printf("scanBlock: conflict start %08x old %p, version up to %x\n",
+//               startAddress, basicBlock->guestStart, context->groupBlockVersion);
+//        unlinkAllBlocks(context);
+      }
       invalidateBlock(basicBlock);
       blockFound = FALSE;
     }
@@ -242,18 +229,31 @@ void scanBlock(GCONTXT *context, u32int startAddress)
   DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: @%.8x, source = %#x, count = %#Lx; %s" EOL, startAddress,
     getScanBlockCallSource(), getScanBlockCounter(), (blockFound ? "HIT" : "MISS"));
 
-  setScanBlockCallSource(SCANNER_CALL_SOURCE_NOT_SET);
+  context->lastBasicBlockID = blockIndex;
 
   if (blockFound)
   {
+    // block was found in index. but if it is a group block
+    // we must check its version number: it could be out of date!
+    if ((basicBlock->type == GB_TYPE_ARM) && 
+        (basicBlock->versionNumber != context->groupBlockVersion))
+    {
+//      printf("scanBlock: found groupblock @ %p GB# %x global# %x\n",
+//             basicBlock, basicBlock->versionNumber, context->groupBlockVersion);
+      // group block is out of date. remove it, scan again
+      unlinkBlock(basicBlock, blockIndex);
+    }
+    basicBlock->hotness++;
     context->R15 = (u32int)basicBlock->codeStoreStart;
-    //But also the PC of the last instruction of the block should be set
+    // But also the PC of the last instruction of the block should be set
     context->lastGuestPC = (u32int)basicBlock->guestEnd;
-    DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: lastGuestPC = %08x, context->R15 @ %08x" 
+    DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: lastGuestPC = %08x, context->R15 @ %08x"
                                         EOL, context->lastGuestPC, context->R15);
+    setScanBlockCallSource(CALL_SOURCE_NOT_SET);
     return;
   }
 
+  basicBlock->hotness = 1;
 #ifdef CONFIG_THUMB2
   if (context->CPSR & PSR_T_BIT)
   {
@@ -264,6 +264,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
   {
     scanArmBlock(context, (u32int*)startAddress, blockIndex, basicBlock);
   }
+  setScanBlockCallSource(CALL_SOURCE_NOT_SET);
 }
 
 
@@ -303,7 +304,21 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
 
   // Next instruction must be translated into hypercall.
   DEBUG(SCANNER, "scanArmBlock: instruction %s must be translated\n", decodedInstruction->instructionString);
-  addInstructionToBlock(context->translationStore, basicBlock, INSTR_SWI | (blockStoreIndex+0x100));
+  u32int instruction = *instructionPtr;
+  u32int cc = instruction & 0xF0000000;
+  if ((isBranch(instruction)) && (cc != 0xE0000000))
+  {
+    // conditional branch.
+    u32int hypercall = (INSTR_SWI | (blockStoreIndex+0x100)) & 0x0FFFFFFF;
+    addInstructionToBlock(context->translationStore, basicBlock, hypercall | cc);
+    addInstructionToBlock(context->translationStore, basicBlock, hypercall | (CC_AL << 28));
+    basicBlock->oneHypercall = FALSE;
+  }
+  else
+  {
+    addInstructionToBlock(context->translationStore, basicBlock, INSTR_SWI | (blockStoreIndex+0x100));
+    basicBlock->oneHypercall = TRUE;
+  }
 
   // set guest end of block address
   basicBlock->guestEnd = instructionPtr;
@@ -321,6 +336,7 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
   // Protect guest against self-modification.
   guestWriteProtect(context, (u32int)guestStart, (u32int)instructionPtr);
 }
+
 
 /*
  * armIsPCInsensitiveInstruction returns TRUE if it is CERTAIN that an instruction
@@ -359,4 +375,132 @@ static bool armIsPCInsensitiveInstruction(u32int instruction)
 
     return !((rd == GPR_PC) || (rn == GPR_PC) || (rm == GPR_PC));
   }
+}
+
+
+bool isBranch(u32int instruction)
+{
+  if ((instruction & 0x0f000000) == 0x0a000000)
+  {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+
+void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastBlock)
+{
+//  printf("linkBlock(nextPC %08x, lastPC %08x)\n", nextPC, lastPC);  
+//  printf("linkBlock: try to link: last gPC %p to next gPC %08x\n", lastBlock->guestEnd, nextPC);
+
+  // get next block
+  u32int blockIndex = getBasicBlockStoreIndex(nextPC);
+  BasicBlock* nextBlock = getBasicBlockStoreEntry(context->translationStore, blockIndex);
+  
+  // if invalid, return.
+  if ((nextBlock->type == BB_TYPE_INVALID) || (nextBlock->hotness < 10))
+  {
+    // next block not scanned.
+    return;
+  }
+
+  u32int addressMap = context->virtAddrEnabled ? (u32int)context->pageTables->guestPhysical : 0;
+  if (((u32int)nextBlock->guestStart != nextPC) || (nextBlock->addressMap != addressMap))
+  {
+    // conflict. return, let scanBlock() deal with conflict first, link later.
+    return;
+  }
+
+  u32int eobInstruction = *(lastBlock->guestEnd);
+  if (!isBranch(eobInstruction))
+  {
+    // not a branch. just leave hypercall.
+    return;
+  }
+
+  if ((nextBlock->type == GB_TYPE_ARM) && (nextBlock->versionNumber != context->groupBlockVersion))
+  {
+    return;
+  }
+
+  if ((lastBlock->type == GB_TYPE_ARM) && (lastBlock->versionNumber != context->groupBlockVersion))
+  {
+    return;
+  }
+
+  // must check wether it was the first or second hypercall at end of block
+  u32int lastInstrOfHostBlock = (u32int)lastBlock->codeStoreStart +
+                                (lastBlock->codeStoreSize-1) * ARM_INSTRUCTION_SIZE;
+  u32int conditionCode = 0xE0000000;
+  if (lastPC != lastInstrOfHostBlock)
+  {
+    conditionCode = eobInstruction & 0xF0000000;
+  }
+
+  // must try to put a branch at lastPC direct to nextPC
+  putBranch(lastPC, (u32int)nextBlock->codeStoreStart, conditionCode);
+
+  // make sure both blocks are marked as a group-block.
+  lastBlock->type = GB_TYPE_ARM;
+  lastBlock->versionNumber = context->groupBlockVersion;
+  nextBlock->type = GB_TYPE_ARM;
+  nextBlock->versionNumber = context->groupBlockVersion;
+
+//  printf("linkBlock: linked %08x -> %p (%p -> %p) version %x\n", lastPC, nextBlock->codeStoreStart, 
+//         lastBlock->guestStart, nextBlock->guestStart, nextBlock->versionNumber);
+}
+
+
+void unlinkBlock(BasicBlock* block, u32int index)
+{
+  u32int hypercall = INSTR_SWI | (index + 0x100);
+  u32int lastInstrOfHostBlock = (u32int)block->codeStoreStart +
+                                (block->codeStoreSize-1) * ARM_INSTRUCTION_SIZE;
+
+  *(u32int*)lastInstrOfHostBlock = hypercall;
+  mmuCleanDCacheByMVAtoPOU(lastInstrOfHostBlock);
+  mmuInvIcacheByMVAtoPOU(lastInstrOfHostBlock);
+
+  if (!block->oneHypercall)
+  {
+    // fix up condition code.
+    u32int condition = *(u32int*)(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE);
+    condition &= 0xF0000000; 
+    hypercall = (hypercall & 0x0FFFFFFF) | condition;
+    
+    *(u32int*)(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE) = hypercall;
+    mmuCleanDCacheByMVAtoPOU(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE);
+    mmuInvIcacheByMVAtoPOU(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE);
+  }
+  block->type = BB_TYPE_ARM;
+  block->versionNumber = 0;
+}
+
+
+void unlinkAllBlocks(GCONTXT *context)
+{
+//  printf("unlinkAllBlocks: %x\n", context->unlinkCount++);
+  u32int i = 0;
+  /* we traverse the complete block translation store
+   * inside the loop we unlink all current group-blocks. */ 
+  for (i = 0; i < BASIC_BLOCK_STORE_SIZE; i++)
+  {
+    if (context->translationStore->basicBlockStore[i].type == GB_TYPE_ARM)
+    {
+      unlinkBlock(&context->translationStore->basicBlockStore[i], i);
+    }
+  }
+//  context->groupBlockVersion = 0;
+}
+
+
+void putBranch(u32int branchLocation, u32int branchTarget, u32int condition)
+{
+  u32int offset = branchTarget - (branchLocation + ARM_INSTRUCTION_SIZE*2);
+  offset = (offset >> 2) & 0xFFFFFF;
+  u32int branchInstruction = condition | BRANCH_BASE_VALUE | offset;
+  *(u32int*)branchLocation = branchInstruction;
+
+  mmuCleanDCacheByMVAtoPOU(branchLocation);
+  mmuInvIcacheByMVAtoPOU(branchLocation);
 }

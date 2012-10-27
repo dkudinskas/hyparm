@@ -680,6 +680,7 @@ void shadowMapSmallPage(GCONTXT *context, smallPageEntry* guest, smallPageEntry*
  **/
 void shadowUnmapSmallPage(GCONTXT *context, smallPageEntry* shadow, smallPageEntry* guest, u32int virtual)
 {
+  DIE_NOW(context, "shadow unmap small page.\n");
   DEBUG(MM_SHADOWING, "shadowUnmapSmallPage: guest entry %#.8x @ %p" EOL, *(u32int *)guest, guest);
   DEBUG(MM_SHADOWING, "shadowUnmapSmallPage: shadow entry %#.8x @ %p" EOL, *(u32int *)shadow, shadow);
   DEBUG(MM_SHADOWING, "shadowUnmapSmallPage: virtual address %#.8x" EOL, virtual);

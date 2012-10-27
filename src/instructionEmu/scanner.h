@@ -17,34 +17,30 @@
 #define SCANNER_CALL_SOURCE_DABT_GVA_PERMISSION  5
 #define SCANNER_CALL_SOURCE_PABT_FREERTOS        6
 #define SCANNER_CALL_SOURCE_PABT_TRANSLATION     7
+#define SCANNER_CALL_SOURCE_INTERRUPT            8
 
 
 __macro__ u32int fetchThumbInstr(u16int *instructionPointer);
-void scanBlock(GCONTXT * gc, u32int blkStartAddr);
+void scanBlock(GCONTXT *context, u32int startAddress);
 __macro__ bool txxIsThumb32(u32int instruction);
+void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastBlock); 
+void unlinkBlock(BasicBlock* block, u32int index);
+void unlinkAllBlocks(GCONTXT *context);
+void putBranch(u32int branchLocation, u32int branchTarget, u32int condition);
 
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
-
 void resetScanBlockCounter(void);
-
 #else
-
 #define resetScanBlockCounter()
-
-#endif /* CONFIG_DEBUG_SCANNER_COUNT_BLOCKS */
+#endif
 
 
 #ifdef CONFIG_SCANNER_EXTRA_CHECKS
-
 void setScanBlockCallSource(u8int source);
-
 #else
-
 #define setScanBlockCallSource(source)
-
-#endif /* CONFIG_SCANNER_EXTRA_CHECKS */
-
+#endif
 
 __macro__ u32int fetchThumbInstr(u16int *instructionPointer)
 {
