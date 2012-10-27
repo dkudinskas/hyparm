@@ -677,28 +677,6 @@ void iabtTranslationFault(GCONTXT *gc, IFSR ifsr, u32int ifar)
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
 void registerSvc(InstructionHandler handler)
 {
-  GCONTXT *context = getActiveGuestContext();
-  if (handler == armBInstruction)
-  {
-    context->armBInstruction++;
-  }
-  else if (handler == armBxInstruction)
-  {
-    context->armBxInstruction++;
-  }
-  else if (handler == armBxjInstruction)
-  {
-    context->armBxjInstruction++;
-  }
-  else if (handler == armBlxRegisterInstruction)
-  {
-    context->armBlxRegisterInstruction++;
-  }
-  else if (handler == armBlxImmediateInstruction)
-  {
-    context->armBlxImmediateInstruction++;
-  }
-
   if (handler == armStmInstruction)
   {
     context->armStmInstruction++;
