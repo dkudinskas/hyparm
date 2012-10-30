@@ -75,8 +75,6 @@ void clearTranslationsSmallPage(TranslationStore* ts, u32int addressStart, u32in
 
 void clearTranslationsByAddressRange(TranslationStore* ts, u32int addressStart, u32int addressEnd)
 {
-  printf("clearTranslationsByAddressRange: address start %08x end %08x\n", addressStart, addressEnd);
-//  fprintf("clearTranslationsByAddressRange: address start %08x end %08x\n", addressStart, addressEnd);
   u32int i = 0;
   /* we traverse the complete block translation store
    * looking for blocks matching this address range.

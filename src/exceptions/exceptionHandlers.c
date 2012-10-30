@@ -30,7 +30,7 @@
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
 #include "instructionEmu/interpreter.h"
 
-void registerSvc(InstructionHandler handler);
+static void registerSvc(GCONTXT *context, InstructionHandler handler);
 #endif
 
 
@@ -119,7 +119,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     context->lastGuestPC = (u32int)basicBlock->guestEnd;
 
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-    registerSvc(basicBlock->handler);
+    registerSvc(context, basicBlock->handler);
 #endif
 
     // interpret the instruction to find the start address of next block
@@ -186,13 +186,13 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     {
       setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
     }
-/*
+
     if (link)
     {
       linkBlock(context, context->R15, lastPC, 
                 getBasicBlockStoreEntry(context->translationStore, code-0x100));
     }
-*/
+
     scanBlock(context, context->R15);
   }
   else
@@ -675,7 +675,7 @@ void iabtTranslationFault(GCONTXT *gc, IFSR ifsr, u32int ifar)
 }
 
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-void registerSvc(InstructionHandler handler)
+void registerSvc(GCONTXT *context, InstructionHandler handler)
 {
   if (handler == armStmInstruction)
   {
