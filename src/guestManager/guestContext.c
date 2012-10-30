@@ -341,3 +341,92 @@ void guestChangeMode(u32int guestMode)
   // we must make sure the correct exception vector is set.
   setExceptionVector(guestMode);
 }
+
+
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+void resetExceptionCounters(GCONTXT *context)
+{
+  context->svcCount = 0;
+
+  context->branchLink = 0;
+  context->branchNonlink = 0;
+  context->branchConditional = 0;
+  context->branchNonconditional = 0;
+  context->branchImmediate = 0;
+  context->branchRegister = 0;
+
+  context->svcGuest = 0;
+  context->armStmInstruction = 0;
+  context->armLdmInstruction = 0;
+  context->armLdrInstruction = 0;
+  context->armBInstruction = 0;
+  context->armSwpInstruction = 0;
+  context->armLdrexbInstruction = 0;
+  context->armLdrexdInstruction = 0;
+  context->armLdrexhInstruction = 0;
+  context->armStrexbInstruction = 0;
+  context->armStrexdInstruction = 0;
+  context->armStrexhInstruction = 0;
+  context->armLdrexInstruction = 0;
+  context->armStrexInstruction = 0;
+  context->armBxInstruction = 0;
+  context->armBxjInstruction = 0;
+  context->armBkptInstruction = 0;
+  context->armSmcInstruction = 0;
+  context->armBlxRegisterInstruction = 0;
+  context->armAndInstruction = 0;
+  context->armEorInstruction = 0;
+  context->armSubInstruction = 0;
+  context->armAddInstruction = 0;
+  context->armAdcInstruction = 0;
+  context->armSbcInstruction = 0;
+  context->armRscInstruction = 0;
+  context->armMsrInstruction = 0;
+  context->armMrsInstruction = 0;
+  context->armOrrInstruction = 0;
+  context->armMovInstruction = 0;
+  context->armLslInstruction = 0;
+  context->armLsrInstruction = 0;
+  context->armAsrInstruction = 0;
+  context->armRrxInstruction = 0;
+  context->armRorInstruction = 0;
+  context->armBicInstruction = 0;
+  context->armMvnInstruction = 0;
+  context->armYieldInstruction = 0;
+  context->armWfeInstruction = 0;
+  context->armWfiInstruction = 0;
+  context->armSevInstruction = 0;
+  context->armDbgInstruction = 0;
+  context->svcInstruction = 0;
+  context->armMrcInstruction = 0;
+  context->armMcrInstruction = 0;
+  context->armDmbInstruction = 0;
+  context->armDsbInstruction = 0;
+  context->armIsbInstruction = 0;
+  context->armClrexInstruction = 0;
+  context->armCpsInstruction = 0;
+  context->armRfeInstruction = 0;
+  context->armSetendInstruction = 0;
+  context->armSrsInstruction = 0;
+  context->armBlxImmediateInstruction = 0;
+  context->armPldInstruction = 0;
+  context->armPliInstruction = 0;
+  context->armStrbtInstruction = 0;
+  context->armStrhtInstruction = 0;
+  context->armStrtInstruction = 0;
+  context->armLdrbtInstruction = 0;
+  context->armLdrhtInstruction = 0;
+  context->armLdrtInstruction = 0;
+  
+  context->dabtCount = 0;
+  context->dabtPriv = 0;
+  context->dabtUser = 0;
+  context->pabtCount = 0;
+  context->pabtPriv = 0;
+  context->pabtUser = 0;
+  context->irqCount = 0;
+  context->irqPriv = 0;
+  context->irqUser = 0;
+}
+#endif
+

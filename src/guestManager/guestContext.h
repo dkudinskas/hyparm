@@ -289,5 +289,8 @@ __macro__ void traceBlock(GCONTXT *context, u32int startAddress)
 #endif /* CONFIG_GUEST_CONTEXT_BLOCK_TRACE */
 }
 
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+void resetExceptionCounters(GCONTXT *context);
+#endif
 
 #endif /* __GUEST_MANAGER__GUEST_CONTEXT_H__ */
