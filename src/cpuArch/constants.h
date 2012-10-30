@@ -113,4 +113,6 @@
 #define LR_OFFSET_PREFETCH_ABT    4
 
 
+#define UNDEFINED_CALL            0xffffff00
+
 #endif

@@ -930,12 +930,10 @@ void pageTableEdit(GCONTXT *context, u32int address, u32int newVal)
           if (shadowUser->type != FAULT)
           {
             shadowUser = getEntrySecond(context, (pageTableEntry*)shadowUser, virtualAddress);
-            printf("shadow unmap user small page\n");
             shadowUnmapSmallPage(context, (smallPageEntry*)shadowUser, (smallPageEntry*)oldGuestEntry, virtualAddress);
           }
           if (shadowPriv->type != FAULT)
           {
-            printf("shadow unmap priv small page\n");
             shadowPriv = getEntrySecond(context, (pageTableEntry*)shadowPriv, virtualAddress);
             shadowUnmapSmallPage(context, (smallPageEntry*)shadowPriv, (smallPageEntry*)oldGuestEntry, virtualAddress);
           }

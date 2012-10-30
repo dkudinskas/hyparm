@@ -17,7 +17,7 @@ void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int conditionC
   ARMStrImmediateInstruction strPCInstruction;
   ARMAddImmediateInstruction addInstruction;
 
-  addInstructionToBlock(ts, block, 0xffffff00 | reg );
+  addInstructionToBlock(ts, block, UNDEFINED_CALL | reg );
   addInstructionToBlock(ts, block, (u32int)&ts->spillLocation);
 
   // These following instructions are going to be executed in priv mode!
@@ -85,7 +85,7 @@ void armRestoreRegister(TranslationStore* ts, BasicBlock* block, u32int conditio
   ARMLdrImmediateInstruction ldrPCInstruction;
   ARMAddImmediateInstruction addInstruction;
 
-  addInstructionToBlock(ts, block, 0xffffff00 | reg );
+  addInstructionToBlock(ts, block, UNDEFINED_CALL | reg );
   addInstructionToBlock(ts, block, (u32int)&ts->spillLocation);
 
   // get spill address

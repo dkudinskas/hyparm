@@ -50,6 +50,7 @@ GCONTXT *createGuestContext(void)
     DIE_NOW(context, "Failed to allocate page tables struct");
   }
   DEBUG(GUEST_CONTEXT, "createGuestContext: page tables @ %p" EOL, context->pageTables);
+  
 
   // virtual machine struct
   DEBUG(GUEST_CONTEXT, "createGuestContext: virtual machine @ %p" EOL, &context->vm);
@@ -65,6 +66,17 @@ GCONTXT *createGuestContext(void)
   // Print the address of the block trace, it may come in handy when debugging...
   DEBUG(GUEST_CONTEXT, "allocateGuestContext: block trace @ %p" EOL, &(context->blockTrace));
 #endif
+
+  // Execution bitmaps
+  context->execBitmap = (u8int*)malloc(SIZE_BITMAP1);
+  if (context->execBitmap == NULL)
+  {
+    DIE_NOW(context, "Failed to allocate page tables struct");
+  }
+  printf("createGuestContext: executionBitmap @ %p" EOL, context->execBitmap);
+  memset((void*)context->execBitmap, 0, SIZE_BITMAP1);
+  DEBUG(GUEST_CONTEXT, "createGuestContext: execBitmap @ %p" EOL, context->execBitmap);
+
   return context;
 }
 
@@ -205,6 +217,7 @@ void dumpGuestContext(const GCONTXT *context)
   printf("translationStore->codeStore next: %p\n", context->translationStore->codeStore);
   printf("translationStore->codeStore next free word: %p\n", context->translationStore->codeStoreFreePtr);
   printf("guest PC Of Last guest Instruction: %08x\n", context->lastGuestPC);
+  printf("last entry block index: %08x\n", context->lastEntryBlockIndex);
   dumpSdramStats(context->vm.sdram);
   
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS

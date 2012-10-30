@@ -680,10 +680,6 @@ void shadowMapSmallPage(GCONTXT *context, smallPageEntry* guest, smallPageEntry*
  **/
 void shadowUnmapSmallPage(GCONTXT *context, smallPageEntry* shadow, smallPageEntry* guest, u32int virtual)
 {
-  printf("shadowUnmapSmallPage: guest entry %#.8x @ %p" EOL, *(u32int *)guest, guest);
-  printf("shadowUnmapSmallPage: shadow entry %#.8x @ %p" EOL, *(u32int *)shadow, shadow);
-  printf("shadowUnmapSmallPage: virtual address %#.8x" EOL, virtual);
-
   DEBUG(MM_SHADOWING, "shadowUnmapSmallPage: guest entry %#.8x @ %p" EOL, *(u32int *)guest, guest);
   DEBUG(MM_SHADOWING, "shadowUnmapSmallPage: shadow entry %#.8x @ %p" EOL, *(u32int *)shadow, shadow);
   DEBUG(MM_SHADOWING, "shadowUnmapSmallPage: virtual address %#.8x" EOL, virtual);
@@ -715,7 +711,6 @@ void shadowUnmapSmallPage(GCONTXT *context, smallPageEntry* shadow, smallPageEnt
 
   // Flush block cache at the address range that the guest mapped originally.
   clearTranslationsByAddressRange(context->translationStore, virtual, (virtual+SMALL_PAGE_SIZE-1));
-//  clearTranslationsSmallPage(context->translationStore, virtual, (virtual+SMALL_PAGE_SIZE-1));
 
   if (context->pageTables->guestVirtual != NULL)
   {

@@ -451,13 +451,15 @@ GCONTXT *irq(GCONTXT *context)
     case GPT2_IRQ:
     {
       throwInterrupt(context, activeIrqNumber);
-      BasicBlock* block = getBasicBlockStoreEntry(context->translationStore, context->lastBasicBlockID);
+      BasicBlock* block = getBasicBlockStoreEntry(context->translationStore, context->lastEntryBlockIndex);
       // now we must unlink the current block if it is in a group block.
       // to make sure the guest isn't waiting for our deferred interrupt forever
       if (block->type == GB_TYPE_ARM)
       {
-//        printf("irq: gpt2 irq in group block.\n");
-        unlinkAllBlocks(context);
+        u32int index = findBlockIndexNumber(context, context->R15);
+        BasicBlock* groupblock = getBasicBlockStoreEntry(context->translationStore, index);
+        unlinkBlock(groupblock, index);
+        context->groupBlockVersion++;
       }
       
       // FIXME: figure out which interrupt to clear and then clear the right one?

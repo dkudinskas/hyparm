@@ -28,6 +28,7 @@ void unlinkBlock(BasicBlock* block, u32int index);
 void unlinkAllBlocks(GCONTXT *context);
 void putBranch(u32int branchLocation, u32int branchTarget, u32int condition);
 
+u32int findBlockIndexNumber(GCONTXT *context, u32int hostPC);
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
 void resetScanBlockCounter(void);

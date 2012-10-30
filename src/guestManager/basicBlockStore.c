@@ -1,5 +1,6 @@
 #include "guestManager/basicBlockStore.h"
 #include "guestManager/translationStore.h"
+#include "guestManager/guestContext.h"
 
 #include "common/debug.h"
 #include "common/linker.h"
@@ -81,4 +82,43 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
 void invalidateBlock(BasicBlock* block)
 {
   memset(block, 0, sizeof(BasicBlock));
+}
+
+void setExecBitmap(GCONTXT* context, u32int start, u32int end)
+{
+  // calculate which byte and bit in bitmap
+  u32int startingSection = start >> 20;
+  u32int endingSection = end >> 20;
+  u32int byteIndex = startingSection >> 3;
+  u32int bitIndex = startingSection - (byteIndex << 3);
+  u8int actualByte = context->execBitmap[byteIndex];
+  u8int actualBit = (actualByte >> bitIndex) & 1;
+  if (actualBit == 0)
+  {
+    context->execBitmap[byteIndex] = actualByte | (1 << bitIndex);
+  }
+  
+  if (startingSection != endingSection)
+  {
+    // we span two sections. do another bit..
+    u32int byteIndexEnd = endingSection >> 3;
+    u32int bitIndexEnd = endingSection - (byteIndexEnd << 3);
+    u8int actualByteEnd = context->execBitmap[bitIndexEnd];
+    u8int actualBitEnd = (actualByteEnd >> bitIndexEnd) & 1;
+    if (actualBitEnd == 0)
+    {
+      context->execBitmap[byteIndexEnd] = actualByteEnd | (1 << bitIndexEnd);
+    }
+  }
+}
+
+
+bool isExecBitSet(GCONTXT* context, u32int addr)
+{
+  u32int section = addr >> 20;
+  u32int byteIndex = section >> 3;
+  u32int bitIndex = section - (byteIndex << 3);
+  u8int actualByte = context->execBitmap[byteIndex];
+  u8int actualBit = (actualByte >> bitIndex) & 1;
+  return (actualBit != 0) ? TRUE : FALSE;
 }

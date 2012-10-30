@@ -55,6 +55,9 @@
 #define GC_SPSR_UND_OFFS  0x90
 
 
+#define NUMBER_OF_SECTIONS  4096
+#define SIZE_BITMAP1        NUMBER_OF_SECTIONS / 8
+
 struct VirtualMachinePageTables;
 typedef struct VirtualMachinePageTables pageTablesVM;
 
@@ -155,9 +158,11 @@ struct guestContext
 
   /* This will contain the guest PC of the last instruction in active BB*/
   u32int lastGuestPC;
-  u32int lastBasicBlockID;
+  u32int lastEntryBlockIndex;
   u32int groupBlockVersion;
   u32int unlinkCount;
+
+  u8int *execBitmap;
 
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   u32int svcCount;
@@ -291,6 +296,5 @@ __macro__ void traceBlock(GCONTXT *context, u32int startAddress)
   context->blockTrace[context->blockTraceIndex] = startAddress;
 #endif /* CONFIG_GUEST_CONTEXT_BLOCK_TRACE */
 }
-
 
 #endif /* __GUEST_MANAGER__GUEST_CONTEXT_H__ */

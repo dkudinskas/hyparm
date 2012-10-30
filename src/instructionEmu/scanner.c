@@ -23,7 +23,9 @@
 #include "memoryManager/pageTable.h"
 
 
-static bool isBranch(u32int instruction);
+static inline bool isBranch(u32int instruction);
+static inline bool isServiceCall(u32int instruction);
+static inline bool isUndefinedCall(u32int instruction);
 
 static void scanArmBlock(GCONTXT *context, u32int *guestStart, u32int blockStoreIndex, BasicBlock* basicBlock);
 static bool armIsPCInsensitiveInstruction(u32int instruction);
@@ -216,9 +218,6 @@ void scanBlock(GCONTXT *context, u32int startAddress)
       if (basicBlock->type == GB_TYPE_ARM)
       {
         context->groupBlockVersion++;
-//        printf("scanBlock: conflict start %08x old %p, version up to %x\n",
-//               startAddress, basicBlock->guestStart, context->groupBlockVersion);
-//        unlinkAllBlocks(context);
       }
       invalidateBlock(basicBlock);
       blockFound = FALSE;
@@ -228,7 +227,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
   DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: @%.8x, source = %#x, count = %#Lx; %s" EOL, startAddress,
     getScanBlockCallSource(), getScanBlockCounter(), (blockFound ? "HIT" : "MISS"));
 
-  context->lastBasicBlockID = blockIndex;
+  context->lastEntryBlockIndex = blockIndex;
 
   if (blockFound)
   {
@@ -237,8 +236,6 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     if ((basicBlock->type == GB_TYPE_ARM) && 
         (basicBlock->versionNumber != context->groupBlockVersion))
     {
-//      printf("scanBlock: found groupblock @ %p GB# %x global# %x\n",
-//             basicBlock, basicBlock->versionNumber, context->groupBlockVersion);
       // group block is out of date. remove it, scan again
       unlinkBlock(basicBlock, blockIndex);
     }
@@ -284,6 +281,7 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
 
   basicBlock->addressMap = (context->virtAddrEnabled) ? (u32int)context->pageTables->guestPhysical : 0;
 
+
   // Scan guest code and copy to C$, translating instructions that use the PC on the fly
   u32int* instructionPtr = guestStart;
   struct decodingTableEntry* decodedInstruction;
@@ -307,7 +305,7 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
   u32int cc = instruction & 0xF0000000;
   if ((isBranch(instruction)) && (cc != 0xE0000000))
   {
-    // conditional branch.
+    // conditional branch! two hypercalls
     u32int hypercall = (INSTR_SWI | (blockStoreIndex+0x100)) & 0x0FFFFFFF;
     addInstructionToBlock(context->translationStore, basicBlock, hypercall | cc);
     addInstructionToBlock(context->translationStore, basicBlock, hypercall | (CC_AL << 28));
@@ -315,9 +313,12 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
   }
   else
   {
+    // not a branch or not-conditional branch. single hypercall.
     addInstructionToBlock(context->translationStore, basicBlock, INSTR_SWI | (blockStoreIndex+0x100));
     basicBlock->oneHypercall = TRUE;
   }
+  // plant block index as well. dirty hack, but fixes interrupt handling.
+  addInstructionToBlock(context->translationStore, basicBlock, blockStoreIndex);
 
   // set guest end of block address
   basicBlock->guestEnd = instructionPtr;
@@ -334,6 +335,8 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
 
   // Protect guest against self-modification.
   guestWriteProtect(context, (u32int)guestStart, (u32int)instructionPtr);
+
+  setExecBitmap(context, (u32int)basicBlock->guestStart, (u32int)basicBlock->guestEnd);
 }
 
 
@@ -377,7 +380,7 @@ static bool armIsPCInsensitiveInstruction(u32int instruction)
 }
 
 
-bool isBranch(u32int instruction)
+inline bool isBranch(u32int instruction)
 {
   if ((instruction & 0x0f000000) == 0x0a000000)
   {
@@ -387,11 +390,31 @@ bool isBranch(u32int instruction)
 }
 
 
+inline bool isServiceCall(u32int instruction)
+{
+  // opcode must be F, condition code must not be F.
+  if (((instruction & 0x0f000000) == 0x0f000000)
+   && ((instruction & 0xf0000000) != 0xf0000000))
+  {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+
+static inline bool isUndefinedCall(u32int instruction)
+{
+  // undefined call is 0xFFFFFFXX (last two numbers will hold spill register number)
+  if ((instruction & UNDEFINED_CALL) == UNDEFINED_CALL)
+  {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+
 void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastBlock)
 {
-//  printf("linkBlock(nextPC %08x, lastPC %08x)\n", nextPC, lastPC);  
-//  printf("linkBlock: try to link: last gPC %p to next gPC %08x\n", lastBlock->guestEnd, nextPC);
-
   // get next block
   u32int blockIndex = getBasicBlockStoreIndex(nextPC);
   BasicBlock* nextBlock = getBasicBlockStoreEntry(context->translationStore, blockIndex);
@@ -417,19 +440,22 @@ void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastB
     return;
   }
 
+
+  // if we found a group block with an old version number, fail to link. 
+  // scanner will then re-scan this block, thus validating it's correct
   if ((nextBlock->type == GB_TYPE_ARM) && (nextBlock->versionNumber != context->groupBlockVersion))
   {
     return;
   }
-
   if ((lastBlock->type == GB_TYPE_ARM) && (lastBlock->versionNumber != context->groupBlockVersion))
   {
     return;
   }
 
-  // must check wether it was the first or second hypercall at end of block
+  // must check wether it was the first or second hypercall
   u32int lastInstrOfHostBlock = (u32int)lastBlock->codeStoreStart +
                                 (lastBlock->codeStoreSize-1) * ARM_INSTRUCTION_SIZE;
+  lastInstrOfHostBlock -= ARM_INSTRUCTION_SIZE;
   u32int conditionCode = 0xE0000000;
   if (lastPC != lastInstrOfHostBlock)
   {
@@ -444,9 +470,6 @@ void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastB
   lastBlock->versionNumber = context->groupBlockVersion;
   nextBlock->type = GB_TYPE_ARM;
   nextBlock->versionNumber = context->groupBlockVersion;
-
-//  printf("linkBlock: linked %08x -> %p (%p -> %p) version %x\n", lastPC, nextBlock->codeStoreStart, 
-//         lastBlock->guestStart, nextBlock->guestStart, nextBlock->versionNumber);
 }
 
 
@@ -455,14 +478,16 @@ void unlinkBlock(BasicBlock* block, u32int index)
   u32int hypercall = INSTR_SWI | (index + 0x100);
   u32int lastInstrOfHostBlock = (u32int)block->codeStoreStart +
                                 (block->codeStoreSize-1) * ARM_INSTRUCTION_SIZE;
+  lastInstrOfHostBlock -= ARM_INSTRUCTION_SIZE;
 
+  // remove 'last' hypercall (or the only one if there werent more)
   *(u32int*)lastInstrOfHostBlock = hypercall;
   mmuCleanDCacheByMVAtoPOU(lastInstrOfHostBlock);
   mmuInvIcacheByMVAtoPOU(lastInstrOfHostBlock);
 
   if (!block->oneHypercall)
   {
-    // fix up condition code.
+    // two hypercalls! fix up condition code.
     u32int condition = *(u32int*)(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE);
     condition &= 0xF0000000; 
     hypercall = (hypercall & 0x0FFFFFFF) | condition;
@@ -478,7 +503,7 @@ void unlinkBlock(BasicBlock* block, u32int index)
 
 void unlinkAllBlocks(GCONTXT *context)
 {
-//  printf("unlinkAllBlocks: %x\n", context->unlinkCount++);
+  DIE_NOW(0, "unlinkAllBlocks unimplemented.\n");
   u32int i = 0;
   /* we traverse the complete block translation store
    * inside the loop we unlink all current group-blocks. */ 
@@ -489,7 +514,59 @@ void unlinkAllBlocks(GCONTXT *context)
       unlinkBlock(&context->translationStore->basicBlockStore[i], i);
     }
   }
-//  context->groupBlockVersion = 0;
+}
+
+
+u32int findBlockIndexNumber(GCONTXT *context, u32int hostPC)
+{
+  bool found = FALSE;
+  u32int* pc = (u32int*)hostPC;
+  u32int index = 0;
+  while (!found)
+  {
+    u32int instruction = *pc;
+    if (isUndefinedCall(instruction))
+    {
+      // next word will be DATA! spill location. skip it and loop back around
+      pc++;
+    }
+    else if (isServiceCall(instruction))
+    {
+      // lets get the code from the service call.
+      index = (instruction & 0x00ffffff) - 0x100;
+      found = TRUE;
+    }
+    else if (isBranch(instruction))
+    {
+      // found our first branch. skip it.
+      pc++;
+      instruction = *pc;
+
+      // one branch down. lets see next one. MUST be branch, svc or the index
+      if (isBranch(instruction))
+      {
+        // second branch! next word is the index 4 sure
+        pc++;
+        index = *pc;
+      }
+      else if (isServiceCall(instruction))
+      {
+        // ok, branch followed by hypecall. get the code from it THIS TIME
+        index = (instruction & 0x00ffffff) - 0x100;
+      }
+      else
+      {
+        // since we had one branch, and the next instruction is not a branch or hypercall
+        // by the power of deduction and logical reasoning, we found the code.
+        index = instruction;
+      }
+      // now we really found it.
+      found = TRUE;
+    } // found first branch ends
+    // instr was not a branch neither a hypercall or undefined call
+    pc++;
+  }
+  return index;
 }
 
 

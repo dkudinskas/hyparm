@@ -47,4 +47,7 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
 
 void invalidateBlock(BasicBlock* block);
 
+void setExecBitmap(GCONTXT* context, u32int start, u32int end);
+bool isExecBitSet(GCONTXT* context, u32int addr);
+
 #endif

@@ -57,30 +57,22 @@ void clearTranslationsByAddress(TranslationStore* ts, u32int address)
 }
 
 
-void clearTranslationsSmallPage(TranslationStore* ts, u32int addressStart, u32int addressEnd)
-{
-  DIE_NOW(0, "clearTranslationsSmallPage unimplemented.");
-  u32int i = 0;
-  for (i = 0; i < BASIC_BLOCK_STORE_SIZE; i++)
-  {
-    u32int index = getBasicBlockStoreIndex(addressStart);
-    BasicBlock* block = getBasicBlockStoreEntry(ts, index);
-    if (block->type != BB_TYPE_INVALID)
-    {
-      invalidateBlock(block);
-    }
-  }
-}
-
-
 void clearTranslationsByAddressRange(TranslationStore* ts, u32int addressStart, u32int addressEnd)
 {
+  bool startSet = isExecBitSet(getActiveGuestContext(), addressStart);
+  bool endSet = isExecBitSet(getActiveGuestContext(), addressEnd);
+  bool set = startSet | endSet;
+  if (!set)
+  {
+    // we have never cached any translations in this address range. nothing to clear.
+    return;
+  }
   u32int i = 0;
   /* we traverse the complete block translation store
    * looking for blocks matching this address range.
    * since there may be the case that part of a group block
    * falls in this range, and we cant remove a single part of a group block
-   * inside the loop we unlink all current group-blocks. */ 
+   * inside the loop we unlink all current group-blocks. */
   for (i = 0; i < BASIC_BLOCK_STORE_SIZE; i++)
   {
     if (ts->basicBlockStore[i].type == GB_TYPE_ARM)
@@ -96,3 +88,4 @@ void clearTranslationsByAddressRange(TranslationStore* ts, u32int addressStart, 
     }
   }
 }
+
