@@ -39,8 +39,8 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   // UNIMPLEMENTED: SWP swap
   ENTRY(IRC_REPLACE, armSwpInstruction,         NULL,                   0x01000090, 0x0fb00ff0, "SWP"),
   // UNIMPLEMENTED:
-  ENTRY(IRC_LS_USER, armStrhtInstruction,       NULL,                   0x006000b0, 0x0f7000f0, "STRHT instruction"),
-  ENTRY(IRC_LS_USER, armLdrhtInstruction,       NULL,                   0x003000b0, 0x0f3000f0, "LDRHT instruction"),
+  ENTRY(IRC_REPLACE, armStrhtInstruction,       NULL,                   0x006000b0, 0x0f7000f0, "STRHT instruction"),
+  ENTRY(IRC_REPLACE, armLdrhtInstruction,       NULL,                   0x003000b0, 0x0f3000f0, "LDRHT instruction"),
   // store and load exclusive: must be emulated - user mode faults
   ENTRY(IRC_REPLACE, armLdrexbInstruction,      NULL,                   0x01d00f9f, 0x0ff00fff, "LDREXB"),
   ENTRY(IRC_REPLACE, armLdrexdInstruction,      NULL,                   0x01b00f9f, 0x0ff00fff, "LDREXD"),
@@ -279,17 +279,17 @@ static struct decodingTableEntry armDataProcMiscInstructions_op1[] =
 static struct decodingTableEntry armLoadStoreWordByteInstructions[] =
 {
   // STRT - all trap
-  ENTRY(IRC_LS_USER, armStrtInstruction,         NULL,                  0x04200000, 0x0f700000, "STRT Rt, [Rn], +-imm12"),
-  ENTRY(IRC_LS_USER, armStrtInstruction,         NULL,                  0x06200000, 0x0f700010, "STRT Rt, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE, armStrtInstruction,         NULL,                  0x04200000, 0x0f700000, "STRT Rt, [Rn], +-imm12"),
+  ENTRY(IRC_REPLACE, armStrtInstruction,         NULL,                  0x06200000, 0x0f700010, "STRT Rt, [Rn], +-Rm"),
   // LDRT - all trap
-  ENTRY(IRC_LS_USER, armLdrtInstruction,         NULL,                  0x04300000, 0x0f700000, "LDRT Rd, [Rn], +-imm12"),
-  ENTRY(IRC_LS_USER, armLdrtInstruction,         NULL,                  0x06300000, 0x0f700010, "LDRT Rd, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE, armLdrtInstruction,         NULL,                  0x04300000, 0x0f700000, "LDRT Rd, [Rn], +-imm12"),
+  ENTRY(IRC_REPLACE, armLdrtInstruction,         NULL,                  0x06300000, 0x0f700010, "LDRT Rd, [Rn], +-Rm"),
   // STRBT - all trap
-  ENTRY(IRC_LS_USER, armStrbtInstruction,        NULL,                  0x04600000, 0x0f700000, "STRBT Rt, [Rn, +-imm12]"),
-  ENTRY(IRC_LS_USER, armStrbtInstruction,        NULL,                  0x06600000, 0x0f700010, "STRBT Rt, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE, armStrbtInstruction,        NULL,                  0x04600000, 0x0f700000, "STRBT Rt, [Rn, +-imm12]"),
+  ENTRY(IRC_REPLACE, armStrbtInstruction,        NULL,                  0x06600000, 0x0f700010, "STRBT Rt, [Rn], +-Rm"),
   // LDRBT - all trap
-  ENTRY(IRC_LS_USER, armLdrbtInstruction,        NULL,                  0x04700000, 0x0f700000, "LDRBT Rd, [Rn], +-imm12"),
-  ENTRY(IRC_LS_USER, armLdrbtInstruction,        NULL,                  0x06700000, 0x0f700010, "LDRBT Rd, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE, armLdrbtInstruction,        NULL,                  0x04700000, 0x0f700000, "LDRBT Rd, [Rn], +-imm12"),
+  ENTRY(IRC_REPLACE, armLdrbtInstruction,        NULL,                  0x06700000, 0x0f700010, "LDRBT Rd, [Rn], +-Rm"),
   // STR - all pass-through
   ENTRY(IRC_SAFE,    armStrInstruction,          armStrPCInstruction,   0x04000000, 0x0e500000, "STR Rt, [Rn, +-imm12]"),
   ENTRY(IRC_SAFE,    armStrInstruction,          armStrPCInstruction,   0x06000000, 0x0e500010, "STR Rt, [Rn], +-Rm"),

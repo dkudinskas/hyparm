@@ -282,11 +282,12 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
   basicBlock->addressMap = (context->virtAddrEnabled) ? (u32int)context->pageTables->guestPhysical : 0;
 
 
-  // Scan guest code and copy to C$, translating instructions that use the PC on the fly
+  // Scan guest code and copy to code store
+  // translating instructions on the fly
   u32int* instructionPtr = guestStart;
   struct decodingTableEntry* decodedInstruction;
 
-  for (; (decodedInstruction = decodeArmInstruction(*instructionPtr))->replace == IRC_SAFE; ++instructionPtr)
+  while((decodedInstruction = decodeArmInstruction(*instructionPtr))->replace != IRC_REPLACE)
   {
     if (armIsPCInsensitiveInstruction(*instructionPtr) || decodedInstruction->pcHandler == NULL)
     {
@@ -297,7 +298,9 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
       DEBUG(SCANNER, "scanArmBlock: instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instructionPtr, instructionPtr);
       decodedInstruction->pcHandler(context->translationStore, basicBlock, (u32int)instructionPtr, *instructionPtr);
     }
+    instructionPtr++;
   }
+
 
   // Next instruction must be translated into hypercall.
   DEBUG(SCANNER, "scanArmBlock: instruction %s must be translated\n", decodedInstruction->instructionString);

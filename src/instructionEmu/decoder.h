@@ -16,7 +16,8 @@ typedef enum
 {
   IRC_SAFE = 0,
   IRC_REPLACE = 1,
-  IRC_LS_USER = 2
+  IRC_LS_USER = 2,
+  IRC_REMOVE = 3
 } instructionReplaceCode;
 
 struct decodingTableEntry
