@@ -2,14 +2,14 @@
  * ARM decoding tables for the table search decoder
  */
 
-#define ENTRY(_code, _handler, _pcHandler, _value, _mask, _instructionString)                  \
-  {                                                                                               \
-    .code = _code,                                                                          \
-    .handler = _handler,                                                                          \
-    .pcHandler = _pcHandler,                                                                      \
-    .value = _value,                                                                              \
-    .mask = _mask,                                                                                \
-    .instructionString = _instructionString                                                       \
+#define ENTRY(_code, _handler, _pcHandler, _value, _mask, _instructionString)     \
+  {                                                                               \
+    .code = _code,                                                                \
+    .handler = _handler,                                                          \
+    .pcHandler = _pcHandler,                                                      \
+    .value = _value,                                                              \
+    .mask = _mask,                                                                \
+    .instructionString = _instructionString                                       \
   }
 
 
