@@ -11,6 +11,8 @@ struct mmc mmchs;
 static inline u32int readWord(u32int addr);
 static inline void writeWord(u32int addr, u32int value);
 
+void mmcSetIOS(struct mmc *mmc);
+
 
 static inline u32int readWord(u32int addr)
 {

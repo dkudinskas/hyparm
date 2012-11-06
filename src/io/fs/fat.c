@@ -47,7 +47,7 @@ int fatMount(fatfs *fs, blockDevice *dev, int partNum)
   fs->part = &primaryPartitionTable.partitions[partNum-1];
   if (!(fs->part->type == 0x0B || fs->part->type == 0x0C))
   {
-    printf("Partition type code is not FAT32 (0x0B or 0x0C)" EOL);
+    printf("Partition type code is not FAT32 (0x0B or 0x0C), but %x" EOL, fs->part->type);
     return -1;
   }
   fs->blockDevice = dev;

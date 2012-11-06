@@ -17,7 +17,7 @@
 
 /* Access Control */
 #define HYPERVISOR_ACCESS_DOMAIN  15
-#define HYPERVISOR_ACCESS_BITS    PRIV_RW_USR_NO //R/W priviledged, No Access USR (ARM ARM B3-28)
+#define HYPERVISOR_ACCESS_BITS    PRIV_RW_USR_NO //priv R/W , USR no access
 #define GUEST_ACCESS_DOMAIN       1
 #define GUEST_ACCESS_BITS         PRIV_RW_USR_RW //Priv R/W, USR R/W
 
@@ -170,6 +170,7 @@ void addPageTableEntry(pageTableEntry* pageTableEntryPtr, u32int physical, u8int
 u32int getPhysicalAddress(GCONTXT *context, simpleEntry* pageTable, u32int virtAddr);
 simpleEntry* getEntryFirst(simpleEntry* pageTable, u32int virtAddr);
 simpleEntry* getEntrySecond(GCONTXT *context, pageTableEntry* firstLevelEntry, u32int virtAddr);
+simpleEntry* getEntry(simpleEntry* pageTable, u32int virtAddr);
 
 void splitSectionToSmallPages(simpleEntry* pageTable, u32int virtAddr);
 

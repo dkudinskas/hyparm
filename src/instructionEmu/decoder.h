@@ -22,14 +22,14 @@ typedef enum
 
 struct decodingTableEntry
 {
-  instructionReplaceCode replace;
+  instructionReplaceCode code;
   InstructionHandler handler;
   PCInstructionHandler pcHandler;
   u32int value;            /* If arch == 0 then value is a sentinel.  */
   u32int mask;             /* Recognise inst if (op & mask) == value.  */
   const char *instructionString; /* How to disassemble this insn.  */
 };
-
+typedef struct decodingTableEntry DecodedInstruction;
 
 struct decodingTableEntry *decodeArmInstruction(u32int instruction);
 

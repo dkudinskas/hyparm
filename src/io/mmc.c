@@ -13,6 +13,10 @@
 
 extern struct mmc *mmcDevice;
 
+int mmcStartup(struct mmc *mmc);
+int mmcSendIfCond(struct mmc *mmc);
+int sdSendOpCond(struct mmc *mmc);
+
 u32int mmcRegisteredNumber = 0;
 
 /* MMC block device code derived from the u-boot project */

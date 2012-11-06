@@ -737,6 +737,19 @@ simpleEntry* getEntrySecond(GCONTXT *context, pageTableEntry* firstLevelEntry, u
 }
 
 
+simpleEntry* getEntry(simpleEntry* pageTable, u32int virtAddr)
+{
+  simpleEntry* entry = getEntryFirst(pageTable, virtAddr);
+  if (entry->type == PAGE_TABLE)
+  {
+    GCONTXT *context = getActiveGuestContext();
+    entry = getEntrySecond(context, (pageTableEntry*)entry, virtAddr);
+  }
+  return entry;
+}
+
+
+
 /**
  * function to take a first level page table entry - section 
  * and remap it as second level 4KB small pages

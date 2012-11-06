@@ -236,8 +236,8 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
   // maps AP bits to shadow entry, write-protects if necessary
   if (peripheral)
   {
-    shadow->ap10 = PRIV_RW_USR_NO & 0x3;
-    shadow->ap2  = PRIV_RW_USR_NO >> 2;
+    shadow->ap10 = HYPERVISOR_ACCESS_BITS & 0x3;
+    shadow->ap2  = HYPERVISOR_ACCESS_BITS >> 2;
   }
   else
   {
@@ -752,26 +752,40 @@ u32int mapAccessPermissionBits(GCONTXT *context, u32int guestAP, u32int domain)
       switch(guestAP)
       {
         case PRIV_NO_USR_NO:
+        {
           shadowAP = PRIV_RW_USR_NO;
           break;
+        }
         case PRIV_RW_USR_NO:
+        {
           shadowAP = guestPriv ? PRIV_RW_USR_RW : PRIV_RW_USR_NO;
           break;
+        }
         case PRIV_RW_USR_RO:
+        {
           shadowAP = guestPriv ? PRIV_RW_USR_RW : PRIV_RW_USR_RO;
           break;
+        }
         case PRIV_RW_USR_RW:
+        {
           shadowAP = PRIV_RW_USR_RW;
           break;
+        }
         case PRIV_RO_USR_NO:
+        {
           shadowAP = guestPriv ? PRIV_RW_USR_RO : PRIV_RW_USR_NO;
           break;
+        }
         case DEPRECATED:
+        {
           shadowAP = guestPriv ? PRIV_RW_USR_RW : PRIV_RW_USR_RO;
           break;
+        }
         case PRIV_RO_USR_RO:
+        {
           shadowAP = PRIV_RW_USR_RO;
           break;
+        }
         case AP_RESERVED:
         default:
           DIE_NOW(context, "mapAccessPermissionBits: Invalid access permission bits.");

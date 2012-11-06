@@ -13,6 +13,7 @@
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/decoder/arm/structs.h"
 #include "instructionEmu/scanner.h"
+#include "instructionEmu/translator/translator.h"
 
 #include "instructionEmu/interpreter/internals.h"
 
@@ -285,25 +286,25 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
   // Scan guest code and copy to code store
   // translating instructions on the fly
   u32int* instructionPtr = guestStart;
-  struct decodingTableEntry* decodedInstruction;
+  DecodedInstruction* decodedInstr;
 
-  while((decodedInstruction = decodeArmInstruction(*instructionPtr))->replace != IRC_REPLACE)
+  while((decodedInstr = decodeArmInstruction(*instructionPtr))->code != IRC_REPLACE)
   {
-    if (armIsPCInsensitiveInstruction(*instructionPtr) || decodedInstruction->pcHandler == NULL)
+    if (armIsPCInsensitiveInstruction(*instructionPtr) || decodedInstr->pcHandler == NULL)
     {
-      addInstructionToBlock(context->translationStore, basicBlock, *instructionPtr);
+      translate(context, basicBlock, decodedInstr, *instructionPtr);
     }
     else
     {
       DEBUG(SCANNER, "scanArmBlock: instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instructionPtr, instructionPtr);
-      decodedInstruction->pcHandler(context->translationStore, basicBlock, (u32int)instructionPtr, *instructionPtr);
+      decodedInstr->pcHandler(context->translationStore, basicBlock, (u32int)instructionPtr, *instructionPtr);
     }
     instructionPtr++;
   }
 
 
   // Next instruction must be translated into hypercall.
-  DEBUG(SCANNER, "scanArmBlock: instruction %s must be translated\n", decodedInstruction->instructionString);
+  DEBUG(SCANNER, "scanArmBlock: instruction %s must be translated\n", decodedInstr->instructionString);
   u32int instruction = *instructionPtr;
   u32int cc = instruction & 0xF0000000;
   if ((isBranch(instruction)) && (cc != 0xE0000000))
@@ -325,7 +326,7 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
 
   // set guest end of block address
   basicBlock->guestEnd = instructionPtr;
-  basicBlock->handler = decodedInstruction->handler;
+  basicBlock->handler = decodedInstr->handler;
   
   context->lastGuestPC = (u32int)instructionPtr;
   DEBUG(SCANNER, "scanArmBlock: last guest PC set to %08x\n", context->lastGuestPC);
