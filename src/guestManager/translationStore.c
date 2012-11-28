@@ -7,6 +7,7 @@
 #include "guestManager/translationStore.h"
 #include "guestManager/codeStore.h"
 
+#include "instructionEmu/blockLinker.h"
 #include "instructionEmu/scanner.h"
 
 #include "memoryManager/mmu.h"
@@ -32,7 +33,7 @@ void initialiseTranslationStore(TranslationStore* ts)
   DEBUG(TRANSLATION_STORE, "initialiseTranslationStore: basic block store @ %p\n", ts->basicBlockStore);
   memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
   
-  ts->stop = FALSE;
+  ts->write = TRUE;
 }
 
 

@@ -23,6 +23,10 @@ config OLEVEL_3
   bool "Level 3 (-O3)"
   depends on !PREDICTABLE_DEBUGGING
 
+config OLEVEL_FAST
+  bool "Level fast (-Ofast)"
+  depends on !PREDICTABLE_DEBUGGING
+
 endchoice
 
 config BUILD_ANALYZE_FUNCTIONS

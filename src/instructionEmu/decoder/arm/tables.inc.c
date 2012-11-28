@@ -38,8 +38,9 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   ENTRY(IRC_SAFE,    nopInstruction,            NULL,                   0xe1a00000, 0xffffffff, "NOP"),
   // UNIMPLEMENTED: SWP swap
   ENTRY(IRC_REPLACE, armSwpInstruction,         NULL,                   0x01000090, 0x0fb00ff0, "SWP"),
-  // UNIMPLEMENTED:
+  // store halfword and translate
   ENTRY(IRC_REPLACE, armStrhtInstruction,       NULL,                   0x006000b0, 0x0f7000f0, "STRHT instruction"),
+  // load halfword and translate
   ENTRY(IRC_REPLACE, armLdrhtInstruction,       NULL,                   0x003000b0, 0x0f3000f0, "LDRHT instruction"),
   // store and load exclusive: must be emulated - user mode faults
   ENTRY(IRC_REPLACE, armLdrexbInstruction,      NULL,                   0x01d00f9f, 0x0ff00fff, "LDREXB"),
@@ -279,8 +280,8 @@ static struct decodingTableEntry armDataProcMiscInstructions_op1[] =
 static struct decodingTableEntry armLoadStoreWordByteInstructions[] =
 {
   // STRT - all trap
-  ENTRY(IRC_REPLACE, armStrtInstruction,         NULL,                  0x04200000, 0x0f700000, "STRT Rt, [Rn], +-imm12"),
-  ENTRY(IRC_REPLACE, armStrtInstruction,         NULL,                  0x06200000, 0x0f700010, "STRT Rt, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE, armStrtInstruction,         armStrtPCInstruction,  0x04200000, 0x0f700000, "STRT Rt, [Rn], +-imm12"),
+  ENTRY(IRC_REPLACE, armStrtInstruction,         armStrtPCInstruction,  0x06200000, 0x0f700010, "STRT Rt, [Rn], +-Rm"),
   // LDRT - all trap
   ENTRY(IRC_REPLACE, armLdrtInstruction,         NULL,                  0x04300000, 0x0f700000, "LDRT Rd, [Rn], +-imm12"),
   ENTRY(IRC_REPLACE, armLdrtInstruction,         NULL,                  0x06300000, 0x0f700010, "LDRT Rd, [Rn], +-Rm"),
@@ -516,9 +517,9 @@ static struct decodingTableEntry armUnconditionalInstructions[] =
   // BLX: branch and link to Thumb subroutine
   ENTRY(IRC_REPLACE, armBlxImmediateInstruction, NULL,                  0xfa000000, 0xfe000000, "BLX #imm24"),
   // PLD: preload data
-  ENTRY(IRC_REPLACE, armPldInstruction,          NULL,                  0xf450f000, 0xfc70f000, "PLD"),
+  ENTRY(IRC_REMOVE, armPldInstruction,          NULL,                  0xf450f000, 0xfc70f000, "PLD"),
   // PLI: preload instruction
-  ENTRY(IRC_REPLACE, armPliInstruction,          NULL,                  0xf450f000, 0xfd70f000, "PLI"),
+  ENTRY(IRC_REMOVE, armPliInstruction,          NULL,                  0xf450f000, 0xfd70f000, "PLI"),
   ENTRY(IRC_REPLACE, undefinedInstruction,       NULL,                  0x00000000, 0x00000000, "armUnconditionalInstructions")
 };
 

@@ -20,15 +20,12 @@
 #define SCANNER_CALL_SOURCE_INTERRUPT            8
 
 
-__macro__ u32int fetchThumbInstr(u16int *instructionPointer);
 void scanBlock(GCONTXT *context, u32int startAddress);
-__macro__ bool txxIsThumb32(u32int instruction);
-void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastBlock); 
-void unlinkBlock(BasicBlock* block, u32int index);
-void unlinkAllBlocks(GCONTXT *context);
-void putBranch(u32int branchLocation, u32int branchTarget, u32int condition);
 
-u32int findBlockIndexNumber(GCONTXT *context, u32int hostPC);
+u32int rescanBlock(GCONTXT *context, u32int blockStoreIndex, BasicBlock* block, u32int hostPC);
+
+__macro__ u32int fetchThumbInstr(u16int *instructionPointer);
+__macro__ bool txxIsThumb32(u32int instruction);
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
 void resetScanBlockCounter(void);

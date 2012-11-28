@@ -26,7 +26,10 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
 {
   DEBUG(BLOCK_STORE, "addInstructionToBlock: block %p, instruction %08x\n", basicBlock, instruction);
 
-  *ts->codeStoreFreePtr = instruction;
+  if (ts->write)
+  {
+    *ts->codeStoreFreePtr = instruction;
+  }
 
   /* to ensure data and instruction cache coherency
    * 1. clean data cache entry by start and end address of code store
@@ -51,7 +54,10 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
     u32int* instrPtr = basicBlock->codeStoreStart;
     for (i = 0; i < basicBlock->codeStoreSize; i++)
     {
-      *ts->codeStoreFreePtr = *instrPtr;
+      if (ts->write)
+      {
+        *ts->codeStoreFreePtr = *instrPtr;
+      }
       ts->codeStoreFreePtr++;
       instrPtr++;
     }

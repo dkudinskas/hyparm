@@ -513,6 +513,8 @@ void armStrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
 
   if (replaceSource || replaceBase)
   {
+    printf("armStrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
+          "Rt=%x" EOL, instruction, pc, conditionCode, sourceRegister, baseRegister);
     DIE_NOW(0, "armStrPCInstruction: translate, stub\n");
     /*
     DEBUG(TRANSLATION, "armStrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
@@ -576,3 +578,33 @@ void armStrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
     armRestoreRegister(ts, block, conditionCode, scratchRegister);
   }
 }
+
+
+void armStrtPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+{
+  const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
+  const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, STR_RT_INDEX);
+  const u32int baseRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
+  const u32int offsetRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
+
+  const bool replaceSource = sourceRegister == GPR_PC;
+  const bool replaceBase = baseRegister == GPR_PC;
+  u32int scratchRegister;
+
+  if (replaceSource || replaceBase)
+  {
+    printf("armStrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
+          "Rt=%x" EOL, instruction, pc, conditionCode, sourceRegister, baseRegister);
+    DIE_NOW(0, "armStrPCInstruction: translate, stub\n");
+  }
+
+  addInstructionToBlock(ts, block, instruction);
+
+  if (replaceSource || replaceBase)
+  {
+    DIE_NOW(0, "armStrPCInstruction: restore register stub.\n");
+    // Restore register; done.
+    armRestoreRegister(ts, block, conditionCode, scratchRegister);
+  }
+}
+

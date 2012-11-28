@@ -10,6 +10,7 @@
 #include "guestManager/guestExceptions.h"
 #endif
 
+#include "instructionEmu/blockLinker.h"
 #include "instructionEmu/decoder.h"
 #include "instructionEmu/decoder/arm/structs.h"
 #include "instructionEmu/scanner.h"
@@ -24,9 +25,6 @@
 #include "memoryManager/pageTable.h"
 
 
-static inline bool isBranch(u32int instruction);
-static inline bool isServiceCall(u32int instruction);
-static inline bool isUndefinedCall(u32int instruction);
 
 static void scanArmBlock(GCONTXT *context, u32int *guestStart, u32int blockStoreIndex, BasicBlock* basicBlock);
 static bool armIsPCInsensitiveInstruction(u32int instruction);
@@ -266,8 +264,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 
 
 /*
- * TODO: caching is disabled on the code store
- * so no cache maintenance operations are called from here
+ * scan and translate a guest basic block, copying it into translation cache
  */
 void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, BasicBlock* basicBlock)
 {
@@ -384,203 +381,66 @@ static bool armIsPCInsensitiveInstruction(u32int instruction)
 }
 
 
-inline bool isBranch(u32int instruction)
+/*
+ * re-scan-and-translate a guest basic block
+ * do NOT copy anything into code store
+ * this called upon a bad case when we have to somehow map
+ * a translation store PC to its original guest PC. RARE case. 
+ */
+u32int rescanBlock(GCONTXT *context, u32int blockStoreIndex, BasicBlock* block, u32int hostPC)
 {
-  if ((instruction & 0x0f000000) == 0x0a000000)
-  {
-    return TRUE;
-  }
-  return FALSE;
-}
+  DEBUG(SCANNER, "rescanBlock: hostPC %08x block store index %x block %p\n", hostPC, blockStoreIndex, block);
+  DEBUG(SCANNER, "rescanBlock: bb->gStart %p bb->gEnd %p bb->csStart %p bb->csSize %08x\n",
+         block->guestStart, block->guestEnd, block->codeStoreStart, block->codeStoreSize);
 
-
-inline bool isServiceCall(u32int instruction)
-{
-  // opcode must be F, condition code must not be F.
-  if (((instruction & 0x0f000000) == 0x0f000000)
-   && ((instruction & 0xf0000000) != 0xf0000000))
-  {
-    return TRUE;
-  }
-  return FALSE;
-}
-
-
-static inline bool isUndefinedCall(u32int instruction)
-{
-  // undefined call is 0xFFFFFFXX (last two numbers will hold spill register number)
-  if ((instruction & UNDEFINED_CALL) == UNDEFINED_CALL)
-  {
-    return TRUE;
-  }
-  return FALSE;
-}
-
-
-void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastBlock)
-{
-  // get next block
-  u32int blockIndex = getBasicBlockStoreIndex(nextPC);
-  BasicBlock* nextBlock = getBasicBlockStoreEntry(context->translationStore, blockIndex);
+  // backup code store pointer
+  u32int* csFreeBackup = context->translationStore->codeStoreFreePtr;
   
-  // if invalid, return.
-  if ((nextBlock->type == BB_TYPE_INVALID) || (nextBlock->hotness < 10))
+  // set the pointer to the start of current block for rescanning
+  context->translationStore->codeStoreFreePtr = block->codeStoreStart;
+  
+  // disable code store writes - all calls to addInstructionToBlock will NOT write
+  context->translationStore->write = FALSE;
+
+  // Scan guest code
+  u32int* instructionPtr = block->guestStart;
+  DecodedInstruction* decodedInstr;
+
+  while((decodedInstr = decodeArmInstruction(*instructionPtr))->code != IRC_REPLACE)
   {
-    // next block not scanned.
-    return;
-  }
-
-  u32int addressMap = context->virtAddrEnabled ? (u32int)context->pageTables->guestPhysical : 0;
-  if (((u32int)nextBlock->guestStart != nextPC) || (nextBlock->addressMap != addressMap))
-  {
-    // conflict. return, let scanBlock() deal with conflict first, link later.
-    return;
-  }
-
-  u32int eobInstruction = *(lastBlock->guestEnd);
-  if (!isBranch(eobInstruction))
-  {
-    // not a branch. just leave hypercall.
-    return;
-  }
-
-
-  // if we found a group block with an old version number, fail to link. 
-  // scanner will then re-scan this block, thus validating it's correct
-  if ((nextBlock->type == GB_TYPE_ARM) && (nextBlock->versionNumber != context->groupBlockVersion))
-  {
-    return;
-  }
-  if ((lastBlock->type == GB_TYPE_ARM) && (lastBlock->versionNumber != context->groupBlockVersion))
-  {
-    return;
-  }
-
-  // must check wether it was the first or second hypercall
-  u32int lastInstrOfHostBlock = (u32int)lastBlock->codeStoreStart +
-                                (lastBlock->codeStoreSize-1) * ARM_INSTRUCTION_SIZE;
-  lastInstrOfHostBlock -= ARM_INSTRUCTION_SIZE;
-  u32int conditionCode = 0xE0000000;
-  if (lastPC != lastInstrOfHostBlock)
-  {
-    conditionCode = eobInstruction & 0xF0000000;
-  }
-
-  // must try to put a branch at lastPC direct to nextPC
-  putBranch(lastPC, (u32int)nextBlock->codeStoreStart, conditionCode);
-
-  // make sure both blocks are marked as a group-block.
-  lastBlock->type = GB_TYPE_ARM;
-  lastBlock->versionNumber = context->groupBlockVersion;
-  nextBlock->type = GB_TYPE_ARM;
-  nextBlock->versionNumber = context->groupBlockVersion;
-}
-
-
-void unlinkBlock(BasicBlock* block, u32int index)
-{
-  u32int hypercall = INSTR_SWI | (index + 0x100);
-  u32int lastInstrOfHostBlock = (u32int)block->codeStoreStart +
-                                (block->codeStoreSize-1) * ARM_INSTRUCTION_SIZE;
-  lastInstrOfHostBlock -= ARM_INSTRUCTION_SIZE;
-
-  // remove 'last' hypercall (or the only one if there werent more)
-  *(u32int*)lastInstrOfHostBlock = hypercall;
-  mmuCleanDCacheByMVAtoPOU(lastInstrOfHostBlock);
-  mmuInvIcacheByMVAtoPOU(lastInstrOfHostBlock);
-
-  if (!block->oneHypercall)
-  {
-    // two hypercalls! fix up condition code.
-    u32int condition = *(u32int*)(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE);
-    condition &= 0xF0000000; 
-    hypercall = (hypercall & 0x0FFFFFFF) | condition;
-    
-    *(u32int*)(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE) = hypercall;
-    mmuCleanDCacheByMVAtoPOU(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE);
-    mmuInvIcacheByMVAtoPOU(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE);
-  }
-  block->type = BB_TYPE_ARM;
-  block->versionNumber = 0;
-}
-
-
-void unlinkAllBlocks(GCONTXT *context)
-{
-  DIE_NOW(0, "unlinkAllBlocks unimplemented.\n");
-  u32int i = 0;
-  /* we traverse the complete block translation store
-   * inside the loop we unlink all current group-blocks. */ 
-  for (i = 0; i < BASIC_BLOCK_STORE_SIZE; i++)
-  {
-    if (context->translationStore->basicBlockStore[i].type == GB_TYPE_ARM)
+    DEBUG(SCANNER, "rescanBlock: guest instr ptr %p host %p\n", instructionPtr, context->translationStore->codeStoreFreePtr);
+    if (armIsPCInsensitiveInstruction(*instructionPtr) || decodedInstr->pcHandler == NULL)
     {
-      unlinkBlock(&context->translationStore->basicBlockStore[i], i);
+      DEBUG(SCANNER, "rescanBlock: pc insensitive. instruction %08x\n", *instructionPtr);
+      translate(context, block, decodedInstr, *instructionPtr);
     }
-  }
-}
-
-
-u32int findBlockIndexNumber(GCONTXT *context, u32int hostPC)
-{
-  bool found = FALSE;
-  u32int* pc = (u32int*)hostPC;
-  u32int index = 0;
-  while (!found)
-  {
-    u32int instruction = *pc;
-    if (isUndefinedCall(instruction))
+    else
     {
-      // next word will be DATA! spill location. skip it and loop back around
-      pc++;
+      DEBUG(SCANNER, "rescanBlock: instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instructionPtr, instructionPtr);
+      decodedInstr->pcHandler(context->translationStore, block, (u32int)instructionPtr, *instructionPtr);
     }
-    else if (isServiceCall(instruction))
+
+    // if we reached or 'gone past' the looked for address during the scanning
+    // of the last guest instruction, we found the mapping.
+    if ((u32int)context->translationStore->codeStoreFreePtr > hostPC)
     {
-      // lets get the code from the service call.
-      index = (instruction & 0x00ffffff) - 0x100;
-      found = TRUE;
+      DEBUG(SCANNER, "rescanBlock: current cs ptr %p\n", context->translationStore->codeStoreFreePtr);
+      // restore code store free pointer
+      context->translationStore->codeStoreFreePtr = csFreeBackup;
+      // re-enable code store writes
+      context->translationStore->write = TRUE;
+
+      // and we can safely return now.
+      return (u32int)instructionPtr;
     }
-    else if (isBranch(instruction))
-    {
-      // found our first branch. skip it.
-      pc++;
-      instruction = *pc;
 
-      // one branch down. lets see next one. MUST be branch, svc or the index
-      if (isBranch(instruction))
-      {
-        // second branch! next word is the index 4 sure
-        pc++;
-        index = *pc;
-      }
-      else if (isServiceCall(instruction))
-      {
-        // ok, branch followed by hypecall. get the code from it THIS TIME
-        index = (instruction & 0x00ffffff) - 0x100;
-      }
-      else
-      {
-        // since we had one branch, and the next instruction is not a branch or hypercall
-        // by the power of deduction and logical reasoning, we found the code.
-        index = instruction;
-      }
-      // now we really found it.
-      found = TRUE;
-    } // found first branch ends
-    // instr was not a branch neither a hypercall or undefined call
-    pc++;
+    // we havent reached the instruction we are looking for yet. carry on.
+    instructionPtr++;
   }
-  return index;
+
+  DIE_NOW(context, "rescanBlock: not sure if we should ever get here.\n");
+
+  // just compiler happy
+  return 0;
 }
 
-
-void putBranch(u32int branchLocation, u32int branchTarget, u32int condition)
-{
-  u32int offset = branchTarget - (branchLocation + ARM_INSTRUCTION_SIZE*2);
-  offset = (offset >> 2) & 0xFFFFFF;
-  u32int branchInstruction = condition | BRANCH_BASE_VALUE | offset;
-  *(u32int*)branchLocation = branchInstruction;
-
-  mmuCleanDCacheByMVAtoPOU(branchLocation);
-  mmuInvIcacheByMVAtoPOU(branchLocation);
-}

@@ -17,6 +17,8 @@ void armShiftPCInstruction(TranslationStore *ts, BasicBlock *block, u32int pc, u
  */
 void armLdrPCInstruction(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
 void armStrPCInstruction(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
+void armStrtPCInstruction(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
+
 void armStmPCInstruction(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
 
 #endif /* __INSTRUCTION_EMU__TRANSLATOR__ARM__PC_HANDLERS_H__ */

@@ -21,7 +21,7 @@ typedef struct TranslationStore
   u32int* codeStoreFreePtr;
   BasicBlock* basicBlockStore;
   u32int spillLocation;
-  bool stop;
+  bool write;
 } TranslationStore;
 
 

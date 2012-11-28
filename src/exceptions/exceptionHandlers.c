@@ -15,9 +15,12 @@
 #include "guestManager/guestExceptions.h"
 #include "guestManager/scheduler.h"
 
+#include "instructionEmu/blockLinker.h"
 #include "instructionEmu/loadStoreDecode.h"
 #include "instructionEmu/loopDetector.h"
 #include "instructionEmu/scanner.h"
+#include "instructionEmu/translator/translator.h"
+
 
 #include "memoryManager/shadowMap.h"
 #include "memoryManager/memoryConstants.h"
@@ -306,15 +309,18 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
   }
 }
 
+
 GCONTXT *undefined(GCONTXT *context)
 {
   DIE_NOW(context, "undefined: undefined handler, Implement me!");
 }
 
+
 void undefinedPrivileged(void)
 {
   DIE_NOW(NULL, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!");
 }
+
 
 GCONTXT *prefetchAbort(GCONTXT *context)
 {
@@ -459,7 +465,6 @@ GCONTXT *irq(GCONTXT *context)
         u32int index = findBlockIndexNumber(context, context->R15);
         BasicBlock* groupblock = getBasicBlockStoreEntry(context->translationStore, index);
         unlinkBlock(groupblock, index);
-        context->groupBlockVersion++;
       }
       
       // FIXME: figure out which interrupt to clear and then clear the right one?
@@ -618,7 +623,7 @@ void dabtPermissionFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
 }
 
 
-void dabtTranslationFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
+void dabtTranslationFault(GCONTXT *context, DFSR dfsr, u32int dfar)
 {
   /* if we hit this - that means that:
      mem access address corresponding 1st level page table entry FAULT/reserved
@@ -626,11 +631,17 @@ void dabtTranslationFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
      see if translation fault should be forwarded to the guest!
      if THAT fails, then really panic.
    */
-  if (!shadowMap(gc, dfar))
+  if (!shadowMap(context, dfar))
   {
     // failed to shadow map!
-    if (shouldDataAbort(gc, isGuestInPrivMode(gc), dfsr.WnR, dfar))
+    if (shouldDataAbort(context, isGuestInPrivMode(context), dfsr.WnR, dfar))
     {
+      if (isGuestInPrivMode(context))
+      {
+        // we need to map host PC to guest PC
+        context->R15 = hostpcToGuestpc(context);
+        DEBUG(EXCEPTION_HANDLERS, "dabtTranslationFault: mapping PC got %08x\n", context->R15);
+      }
       /*
        * here we must find the correct guest PC to store in R14_ABT
        * - if guest was running in user mode
@@ -638,9 +649,9 @@ void dabtTranslationFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
        * - if guest was privileged mode, guest code was executed from code store
        *   then we must find correct guest PC
        */
-      deliverDataAbort(gc);
+      deliverDataAbort(context);
       setScanBlockCallSource(SCANNER_CALL_SOURCE_DABT_TRANSLATION);
-      scanBlock(gc, gc->R15);
+      scanBlock(context, context->R15);
       return;
     }
     else
@@ -651,7 +662,7 @@ void dabtTranslationFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
 }
 
 
-void iabtTranslationFault(GCONTXT *gc, IFSR ifsr, u32int ifar)
+void iabtTranslationFault(GCONTXT *context, IFSR ifsr, u32int ifar)
 {
   /* if we hit this - that means that:
      mem access address corresponding 1st level page table entry FAULT/reserved
@@ -659,22 +670,29 @@ void iabtTranslationFault(GCONTXT *gc, IFSR ifsr, u32int ifar)
      see if translation fault should be forwarded to the guest!
      if THAT fails, then really panic.
    */
-  if (!shadowMap(gc, ifar))
+  if (!shadowMap(context, ifar))
   {
     // failed to shadow map!
-    if (shouldPrefetchAbort(gc, isGuestInPrivMode(gc), ifar))
+    if (shouldPrefetchAbort(context, isGuestInPrivMode(context), ifar))
     {
-      deliverPrefetchAbort(gc);
+      if (isGuestInPrivMode(context))
+      {
+        // we need to map host PC to guest PC
+        context->R15 = hostpcToGuestpc(context);
+        DEBUG(EXCEPTION_HANDLERS, "dabtTranslationFault: mapping PC got %08x\n", context->R15);
+      }
+      deliverPrefetchAbort(context);
       setScanBlockCallSource(SCANNER_CALL_SOURCE_PABT_TRANSLATION);
-      scanBlock(gc, gc->R15);
+      scanBlock(context, context->R15);
       return;
     }
     else
     {
-      DIE_NOW(NULL, "iabtTranslationFault: panic now!\n");
+      DIE_NOW(context, "iabtTranslationFault: panic now!\n");
     }
   }
 }
+
 
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
 void registerSvc(GCONTXT *context, InstructionHandler handler)

@@ -258,7 +258,7 @@ void storeGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAd
     case GPT_REG_TCRR:
     {
       // make sure we dont throw irq's too often...
-      u32int adjustedValue = value << 10;
+      u32int adjustedValue = value << 14;
       storeToGPTimer(2, regOffs, adjustedValue);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to internal clock register value %#.8x" EOL,
           dev->deviceName, value);
@@ -267,7 +267,7 @@ void storeGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAd
     case GPT_REG_TLDR:
     {
       // make sure we dont throw irq's too often...
-      u32int adjustedValue = value << 10;
+      u32int adjustedValue = value << 14;
       storeToGPTimer(2, regOffs, adjustedValue);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to counter reload value %#.8x" EOL, dev->deviceName,
           value);
