@@ -44,9 +44,7 @@ usrSvc:
 
   /* guest context svc mode R13/R14 register pointer in R1, save state  */
   ADD     R1, R0, #GC_R13_OFFS
-  CPS     PSR_SYS_MODE
-  STMIA   R1, {R13, R14}
-  CPS     PSR_SVC_MODE
+  STMIA   R1, {R13, R14}^
 
   /* save guest PC in guest context */
   MOV     R2, LR
@@ -100,10 +98,7 @@ usrSvc:
   BEQ     contUsrSvc
   ADD     R2, R0, #GC_R13_OFFS
 contUsrSvc:
-  CPS     PSR_SYS_MODE
-  LDR     SP, [R2]
-  LDR     LR, [R2, #4]
-  CPS     PSR_SVC_MODE
+  LDMIA   R2, {SP, LR}^
 
   /* Lets not loose the guest context pointer.. SP/LR are already free to use */
   MOV     LR, R0
@@ -169,9 +164,7 @@ usrPrefetch:
 
   /* guest context USR mode R13/R14 register pointer in R1, save state  */
   ADD     R1, R0, #GC_R13_OFFS
-  CPS     PSR_SYS_MODE
-  STMIA   R1, {R13, R14}
-  CPS     PSR_SVC_MODE
+  STMIA   R1, {R13, R14}^
 
   /* save guest PC in guest context */
 #ifdef CONFIG_THUMB2
@@ -214,10 +207,7 @@ usrPrefetch:
   BEQ     contUsrPabt
   ADD     R2, R0, #GC_R13_OFFS /* must be system mode */
 contUsrPabt:
-  CPS     PSR_SYS_MODE
-  LDR     SP, [R2]
-  LDR     LR, [R2, #4]
-  CPS     PSR_SVC_MODE
+  LDMIA   R2, {SP, LR}^
 
   /* Lets not lose the guest context pointer.. */
   MOV     LR, R0
@@ -283,9 +273,7 @@ usrDataAbort:
 
   /* guest context user mode R13/R14 register pointer in R1, save state  */
   ADD     R1, R0, #GC_R13_OFFS
-  CPS     PSR_SYS_MODE
-  STMIA   R1, {R13, R14}
-  CPS     PSR_SVC_MODE
+  STMIA   R1, {R13, R14}^
 
   /* save guest PC in guest context */
 #ifdef CONFIG_THUMB2
@@ -329,10 +317,7 @@ usrThumbModeAbort:
   BEQ     contUsrDabt
   ADD     R2, R0, #GC_R13_OFFS /* must be system mode */
 contUsrDabt:
-  CPS     PSR_SYS_MODE
-  LDR     SP, [R2]
-  LDR     LR, [R2, #4]
-  CPS     PSR_SVC_MODE
+  LDMIA   R2, {SP, LR}^
 
   /* Lets not lose the guest context pointer.. */
   MOV     LR, R0
@@ -413,9 +398,7 @@ usrIrq:
 
   /* guest context sys/usr mode R13/R14 register pointer in R1, save state  */
   ADD     R1, R0, #GC_R13_OFFS
-  CPS     PSR_SYS_MODE
-  STMIA   R1, {R13, R14}
-  CPS     PSR_SVC_MODE
+  STMIA   R1, {R13, R14}^
 
   /* save guest PC in guest context */
 #ifdef CONFIG_THUMB2
@@ -455,10 +438,7 @@ usrIrq:
   BEQ     contUsrIrq
   ADD     R2, R0, #GC_R13_OFFS
 contUsrIrq:
-  CPS     PSR_SYS_MODE
-  LDR     SP, [R2]
-  LDR     LR, [R2, #4]
-  CPS     PSR_SVC_MODE
+  LDMIA   R2, {SP, LR}^
 
   /* Lets not loose the guest context pointer.. SP/LR are already free to use */
   MOV     LR, R0

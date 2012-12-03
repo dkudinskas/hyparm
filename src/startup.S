@@ -278,12 +278,10 @@ setEmergencyExceptionVector:
   ORR     R2, R2, R5
   STR     R2, [R1]
   /*
-   * Temporarily switch to system mode to extract the values of banked R13 and R14
+   * extract userm ode values of banked R13 and R14
    */
-  MRS     R2, CPSR
-  CPS     PSR_SYS_MODE
-  STMIA   R4, {R13, R14}
-  MSR     CPSR_cxsf, R2
+  STMIA   R4, {R13, R14}^
+
   /*
    * Store R8--R12; the location depends on whether we were emulating FIQ mode
    */
@@ -349,11 +347,7 @@ setEmergencyExceptionVector:
   /*
    * Temporarily switch to system mode to restore the values of R13 and R14 to the banked registers
    */
-  MRS     R1, CPSR
-  CPS     PSR_SYS_MODE
-  LDR     SP, [R4]
-  LDR     LR, [R4, #4]
-  MSR     CPSR_cxsf, R1
+  LDMIA   R4, {SP, LR}
   /*
    * Move some things out of the way:
    * - R8: pointer to guest context

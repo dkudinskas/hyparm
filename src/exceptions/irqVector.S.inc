@@ -53,9 +53,7 @@ irqSvc:
 
   /* guest context irq mode R13/R14 register pointer in R1, save state  */
   ADD     R1, R0, #GC_R13_IRQ_OFFS
-  CPS     PSR_SYS_MODE
-  STMIA   R1, {R13, R14}
-  CPS     PSR_SVC_MODE
+  STMIA   R1, {R13, R14}^
 
   /* save guest PC in guest context */
   MOV     R2, LR
@@ -108,10 +106,7 @@ irqSvc:
   BEQ     contIrqSvc
   ADD     R2, R0, #GC_R13_OFFS
 contIrqSvc:
-  CPS     PSR_SYS_MODE
-  LDR     SP, [R2]
-  LDR     LR, [R2, #4]
-  CPS     PSR_SVC_MODE
+  LDMIA   R2, {SP, LR}^
 
   /* Lets not loose the guest context pointer.. SP/LR are already free to use */
   MOV     LR, R0
@@ -183,9 +178,7 @@ irqDataAbort:
 
   /* guest context SVC mode R13/R14 register pointer in R1, save state  */
   ADD     R1, R0, #GC_R13_IRQ_OFFS
-  CPS     PSR_SYS_MODE
-  STMIA   R1, {R13, R14}
-  CPS     PSR_SVC_MODE
+  STMIA   R1, {R13, R14}^
 
   /* save guest PC in guest context */
 #ifdef CONFIG_THUMB2
@@ -226,10 +219,7 @@ irqThumbModeAbort:
   BEQ     contIrqDabt
   ADD     R2, R0, #GC_R13_OFFS
 contIrqDabt:
-  CPS     PSR_SYS_MODE
-  LDR     SP, [R2]
-  LDR     LR, [R2, #4]
-  CPS     PSR_SVC_MODE
+  LDMIA   R2, {SP, LR}^
 
   /* Lets not lose the guest context pointer.. */
   MOV     LR, R0
@@ -309,9 +299,7 @@ irqIrq:
 
   /* guest context IRQ mode R13/R14 register pointer in R1, save state  */
   ADD     R1, R0, #GC_R13_IRQ_OFFS
-  CPS     PSR_SYS_MODE
-  STMIA   R1, {R13, R14}
-  CPS     PSR_SVC_MODE
+  STMIA   R1, {R13, R14}^
 
   /* save guest PC in guest context */
 #ifdef CONFIG_THUMB2
@@ -351,10 +339,7 @@ irqIrq:
   BEQ     contIrqIrq
   ADD     R2, R0, #GC_R13_OFFS
 contIrqIrq:
-  CPS     PSR_SYS_MODE
-  LDR     SP, [R2]
-  LDR     LR, [R2, #4]
-  CPS     PSR_SVC_MODE
+  LDMIA   R2, {SP, LR}^
 
   /* Lets not loose the guest context pointer.. SP/LR are already free to use */
   MOV     LR, R0
