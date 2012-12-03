@@ -52,13 +52,22 @@ void putBranch(u32int branchLocation, u32int branchTarget, u32int condition)
 
 bool isBranch(u32int instruction)
 {
-  if ((instruction & 0x0f000000) == 0x0a000000)
+  if ((instruction & 0x0e000000) == 0x0a000000)
   {
     return TRUE;
   }
   return FALSE;
 }
 
+
+bool branchLinks(u32int instruction)
+{
+  if ((instruction & 0x01000000) == 0x01000000)
+  {
+    return TRUE;
+  }
+  return FALSE;
+}
 
 bool isServiceCall(u32int instruction)
 {
@@ -81,6 +90,17 @@ bool isUndefinedCall(u32int instruction)
   }
   return FALSE;
 }
+
+
+bool isConditional(u32int instruction)
+{
+  if ((instruction & 0xF0000000) != 0xE0000000)
+  {
+    return TRUE;
+  }
+  return FALSE;
+}
+
 
 
 u32int findBlockIndexNumber(GCONTXT *context, u32int hostPC)

@@ -263,6 +263,8 @@ GCONTXT *createGuestContext(void) __cold__;
 
 void dumpGuestContext(const GCONTXT * gc) __cold__;
 
+void dumpCounters(void);
+
 __macro__ GCONTXT *getActiveGuestContext(void);
 
 /* a function to evaluate if guest is in priviledge mode or user mode */

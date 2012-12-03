@@ -123,9 +123,6 @@ void armRestoreRegister(TranslationStore* ts, BasicBlock* block, u32int conditio
 
 void armWritePCToRegister(TranslationStore* ts, BasicBlock* block, u32int conditionCode, u32int reg, u32int pc)
 {
-  ASSERT(conditionCode <= CC_AL, "invalid condition code");
-  ASSERT(reg < GPR_PC, "invalid temporary register");
-
   pc += 8;
 
   // assemble MOVW

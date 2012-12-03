@@ -304,20 +304,38 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
   DEBUG(SCANNER, "scanArmBlock: instruction %s must be translated\n", decodedInstr->instructionString);
   u32int instruction = *instructionPtr;
   u32int cc = instruction & 0xF0000000;
-  if ((isBranch(instruction)) && (cc != 0xE0000000))
+
+  if (isBranch(instruction))
   {
-    // conditional branch! two hypercalls
-    u32int hypercall = (INSTR_SWI | (blockStoreIndex+0x100)) & 0x0FFFFFFF;
-    addInstructionToBlock(context->translationStore, basicBlock, hypercall | cc);
-    addInstructionToBlock(context->translationStore, basicBlock, hypercall | (CC_AL << 28));
-    basicBlock->oneHypercall = FALSE;
+    if (branchLinks(instruction))
+    {
+      // we need to store guest PC to R14
+      armWritePCToRegister(context->translationStore, basicBlock,
+                           cc >> 28, GPR_LR, ((u32int)instructionPtr)-4);
+    }
+    
+    if (isConditional(instruction))
+    {
+      // conditional branch, two hypercalls
+      u32int hypercall = (INSTR_SWI | (blockStoreIndex+0x100)) & 0x0FFFFFFF;
+      addInstructionToBlock(context->translationStore, basicBlock, hypercall | cc);
+      addInstructionToBlock(context->translationStore, basicBlock, hypercall | (CC_AL << 28));
+      basicBlock->oneHypercall = FALSE;
+    }
+    else
+    {
+      // not a branch or not-conditional branch. single hypercall.
+      addInstructionToBlock(context->translationStore, basicBlock, INSTR_SWI | (blockStoreIndex+0x100));
+      basicBlock->oneHypercall = TRUE;
+    }
   }
   else
   {
-    // not a branch or not-conditional branch. single hypercall.
+    // not a branch
     addInstructionToBlock(context->translationStore, basicBlock, INSTR_SWI | (blockStoreIndex+0x100));
     basicBlock->oneHypercall = TRUE;
   }
+
   // plant block index as well. dirty hack, but fixes interrupt handling.
   addInstructionToBlock(context->translationStore, basicBlock, blockStoreIndex);
 

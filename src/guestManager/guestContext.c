@@ -440,5 +440,10 @@ void resetExceptionCounters(GCONTXT *context)
   context->irqPriv = 0;
   context->irqUser = 0;
 }
+
+void dumpCounters()
+{
+  dumpGuestContext(getActiveGuestContext());
+}
 #endif
 

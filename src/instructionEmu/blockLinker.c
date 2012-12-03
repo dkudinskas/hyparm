@@ -36,7 +36,6 @@ void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastB
     return;
   }
 
-
   // if we found a group block with an old version number, fail to link. 
   // scanner will then re-scan this block, thus validating it's correct
   if ((nextBlock->type == GB_TYPE_ARM) && (nextBlock->versionNumber != context->groupBlockVersion))
@@ -49,8 +48,10 @@ void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastB
   }
 
   // must check wether it was the first or second hypercall
+  // to do that we get the address of the last word of the block in host cache
   u32int lastInstrOfHostBlock = (u32int)lastBlock->codeStoreStart +
                                 (lastBlock->codeStoreSize-1) * ARM_INSTRUCTION_SIZE;
+  // this last word is DATA (block index). the word before is control flow
   lastInstrOfHostBlock -= ARM_INSTRUCTION_SIZE;
   u32int conditionCode = 0xE0000000;
   if (lastPC != lastInstrOfHostBlock)
