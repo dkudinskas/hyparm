@@ -56,7 +56,8 @@
 
 
 #define NUMBER_OF_SECTIONS  4096
-#define SIZE_BITMAP1        NUMBER_OF_SECTIONS / 8
+#define NUMBER_OF_SMALL_PAGES 256
+#define SIZE_BITMAP1        (NUMBER_OF_SECTIONS * NUMBER_OF_SMALL_PAGES)/ 8
 
 struct VirtualMachinePageTables;
 typedef struct VirtualMachinePageTables pageTablesVM;

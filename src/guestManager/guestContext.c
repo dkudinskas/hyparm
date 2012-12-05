@@ -73,9 +73,8 @@ GCONTXT *createGuestContext(void)
   {
     DIE_NOW(context, "Failed to allocate page tables struct");
   }
-  printf("createGuestContext: executionBitmap @ %p" EOL, context->execBitmap);
   memset((void*)context->execBitmap, 0, SIZE_BITMAP1);
-  DEBUG(GUEST_CONTEXT, "createGuestContext: execBitmap @ %p" EOL, context->execBitmap);
+  DEBUG(GUEST_CONTEXT, "createGuestContext: execBitmap @ %p size %x" EOL, context->execBitmap, SIZE_BITMAP1);
 
   return context;
 }

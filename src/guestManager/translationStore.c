@@ -74,7 +74,26 @@ void clearTranslationsByAddress(TranslationStore* ts, u32int address)
   {
     return;
   }
-//  DIE_NOW(0, "clearTranslationsByAddress unimplemented.\n");
+
+  u32int i = 0;
+  /* we traverse the complete block translation store
+   * looking for blocks containing this address
+   * since there may be the case that part of a group block
+   * falls in this range, and we cant remove a single part of a group block
+   * inside the loop we unlink all current group-blocks. */
+  for (i = 0; i < BASIC_BLOCK_STORE_SIZE; i++)
+  {
+    if (ts->basicBlockStore[i].type == GB_TYPE_ARM)
+    {
+      unlinkBlock(&ts->basicBlockStore[i], i);
+    }
+    u32int guestStart = (u32int)(ts->basicBlockStore[i].guestStart);
+    u32int guestEnd = (u32int)(ts->basicBlockStore[i].guestEnd); 
+    if ((guestStart <= address) && (guestEnd >= address))
+    {
+      memset((void*)&ts->basicBlockStore[i], 0, sizeof(BasicBlock));
+    }
+  }
 }
 
 
