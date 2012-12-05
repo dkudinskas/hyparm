@@ -160,7 +160,6 @@ struct guestContext
   u32int lastGuestPC;
   u32int lastEntryBlockIndex;
   u32int groupBlockVersion;
-  u32int unlinkCount;
 
   u8int *execBitmap;
 

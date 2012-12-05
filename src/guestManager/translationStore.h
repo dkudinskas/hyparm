@@ -29,6 +29,7 @@ void initialiseTranslationStore(TranslationStore* ts);
 
 void instructionToCodeStore(TranslationStore* ts, u32int instruction);
 
+void clearTranslationsAll(TranslationStore* ts);
 void clearTranslationsByAddress(TranslationStore* ts, u32int address);
 void clearTranslationsByAddressRange(TranslationStore* ts, u32int addressStart, u32int addressEnd);
 

@@ -50,10 +50,30 @@ void instructionToCodeStore(TranslationStore* ts, u32int instruction)
 }
 
 
+void clearTranslationsAll(TranslationStore* ts)
+{
+  DEBUG(TRANSLATION_STORE, "clearTranslationsAll: clear all translations\n");
+
+  ts->codeStore = (u32int*)RAM_CODE_CACHE_POOL_BEGIN;
+  memset(ts->codeStore, 0, RAM_CODE_CACHE_POOL_END-RAM_CODE_CACHE_POOL_BEGIN);
+
+  ts->codeStoreFreePtr = ts->codeStore;
+  DEBUG(TRANSLATION_STORE, "clearTranslationsAll: code store free ptr @ %p\n", ts->codeStoreFreePtr);
+
+  DEBUG(TRANSLATION_STORE, "clearTranslationsAll: basic block store @ %p\n", ts->basicBlockStore);
+  memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
+  
+  ts->write = TRUE;
+}
+
+
 void clearTranslationsByAddress(TranslationStore* ts, u32int address)
 {
-  // stub
-//  printf("clearTranslationsByAddress unimplemented.\n");
+  bool executed = isExecBitSet(getActiveGuestContext(), address);
+  if (!executed)
+  {
+    return;
+  }
 //  DIE_NOW(0, "clearTranslationsByAddress unimplemented.\n");
 }
 

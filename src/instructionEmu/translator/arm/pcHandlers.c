@@ -60,10 +60,11 @@ void armDPImmRegRSR(TranslationStore* ts, BasicBlock *block, u32int pc, u32int i
   const u32int regN = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
   const u32int regM = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
+  u32int scratchRegister = 0;
   u32int pcRegister = regDest;
   bool replaceN = regN == GPR_PC;
   bool replaceM = !immediateForm && regM == GPR_PC;
-  bool restoreFromSpill = FALSE;
+  bool spill = FALSE;
 
   if (replaceN || replaceM)
   {
@@ -80,11 +81,17 @@ void armDPImmRegRSR(TranslationStore* ts, BasicBlock *block, u32int pc, u32int i
      * In this case the instruction does not contain a 'dead' register! */
     if ((immediateForm == 0) && ((regN == regDest) || (regM == regDest)))
     {
-      const u32int scratchRegister = getOtherRegisterOf3(regDest, regN, regM);
-//      armBackupRegisterToSpill(ts, block, conditionCode, scratchRegister);
-      DIE_NOW(0, "armDPImmRegRSR: backupRegisterToSpill stop point.\n");
+      scratchRegister = getOtherRegisterOf3(regDest, regN, regM);
+
+      // register to push in priv mode
+      u32int tempReg = (scratchRegister != GPR_R0) ? GPR_R0 : GPR_R1;
+
+      // spill register
+      armSpillRegister(ts, block, conditionCode, scratchRegister, tempReg);
+
       pcRegister = scratchRegister;
-      restoreFromSpill = TRUE;
+      
+      spill = TRUE;
     }
 
     armWritePCToRegister(ts, block, conditionCode, pcRegister, pc);
@@ -102,10 +109,9 @@ void armDPImmRegRSR(TranslationStore* ts, BasicBlock *block, u32int pc, u32int i
 
   addInstructionToBlock(ts, block, instruction);
 
-  if (restoreFromSpill)
+  if (spill)
   {
-//    armRestoreRegisterFromSpill(ts, block, conditionCode, pcRegister);
-    DIE_NOW(context, "armDPImmRegRSR: armRestoreRegisterFromSpill stop point.\n");
+    armRestoreRegister(ts, block, conditionCode, scratchRegister);
   }
 }
 

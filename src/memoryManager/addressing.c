@@ -187,8 +187,11 @@ void guestEnableMMU(GCONTXT *context)
  **/
 void guestDisableMMU(GCONTXT *context)
 {
-  DEBUG(MM_ADDRESSING, "guestEnableMMU: guest turning off virtual memory" EOL);
+  DEBUG(MM_ADDRESSING, "guestDisableMMU: guest turning off virtual memory" EOL);
 
+  mmuDisableVirtAddr();
+
+  // reset all the shadow stuff
   context->pageTables->guestPhysical = 0;
   context->pageTables->guestVirtual = 0;
   context->pageTables->shadowPriv = 0;
@@ -201,7 +204,30 @@ void guestDisableMMU(GCONTXT *context)
   context->pageTables->gptInfo = 0;
   context->virtAddrEnabled = FALSE;
   
+  // reset hypervisor page table
+  memset((void*)context->pageTables->hypervisor, 0, PT1_SIZE);
+
+  // and set it up again
+  setupPageTable(context, PT_TARGET_HYPERVISOR);
+
+  DEBUG(MM_ADDRESSING, "guestDisableMMU: hypervisor page table %p reset" EOL, context->pageTables->hypervisor);
+
+  mmuInit();
+  mmuSetDomain(HYPERVISOR_ACCESS_DOMAIN, client);
+  mmuSetDomain(GUEST_ACCESS_DOMAIN, client);
+  mmuSetTTBR0(context->pageTables->hypervisor, 0);
+
+  // turn vmem back on
+  mmuEnableVirtAddr();
+  
+  // get rid of all translations
+  clearTranslationsAll(context->translationStore);
+
+  // sync everything to make sure.
+  mmuDataMemoryBarrier();
   mmuInvalidateUTLB();
+  mmuClearInstructionCache();
+  DEBUG(MM_ADDRESSING, "guestDisableMMU: done" EOL);
 }
 
 void guestSetContextID(GCONTXT *context, u32int contextid)
