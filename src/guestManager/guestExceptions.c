@@ -273,7 +273,9 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
       break;
     }
     default:
+    {
       DIE_NOW(context, "throwInterrupt: from unknown source.");
+    }
   }
 }
 

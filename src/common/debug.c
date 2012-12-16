@@ -83,17 +83,17 @@ static void banner(const char *msg)
   printf(EOL EOL "%s[%s]%s%s" EOL EOL, padding, msg, ((msgLength & 1) ? "" : "="), padding);
 }
 
-void dieNow(const char *file, u32int line, const char *caller, const char *message)
+void dieNow(const char *filename, u32int line, const char *caller, const char *message)
 {
-  dieNowF(file, line, caller, "%s", message);
+  dieNowF(filename, line, caller, "%s", message);
 }
 
-void dieNow2(const char *file, u32int line, const char *caller, const char *message1, const char *message2)
+void dieNow2(const char *filename, u32int line, const char *caller, const char *message1, const char *message2)
 {
-  dieNowF(file, line, caller, "%s%s", message1, message2);
+  dieNowF(filename, line, caller, "%s%s", message1, message2);
 }
 
-void dieNowF(const char *file, u32int line, const char *caller, const char *format, ...)
+void dieNowF(const char *filename, u32int line, const char *caller, const char *format, ...)
 {
 #ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
   setEmergencyExceptionVector();
@@ -106,7 +106,7 @@ void dieNowF(const char *file, u32int line, const char *caller, const char *form
   va_list args;
   va_start(args, format);
   banner("ERROR");
-  printf("%s:%u: in %s:" EOL, file, line, caller);
+  printf("%s:%u: in %s:" EOL, filename, line, caller);
   vprintf(format, args);
   va_end(args);
   printf(EOL);
@@ -237,7 +237,6 @@ static inline u32int vprintf(const char *format, va_list args)
 
 
 #ifdef CONFIG_MMC_LOG
-
 u32int fprintf(const char *fmt, ...)
 {
   va_list args;

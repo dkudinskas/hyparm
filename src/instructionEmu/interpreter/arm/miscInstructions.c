@@ -111,9 +111,6 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
     }
     if (affectF)
     {
-#ifndef CONFIG_GUEST_ANDROID
-      ASSERT((oldCpsr & PSR_F_BIT), "Guest disabling fiqs globally!");
-#endif
       oldCpsr |= PSR_F_BIT;
     }
   }

@@ -403,6 +403,7 @@ int sdChangeFreq(struct mmc *mmc)
   return 0;
 }
 
+
 int mmcStartup(struct mmc *mmc)
 {
   u32int mult, freq;
@@ -577,6 +578,7 @@ int mmcStartup(struct mmc *mmc)
   return 0;
 }
 
+
 int mmcSendIfCond(struct mmc *mmc)
 {
   struct mmcCommand cmd;
@@ -606,6 +608,7 @@ int mmcSendIfCond(struct mmc *mmc)
 
   return 0;
 }
+
 
 int sdSendOpCond(struct mmc *mmc)
 {

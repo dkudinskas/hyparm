@@ -74,11 +74,7 @@ void initClockManager(virtualMachine *vm)
   cm->cmIclkEn1Core   = 0x3ffffedb;
   cm->cmIclkEn2Core   = 0x0000001f;
   cm->cmIclkEn3Core   = 0x00000000;
-#ifdef CONFIG_GUEST_ANDROID
   cm->cmIdleSt1Core   = 0x8000001d;
-#else
-  cm->cmIdleSt1Core   = 0xc000001d;
-#endif
   cm->cmIdleSt2Core   = 0x00000000;
   cm->cmIdleSt3Core   = 0x0000000d;
   cm->cmAutoIdle1Core = 0x00000008;
@@ -926,11 +922,7 @@ static void storeCamCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmClkStCtrlCam != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkStCtrlCam" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -938,11 +930,7 @@ static void storeCamCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmAutoIdleCam != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdleCam" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -980,15 +968,11 @@ static void storeClockControlCm(struct ClockManager *cm, u32int physicalAddress,
     {
       if (cm->cmClkEn2Pll != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkEn2Pll" EOL, __func__);
         if ((value & 0x7) == 0x7)
         {
           cm->cmIdleSt2CkGen |= 0x1;
         }
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -996,11 +980,7 @@ static void storeClockControlCm(struct ClockManager *cm, u32int physicalAddress,
     {
       if (cm->cmAutoIdlePll != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdlePll" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1008,33 +988,21 @@ static void storeClockControlCm(struct ClockManager *cm, u32int physicalAddress,
     {
       if (cm->cmAutoIdle2Pll != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdle2Pll" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
     case CM_CLKSEL1_PLL:
       if (cm->cmClkSel1Pll != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkSel1Pll" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     case CM_CLKSEL4_PLL:
     {
       if (cm->cmClkSel4Pll != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkSel4Pll" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1080,12 +1048,8 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
       }
       else
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: unimplemented cmIclkEn1Core case %#.8x -> %#.8x" EOL, __func__,
               cm->cmIclkEn1Core, value);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       cm->cmIclkEn1Core = value;
       break;
@@ -1093,32 +1057,20 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
     case CM_FCLKEN1_CORE:
       if (cm->cmFclkEn1Core != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmFclkEn1Core" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     case CM_CLKSTCTRL_CORE:
       if (cm->cmClkStCtrl != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkStCtrl" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     case CM_AUTOIDLE1_CORE:
     {
       if (cm->cmAutoIdle1Core != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdle1Core" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1126,11 +1078,7 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
     {
       if (cm->cmAutoIdle2Core != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdle2Core" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1138,11 +1086,7 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
     {
       if (cm->cmAutoIdle3Core != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdle3Core" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1177,11 +1121,7 @@ static void storeDssCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmIclkEnDss != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmIclkEnDss" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1189,11 +1129,7 @@ static void storeDssCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmClkStCtrlDss != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkstctrlUsb" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1201,11 +1137,7 @@ static void storeDssCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmAutoIdleDss != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdleDss" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1236,11 +1168,7 @@ static void storeEmuCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmClkStCtrlEmu != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkStCtrlEmu" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1262,11 +1190,7 @@ static void storeIva2Cm(struct ClockManager *cm, u32int physicalAddress, u32int 
     {
       if (cm->cmClkStCtrlIva2Reg != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkstctrlIva2" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1274,11 +1198,7 @@ static void storeIva2Cm(struct ClockManager *cm, u32int physicalAddress, u32int 
     {
       if (cm->cmAutoidlePllIva2Reg != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoidlePllIva2Reg" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1286,11 +1206,7 @@ static void storeIva2Cm(struct ClockManager *cm, u32int physicalAddress, u32int 
     {
       if (cm->cmFClkEnIva2Reg != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmFClkEnIva2Reg" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1322,11 +1238,7 @@ static void storeMpuCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmClkStCtrlMpuReg != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkStCtrlMpu" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1334,11 +1246,7 @@ static void storeMpuCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmAutoidlePllMpuReg != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoidlePllMpuReg" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1370,11 +1278,7 @@ static void storeNeonCm(struct ClockManager *cm, u32int physicalAddress, u32int 
     {
       if (cm->cmClkStCtrlNeon != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkstctrlNeon" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1396,11 +1300,7 @@ static void storePerCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmFclkEnPer != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmFclkEnPer" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1424,11 +1324,7 @@ static void storePerCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmAutoIdlePer != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdlePer" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1444,11 +1340,7 @@ static void storePerCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmSleepDepPer != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmSleepDepPer" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1487,11 +1379,7 @@ static void storeSgxCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       if (cm->cmClkStCtrlSgx != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkstctrlSgx" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1513,11 +1401,7 @@ static void storeUsbHostCm(struct ClockManager *cm, u32int physicalAddress, u32i
     {
       if (cm->cmAutoidleUsb != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoidleUsb" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1525,11 +1409,7 @@ static void storeUsbHostCm(struct ClockManager *cm, u32int physicalAddress, u32i
     {
       if (cm->cmClkStCtrlUsb != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkstctrlUsb" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -1636,11 +1516,7 @@ static void storeWkupCm(struct ClockManager *cm, u32int physicalAddress, u32int 
     {
       if (cm->cmAutoIdleWkup != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdleWkup" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }

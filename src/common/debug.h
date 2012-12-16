@@ -65,15 +65,12 @@ u32int printf(const char *fmt, ...) __attribute__((format(__printf__, 1, 2)));
 
 
 #ifdef CONFIG_MMC_LOG
-
 /* output to mmc */
 u32int fprintf(const char *fmt, ...) __attribute__((format(__printf__, 1, 2)));
-
 #else
-
 /* fall back to serial */
 #define fprintf  printf
-
 #endif /* CONFIG_MMC */
 
 #endif /* __COMMON__DEBUG_H__ */
+

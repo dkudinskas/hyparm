@@ -10,7 +10,9 @@
 #include "vm/omap35xx/sdmaInternals.h"
 #include "vm/omap35xx/timer32k.h"
 #include "vm/omap35xx/intc.h"
+#ifndef CONFIG_NO_MMC
 #include "vm/omap35xx/mmc.h"
+#endif
 
 
 static inline u32int getChannelNumber(u32int regOffs);
@@ -324,7 +326,7 @@ void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       if ((value & SDMA_CCRi_ENABLE) == SDMA_CCRi_ENABLE)
       {
         DEBUG(VP_OMAP_35XX_SDMA, "%s: Enabling channel %x" EOL, dev->deviceName, channelIndex);
-        
+#ifndef CONFIG_NO_MMC
         /* It would be cleaner to check the SDMA_SEL_SRC_DST_SYNC bit and use it to decide
            if we should decide based on source or address. However, MMC transfers with
            kernel 2.6.28-omap1 seem to sometimes synchronize on destination even if 
@@ -348,6 +350,7 @@ void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
               DIE_NOW(NULL, "DMA channel enabled for unknown source / destination");
           }
         }
+#endif
       }
       sdma->chIndexedRegs[channelIndex].ccr = value;
       break;

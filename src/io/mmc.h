@@ -196,6 +196,13 @@ struct mmc
   blockDevice blockDev;
 };
 
+
+int mmcStartup(struct mmc *mmc);
+
+int mmcSendIfCond(struct mmc *mmc);
+
+int sdSendOpCond(struct mmc *mmc);
+
 int mmcMainInit(void);
 
 int mmcRegister(struct mmc *mmc);

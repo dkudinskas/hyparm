@@ -300,4 +300,6 @@ int mmcRead(struct mmc *dev, char *buf, u32int size);
 
 int mmcWrite(struct mmc *dev, const char *buf, u32int size);
 
+void mmcSetIOS(struct mmc *mmc);
+
 #endif
