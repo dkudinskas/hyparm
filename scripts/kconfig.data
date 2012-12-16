@@ -75,6 +75,21 @@ endchoice
 config PATH_AUTODECODER
   string "Path to autodecoder"
 
+choice
+  prompt "MMC/SD use"
+  default NO_MMC
+
+config NO_MMC
+  bool "No SD/MMC access"
+
+config MMC_GUEST_ACCESS
+  bool "Give the guest access to the physical SD/MMC"
+  
+config MMC_LOG
+  bool "Use MMC/SD device to store debug output"
+  depends on DEBUG
+endchoice
+
 endmenu
 
 menu "Physical hardware platform"
@@ -551,6 +566,14 @@ config DEBUG_VP_OMAP_35XX_GPMC
   bool "Debug memory controller (GPMC)"
   depends on DEBUG_VIRTUAL_PLATFORM
 
+config DEBUG_VP_OMAP_35XX_I2C
+  bool "Debug I2C controller"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
+config DEBUG_VP_OMAP_35XX_TWL4030
+  bool "Debug power management chip (TWL4030)"
+  depends on DEBUG_VIRTUAL_PLATFORM
+
 config DEBUG_VP_OMAP_35XX_MMC
   bool "Debug MMC"
   depends on DEBUG_VIRTUAL_PLATFORM
@@ -595,21 +618,17 @@ config DEBUG_VP_OMAP_35XX_WDTIMER
   bool "Debug watchdog timers (WDTIMER)"
   depends on DEBUG_VIRTUAL_PLATFORM
 
-config MMC
-  bool "Use MMC/SD device to store debug output"
-  depends on DEBUG
-
 config DEBUG_MMC
   bool "Debug MMC block device"
-  depends on MMC
+  depends on (DEBUG && (!NO_MMC))
 
 config DEBUG_PARTITIONS
   bool "Debug partition detection"
-  depends on MMC
+  depends on (DEBUG && MMC_LOG)
 
 config DEBUG_FS_FAT
   bool "Debug FAT file system"
-  depends on MMC
+  depends on (DEBUG && MMC_LOG)
 
 config DEBUG_INTERPRETER_ANY_COPROC
   bool

@@ -38,6 +38,12 @@
 #define UART1_SIZE                       0x00002000
 #define UART2                            0x4806c000
 #define UART2_SIZE                       0x00002000
+#define I2C1                             0x48070000
+#define I2C1_SIZE                        0x00000080
+#define I2C2                             0x48072000 
+#define I2C2_SIZE                        0x00000080
+#define I2C3                             0x48060000
+#define I2C3_SIZE                        0x00000080 
 #define SD_MMC1                          0x4809C000
 #define SD_MMC1_SIZE                     0x00002000
 #define SD_MMC3                          0x480AD000

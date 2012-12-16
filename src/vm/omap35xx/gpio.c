@@ -415,11 +415,7 @@ void storeGpio(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtualAd
         break;
       case GPIO_DEBOUNCENABLE:
       {
-#ifdef CONFIG_GUEST_ANDROID
         beStoreGPIO(regOffset, value, gpio->physicalId);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
         break;
       }
       case GPIO_WAKEUPENABLE:

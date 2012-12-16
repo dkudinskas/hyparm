@@ -19,15 +19,15 @@
 #include "vm/omap35xx/timer32k.h"
 #include "vm/omap35xx/uart.h"
 #include "vm/omap35xx/controlModule.h"
-
-#ifdef CONFIG_GUEST_ANDROID
 #include "vm/omap35xx/dmtimer.h"
+#ifdef CONFIG_MMC_GUEST_ACCESS
+#include "vm/omap35xx/i2c.h"
 #include "vm/omap35xx/mmc.h"
+#endif
 #include "vm/omap35xx/pm.h"
 #include "vm/omap35xx/sdrc.h"
 #include "vm/omap35xx/sms.h"
 #include "vm/omap35xx/wdtimer.h"
-#endif
 
 
 static bool attachDevice(device *parent, device *child) __cold__;
@@ -178,7 +178,6 @@ device *createHardwareLibrary(GCONTXT *context)
   }
   initGpmc(&context->vm);
 
-#ifdef CONFIG_GUEST_ANDROID
   // L3INT: Protection Mechanism (PM)
   device *pmModule = createDevice("L3_PM", FALSE, Q1_L3_PM, (u32int)(Q1_L3_PM + Q1_L3_PM_SIZE - 1),
                                   l3Interconnect, &loadProtectionMechanism,
@@ -208,7 +207,6 @@ device *createHardwareLibrary(GCONTXT *context)
     goto sdrcModuleError;
   }
   initSdrc(&context->vm);
-#endif /* CONFIG_GUEST_ANDROID */
 
   // Q1: LEVEL4 INTERCONNECT (L4INT, parent Q1)
   device *l4Interconnect = createDevice("L4_INTERCONNECT", TRUE, Q1_L4_INTERCONNECT,
@@ -275,7 +273,34 @@ device *createHardwareLibrary(GCONTXT *context)
   }
   initUart(&context->vm, 2);
 
-#ifdef CONFIG_GUEST_ANDROID
+#ifdef CONFIG_MMC_GUEST_ACCESS
+  // I2C1
+  device * i2c1 = createDevice("I2C1", FALSE, I2C1, (u32int) (I2C1 - 1 + I2C1_SIZE), l4IntCore,
+                               &loadI2c, &storeI2c);
+  if (i2c1 == NULL)
+  {
+    goto i2c1Error;
+  }
+  initI2c(&context->vm, 1);
+  
+  // I2C2
+  device * i2c2 = createDevice("I2C2", FALSE, I2C2, (u32int) (I2C2 - 1 + I2C2_SIZE), l4IntCore,
+                               &loadI2c, &storeI2c);
+  if (i2c2 == NULL)
+  {
+    goto i2c2Error;
+  }
+  initI2c(&context->vm, 2);
+  
+  // I2C3
+  device * i2c3 = createDevice("I2C3", FALSE, I2C3, (u32int) (I2C3 - 1 + I2C3_SIZE), l4IntCore,
+                               &loadI2c, &storeI2c);
+  if (i2c3 == NULL)
+  {
+    goto i2c3Error;
+  }
+  initI2c(&context->vm, 3);
+
   // L4INT_CORE: MMC/SD/SDIO1
   device *mmc1 = createDevice("SD_MMC1", FALSE, SD_MMC1, (u32int) (SD_MMC1 - 1 + SD_MMC1_SIZE), l4IntCore,
                                &loadMmc, &storeMmc);
@@ -283,7 +308,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto mmc1Error;
   }
-  initMmc(&context->vm, 1);
+  initVirtMmc(&context->vm, 1);
 
   // L4INT_CORE: MMC/SD/SDIO2
   device *mmc2 = createDevice("SD_MMC2", FALSE, SD_MMC2, (u32int) (SD_MMC2 - 1 + SD_MMC2_SIZE), l4IntCore,
@@ -292,7 +317,7 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto mmc2Error;
   }
-  initMmc(&context->vm, 2);
+  initVirtMmc(&context->vm, 2);
 
   // L4INT_CORE: MMC/SD/SDIO3
   device *mmc3 = createDevice("SD_MMC1", FALSE, SD_MMC3, (u32int) (SD_MMC3 - 1 + SD_MMC3_SIZE), l4IntCore,
@@ -301,8 +326,8 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto mmc3Error;
   }
-  initMmc(&context->vm, 3);
-#endif /* CONFIG_GUEST_ANDROID */
+  initVirtMmc(&context->vm, 3);
+#endif 
 
   // L4INT_CORE: interrupt controller
   device *intc = createDevice("INTC", FALSE, INTERRUPT_CONTROLLER,
@@ -323,7 +348,6 @@ device *createHardwareLibrary(GCONTXT *context)
     goto l4CoreWakeupIntError;
   }
 
-#ifdef CONFIG_GUEST_ANDROID
   // L4_CORE_WAKEUP: dual-mode timer
   device *dmTimer = createDevice("DM_TIMER", FALSE, DM_TIMER, (u32int)(DM_TIMER + DM_TIMER_SIZE-1),
                                  l4CoreWakeupInt, &loadDmTimer, &storeDmTimer);
@@ -332,7 +356,6 @@ device *createHardwareLibrary(GCONTXT *context)
   {
     goto dmTimerError;
   }
-#endif /* CONFIG_GUEST_ANDROID */
 
   // L4_CORE_WAKEUP: power and reset manager
   device *prm = createDevice("PRM", FALSE, PRM, (u32int)(PRM - 1 + PRM_SIZE), l4CoreWakeupInt,
@@ -362,7 +385,6 @@ device *createHardwareLibrary(GCONTXT *context)
   initGpio(&context->vm, 1);
 
   // L4_CORE_WAKEUP: watchdog timer 2
-#ifdef CONFIG_GUEST_ANDROID
   device *wdtimer2 = createDevice("WDTIMER2", FALSE, WDTIMER2, (u32int)(WDTIMER2 - 1 + WDTIMER2_SIZE),
                                   l4CoreWakeupInt, &loadWDTimer2, &storeWDTimer2);
   if (wdtimer2 == NULL)
@@ -370,14 +392,6 @@ device *createHardwareLibrary(GCONTXT *context)
     goto wdtimer2Error;
   }
   initWDTimer2(&context->vm);
-#else
-  device *wdtimer2 = createDevice("WDTIMER2", FALSE, WDTIMER2, (u32int)(WDTIMER2 - 1 + WDTIMER2_SIZE),
-                                  l4CoreWakeupInt, &loadGeneric, &storeGeneric);
-  if (wdtimer2 == NULL)
-  {
-    goto wdtimer2Error;
-  }
-#endif /* CONFIG_GUEST_ANDROID */
 
   // L4_CORE_WAKEUP: general purpose timer 1
   device *gptimer1 = createDevice("GPTIMER1", FALSE, GPTIMER1, (u32int)(GPTIMER1 - 1 + GPTIMER1_SIZE),
@@ -526,23 +540,27 @@ gpio1Error:
 ctrlModIDError:
   free(prm);
 prmError:
-#ifdef CONFIG_GUEST_ANDROID
   free(dmTimer);
 dmTimerError:
-#endif /* CONFIG_GUEST_ANDROID */
   free(l4CoreWakeupInt);
 l4CoreWakeupIntError:
   free(intc);
 intcError:
-#ifdef CONFIG_GUEST_ANDROID
+#ifdef CONFIG_MMC_GUEST_ACCESS
   free(mmc3);
 mmc3Error:
   free(mmc2);
 mmc2Error:
   free(mmc1);
 mmc1Error:
-#endif /* CONFIG_GUEST_ANDROID */
+  free(i2c3);
+i2c3Error:
+  free(i2c2);
+i2c2Error:
+  free(i2c1);
+i2c1Error:
   free(uart2);
+#endif
 uart2Error:
   free(uart1);
 uart1Error:
@@ -556,14 +574,12 @@ sysCtrlModError:
 l4IntCoreError:
   free(l4Interconnect);
 l4InterconnectError:
-#ifdef CONFIG_GUEST_ANDROID
   free(sdrcModule);
 sdrcModuleError:
   free(smsModule);
 smsModuleError:
   free(pmModule);
 pmModuleError:
-#endif /* CONFIG_GUEST_ANDROID */
   free(gpmcModule);
 gpmcModuleError:
   free(l3Interconnect);
@@ -585,10 +601,12 @@ topLevelBusError:
   return NULL;
 }
 
+
 static inline bool isAddressInDevice(u32int address, device *dev)
 {
   return (address >= dev->startAddressMapped) && (address <= dev->endAddressMapped);
 }
+
 
 /**************************************
  * generic LOAD/STORE functions       *

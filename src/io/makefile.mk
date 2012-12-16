@@ -1,3 +1,4 @@
-HYPARM_SRCS_C-$(CONFIG_MMC) += io/mmc.c
-HYPARM_SRCS_C-$(CONFIG_MMC) += io/partitions.c
+HYPARM_SRCS_C-$(CONFIG_MMC_LOG) += io/mmc.c
+HYPARM_SRCS_C-$(CONFIG_MMC_GUEST_ACCESS) += io/mmc.c
+HYPARM_SRCS_C-$(CONFIG_MMC_LOG) += io/partitions.c
 

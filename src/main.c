@@ -18,7 +18,7 @@
 #include "drivers/beagle/beClockMan.h"
 #include "drivers/beagle/beUart.h"
 
-#ifdef CONFIG_MMC
+#ifndef CONFIG_NO_MMC
 #include "drivers/beagle/beMMC.h"
 #endif
 
@@ -30,8 +30,10 @@
 
 #include "instructionEmu/scanner.h"
 
-#ifdef CONFIG_MMC
+#ifndef CONFIG_NO_MMC
 #include "io/mmc.h"
+#endif
+#ifdef CONFIG_MMC_LOG
 #include "io/partitions.h"
 #include "io/fs/fat.h"
 #endif
@@ -70,10 +72,13 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
 static bool stringToAddress(const char *str, u32int *address) __cold__;
 
 
-#ifdef CONFIG_MMC
+#ifndef CONFIG_NO_MMC
+struct mmc *mmcDevice;
+#endif
+
+#ifdef CONFIG_MMC_LOG
 fatfs mainFilesystem;
 partitionTable primaryPartitionTable;
-struct mmc *mmcDevice;
 file *debugStream;
 #endif
 
@@ -91,8 +96,10 @@ void main(s32int argc, char *argv[])
   memset(&config, 0, sizeof(struct runtimeConfiguration));
   config.guestOS = GUEST_OS_LINUX;
  
-#ifdef CONFIG_MMC
+#ifndef CONFIG_NO_MMC
   mmcDevice = NULL;
+#endif
+#ifdef CONFIG_MMC_LOG
   debugStream = NULL;
 #endif
 
@@ -153,7 +160,7 @@ void main(s32int argc, char *argv[])
   /* initialise phyiscal GPT2, dedicated to guest1 */
   gptBEInit(2);
 
-#ifdef CONFIG_MMC
+#ifdef CONFIG_MMC_LOG
   u32int err = 0;
   if ((err = mmcMainInit()) != 0)
   {
@@ -175,7 +182,7 @@ void main(s32int argc, char *argv[])
   {
     DIE_NOW(context, "Failed to open (create) debug stream file.");
   }
-#endif /* CONFIG_MMC */
+#endif /* CONFIG_MMC_LOG */
 
   // does not return
   switch (config.guestOS)

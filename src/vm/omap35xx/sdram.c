@@ -91,7 +91,9 @@ u32int loadSdram(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAdd
 
 void storeSdram(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
+#ifdef CONFIG_SDRAM_STORE_COUNTER
   struct SdramController* sdram = context->vm.sdram;
+#endif
 
   DEBUG(VP_OMAP_35XX_SDRAM, "%s store to physical address: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x"
       EOL, dev->deviceName, phyAddr, virtAddr, (u32int)size, value);

@@ -15,7 +15,6 @@ struct EmulatedVirtualMachine
   struct SystemControlModule* sysCtrlModule;
   struct Uart* uart[3];
   struct SynchronizedTimer32k* timer32k;
-#ifdef CONFIG_GUEST_ANDROID
   struct Mmc *mmc[3];
   struct PmRt     *pmrt;
   struct PmGpmc   *pmgpmc;
@@ -25,7 +24,6 @@ struct EmulatedVirtualMachine
   struct Sdrc *sdrc;
   struct Sms *sms;
   struct WatchdogTimer *wdtimer2;
-#endif
 };
 
 #endif

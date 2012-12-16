@@ -196,6 +196,7 @@ struct mmc
   blockDevice blockDev;
 };
 
+
 int mmcMainInit(void);
 
 int mmcRegister(struct mmc *mmc);

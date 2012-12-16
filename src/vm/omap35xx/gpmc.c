@@ -185,11 +185,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig1_0 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_0" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -197,11 +193,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig7_0 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_0" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -209,11 +201,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig1_1 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_1" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -221,11 +209,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig7_1 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_1" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -233,11 +217,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig1_2 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_2" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -245,11 +225,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig7_2 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_2" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -257,11 +233,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig1_3 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_3" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -269,11 +241,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig7_3 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_3" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -281,11 +249,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig1_4 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_4" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -293,11 +257,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig7_4 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_4" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -305,11 +265,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig1_5 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_5" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -317,11 +273,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig7_5 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_5" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -329,11 +281,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig1_6 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_6" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -341,11 +289,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig7_6 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_6" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -353,11 +297,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig1_7 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig1_7" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }
@@ -365,11 +305,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if (gpmc->gpmcConfig7_7 != value)
       {
-#ifdef CONFIG_GUEST_ANDROID
         DEBUG(VP_OMAP_35XX_GPMC, "%s: ignoring store to gpmc->gpmcConfig7_7" EOL, __func__);
-#else
-        DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-#endif
       }
       break;
     }

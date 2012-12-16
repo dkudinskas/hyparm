@@ -9,7 +9,7 @@
 
 #include "guestManager/guestContext.h"
 
-#ifdef CONFIG_MMC
+#ifdef CONFIG_MMC_LOG
 #include "io/fs/fat.h"
 #endif
 
@@ -33,7 +33,7 @@ extern u32int undStack;
 extern u32int undStackEnd;
 
 
-#ifdef CONFIG_MMC
+#ifdef CONFIG_MMC_LOG
 extern fatfs mainFilesystem;
 extern file * debugStream;
 #endif
@@ -99,7 +99,7 @@ void dieNowF(const char *fileName, u32int line, const char *caller, const char *
   setEmergencyExceptionVector();
 #endif
 
-#ifdef CONFIG_MMC
+#ifdef CONFIG_MMC_LOG
   fclose(&mainFilesystem, debugStream);
 #endif
 
@@ -236,8 +236,7 @@ static inline u32int vprintf(const char *format, va_list args)
 }
 
 
-#ifdef CONFIG_MMC
-
+#ifdef CONFIG_MMC_LOG
 u32int fprintf(const char *fmt, ...)
 {
   va_list args;
@@ -254,4 +253,4 @@ u32int fprintf(const char *fmt, ...)
   return i;
 }
 
-#endif /* CONFIG_MMC */
+#endif /* CONFIG_MMC_LOG */

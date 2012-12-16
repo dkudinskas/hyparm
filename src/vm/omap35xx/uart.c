@@ -83,13 +83,6 @@ u32int loadUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
   /*
    * Normally access size is a word but linux accesses in halfword and byte size too.
    */
-#ifndef CONFIG_GUEST_ANDROID
-  if (size != BYTE)
-  {
-    DIE_NOW(NULL, "UART: loadUart invalid access size - byte");
-  }
-#endif
-
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)
   {
@@ -281,12 +274,6 @@ void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
   /*
    * Normally access size is a word but linux accesses in halfword and byte size too.
    */
-#ifndef CONFIG_GUEST_ANDROID
-  if (size != BYTE)
-  {
-    DIE_NOW(NULL, "UART: storeUart invalid access size - byte");
-  }
-#endif
 
   u32int uID = getUartNumber(phyAddr);
   if (uID == 0)

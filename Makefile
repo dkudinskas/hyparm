@@ -196,8 +196,10 @@ HYPARM_DIRS-y := common common/memoryAllocator cpuArch drivers/beagle exceptions
                  guestManager instructionEmu instructionEmu/decoder instructionEmu/interpreter \
                  instructionEmu/translator memoryManager vm/omap35xx
 
-# Debugging
-HYPARM_DIRS-$(CONFIG_MMC) += io io/fs
+# sd-card
+HYPARM_DIRS-$(CONFIG_MMC_LOG) += io io/fs
+HYPARM_DIRS-$(CONFIG_MMC_GUEST_ACCESS) += io io/fs
+
 
 # Hacks
 HYPARM_DIRS-$(CONFIG_CLI) += cli

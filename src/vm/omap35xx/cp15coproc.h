@@ -58,6 +58,7 @@ typedef enum coprocessor15Register
   CP15_ICIMVAU   = CRB_INDEX( 7, 0,  5, 1),
   CP15_ISB       = CRB_INDEX( 7, 0,  5, 4),
   CP15_BPIALL    = CRB_INDEX( 7, 0,  5, 6),
+  CP15_DCIMVAC   = CRB_INDEX( 7, 0,  6, 1),
   CP15_DCCMVAC   = CRB_INDEX( 7, 0, 10, 1),
   CP15_DCCSW     = CRB_INDEX( 7, 0, 10, 2),
   CP15_DSB       = CRB_INDEX( 7, 0, 10, 4),
