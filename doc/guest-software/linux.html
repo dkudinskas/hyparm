@@ -100,6 +100,67 @@ The last step is taken from <code>arch/arm/boot/.uImage.cmd</code> by replacing 
 Values for the <code>-a</code> and <code>-e</code> parameters may differ; adapt if necessary.
 </p>
 
+<h2>Kernel command line parameters</h2>
+
+<h3>Essentials</h3>
+
+<p>The boot console must be specified using the <code>console=<em>...</em></code> parameter. For kernels up to (and possibly including) 2.6.36, the console on the BeagleBoard should be <code>ttyS2</code>.
+In newer kernels, the serial TTYs of the OMAP are renamed to <code>ttyO<em>n</em></code>; the boot console on the BeagleBoard should then be set to <code>ttyO2</code>.
+For serial TTYs the baud rate, parity, etc. should be specified as well, e.g., <code>console=ttyS2,115200n8</code>.
+</p>
+
+<p>
+The filesystem to mount as root is specified using the <code>root=<em>device</em></code> parameter.
+This filesystem must contain <em>init</em>, i.e. the first userland program to run.
+When using an initial RAM disk, either built into the kernel (<a href="http://www.linuxfordevices.com/c/a/Linux-For-Devices-Articles/Introducing-initramfs-a-new-model-for-initial-RAM-disks/">initramfs</a>) or provided separately (initrd), you must specify <code>root=/dev/ram0</code>, and the absolute path to the init binary must be specified using the <code>rdinit=<em>path</em></code> parameter.
+In all other cases such as booting from a memory card, the absolute path to the init binary must be specified using the <code>init=<em>path</em></code> parameter instead.
+If <code>init</code> or <code>rdinit</code> is omitted, the path to the init binary defaults to <code>/sbin/init</code>.
+</p>
+
+<p>
+When using an initrd, it must be available somewhere in memory before booting the kernel.
+This can be achieved with U-Boot.
+The address and size of the initrd must then be passed to the kernel using the <code>initrd=<em>address</em>,<em>size</em></code> and <code>ramdisk_size=<em>kilobytes</em></code> parameters. The size in the <code>initrd</code> parameter can be specified using metric prefix multipliers, e.g. <code>initrd=0x81600000,8M</code>.
+By default, the kernel will mount an initrd read-only.
+To make the filesystem writable you also need to add the <code>rw</code> parameter to the kernel command line.
+</p>
+
+<p>
+When booting directly from a device that is detected asynchronously such as memory cards and USB devices, either <code>rootdelay=<em>seconds</em></code> or <code>rootwait</code> must be specified in the kernel command line.
+The former makes the kernel wait up to a specified number of seconds for the root filesystem to become available; afterwards the kernel will panic.
+The latter makes the kernel wait indefinitely for the root filesystem to become available.
+</p>
+
+<h3>Debugging</h3>
+
+<p>
+When a kernel fails to do what it's supposed to do there are a number of ways to diagnose the problem. Most of them make the kernel output more verbose:
+</p>
+
+<ul>
+
+<li>
+The kernel log level can be set to the debug level by adding <code>debug</code> to the kernel command line. All debug messages will then be printed to the console at boot time. The log level can also be completely ignored by adding <code>ignore_loglevel</code> to the kernel command line; this will cause all kernel messages to be printed on the console, at all times.
+</li>
+
+<li>
+The <em>early printk</em> feature can be enabled to get boot messages before the usual initialisation of the boot console happens. This feature is available since Linux 2.6.22 and requires <code>CONFIG_EARLY_PRINTK</code> to be enabled in the kernel configuration. To enable, add <code>earlyprintk</code> to the kernel command line.
+</li>
+
+<li>
+The number of loops per jiffy is auto-detected at boot-time unless <code>lpj=<em>value</em></code> is specified in the kernel command line. If interrupt handling in the hypervisor is broken, the kernel will hang at the auto-detection. Specifying the <code>lpj</code> parameter is a quick way to diagnose the reason of the hang.
+</li>
+
+<li>
+The kernel performs system initialization through so-called <em>initcall functions</em>. Each driver can register its own initcall function with the kernel. If the kernel crashes during boot we can check whether the crash is caused by a failing initcall function. Add <code>initcall_debug</code> to the kernel command line to make the kernel print which initcall functions it calls and their return values.
+</li>
+
+<li>
+In order to facilitate debugging user-space crashes, the parameters <code>print-fatal-signals=1</code> and <code>user_debug=31</code> should be added on the kernel command line. The former turns on warnings about various signal handling related application anomalies. The latter makes the kernel print the cause when applications crash due to exceptions; this feature requires <code>CONFIG_DEBUG_USER</code> to be enabled in the kernel configuration.
+</li>
+
+</ul>
+
 <h2>Browsing the kernel source tree</h2>
 
 <p>
