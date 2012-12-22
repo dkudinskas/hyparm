@@ -161,6 +161,30 @@ In order to facilitate debugging user-space crashes, the parameters <code>print-
 
 </ul>
 
+<p>
+In order to make debug messages meaningful, kernels should generally be compiled with the following options:
+</p>
+
+<ul>
+
+<li>
+<code>CONFIG_DEBUG_INFO</code>: if enabled, the kernel is compiled with debugging information (essential).
+</li>
+
+<li>
+<code>CONFIG_ARM_UNWIND</code>: if enabled, stack unwinding support is built into the kernel. Stack unwinding does not slow down the kernel, and is required to generate meaningful backtraces.
+</li>
+
+<li>
+<code>CONFIG_DEBUG_BUGVERBOSE</code>: if enabled, BUG() panics will include file and line number information.
+</li>
+
+<li>
+<code>CONFIG_DEBUG_ERRORS</code>: if enabled, the verbosity of messages related to internal kernel errors is increased.
+</li>
+
+</ul>
+
 <h2>Browsing the kernel source tree</h2>
 
 <p>
