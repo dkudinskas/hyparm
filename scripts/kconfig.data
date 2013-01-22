@@ -174,9 +174,6 @@ endmenu
 
 menu "Guest software"
 
-config GUEST_ANDROID
-  bool "Android"
-
 config GUEST_FREERTOS
   bool "FreeRTOS"
 
