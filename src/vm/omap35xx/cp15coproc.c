@@ -587,7 +587,10 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
       break;
     }
     default:
+    {
+      printf("setCregVal: reg=%#.8x value=%#.8x not handled" EOL, registerIndex, value);
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+    }
   }
 }
 
@@ -604,7 +607,7 @@ u32int getCregVal(CREG *registerBank, u32int registerIndex)
   }
   else
   {
-    printf("getCreg: reg=%#.8x value=%#.8x invalid" EOL, registerIndex, cr->value);
+    printf("getCregVal: reg=%#.8x value=%#.8x invalid" EOL, registerIndex, cr->value);
     DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 }
