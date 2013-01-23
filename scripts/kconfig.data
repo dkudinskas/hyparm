@@ -33,6 +33,9 @@ config BUILD_ANALYZE_FUNCTIONS
   bool "Let the compiler suggest function attributes"
   depends on OLEVEL_3
 
+config BUILD_NO_UNALIGNED_ACCESS
+  bool "Disable unaligned memory accesses by default (for GCC >= 4.7)"
+
 config BUILD_SSP
   bool "Enable stack-smashing protector"
   depends on !PREDICTABLE_DEBUGGING
