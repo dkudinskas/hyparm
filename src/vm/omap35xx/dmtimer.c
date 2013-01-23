@@ -1,3 +1,5 @@
+#include "common/debug.h"
+
 #include "guestManager/guestContext.h"
 
 #include "vm/omap35xx/dmtimer.h"
@@ -23,10 +25,13 @@
 
 u32int loadDmTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
-  return phyAddr == DM_TIMER_RESET ? 1 : 0;
+  printf("loadDMTimer: VA %08x PA %08x\n", virtAddr, phyAddr);
+  DIE_NOW(context, "dmtimer should not be\n");
+  return 0;
 }
 
 void storeDmTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
-  // ignored
+  printf("storeDMTimer: VA %08x PA %08x val %08x\n", virtAddr, phyAddr, value);
+  DIE_NOW(context, "dmtimer should not be\n");
 }

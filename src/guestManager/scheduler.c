@@ -43,5 +43,4 @@ void guestIdle(GCONTXT * context)
     }
   }
   context->guestIdle = FALSE;
-
 }

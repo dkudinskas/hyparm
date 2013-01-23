@@ -19,7 +19,6 @@
 #include "vm/omap35xx/timer32k.h"
 #include "vm/omap35xx/uart.h"
 #include "vm/omap35xx/controlModule.h"
-#include "vm/omap35xx/dmtimer.h"
 #ifdef CONFIG_MMC_GUEST_ACCESS
 #include "vm/omap35xx/i2c.h"
 #include "vm/omap35xx/mmc.h"
@@ -348,14 +347,6 @@ device *createHardwareLibrary(GCONTXT *context)
     goto l4CoreWakeupIntError;
   }
 
-  // L4_CORE_WAKEUP: dual-mode timer
-  device *dmTimer = createDevice("DM_TIMER", FALSE, DM_TIMER, (u32int)(DM_TIMER + DM_TIMER_SIZE-1),
-                                 l4CoreWakeupInt, &loadDmTimer, &storeDmTimer);
-
-  if (dmTimer == NULL)
-  {
-    goto dmTimerError;
-  }
 
   // L4_CORE_WAKEUP: power and reset manager
   device *prm = createDevice("PRM", FALSE, PRM, (u32int)(PRM - 1 + PRM_SIZE), l4CoreWakeupInt,
@@ -540,8 +531,6 @@ gpio1Error:
 ctrlModIDError:
   free(prm);
 prmError:
-  free(dmTimer);
-dmTimerError:
   free(l4CoreWakeupInt);
 l4CoreWakeupIntError:
   free(intc);

@@ -104,7 +104,7 @@ M_IRQ_80 Reserved       Reserved
 M_IRQ_81 MCBSP5_IRQ_TX
 M_IRQ_82 MCBSP5_IRQ_RX
 */
-#define MMC1_IRQ       83
+#define MMC1_IRQ       83 //0x53
 /*
 M_IRQ_84 MS_IRQ         MS-PROTM module
 M_IRQ_85 Reserved       Reserved
