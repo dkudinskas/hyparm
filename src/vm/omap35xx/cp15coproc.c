@@ -22,7 +22,7 @@ CREG *createCRB()
   {
     return NULL;
   }
-  
+
   DEBUG(INTERPRETER_ANY_COPROC, "Initializing coprocessor reg bank @ address %p" EOL, crb);
 
   /* MIDR:
@@ -66,9 +66,13 @@ CREG *createCRB()
    * initialize to lvl0, data cache (0x00000000) */
   initialiseRegister(crb, CP15_CSSELR, 0);
 
-  /* SCTRL:
+  /* SCTLR:
    * system control register, init to C5187A */
   initialiseRegister(crb, CP15_SCTRL, 0x00C5187A);
+
+  /* ACTLR:
+   * auxiliary control register, init to 0x00000002 (L2 cache enabled) */
+  initialiseRegister(crb, CP15_ACTLR, 2);
 
   /* TTBR0:
    * translation table base register 0. initialise to 0. */
@@ -311,7 +315,7 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
         DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - low interrupt vector set." EOL);
         context->guestHighVectorSet = FALSE;
       }
-      
+
       if (((oldVal & SYS_CTRL_ALIGNMENT) == 0) && ((value & SYS_CTRL_ALIGNMENT) != 0))
       {
         DEBUG(INTERPRETER_ANY_COPROC, "CP15: sysctrl align check set." EOL);
@@ -332,6 +336,45 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
 //      DIE_NOW(NULL, "CP15: SysCtrl - set tex remap, investigate.\n");
       }
       break;
+    }
+    case CP15_ACTLR:
+    {
+      ACTLR old = { .value = oldVal };
+      ACTLR new = { .value = value };
+      ASSERT(old.bits.l1AliasChecksEnable == new.bits.l1AliasChecksEnable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.l2Enable == new.bits.l2Enable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.l1ParityDetectEnable == new.bits.l1ParityDetectEnable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.axiSpeculativeAccessEnable == new.bits.axiSpeculativeAccessEnable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.l1NEONEnable == new.bits.l1NEONEnable, ERROR_NOT_IMPLEMENTED)
+      if (old.bits.invalidateBTBEnable != new.bits.invalidateBTBEnable)
+      {
+        if (new.bits.invalidateBTBEnable)
+        {
+          printf("Warning: guest enabling CP15 BTB invalidate operations");
+        }
+        else
+        {
+          printf("Warning: guest disabling CP15 BTB invalidate operations");
+        }
+        old.bits.invalidateBTBEnable = new.bits.invalidateBTBEnable;
+        registerBank[CP15_ACTLR].value = old.value;
+      }
+      ASSERT(old.bits.branchSizeMispredictDisable == new.bits.branchSizeMispredictDisable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.wfiNOP == new.bits.wfiNOP, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.pldNOP == new.bits.pldNOP, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceSingleIssue == new.bits.forceSingleIssue, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceLoadStoreSingleIssue == new.bits.forceLoadStoreSingleIssue, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceNEONSingleIssue == new.bits.forceNEONSingleIssue, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceMainClock == new.bits.forceMainClock, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceNEONClock == new.bits.forceNEONClock, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceETMClock == new.bits.forceETMClock, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.cp1415PipelineFlush == new.bits.cp1415PipelineFlush, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.cp1415WaitOnIdle == new.bits.cp1415WaitOnIdle, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.cp1415InstructionSerialization == new.bits.cp1415InstructionSerialization, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.clockStopRequestDisable == new.bits.clockStopRequestDisable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.cacheMaintenancePipeline == new.bits.cacheMaintenancePipeline, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.l1HardwareResetDisable == new.bits.l1HardwareResetDisable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.l2HardwareResetDisable == new.bits.l2HardwareResetDisable, ERROR_NOT_IMPLEMENTED)
     }
     case CP15_TTBR0:
     {

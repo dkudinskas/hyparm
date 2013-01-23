@@ -46,6 +46,7 @@ typedef enum coprocessor15Register
   CP15_CLIDR     = CRB_INDEX( 0, 1,  0, 1),
   CP15_CSSELR    = CRB_INDEX( 0, 2,  0, 0),
   CP15_SCTRL     = CRB_INDEX( 1, 0,  0, 0),
+  CP15_ACTLR     = CRB_INDEX( 1, 0,  0, 1),
   CP15_TTBR0     = CRB_INDEX( 2, 0,  0, 0),
   CP15_TTBR1     = CRB_INDEX( 2, 0,  0, 1),
   CP15_TTBCR     = CRB_INDEX( 2, 0,  0, 2),
@@ -89,6 +90,40 @@ typedef struct coprocessorRegisterBankEntry
   u32int value;
   bool   valid;
 } CREG;
+
+/* Cortex-A8 specific */
+struct auxiliaryControlRegister
+{
+  unsigned l1AliasChecksEnable : 1;
+  unsigned l2Enable : 1;
+  unsigned : 1;
+  unsigned l1ParityDetectEnable : 1;
+  unsigned axiSpeculativeAccessEnable : 1;
+  unsigned l1NEONEnable : 1;
+  unsigned invalidateBTBEnable : 1;
+  unsigned branchSizeMispredictDisable : 1;
+  unsigned wfiNOP : 1;
+  unsigned pldNOP : 1;
+  unsigned forceSingleIssue : 1;
+  unsigned forceLoadStoreSingleIssue : 1;
+  unsigned forceNEONSingleIssue : 1;
+  unsigned forceMainClock : 1;
+  unsigned forceNEONClock : 1;
+  unsigned forceETMClock : 1;
+  unsigned cp1415PipelineFlush : 1;
+  unsigned cp1415WaitOnIdle : 1;
+  unsigned cp1415InstructionSerialization : 1;
+  unsigned clockStopRequestDisable : 1;
+  unsigned cacheMaintenancePipeline : 1;
+  unsigned : 9;
+  unsigned l1HardwareResetDisable : 1;
+  unsigned l2HardwareResetDisable : 1;
+};
+typedef union
+{
+  struct auxiliaryControlRegister bits;
+  u32int value;
+} ACTLR;
 
 
 CREG *createCRB(void) __cold__;
