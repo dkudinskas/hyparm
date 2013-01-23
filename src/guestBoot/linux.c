@@ -10,7 +10,7 @@
 #define BOARD_INITRD_LEN     0x800000
 
 
-void bootLinux(GCONTXT *context, u32int loadAddress, u32int initrdAddress)
+void bootLinux(GCONTXT *context, u32int loadAddress, u32int initrdAddress, const char *arguments)
 {
   u32int currentAddress = loadAddress + sizeof(image_header_t);
 
@@ -39,6 +39,10 @@ void bootLinux(GCONTXT *context, u32int loadAddress, u32int initrdAddress)
   if (initrdAddress != 0)
   {
     setupInitrdTag(&tagList, initrdAddress, initrdAddress + BOARD_INITRD_LEN);
+  }
+  if (arguments)
+  {
+    setupCommandLineTag(&tagList, arguments);
   }
   setupEndTag(&tagList);
 

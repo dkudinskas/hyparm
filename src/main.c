@@ -52,6 +52,7 @@
 #define CL_OPTION_GUEST_OS           2
 #define CL_OPTION_GUEST_KERNEL       3
 #define CL_OPTION_GUEST_INITRD       4
+#define CL_OPTION_GUEST_KCMDLINE     5
 
 #define CL_VALUE_GUEST_OS_FREERTOS   "freertos"
 #define CL_VALUE_GUEST_OS_LINUX      "linux"
@@ -63,6 +64,7 @@ struct runtimeConfiguration
   enum guestOSType guestOS;
   u32int guestKernelAddress;
   u32int guestInitialRAMDiskAddress;
+  const char *guestKernelCmdLine;
 };
 
 
@@ -95,7 +97,7 @@ void main(s32int argc, char *argv[])
   struct runtimeConfiguration config;
   memset(&config, 0, sizeof(struct runtimeConfiguration));
   config.guestOS = GUEST_OS_LINUX;
- 
+
 #ifndef CONFIG_NO_MMC
   mmcDevice = NULL;
 #endif
@@ -193,7 +195,7 @@ void main(s32int argc, char *argv[])
       break;
 #endif
     case GUEST_OS_LINUX:
-      bootLinux(context, config.guestKernelAddress, config.guestInitialRAMDiskAddress);
+      bootLinux(context, config.guestKernelAddress, config.guestInitialRAMDiskAddress, config.guestKernelCmdLine);
       break;
     case GUEST_OS_TEST:
       bootTest(context, config.guestKernelAddress);
@@ -215,6 +217,7 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
   options = addCommandLineOption(options, "guest", "Guest operating system type", TRUE, FALSE, CL_OPTION_GUEST_OS);
   options = addCommandLineOption(options, "kernel", "Address of the kernel in memory", TRUE, TRUE, CL_OPTION_GUEST_KERNEL);
   options = addCommandLineOption(options, "initrd", "Address of an initial RAM disk in memory", TRUE, FALSE, CL_OPTION_GUEST_INITRD);
+  options = addCommandLineOption(options, "kcmdline", "Kernel command line", TRUE, FALSE, CL_OPTION_GUEST_KCMDLINE);
   commandLine = parseCommandLine(options, argc, argv);
   bool hadGuestOption = FALSE;
   for (p = commandLine; p; p = p->next)
@@ -273,6 +276,19 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
         {
           printf("Error: invalid initial RAM disk address '%s'" EOL, p->value);
           success = FALSE;
+        }
+        break;
+      }
+      case CL_OPTION_GUEST_KCMDLINE:
+      {
+        if (config->guestKernelCmdLine)
+        {
+          printf("Error: duplicate option: kernel command line" EOL);
+          success = FALSE;
+        }
+        else
+        {
+          config->guestKernelCmdLine = p->value;
         }
         break;
       }
