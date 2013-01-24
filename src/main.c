@@ -71,7 +71,6 @@ struct runtimeConfiguration
 static void dumpRuntimeConfiguration(struct runtimeConfiguration *config) __cold__;
 void main(s32int argc, char *argv[]) __cold__;
 static void processCommandLine(struct runtimeConfiguration *config, s32int argc, char *argv[]) __cold__;
-static bool stringToAddress(const char *str, u32int *address) __cold__;
 
 
 #ifndef CONFIG_NO_MMC
@@ -209,6 +208,35 @@ void main(s32int argc, char *argv[])
 #endif /* CONFIG_CLI */
 }
 
+
+#ifdef CONFIG_HARDCODED_CMDLINE
+
+static void processCommandLine(struct runtimeConfiguration *config, s32int argc, char *argv[])
+{
+  UNUSED(argc);
+  UNUSED(argv);
+
+#if defined(CONFIG_HARDCODED_CMDLINE_GUEST_LINUX)
+  config->guestOS = GUEST_OS_LINUX;
+#elif defined(CONFIG_HARDCODED_CMDLINE_GUEST_TEST)
+  config->guestOS = GUEST_OS_TEST;
+#else
+#error config->guestOS undefined
+#endif
+
+  config->guestKernelAddress = CONFIG_HARDCODED_CMDLINE_KERNEL;
+
+#ifdef CONFIG_HARDCODED_CMDLINE_INITRD
+  config->guestInitialRAMDiskAddress = CONFIG_HARDCODED_CMDLINE_INITRD_ADDRESS;
+#endif
+
+  config->guestKernelCmdLine = EXPAND_TO_STRING(CONFIG_HARDCODED_CMDLINE_KCMDLINE);
+}
+
+#else
+
+static bool stringToAddress(const char *str, u32int *address) __cold__;
+
 static void processCommandLine(struct runtimeConfiguration *config, s32int argc, char *argv[])
 {
   bool success = TRUE;
@@ -320,3 +348,5 @@ static bool stringToAddress(const char *str, u32int *address)
   }
   return FALSE;
 }
+
+#endif /* CONFIG_HARDCODED_CMDLINE */
