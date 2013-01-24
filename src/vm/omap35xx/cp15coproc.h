@@ -35,6 +35,11 @@
 #define CRB_INDEX(CRn, opc1, CRm, opc2)                                                            \
   ((((CRn * MAX_OPC1_VALUES) + opc1) * MAX_CRM_VALUES + CRm) * MAX_OPC2_VALUES + opc2)
 
+#define CRB_INDEX_TO_CRM(index)  ((index >> 3) & 0xF)
+#define CRB_INDEX_TO_CRN(index)  ((index >> 10) & 0xF)
+#define CRB_INDEX_TO_OP1(index)  ((index >> 7) & 0x7)
+#define CRB_INDEX_TO_OP2(index)  (index & 0x7)
+
 
 typedef enum coprocessor15Register
 {

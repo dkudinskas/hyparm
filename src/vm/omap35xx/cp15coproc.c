@@ -236,15 +236,18 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
   if (unlikely(!registerBank[registerIndex].valid))
   {
     // guest writing to a register that is not valid yet! investigate
-    printf("setCregVal: reg=%#.8x value=%#.8x" EOL, registerIndex, value);
+    printf("setCregVal: op1=%#x CRn=%#x CRm=%#x op2=%#x value=%#.8x" EOL,
+           CRB_INDEX_TO_OP1(registerIndex), CRB_INDEX_TO_CRN(registerIndex),
+           CRB_INDEX_TO_CRM(registerIndex), CRB_INDEX_TO_OP2(registerIndex), value);
     DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 
   u32int oldVal = registerBank[registerIndex].value;
   registerBank[registerIndex].value = value;
 
-  DEBUG(INTERPRETER_ANY_COPROC, "setCregVal reg=%#.8x value=%#.8x -> %#.8x" EOL, registerIndex,
-        oldVal, value);
+  DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: op1=%#x CRn=%#x CRm=%#x op2=%#x value=%#.8x -> %#.8x" EOL,
+        CRB_INDEX_TO_OP1(registerIndex), CRB_INDEX_TO_CRN(registerIndex),
+        CRB_INDEX_TO_CRM(registerIndex), CRB_INDEX_TO_OP2(registerIndex), oldVal, value);
 
   switch (registerIndex)
   {
@@ -631,7 +634,9 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
     }
     default:
     {
-      printf("setCregVal: reg=%#.8x value=%#.8x not handled" EOL, registerIndex, value);
+      printf("setCregVal: op1=%#x CRn=%#x CRm=%#x op2=%#x value=%#.8x not handled" EOL,
+             CRB_INDEX_TO_OP1(registerIndex), CRB_INDEX_TO_CRN(registerIndex),
+             CRB_INDEX_TO_CRM(registerIndex), CRB_INDEX_TO_OP2(registerIndex), value);
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
   }
@@ -641,7 +646,9 @@ u32int getCregVal(CREG *registerBank, u32int registerIndex)
 {
   const CREG *cr = &registerBank[registerIndex];
 
-  DEBUG(INTERPRETER_ANY_COPROC, "getCreg: reg=%#.8x value=%#.8x valid=%x" EOL, registerIndex,
+  DEBUG(INTERPRETER_ANY_COPROC, "getCreg: op1=%#x CRn=%#x CRm=%#x op2=%#x value=%#.8x valid=%x" EOL,
+        CRB_INDEX_TO_OP1(registerIndex), CRB_INDEX_TO_CRN(registerIndex),
+        CRB_INDEX_TO_CRM(registerIndex), CRB_INDEX_TO_OP2(registerIndex),
         cr->value, cr->valid);
 
   if (cr->valid)
@@ -650,7 +657,9 @@ u32int getCregVal(CREG *registerBank, u32int registerIndex)
   }
   else
   {
-    printf("getCregVal: reg=%#.8x value=%#.8x invalid" EOL, registerIndex, cr->value);
+    printf("getCregVal: op1=%#x CRn=%#x CRm=%#x op2=%#x value=%#.8x invalid" EOL,
+           CRB_INDEX_TO_OP1(registerIndex), CRB_INDEX_TO_CRN(registerIndex),
+           CRB_INDEX_TO_CRM(registerIndex), CRB_INDEX_TO_OP2(registerIndex), cr->value);
     DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 }
