@@ -584,13 +584,13 @@ static void maskInterrupt(struct InterruptController *irqController, u32int inte
   {
     case 0:
       irqController->intcMir0 |= bitMask;
-      break;  
+      break;
     case 1:
       irqController->intcMir1 |= bitMask;
-      break;  
+      break;
     case 2:
       irqController->intcMir2 |= bitMask;
-      break;  
+      break;
     default:
       DIE_NOW(NULL, "INTC: mask interrupt from invalid interrupt bank");
   }
@@ -611,13 +611,13 @@ static void unmaskInterrupt(struct InterruptController *irqController, u32int in
   {
     case 0:
       irqController->intcMir0 &= ~bitMask;
-      break;  
+      break;
     case 1:
       irqController->intcMir1 &= ~bitMask;
-      break;  
+      break;
     case 2:
       irqController->intcMir2 &= ~bitMask;
-      break;  
+      break;
     default:
       DIE_NOW(NULL, "INTC: unmask interrupt from invalid interrupt bank");
   }
@@ -638,13 +638,13 @@ static bool isGuestIrqMasked(struct InterruptController *irqController, u32int i
   {
     case 0:
       return ((irqController->intcMir0 & bitMask) == 1);
-      break;  
+      break;
     case 1:
       return ((irqController->intcMir1 & bitMask) == 1);
-      break;  
+      break;
     case 2:
       return ((irqController->intcMir2 & bitMask) == 1);
-      break;  
+      break;
     default:
       DIE_NOW(NULL, "INTC: unmask interrupt from invalid interrupt bank");
   }
@@ -794,7 +794,7 @@ static u32int prioritySortIrqs(struct InterruptController *irqController)
 
     if (irqController->intcPendingIrq1 != 0)
     {
-      u32int mask = 0; 
+      u32int mask = 0;
       u32int i = 0;
       for (i = 0; i < 32; i++)
       {
@@ -815,7 +815,7 @@ static u32int prioritySortIrqs(struct InterruptController *irqController)
 
     if (irqController->intcPendingIrq2 != 0)
     {
-      u32int mask = 0; 
+      u32int mask = 0;
       u32int i = 0;
       for (i = 0; i < 32; i++)
       {

@@ -658,7 +658,7 @@ irqHandler:
 
 irqHandlerPriv:
   /* we backed up the LR to hold the SPSR */
-  POP     {LR} 
+  POP     {LR}
   /* link register is last pc+4. */
   SUB     LR, LR, #4
   /* save common registers and return address. */

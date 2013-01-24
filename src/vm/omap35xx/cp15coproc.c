@@ -129,7 +129,7 @@ CREG *createCRB()
   /* DCCMVAC:
    * clean data cache line by MVA to PoC, write-only */
   initialiseRegister(crb, CP15_DCCMVAC, 0);
-  
+
   /* CP15_DCIMVAC:
    * invalidate data cache line (using MVA) */
   initialiseRegister(crb, CP15_DCIMVAC, 0);

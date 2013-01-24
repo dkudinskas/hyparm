@@ -80,7 +80,7 @@
 
 /*
  * UNKNOWN REGISTER OFFSET
- * This uknown register offset is used by some linux kernels.
+ * This unknown register offset is used by some linux kernels.
  * It tries to to read-modify-write this registers
  *   which belong to no module.
  */
