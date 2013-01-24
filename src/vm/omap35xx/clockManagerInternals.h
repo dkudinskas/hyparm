@@ -234,4 +234,8 @@
 #define CM_CLKSTCTRL_USBHOST        0x00000048 // enable domain power state transition, RW
 #define CM_CLKSTST_USBHOST          0x0000004C // interface clock activity status, R/O
 
+#define PM_PWSTCTRL                 0x000000E0 /* power state control, a register from certain PM
+                                                * devices mistakenly used on CM by the unified
+                                                * OMAP2+ drivers in Linux kernels >= v2.6.37-rc1.*/
+
 #endif /* __VM_OMAP_35XX__CLOCK_MANAGER_INTERNALS_H__ */

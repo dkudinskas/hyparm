@@ -242,15 +242,13 @@ static u32int loadClockControlPrm(struct PowerAndResetManager *prm, u32int physi
       value = prm->prmClkoutCtrlReg;
       break;
     }
-#ifdef CONFIG_MMC_GUEST_ACCESS
-    case PM_WKDEP:
+    case CM_SLEEPDEP:
     case PM_PWSTST:
-    case PM_UNKNOWN:
+    case PM_WKDEP:
     {
       DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
       break;
     }
-#endif
     default:
     {
       printf("offset %x" EOL, registerOffset);
@@ -764,16 +762,14 @@ static u32int loadWakeUpPrm(struct PowerAndResetManager *prm, u32int physicalAdd
       value = prm->prmWkstWkup;
       break;
     }
-#ifdef CONFIG_MMC_GUEST_ACCESS
-    case PM_WKDEP:
+    case CM_SLEEPDEP:
     case PM_PWSTCTRL:
     case PM_PWSTST:
-    case PM_UNKNOWN:
+    case PM_WKDEP:
     {
       DEBUG(VP_OMAP_35XX_PRM, "%s: ignoring load from invalid register %x" EOL, __func__, registerOffset);
       break;
     }
-#endif
     default:
     {
       printf("offset %x" EOL, registerOffset);

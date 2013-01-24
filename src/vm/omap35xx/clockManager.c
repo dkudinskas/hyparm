@@ -624,6 +624,12 @@ static u32int loadMpuCm(struct ClockManager *cm, u32int physicalAddress)
       value = cm->cmClkStStMpuReg;
       break;
     }
+    case PM_PWSTCTRL:
+    {
+      DEBUG(VP_OMAP_35XX_CM, "%s: allowing load on invalid register %x" EOL, __func__,
+            registerOffset);
+      break;
+    }
     default:
     {
       printf("offset %x" EOL, registerOffset);
@@ -1092,10 +1098,15 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
       }
       break;
     }
+    case CM_IDLEST1_CORE:
+    {
+      DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to read-only register with offset %x" EOL,
+            __func__, registerOffset);
+      break;
+    }
     case CM_FCLKEN3_CORE:
     case CM_ICLKEN2_CORE:
     case CM_ICLKEN3_CORE:
-    case CM_IDLEST1_CORE:
     case CM_IDLEST2_CORE:
     case CM_IDLEST3_CORE:
     case CM_CLKSEL_CORE:
@@ -1253,6 +1264,13 @@ static void storeMpuCm(struct ClockManager *cm, u32int physicalAddress, u32int v
       break;
     }
     case CM_CLKEN_PLL_MPU:
+    {
+      if (cm->cmClkEnPllMpuReg != value)
+      {
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkEnPllMpuReg" EOL, __func__);
+      }
+      break;
+    }
     case CM_IDLEST_MPU:
     case CM_IDLEST_PLL_MPU:
     case CM_CLKSEL1_PLL_MPU:
@@ -1261,6 +1279,12 @@ static void storeMpuCm(struct ClockManager *cm, u32int physicalAddress, u32int v
     {
       printf("offset %x value %#.8x" EOL, registerOffset, value);
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+    }
+    case PM_PWSTCTRL:
+    {
+      DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to invalid register %x with value %#.8x" EOL,
+            __func__, registerOffset, value);
+      break;
     }
     default:
     {
