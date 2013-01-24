@@ -106,7 +106,8 @@
 #define SHIFT_TYPE_ROR    0x4
 
 // System control register
-#define SCTLR_TE    0x4000000  // Thumb Exception enable
+#define SCTLR_TE    0x04000000  // Thumb Exception enable
+#define SCTLR_A     0x00000002
 
 #define LR_OFFSET_IRQ             4
 #define LR_OFFSET_DATA_ABT        8
