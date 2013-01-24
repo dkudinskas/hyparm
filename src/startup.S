@@ -73,9 +73,21 @@ zeroFillBSS$:
   STR     R2, [R3]
 #endif /* CONFIG_BUILD_SSP */
   /*
+   * When using GCC >= 4.7, unaligned memory accesses may be generated unless
+   * CONFIG_BUILD_NO_UNALIGNED_ACCESS is set. Make sure alignment checking is disabled:
+   */
+#ifdef __GNUC__
+#if !defined(CONFIG_BUILD_NO_UNALIGNED_ACCESS) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 7)))
+  MRC     p15, 0, r2, c1, c0, 0
+  BIC     r2, r2, #SCTLR_A
+  MCR     p15, 0, r2, c1, c0, 0
+#endif
+#endif /* __GNUC__ */
+  /*
    * Branch to main.
    * This function must never return.
    */
+branchToMain$:
   B       main
 
 
