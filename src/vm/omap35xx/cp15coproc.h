@@ -31,6 +31,9 @@
 #define SYS_CTRL_ACCESS_FLAG         0x20000000
 #define SYS_CTRL_THUMB_EXC_HANDLE    0x40000000
 
+#define IDPFR0_ARM_ISA_SUPPORT       0x00000001
+#define IDPFR0_THUMB2_ISA_SUPPORT    0x00000030
+
 
 #define CRB_INDEX(CRn, opc1, CRm, opc2)                                                            \
   ((((CRn * MAX_OPC1_VALUES) + opc1) * MAX_CRM_VALUES + CRm) * MAX_OPC2_VALUES + opc2)
@@ -45,6 +48,7 @@ typedef enum coprocessor15Register
 {
   CP15_MIDR      = CRB_INDEX( 0, 0,  0, 0),
   CP15_CTR       = CRB_INDEX( 0, 0,  0, 1),
+  CP15_IDPFR0    = CRB_INDEX( 0, 0,  1, 0),
   CP15_MMFR0     = CRB_INDEX( 0, 0,  1, 4),
   CP15_MMFR1     = CRB_INDEX( 0, 0,  1, 5),
   CP15_CCSIDR    = CRB_INDEX( 0, 1,  0, 0),

@@ -40,6 +40,16 @@ CREG *createCRB()
    * read only. init to 80048004 */
   initialiseRegister(crb, CP15_CTR, 0x80048004);
 
+  /* IDPFR0:
+   * processor feature register 0
+   * read only */
+#ifdef CONFIG_THUMB2
+  // For the future... if ever.
+  initialiseRegister(crb, CP15_IDPFR0, IDPFR0_ARM_ISA_SUPPORT | IDPFR0_THUMB2_ISA_SUPPORT);
+#else
+  initialiseRegister(crb, CP15_IDPFR0, IDPFR0_ARM_ISA_SUPPORT);
+#endif
+
   /* MMFR0:
    * memory model feature register 0
    * read only, init to 31100003 */
