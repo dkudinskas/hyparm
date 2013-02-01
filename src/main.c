@@ -54,6 +54,7 @@
 #define CL_OPTION_GUEST_OS           2
 #define CL_OPTION_GUEST_KERNEL       3
 #define CL_OPTION_GUEST_INITRD       4
+#define CL_OPTION_GUEST_KCMDLINE     5
 
 #define CL_VALUE_GUEST_OS_FREERTOS   "freertos"
 #define CL_VALUE_GUEST_OS_LINUX      "linux"
@@ -65,13 +66,13 @@ struct runtimeConfiguration
   enum guestOSType guestOS;
   u32int guestKernelAddress;
   u32int guestInitialRAMDiskAddress;
+  const char *guestKernelCmdLine;
 };
 
 
 static void dumpRuntimeConfiguration(struct runtimeConfiguration *config) __cold__;
 void main(s32int argc, char *argv[]) __cold__;
 static void processCommandLine(struct runtimeConfiguration *config, s32int argc, char *argv[]) __cold__;
-static bool stringToAddress(const char *str, u32int *address) __cold__;
 
 
 #ifndef CONFIG_NO_MMC
@@ -97,7 +98,7 @@ void main(s32int argc, char *argv[])
   struct runtimeConfiguration config;
   memset(&config, 0, sizeof(struct runtimeConfiguration));
   config.guestOS = GUEST_OS_LINUX;
- 
+
 #ifndef CONFIG_NO_MMC
   mmcDevice = NULL;
 #endif
@@ -200,7 +201,7 @@ void main(s32int argc, char *argv[])
       break;
 #endif
     case GUEST_OS_LINUX:
-      bootLinux(context, config.guestKernelAddress, config.guestInitialRAMDiskAddress);
+      bootLinux(context, config.guestKernelAddress, config.guestInitialRAMDiskAddress, config.guestKernelCmdLine);
       break;
     case GUEST_OS_TEST:
       bootTest(context, config.guestKernelAddress);
@@ -214,6 +215,35 @@ void main(s32int argc, char *argv[])
 #endif /* CONFIG_CLI */
 }
 
+
+#ifdef CONFIG_HARDCODED_CMDLINE
+
+static void processCommandLine(struct runtimeConfiguration *config, s32int argc, char *argv[])
+{
+  UNUSED(argc);
+  UNUSED(argv);
+
+#if defined(CONFIG_HARDCODED_CMDLINE_GUEST_LINUX)
+  config->guestOS = GUEST_OS_LINUX;
+#elif defined(CONFIG_HARDCODED_CMDLINE_GUEST_TEST)
+  config->guestOS = GUEST_OS_TEST;
+#else
+#error config->guestOS undefined
+#endif
+
+  config->guestKernelAddress = CONFIG_HARDCODED_CMDLINE_KERNEL;
+
+#ifdef CONFIG_HARDCODED_CMDLINE_INITRD
+  config->guestInitialRAMDiskAddress = CONFIG_HARDCODED_CMDLINE_INITRD_ADDRESS;
+#endif
+
+  config->guestKernelCmdLine = EXPAND_TO_STRING(CONFIG_HARDCODED_CMDLINE_KCMDLINE);
+}
+
+#else
+
+static bool stringToAddress(const char *str, u32int *address) __cold__;
+
 static void processCommandLine(struct runtimeConfiguration *config, s32int argc, char *argv[])
 {
   bool success = TRUE;
@@ -222,6 +252,7 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
   options = addCommandLineOption(options, "guest", "Guest operating system type", TRUE, FALSE, CL_OPTION_GUEST_OS);
   options = addCommandLineOption(options, "kernel", "Address of the kernel in memory", TRUE, TRUE, CL_OPTION_GUEST_KERNEL);
   options = addCommandLineOption(options, "initrd", "Address of an initial RAM disk in memory", TRUE, FALSE, CL_OPTION_GUEST_INITRD);
+  options = addCommandLineOption(options, "kcmdline", "Kernel command line", TRUE, FALSE, CL_OPTION_GUEST_KCMDLINE);
   commandLine = parseCommandLine(options, argc, argv);
   bool hadGuestOption = FALSE;
   for (p = commandLine; p; p = p->next)
@@ -283,6 +314,19 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
         }
         break;
       }
+      case CL_OPTION_GUEST_KCMDLINE:
+      {
+        if (config->guestKernelCmdLine)
+        {
+          printf("Error: duplicate option: kernel command line" EOL);
+          success = FALSE;
+        }
+        else
+        {
+          config->guestKernelCmdLine = p->value;
+        }
+        break;
+      }
       default:
       {
         printf("Error: unrecognized option '%s'" EOL, p->value);
@@ -311,3 +355,5 @@ static bool stringToAddress(const char *str, u32int *address)
   }
   return FALSE;
 }
+
+#endif /* CONFIG_HARDCODED_CMDLINE */

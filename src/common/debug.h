@@ -42,6 +42,9 @@
 #define DIE_NOW(context, msg)  dieNow(__FILE__, __LINE__, __func__, msg)
 
 
+#define UNUSED(arg)   (void)(arg)
+
+
 extern const char *const ERROR_BAD_ACCESS_SIZE;
 extern const char *const ERROR_BAD_ARGUMENTS;
 extern const char *const ERROR_NO_SUCH_REGISTER;

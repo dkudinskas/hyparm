@@ -10,6 +10,23 @@
 .global _start
 _start:
   /*
+   * Fix U-Shit: some smartass decided it was good to turn on MMU in the bootloader. WTF?
+   * Also, when using GCC >= 4.7, unaligned memory accesses may be generated unless
+   * CONFIG_BUILD_NO_UNALIGNED_ACCESS is set. Make sure alignment checking is disabled in that
+   * case. All this must happen as early as possible to avoid madness later on.
+   */
+  MRC     p15, 0, r2, c1, c0, 0
+  BIC     r2, r2, #(SCTLR_TE | SCTLR_VE)
+  BIC     r2, r2, #SCTLR_V
+#ifdef __GNUC__
+#if !defined(CONFIG_BUILD_NO_UNALIGNED_ACCESS) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 7)))
+  BIC     r2, r2, #SCTLR_A
+#endif
+#endif /* __GNUC__ */
+  BIC     r2, r2, #SCTLR_M
+  MCR     p15, 0, r2, c1, c0, 0
+  ISB
+  /*
    * The hypervisor is started through U-Boot, and any command line arguments are passed as following:
    * - R0 contains the number of arguments;
    * - R1 is a pointer to an array of null-terminated C strings.
@@ -81,6 +98,7 @@ zeroFillBSS$:
    * Branch to main.
    * This function must never return.
    */
+branchToMain$:
   B       main
 
 
@@ -673,7 +691,7 @@ irqHandler:
 
 irqHandlerPriv:
   /* we backed up the LR to hold the SPSR */
-  POP     {LR} 
+  POP     {LR}
   /* link register is last pc+4. */
   SUB     LR, LR, #4
   /* save common registers and return address. */

@@ -22,6 +22,9 @@
 /* REGISTER DEFINITIONS and offsets */
 /************************************/
 // COMMON REGISTER OFFSETS
+#define CM_SLEEPDEP              0x00000044 /* sleep transition dependency, a register from certain
+                                             * CM devices mistakenly used on PRM by the unified
+                                             * OMAP2+ drivers in Linux kernels >= v2.6.37-rc1. */
 #define RM_RSTCTRL               0x00000050 // reset control, RW
 #define RM_RSTST                 0x00000058 // reset status, RW
 #define PM_WKEN                  0x000000A0 // wakeup events enable, RW
@@ -80,7 +83,7 @@
 
 /*
  * UNKNOWN REGISTER OFFSET
- * This uknown register offset is used by some linux kernels.
+ * This unknown register offset is used by some linux kernels.
  * It tries to to read-modify-write this registers
  *   which belong to no module.
  */

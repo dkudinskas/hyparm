@@ -26,6 +26,8 @@
 #define INTCPS_SYSSTATUS_RESERVED       0xFFFFFFFE // [31:1] reserved
 #define INTCPS_SYSSTATUS_SOFTRESET      0x00000001 // [0] 0: resetting 1: reset done
 
+#define REG_INTCPS_UNKNOWN_20    0x00000020
+
 #define REG_INTCPS_SIR_IRQ       0x00000040 // RO current active irq number
 #define INTCPS_SIR_IRQ_SPURIOUSIRQFLAG  0xFFFFFF80 // [31:7] spurious flag
 #define INTCPS_SIR_IRQ_ACTIVEIRQ        0x0000007F // [6:0] active irq number

@@ -57,6 +57,8 @@ The <code><em>device-path</em></code> must be set to the path in <code>/dev</cod
 The script will create a small FAT partition for booting and a big partition to house a Linux filesystem.
 </p>
 
+<h4>Using X-Loader and legacy U-Boot</h4>
+
 <p>Binaries of the two bootloaders, X-Loader and U-Boot, must be copied <em>in order</em> to the boot partition:</p>
 
 <pre>
@@ -66,14 +68,20 @@ The script will create a small FAT partition for booting and a big partition to 
 # sudo udisks --unmount <em>boot-partition-path</em>
 </pre>
 
+<h4>Using recent U-Boot with SPL</h4>
+
+<p>Recent U-Boot versions come with their own equivalent of X-Loader called SPL (secondary program loader). The procedure is equivalent and requires copying the files <code>MLO</code> and <code>u-boot.img</code> (not the <code>u-boot.bin</code> file!) in order to the boot partition of your SD card.</p>
+
 <p>
 You can now use the SD card with the BeagleBoard (tap the reset button while holding the user button).
 </p>
 
 <h3>Flashing new bootloaders to the NAND</h3>
 
+<h4>Using X-Loader and legacy U-Boot</h4>
+
 <p>
-Save the files to be flashed on the boot partition of the SD card:
+Note that X-Loader must be signed (with the signGP tool) and U-Boot must be specifically configured to run from NAND. Save the files to be flashed on the boot partition of the SD card:
 </p>
 
 <pre>
@@ -96,6 +104,24 @@ OMAP3 beagleboard.org # nandecc sw
 OMAP3 beagleboard.org # nand erase 80000 160000
 OMAP3 beagleboard.org # nand write.i 0x80200000 80000 160000
 </pre>
+
+<h4>Using recent U-Boot with SPL</h4>
+
+<p>Recent versions of U-Boot with SPL can be used to boot from NAND without modification. Prepare an SD card as described above with the U-Boot that you want to flash to NAND. Then, boot the BeagleBoard from that SD card and use the following commands to flash:</p>
+
+<pre>
+OMAP3 beagleboard.org # mw.b 0x82000000 0 0xFFFFFF
+OMAP3 beagleboard.org # fatload mmc 0 0x82000000 MLO
+OMAP3 beagleboard.org # nandecc hw
+OMAP3 beagleboard.org # nand erase 0 80000
+OMAP3 beagleboard.org # nand write.i 0x82000000 0 80000
+OMAP3 beagleboard.org # mw.b 0x82000000 0 0xFFFFFF
+OMAP3 beagleboard.org # fatload mmc 0 0x82000000 u-boot.img
+OMAP3 beagleboard.org # nand erase 80000 160000
+OMAP3 beagleboard.org # nand write.i 0x82000000 80000 160000
+</pre>
+
+<p>Note that unlike with X-Loader and legacy U-Boot, hardware ECC must be enabled for both stages.</p>
 
 </body>
 </html>

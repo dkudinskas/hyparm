@@ -33,6 +33,9 @@ config BUILD_ANALYZE_FUNCTIONS
   bool "Let the compiler suggest function attributes"
   depends on OLEVEL_3
 
+config BUILD_NO_UNALIGNED_ACCESS
+  bool "Disable unaligned memory accesses by default (for GCC >= 4.7)"
+
 config BUILD_SSP
   bool "Enable stack-smashing protector"
   depends on !PREDICTABLE_DEBUGGING
@@ -177,9 +180,6 @@ endmenu
 
 menu "Guest software"
 
-config GUEST_ANDROID
-  bool "Android"
-
 config GUEST_FREERTOS
   bool "FreeRTOS"
 
@@ -214,6 +214,41 @@ config BKPT
     triggered, will cause prefetch aborts. Such aborts will cause the hypervisor to
     crash, trigger more software breakpoints, ... resulting in an infinite loop of
     prefetch aborts.
+
+menuconfig HARDCODED_CMDLINE
+  bool "Hardcoded command line"
+  depends on DEBUGGING_HACKS
+
+choice
+  prompt "Guest operating system type"
+  default HARDCODED_CMDLINE_GUEST_LINUX
+  depends on HARDCODED_CMDLINE
+
+config HARDCODED_CMDLINE_GUEST_LINUX
+  bool "Linux"
+
+config HARDCODED_CMDLINE_GUEST_TEST
+  bool "Unit test"
+
+endchoice
+
+config HARDCODED_CMDLINE_KERNEL
+  hex "Address of the guest kernel in memory"
+  default 0x81000000
+  depends on HARDCODED_CMDLINE
+
+config HARDCODED_CMDLINE_INITRD
+  bool "Use an initial RAM disk external to the kernel image"
+  depends on HARDCODED_CMDLINE && HARDCODED_CMDLINE_GUEST_LINUX
+
+config HARDCODED_CMDLINE_INITRD_ADDRESS
+  hex "Address of initial RAM disk in memory"
+  default 0x83000000
+  depends on HARDCODED_CMDLINE_INITRD
+
+config HARDCODED_CMDLINE_KCMDLINE
+  string "Kernel command line"
+  depends on HARDCODED_CMDLINE && HARDCODED_CMDLINE_GUEST_LINUX
 
 config DUMP_STACK
   bool "Dump stack on crash"

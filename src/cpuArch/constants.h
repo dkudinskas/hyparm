@@ -106,7 +106,11 @@
 #define SHIFT_TYPE_ROR    0x4
 
 // System control register
-#define SCTLR_TE    0x4000000  // Thumb Exception enable
+#define SCTLR_TE    0x40000000  // Thumb Exception enable
+#define SCTLR_VE    0x01000000  // ARM fiq/irq vs. impl defined vectors (deprecated)
+#define SCTLR_V     0x00002000  // Low/high vecs (deprecated)
+#define SCTLR_A     0x00000002  // Align check enable
+#define SCTLR_M     0x00000001  // MMU enable
 
 #define LR_OFFSET_IRQ             4
 #define LR_OFFSET_DATA_ABT        8

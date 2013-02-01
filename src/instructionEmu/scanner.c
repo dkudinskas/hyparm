@@ -243,8 +243,8 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     context->lastGuestPC = (u32int)basicBlock->guestEnd;
     DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: lastGuestPC = %08x, context->R15 @ %08x"
                                         EOL, context->lastGuestPC, context->R15);
-    setScanBlockCallSource(CALL_SOURCE_NOT_SET);
-  
+
+    setScanBlockCallSource(SCANNER_CALL_SOURCE_NOT_SET);
     return;
   }
 
@@ -259,7 +259,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
   {
     scanArmBlock(context, (u32int*)startAddress, blockIndex, basicBlock);
   }
-  setScanBlockCallSource(CALL_SOURCE_NOT_SET);
+  setScanBlockCallSource(SCANNER_CALL_SOURCE_NOT_SET);
 }
 
 

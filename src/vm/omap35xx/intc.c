@@ -63,6 +63,11 @@ u32int loadIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       }
       break;
     }
+    case REG_INTCPS_UNKNOWN_20:
+    {
+      DEBUG(VP_OMAP_35XX_INTC, "%s: allowing load on invalid register %x" EOL, __func__, regOffset);
+      break;
+    }
     case REG_INTCPS_MIR_CLEAR0:
       DIE_NOW(NULL, "INTC: load from W/O register (MIR0_CLEAR)");
       break;
@@ -230,12 +235,15 @@ u32int loadIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
     case REG_INTCPS_ILR94:
     case REG_INTCPS_ILR95:
     {
-      printf("Intc: Unimplemted regsiter load reg nr %#x" EOL, regOffset);
+      printf("%s: offset %#x" EOL, __func__, regOffset);
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
       break;
     }
     default:
+    {
+      printf("%s: offset %#x" EOL, __func__, regOffset);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
+    }
   }
 
   DEBUG(VP_OMAP_35XX_INTC, "%s load from pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
@@ -584,13 +592,13 @@ static void maskInterrupt(struct InterruptController *irqController, u32int inte
   {
     case 0:
       irqController->intcMir0 |= bitMask;
-      break;  
+      break;
     case 1:
       irqController->intcMir1 |= bitMask;
-      break;  
+      break;
     case 2:
       irqController->intcMir2 |= bitMask;
-      break;  
+      break;
     default:
       DIE_NOW(NULL, "INTC: mask interrupt from invalid interrupt bank");
   }
@@ -611,13 +619,13 @@ static void unmaskInterrupt(struct InterruptController *irqController, u32int in
   {
     case 0:
       irqController->intcMir0 &= ~bitMask;
-      break;  
+      break;
     case 1:
       irqController->intcMir1 &= ~bitMask;
-      break;  
+      break;
     case 2:
       irqController->intcMir2 &= ~bitMask;
-      break;  
+      break;
     default:
       DIE_NOW(NULL, "INTC: unmask interrupt from invalid interrupt bank");
   }
@@ -638,13 +646,13 @@ static bool isGuestIrqMasked(struct InterruptController *irqController, u32int i
   {
     case 0:
       return ((irqController->intcMir0 & bitMask) == 1);
-      break;  
+      break;
     case 1:
       return ((irqController->intcMir1 & bitMask) == 1);
-      break;  
+      break;
     case 2:
       return ((irqController->intcMir2 & bitMask) == 1);
-      break;  
+      break;
     default:
       DIE_NOW(NULL, "INTC: unmask interrupt from invalid interrupt bank");
   }
@@ -794,7 +802,7 @@ static u32int prioritySortIrqs(struct InterruptController *irqController)
 
     if (irqController->intcPendingIrq1 != 0)
     {
-      u32int mask = 0; 
+      u32int mask = 0;
       u32int i = 0;
       for (i = 0; i < 32; i++)
       {
@@ -815,7 +823,7 @@ static u32int prioritySortIrqs(struct InterruptController *irqController)
 
     if (irqController->intcPendingIrq2 != 0)
     {
-      u32int mask = 0; 
+      u32int mask = 0;
       u32int i = 0;
       for (i = 0; i < 32; i++)
       {

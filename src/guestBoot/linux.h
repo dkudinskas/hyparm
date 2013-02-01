@@ -7,7 +7,7 @@
 #include "guestManager/guestContext.h"
 
 
-void bootLinux(GCONTXT *context, u32int loadAddress, u32int initrdAddress) __cold__
-  __attribute__((noreturn));
+void bootLinux(GCONTXT *context, u32int loadAddress, u32int initrdAddress, const char *arguments)
+  __cold__ __attribute__((noreturn));
 
 #endif

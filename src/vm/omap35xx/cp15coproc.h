@@ -31,21 +31,31 @@
 #define SYS_CTRL_ACCESS_FLAG         0x20000000
 #define SYS_CTRL_THUMB_EXC_HANDLE    0x40000000
 
+#define IDPFR0_ARM_ISA_SUPPORT       0x00000001
+#define IDPFR0_THUMB2_ISA_SUPPORT    0x00000030
+
 
 #define CRB_INDEX(CRn, opc1, CRm, opc2)                                                            \
   ((((CRn * MAX_OPC1_VALUES) + opc1) * MAX_CRM_VALUES + CRm) * MAX_OPC2_VALUES + opc2)
+
+#define CRB_INDEX_TO_CRM(index)  ((index >> 3) & 0xF)
+#define CRB_INDEX_TO_CRN(index)  ((index >> 10) & 0xF)
+#define CRB_INDEX_TO_OP1(index)  ((index >> 7) & 0x7)
+#define CRB_INDEX_TO_OP2(index)  (index & 0x7)
 
 
 typedef enum coprocessor15Register
 {
   CP15_MIDR      = CRB_INDEX( 0, 0,  0, 0),
   CP15_CTR       = CRB_INDEX( 0, 0,  0, 1),
+  CP15_IDPFR0    = CRB_INDEX( 0, 0,  1, 0),
   CP15_MMFR0     = CRB_INDEX( 0, 0,  1, 4),
   CP15_MMFR1     = CRB_INDEX( 0, 0,  1, 5),
   CP15_CCSIDR    = CRB_INDEX( 0, 1,  0, 0),
   CP15_CLIDR     = CRB_INDEX( 0, 1,  0, 1),
   CP15_CSSELR    = CRB_INDEX( 0, 2,  0, 0),
   CP15_SCTRL     = CRB_INDEX( 1, 0,  0, 0),
+  CP15_ACTLR     = CRB_INDEX( 1, 0,  0, 1),
   CP15_TTBR0     = CRB_INDEX( 2, 0,  0, 0),
   CP15_TTBR1     = CRB_INDEX( 2, 0,  0, 1),
   CP15_TTBCR     = CRB_INDEX( 2, 0,  0, 2),
@@ -89,6 +99,40 @@ typedef struct coprocessorRegisterBankEntry
   u32int value;
   bool   valid;
 } CREG;
+
+/* Cortex-A8 specific */
+struct auxiliaryControlRegister
+{
+  unsigned l1AliasChecksEnable : 1;
+  unsigned l2Enable : 1;
+  unsigned : 1;
+  unsigned l1ParityDetectEnable : 1;
+  unsigned axiSpeculativeAccessEnable : 1;
+  unsigned l1NEONEnable : 1;
+  unsigned invalidateBTBEnable : 1;
+  unsigned branchSizeMispredictDisable : 1;
+  unsigned wfiNOP : 1;
+  unsigned pldNOP : 1;
+  unsigned forceSingleIssue : 1;
+  unsigned forceLoadStoreSingleIssue : 1;
+  unsigned forceNEONSingleIssue : 1;
+  unsigned forceMainClock : 1;
+  unsigned forceNEONClock : 1;
+  unsigned forceETMClock : 1;
+  unsigned cp1415PipelineFlush : 1;
+  unsigned cp1415WaitOnIdle : 1;
+  unsigned cp1415InstructionSerialization : 1;
+  unsigned clockStopRequestDisable : 1;
+  unsigned cacheMaintenancePipeline : 1;
+  unsigned : 9;
+  unsigned l1HardwareResetDisable : 1;
+  unsigned l2HardwareResetDisable : 1;
+};
+typedef union
+{
+  struct auxiliaryControlRegister bits;
+  u32int value;
+} ACTLR;
 
 
 CREG *createCRB(void) __cold__;

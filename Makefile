@@ -142,6 +142,8 @@ $(KCONFIG_CONFIG):
 
   CFLAGS-$(CONFIG_BUILD_ANALYZE_FUNCTIONS) += -Wsuggest-attribute=pure -Wsuggest-attribute=const -Wsuggest-attribute=noreturn
 
+  CFLAGS-$(CONFIG_BUILD_NO_UNALIGNED_ACCESS) += -mno-unaligned-access
+
   CFLAGS-$(CONFIG_BUILD_SSP) += -fstack-protector-all -Wstack-protector
 
   CFLAGS-$(CONFIG_BUILD_LTO) += -flto=jobserver -fuse-linker-plugin

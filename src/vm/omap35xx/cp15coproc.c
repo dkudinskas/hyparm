@@ -22,7 +22,7 @@ CREG *createCRB()
   {
     return NULL;
   }
-  
+
   DEBUG(INTERPRETER_ANY_COPROC, "Initializing coprocessor reg bank @ address %p" EOL, crb);
 
   /* MIDR:
@@ -39,6 +39,16 @@ CREG *createCRB()
    * cache type register: information on the architecture of caches
    * read only. init to 80048004 */
   initialiseRegister(crb, CP15_CTR, 0x80048004);
+
+  /* IDPFR0:
+   * processor feature register 0
+   * read only */
+#ifdef CONFIG_THUMB2
+  // For the future... if ever.
+  initialiseRegister(crb, CP15_IDPFR0, IDPFR0_ARM_ISA_SUPPORT | IDPFR0_THUMB2_ISA_SUPPORT);
+#else
+  initialiseRegister(crb, CP15_IDPFR0, IDPFR0_ARM_ISA_SUPPORT);
+#endif
 
   /* MMFR0:
    * memory model feature register 0
@@ -66,9 +76,13 @@ CREG *createCRB()
    * initialize to lvl0, data cache (0x00000000) */
   initialiseRegister(crb, CP15_CSSELR, 0);
 
-  /* SCTRL:
+  /* SCTLR:
    * system control register, init to C5187A */
   initialiseRegister(crb, CP15_SCTRL, 0x00C5187A);
+
+  /* ACTLR:
+   * auxiliary control register, init to 0x00000002 (L2 cache enabled) */
+  initialiseRegister(crb, CP15_ACTLR, 2);
 
   /* TTBR0:
    * translation table base register 0. initialise to 0. */
@@ -125,7 +139,7 @@ CREG *createCRB()
   /* DCCMVAC:
    * clean data cache line by MVA to PoC, write-only */
   initialiseRegister(crb, CP15_DCCMVAC, 0);
-  
+
   /* CP15_DCIMVAC:
    * invalidate data cache line (using MVA) */
   initialiseRegister(crb, CP15_DCIMVAC, 0);
@@ -232,15 +246,18 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
   if (unlikely(!registerBank[registerIndex].valid))
   {
     // guest writing to a register that is not valid yet! investigate
-    printf("setCregVal: reg=%#.8x value=%#.8x" EOL, registerIndex, value);
+    printf("setCregVal: op1=%#x CRn=%#x CRm=%#x op2=%#x value=%#.8x" EOL,
+           CRB_INDEX_TO_OP1(registerIndex), CRB_INDEX_TO_CRN(registerIndex),
+           CRB_INDEX_TO_CRM(registerIndex), CRB_INDEX_TO_OP2(registerIndex), value);
     DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 
   u32int oldVal = registerBank[registerIndex].value;
   registerBank[registerIndex].value = value;
 
-  DEBUG(INTERPRETER_ANY_COPROC, "setCregVal reg=%#.8x value=%#.8x -> %#.8x" EOL, registerIndex,
-        oldVal, value);
+  DEBUG(INTERPRETER_ANY_COPROC, "setCregVal: op1=%#x CRn=%#x CRm=%#x op2=%#x value=%#.8x -> %#.8x" EOL,
+        CRB_INDEX_TO_OP1(registerIndex), CRB_INDEX_TO_CRN(registerIndex),
+        CRB_INDEX_TO_CRM(registerIndex), CRB_INDEX_TO_OP2(registerIndex), oldVal, value);
 
   switch (registerIndex)
   {
@@ -311,7 +328,7 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
         DEBUG(INTERPRETER_ANY_COPROC, "CP15: SysCtrl - low interrupt vector set." EOL);
         context->guestHighVectorSet = FALSE;
       }
-      
+
       if (((oldVal & SYS_CTRL_ALIGNMENT) == 0) && ((value & SYS_CTRL_ALIGNMENT) != 0))
       {
         DEBUG(INTERPRETER_ANY_COPROC, "CP15: sysctrl align check set." EOL);
@@ -332,6 +349,45 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
 //      DIE_NOW(NULL, "CP15: SysCtrl - set tex remap, investigate.\n");
       }
       break;
+    }
+    case CP15_ACTLR:
+    {
+      ACTLR old = { .value = oldVal };
+      ACTLR new = { .value = value };
+      ASSERT(old.bits.l1AliasChecksEnable == new.bits.l1AliasChecksEnable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.l2Enable == new.bits.l2Enable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.l1ParityDetectEnable == new.bits.l1ParityDetectEnable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.axiSpeculativeAccessEnable == new.bits.axiSpeculativeAccessEnable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.l1NEONEnable == new.bits.l1NEONEnable, ERROR_NOT_IMPLEMENTED)
+      if (old.bits.invalidateBTBEnable != new.bits.invalidateBTBEnable)
+      {
+        if (new.bits.invalidateBTBEnable)
+        {
+          printf("Warning: guest enabling CP15 BTB invalidate operations");
+        }
+        else
+        {
+          printf("Warning: guest disabling CP15 BTB invalidate operations");
+        }
+        old.bits.invalidateBTBEnable = new.bits.invalidateBTBEnable;
+        registerBank[CP15_ACTLR].value = old.value;
+      }
+      ASSERT(old.bits.branchSizeMispredictDisable == new.bits.branchSizeMispredictDisable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.wfiNOP == new.bits.wfiNOP, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.pldNOP == new.bits.pldNOP, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceSingleIssue == new.bits.forceSingleIssue, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceLoadStoreSingleIssue == new.bits.forceLoadStoreSingleIssue, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceNEONSingleIssue == new.bits.forceNEONSingleIssue, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceMainClock == new.bits.forceMainClock, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceNEONClock == new.bits.forceNEONClock, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.forceETMClock == new.bits.forceETMClock, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.cp1415PipelineFlush == new.bits.cp1415PipelineFlush, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.cp1415WaitOnIdle == new.bits.cp1415WaitOnIdle, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.cp1415InstructionSerialization == new.bits.cp1415InstructionSerialization, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.clockStopRequestDisable == new.bits.clockStopRequestDisable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.cacheMaintenancePipeline == new.bits.cacheMaintenancePipeline, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.l1HardwareResetDisable == new.bits.l1HardwareResetDisable, ERROR_NOT_IMPLEMENTED)
+      ASSERT(old.bits.l2HardwareResetDisable == new.bits.l2HardwareResetDisable, ERROR_NOT_IMPLEMENTED)
     }
     case CP15_TTBR0:
     {
@@ -587,7 +643,12 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
       break;
     }
     default:
+    {
+      printf("setCregVal: op1=%#x CRn=%#x CRm=%#x op2=%#x value=%#.8x not handled" EOL,
+             CRB_INDEX_TO_OP1(registerIndex), CRB_INDEX_TO_CRN(registerIndex),
+             CRB_INDEX_TO_CRM(registerIndex), CRB_INDEX_TO_OP2(registerIndex), value);
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+    }
   }
 }
 
@@ -595,7 +656,9 @@ u32int getCregVal(CREG *registerBank, u32int registerIndex)
 {
   const CREG *cr = &registerBank[registerIndex];
 
-  DEBUG(INTERPRETER_ANY_COPROC, "getCreg: reg=%#.8x value=%#.8x valid=%x" EOL, registerIndex,
+  DEBUG(INTERPRETER_ANY_COPROC, "getCreg: op1=%#x CRn=%#x CRm=%#x op2=%#x value=%#.8x valid=%x" EOL,
+        CRB_INDEX_TO_OP1(registerIndex), CRB_INDEX_TO_CRN(registerIndex),
+        CRB_INDEX_TO_CRM(registerIndex), CRB_INDEX_TO_OP2(registerIndex),
         cr->value, cr->valid);
 
   if (cr->valid)
@@ -604,7 +667,9 @@ u32int getCregVal(CREG *registerBank, u32int registerIndex)
   }
   else
   {
-    printf("getCreg: reg=%#.8x value=%#.8x invalid" EOL, registerIndex, cr->value);
+    printf("getCregVal: op1=%#x CRn=%#x CRm=%#x op2=%#x value=%#.8x invalid" EOL,
+           CRB_INDEX_TO_OP1(registerIndex), CRB_INDEX_TO_CRN(registerIndex),
+           CRB_INDEX_TO_CRM(registerIndex), CRB_INDEX_TO_OP2(registerIndex), cr->value);
     DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 }
