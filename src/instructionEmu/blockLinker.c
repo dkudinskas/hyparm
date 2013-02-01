@@ -100,7 +100,6 @@ void unlinkBlock(BasicBlock* block, u32int index)
 
 void unlinkAllBlocks(GCONTXT *context)
 {
-  DIE_NOW(0, "unlinkAllBlocks unimplemented.\n");
   u32int i = 0;
   /* we traverse the complete block translation store
    * inside the loop we unlink all current group-blocks. */ 

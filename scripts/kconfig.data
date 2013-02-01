@@ -90,6 +90,9 @@ config MMC_LOG
   depends on DEBUG
 endchoice
 
+config PROFILER
+  bool "Enable profiling"
+
 endmenu
 
 menu "Physical hardware platform"

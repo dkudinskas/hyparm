@@ -72,6 +72,11 @@ zeroFillBSS$:
   LDR     R3, =__stack_chk_guard
   STR     R2, [R3]
 #endif /* CONFIG_BUILD_SSP */
+
+#ifdef CONFIG_PROFILER
+  CPSIE   F
+#endif
+
   /*
    * Branch to main.
    * This function must never return.
@@ -398,8 +403,14 @@ setEmergencyExceptionVector:
    * Construct SPSR in R0: set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and
    * restore all other fields from the CPSR
    */
+#ifdef CONFIG_PROFILER
+  BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
+  ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
+#endif
+
 #ifdef CONFIG_THUMB2
   /*
    * Also update guest PC when guest is in Thumb mode, then save SPSR
@@ -437,7 +448,11 @@ setEmergencyExceptionVector:
   /*
    * Patch CPSR value (set user mode) and store to SPSR
    */
+#ifdef CONFIG_PROFILER
+  BIC     R0, R0, #(PSR_MODE | PSR_F_BIT)
+#else
   BIC     R0, R0, #PSR_MODE
+#endif
   ORR     R0, R0, #PSR_USR_MODE
   MSR     SPSR_cxsf, R0
   POP     {R0}
@@ -670,14 +685,12 @@ irqHandlerPriv:
 
 .global fiqHandler
 fiqHandler:
-  /* this is not implemented really */
-  STMFD SP!, {LR}
-  STMFD SP!, {R0-R12}
-
+  push    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
+  SUB    r0, lr, #4
   BL fiq
-
-  LDMFD SP!, {R0-R12}
-  LDMFD SP!, {PC}^
+  pop     {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
+  // TODO: Check if this works correctly in Thumb mode
+  SUBS PC, LR, #4
 
 
 /*

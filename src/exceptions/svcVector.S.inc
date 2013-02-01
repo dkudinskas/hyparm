@@ -122,8 +122,13 @@ contSvcSvc:
   
   /* Construct SPSR in R0: set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and
     restore all other fields from the CPSR*/
+#ifdef CONFIG_PROFILER
+  BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
+  ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
+#endif
   MSR     SPSR, R0
   POP     {R0}
   /* MOVS cannot do interworking */
@@ -237,8 +242,13 @@ contSvcDabt:
   
   /* Construct SPSR in R0: set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and
     restore all other fields from the CPSR*/
+#ifdef CONFIG_PROFILER
+  BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
+  ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
+#endif
   MSR     SPSR, R0
   POP     {R0}
 #ifdef CONFIG_THUMB2
@@ -357,8 +367,14 @@ contSvcIrq:
   
   /* Construct SPSR in R0: set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and
     restore all other fields from the CPSR*/
+#ifdef CONFIG_PROFILER
+  BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
+  ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
+#endif
+
 #ifdef CONFIG_THUMB2
   TST     R0, #PSR_T_BIT
 #endif
@@ -378,11 +394,8 @@ contSvcIrq:
 /***************************************************/
 .global svcFiq
 svcFiq:
-  /* this is not implemented really */
-  STMFD SP!, {LR}
-  STMFD SP!, {R0-R12}
-
+  push    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
+  SUB    r0, lr, #4
   BL fiq
-
-  LDMFD SP!, {R0-R12}
-  LDMFD SP!, {PC}^
+  pop     {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, lr}
+  SUBS PC, LR, #4

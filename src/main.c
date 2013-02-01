@@ -8,8 +8,10 @@
 #include "common/stdarg.h"
 #include "common/stddef.h"
 #include "common/string.h"
-
 #include "common/memoryAllocator/allocator.h"
+#ifdef CONFIG_PROFILER
+#include "common/profiler.h"
+#endif
 
 #include "cpuArch/armv7.h"
 
@@ -183,6 +185,11 @@ void main(s32int argc, char *argv[])
     DIE_NOW(context, "Failed to open (create) debug stream file.");
   }
 #endif /* CONFIG_MMC_LOG */
+
+#ifdef CONFIG_PROFILER
+  profilerInit();
+  printf("Profiler started\n");
+#endif
 
   // does not return
   switch (config.guestOS)

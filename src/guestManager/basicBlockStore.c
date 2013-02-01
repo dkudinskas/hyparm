@@ -28,24 +28,18 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
 
   if (ts->write)
   {
+    basicBlock->codeStoreSize++;
     *ts->codeStoreFreePtr = instruction;
+    mmuCleanDCacheByMVAtoPOU((u32int)ts->codeStoreFreePtr);
+    mmuInvIcacheByMVAtoPOU((u32int)ts->codeStoreFreePtr);
+    DEBUG(BLOCK_STORE, "addInstructionToBlock: codeStore loc %p is now %08x\n",
+                                   ts->codeStoreFreePtr, *ts->codeStoreFreePtr);
   }
-
-  /* to ensure data and instruction cache coherency
-   * 1. clean data cache entry by start and end address of code store
-   * (DCCMVAU, Clean data cache line by MVA to PoU: c7, 0, c11, 1)
-   * 2. invalidate instruction cache entry by start and end address.
-   * (ICIMVAU, Invalidate instruction caches by MVA to PoU: c7, 0, c5, 1) */
-  mmuCleanDCacheByMVAtoPOU((u32int)ts->codeStoreFreePtr);
-  mmuInvIcacheByMVAtoPOU((u32int)ts->codeStoreFreePtr);
-  DEBUG(BLOCK_STORE, "addInstructionToBlock: codeStore loc %p is now %08x\n",
-                                 ts->codeStoreFreePtr, *ts->codeStoreFreePtr);
-
   ts->codeStoreFreePtr++;
-  basicBlock->codeStoreSize++;
 
   if ((u32int)ts->codeStoreFreePtr >= RAM_CODE_CACHE_POOL_END)
   {
+    printf("reached the end of code cache pool!\n"); 
     // reset free pointer
     ts->codeStoreFreePtr = ts->codeStore;
     
@@ -62,23 +56,26 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
       instrPtr++;
     }
     
-    basicBlock->codeStoreStart = ts->codeStore;
-    
-    // save all information from basic block entry
-    // as basic block store is going to be zeroed
-    BasicBlock tempBlock = *basicBlock;
-    
-    // invalidate the basic block store
-    memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
-    
-    // restore basic block store entry    
-    basicBlock->guestStart = tempBlock.guestStart;
-    basicBlock->guestEnd = tempBlock.guestEnd;
-    basicBlock->codeStoreStart = tempBlock.codeStoreStart;
-    basicBlock->codeStoreSize = tempBlock.codeStoreSize;
-    basicBlock->handler = tempBlock.handler;
-    basicBlock->type = tempBlock.type;
-    basicBlock->addressMap = tempBlock.addressMap;
+    if (ts->write)
+    {
+      basicBlock->codeStoreStart = ts->codeStore;
+      
+      // save all information from basic block entry
+      // as basic block store is going to be zeroed
+      BasicBlock tempBlock = *basicBlock;
+      
+      // invalidate the basic block store
+      memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
+      
+      // restore basic block store entry    
+      basicBlock->guestStart = tempBlock.guestStart;
+      basicBlock->guestEnd = tempBlock.guestEnd;
+      basicBlock->codeStoreStart = tempBlock.codeStoreStart;
+      basicBlock->codeStoreSize = tempBlock.codeStoreSize;
+      basicBlock->handler = tempBlock.handler;
+      basicBlock->type = tempBlock.type;
+      basicBlock->addressMap = tempBlock.addressMap;
+    }
   }
   
   DEBUG(BLOCK_STORE, "addInstructionToBlock: codeStoreSize %x\n", basicBlock->codeStoreSize);

@@ -59,6 +59,10 @@ void toggleTimerFclk(u32int clockID, bool enable)
         break;
       }
       case 3:
+      {
+        regVal = enable ? (regVal | CM_FCLKEN_PER_GPT3) : (regVal & ~CM_FCLKEN_PER_GPT3);
+        break;
+      }
       case 4:
       case 5:
       case 6:
@@ -97,6 +101,10 @@ void setClockSource(u32int clockID, bool sysClock)
         break;
       }
       case 3:
+      {
+        regVal = sysClock ? (regVal | CM_CLKSEL_PER_GPT3) : (regVal & ~CM_CLKSEL_PER_GPT3);
+        break;
+      }
       case 4:
       case 5:
       case 6:

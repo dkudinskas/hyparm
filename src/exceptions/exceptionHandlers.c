@@ -1,6 +1,9 @@
 #include "common/debug.h"
 #include "common/stddef.h"
-
+#ifdef CONFIG_PROFILER
+#include "common/profiler.h"
+#endif
+ 
 #include "cpuArch/armv7.h"
 #include "cpuArch/constants.h"
 
@@ -150,6 +153,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     DIE_NOW(context, "softwareInterrupt: Invalid nextPC. Instr to implement?");
   }
 
+
   traceBlock(context, nextPC);
 
   u32int lastPC = context->R15;
@@ -267,7 +271,7 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
   getActiveGuestContext()->dabtCount++;
   getActiveGuestContext()->dabtPriv++;
 #endif
-
+  printf("dabtPriv @ %08x\n", pc);
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
 
@@ -443,7 +447,7 @@ GCONTXT *irq(GCONTXT *context)
   getActiveGuestContext()->irqUser++;
 #endif
 
-  // Get the number of the highest priority active IRQ/FIQ
+  // Get the number of the highest priority active IRQ
   u32int activeIrqNumber = getIrqNumberBE();
   switch(activeIrqNumber)
   {
@@ -499,9 +503,9 @@ GCONTXT *irq(GCONTXT *context)
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
-   * that the preceding writes are done before enabling IRQs/FIQs,
+   * that the preceding writes are done before enabling IRQss,
    * a Data Synchronization Barrier is used. This operation ensure that
-   * the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
+   * the IRQ line is de-asserted before IRQ enabling. */
   __asm__ __volatile__("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
@@ -517,7 +521,7 @@ void irqPrivileged()
   context->irqPriv++;
 #endif
 
-  // Get the number of the highest priority active IRQ/FIQ
+  // Get the number of the highest priority active IRQ
   u32int activeIrqNumber = getIrqNumberBE();
   switch(activeIrqNumber)
   {
@@ -564,20 +568,46 @@ void irqPrivileged()
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
-   * that the preceding writes are done before enabling IRQs/FIQs,
+   * that the preceding writes are done before enabling IRQss,
    * a Data Synchronization Barrier is used. This operation ensure that
-   * the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
+   * the IRQ line is de-asserted before IRQ enabling. */
   __asm__ __volatile__("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
 }
 
 
-void fiq(void)
+void fiq(u32int addr)
 {
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-}
-
+#ifdef CONFIG_PROFILER
+//  printf("-");
+  GCONTXT *const context = getActiveGuestContext();
+  
+  u32int activeFiqNumber = getFiqNumberBE();
+  switch (activeFiqNumber)
+  {
+    case GPT3_IRQ:
+    {
+//      u32int pAddr = getPhysicalAddress(context, context->pageTables->shadowActive, addr);
+      profilerRecord(addr);
+      gptBEClearOverflowInterrupt(3);
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "unimplemented FIQ handler.");
+  }
+  
+  acknowledgeFiqBE();
+  
+  // write barrier
+  asm volatile("MOV R0, #0\n\t"
+               "MCR P15, #0, R0, C7, C10, #4"
+               : : : "memory");
+//  printf(".");
+#else
+   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+ }
 
 
 void dabtPermissionFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
