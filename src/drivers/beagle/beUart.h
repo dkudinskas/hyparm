@@ -161,6 +161,8 @@ char serialGetc(void);
 
 char serialGetcAsync(void);
 
+bool serialCheckInput(void);
+
 void beUartInit(u32int uartid);
 
 void beUartReset(u32int uartid);

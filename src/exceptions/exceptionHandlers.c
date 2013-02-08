@@ -271,7 +271,6 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
   getActiveGuestContext()->dabtCount++;
   getActiveGuestContext()->dabtPriv++;
 #endif
-  printf("dabtPriv @ %08x\n", pc);
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
 
@@ -485,14 +484,19 @@ GCONTXT *irq(GCONTXT *context)
     }
     case UART3_IRQ:
     {
-      /*
-       * FIXME: Niels: are we sure we're supposed to read characters unconditionally?
-       */
       // read character from UART
-      u8int c = serialGetcAsync();
-      acknowledgeIrqBE();
-      // forward character to emulated UART
-      uartPutRxByte(context, c, 3);
+      if (serialCheckInput())
+      {
+        u8int c = serialGetcAsync();
+        acknowledgeIrqBE();
+        // forward character to emulated UART
+        uartPutRxByte(context, c, 3);
+      }
+      else
+      {
+        // what interrupt??
+        acknowledgeIrqBE();
+      }
       break;
     }
     default:
@@ -550,14 +554,19 @@ void irqPrivileged()
     }
     case UART3_IRQ:
     {
-      /*
-       * FIXME: Niels: are we sure we're supposed to read characters unconditionally?
-       */
       // read character from UART
-      u8int c = serialGetcAsync();
-      acknowledgeIrqBE();
-      // forward character to emulated UART
-      uartPutRxByte(context, c, 3);
+      if (serialCheckInput())
+      {
+        u8int c = serialGetcAsync();
+        acknowledgeIrqBE();
+        // forward character to emulated UART
+        uartPutRxByte(context, c, 3);
+      }
+      else
+      {
+        // what interrupt??
+        acknowledgeIrqBE();
+      }
       break;
     }
     default:
