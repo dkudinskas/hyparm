@@ -589,7 +589,6 @@ void irqPrivileged()
 void fiq(u32int addr)
 {
 #ifdef CONFIG_PROFILER
-//  printf("-");
   GCONTXT *const context = getActiveGuestContext();
   
   u32int activeFiqNumber = getFiqNumberBE();
@@ -597,7 +596,6 @@ void fiq(u32int addr)
   {
     case GPT3_IRQ:
     {
-//      u32int pAddr = getPhysicalAddress(context, context->pageTables->shadowActive, addr);
       profilerRecord(addr);
       gptBEClearOverflowInterrupt(3);
       break;
@@ -612,7 +610,6 @@ void fiq(u32int addr)
   asm volatile("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
                : : : "memory");
-//  printf(".");
 #else
    DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 #endif

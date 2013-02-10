@@ -22,8 +22,7 @@ void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastB
     return;
   }
 
-  u32int addressMap = context->virtAddrEnabled ? (u32int)context->pageTables->guestPhysical : 0;
-  if (((u32int)nextBlock->guestStart != nextPC) || (nextBlock->addressMap != addressMap))
+  if ((u32int)nextBlock->guestStart != nextPC)
   {
     // conflict. return, let scanBlock() deal with conflict first, link later.
     return;

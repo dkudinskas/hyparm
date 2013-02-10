@@ -32,7 +32,6 @@ struct BasicBlockEntry
   u32int* codeStoreStart;
   u32int codeStoreSize;
   InstructionHandler handler;
-  u32int addressMap;
   u32int versionNumber;
   u8int hotness;
   bool oneHypercall;
@@ -49,5 +48,7 @@ void invalidateBlock(BasicBlock* block);
 
 void setExecBitmap(GCONTXT* context, u32int start, u32int end);
 bool isExecBitSet(GCONTXT* context, u32int addr);
+
+void dumpBlockStoreStats(GCONTXT* context);
 
 #endif

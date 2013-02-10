@@ -45,8 +45,8 @@
 #define UART_IIR_IT_TYPE_SHAMT           0x1
 #define UART_IIR_IT_PENDING     0x00000001 // interrupt pending bit
 #define UART_FCR_REG          0x00000008 // FIFO control register, W/O
-#define UART_FCR_RX_FIFO_TRIG   0x0000000C // RX FIFO trigger level
-#define UART_FCR_TX_FIFO_TRIG   0x00000003 // TX FIFO trigger level 
+#define UART_FCR_RX_FIFO_TRIG   0x000000C0 // RX FIFO trigger level
+#define UART_FCR_TX_FIFO_TRIG   0x00000030 // TX FIFO trigger level 
 #define UART_FCR_DMA_MODE       0x00000008 // set DMA on (1) or off (0)
 #define UART_FCR_TX_FIFO_CLR    0x00000004 // clear TX FIFO, reset counter to 0
 #define UART_FCR_RX_FIFO_CLR    0x00000002 // clear RX FIFO, reset counter to 0
@@ -168,8 +168,5 @@ void beUartInit(u32int uartid);
 void beUartReset(u32int uartid);
 
 void beUartStartup(u32int uartid, u32int baudRate);
-
-void beUartDumpRegs(u32int uartid);
-
 
 #endif

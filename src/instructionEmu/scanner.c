@@ -202,10 +202,9 @@ void scanBlock(GCONTXT *context, u32int startAddress)
   BasicBlock* basicBlock = getBasicBlockStoreEntry(context->translationStore, blockIndex);
   
   bool blockFound = FALSE;
-  u32int addressMap = context->virtAddrEnabled ? (u32int)context->pageTables->guestPhysical : 0;
   if (basicBlock->type != BB_TYPE_INVALID)
   {
-    if ((basicBlock->addressMap == addressMap) && ((u32int)basicBlock->guestStart == startAddress))
+    if (((u32int)basicBlock->guestStart == startAddress))
     {
       // entry valid, address map maches, and start address maches. really found!
       blockFound = TRUE;
@@ -213,6 +212,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     else
     {
       // conflict!
+      context->conflictTotal++;
       if (basicBlock->type == GB_TYPE_ARM)
       {
         context->groupBlockVersion++;
@@ -276,8 +276,6 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
   basicBlock->codeStoreSize = 0;
   basicBlock->handler = NULL;
   basicBlock->type = BB_TYPE_ARM;
-
-  basicBlock->addressMap = (context->virtAddrEnabled) ? (u32int)context->pageTables->guestPhysical : 0;
 
   // Scan guest code and copy to code store
   // translating instructions on the fly

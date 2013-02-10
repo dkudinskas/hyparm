@@ -128,6 +128,8 @@ void main(s32int argc, char *argv[])
    * Print the bounds of the hypervisor image in RAM.
    */
   DEBUG(STARTUP, "Hypervisor @ %#.8x -- %#.8x" EOL, HYPERVISOR_BEGIN_ADDRESS, HYPERVISOR_END_ADDRESS);
+  DEBUG(STARTUP, "Code store @ %#.8x -- %#.8x" EOL, RAM_CODE_CACHE_POOL_BEGIN, RAM_CODE_CACHE_POOL_END);
+  DEBUG(STARTUP, "Malloc Region @ %#.8x -- %#.8x" EOL, RAM_XN_POOL_BEGIN, RAM_XN_POOL_END);
 
   /*
    * Use command line arguments passed by U-Boot to update the runtime configuration structure. The

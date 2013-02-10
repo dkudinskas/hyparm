@@ -163,6 +163,7 @@ struct guestContext
   u32int groupBlockVersion;
 
   u8int *execBitmap;
+  u32int conflictTotal;
 
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   u32int svcCount;

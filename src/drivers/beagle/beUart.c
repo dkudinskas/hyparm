@@ -160,24 +160,23 @@ void beUartInit(u32int uartid)
   beLoadUart(UART_MSR_REG, uartid);
   beLoadUart(UART_IIR_REG, uartid);
 
+  // set up hypervisor structure
   beUart[arrayIndex]->loopback = FALSE;
-
   beUart[arrayIndex]->baseAddress = beGetUartBaseAddr(uartid);
   beUart[arrayIndex]->size = UART_SIZE;
 }
 
-/* just perform a software reset of the device */
+/*
+ * Perform a software reset of the device 
+ */
 void beUartReset(u32int uartid)
 {
   u32int sysCtrl = beLoadUart(UART_SYSC_REG, uartid);
   sysCtrl |= UART_SYSC_REG_RESET;
   beStoreUart(UART_SYSC_REG, sysCtrl, uartid);
-
   while ((beLoadUart(UART_SYSS_REG, uartid) & UART_SYSS_REG_RSTDONE) != UART_SYSS_REG_RSTDONE)
   {
-    /*
-     * Wait for reset done bit
-     */
+    // Wait for reset done bit
   }
 }
 
@@ -251,16 +250,12 @@ static inline u8int beLoadUart(u32int regOffs, u32int uartid)
   return *(volatile u8int *)(beGetUartBaseAddr(uartid) | regOffs);
 }
 
+
 static inline void beStoreUart(u32int regOffs, u8int value, u32int uartid)
 {
   *(volatile u8int *)(beGetUartBaseAddr(uartid) | regOffs) = value;
 }
 
-
-void beUartDumpRegs(u32int uartid)
-{
-  // TODO
-}
 
 static inline u32int beGetUartBaseAddr(u32int id)
 {

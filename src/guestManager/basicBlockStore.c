@@ -3,6 +3,7 @@
 #include "guestManager/guestContext.h"
 
 #include "common/debug.h"
+#include "common/helpers.h"
 #include "common/linker.h"
 #include "common/stdlib.h"
 
@@ -11,7 +12,8 @@
 
 u32int getBasicBlockStoreIndex(u32int startAddress)
 {
-  return (startAddress >> 2) & (BASIC_BLOCK_STORE_SIZE - 1);
+  u32int index = crc16((u8int*)&startAddress, 4);
+  return index & (BASIC_BLOCK_STORE_SIZE - 1);
 }
 
 
@@ -39,7 +41,8 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
 
   if ((u32int)ts->codeStoreFreePtr >= RAM_CODE_CACHE_POOL_END)
   {
-    printf("reached the end of code cache pool!\n"); 
+    printf("reached the end of code cache pool!\n");
+    dumpBlockStoreStats(getActiveGuestContext());
     // reset free pointer
     ts->codeStoreFreePtr = ts->codeStore;
     
@@ -74,7 +77,6 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
       basicBlock->codeStoreSize = tempBlock.codeStoreSize;
       basicBlock->handler = tempBlock.handler;
       basicBlock->type = tempBlock.type;
-      basicBlock->addressMap = tempBlock.addressMap;
     }
   }
   
@@ -125,3 +127,34 @@ bool isExecBitSet(GCONTXT* context, u32int addr)
   u8int actualBit = (actualByte >> bitIndex) & 1;
   return (actualBit != 0) ? TRUE : FALSE;
 }
+
+
+void dumpBlockStoreStats(GCONTXT* context)
+{
+  BasicBlock* index = context->translationStore->basicBlockStore;
+  u32int occupied = 0, free = 0;
+  u32int i;
+  u32int sizeOfBlocks = 0;
+  for (i = 0; i < BASIC_BLOCK_STORE_SIZE; i++)
+  {
+    if (index[i].type == BB_TYPE_INVALID)
+    {
+      free++;
+    }
+    else
+    {
+      occupied++;
+      sizeOfBlocks += index[i].codeStoreSize;
+    }
+  }
+  printf("======================================================\n");
+  printf("Basic Block Index Entries:    %08x\n", BASIC_BLOCK_STORE_SIZE);
+  printf("Basic Block entries free:     %08x\n", free);
+  printf("Basic Block entries occupied: %08x\n", occupied);
+  printf("conflictTotal: %08x\n", context->conflictTotal);
+  context->conflictTotal = 0;
+  printf("total used block store space %08x\n", sizeOfBlocks);
+  printf("======================================================\n");
+
+}
+
