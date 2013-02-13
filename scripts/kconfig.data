@@ -96,6 +96,9 @@ endchoice
 config PROFILER
   bool "Enable profiling"
 
+config STATS
+  bool "enable gathering overhead stats"
+
 endmenu
 
 menu "Physical hardware platform"

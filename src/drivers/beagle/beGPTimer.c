@@ -144,10 +144,9 @@ void gptBEEnable(u32int id)
 }
 
 
-// Warning: this probably isn't very accurate
-void gptBESetPeriod(u32int id, u32int ms)
+void gptBESetPeriod(u32int id)
 {
-  printf("gptBESetPeriod %08x for gpt %x\n", ms, id);
+  printf("gptBESetPeriod for gpt %x\n", id);
   setClockSource(id, FALSE);
   // source clock is now 32kHz, meaning 32768 'ticks' a second.
   // to set period: 32kHz/1000 * ms

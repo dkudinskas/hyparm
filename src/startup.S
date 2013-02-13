@@ -26,8 +26,27 @@ _start:
   BIC     r2, r2, #SCTLR_M
   MCR     p15, 0, r2, c1, c0, 0
   ISB
+
+#ifdef CONFIG_STATS
+  MOV     R8, #0
+  ORR     R8, R8, #1              /* enable all counters */
+  ORR     R8, R8, #2              /* reset all performance counters to 0 */
+  ORR     R8, R8, #4              /* reset cycle counter to 0 */
+  ORR     R8, R8, #8              /* ENABLE the divider (64)*/
+  ORR     R8, R8, #16             /* not sure: enable export events? */
+  MCR     p15, 0, R8, c9, c12, 0  /* Write PMNC Register */
+
+  MOVW    R8, #0x000f
+  MOVT    R8, #0x8000
+  MCR     p15, 0, R8, c9, c12, 1  /* enable all counters */
+  MOV     R7, #0
+  MCR     p15, 0, R7, c9, c12, 2  /* enable all counters */
+  MCR     p15, 0, R8, c9, c12, 3  /* clear all overflow flags */
+#endif
+
+
   /*
-   * The hypervisor is started through U-Boot, and any command line arguments are passed as following:
+   * The hypervisor is started through U-Boot, any command line arguments are passed as following:
    * - R0 contains the number of arguments;
    * - R1 is a pointer to an array of null-terminated C strings.
    * These arguments will be used by main and will be preserved if we don't touch R0 and R1.
@@ -179,6 +198,8 @@ undVector:
   B       undIrq
   B       undFiq
 
+
+#include "exceptions/macros.S.inc"
 #include "exceptions/abortVector.S.inc"
 #include "exceptions/svcVector.S.inc"
 #include "exceptions/irqVector.S.inc"
@@ -218,7 +239,6 @@ setEmergencyExceptionVector:
   BX      LR
 
 #endif /* CONFIG_EMERGENCY_EXCEPTION_VECTOR */
-
 
 /*
  * get_emulated_mode
@@ -781,6 +801,28 @@ topStackGap:
 activeGuestContext:
 guestContextSpace:
   .space 4
+#ifdef CONFIG_STATS
+.global timerStartSvc
+timerStartSvc:
+  .space 4
+.global timerTotalSvc
+timerTotalSvc:
+  .space 4
+.global timerNumberSvc
+timerNumberSvc:
+  .space 4
+
+.global timerStartDabt
+timerStartDabt:
+  .space 4
+.global timerTotalDabt
+timerTotalDabt:
+  .space 4
+.global timerNumberDabt
+timerNumberDabt:
+  .space 4
+
+#endif
 
 
 /*

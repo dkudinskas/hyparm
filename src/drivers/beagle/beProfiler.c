@@ -14,7 +14,7 @@ void profilerBEInit()
   setClockSource(PROFILER_GPT, FALSE);
   toggleTimerFclk(PROFILER_GPT, TRUE);
   gptBEInit(PROFILER_GPT);
-  gptBESetPeriod(PROFILER_GPT, 0);
+  gptBESetPeriod(PROFILER_GPT);
   gptBEEnableOverflowInterrupt(PROFILER_GPT);
   unmaskInterruptBE(PROFILER_GPT_IRQ);
   profiler.enabled = TRUE;

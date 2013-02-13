@@ -153,7 +153,7 @@ void gptBEEnable(u32int id);
 
 void gptBEEnableOverflowInterrupt(u32int id);
 
-void gptBESetPeriod(u32int id, u32int ms);
+void gptBESetPeriod(u32int id);
 
 void gptBESet10msTick(u32int id);
 

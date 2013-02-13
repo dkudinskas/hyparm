@@ -79,7 +79,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
 
-
 #ifdef CONFIG_THUMB2
   /* Make sure that any SVC that is not part of the scanner
    * will be delivered to the guest */
@@ -152,7 +151,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   {
     DIE_NOW(context, "softwareInterrupt: Invalid nextPC. Instr to implement?");
   }
-
 
   traceBlock(context, nextPC);
 

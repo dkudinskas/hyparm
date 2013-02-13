@@ -30,7 +30,11 @@ svcUndefined:
 /***************************************************/
 .global svcSvc
 svcSvc:
-  PUSH   {LR}
+#ifdef CONFIG_STATS
+  recordStartSvc
+#endif
+
+  PUSH    {LR}
 
   /* Load guest context into LR and store R0--R12 into guest context. */
   LDR     LR, =guestContextSpace
@@ -130,12 +134,16 @@ contSvcSvc:
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
 #endif
   MSR     SPSR, R0
+
   POP     {R0}
   /* MOVS cannot do interworking */
 #ifdef CONFIG_THUMB2
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndSvc
+#endif
   MOVS    PC, LR
 #endif
 
@@ -153,6 +161,9 @@ svcPrefetch:
 /***************************************************/
 .global svcDataAbort
 svcDataAbort:
+#ifdef CONFIG_STATS
+  recordStartDabt
+#endif
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
@@ -250,6 +261,10 @@ contSvcDabt:
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
 #endif
   MSR     SPSR, R0
+
+#ifdef CONFIG_STATS
+  recordEndDabt
+#endif
   POP     {R0}
 #ifdef CONFIG_THUMB2
   STMDB   SP, {LR}
