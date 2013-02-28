@@ -88,9 +88,14 @@ void l2_cache_disable(void);
 
 
 /*
- * Infinite loop waiting for interrupts (even if they are masked); used on crash
+ * breakIfDebugging: insert software breakpoint when CONFIG_BKPT is set
+ * infiniteIdleLoop: infinite loop waiting for interrupts (even if they are masked); used on crash
  */
 #ifdef CONFIG_BKPT
+#define breakIfDebugging() \
+  { \
+    __asm__ __volatile__ ("BKPT #0xBAD"); \
+  }
 #define infiniteIdleLoop() \
   { \
     while (TRUE) \
@@ -99,6 +104,7 @@ void l2_cache_disable(void);
     } \
   }
 #else
+#define breakIfDebugging()  {}
 #define infiniteIdleLoop() \
   { \
     while (TRUE) \

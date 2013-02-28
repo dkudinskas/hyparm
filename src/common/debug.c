@@ -85,16 +85,19 @@ static void banner(const char *msg)
 
 void dieNow(const char *fileName, u32int line, const char *caller, const char *message)
 {
+  breakIfDebugging();
   dieNowF(fileName, line, caller, "%s", message);
 }
 
 void dieNow2(const char *fileName, u32int line, const char *caller, const char *message1, const char *message2)
 {
+  breakIfDebugging();
   dieNowF(fileName, line, caller, "%s%s", message1, message2);
 }
 
 void dieNowF(const char *fileName, u32int line, const char *caller, const char *format, ...)
 {
+  breakIfDebugging();
 #ifdef CONFIG_EMERGENCY_EXCEPTION_VECTOR
   setEmergencyExceptionVector();
 #endif
