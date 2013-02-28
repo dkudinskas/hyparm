@@ -4,13 +4,13 @@
 #include "common/string.h"
 
 #include "drivers/beagle/beGPTimer.h"
+#include "drivers/beagle/beClockMan.h"
 
 
 struct GeneralPurposeTimerBE
 {
   u32int baseAddress;
   bool enabled;
-  //bool enabled;
   //bool posted;
 };
 
@@ -142,6 +142,23 @@ void gptBEEnable(u32int id)
     DEBUG(PP_OMAP_35XX_GPTIMER, "gpt_BE%x: already enabled" EOL, id);
   }
 }
+
+
+void gptBESetPeriod(u32int id)
+{
+  printf("gptBESetPeriod for gpt %x\n", id);
+  setClockSource(id, FALSE);
+  // source clock is now 32kHz, meaning 32768 'ticks' a second.
+  // to set period: 32kHz/1000 * ms
+  u32int counter = 0xFFFFFFFF - 1024; //2048; //4096; //8192; //16384; //32768;
+  gptBEregWrite(id, GPT_REG_TLDR, counter);
+  gptBEregWrite(id, GPT_REG_TOWR, GPT_TOWR_OVF_WRAPPING & 1);
+  // write to trigger register - thus triggering internal counter value reset to TLDR
+  gptBEregWrite(id, GPT_REG_TTGR, 1);
+  // set autoreload
+  gptBEregWrite(id, GPT_REG_TCLR, (gptBEregRead(id, GPT_REG_TCLR) | GPT_TCLR_AUTORELOAD));
+}
+
 
 void gptBESet10msTick(u32int id)
 {

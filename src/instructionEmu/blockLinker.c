@@ -22,8 +22,7 @@ void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastB
     return;
   }
 
-  u32int addressMap = context->virtAddrEnabled ? (u32int)context->pageTables->guestPhysical : 0;
-  if (((u32int)nextBlock->guestStart != nextPC) || (nextBlock->addressMap != addressMap))
+  if ((u32int)nextBlock->guestStart != nextPC)
   {
     // conflict. return, let scanBlock() deal with conflict first, link later.
     return;
@@ -100,7 +99,6 @@ void unlinkBlock(BasicBlock* block, u32int index)
 
 void unlinkAllBlocks(GCONTXT *context)
 {
-  DIE_NOW(0, "unlinkAllBlocks unimplemented.\n");
   u32int i = 0;
   /* we traverse the complete block translation store
    * inside the loop we unlink all current group-blocks. */ 

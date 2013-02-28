@@ -251,7 +251,7 @@ static u32int loadClockControlPrm(struct PowerAndResetManager *prm, u32int physi
     }
     default:
     {
-      printf("offset %x" EOL, registerOffset);
+      printf("pa %08x (offset %x)" EOL, physicalAddress, registerOffset);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }

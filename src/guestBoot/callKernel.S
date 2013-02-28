@@ -14,8 +14,13 @@ callKernel:
    * Modify the SPSR: set USR mode, disable asynchronous aborts and FIQs
    */
   MRS    r4, SPSR
-  BIC    r4, #PSR_MODE
-  ORR    r4, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
+#ifdef CONFIG_PROFILER
+  BIC    r4, #(PSR_MODE | PSR_F_BIT)
+  ORR    r4, #(PSR_USR_MODE | PSR_A_BIT)
+#else
+   BIC    r4, #PSR_MODE
+   ORR    r4, #(PSR_USR_MODE | PSR_A_BIT | PSR_F_BIT)
+#endif
 
 #ifdef CONFIG_THUMB2
   /*

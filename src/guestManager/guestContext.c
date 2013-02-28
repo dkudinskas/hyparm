@@ -12,6 +12,18 @@
 #include "vm/omap35xx/sdram.h"
 
 
+#ifdef CONFIG_STATS
+extern u32int timerTotalSvc;
+extern u32int timerNumberSvc;
+extern u32int timerTotalDabt;
+extern u32int timerNumberDabt;
+
+
+u32int getCycleCount(void);
+#endif
+
+
+
 GCONTXT *createGuestContext(void)
 {
   // Allocate guest context
@@ -76,6 +88,12 @@ GCONTXT *createGuestContext(void)
   memset((void*)context->execBitmap, 0, SIZE_BITMAP1);
   DEBUG(GUEST_CONTEXT, "createGuestContext: execBitmap @ %p size %x" EOL, context->execBitmap, SIZE_BITMAP1);
 
+#ifdef CONFIG_STATS
+  timerTotalSvc = 0;
+  timerNumberSvc = 0;
+  timerTotalDabt = 0;
+  timerNumberDabt = 0;
+#endif
   return context;
 }
 
@@ -316,8 +334,23 @@ void dumpGuestContext(const GCONTXT *context)
   printf("irqUser: %08x\n", context->irqUser);
   printf("====================================\n");
 #endif
+#ifdef CONFIG_STATS
+  printf("timerTotalSvc:     %08x\n", timerTotalSvc);
+  printf("timerNumberSvc:    %08x\n", timerNumberSvc);
+  printf("timerTotalDabt:    %08x\n", timerTotalDabt);
+  printf("timerNumberDabt:   %08x\n", timerNumberDabt);
+  printf("total cycle count: %08x\n", getCycleCount());
+#endif
 }
 
+#ifdef CONFIG_STATS
+u32int getCycleCount()
+{
+  u32int value;
+  asm volatile ("MRC p15, 0, %0, c9, c13, 0\t\n": "=r"(value));
+  return value;
+}
+#endif
 
 bool isGuestInPrivMode(GCONTXT * context)
 {

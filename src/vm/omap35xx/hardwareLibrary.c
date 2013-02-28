@@ -2,6 +2,9 @@
 #include "common/stddef.h"
 #include "common/stdlib.h"
 #include "common/string.h"
+#ifdef CONFIG_PROFILER
+#include "vm/omap35xx/profiler.h"
+#endif
 
 #include "guestManager/guestContext.h"
 
@@ -493,12 +496,26 @@ device *createHardwareLibrary(GCONTXT *context)
     goto q3busError;
   }
 
+  
+#ifdef CONFIG_PROFILER
+  device *profiler = createDevice("Profiler", FALSE, PROFILER, 
+                                  (u32int)(PROFILER - 1 + PROFILER_SIZE), l4IntCore,
+                                  &loadProfilerInt, &storeProfilerInt);
+  if (profiler == NULL)
+  {
+    goto profilerError;
+  }
+#endif
   return topLevelBus;
 
   /*
    * Deallocation in reverse order to make sure no uninitialized pointer values are freed.
    * WARNING: this is required because pointers are NOT guaranteed to be NULL if uninitialized.
    */
+#ifdef CONFIG_PROFILER
+  free(profiler);
+profilerError:
+#endif
   free(q3bus);
 q3busError:
   free(sdramModule);

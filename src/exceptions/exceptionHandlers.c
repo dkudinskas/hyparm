@@ -1,6 +1,9 @@
 #include "common/debug.h"
 #include "common/stddef.h"
-
+#ifdef CONFIG_PROFILER
+#include "common/profiler.h"
+#endif
+ 
 #include "cpuArch/armv7.h"
 #include "cpuArch/constants.h"
 
@@ -75,7 +78,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 #endif
 
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
-
 
 #ifdef CONFIG_THUMB2
   /* Make sure that any SVC that is not part of the scanner
@@ -267,7 +269,6 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
   getActiveGuestContext()->dabtCount++;
   getActiveGuestContext()->dabtPriv++;
 #endif
-
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
 
@@ -443,7 +444,7 @@ GCONTXT *irq(GCONTXT *context)
   getActiveGuestContext()->irqUser++;
 #endif
 
-  // Get the number of the highest priority active IRQ/FIQ
+  // Get the number of the highest priority active IRQ
   u32int activeIrqNumber = getIrqNumberBE();
   switch(activeIrqNumber)
   {
@@ -481,14 +482,19 @@ GCONTXT *irq(GCONTXT *context)
     }
     case UART3_IRQ:
     {
-      /*
-       * FIXME: Niels: are we sure we're supposed to read characters unconditionally?
-       */
       // read character from UART
-      u8int c = serialGetcAsync();
-      acknowledgeIrqBE();
-      // forward character to emulated UART
-      uartPutRxByte(context, c, 3);
+      if (serialCheckInput())
+      {
+        u8int c = serialGetcAsync();
+        acknowledgeIrqBE();
+        // forward character to emulated UART
+        uartPutRxByte(context, c, 3);
+      }
+      else
+      {
+        // what interrupt??
+        acknowledgeIrqBE();
+      }
       break;
     }
     default:
@@ -499,9 +505,9 @@ GCONTXT *irq(GCONTXT *context)
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
-   * that the preceding writes are done before enabling IRQs/FIQs,
+   * that the preceding writes are done before enabling IRQss,
    * a Data Synchronization Barrier is used. This operation ensure that
-   * the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
+   * the IRQ line is de-asserted before IRQ enabling. */
   __asm__ __volatile__("MOV R0, #0\n\t"
                "MCR p15, #0, R0, c7, c10, #4"
                : : : "memory");
@@ -517,7 +523,7 @@ void irqPrivileged()
   context->irqPriv++;
 #endif
 
-  // Get the number of the highest priority active IRQ/FIQ
+  // Get the number of the highest priority active IRQ
   u32int activeIrqNumber = getIrqNumberBE();
   switch(activeIrqNumber)
   {
@@ -546,14 +552,19 @@ void irqPrivileged()
     }
     case UART3_IRQ:
     {
-      /*
-       * FIXME: Niels: are we sure we're supposed to read characters unconditionally?
-       */
       // read character from UART
-      u8int c = serialGetcAsync();
-      acknowledgeIrqBE();
-      // forward character to emulated UART
-      uartPutRxByte(context, c, 3);
+      if (serialCheckInput())
+      {
+        u8int c = serialGetcAsync();
+        acknowledgeIrqBE();
+        // forward character to emulated UART
+        uartPutRxByte(context, c, 3);
+      }
+      else
+      {
+        // what interrupt??
+        acknowledgeIrqBE();
+      }
       break;
     }
     default:
@@ -564,20 +575,43 @@ void irqPrivileged()
   }
 
   /* Because the writes are posted on an Interconnect bus, to be sure
-   * that the preceding writes are done before enabling IRQs/FIQs,
+   * that the preceding writes are done before enabling IRQss,
    * a Data Synchronization Barrier is used. This operation ensure that
-   * the IRQ/FIQ line is de-asserted before IRQ/FIQ enabling. */
+   * the IRQ line is de-asserted before IRQ enabling. */
   __asm__ __volatile__("MOV R0, #0\n\t"
                "MCR p15, #0, R0, c7, c10, #4"
                : : : "memory");
 }
 
 
-void fiq(void)
+void fiq(u32int addr)
 {
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-}
-
+#ifdef CONFIG_PROFILER
+  GCONTXT *const context = getActiveGuestContext();
+  
+  u32int activeFiqNumber = getFiqNumberBE();
+  switch (activeFiqNumber)
+  {
+    case GPT3_IRQ:
+    {
+      profilerRecord(addr);
+      gptBEClearOverflowInterrupt(3);
+      break;
+    }
+    default:
+      DIE_NOW(NULL, "unimplemented FIQ handler.");
+  }
+  
+  acknowledgeFiqBE();
+  
+  // write barrier
+  asm volatile("MOV R0, #0\n\t"
+               "MCR P15, #0, R0, C7, C10, #4"
+               : : : "memory");
+#else
+   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+#endif
+ }
 
 
 void dabtPermissionFault(GCONTXT *gc, DFSR dfsr, u32int dfar)

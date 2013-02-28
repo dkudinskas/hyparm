@@ -58,6 +58,65 @@ char serialGetcAsync()
 }
 
 
+bool serialCheckInput()
+{
+  u32int iir = beLoadUart(UART_IIR_REG, 3);
+  if ((iir & 1) == 0)
+  {
+    u32int type = (iir & 0x3e) >> 1;
+    switch (type)
+    {
+      case UART_IIR_IT_TYPE_RHR_IRQ:
+      {
+        return TRUE;
+      }
+      case UART_IIR_IT_TYPE_RX_TIMEOUT_IRQ:
+      {
+        // stale data in RX register. reset - read RHR
+        beLoadUart(UART_RHR_REG, 3);
+        break;
+      }
+      case UART_IIR_IT_TYPE_RX_LS_ERR_IRQ:
+      {
+        // overflow error?
+        u32int lsr = beLoadUart(UART_LSR_REG, 3);
+        if ((lsr & UART_LSR_RX_OE) != 0)
+        {
+          // overflow, reading LSR resets. return!
+          break;
+        }
+        else
+        {
+          if (((lsr & UART_LSR_RX_BI) != 0) ||
+              ((lsr & UART_LSR_RX_FE) != 0) ||
+              ((lsr & UART_LSR_RX_PE) != 0))
+          {
+            // reseting parity/frame/break requires read from RHR
+            beLoadUart(UART_RHR_REG, 3);
+            break;
+          } 
+          else
+          {
+            printf("UART: IT_TYPE RX line status error. but no error bits set in LSR!\n");
+            DIE_NOW(0, "invalid irq state.");
+          }
+        }
+        break;
+      }
+      case UART_IIR_IT_TYPE_MODEM_IRQ:
+      case UART_IIR_IT_TYPE_THR_IRQ:
+      case UART_IIR_IT_TYPE_XOFF_IRQ:
+      case UART_IIR_IT_TYPE_CTS_IRQ:
+      default:
+      {
+        return FALSE;
+      }
+    } // switch ends
+  }
+  return FALSE;
+}
+
+
 /*
  * initialize the device and put it in a harmless state
  */
@@ -101,24 +160,23 @@ void beUartInit(u32int uartid)
   beLoadUart(UART_MSR_REG, uartid);
   beLoadUart(UART_IIR_REG, uartid);
 
+  // set up hypervisor structure
   beUart[arrayIndex]->loopback = FALSE;
-
   beUart[arrayIndex]->baseAddress = beGetUartBaseAddr(uartid);
   beUart[arrayIndex]->size = UART_SIZE;
 }
 
-/* just perform a software reset of the device */
+/*
+ * Perform a software reset of the device 
+ */
 void beUartReset(u32int uartid)
 {
   u32int sysCtrl = beLoadUart(UART_SYSC_REG, uartid);
   sysCtrl |= UART_SYSC_REG_RESET;
   beStoreUart(UART_SYSC_REG, sysCtrl, uartid);
-
   while ((beLoadUart(UART_SYSS_REG, uartid) & UART_SYSS_REG_RSTDONE) != UART_SYSS_REG_RSTDONE)
   {
-    /*
-     * Wait for reset done bit
-     */
+    // Wait for reset done bit
   }
 }
 
@@ -192,16 +250,12 @@ static inline u8int beLoadUart(u32int regOffs, u32int uartid)
   return *(volatile u8int *)(beGetUartBaseAddr(uartid) | regOffs);
 }
 
+
 static inline void beStoreUart(u32int regOffs, u8int value, u32int uartid)
 {
   *(volatile u8int *)(beGetUartBaseAddr(uartid) | regOffs) = value;
 }
 
-
-void beUartDumpRegs(u32int uartid)
-{
-  // TODO
-}
 
 static inline u32int beGetUartBaseAddr(u32int id)
 {

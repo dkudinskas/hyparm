@@ -21,3 +21,4 @@ HYPARM_SRCS_C-y += vm/omap35xx/pm.c
 HYPARM_SRCS_C-y += vm/omap35xx/sdrc.c
 HYPARM_SRCS_C-y += vm/omap35xx/sms.c
 HYPARM_SRCS_C-y += vm/omap35xx/wdtimer.c
+HYPARM_SRCS_C-$(CONFIG_PROFILER) += vm/omap35xx/profiler.c

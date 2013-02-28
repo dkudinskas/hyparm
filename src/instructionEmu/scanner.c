@@ -194,7 +194,6 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     DIE_NOW(context, "scanBlock() called from unknown source");
   }
 #endif /* CONFIG_SCANNER_EXTRA_CHECKS */
-
   if ((getScanBlockCounter() & MARK_MASK) == 1)
   {
     DEBUG(SCANNER_MARK, "scanBlock: #B = %#.16Lx; startAddress = %#.8x" EOL, getScanBlockCounter(), startAddress);
@@ -203,10 +202,9 @@ void scanBlock(GCONTXT *context, u32int startAddress)
   BasicBlock* basicBlock = getBasicBlockStoreEntry(context->translationStore, blockIndex);
   
   bool blockFound = FALSE;
-  u32int addressMap = context->virtAddrEnabled ? (u32int)context->pageTables->guestPhysical : 0;
   if (basicBlock->type != BB_TYPE_INVALID)
   {
-    if ((basicBlock->addressMap == addressMap) && ((u32int)basicBlock->guestStart == startAddress))
+    if (((u32int)basicBlock->guestStart == startAddress))
     {
       // entry valid, address map maches, and start address maches. really found!
       blockFound = TRUE;
@@ -214,6 +212,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     else
     {
       // conflict!
+      context->conflictTotal++;
       if (basicBlock->type == GB_TYPE_ARM)
       {
         context->groupBlockVersion++;
@@ -244,6 +243,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
     context->lastGuestPC = (u32int)basicBlock->guestEnd;
     DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: lastGuestPC = %08x, context->R15 @ %08x"
                                         EOL, context->lastGuestPC, context->R15);
+
     setScanBlockCallSource(SCANNER_CALL_SOURCE_NOT_SET);
     return;
   }
@@ -277,14 +277,10 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
   basicBlock->handler = NULL;
   basicBlock->type = BB_TYPE_ARM;
 
-  basicBlock->addressMap = (context->virtAddrEnabled) ? (u32int)context->pageTables->guestPhysical : 0;
-
-
   // Scan guest code and copy to code store
   // translating instructions on the fly
   u32int* instructionPtr = guestStart;
   DecodedInstruction* decodedInstr;
-
   while((decodedInstr = decodeArmInstruction(*instructionPtr))->code != IRC_REPLACE)
   {
     if (armIsPCInsensitiveInstruction(*instructionPtr) || decodedInstr->pcHandler == NULL)
@@ -298,7 +294,6 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
     }
     instructionPtr++;
   }
-
 
   // Next instruction must be translated into hypercall.
   DEBUG(SCANNER, "scanArmBlock: instruction %s must be translated\n", decodedInstr->instructionString);
@@ -324,7 +319,7 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
     }
     else
     {
-      // not a branch or not-conditional branch. single hypercall.
+      // not-conditional branch. single hypercall.
       addInstructionToBlock(context->translationStore, basicBlock, INSTR_SWI | (blockStoreIndex+0x100));
       basicBlock->oneHypercall = TRUE;
     }

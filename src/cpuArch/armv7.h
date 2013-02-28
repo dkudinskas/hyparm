@@ -86,6 +86,15 @@ void l2_cache_disable(void);
     __asm__ __volatile__ ("CPSID i"); \
   }
 
+#define enableFastInterrupts() \
+  { \
+    __asm__ __volatile__ ("CPSIE f"); \
+  }
+
+#define disableFastInterrupts() \
+  { \
+    __asm__ __volatile__ ("CPSID f"); \
+  }
 
 /*
  * breakIfDebugging: insert software breakpoint when CONFIG_BKPT is set

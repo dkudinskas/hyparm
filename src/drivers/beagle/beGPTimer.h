@@ -4,8 +4,11 @@
 #include "common/types.h"
 
 
-// #define BE_GPTIMER_COUNT       12
+#ifdef CONFIG_PROFILER
+#define BE_GPTIMER_COUNT        3
+#else
 #define BE_GPTIMER_COUNT        2 // just use GPTIMER1 and GPTIMER2 for now
+#endif
 
 // base addresses
 #define GPTIMER1        0x48318000
@@ -149,6 +152,8 @@ void gptBEDisableOverflowInterrupt(u32int id);
 void gptBEEnable(u32int id);
 
 void gptBEEnableOverflowInterrupt(u32int id);
+
+void gptBESetPeriod(u32int id);
 
 void gptBESet10msTick(u32int id);
 

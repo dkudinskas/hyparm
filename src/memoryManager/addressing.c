@@ -130,6 +130,12 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
   mapSmallPage(pageTablePtr, BE_MMCHS1, BE_MMCHS1,
                HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
 
+#ifdef CONFIG_PROFILER
+  // gptimer3
+  mapSmallPage(pageTablePtr, BE_GPTIMER3, BE_GPTIMER3,
+               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
+#endif
+
   //serial (UART3)
   mapSmallPage(pageTablePtr, BE_UART3, BE_UART3,
                HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
