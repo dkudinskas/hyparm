@@ -1,3 +1,4 @@
+HYPARM_SRCS_C-y += common/aeabi.c
 HYPARM_SRCS_C-y += common/alignFunctions.c
 HYPARM_SRCS_C-y += common/commandLine.c
 HYPARM_SRCS_C-y += common/compiler.c

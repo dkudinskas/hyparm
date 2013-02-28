@@ -20,20 +20,17 @@ HOSTCFLAGS   := -O2 -fomit-frame-pointer -Wall
 HOSTCPPFLAGS :=
 
 
-CC            = $(CROSS_COMPILE)gcc
+CC_GCC        = $(CROSS_COMPILE)gcc
+CC            = $(CC_GCC)
 AS            = $(CROSS_COMPILE)as
 LD            = $(CROSS_COMPILE)ld
 OBJCOPY       = $(CROSS_COMPILE)objcopy
 OBJDUMP       = $(CROSS_COMPILE)objdump
 
 AFLAGS       := --fatal-warnings
-CFLAGS       := -marm -mabi=aapcs-linux -mno-thumb-interwork -msoft-float \
-                -ggdb3 -std=gnu99 \
+CFLAGS       := -marm -mabi=aapcs-linux -msoft-float \
+                -std=gnu99 \
                 -ffreestanding -fno-common -fno-stack-protector \
-                -Wall -Wextra -Wcast-qual -Wformat=2 -Winit-self -Winline -Wlogical-op \
-                -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpacked \
-                -Wredundant-decls -Wshadow -Wstrict-prototypes -Wundef -Wvla -Wwrite-strings \
-                -Wno-empty-body -Wno-unused-label -Wno-unused-parameter \
                 -Werror=format-extra-args \
                 -Werror=implicit-function-declaration -Werror=implicit-int \
                 -Werror=init-self -Werror=parentheses -Werror=return-type -Werror=uninitialized
@@ -125,6 +122,11 @@ $(KCONFIG_CONFIG):
   endif
 
 
+  CC-$(CONFIG_GCC) := $(CC)
+  CC-$(CONFIG_CLANG) := clang
+  CC := $(CC-y)
+
+
   AFLAGS-y :=
   CFLAGS-y :=
   CPPFLAGS-y := -imacros $(KCONFIG_AUTOHEADER)
@@ -132,21 +134,37 @@ $(KCONFIG_CONFIG):
   LDFLAGS-y :=
 
 
+  CFLAGS-$(CONFIG_CLANG) += -g -integrated-as -target arm-none-eabi -Weverything -no-pedantic \
+                            -Wno-covered-switch-default -Wno-c11-extensions -Wno-format-non-iso \
+                            -Wno-gnu -Wno-padded -Wno-pointer-arith -Wno-sign-conversion \
+                            -Wno-unreachable-code -Wno-unused-macros -Wno-unused-parameter
+  CFLAGS-$(CONFIG_GCC) += -ggdb3 -mno-thumb-interwork \
+                          -Wall -Wextra -Wcast-qual -Wformat=2 -Winit-self -Winline -Wlogical-op \
+                          -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpacked \
+                          -Wredundant-decls -Wshadow -Wstrict-prototypes -Wundef -Wvla \
+                          -Wwrite-strings -Wno-empty-body -Wno-unused-label -Wno-unused-parameter
+
+
   CFLAGS-$(CONFIG_OLEVEL_0) += -O0
   CFLAGS-$(CONFIG_OLEVEL_S) += -Os -Wno-inline
   CFLAGS-$(CONFIG_OLEVEL_1) += -O1
   CFLAGS-$(CONFIG_OLEVEL_2) += -O2
   CFLAGS-$(CONFIG_OLEVEL_3) += -O3
+  CFLAGS-$(CONFIG_OLEVEL_4) += -O4
   CFLAGS-$(CONFIG_OLEVEL_FAST) += -Ofast
-
-
-  CFLAGS-$(CONFIG_BUILD_ANALYZE_FUNCTIONS) += -Wsuggest-attribute=pure -Wsuggest-attribute=const -Wsuggest-attribute=noreturn
 
   CFLAGS-$(CONFIG_BUILD_NO_UNALIGNED_ACCESS) += -mno-unaligned-access
 
   CFLAGS-$(CONFIG_BUILD_SSP) += -fstack-protector-all -Wstack-protector
 
-  CFLAGS-$(CONFIG_BUILD_LTO) += -flto=jobserver -fuse-linker-plugin
+  ifeq ($(CONFIG_CLANG),)
+    CFLAGS-$(CONFIG_BUILD_ANALYZE_FUNCTIONS) += -Wsuggest-attribute=pure -Wsuggest-attribute=const -Wsuggest-attribute=noreturn
+    CFLAGS-$(CONFIG_BUILD_LTO) += -flto=jobserver -fuse-linker-plugin
+  else
+    ifeq ($(CONFIG_BUILD_ANALYZE_FUNCTIONS),)
+      CFLAGS += -Wno-missing-noreturn
+    endif
+  endif
 
   ifeq ($(CONFIG_BUILD_SAVE_TEMPS),y)
     CPPFLAGS-y += -save-temps=obj
@@ -289,7 +307,7 @@ $(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_OK)
 ifneq ($(VERBOSE),)
 	@echo 'DEP      $<'
 endif
-	@$(CC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
+	@$(CC_GCC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
 
 # Generate dependency files for all assembly source files that require preprocessing. This rule is
 # exactly the same as the rule above, except that it generates *.S.d files from *.S files.
@@ -297,7 +315,7 @@ $(SOURCE_PATH)/%.S.d: $(SOURCE_PATH)/%.S $(KCONFIG_OK)
 ifneq ($(VERBOSE),)
 	@echo 'DEP      $<'
 endif
-	@$(CC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
+	@$(CC_GCC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
 
 
 $(SOURCE_PATH)/%.c.o: $(SOURCE_PATH)/%.c
@@ -310,7 +328,7 @@ $(SOURCE_PATH)/%.s.o: $(SOURCE_PATH)/%.s $(KCONFIG_CONFIG)
 
 $(SOURCE_PATH)/%.S.o: $(SOURCE_PATH)/%.S $(KCONFIG_CONFIG)
 	@echo 'CPP/AS   $<'
-	@$(CC) $(CPP_AFLAGS) $(CPPFLAGS) -c -o $@ $<
+	@$(CC_GCC) $(CPP_AFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 
   # Check if we are invoking autodecoder

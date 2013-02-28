@@ -31,9 +31,9 @@ typedef u64int u64intPair __attribute__((vector_size(16)));
 
 u64int __aeabi_llsl(u64int value, s32int amount);
 u64int __aeabi_llsr(u64int value, s32int amount);
-u32int __aeabi_uidiv(u32int dividend, u32int divisor) __attribute__((externally_visible));
-u32intPair __aeabi_uidivmod(u32int dividend, u32int divisor) __attribute__((externally_visible));
-u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor) __attribute__((externally_visible));
+u32int __aeabi_uidiv(u32int dividend, u32int divisor) __lto_preserve__;
+u32intPair __aeabi_uidivmod(u32int dividend, u32int divisor) __lto_preserve__;
+u64intPair __aeabi_uldivmod(u64int dividend, u64int divisor) __lto_preserve__;
 
 
 /*

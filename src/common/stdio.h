@@ -61,8 +61,8 @@ int
 #else
   vsscanf
 #endif
-  (const char *s, const char *format, va_list args)
-  __attribute__((flatten, format(__scanf__, 2, 0), warn_unused_result));
+  (const char *s, const char *format, va_list args) __flatten__
+  __attribute__((format(__scanf__, 2, 0), warn_unused_result));
 
 int
 #ifdef TEST

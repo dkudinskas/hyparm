@@ -10,7 +10,11 @@
  * separate ELF text section, '.text.unlikely', so that hot code is put together (better cache
  * behavior). For more information on ELF sections, see linker.h.
  */
+#ifdef __clang__
+#define __cold__
+#else
 #define __cold__      __attribute__((cold))
+#endif
 /*
  * __constant__ (function attribute)
  * Hint the compiler that a function does not examine any values except its arguments, and has no
@@ -23,6 +27,25 @@
  * functions across object file boundaries.
  */
 #define __constant__  __attribute__((const))
+/*
+ * __flatten__ (function attribute)
+ * Request the compiler to inline as many function calls as possible in the function body.
+ */
+#ifdef __clang__
+#define __flatten__
+#else
+#define __flatten__   __attribute__((flatten))
+#endif
+/*
+ * __lto_preserve__ (function attribute)
+ * Hint the link-time optimizer that a function should be preserved even if it can't figure out how
+ * it's called (LTO would otherwise consider that function dead code and remove it).
+ */
+#ifdef __clang__
+#define __lto_preserve__
+#else
+#define __lto_preserve__  __attribute__((externally_visible))
+#endif
 /*
  * __pure__ (function attribute)
  * Hint the compiler that a function has no effect other than the return value and its return value
@@ -56,7 +79,9 @@
 #define unlikely(x)   __builtin_expect(!!(x), 0)
 
 #ifdef __GNUC__
-#if (__GNUC__ == 4 && __GNUC_MINOR__ >= 6) || __GNUC__ > 4
+#ifdef __clang__
+#define COMPILER_HAS_STATIC_ASSERT
+#elif (__GNUC__ == 4 && __GNUC_MINOR__ >= 6) || __GNUC__ > 4
 #define COMPILER_CAN_HIDE_WARNINGS
 #define COMPILER_HAS_GCC_VECTOR_TYPES
 #define COMPILER_HAS_STATIC_ASSERT

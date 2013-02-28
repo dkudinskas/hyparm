@@ -632,7 +632,12 @@ int
           switch (modifier)
           {
             case 'L':
+#ifdef COMPILER_HAS_GCC_VECTOR_TYPES
               VSPRINTF_DECIMAL(s64int, u64int, TRUE, llabs);
+#else
+              /* Cannot call DIE_NOW here... it may go for another round of printf and loop! */
+              return -1;
+#endif
               break;
             default:
               VSPRINTF_DECIMAL(s32int, u32int, TRUE, abs);
@@ -676,7 +681,12 @@ int
           switch (modifier)
           {
             case 'L':
+#ifdef COMPILER_HAS_GCC_VECTOR_TYPES
               VSPRINTF_DECIMAL(u64int, u64int, FALSE, /* no abs function required */);
+#else
+              /* Cannot call DIE_NOW here... it may go for another round of printf and loop! */
+              return -1;
+#endif
               break;
             default:
               VSPRINTF_DECIMAL(u32int, u32int, FALSE, /* no abs function required */);

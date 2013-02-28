@@ -51,7 +51,7 @@ const char *const ERROR_UNPREDICTABLE_INSTRUCTION = "unpredictable instruction";
 
 
 void dumpStackFromParameters(u32int snapshotOrigin, u32int psr, u32int *stack)
-  __attribute__((externally_visible));
+  __lto_preserve__;
 
 static u32int vprintf(const char *format, va_list args) __attribute__((always_inline));
 

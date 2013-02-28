@@ -1,51 +1,107 @@
 menu "General setup"
 
+config GCC
+  bool
+
+config CLANG
+  bool
+
+config GCC_45_UP
+  bool
+
+config GCC_46_UP
+  bool
+
+config GCC_47_UP
+  bool
+
+choice
+  prompt "C Compiler"
+  default GCC_4X
+
+config CLANG_32
+  bool "Clang 3.2"
+  select CLANG
+
+config GCC_4X
+  bool "GNU C Compiler"
+  select GCC
+
+config GCC_45
+  bool "GNU C Compiler >= 4.5"
+  select GCC
+  select GCC_45_UP
+
+config GCC_46
+  bool "GNU C Compiler >= 4.6"
+  select GCC
+  select GCC_45_UP
+  select GCC_46_UP
+
+config GCC_47
+  bool "GNU C Compiler >= 4.7"
+  select GCC
+  select GCC_45_UP
+  select GCC_46_UP
+  select GCC_47_UP
+
+endchoice
+
 choice
   prompt "Compiler optimization level"
   default OLEVEL_3
 
 config OLEVEL_0
   bool "None (-O0)"
+  depends on !(CLANG && BUILD_LTO)
 
 config OLEVEL_S
   bool "Size (-Os)"
-  depends on !PREDICTABLE_DEBUGGING
+  depends on !(CLANG && BUILD_LTO) && !PREDICTABLE_DEBUGGING
 
 config OLEVEL_1
   bool "Level 1 (-O1)"
-  depends on !PREDICTABLE_DEBUGGING
+  depends on !(CLANG && BUILD_LTO) && !PREDICTABLE_DEBUGGING
 
 config OLEVEL_2
   bool "Level 2 (-O2)"
-  depends on !PREDICTABLE_DEBUGGING
+  depends on !(CLANG && BUILD_LTO) && !PREDICTABLE_DEBUGGING
 
 config OLEVEL_3
   bool "Level 3 (-O3)"
-  depends on !PREDICTABLE_DEBUGGING
+  depends on !(CLANG && BUILD_LTO) && !PREDICTABLE_DEBUGGING
+
+config OLEVEL_4
+  bool "Level 4 (-O4)"
+  depends on CLANG && BUILD_LTO && !PREDICTABLE_DEBUGGING
 
 config OLEVEL_FAST
   bool "Level fast (-Ofast)"
-  depends on !PREDICTABLE_DEBUGGING
+  depends on GCC_46_UP && !PREDICTABLE_DEBUGGING
 
 endchoice
 
 config BUILD_ANALYZE_FUNCTIONS
   bool "Let the compiler suggest function attributes"
-  depends on OLEVEL_3
+  depends on CLANG || GCC_46_UP
+  help
+    Higher optimization levels improve the accuracy of the analysis.
 
 config BUILD_NO_UNALIGNED_ACCESS
-  bool "Disable unaligned memory accesses by default (for GCC >= 4.7)"
+  bool "Disable unaligned memory accesses by default"
+  depends on GCC_47_UP
 
 config BUILD_SSP
-  bool "Enable stack-smashing protector"
-  depends on !PREDICTABLE_DEBUGGING
+  bool "Enable buffer overflow protection"
+  depends on GCC && !PREDICTABLE_DEBUGGING
 
 config BUILD_LTO
-  bool "Link-time optimization (requires toolchain support)"
-  depends on !PREDICTABLE_DEBUGGING
+  bool "Link-time optimization"
+  depends on (CLANG || GCC_46_UP) && !PREDICTABLE_DEBUGGING
 
 config BUILD_SAVE_TEMPS
-  bool "Save intermediate files during build (requires GCC >= 4.5)"
+  bool "Save intermediate files during build"
+  depends on GCC_45_UP
 
 config ASSERT
   bool "Enable run-time assertions"
