@@ -27,6 +27,8 @@ LD            = $(CROSS_COMPILE)ld
 OBJCOPY       = $(CROSS_COMPILE)objcopy
 OBJDUMP       = $(CROSS_COMPILE)objdump
 
+LIBGCC       := $(shell $(CC_GCC) -print-libgcc-file-name)
+
 AFLAGS       := --fatal-warnings
 CFLAGS       := -marm -mabi=aapcs-linux -msoft-float \
                 -std=gnu99 \
@@ -239,7 +241,7 @@ HYPARM_DEPS    += $(foreach SRC,$(HYPARM_SRCS_SX-y), $(SOURCE_PATH)/$(SRC).d)
 HYPARM_OBJS_C  := $(foreach SRC,$(HYPARM_SRCS_C-y),$(SOURCE_PATH)/$(SRC).o)
 HYPARM_OBJS_S  := $(foreach SRC,$(HYPARM_SRCS_S-y),$(SOURCE_PATH)/$(SRC).o)
 HYPARM_OBJS_SX := $(foreach SRC,$(HYPARM_SRCS_SX-y),$(SOURCE_PATH)/$(SRC).o)
-HYPARM_OBJS    := $(HYPARM_OBJS_C) $(HYPARM_OBJS_S) $(HYPARM_OBJS_SX)
+HYPARM_OBJS    := $(HYPARM_OBJS_C) $(HYPARM_OBJS_S) $(HYPARM_OBJS_SX) $(LIBGCC)
 
 
 # Check if we are building

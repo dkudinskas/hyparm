@@ -122,6 +122,17 @@ branchToMain$:
 
 
 /*
+ * Provide a signal handler for libgcc
+ */
+.global raise
+.func raise
+raise:
+  MOV     r1, lr
+  B       dieFromSignal
+.endfunc
+
+
+/*
  * Exception vector; only used in case security extensions are implemented.
  */
 #ifdef CONFIG_ARCH_EXT_SECURITY

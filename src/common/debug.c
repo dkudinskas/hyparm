@@ -53,6 +53,8 @@ const char *const ERROR_UNPREDICTABLE_INSTRUCTION = "unpredictable instruction";
 void dumpStackFromParameters(u32int snapshotOrigin, u32int psr, u32int *stack)
   __lto_preserve__;
 
+int dieFromSignal(int signal, void *origin) __attribute__((noreturn));
+
 static u32int vprintf(const char *format, va_list args) __attribute__((always_inline));
 
 
@@ -81,6 +83,11 @@ static void banner(const char *msg)
    * Print it all at once
    */
   printf(EOL EOL "%s[%s]%s%s" EOL EOL, padding, msg, ((msgLength & 1) ? "" : "="), padding);
+}
+
+int dieFromSignal(int signal, void *origin)
+{
+  dieNowF("<libgcc>", 0, "<unknown>", "caught signal %i @ %p", signal, origin);
 }
 
 void dieNow(const char *fileName, u32int line, const char *caller, const char *message)
