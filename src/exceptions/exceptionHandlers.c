@@ -3,7 +3,7 @@
 #ifdef CONFIG_PROFILER
 #include "common/profiler.h"
 #endif
- 
+
 #include "cpuArch/armv7.h"
 #include "cpuArch/constants.h"
 
@@ -171,7 +171,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     deliverDataAbort(context);
     link = FALSE;
   }
- 
+
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = %#.8x" EOL, nextPC);
 
   if ((context->CPSR & PSR_MODE) != PSR_USR_MODE)
@@ -194,7 +194,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
     if (link)
     {
-      linkBlock(context, context->R15, lastPC, 
+      linkBlock(context, context->R15, lastPC,
                 getBasicBlockStoreEntry(context->translationStore, code-0x100));
     }
 
@@ -467,7 +467,7 @@ GCONTXT *irq(GCONTXT *context)
         BasicBlock* groupblock = getBasicBlockStoreEntry(context->translationStore, index);
         unlinkBlock(groupblock, index);
       }
-      
+
       // FIXME: figure out which interrupt to clear and then clear the right one?
       gptBEClearOverflowInterrupt(2);
 #ifdef CONFIG_GUEST_FREERTOS
@@ -588,7 +588,7 @@ void fiq(u32int addr)
 {
 #ifdef CONFIG_PROFILER
   GCONTXT *const context = getActiveGuestContext();
-  
+
   u32int activeFiqNumber = getFiqNumberBE();
   switch (activeFiqNumber)
   {
@@ -601,9 +601,9 @@ void fiq(u32int addr)
     default:
       DIE_NOW(NULL, "unimplemented FIQ handler.");
   }
-  
+
   acknowledgeFiqBE();
-  
+
   // write barrier
   asm volatile("MOV R0, #0\n\t"
                "MCR P15, #0, R0, C7, C10, #4"
@@ -631,7 +631,7 @@ void dabtPermissionFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
 
   // interpret the load/store
   emulateLoadStoreGeneric(gc, dfar);
-  
+
   // load/store might still have failed if it was LDRT/STRT
   if (!gc->guestDataAbtPending)
   {
