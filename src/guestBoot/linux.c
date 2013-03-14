@@ -38,10 +38,12 @@ void bootLinux(GCONTXT *context, u32int loadAddress, u32int initrdAddress, const
   setupMemoryTags(&tagList);
   if (initrdAddress != 0)
   {
+    DEBUG(STARTUP, "%s: passing ramdisk address to kernel: %p" EOL, __func__, (void *)initrdAddress);
     setupInitrdTag(&tagList, initrdAddress, initrdAddress + BOARD_INITRD_LEN);
   }
-  if (arguments)
+  if (arguments != NULL && strlen(arguments) > 0)
   {
+    DEBUG(STARTUP, "%s: passing extra command-line arguments to kernel: %s" EOL, __func__, arguments);
     setupCommandLineTag(&tagList, arguments);
   }
   setupEndTag(&tagList);

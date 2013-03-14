@@ -306,7 +306,7 @@ config HARDCODED_CMDLINE_INITRD_ADDRESS
   depends on HARDCODED_CMDLINE_INITRD
 
 config HARDCODED_CMDLINE_KCMDLINE
-  string "Kernel command line"
+  string "Override kernel command line"
   depends on HARDCODED_CMDLINE && HARDCODED_CMDLINE_GUEST_LINUX
 
 config DUMP_STACK

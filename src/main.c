@@ -239,7 +239,7 @@ static void processCommandLine(struct runtimeConfiguration *config, s32int argc,
   config->guestInitialRAMDiskAddress = CONFIG_HARDCODED_CMDLINE_INITRD_ADDRESS;
 #endif
 
-  config->guestKernelCmdLine = EXPAND_TO_STRING(CONFIG_HARDCODED_CMDLINE_KCMDLINE);
+  config->guestKernelCmdLine = CONFIG_HARDCODED_CMDLINE_KCMDLINE;
 }
 
 #else
