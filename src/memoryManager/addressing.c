@@ -155,7 +155,6 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
 void guestSetPageTableBase(GCONTXT *gc, u32int ttbr)
 {
   DEBUG(MM_ADDRESSING, "guestSetPageTableBase: ttbr %#.8x @ pc %#.8x" EOL, ttbr, gc->R15);
-  printf("guestSetPageTableBase: ttbr %#.8x @ pc %#.8x" EOL, ttbr, gc->R15);
 
   gc->pageTables->guestPhysical = (simpleEntry *)ttbr;
   gc->pageTables->guestVirtual = NULL;
@@ -242,7 +241,6 @@ void guestDisableMMU(GCONTXT *context)
 void guestSetContextID(GCONTXT *context, u32int contextid)
 {
   DEBUG(MM_ADDRESSING, "guestSetContextID: value %x" EOL, contextid);
-  printf("guestSetContextID: value %x" EOL, contextid);
 
   context->pageTables->contextID = (contextid & 0xFF);
 }
