@@ -26,7 +26,7 @@ bool shadowMap(GCONTXT *context, u32int virtAddr)
   simpleEntry* gpt = context->pageTables->guestPhysical;
 
   simpleEntry* ttbrBackup = mmuGetTTBR0();
-  mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
+  mmuSetTTBR0(context->hypervisorPageTable, 0x1FF);
 
   simpleEntry* guestFirst = getEntryFirst(gpt, virtAddr);
   DEBUG(MM_SHADOWING, "shadowMap: VA %08x first entry %08x @ %p" EOL, virtAddr, *(u32int*)guestFirst, guestFirst);
@@ -181,7 +181,7 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
     DIE_NOW(context, "shadowMapSection: guest mapping physical address the hypervisor lives in\n");
   }
 
-  sectionEntry* host = (sectionEntry*)getEntryFirst(context->pageTables->hypervisor, guestPhysAddr);
+  sectionEntry* host = (sectionEntry*)getEntryFirst(context->hypervisorPageTable, guestPhysAddr);
 
   if (host->type != SECTION)
   {
@@ -205,7 +205,7 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
       addSectionEntry((sectionEntry*)host, sectionAddr,
                     GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000, FALSE);
     }
-    host = (sectionEntry*)getEntryFirst(context->pageTables->hypervisor, guestPhysAddr);
+    host = (sectionEntry*)getEntryFirst(context->hypervisorPageTable, guestPhysAddr);
   }
   DEBUG(MM_SHADOWING, "shadowMapSection: guest address mapped to host %#.8x" EOL, host->addr << 20);
 
@@ -604,7 +604,7 @@ void shadowMapSmallPage(GCONTXT *context, smallPageEntry* guest, smallPageEntry*
     DIE_NOW(context, "shadowMapSmallPage: guest mapping physical address the hypervisor lives in\n");
   }
 
-  simpleEntry* hostEntry = (simpleEntry*)getEntryFirst(context->pageTables->hypervisor, guestPhysical);
+  simpleEntry* hostEntry = (simpleEntry*)getEntryFirst(context->hypervisorPageTable, guestPhysical);
   u32int hostPhysical = 0;
   switch (hostEntry->type)
   {
@@ -907,9 +907,9 @@ void mapAPBitsPageTable(GCONTXT* context, pageTableEntry* guest, pageTableEntry*
         *(u32int *)guest, guest, *(u32int *)shadow, shadow);
 
   simpleEntry* ttbrBackup = mmuGetTTBR0();
-  mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
+  mmuSetTTBR0(context->hypervisorPageTable, 0x1FF);
 
-  u32int gptPhysAddr = getPhysicalAddress(context, context->pageTables->hypervisor, (guest->addr << 10));
+  u32int gptPhysAddr = getPhysicalAddress(context, context->hypervisorPageTable, (guest->addr << 10));
 
   u32int guestVA  = gptPhysAddr;
   ptInfo* metadata = getPageTableInfo(context, shadow);

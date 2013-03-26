@@ -64,7 +64,6 @@ GCONTXT *createGuestContext(void)
     DIE_NOW(context, "Failed to allocate page tables struct");
   }
   DEBUG(GUEST_CONTEXT, "createGuestContext: page tables @ %p" EOL, context->pageTables);
-  
 
   // virtual machine struct
   DEBUG(GUEST_CONTEXT, "createGuestContext: virtual machine @ %p" EOL, &context->vm);
@@ -193,7 +192,7 @@ void dumpGuestContext(const GCONTXT *context)
   printf("Shadow Page Table Priv: %p, User %p" EOL, ptVM->shadowPriv, ptVM->shadowUser);
   printf("Current active shadow PT: %p" EOL, ptVM->shadowActive);
   /* .. thats it with virtual memory stuff */
-  printf("Hypervisor page table: %p" EOL, ptVM->hypervisor);
+  printf("Hypervisor page table: %p" EOL, context->hypervisorPageTable);
   printf("high exception vector flag: %x" EOL, context->guestHighVectorSet);
   printf("registered exception vector:" EOL);
   printf("Und: %#.8x" EOL, context->guestUndefinedHandler);

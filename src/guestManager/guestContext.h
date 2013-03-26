@@ -73,7 +73,6 @@ enum guestOSType
 
 struct VirtualMachinePageTables
 {
-  simpleEntry* hypervisor;
   simpleEntry* guestVirtual;
   simpleEntry* guestPhysical;
   simpleEntry* shadowPriv;
@@ -136,6 +135,7 @@ struct guestContext
 #endif
   /* Virtual Addressing */
   pageTablesVM* pageTables;
+  simpleEntry* hypervisorPageTable;
   bool virtAddrEnabled;
   virtualMachine vm;
   /* vector address in vmem */
