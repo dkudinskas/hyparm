@@ -1,0 +1,17 @@
+this is a simple trampoline to boot linux native but enable counters beforehand.
+
+
+BUILD ELF:
+arm-none-eabi-gcc booter.c callKernel.S image.c loader.c -o booter -mcpu=cortex-a8
+
+MAKE BINARY:
+arm-none-eabi-objcopy booter booter.bin 
+
+RUNNING:
+transfer booter to RAM
+loady 8f000000
+
+find _start address in objdump (like 0x80d4)
+jump to _start, for example
+go 8f0080d4
+
