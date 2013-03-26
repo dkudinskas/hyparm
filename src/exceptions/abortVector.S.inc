@@ -30,6 +30,9 @@ abortUndefined:
 /***************************************************/
 .global abortSvc
 abortSvc:
+#ifdef CONFIG_STATS
+  recordStartSvc
+#endif
   PUSH   {LR}
 
   /* Load guest context into LR and store R0--R12 into guest context. */
@@ -140,6 +143,9 @@ contAbortSvc:
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndSvc
+#endif
   MOVS    PC, LR
 #endif
 
@@ -157,6 +163,9 @@ abortPrefetch:
 /***************************************************/
 .global abortDataAbort
 abortDataAbort:
+#ifdef CONFIG_STATS
+  recordStartDabt
+#endif
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
@@ -264,6 +273,9 @@ contAbortAbort:
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndDabt
+#endif
   MOVS    PC, LR
 #endif
 
@@ -287,6 +299,9 @@ abtMonPrivLoop:
 /***************************************************/
 .global abortIrq
 abortIrq:
+#ifdef CONFIG_STATS
+  recordStartIrq
+#endif
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
@@ -398,6 +413,9 @@ contAbtIrq:
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndIrq
+#endif
   MOVS    PC, LR
 #endif
 

@@ -21,6 +21,9 @@ usrUndefined:
 /***************************************************/
 .global usrSvc
 usrSvc:
+#ifdef CONFIG_STATS
+  recordStartSvc
+#endif
   PUSH   {LR}
 
   /* Load guest context into LR and store R0--R12 into guest context. */
@@ -127,6 +130,9 @@ contUsrSvc:
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndSvc
+#endif
   MOVS    PC, LR
 #endif
 
@@ -137,6 +143,9 @@ contUsrSvc:
 /***************************************************/
 .global usrPrefetch
 usrPrefetch:
+#ifdef CONFIG_STATS
+  recordStartPabt
+#endif
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
@@ -251,6 +260,9 @@ contUsrPabt:
 /***************************************************/
 .global usrDataAbort
 usrDataAbort:
+#ifdef CONFIG_STATS
+  recordStartDabt
+#endif
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
@@ -356,6 +368,9 @@ contUsrDabt:
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndDabt
+#endif
   MOVS    PC, LR
 #endif
 
@@ -381,6 +396,9 @@ usrMonPrivLoop:
 /***************************************************/
 .global usrIrq
 usrIrq:
+#ifdef CONFIG_STATS
+  recordStartIrq
+#endif
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
@@ -487,6 +505,9 @@ contUsrIrq:
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndIrq
+#endif
   MOVS    PC, LR
 #endif
 

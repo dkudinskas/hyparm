@@ -21,6 +21,9 @@ undUndefined:
 /***************************************************/
 .global undSvc
 undSvc:
+#ifdef CONFIG_STATS
+  recordStartSvc
+#endif
   PUSH   {LR}
 
   /* Load guest context into LR and store R0--R12 into guest context. */
@@ -126,6 +129,9 @@ contUndSvc:
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndSvc
+#endif
   MOVS    PC, LR
 #endif
 

@@ -17,6 +17,8 @@ extern u32int timerTotalSvc;
 extern u32int timerNumberSvc;
 extern u32int timerTotalDabt;
 extern u32int timerNumberDabt;
+extern u32int timerTotalIrq;
+extern u32int timerNumberIrq;
 
 
 u32int getCycleCount(void);
@@ -339,6 +341,8 @@ void dumpGuestContext(const GCONTXT *context)
   printf("timerNumberSvc:    %08x\n", timerNumberSvc);
   printf("timerTotalDabt:    %08x\n", timerTotalDabt);
   printf("timerNumberDabt:   %08x\n", timerNumberDabt);
+  printf("timerTotalIrq:     %08x\n", timerTotalIrq);
+  printf("timerNumberIrq:    %08x\n", timerNumberIrq);
   printf("total cycle count: %08x\n", getCycleCount());
 #endif
 }

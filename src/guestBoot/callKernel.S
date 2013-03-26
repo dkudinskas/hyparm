@@ -10,6 +10,28 @@
  */
 .global callKernel
 callKernel:
+
+#ifdef CONFIG_STATS
+  /*
+   * enable and reset all cycle counters
+   */
+  MOV     R8, #0
+  ORR     R8, R8, #1              /* enable all counters */
+  ORR     R8, R8, #2              /* reset all performance counters to 0 */
+  ORR     R8, R8, #4              /* reset cycle counter to 0 */
+  ORR     R8, R8, #8              /* ENABLE the divider (64)*/
+  ORR     R8, R8, #16             /* not sure: enable export events? */
+  MCR     p15, 0, R8, c9, c12, 0  /* Write PMNC Register */
+
+  MOVW    R8, #0x000f
+  MOVT    R8, #0x8000
+  MCR     p15, 0, R8, c9, c12, 1  /* enable all counters */
+  MOV     R7, #0
+  MCR     p15, 0, R7, c9, c12, 2  /* enable all counters */
+  MCR     p15, 0, R8, c9, c12, 3  /* clear all overflow flags */
+#endif
+
+
   /*
    * Modify the SPSR: set USR mode, disable asynchronous aborts and FIQs
    */
