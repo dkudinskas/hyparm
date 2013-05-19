@@ -160,7 +160,6 @@ struct guestContext
   /* This will contain the guest PC of the last instruction in active BB*/
   u32int lastGuestPC;
   u32int lastEntryBlockIndex;
-  u32int groupBlockVersion;
 
   u8int *execBitmap;
   u32int conflictTotal;

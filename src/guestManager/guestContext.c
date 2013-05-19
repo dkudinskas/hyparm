@@ -237,7 +237,7 @@ void dumpGuestContext(const GCONTXT *context)
   printf("guest PC Of Last guest Instruction: %08x\n", context->lastGuestPC);
   printf("last entry block index: %08x\n", context->lastEntryBlockIndex);
   dumpSdramStats(context->vm.sdram);
-  
+
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   printf("====================================\n");
   printf("svc  count: %08x\n", context->svcCount);

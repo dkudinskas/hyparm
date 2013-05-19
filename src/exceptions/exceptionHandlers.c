@@ -203,7 +203,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   else
   {
     // going to user mode.
-//    DIE_NOW(context, "stop");
     delayResetLoopDetector();
   }
   enableInterrupts();

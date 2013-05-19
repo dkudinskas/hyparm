@@ -14,7 +14,7 @@ void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastB
   // get next block
   u32int blockIndex = getBasicBlockStoreIndex(nextPC);
   BasicBlock* nextBlock = getBasicBlockStoreEntry(context->translationStore, blockIndex);
-  
+
   // if invalid, return.
   if ((nextBlock->type == BB_TYPE_INVALID) || (nextBlock->hotness < 10))
   {
@@ -35,17 +35,6 @@ void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastB
     return;
   }
 
-  // if we found a group block with an old version number, fail to link. 
-  // scanner will then re-scan this block, thus validating it's correct
-  if ((nextBlock->type == GB_TYPE_ARM) && (nextBlock->versionNumber != context->groupBlockVersion))
-  {
-    return;
-  }
-  if ((lastBlock->type == GB_TYPE_ARM) && (lastBlock->versionNumber != context->groupBlockVersion))
-  {
-    return;
-  }
-
   // must check wether it was the first or second hypercall
   // to do that we get the address of the last word of the block in host cache
   u32int lastInstrOfHostBlock = (u32int)lastBlock->codeStoreStart +
@@ -63,9 +52,7 @@ void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastB
 
   // make sure both blocks are marked as a group-block.
   lastBlock->type = GB_TYPE_ARM;
-  lastBlock->versionNumber = context->groupBlockVersion;
   nextBlock->type = GB_TYPE_ARM;
-  nextBlock->versionNumber = context->groupBlockVersion;
 }
 
 
@@ -87,13 +74,12 @@ void unlinkBlock(BasicBlock* block, u32int index)
     u32int condition = *(u32int*)(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE);
     condition &= 0xF0000000; 
     hypercall = (hypercall & 0x0FFFFFFF) | condition;
-    
+
     *(u32int*)(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE) = hypercall;
     mmuCleanDCacheByMVAtoPOU(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE);
     mmuInvIcacheByMVAtoPOU(lastInstrOfHostBlock-ARM_INSTRUCTION_SIZE);
   }
   block->type = BB_TYPE_ARM;
-  block->versionNumber = 0;
 }
 
 

@@ -196,31 +196,15 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 #endif /* CONFIG_SCANNER_EXTRA_CHECKS */
   if ((getScanBlockCounter() & MARK_MASK) == 1)
   {
-    DEBUG(SCANNER_MARK, "scanBlock: #B = %#.16Lx; startAddress = %#.8x" EOL, getScanBlockCounter(), startAddress);
+    DEBUG(SCANNER_MARK, "scanBlock: #B = %#.16Lx; startAddress = %#.8x" EOL,
+                                       getScanBlockCounter(), startAddress);
   }
-  u32int blockIndex = getBasicBlockStoreIndex(startAddress);
-  BasicBlock* basicBlock = getBasicBlockStoreEntry(context->translationStore, blockIndex);
-  
-  bool blockFound = FALSE;
-  if (basicBlock->type != BB_TYPE_INVALID)
-  {
-    if (((u32int)basicBlock->guestStart == startAddress))
-    {
-      // entry valid, address map maches, and start address maches. really found!
-      blockFound = TRUE;
-    }
-    else
-    {
-      // conflict!
-      context->conflictTotal++;
-      if (basicBlock->type == GB_TYPE_ARM)
-      {
-        context->groupBlockVersion++;
-      }
-      invalidateBlock(basicBlock);
-      blockFound = FALSE;
-    }
-  }
+
+
+  BlockInfo blockInfo = getBlockInfo(context->translationStore, startAddress);
+  u32int blockIndex = blockInfo.blockIndex;
+  bool blockFound = blockInfo.blockFound;
+  BasicBlock* basicBlock = blockInfo.blockPtr;
 
   DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: @%.8x, source = %#x, count = %#Lx; %s" EOL, startAddress,
     getScanBlockCallSource(), getScanBlockCounter(), (blockFound ? "HIT" : "MISS"));
@@ -229,15 +213,11 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 
   if (blockFound)
   {
-    // block was found in index. but if it is a group block
-    // we must check its version number: it could be out of date!
-    if ((basicBlock->type == GB_TYPE_ARM) && 
-        (basicBlock->versionNumber != context->groupBlockVersion))
+    // block was found in index. If its a single block, increase hotness
+    if (basicBlock->type == BB_TYPE_ARM)
     {
-      // group block is out of date. remove it, scan again
-      unlinkBlock(basicBlock, blockIndex);
+      basicBlock->hotness++;
     }
-    basicBlock->hotness++;
     context->R15 = (u32int)basicBlock->codeStoreStart;
     // But also the PC of the last instruction of the block should be set
     context->lastGuestPC = (u32int)basicBlock->guestEnd;

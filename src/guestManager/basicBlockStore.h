@@ -32,12 +32,20 @@ struct BasicBlockEntry
   u32int* codeStoreStart;
   u32int codeStoreSize;
   InstructionHandler handler;
-  u32int versionNumber;
   u8int hotness;
   bool oneHypercall;
 };
 typedef struct BasicBlockEntry BasicBlock;
 
+struct BasicBlockIndexValid
+{
+  bool blockFound;
+  u32int blockIndex;
+  BasicBlock* blockPtr;
+};
+typedef struct BasicBlockIndexValid BlockInfo;
+
+BlockInfo getBlockInfo(struct TranslationStore* ts, u32int startAddress);
 
 u32int getBasicBlockStoreIndex(u32int startAddress);
 BasicBlock* getBasicBlockStoreEntry(struct TranslationStore* ts, u32int index);

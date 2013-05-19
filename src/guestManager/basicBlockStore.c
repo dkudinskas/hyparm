@@ -10,10 +10,48 @@
 #include "memoryManager/mmu.h"
 
 
+BlockInfo getBlockInfo(TranslationStore* ts, u32int startAddress)
+{
+  BlockInfo info = {.blockFound = FALSE, .blockIndex = 0};
+  u32int index = getBasicBlockStoreIndex(startAddress);
+
+  BasicBlock* block;
+
+  do
+  {
+    block = &ts->basicBlockStore[index];
+    if (block->type == BB_TYPE_INVALID)
+    {
+      // no block here
+      info.blockFound = FALSE;
+      info.blockIndex = index;
+      info.blockPtr = block;
+      return info;
+    }
+    else
+    {
+      if ((u32int)block->guestStart == startAddress)
+      {
+        // found block here
+        info.blockFound = TRUE;
+        info.blockIndex = index;
+        info.blockPtr = block;
+        return info;
+      }
+      else
+      {
+        // some other block lives here, keep calm and carry on.
+        index++;
+      }
+    }
+  } // really loop until block is found of placed.
+  while (TRUE);
+}
+
+
 u32int getBasicBlockStoreIndex(u32int startAddress)
 {
-  u32int index = crc16((u8int*)&startAddress, 4);
-  return index & (BASIC_BLOCK_STORE_SIZE - 1);
+  return (startAddress >> 2) & (BASIC_BLOCK_STORE_SIZE - 1);
 }
 
 
@@ -45,7 +83,7 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
     dumpBlockStoreStats(getActiveGuestContext());
     // reset free pointer
     ts->codeStoreFreePtr = ts->codeStore;
-    
+
     // copy instructions that have already been copied for this block to front of CS
     u32int i = 0;
     u32int* instrPtr = basicBlock->codeStoreStart;
@@ -58,19 +96,19 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
       ts->codeStoreFreePtr++;
       instrPtr++;
     }
-    
+
     if (ts->write)
     {
       basicBlock->codeStoreStart = ts->codeStore;
-      
+
       // save all information from basic block entry
       // as basic block store is going to be zeroed
       BasicBlock tempBlock = *basicBlock;
-      
+
       // invalidate the basic block store
       memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
-      
-      // restore basic block store entry    
+
+      // restore basic block store entry
       basicBlock->guestStart = tempBlock.guestStart;
       basicBlock->guestEnd = tempBlock.guestEnd;
       basicBlock->codeStoreStart = tempBlock.codeStoreStart;
@@ -79,7 +117,7 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
       basicBlock->type = tempBlock.type;
     }
   }
-  
+
   DEBUG(BLOCK_STORE, "addInstructionToBlock: codeStoreSize %x\n", basicBlock->codeStoreSize);
 }
 
@@ -102,7 +140,7 @@ void setExecBitmap(GCONTXT* context, u32int start, u32int end)
   {
     context->execBitmap[byteIndex] = actualByte | (1 << bitIndex);
   }
-  
+
   if (startingPage != endingPage)
   {
     // we span two sections. do another bit..
