@@ -199,18 +199,26 @@ void main(s32int argc, char *argv[])
   {
 #ifdef CONFIG_GUEST_FREERTOS
     case GUEST_OS_FREERTOS:
+    {
       bootFreeRtos(context, config.guestKernelAddress);
       break;
+    }
 #endif
     case GUEST_OS_LINUX:
+    {
       bootLinux(context, config.guestKernelAddress, config.guestInitialRAMDiskAddress, config.guestKernelCmdLine);
       break;
+    }
     case GUEST_OS_TEST:
+    {
       bootTest(context, config.guestKernelAddress);
       break;
+    }
     default:
+    {
       printf("Error: unsupported guest OS %#x", config.guestOS);
       break;
+    }
   }
   DIE_NOW(context, "guest boot failed");
 
