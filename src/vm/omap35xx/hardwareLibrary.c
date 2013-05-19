@@ -673,12 +673,12 @@ static void storeGeneric(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int
 
 u32int vmLoad(GCONTXT *gc, ACCESS_SIZE size, u32int virtAddr)
 {
-  u32int physAddr = getPhysicalAddress(gc, gc->virtAddrEnabled ? gc->pageTables->shadowActive : gc->pageTables->hypervisor, virtAddr);
+  u32int physAddr = getPhysicalAddress(gc, gc->virtAddrEnabled ? gc->pageTables->shadowActive : gc->hypervisorPageTable, virtAddr);
   return gc->hardwareLibrary->loadFunction(gc, gc->hardwareLibrary, size, virtAddr, physAddr);
 }
 
 void vmStore(GCONTXT *gc, ACCESS_SIZE size, u32int virtAddr, u32int value)
 {
-  u32int physAddr = getPhysicalAddress(gc, gc->virtAddrEnabled ? gc->pageTables->shadowActive : gc->pageTables->hypervisor, virtAddr);
+  u32int physAddr = getPhysicalAddress(gc, gc->virtAddrEnabled ? gc->pageTables->shadowActive : gc->hypervisorPageTable, virtAddr);
   gc->hardwareLibrary->storeFunction(gc, gc->hardwareLibrary, size, virtAddr, physAddr, value);
 }

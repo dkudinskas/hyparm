@@ -32,7 +32,7 @@ void guestWriteProtect(GCONTXT *gc, u32int startAddress, u32int endAddress)
   }
   else
   {
-    writeProtectRange(gc, gc->pageTables->hypervisor, startAddress, endAddress);
+    writeProtectRange(gc, gc->hypervisorPageTable, startAddress, endAddress);
   }
 }
 
@@ -151,7 +151,7 @@ bool shouldDataAbort(GCONTXT *context, bool privAccess, bool isWrite, u32int add
   }
 
   simpleEntry* ttbrBackup = mmuGetTTBR0();
-  mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
+  mmuSetTTBR0(context->hypervisorPageTable, 0x1FF);
 
   gpt = context->pageTables->guestPhysical;
 
@@ -381,7 +381,7 @@ bool shouldPrefetchAbort(GCONTXT *context, bool privAccess, u32int address)
   }
 
   simpleEntry* ttbrBackup = mmuGetTTBR0();
-  mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
+  mmuSetTTBR0(context->hypervisorPageTable, 0x1FF);
 
   gpt = context->pageTables->guestPhysical;
 

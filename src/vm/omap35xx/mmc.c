@@ -199,8 +199,9 @@ void mmcStartDmaTransfer(GCONTXT *context, u32int phyAddr, u32int id, bool read)
   noOfTransferredBlocks = min(noOfBlocksMmc, noOfBlocksDma);
   
   bool replacedTTBR0 = FALSE;
-  if (mmuGetTTBR0() != context->pageTables->hypervisor) {
-    mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
+  if (mmuGetTTBR0() != context->hypervisorPageTable)
+  {
+    mmuSetTTBR0(context->hypervisorPageTable, 0x1FF);
     replacedTTBR0 = TRUE;
   }
 
@@ -328,13 +329,14 @@ void storeMmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, 
               DIE_NOW(NULL, "MMC Error: Can't find DMA channel\n");
             }
 
-            DEBUG(VP_OMAP_35XX_MMC, "hyp page table: %p\n", context->pageTables->hypervisor);
+            DEBUG(VP_OMAP_35XX_MMC, "hyp page table: %p\n", context->hypervisorPageTable);
             DEBUG(VP_OMAP_35XX_MMC, "shadow active: %p\n", context->pageTables->shadowActive);
             DEBUG(VP_OMAP_35XX_MMC, "TTBR0: %p\n", mmuGetTTBR0());
             
             bool replacedTTBR0 = FALSE;
-            if (mmuGetTTBR0() != context->pageTables->hypervisor) {
-              mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
+            if (mmuGetTTBR0() != context->hypervisorPageTable)
+            {
+              mmuSetTTBR0(context->hypervisorPageTable, 0x1FF);
               replacedTTBR0 = TRUE;
             }
 
@@ -525,8 +527,9 @@ void mmcContinueDmaTransfer(GCONTXT *context, u32int id, u32int dmaChannel, bool
     noOfBlocksDma = context->vm.sdma->chIndexedRegs[dmaChannel].cfn & 0xFFFF;
     
     bool replacedTTBR0 = FALSE;
-    if (mmuGetTTBR0() != context->pageTables->hypervisor) {
-      mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
+    if (mmuGetTTBR0() != context->hypervisorPageTable)
+    {
+      mmuSetTTBR0(context->hypervisorPageTable, 0x1FF);
       replacedTTBR0 = TRUE;
     }
     if (read)

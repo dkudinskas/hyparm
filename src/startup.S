@@ -190,10 +190,12 @@ undVector:
   B       undMonitor
   B       undIrq
   B       undFiq
+  .ltorg
 
 
 #include "exceptions/macros.S.inc"
 #include "exceptions/abortVector.S.inc"
+  .ltorg
 #include "exceptions/svcVector.S.inc"
 #include "exceptions/irqVector.S.inc"
 #include "exceptions/usrVector.S.inc"
@@ -729,6 +731,48 @@ fiqHandler:
  */
 .bss
 
+#ifdef CONFIG_STATS
+.global timerStartSvc
+timerStartSvc:
+  .space 4
+.global timerTotalSvc
+timerTotalSvc:
+  .space 4
+.global timerNumberSvc
+timerNumberSvc:
+  .space 4
+
+.global timerStartDabt
+timerStartDabt:
+  .space 4
+.global timerTotalDabt
+timerTotalDabt:
+  .space 4
+.global timerNumberDabt
+timerNumberDabt:
+  .space 4
+
+.global timerStartIrq
+timerStartIrq:
+  .space 4
+.global timerTotalIrq
+timerTotalIrq:
+  .space 4
+.global timerNumberIrq
+timerNumberIrq:
+  .space 4
+
+.global timerStartPabt
+timerStartPabt:
+  .space 4
+.global timerTotalPabt
+timerTotalPabt:
+  .space 4
+.global timerNumberPabt
+timerNumberPabt:
+  .space 4
+#endif
+
 /*
  * Allocate stack space. Note that stacks grown down, i.e., every PUSH lowers the value of SP, and
  * every POP increases the value of SP. Hence, labels have to be put after the reserved space.
@@ -794,29 +838,6 @@ topStackGap:
 activeGuestContext:
 guestContextSpace:
   .space 4
-#ifdef CONFIG_STATS
-.global timerStartSvc
-timerStartSvc:
-  .space 4
-.global timerTotalSvc
-timerTotalSvc:
-  .space 4
-.global timerNumberSvc
-timerNumberSvc:
-  .space 4
-
-.global timerStartDabt
-timerStartDabt:
-  .space 4
-.global timerTotalDabt
-timerTotalDabt:
-  .space 4
-.global timerNumberDabt
-timerNumberDabt:
-  .space 4
-
-#endif
-
 
 /*
  * temporary location for register spilling!

@@ -1,6 +1,7 @@
 #include "common/debug.h"
 #include "common/linker.h"
 #include "common/stddef.h"
+#include "common/stdlib.h"
 #include "common/string.h"
 
 #include "cpuArch/constants.h"
@@ -37,16 +38,16 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target);
 void initVirtualAddressing(GCONTXT *context)
 {
   //alloc some space for our 1st Level page table
-  context->pageTables->hypervisor = (simpleEntry *)newLevelOnePageTable();
+  context->hypervisorPageTable = (simpleEntry *)newLevelOnePageTable();
 
   setupPageTable(context, PT_TARGET_HYPERVISOR);
 
-  DEBUG(MM_ADDRESSING, "initVirtualAddressing: new hypervisor page table %p" EOL, context->pageTables->hypervisor);
+  DEBUG(MM_ADDRESSING, "initVirtualAddressing: new hypervisor page table %p" EOL, context->hypervisorPageTable);
 
   mmuInit();
   mmuSetDomain(HYPERVISOR_ACCESS_DOMAIN, client);
   mmuSetDomain(GUEST_ACCESS_DOMAIN, client);
-  mmuSetTTBR0(context->pageTables->hypervisor, 0);
+  mmuSetTTBR0(context->hypervisorPageTable, 0);
   mmuEnableVirtAddr();
 
   DEBUG(MM_ADDRESSING, "initVirtualAddressing: done" EOL);
@@ -60,7 +61,7 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
   {
     case PT_TARGET_HYPERVISOR:
     {
-      pageTablePtr = context->pageTables->hypervisor;
+      pageTablePtr = context->hypervisorPageTable;
       break;
     }
     case PT_TARGET_GUEST_SHADOW_PRIVILEGED:
@@ -211,17 +212,17 @@ void guestDisableMMU(GCONTXT *context)
   context->virtAddrEnabled = FALSE;
   
   // reset hypervisor page table
-  memset((void*)context->pageTables->hypervisor, 0, PT1_SIZE);
+  memset((void*)context->hypervisorPageTable, 0, PT1_SIZE);
 
   // and set it up again
   setupPageTable(context, PT_TARGET_HYPERVISOR);
 
-  DEBUG(MM_ADDRESSING, "guestDisableMMU: hypervisor page table %p reset" EOL, context->pageTables->hypervisor);
+  DEBUG(MM_ADDRESSING, "guestDisableMMU: hypervisor page table %p reset" EOL, context->hypervisorPageTable);
 
   mmuInit();
   mmuSetDomain(HYPERVISOR_ACCESS_DOMAIN, client);
   mmuSetDomain(GUEST_ACCESS_DOMAIN, client);
-  mmuSetTTBR0(context->pageTables->hypervisor, 0);
+  mmuSetTTBR0(context->hypervisorPageTable, 0);
 
   // turn vmem back on
   mmuEnableVirtAddr();
@@ -235,6 +236,7 @@ void guestDisableMMU(GCONTXT *context)
   mmuClearInstructionCache();
   DEBUG(MM_ADDRESSING, "guestDisableMMU: done" EOL);
 }
+
 
 void guestSetContextID(GCONTXT *context, u32int contextid)
 {
@@ -250,8 +252,6 @@ void guestSetContextID(GCONTXT *context, u32int contextid)
 void privToUserAddressing(GCONTXT *context)
 {
   DEBUG(MM_ADDRESSING, "privToUserAddressing: set shadowActive to %p" EOL, context->pageTables->shadowUser);
-
-  // invalidate the whole block cache
 
   context->pageTables->shadowActive = context->pageTables->shadowUser;
   
@@ -289,8 +289,6 @@ void userToPrivAddressing(GCONTXT *context)
 {
   DEBUG(MM_ADDRESSING, "userToPrivAddressing: set shadowActive to %p" EOL, context->pageTables->shadowPriv);
 
-  // invalidate the whole block cache
-
   context->pageTables->shadowActive = context->pageTables->shadowPriv;
   if (context->pageTables->guestVirtual != 0)
   {
@@ -325,10 +323,6 @@ void userToPrivAddressing(GCONTXT *context)
 void initialiseShadowPageTables(GCONTXT *gc)
 {
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: create double-shadows!" EOL);
-
-  // invalidate the whole block cache
-  // don't need to clear the translationStore here, as entries are tagged with addressMap
-  // clearTranslationStore(&gc->translationStore);
 
   mmuClearDataCache();
   mmuDataMemoryBarrier();
@@ -377,7 +371,7 @@ void changeGuestDACR(GCONTXT *context, u32int oldVal, u32int newVal)
   if (context->virtAddrEnabled)
   {
     simpleEntry* ttbrBackup = mmuGetTTBR0();
-    mmuSetTTBR0(context->pageTables->hypervisor, 0x1FF);
+    mmuSetTTBR0(context->hypervisorPageTable, 0x1FF);
 
     simpleEntry* gpt = context->pageTables->guestPhysical;
 

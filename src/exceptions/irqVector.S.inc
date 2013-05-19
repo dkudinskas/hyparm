@@ -30,6 +30,9 @@ irqUndefined:
 /***************************************************/
 .global irqSvc
 irqSvc:
+#ifdef CONFIG_STATS
+  recordStartSvc
+#endif
   PUSH   {LR}
 
   /* Load guest context into LR and store R0--R12 into guest context. */
@@ -134,6 +137,9 @@ contIrqSvc:
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndSvc
+#endif
   MOVS    PC, LR
 #endif
 
@@ -151,6 +157,9 @@ irqPrefetch:
 /***************************************************/
 .global irqDataAbort
 irqDataAbort:
+#ifdef CONFIG_STATS
+  recordStartDabt
+#endif
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
@@ -253,6 +262,9 @@ contIrqDabt:
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndDabt
+#endif
   MOVS    PC, LR
 #endif
 
@@ -277,6 +289,9 @@ irqMonPrivLoop:
 /* interrupt handler, guest was in irq mode        */
 /***************************************************/
 .global irqIrq
+#ifdef CONFIG_STATS
+  recordStartIrq
+#endif
 irqIrq:
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
@@ -383,6 +398,9 @@ contIrqIrq:
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndIrq
+#endif
   MOVS    PC, LR
 #endif
 

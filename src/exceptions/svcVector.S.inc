@@ -262,14 +262,14 @@ contSvcDabt:
 #endif
   MSR     SPSR, R0
 
-#ifdef CONFIG_STATS
-  recordEndDabt
-#endif
   POP     {R0}
 #ifdef CONFIG_THUMB2
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndDabt
+#endif
   MOVS    PC, LR
 #endif
   
@@ -294,6 +294,10 @@ svcMonPrivLoop:
 /***************************************************/
 .global svcIrq
 svcIrq:
+#ifdef CONFIG_STATS
+  recordStartIrq
+#endif
+
   PUSH   {LR}
   /* Test SPSR -> are we from USR mode? */
   MRS    LR, SPSR
@@ -394,12 +398,16 @@ contSvcIrq:
   TST     R0, #PSR_T_BIT
 #endif
   MSR     SPSR, R0
+
   POP     {R0}
 #ifdef CONFIG_THUMB2
   SUBNE   LR, LR, #2
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
 #else
+#ifdef CONFIG_STATS
+  recordEndIrq
+#endif
   MOVS    PC, LR
 #endif
 
