@@ -20,7 +20,8 @@ extern u32int timerNumberDabt;
 extern u32int timerTotalIrq;
 extern u32int timerNumberIrq;
 
-
+u32int getPerfCounter1(void);
+u32int getPerfCounter2(void);
 u32int getCycleCount(void);
 #endif
 
@@ -343,10 +344,31 @@ void dumpGuestContext(const GCONTXT *context)
   printf("timerTotalIrq:     %08x\n", timerTotalIrq);
   printf("timerNumberIrq:    %08x\n", timerNumberIrq);
   printf("total cycle count: %08x\n", getCycleCount());
+  printf("perf counter 1:    %08x\n", getPerfCounter1());
+  printf("perf counter 2:    %08x\n", getPerfCounter2());
 #endif
 }
 
 #ifdef CONFIG_STATS
+u32int getPerfCounter1()
+{
+  u32int sel = 0; /* perf coutner select register: 0 */
+  u32int value;
+  asm volatile ("MCR p15, 0, %0, c9, c12, 5\t\n":: "r"(sel));
+  asm volatile ("MCR p15, 0, %0, c9, c13, 2\t\n": "=r"(value));
+  return value;
+}
+
+u32int getPerfCounter2()
+{
+  u32int sel = 1; /* perf coutner select register: 1 */
+  u32int value;
+  asm volatile ("MCR p15, 0, %0, c9, c12, 5\t\n":: "r"(sel));
+  asm volatile ("MCR p15, 0, %0, c9, c13, 2\t\n": "=r"(value));
+  return value;
+}
+
+
 u32int getCycleCount()
 {
   u32int value;

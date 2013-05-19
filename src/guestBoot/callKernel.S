@@ -12,9 +12,26 @@
 callKernel:
 
 #ifdef CONFIG_STATS
-  /*
-   * enable and reset all cycle counters
-   */
+  MOV     R8, #0
+  MCR     p15, 0, R8, c9, c12, 5  /* select performance counter 0  */
+  MOV     R8, #1
+  MCR     p15, 0, R8, c9, c13, 1  /* get it to count i-cache l1 misses   */
+
+  MOV     R8, #1
+  MCR     p15, 0, R8, c9, c12, 5  /* select performance counter 1  */
+  MOV     R8, #3
+  MCR     p15, 0, R8, c9, c13, 1  /* get it to count d-cache l1 misses   */
+
+  MOV     R8, #2
+  MCR     p15, 0, R8, c9, c12, 5  /* select performance counter 2  */
+  MOV     R8, #0x44
+  MCR     p15, 0, R8, c9, c13, 1  /* get it to count l2 misses   */
+
+  MOV     R8, #3
+  MCR     p15, 0, R8, c9, c12, 5  /* select performance counter 3  */
+  MOV     R8, #5
+  MCR     p15, 0, R8, c9, c13, 1  /* get it to count dTLB misses   */
+
   MOV     R8, #0
   ORR     R8, R8, #1              /* enable all counters */
   ORR     R8, R8, #2              /* reset all performance counters to 0 */

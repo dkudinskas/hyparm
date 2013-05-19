@@ -203,6 +203,10 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   else
   {
     // going to user mode.
+    if (nextPC == 0xbce0)
+    {
+      printf("nextPC %x\n", nextPC);
+    }
     delayResetLoopDetector();
   }
   enableInterrupts();
