@@ -57,6 +57,7 @@ void invalidateBlock(BasicBlock* block);
 void setExecBitmap(GCONTXT* context, u32int start, u32int end);
 bool isExecBitSet(GCONTXT* context, u32int addr);
 
+void dumpBlock(BasicBlock* block);
 void dumpBlockStoreStats(GCONTXT* context);
 
 #endif

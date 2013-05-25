@@ -47,7 +47,7 @@ enum
  * The third one is register-shifted register, which is unpredictable
  * if any register is the PC.
  *
- * The immediate flavor has only one operand register (Rn at RN_INDEX). 
+ * The immediate flavor has only one operand register (Rn at RN_INDEX).
  * The register flavor has an extra operand register (Rm at RM_INDEX).
  *
  * All these instructions are data processing which store their result into a some Rd.
@@ -90,7 +90,7 @@ void armDPImmRegRSR(TranslationStore* ts, BasicBlock *block, u32int pc, u32int i
       armSpillRegister(ts, block, conditionCode, scratchRegister, tempReg);
 
       pcRegister = scratchRegister;
-      
+
       spill = TRUE;
     }
 
@@ -326,7 +326,7 @@ void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
      */
     const u32int remainingRegisters = instruction & STM_REGISTERS_MASK & ~STM_REGISTERS_PC_BIT;
     scratchRegister = findLastBitSet(remainingRegisters);
-    
+
     if (scratchRegister == baseRegister)
     {
       scratchRegister++;

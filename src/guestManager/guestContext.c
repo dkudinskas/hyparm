@@ -36,7 +36,7 @@ GCONTXT *createGuestContext(void)
     DIE_NOW(NULL, "Failed to allocate guest context.");
   }
   DEBUG(GUEST_CONTEXT, "createGuestContext: @ %p; initialising..." EOL, context);
-  
+
   // Set initial values
   context->CPSR = (PSR_F_BIT | PSR_I_BIT | PSR_SVC_MODE);
 
@@ -243,7 +243,7 @@ void dumpGuestContext(const GCONTXT *context)
   printf("====================================\n");
   printf("svc  count: %08x\n", context->svcCount);
   printf("====================================\n");
-  
+
   printf("svcGuest: %08x\n", context->svcGuest);
   printf("armStmInstruction: %08x\n", context->armStmInstruction);
   printf("armStrbtInstruction: %08x\n", context->armStrbtInstruction);
@@ -486,7 +486,7 @@ void resetExceptionCounters(GCONTXT *context)
   context->armLdrbtInstruction = 0;
   context->armLdrhtInstruction = 0;
   context->armLdrtInstruction = 0;
-  
+
   context->dabtCount = 0;
   context->dabtPriv = 0;
   context->dabtUser = 0;

@@ -496,10 +496,10 @@ static struct decodingTableEntry armSvcCoprocInstructions[] =
 static struct decodingTableEntry armUnconditionalInstructions[] =
 {
   // UNIMPLEMENTED: data memory barrier
-  ENTRY(IRC_REPLACE, armDmbInstruction,          NULL,                  0xf57ff050, 0xfffffff0, "dmb\t%U"),
+  ENTRY(IRC_REMOVE, armDmbInstruction,          NULL,                  0xf57ff050, 0xfffffff0, "dmb\t%U"),
   // sync barriers
-  ENTRY(IRC_REPLACE, armDsbInstruction,          NULL,                  0xf57ff040, 0xfffffff0, "DSB"),
-  ENTRY(IRC_REPLACE, armIsbInstruction,          NULL,                  0xf57ff060, 0xfffffff0, "ISB"),
+  ENTRY(IRC_REMOVE, armDsbInstruction,          NULL,                  0xf57ff040, 0xfffffff0, "DSB"),
+  ENTRY(IRC_REMOVE, armIsbInstruction,          NULL,                  0xf57ff060, 0xfffffff0, "ISB"),
   // UNIMPLEMENTED: CLREX clear exclusive
   ENTRY(IRC_REPLACE, armClrexInstruction,        NULL,                  0xf57ff01f, 0xffffffff, "clrex"),
   // CPS: change processor state

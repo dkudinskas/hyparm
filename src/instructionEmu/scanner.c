@@ -288,7 +288,7 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
       armWritePCToRegister(context->translationStore, basicBlock,
                            cc >> 28, GPR_LR, ((u32int)instructionPtr)-4);
     }
-    
+
     if (isConditional(instruction))
     {
       // conditional branch, two hypercalls
@@ -317,10 +317,10 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
   // set guest end of block address
   basicBlock->guestEnd = instructionPtr;
   basicBlock->handler = decodedInstr->handler;
-  
+
   context->lastGuestPC = (u32int)instructionPtr;
   DEBUG(SCANNER, "scanArmBlock: last guest PC set to %08x\n", context->lastGuestPC);
-  DEBUG(SCANNER, "scanArmBlock: instr %08x @ %p SWIcode %02x hdlrFuncPtr %p" EOL, 
+  DEBUG(SCANNER, "scanArmBlock: instr %08x @ %p SWIcode %02x hdlrFuncPtr %p" EOL,
         *instructionPtr, instructionPtr, blockStoreIndex, basicBlock->handler);
 
   // we will start executing at the first instruction of this block inside code store
@@ -388,10 +388,10 @@ u32int rescanBlock(GCONTXT *context, u32int blockStoreIndex, BasicBlock* block, 
 
   // backup code store pointer
   u32int* csFreeBackup = context->translationStore->codeStoreFreePtr;
-  
+
   // set the pointer to the start of current block for rescanning
   context->translationStore->codeStoreFreePtr = block->codeStoreStart;
-  
+
   // disable code store writes - all calls to addInstructionToBlock will NOT write
   context->translationStore->write = FALSE;
 

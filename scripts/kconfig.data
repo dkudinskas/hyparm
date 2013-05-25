@@ -477,6 +477,10 @@ config DEBUG_BLOCK_STORE
   bool "Debug block store"
   depends on DEBUG
 
+config DEBUG_LINKER
+  bool "Debug block linker"
+  depends on DEBUG
+
 config DEBUG_TRANSLATION_STORE
   bool "Debug translation store"
   depends on DEBUG

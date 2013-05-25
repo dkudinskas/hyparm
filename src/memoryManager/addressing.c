@@ -143,6 +143,8 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
 
   if (target != PT_TARGET_GUEST_SHADOW_UNPRIVILEGED)
   {
+    mapRegion(pageTablePtr, SPILL_PAGE_BEGIN, SPILL_PAGE_BEGIN, SPILL_PAGE_END-1,
+              GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RW, TRUE, FALSE, 0, TRUE);
     mapRegion(pageTablePtr, RAM_CODE_CACHE_POOL_BEGIN, RAM_CODE_CACHE_POOL_BEGIN, RAM_CODE_CACHE_POOL_END-1,
               GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RO, TRUE, FALSE, 0, FALSE);
   }

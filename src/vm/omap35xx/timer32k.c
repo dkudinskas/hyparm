@@ -28,7 +28,7 @@ void initTimer32k(virtualMachine *vm)
   timer32k->timer32SysconfReg = 0;
   volatile u32int * memPtr = (u32int *)(TIMER32K_BASE + REG_TIMER_32K_COUNTER);
   timer32k->counterVal = *memPtr;
-  
+
   vm->timer32k = timer32k;
 }
 

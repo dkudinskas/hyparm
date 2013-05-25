@@ -167,6 +167,19 @@ bool isExecBitSet(GCONTXT* context, u32int addr)
 }
 
 
+void dumpBlock(BasicBlock* block)
+{
+  printf("dumpBlock: type %x\n", block->type);
+  printf("dumpBlock: guestStart %p\n", block->guestStart);
+  printf("dumpBlock: guestEnd %p\n", block->guestEnd);
+  printf("dumpBlock: codeStoreStart %p\n", block->codeStoreStart);
+  printf("dumpBlock: codeStoreSize %d\n", block->codeStoreSize);
+  printf("dumpBlock: handler %p\n", block->handler);
+  printf("dumpBlock: hotness %d\n", block->hotness);
+  printf("dumpBlock: oneHypercall %x\n", block->oneHypercall);
+}
+
+
 void dumpBlockStoreStats(GCONTXT* context)
 {
   BasicBlock* index = context->translationStore->basicBlockStore;
@@ -189,8 +202,6 @@ void dumpBlockStoreStats(GCONTXT* context)
   printf("Basic Block Index Entries:    %08x\n", BASIC_BLOCK_STORE_SIZE);
   printf("Basic Block entries free:     %08x\n", free);
   printf("Basic Block entries occupied: %08x\n", occupied);
-  printf("conflictTotal: %08x\n", context->conflictTotal);
-  context->conflictTotal = 0;
   printf("total used block store space %08x\n", sizeOfBlocks);
   printf("======================================================\n");
 

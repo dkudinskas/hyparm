@@ -71,6 +71,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   bool link = TRUE;
   u32int nextPC = 0;
   bool gSVC = FALSE;
+  BasicBlock* block = NULL;
 
   disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
@@ -120,15 +121,15 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   {
     u32int cpsrOld = context->CPSR;
     u32int blockStoreIndex = code - 0x100;
-    BasicBlock* basicBlock = getBasicBlockStoreEntry(context->translationStore, blockStoreIndex);
-    context->lastGuestPC = (u32int)basicBlock->guestEnd;
+    block = getBasicBlockStoreEntry(context->translationStore, blockStoreIndex);
+    context->lastGuestPC = (u32int)block->guestEnd;
 
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-    registerSvc(context, basicBlock->handler);
+    registerSvc(context, block->handler);
 #endif
 
     // interpret the instruction to find the start address of next block
-    nextPC = basicBlock->handler(context, *basicBlock->guestEnd);
+    nextPC = block->handler(context, *block->guestEnd);
 
     u32int cpsrNew = context->CPSR;
     if (((cpsrOld & PSR_MODE) != PSR_USR_MODE) &&
@@ -192,10 +193,9 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
       setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
     }
 
-    if (link)
+    if (link && isBranch(*block->guestEnd))
     {
-      linkBlock(context, context->R15, lastPC,
-                getBasicBlockStoreEntry(context->translationStore, code-0x100));
+      linkBlock(context, context->R15, lastPC, block);
     }
 
     scanBlock(context, context->R15);

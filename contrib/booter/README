@@ -1,11 +1,7 @@
 this is a simple trampoline to boot linux native but enable counters beforehand.
 
-
-BUILD ELF:
-arm-none-eabi-gcc booter.c callKernel.S image.c loader.c -o booter -mcpu=cortex-a8
-
-MAKE BINARY:
-arm-none-eabi-objcopy booter booter.bin 
+BUILD ELF & BINARY:
+run make
 
 RUNNING:
 transfer booter to RAM

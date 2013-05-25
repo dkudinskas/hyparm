@@ -1,11 +1,12 @@
 #include "cpuArch/constants.h"
 
+#include "common/debug.h"
+#include "common/linker.h"
+
 #include "instructionEmu/blockLinker.h"
 #include "instructionEmu/decoder/arm/structs.h"
 #include "instructionEmu/scanner.h"
 #include "instructionEmu/translator/translator.h"
-
-#include "common/debug.h"
 
 #include "memoryManager/mmu.h"
 
@@ -81,17 +82,6 @@ bool isServiceCall(u32int instruction)
 }
 
 
-bool isUndefinedCall(u32int instruction)
-{
-  // undefined call is 0xFFFFFFXX (last two numbers will hold spill register number)
-  if ((instruction & UNDEFINED_CALL) == UNDEFINED_CALL)
-  {
-    return TRUE;
-  }
-  return FALSE;
-}
-
-
 bool isConditional(u32int instruction)
 {
   if ((instruction & 0xF0000000) != 0xE0000000)
@@ -111,10 +101,10 @@ u32int findBlockIndexNumber(GCONTXT *context, u32int hostPC)
   while (!found)
   {
     u32int instruction = *pc;
-    if (isUndefinedCall(instruction))
+    if (instruction == SPILL_PAGE_BEGIN)
     {
-      // next word will be DATA! spill location. skip it and loop back around
       pc++;
+      continue;
     }
     else if (isServiceCall(instruction))
     {
@@ -160,10 +150,10 @@ u32int hostpcToGuestpc(GCONTXT* context)
 {
   u32int index = context->lastEntryBlockIndex;
   BasicBlock* block = getBasicBlockStoreEntry(context->translationStore, context->lastEntryBlockIndex);
-  
+
   // this value we are trying to map
   u32int hostPC = context->R15;
-  
+
   if (block->type == GB_TYPE_ARM)
   {
     // we are in group block! get the REAL block index number.
@@ -172,7 +162,7 @@ u32int hostpcToGuestpc(GCONTXT* context)
     block = getBasicBlockStoreEntry(context->translationStore, index);
     unlinkBlock(block, index);
   }
-  
+
   // if we are at the first instruction of code store block, we really know the mapping
   if (hostPC == (u32int)block->codeStoreStart)
   {
