@@ -79,7 +79,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   context->svcCount++;
 #endif
 
-  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
+//  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
 
 #ifdef CONFIG_THUMB2
   /* Make sure that any SVC that is not part of the scanner
@@ -174,7 +174,14 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     link = FALSE;
   }
 
-  DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = %#.8x" EOL, nextPC);
+  if ((nextPC != 0xc0010e4c) && (nextPC != 0xc0010e40) &&
+      (nextPC != 0xc00fb770) && (nextPC != 0xc00fb77c))
+  {
+    if ((nextPC & 0xffffff00) != 0xc0017c00)
+    {
+      DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = %#.8x" EOL, nextPC);
+    }
+  }
 
   if ((context->CPSR & PSR_MODE) != PSR_USR_MODE)
   {
@@ -229,18 +236,25 @@ GCONTXT *dataAbort(GCONTXT *context)
   /* Encodings: Page 1289 & 1355 */
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
+  printf("dataAbort: dfar %08x ", dfar);
   u32int faultStatus = (dfsr.fs3_0) | (dfsr.fs4 << 4);
   switch (faultStatus)
   {
     case dfsPermissionSection:
     case dfsPermissionPage:
     {
+      printf("perm\n");
       dabtPermissionFault(context, dfsr, dfar);
       break;
     }
     case dfsTranslationSection:
     case dfsTranslationPage:
     {
+      printf("trans\n");
+      if (dfar == 0x20)
+      {
+        DIE_NOW(context, "stop\n");
+      }
       dabtTranslationFault(context, dfsr, dfar);
       break;
     }
@@ -280,6 +294,7 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 #endif
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
+  printf("dataAbortPriv: pc %08x dfar %08x ", pc, dfar);
 
   u32int faultStatus = (dfsr.fs3_0) | (dfsr.fs4 << 4);
   switch(faultStatus)
@@ -287,6 +302,7 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
     case dfsTranslationSection:
     case dfsTranslationPage:
     {
+      printf("transl\n");
       dabtTranslationFault(getActiveGuestContext(), dfsr, dfar);
       break;
     }
@@ -341,13 +357,15 @@ GCONTXT *prefetchAbort(GCONTXT *context)
   // Make sure interrupts are disabled while we deal with prefetch abort.
   IFSR ifsr = getIFSR();
   u32int ifar = getIFAR();
-  u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
+  printf("prefetchAbort: ifar %08x ", ifar);
 
+  u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
   switch(faultStatus)
   {
     case ifsTranslationFaultSection:
     case ifsTranslationFaultPage:
     {
+      printf("transl\n");
       iabtTranslationFault(context, ifsr, ifar);
       break;
     }

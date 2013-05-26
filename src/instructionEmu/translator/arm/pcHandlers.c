@@ -306,6 +306,118 @@ void armShiftPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u
 void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
   DEBUG(TRANSLATION, "armStmPCInstruction: PC=%x, instruction %08x" EOL, pc, instruction);
+  DEBUG(TRANSLATION, "armStmPCInstruction: block %p csStart %p" EOL, block, block->codeStoreStart);
+
+  ARM_ldm_stm stm;
+  stm.value = instruction;
+
+  // first, simply add the instruction, which might store an incorrect PC value
+  addInstructionToBlock(ts, block, instruction);
+
+  if ((stm.fields.register_list & 0x8000) != 0)
+  {
+    // PC was in list. we have to fix up the incorrectly stored value.
+    u16int regList = stm.fields.register_list;
+    u32int Rn      = stm.fields.Rn;
+    bool wback     = stm.fields.W;
+    bool add       = stm.fields.U;
+    bool index     = stm.fields.P;
+    u32int cond    = stm.fields.cond;
+    u32int scratch, Rn_offs;
+
+    // set scratch register to be different from base register of STM
+    scratch = (Rn == 0) ? 1 : 0;
+
+    // push scratch register.
+    ARM_ldm_stm push;
+    push.value = LDM_STM_BASE_VALUE;
+    push.fields.register_list = 1 << scratch;
+    push.fields.Rn = 13;
+    push.fields.L  = 0;
+    push.fields.W  = 1;
+    push.fields.S  = 0;
+    push.fields.U  = 0;
+    push.fields.P  = 1;
+    push.fields.cond = cond;
+    addInstructionToBlock(ts, block, push.value);
+
+    // put correct guest PC into scratch
+    armWritePCToRegister(ts, block, cond, scratch, pc);
+
+    bool addOffset = FALSE;
+    // now we must calculate the offset where to store correct PC
+    if (wback)
+    {
+      if (add)
+      {
+        DIE_NOW(0, "armStmPCInstruction: add unimplemented\n");
+      }
+      else
+      {
+        if (index)
+        {
+          // STMDB (pre) address offset before transfer
+          // the highest register in the list (PC) is stored in old Rn-4
+          // since this is writeback case, current Rn = R[n] - 4*BitCount(registers);
+          Rn_offs = countBitsSet(regList)*4 - 4;
+          addOffset = TRUE;
+
+          if (Rn == 13)
+          {
+            // guest push'ing, and we also pushed 1 more word onto guest stack
+            // adjust offset to account for it. +4
+            Rn_offs += 4;
+          }
+        }
+        else
+        {
+          DIE_NOW(0, "armStmPCInstruction: post unimplemented\n");
+          // STMDA (post) address offset after transfer
+          // the highest register in the list (PC) is stored in Rn
+        }
+      } // U = 0
+    } // back
+    else
+    {
+      DIE_NOW(0, "armStmPcInstruction: wback 0 unimplemented\n");
+    }
+
+    // we know where to put the correct PC value: correct it!
+    ARM_ldr_str_imm str;
+    str.value = STR_IMMEDIATE_BASE_VALUE;
+    str.fields.imm12 = Rn_offs;
+    str.fields.Rt = scratch;
+    str.fields.Rn = Rn;
+    str.fields.L  = 0;
+    str.fields.W  = 0;
+    str.fields.B  = 0;
+    str.fields.U  = addOffset;
+    str.fields.P  = 1;
+    str.fields.I  = 0;
+    str.fields.cond = cond;
+    addInstructionToBlock(ts, block, str.value);
+
+    // pop scratch register.
+    ARM_ldm_stm pop;
+    pop.value = LDM_STM_BASE_VALUE;
+    pop.fields.register_list = 1 << scratch;
+    pop.fields.Rn = 13;
+    pop.fields.L  = 1;
+    pop.fields.W  = 1;
+    pop.fields.S  = 0;
+    pop.fields.U  = 1;
+    pop.fields.P  = 0;
+    pop.fields.cond = cond;
+    addInstructionToBlock(ts, block, pop.value);
+
+  }
+
+//  DIE_NOW(0, "stop");
+}
+
+void armStmPCInstructionBackup(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+{
+  DEBUG(TRANSLATION, "armStmPCInstruction: PC=%x, instruction %08x" EOL, pc, instruction);
 
   if ((instruction & STM_REGISTERS_PC_BIT))
   {
@@ -444,7 +556,7 @@ void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
          *
          * First, we add 'SUB Rn, Rn, #4':
          */
-        ARMSubImmediateInstruction adjustBaseRegisterInstruction = { .value = SUB_IMMEDIATE_BASE_VALUE };
+        ARM_ALU_imm adjustBaseRegisterInstruction = { .value = SUB_IMMEDIATE_BASE_VALUE };
         adjustBaseRegisterInstruction.fields.conditionCode = conditionCode;
         adjustBaseRegisterInstruction.fields.destinationRegister = baseRegister;
         adjustBaseRegisterInstruction.fields.immediate = 4;
@@ -478,15 +590,15 @@ void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
         // STMDB Rn!  regs:  R[n]'-4 +4*#r      4*(#r-1)  R[n]'             offset       (P=1, W=0)
         //
         // R[n]' denotes the value in Rn after performing the above STM with (#r-1) registers.
-        ARMStrImmediateInstruction strPCInstruction = { .value = STR_IMMEDIATE_BASE_VALUE };
-        strPCInstruction.fields.add = TRUE;
-        strPCInstruction.fields.baseRegister = baseRegister;
-        strPCInstruction.fields.conditionCode = conditionCode;
-        strPCInstruction.fields.immediate = (!before || !writeback ? 4 : 0)
+        ARM_ldr_str_imm strPCInstruction = { .value = STR_IMMEDIATE_BASE_VALUE };
+        strPCInstruction.fields.U = TRUE;
+        strPCInstruction.fields.Rn = baseRegister;
+        strPCInstruction.fields.cond = conditionCode;
+        strPCInstruction.fields.imm12 = (!before || !writeback ? 4 : 0)
                    + (writeback ? 4 * countBitsSet(remainingRegisters) : 0);
-        strPCInstruction.fields.index = !before || writeback;
-        strPCInstruction.fields.sourceRegister = scratchRegister;
-        strPCInstruction.fields.writeBackIfNotIndex = !before && !writeback;
+        strPCInstruction.fields.P = !before || writeback;
+        strPCInstruction.fields.Rt = scratchRegister;
+        strPCInstruction.fields.W = !before && !writeback;
         addInstructionToBlock(ts, block, strPCInstruction.value);
 
         DEBUG(TRANSLATION, "armStmPCInstruction: split off PC in STR instruction: %#.8x" 
