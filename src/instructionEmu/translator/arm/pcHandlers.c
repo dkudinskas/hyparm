@@ -90,7 +90,7 @@ void armDPImmRegRSR(TranslationStore* ts, BasicBlock *block, u32int pc, u32int i
       armSpillRegister(ts, block, conditionCode, scratchRegister, tempReg);
 
       pcRegister = scratchRegister;
-      
+
       spill = TRUE;
     }
 
@@ -326,7 +326,7 @@ void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
      */
     const u32int remainingRegisters = instruction & STM_REGISTERS_MASK & ~STM_REGISTERS_PC_BIT;
     scratchRegister = findLastBitSet(remainingRegisters);
-    
+
     if (scratchRegister == baseRegister)
     {
       scratchRegister++;

@@ -18,10 +18,10 @@ irqUndefined:
   AND    LR, LR, #PSR_MODE
   CMP    LR, #PSR_USR_MODE
   BNE    undHandlerPriv /* Abort occured in Hypervisor (privileged) code */
-  
+
   POP    {LR}
-  ADD    PC, LR, #4
-  
+  MOV    PC, LR
+
   B      irqUndefined
 
 

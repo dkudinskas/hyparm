@@ -12,13 +12,13 @@ void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int conditionC
 {
   ASSERT(conditionCode <= CC_AL, "invalid condition code");
   ASSERT(reg < GPR_PC, "invalid temporary register");
+  DEBUG(TRANSLATION, "armSpillRegister: block %p csStart %p", block, block->codeStoreStart);
 
   ARMLdrImmediateInstruction ldrPCInstruction;
   ARMStrImmediateInstruction strPCInstruction;
   ARMAddImmediateInstruction addInstruction;
 
   addInstructionToBlock(ts, block, UNDEFINED_CALL | reg );
-  addInstructionToBlock(ts, block, (u32int)&ts->spillLocation);
 
   // These following instructions are going to be executed in priv mode!
 
@@ -33,16 +33,7 @@ void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int conditionC
   strPCInstruction.fields.writeBackIfNotIndex = TRUE;
   addInstructionToBlock(ts, block, strPCInstruction.value);
 
-  // get spill address
-  ldrPCInstruction.value = LDR_IMMEDIATE_BASE_VALUE;
-  ldrPCInstruction.fields.add = FALSE;
-  ldrPCInstruction.fields.baseRegister = GPR_PC;
-  ldrPCInstruction.fields.conditionCode = conditionCode;
-  ldrPCInstruction.fields.immediate = 0x10;
-  ldrPCInstruction.fields.index = TRUE;
-  ldrPCInstruction.fields.sourceRegister = tempReg;
-  ldrPCInstruction.fields.writeBack = FALSE;
-  addInstructionToBlock(ts, block, ldrPCInstruction.value);
+  armWriteSpillLocToRegister(ts, block, conditionCode, tempReg);
 
   // spill register into spill address
   strPCInstruction.value = STR_IMMEDIATE_BASE_VALUE;
@@ -54,7 +45,7 @@ void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int conditionC
   strPCInstruction.fields.sourceRegister = reg;
   strPCInstruction.fields.writeBackIfNotIndex = TRUE;
   addInstructionToBlock(ts, block, strPCInstruction.value);
-  
+
   // restore pushed temp register
   ldrPCInstruction.value = LDR_IMMEDIATE_BASE_VALUE;
   ldrPCInstruction.fields.add = TRUE;
@@ -81,23 +72,14 @@ void armRestoreRegister(TranslationStore* ts, BasicBlock* block, u32int conditio
 {
   ASSERT(conditionCode <= CC_AL, "invalid condition code");
   ASSERT(reg < GPR_PC, "invalid temporary register");
+  DEBUG(TRANSLATION, "armRestoreRegister: block %p csStart %p", block, block->codeStoreStart);
 
   ARMLdrImmediateInstruction ldrPCInstruction;
   ARMAddImmediateInstruction addInstruction;
 
   addInstructionToBlock(ts, block, UNDEFINED_CALL | reg );
-  addInstructionToBlock(ts, block, (u32int)&ts->spillLocation);
 
-  // get spill address
-  ldrPCInstruction.value = LDR_IMMEDIATE_BASE_VALUE;
-  ldrPCInstruction.fields.add = FALSE;
-  ldrPCInstruction.fields.baseRegister = GPR_PC;
-  ldrPCInstruction.fields.conditionCode = conditionCode;
-  ldrPCInstruction.fields.immediate = 0xC;
-  ldrPCInstruction.fields.index = TRUE;
-  ldrPCInstruction.fields.sourceRegister = reg;
-  ldrPCInstruction.fields.writeBack = FALSE;
-  addInstructionToBlock(ts, block, ldrPCInstruction.value);
+  armWriteSpillLocToRegister(ts, block, conditionCode, reg);
 
   // load spilled value back
   ldrPCInstruction.value = LDR_IMMEDIATE_BASE_VALUE;
@@ -119,6 +101,23 @@ void armRestoreRegister(TranslationStore* ts, BasicBlock* block, u32int conditio
   addInstruction.fields.setFlags = TRUE;
   addInstructionToBlock(ts, block, addInstruction.value);
 }
+
+
+void armWriteSpillLocToRegister(TranslationStore* ts, BasicBlock* block, u32int conditionCode, u32int reg)
+{
+  u32int sploc = (u32int)(&ts->spillLocation);
+  // assemble MOVW
+  //MOVW -> ARM ARM A8.6.96 p506
+  //|COND|0011|0000|imm4| Rd |    imm12   |
+  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110000 << 20) | ((sploc & 0xF000) << 4) | (reg << 12) | (sploc & 0x0FFF));
+
+  sploc >>= 16;
+  // assemble MOVT
+  //MOVT -> ARM ARM A8.6.99 p512
+  //|COND|0011|0100|imm4| Rd |    imm12   |
+  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110100 << 20) | ((sploc & 0xF000) << 4) | (reg << 12) | (sploc & 0x0FFF));
+}
+
 
 
 void armWritePCToRegister(TranslationStore* ts, BasicBlock* block, u32int conditionCode, u32int reg, u32int pc)

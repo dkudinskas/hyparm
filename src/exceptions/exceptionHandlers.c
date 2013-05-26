@@ -321,11 +321,11 @@ GCONTXT *undefined(GCONTXT *context)
 }
 
 
-void undefinedPrivileged(void)
+void undefinedPrivileged(u32int pc)
 {
+  fprintf("undefinedPrivileged: pc %08x\n", pc);
   DIE_NOW(NULL, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!");
 }
-
 
 GCONTXT *prefetchAbort(GCONTXT *context)
 {
