@@ -26,11 +26,11 @@
 
 
 
-static void scanArmBlock(GCONTXT *context, u32int *guestStart, u32int blockStoreIndex, BasicBlock* basicBlock);
+static BasicBlock* scanArmBlock(GCONTXT *context, u32int *guestStart, u32int blockStoreIndex, BasicBlock* basicBlock);
 static bool armIsPCInsensitiveInstruction(u32int instruction);
 
 #ifdef CONFIG_THUMB2
-static void scanThumbBlock(GCONTXT *context, u16int *start, u32int metaIndex);
+static BasicBlock* scanThumbBlock(GCONTXT *context, u16int *start, u32int metaIndex);
 #endif
 
 #ifdef CONFIG_SCANNER_COUNT_BLOCKS
@@ -184,7 +184,7 @@ static void reportBlockSize(u32int *start, u32int size)
 #endif /* CONFIG_DEBUG_SCANNER_MARK_INTERVAL */
 
 
-void scanBlock(GCONTXT *context, u32int startAddress)
+BasicBlock* scanBlock(GCONTXT *context, u32int startAddress)
 {
   incrementScanBlockCounter();
 #ifdef CONFIG_SCANNER_EXTRA_CHECKS
@@ -225,19 +225,19 @@ void scanBlock(GCONTXT *context, u32int startAddress)
                                         EOL, context->lastGuestPC, context->R15);
 
     setScanBlockCallSource(SCANNER_CALL_SOURCE_NOT_SET);
-    return;
+    return basicBlock;
   }
 
   basicBlock->hotness = 1;
 #ifdef CONFIG_THUMB2
   if (context->CPSR & PSR_T_BIT)
   {
-    scanThumbBlock(context, (void*)startAddress, blockIndex);
+    return scanThumbBlock(context, (void*)startAddress, blockIndex);
   }
   else
 #endif /* CONFIG_THUMB2 */
   {
-    scanArmBlock(context, (u32int*)startAddress, blockIndex, basicBlock);
+    return scanArmBlock(context, (u32int*)startAddress, blockIndex, basicBlock);
   }
   setScanBlockCallSource(SCANNER_CALL_SOURCE_NOT_SET);
 }
@@ -246,7 +246,7 @@ void scanBlock(GCONTXT *context, u32int startAddress)
 /*
  * scan and translate a guest basic block, copying it into translation cache
  */
-void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, BasicBlock* basicBlock)
+BasicBlock* scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, BasicBlock* basicBlock)
 {
   DEBUG(SCANNER, "scanArmBlock: guestStart %p block store index %x block %p\n", guestStart, blockStoreIndex, basicBlock);
 
@@ -331,6 +331,7 @@ void scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStoreIndex, 
   guestWriteProtect(context, (u32int)guestStart, (u32int)instructionPtr);
 
   setExecBitmap(context, (u32int)basicBlock->guestStart, (u32int)basicBlock->guestEnd);
+  return basicBlock;
 }
 
 

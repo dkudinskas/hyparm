@@ -17,6 +17,8 @@ void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int conditionC
   ARMLdrImmediateInstruction ldrPCInstruction;
   ARMStrImmediateInstruction strPCInstruction;
 
+  block->spills = TRUE;
+
   // store a register into the next slot of user stack (do not adjust user SP)
   strPCInstruction.value = STR_IMMEDIATE_BASE_VALUE;
   strPCInstruction.fields.add = FALSE;

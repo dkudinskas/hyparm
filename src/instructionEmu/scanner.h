@@ -20,7 +20,7 @@
 #define SCANNER_CALL_SOURCE_INTERRUPT            8
 
 
-void scanBlock(GCONTXT *context, u32int startAddress);
+BasicBlock* scanBlock(GCONTXT *context, u32int startAddress);
 
 u32int rescanBlock(GCONTXT *context, u32int blockStoreIndex, BasicBlock* block, u32int hostPC);
 

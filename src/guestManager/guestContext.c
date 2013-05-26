@@ -355,7 +355,7 @@ u32int getPerfCounter1()
   u32int sel = 0; /* perf coutner select register: 0 */
   u32int value;
   asm volatile ("MCR p15, 0, %0, c9, c12, 5\t\n":: "r"(sel));
-  asm volatile ("MCR p15, 0, %0, c9, c13, 2\t\n": "=r"(value));
+  asm volatile ("MRC p15, 0, %0, c9, c13, 2\t\n": "=r"(value));
   return value;
 }
 
@@ -364,7 +364,7 @@ u32int getPerfCounter2()
   u32int sel = 1; /* perf coutner select register: 1 */
   u32int value;
   asm volatile ("MCR p15, 0, %0, c9, c12, 5\t\n":: "r"(sel));
-  asm volatile ("MCR p15, 0, %0, c9, c13, 2\t\n": "=r"(value));
+  asm volatile ("MRC p15, 0, %0, c9, c13, 2\t\n": "=r"(value));
   return value;
 }
 

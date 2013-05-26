@@ -1,5 +1,6 @@
 #include "common/debug.h"
 #include "common/stddef.h"
+#include "common/linker.h"
 #ifdef CONFIG_PROFILER
 #include "common/profiler.h"
 #endif
@@ -198,7 +199,11 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
       linkBlock(context, context->R15, lastPC, block);
     }
 
-    scanBlock(context, context->R15);
+    BasicBlock* nextBlock = scanBlock(context, context->R15);
+    if (nextBlock->spills)
+    {
+      asm volatile ("PLD [%0]\t\n":: "r"(SPILL_PAGE_BEGIN));
+    }
   }
   else
   {
