@@ -199,11 +199,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
       linkBlock(context, context->R15, lastPC, block);
     }
 
-    BasicBlock* nextBlock = scanBlock(context, context->R15);
-    if (nextBlock->spills)
-    {
-      asm volatile ("PLD [%0]\t\n":: "r"(SPILL_PAGE_BEGIN));
-    }
+    scanBlock(context, context->R15);
   }
   else
   {

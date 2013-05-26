@@ -83,11 +83,8 @@ void armDPImmRegRSR(TranslationStore* ts, BasicBlock *block, u32int pc, u32int i
     {
       scratchRegister = getOtherRegisterOf3(regDest, regN, regM);
 
-      // register to push in priv mode
-      u32int tempReg = (scratchRegister != GPR_R0) ? GPR_R0 : GPR_R1;
-
       // spill register
-      armSpillRegister(ts, block, conditionCode, scratchRegister, tempReg);
+      armSpillRegister(ts, block, conditionCode, scratchRegister);
 
       pcRegister = scratchRegister;
 
@@ -217,11 +214,8 @@ void armLdrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
     {
       scratchRegister = getOtherRegisterOf2(regD, regM);
 
-      // register to push in priv mode
-      u32int tempReg = (scratchRegister != GPR_R0) ? GPR_R0 : GPR_R1;
-
       // spill register
-      armSpillRegister(ts, block, conditionCode, scratchRegister, tempReg);
+      armSpillRegister(ts, block, conditionCode, scratchRegister);
 
       pcRegister = scratchRegister;
     }
@@ -460,11 +454,8 @@ void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
         scratchRegister = getOtherRegister(baseRegister);
         DEBUG(TRANSLATION, "armStmPCInstruction: spilling and reusing r%u" EOL, scratchRegister);
 
-        // register to push in priv mode
-        u32int tempReg = (scratchRegister != GPR_R0) ? GPR_R0 : GPR_R1;
-
         // spill register
-        armSpillRegister(ts, block, conditionCode, scratchRegister, tempReg);
+        armSpillRegister(ts, block, conditionCode, scratchRegister);
 
         armWritePCToRegister(ts, block, conditionCode, scratchRegister, pc);
 

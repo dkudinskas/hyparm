@@ -34,7 +34,6 @@ struct BasicBlockEntry
   InstructionHandler handler;
   u8int hotness;
   bool oneHypercall;
-  bool spills;
 };
 typedef struct BasicBlockEntry BasicBlock;
 

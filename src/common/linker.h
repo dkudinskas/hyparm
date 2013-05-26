@@ -75,8 +75,6 @@
  * The size and alignment of these pools is specified in the linker script. The next 4 macros
  * expose their starting and ending address.
  */
-#define SPILL_PAGE_BEGIN                ((u32int)&(__SPILL_PAGE_BEGIN__))
-#define SPILL_PAGE_END                  ((u32int)&(__SPILL_PAGE_END__))
 #define RAM_CODE_CACHE_POOL_BEGIN       ((u32int)&(__RAM_CODE_CACHE_POOL_BEGIN__))
 #define RAM_CODE_CACHE_POOL_END         ((u32int)&(__RAM_CODE_CACHE_POOL_END__))
 #define RAM_XN_POOL_BEGIN               ((u32int)&(__RAM_XN_POOL_BEGIN__))
@@ -97,8 +95,6 @@ extern const u32int __DATA_END__;
 extern const u32int __BSS_BEGIN__;
 extern const u32int __BSS_END__;
 extern const u32int __HYPERVISOR_END__;
-extern const u32int __SPILL_PAGE_BEGIN__;
-extern const u32int __SPILL_PAGE_END__;
 extern const u32int __RAM_CODE_CACHE_POOL_BEGIN__;
 extern const u32int __RAM_CODE_CACHE_POOL_END__;
 extern const u32int __RAM_XN_POOL_BEGIN__;

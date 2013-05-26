@@ -72,13 +72,52 @@ typedef union
 } ARMSubImmediateInstruction;
 
 
+typedef union
+{
+  struct armMrcInstruction
+  {
+    unsigned CRm : 4;
+    unsigned pad0 : 1;
+    unsigned opc2 : 3;
+    unsigned coproc : 4;
+    unsigned Rt : 4;
+    unsigned CRn : 4;
+    unsigned pad1 : 1;
+    unsigned opc1 : 3;
+    unsigned pad3 : 4;
+    unsigned cc : 4;
+  } fields;
+  u32int value;
+} ARMMrcInstruction;
+
+
+typedef union
+{
+  struct armMcrInstruction
+  {
+    unsigned CRm : 4;
+    unsigned pad0 : 1;
+    unsigned opc2 : 3;
+    unsigned coproc : 4;
+    unsigned Rt : 4;
+    unsigned CRn : 4;
+    unsigned pad1 : 1;
+    unsigned opc1 : 3;
+    unsigned pad3 : 4;
+    unsigned cc : 4;
+  } fields;
+  u32int value;
+} ARMMcrInstruction;
+
 enum
 {
-  STR_IMMEDIATE_BASE_VALUE = 0x04000000,
-  LDR_IMMEDIATE_BASE_VALUE = 0x04100000,
-  SUB_IMMEDIATE_BASE_VALUE = 0x02400000,
   ADD_IMMEDIATE_BASE_VALUE = 0x02800000,
-  BRANCH_BASE_VALUE        = 0x0a000000
+  BRANCH_BASE_VALUE        = 0x0a000000,
+  LDR_IMMEDIATE_BASE_VALUE = 0x04100000,
+  MRC_BASE_VALUE           = 0x0e100010,
+  MCR_BASE_VALUE           = 0x0e000010,
+  STR_IMMEDIATE_BASE_VALUE = 0x04000000,
+  SUB_IMMEDIATE_BASE_VALUE = 0x02400000,
 };
 
 #endif /* __INSTRUCTION_EMU__DECODER__ARM__STRUCTS_H__ */

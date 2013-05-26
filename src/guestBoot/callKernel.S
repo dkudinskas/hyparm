@@ -12,25 +12,20 @@
 callKernel:
 
 #ifdef CONFIG_STATS
-  MOV     R8, #0
-  MCR     p15, 0, R8, c9, c12, 5  /* select performance counter 0  */
+  MOV     R8, #1
+  MCR     p15, 0, R8, c9, c12, 5  /* select performance counter 1  */
   MOV     R8, #1
   MCR     p15, 0, R8, c9, c13, 1  /* get it to count i-cache l1 misses   */
 
-  MOV     R8, #1
-  MCR     p15, 0, R8, c9, c12, 5  /* select performance counter 1  */
+  MOV     R8, #2
+  MCR     p15, 0, R8, c9, c12, 5  /* select performance counter 2  */
   MOV     R8, #3
   MCR     p15, 0, R8, c9, c13, 1  /* get it to count d-cache l1 misses   */
 
-  MOV     R8, #2
-  MCR     p15, 0, R8, c9, c12, 5  /* select performance counter 2  */
-  MOV     R8, #0x44
-  MCR     p15, 0, R8, c9, c13, 1  /* get it to count l2 misses   */
-
   MOV     R8, #3
   MCR     p15, 0, R8, c9, c12, 5  /* select performance counter 3  */
-  MOV     R8, #5
-  MCR     p15, 0, R8, c9, c13, 1  /* get it to count dTLB misses   */
+  MOV     R8, #0x44
+  MCR     p15, 0, R8, c9, c13, 1  /* get it to count l2 misses   */
 
   MOV     R8, #0
   ORR     R8, R8, #1              /* enable all counters */
@@ -47,6 +42,25 @@ callKernel:
   MCR     p15, 0, R7, c9, c12, 2  /* enable all counters */
   MCR     p15, 0, R8, c9, c12, 3  /* clear all overflow flags */
 #endif
+
+  /* make sure counter 0 is disabled */
+  MOV     R8, #1
+  MCR     p15, 0, R8, c9, c12, 2
+
+  /* select performance counter 0 */
+  MOV     R8, #0
+  MCR     p15, 0, R8, c9, c12, 5
+
+  /* reset counter zero */
+  MCR     p15, 0, R8, c9, c13, 2
+
+  /* user enable peft counters */
+  MOV     R8, #1
+  MCR     p15, 0, R8, c9, c14, 0
+
+  /* performance counter 0 reserved for spilling */
+  MOV     R8, #0
+  MCR     p15, 0, R8, c9, c12, 5
 
 
   /*
