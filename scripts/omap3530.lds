@@ -73,7 +73,7 @@ SECTIONS
 	 * Executable dynamic allocation pool (for code caches). This pool must be mapped separately,
 	 * so its size must be a multiple of the small page size.
 	 */
-	. = ALIGN(64K);
+	. = ALIGN(1M);
 	__RAM_CODE_CACHE_POOL_BEGIN__ = .;
 	. += 2048K;
 	__RAM_CODE_CACHE_POOL_END__ = .;

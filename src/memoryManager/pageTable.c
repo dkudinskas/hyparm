@@ -119,7 +119,7 @@ u32int mapRegion(simpleEntry *pageTable, u32int virtualStartAddress, u32int phys
       physicalStartAddress += SECTION_SIZE;
       virtualStartAddress += SECTION_SIZE;
     }
-/*    else if (isAlignedToMaskN(physicalStartAddress, LARGE_PAGE_MASK)
+    else if (isAlignedToMaskN(physicalStartAddress, LARGE_PAGE_MASK)
              && (physicalEndAddress - physicalStartAddress) >= LARGE_PAGE_SIZE)
     {
       // 64 kB, map a large page -- may involve creation of an L2 table 
@@ -127,7 +127,7 @@ u32int mapRegion(simpleEntry *pageTable, u32int virtualStartAddress, u32int phys
                    cacheable, bufferable, regionAttributes, executeNever);
       physicalStartAddress += LARGE_PAGE_SIZE;
       virtualStartAddress += LARGE_PAGE_SIZE;
-    }*/
+    }
     else
     {
       /* 4 kB, map a small page -- may involve creation of an L2 table */
