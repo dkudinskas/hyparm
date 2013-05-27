@@ -7,7 +7,9 @@
 /*
  * Data processing instructions
  */
-void armDPImmRegRSR(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
+void armALUImmRegRSR(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
+void armALUimm(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
+void armALUreg(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
 void armDPImmRegRSRNoDest(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
 void armMovPCInstruction(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
 void armShiftPCInstruction(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);

@@ -52,36 +52,74 @@ enum
  *
  * All these instructions are data processing which store their result into a some Rd.
  */
-void armDPImmRegRSR(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+void armALUImmRegRSR(TranslationStore* ts, BasicBlock *block,
+                     u32int pc, u32int instruction)
+{
+  bool immediateForm = (instruction & DATA_PROC_IMMEDIATE_FORM_BIT);
+  if (immediateForm)
+  {
+    armALUimm(ts, block, pc, instruction);
+  }
+  else
+  {
+    armALUreg(ts, block, pc, instruction);
+  }
+}
+
+
+void armALUimm(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction)
+{
+  ARM_ALU_imm instr;
+  instr.value = instruction;
+
+  u32int Rd   = instr.fields.Rd;
+  u32int Rn   = instr.fields.Rn;
+  u32int cond = instr.fields.cond;
+
+  if (Rn == GPR_PC)
+  {
+    DEBUG(TRANSLATION, "armALUimm: translating %08x @ %08x with cond=%x, Rd=%x, Rn=%x"
+          EOL, instruction, pc, cond, Rd, Rn);
+
+    armWritePCToRegister(ts, block, cond, Rd, pc);
+    instruction = ARM_SET_REGISTER(instruction, RN_INDEX, Rd);
+  }
+  addInstructionToBlock(ts, block, instruction);
+}
+
+
+void armALUreg(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction)
 {
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
+
   const bool immediateForm = (instruction & DATA_PROC_IMMEDIATE_FORM_BIT);
-  const u32int regDest = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
-  const u32int regN = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
-  const u32int regM = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
+
+  const u32int Rd = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
+  const u32int Rn = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
+  const u32int Rm = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
   u32int scratchRegister = 0;
-  u32int pcRegister = regDest;
-  bool replaceN = regN == GPR_PC;
-  bool replaceM = !immediateForm && regM == GPR_PC;
+  u32int pcRegister = Rd;
+  bool replaceN = (Rn == GPR_PC);
+  bool replaceM = !immediateForm && (Rm == GPR_PC);
   bool spill = FALSE;
 
   if (replaceN || replaceM)
   {
     // This implementation expects Rd=PC to trap
-    ASSERT(regDest != GPR_PC, ERROR_NOT_IMPLEMENTED);
+    ASSERT(Rd != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
     DEBUG(TRANSLATION, "armDPImmRegRSR: translating %08x @ %08x with cond=%x, imm=%x, "
-          "Rd=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, immediateForm, regDest, regN, regM);
+          "Rd=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, immediateForm, Rd, Rn, Rm);
 
     /* For the imm case, e.g. ADD Rd,Rn,#imm, we cannot have Rn=Rd because Rn=PC and Rd=PC
      * must trap. For the register case however, we can have ADD Rd,Rn,Rm with
      * - Rn=PC, Rm=Rd
      * - Rn=Rd, Rm=PC
      * In this case the instruction does not contain a 'dead' register! */
-    if ((immediateForm == 0) && ((regN == regDest) || (regM == regDest)))
+    if ((immediateForm == 0) && ((Rn == Rd) || (Rm == Rd)))
     {
-      scratchRegister = getOtherRegisterOf3(regDest, regN, regM);
+      scratchRegister = getOtherRegisterOf3(Rd, Rn, Rm);
 
       // register to push in priv mode
       u32int tempReg = (scratchRegister != GPR_R0) ? GPR_R0 : GPR_R1;
