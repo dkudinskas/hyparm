@@ -17,12 +17,12 @@ void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int conditionC
   ARMMcrInstruction mcr;
 
   mcr.value = MCR_BASE_VALUE;
-  mcr.fields.CRm = 13;
-  mcr.fields.opc2 = 2;
   mcr.fields.coproc = 15;
-  mcr.fields.Rt = reg;
-  mcr.fields.CRn = 9;
   mcr.fields.opc1 = 0;
+  mcr.fields.CRn = 13;
+  mcr.fields.CRm = 0;
+  mcr.fields.opc2 = 2;
+  mcr.fields.Rt = reg;
   mcr.fields.cc = conditionCode;
 
   addInstructionToBlock(ts, block, mcr.value);
@@ -37,12 +37,12 @@ void armRestoreRegister(TranslationStore* ts, BasicBlock* block, u32int conditio
   ARMMrcInstruction mrc;
 
   mrc.value = MRC_BASE_VALUE;
-  mrc.fields.CRm = 13;
-  mrc.fields.opc2 = 2;
   mrc.fields.coproc = 15;
-  mrc.fields.Rt = reg;
-  mrc.fields.CRn = 9;
   mrc.fields.opc1 = 0;
+  mrc.fields.CRn = 13;
+  mrc.fields.CRm = 0;
+  mrc.fields.opc2 = 2;
+  mrc.fields.Rt = reg;
   mrc.fields.cc = conditionCode;
 
   addInstructionToBlock(ts, block, mrc.value);
