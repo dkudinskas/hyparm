@@ -41,17 +41,6 @@ enum
 };
 
 
-/*
- * Translates {ADC,ADD,AND,BIC,EOR,ORR,RSB,RSC,SBC,SUB} for which Rd!=PC
- * in both immediate and register flavours. All these instructions have 3 flavours.
- * The third one is register-shifted register, which is unpredictable
- * if any register is the PC.
- *
- * The immediate flavor has only one operand register (Rn at RN_INDEX).
- * The register flavor has an extra operand register (Rm at RM_INDEX).
- *
- * All these instructions are data processing which store their result into a some Rd.
- */
 void armALUImmRegRSR(TranslationStore* ts, BasicBlock *block,
                      u32int pc, u32int instruction)
 {
@@ -90,18 +79,19 @@ void armALUimm(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instru
 
 void armALUreg(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction)
 {
-  const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
+  ARM_ALU_reg instr;
+  instr.value = instruction;
 
-  const bool immediateForm = (instruction & DATA_PROC_IMMEDIATE_FORM_BIT);
-
-  const u32int Rd = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
-  const u32int Rn = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
-  const u32int Rm = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
+  u32int Rd   = instr.fields.Rd;
+  u32int Rn   = instr.fields.Rn;
+  u32int Rm   = instr.fields.Rm;
+  u32int cond = instr.fields.cond;
+  u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
 
   u32int scratchRegister = 0;
   u32int pcRegister = Rd;
   bool replaceN = (Rn == GPR_PC);
-  bool replaceM = !immediateForm && (Rm == GPR_PC);
+  bool replaceM = (Rm == GPR_PC);
   bool spill = FALSE;
 
   if (replaceN || replaceM)
@@ -109,15 +99,15 @@ void armALUreg(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instru
     // This implementation expects Rd=PC to trap
     ASSERT(Rd != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
-    DEBUG(TRANSLATION, "armDPImmRegRSR: translating %08x @ %08x with cond=%x, imm=%x, "
-          "Rd=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, immediateForm, Rd, Rn, Rm);
+    DEBUG(TRANSLATION, "armALUreg: translating %08x @ %08x with cond=%x, "
+          "Rd=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, Rd, Rn, Rm);
 
     /* For the imm case, e.g. ADD Rd,Rn,#imm, we cannot have Rn=Rd because Rn=PC and Rd=PC
      * must trap. For the register case however, we can have ADD Rd,Rn,Rm with
      * - Rn=PC, Rm=Rd
      * - Rn=Rd, Rm=PC
      * In this case the instruction does not contain a 'dead' register! */
-    if ((immediateForm == 0) && ((Rn == Rd) || (Rm == Rd)))
+    if ((Rn == Rd) || (Rm == Rd))
     {
       scratchRegister = getOtherRegisterOf3(Rd, Rn, Rm);
 
@@ -125,6 +115,7 @@ void armALUreg(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instru
       u32int tempReg = (scratchRegister != GPR_R0) ? GPR_R0 : GPR_R1;
 
       // spill register
+      printf("armALUreg: armSpillRegister\n");
       armSpillRegister(ts, block, conditionCode, scratchRegister, tempReg);
 
       pcRegister = scratchRegister;
@@ -259,6 +250,7 @@ void armLdrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
       u32int tempReg = (scratchRegister != GPR_R0) ? GPR_R0 : GPR_R1;
 
       // spill register
+      printf("armLdrPCInstruction: armSpillRegister\n");
       armSpillRegister(ts, block, conditionCode, scratchRegister, tempReg);
 
       pcRegister = scratchRegister;

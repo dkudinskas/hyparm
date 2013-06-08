@@ -22,7 +22,7 @@
   LDR     R2, [R0]                  /* count now in r2 */
   ADD     R2, R2, #1                /* incremented count */
   STR     R2, [R0]                  /* count updated in guest context */
-   
+
   POP     {R0, R1, R2}
 .endm
 

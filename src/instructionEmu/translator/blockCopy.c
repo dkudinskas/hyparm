@@ -88,35 +88,41 @@ void armRestoreRegister(TranslationStore* ts, BasicBlock* block, u32int conditio
   addInstructionToBlock(ts, block, loadStore.value);
 }
 
-void armWriteSpillLocToRegister(TranslationStore* ts, BasicBlock* block, u32int conditionCode, u32int reg)
+void armWriteSpillLocToRegister(TranslationStore* ts, BasicBlock* block,
+                                u32int conditionCode, u32int reg)
 {
   u32int sploc = SPILL_PAGE_BEGIN;
   // assemble MOVW
   //MOVW -> ARM ARM A8.6.96 p506
   //|COND|0011|0000|imm4| Rd |    imm12   |
-  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110000 << 20) | ((sploc & 0xF000) << 4) | (reg << 12) | (sploc & 0x0FFF));
+  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110000 << 20) |
+                      ((sploc & 0xF000) << 4) | (reg << 12) | (sploc & 0x0FFF));
 
   sploc >>= 16;
   // assemble MOVT
   //MOVT -> ARM ARM A8.6.99 p512
   //|COND|0011|0100|imm4| Rd |    imm12   |
-  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110100 << 20) | ((sploc & 0xF000) << 4) | (reg << 12) | (sploc & 0x0FFF));
+  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110100 << 20) |
+                       ((sploc & 0xF000) << 4) | (reg << 12) | (sploc & 0x0FFF));
 }
 
 
 
-void armWritePCToRegister(TranslationStore* ts, BasicBlock* block, u32int conditionCode, u32int reg, u32int pc)
+void armWritePCToRegister(TranslationStore* ts, BasicBlock* block,
+                          u32int conditionCode, u32int reg, u32int pc)
 {
   pc += 8;
 
   // assemble MOVW
   //MOVW -> ARM ARM A8.6.96 p506
   //|COND|0011|0000|imm4| Rd |    imm12   |
-  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110000 << 20) | ((pc & 0xF000) << 4) | (reg << 12) | (pc & 0x0FFF));
+  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110000 << 20) |
+                      ((pc & 0xF000) << 4) | (reg << 12) | (pc & 0x0FFF));
 
   pc >>= 16;
   // assemble MOVT
   //MOVT -> ARM ARM A8.6.99 p512
   //|COND|0011|0100|imm4| Rd |    imm12   |
-  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110100 << 20) | ((pc & 0xF000) << 4) | (reg << 12) | (pc & 0x0FFF));
+  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110100 << 20) |
+                      ((pc & 0xF000) << 4) | (reg << 12) | (pc & 0x0FFF));
 }

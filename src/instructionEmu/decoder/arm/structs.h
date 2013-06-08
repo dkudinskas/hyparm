@@ -20,6 +20,24 @@ typedef union
 
 typedef union
 {
+  struct armALURegisterInstruction
+  {
+    u32int Rm : 4;
+    u32int pad0 : 1;
+    u32int type : 2;
+    u32int imm5 : 5;
+    u32int Rd : 4;
+    u32int Rn : 4;
+    u32int S : 1;
+    u32int pad1 : 7;
+    u32int cond : 4;
+  } fields;
+  u32int value;
+} ARM_ALU_reg;
+
+
+typedef union
+{
   struct armLdmStmInstruction
   {
     u32int register_list : 16;
