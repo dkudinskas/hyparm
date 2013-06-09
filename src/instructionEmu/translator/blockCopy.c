@@ -9,103 +9,83 @@
 #include "instructionEmu/decoder/arm/structs.h"
 
 
-void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int conditionCode, u32int reg, u32int tempReg)
+void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int cond, u32int reg, u32int tempReg)
 {
   ASSERT(conditionCode <= CC_AL, "invalid condition code");
   ASSERT(reg < GPR_PC, "invalid temporary register");
 
-  ARM_ldr_str_imm loadStore;
-
-  block->spills = TRUE;
-
-  // store a register into the next slot of user stack (do not adjust user SP)
-  loadStore.value = STR_IMMEDIATE_BASE_VALUE;
-  loadStore.fields.imm12 = 4;
-  loadStore.fields.Rt = tempReg;
-  loadStore.fields.Rn = GPR_SP;
-  loadStore.fields.L = 0;
-  loadStore.fields.W = 0;
-  loadStore.fields.B = 0;
-  loadStore.fields.U = 0;
-  loadStore.fields.P = 1;
-  loadStore.fields.I = 0;
-  loadStore.fields.cond = conditionCode;
-  addInstructionToBlock(ts, block, loadStore.value);
-
-  armWriteSpillLocToRegister(ts, block, conditionCode, tempReg);
-
-  // spill register into spill address
-  loadStore.value = STR_IMMEDIATE_BASE_VALUE;
-  loadStore.fields.imm12 = 0;
-  loadStore.fields.Rt = reg;
-  loadStore.fields.Rn = tempReg;
-  loadStore.fields.L = 0;
-  loadStore.fields.W = 0;
-  loadStore.fields.B = 0;
-  loadStore.fields.U = 0;
-  loadStore.fields.P = 1;
-  loadStore.fields.I = 0;
-  loadStore.fields.cond = conditionCode;
-  addInstructionToBlock(ts, block, loadStore.value);
-
-  // restore stored temp register (do not adjust user SP)
-  loadStore.value = LDR_IMMEDIATE_BASE_VALUE;
-  loadStore.fields.imm12 = 4;
-  loadStore.fields.Rt = tempReg;
-  loadStore.fields.Rn = GPR_SP;
-  loadStore.fields.L = 1;
-  loadStore.fields.W = 0;
-  loadStore.fields.B = 0;
-  loadStore.fields.U = 0;
-  loadStore.fields.P = 1;
-  loadStore.fields.I = 0;
-  loadStore.fields.cond = conditionCode;
-  addInstructionToBlock(ts, block, loadStore.value);
+  if (getActiveGuestContext()->virtAddrEnabled)
+  {
+    // push scratch register to user stack
+    ARM_ldm_stm push = {.value = LDM_STM_BASE_VALUE};
+    push.fields.register_list = 1 << reg;
+    push.fields.Rn = 13;
+    push.fields.L  = 0;
+    push.fields.W  = 1;
+    push.fields.S  = 0;
+    push.fields.U  = 0;
+    push.fields.P  = 1;
+    push.fields.cond = cond;
+    addInstructionToBlock(ts, block, push.value);
+  }
+  else
+  {
+    // spill value to a spare reg in CP15
+    ARMMcrInstruction mcr;
+    mcr.value = MCR_BASE_VALUE;
+    mcr.fields.CRm = 13;
+    mcr.fields.opc2 = 2;
+    mcr.fields.coproc = 15;
+    mcr.fields.Rt = reg;
+    mcr.fields.CRn = 9;
+    mcr.fields.opc1 = 0;
+    mcr.fields.CRn = 13;
+    mcr.fields.CRm = 0;
+    mcr.fields.opc2 = 2;
+    mcr.fields.Rt = reg;
+    mcr.fields.cc = cond;
+    addInstructionToBlock(ts, block, mcr.value);
+  }
 }
 
 
-void armRestoreRegister(TranslationStore* ts, BasicBlock* block, u32int conditionCode, u32int reg)
+void armRestoreRegister(TranslationStore* ts, BasicBlock* block, u32int cond, u32int reg)
 {
   ASSERT(conditionCode <= CC_AL, "invalid condition code");
   ASSERT(reg < GPR_PC, "invalid temporary register");
 
-  ARM_ldr_str_imm loadStore;
-
-  armWriteSpillLocToRegister(ts, block, conditionCode, reg);
-
-  // load spilled value back
-  loadStore.value = LDR_IMMEDIATE_BASE_VALUE;
-  loadStore.fields.imm12 = 0;
-  loadStore.fields.Rt = reg;
-  loadStore.fields.Rn = reg;
-  loadStore.fields.L = 1;
-  loadStore.fields.W = 0;
-  loadStore.fields.B = 0;
-  loadStore.fields.U = 1;
-  loadStore.fields.P = 0;
-  loadStore.fields.I = 0;
-  loadStore.fields.cond = conditionCode;
-  addInstructionToBlock(ts, block, loadStore.value);
+  if (getActiveGuestContext()->virtAddrEnabled)
+  {
+    // pop scratch register.
+    ARM_ldm_stm pop = {.value = LDM_STM_BASE_VALUE};
+    pop.fields.register_list = 1 << reg;
+    pop.fields.Rn = 13;
+    pop.fields.L  = 1;
+    pop.fields.W  = 1;
+    pop.fields.S  = 0;
+    pop.fields.U  = 1;
+    pop.fields.P  = 0;
+    pop.fields.cond = cond;
+    addInstructionToBlock(ts, block, pop.value);
+  }
+  else
+  {
+    ARMMrcInstruction mrc;
+    mrc.value = MRC_BASE_VALUE;
+    mrc.fields.CRm = 13;
+    mrc.fields.opc2 = 2;
+    mrc.fields.coproc = 15;
+    mrc.fields.Rt = reg;
+    mrc.fields.CRn = 9;
+    mrc.fields.opc1 = 0;
+    mrc.fields.CRn = 13;
+    mrc.fields.CRm = 0;
+    mrc.fields.opc2 = 2;
+    mrc.fields.Rt = reg;
+    mrc.fields.cc = cond;
+    addInstructionToBlock(ts, block, mrc.value);
+  }
 }
-
-void armWriteSpillLocToRegister(TranslationStore* ts, BasicBlock* block,
-                                u32int conditionCode, u32int reg)
-{
-  u32int sploc = SPILL_PAGE_BEGIN;
-  // assemble MOVW
-  //MOVW -> ARM ARM A8.6.96 p506
-  //|COND|0011|0000|imm4| Rd |    imm12   |
-  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110000 << 20) |
-                      ((sploc & 0xF000) << 4) | (reg << 12) | (sploc & 0x0FFF));
-
-  sploc >>= 16;
-  // assemble MOVT
-  //MOVT -> ARM ARM A8.6.99 p512
-  //|COND|0011|0100|imm4| Rd |    imm12   |
-  addInstructionToBlock(ts, block, (conditionCode << 28) | (0b00110100 << 20) |
-                       ((sploc & 0xF000) << 4) | (reg << 12) | (sploc & 0x0FFF));
-}
-
 
 
 void armWritePCToRegister(TranslationStore* ts, BasicBlock* block,

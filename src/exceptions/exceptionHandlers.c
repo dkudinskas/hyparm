@@ -200,10 +200,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     }
 
     BasicBlock* nextBlock = scanBlock(context, context->R15);
-    if (nextBlock->spills)
-    {
-      asm volatile ("PLD [%0]\t\n":: "r"(SPILL_PAGE_BEGIN));
-    }
   }
   else
   {

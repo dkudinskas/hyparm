@@ -101,12 +101,7 @@ u32int findBlockIndexNumber(GCONTXT *context, u32int hostPC)
   while (!found)
   {
     u32int instruction = *pc;
-    if (instruction == SPILL_PAGE_BEGIN)
-    {
-      pc++;
-      continue;
-    }
-    else if (isServiceCall(instruction))
+    if (isServiceCall(instruction))
     {
       // lets get the code from the service call.
       index = (instruction & 0x00ffffff) - 0x100;

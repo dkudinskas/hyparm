@@ -40,12 +40,14 @@ enum
   SETFLAGS_BIT = 1 << 20,
 };
 
-
+/*
+ * Translates common ALU instructions, imm/reg/reg-shifted-reg cases
+ */
 void armALUImmRegRSR(TranslationStore* ts, BasicBlock *block,
                      u32int pc, u32int instruction)
 {
-  bool immediateForm = (instruction & DATA_PROC_IMMEDIATE_FORM_BIT);
-  if (immediateForm)
+  ARM_ALU_imm instr = {.value = instruction};
+  if (instr.fields.I)
   {
     armALUimm(ts, block, pc, instruction);
   }
@@ -56,38 +58,54 @@ void armALUImmRegRSR(TranslationStore* ts, BasicBlock *block,
 }
 
 
-void armALUimm(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction)
+/*
+ * Translates {CMN,CMP,TEQ,TST}: ALU ops that discard the result, hence don't 
+ * have a dead register
+ */
+void armALUImmRegRSRNoDest(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
-  ARM_ALU_imm instr;
-  instr.value = instruction;
-
-  u32int Rd   = instr.fields.Rd;
-  u32int Rn   = instr.fields.Rn;
-  u32int cond = instr.fields.cond;
-
-  if (Rn == GPR_PC)
+  ARM_ALU_imm instr = {.value = instruction};
+  if (instr.fields.I)
   {
-    DEBUG(TRANSLATION, "armALUimm: translating %08x @ %08x with cond=%x, Rd=%x, Rn=%x"
-          EOL, instruction, pc, cond, Rd, Rn);
-
-    armWritePCToRegister(ts, block, cond, Rd, pc);
-    instruction = ARM_SET_REGISTER(instruction, RN_INDEX, Rd);
+    armALUimmNoDest(ts, block, pc, instruction);
   }
-  addInstructionToBlock(ts, block, instruction);
+  else
+  {
+    armALUregNoDest(ts, block, pc, instruction);
+  }
+
 }
 
 
+/*
+ * Translates common ALU instructions, imm case
+ */
+void armALUimm(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction)
+{
+  ARM_ALU_imm instr = {.value = instruction};
+  if (instr.fields.Rn == GPR_PC)
+  {
+    DEBUG(TRANSLATION, "armALUimm: translating %08x @ %08x with cond=%x, Rd=%x, Rn=%x"
+          EOL, instruction, pc, instr.fields.cond, instr.fields.Rd, instr.fields.Rn);
+    armWritePCToRegister(ts, block, instr.fields.cond, instr.fields.Rd, pc);
+    instr.fields.Rn = instr.fields.Rd;
+  }
+  addInstructionToBlock(ts, block, instr.value);
+}
+
+
+/*
+ * Translates common ALU instructions, reg case
+ */
 void armALUreg(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction)
 {
-  ARM_ALU_reg instr;
-  instr.value = instruction;
+  DIE_NOW(0, "armALUreg unimplemented\n");
+/*  ARM_ALU_reg instr = {.value = instruction};
 
-  u32int Rd   = instr.fields.Rd;
-  u32int Rn   = instr.fields.Rn;
-  u32int Rm   = instr.fields.Rm;
+  u32int Rn = instr.fields.Rn;
+  u32int Rm = instr.fields.Rm;
+  u32int Rd = instr.fields.Rd;
   u32int cond = instr.fields.cond;
-  u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
-
   u32int scratchRegister = 0;
   u32int pcRegister = Rd;
   bool replaceN = (Rn == GPR_PC);
@@ -100,30 +118,29 @@ void armALUreg(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instru
     ASSERT(Rd != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
     DEBUG(TRANSLATION, "armALUreg: translating %08x @ %08x with cond=%x, "
-          "Rd=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, Rd, Rn, Rm);
-
+          "Rd=%x, Rn=%x, Rm=%x" EOL, instr.value, pc, cond, Rd, Rn, Rm);
+    DIE_NOW(0, "armALUreg: unimplemented\n");
+*/
     /* For the imm case, e.g. ADD Rd,Rn,#imm, we cannot have Rn=Rd because Rn=PC and Rd=PC
      * must trap. For the register case however, we can have ADD Rd,Rn,Rm with
      * - Rn=PC, Rm=Rd
      * - Rn=Rd, Rm=PC
      * In this case the instruction does not contain a 'dead' register! */
-    if ((Rn == Rd) || (Rm == Rd))
+/*    if ((Rn == Rd) || (Rm == Rd))
     {
       scratchRegister = getOtherRegisterOf3(Rd, Rn, Rm);
-
       // register to push in priv mode
       u32int tempReg = (scratchRegister != GPR_R0) ? GPR_R0 : GPR_R1;
 
       // spill register
-      printf("armALUreg: armSpillRegister\n");
-      armSpillRegister(ts, block, conditionCode, scratchRegister, tempReg);
+      armSpillRegister(ts, block, cond, scratchRegister, tempReg);
 
       pcRegister = scratchRegister;
 
       spill = TRUE;
     }
 
-    armWritePCToRegister(ts, block, conditionCode, pcRegister, pc);
+    armWritePCToRegister(ts, block, cond, pcRegister, pc);
 
     if (replaceN)
     {
@@ -140,24 +157,47 @@ void armALUreg(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instru
 
   if (spill)
   {
-    armRestoreRegister(ts, block, conditionCode, scratchRegister);
-  }
+    armRestoreRegister(ts, block, cond, scratchRegister);
+  }*/
 }
 
 
 /*
- * Translates {CMN,CMP,TEQ,TST}.
- *
- * All these instructions are data processing instructions which update the condition flags in the
- * PSR and discard their result. Because there is no destination register, we need to spill some
- * register for the PC...
+ * Translates ALU instructions without Rd, imm case
  */
-void armDPImmRegRSRNoDest(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+void armALUimmNoDest(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+{
+  ARM_ALU_imm instr = {.value = instruction};
+  u32int cond = instr.fields.cond;
+  u32int Rn = instr.fields.cond;
+
+  if (instr.fields.Rn == GPR_PC)
+  {
+    DEBUG(TRANSLATION, "armALUimmNoDest: translating %08x @ %08x cc=%x Rn=%x"
+          EOL, instr.value, pc, cond, Rn);
+    DIE_NOW(0, "armALUimmNoDest UNIMPLEMENTED\n");
+    // must spill a register to put correct PC value in
+    // since there is no destination register to be 'dead'
+  }
+  addInstructionToBlock(ts, block, instruction);
+}
+
+
+/*
+ * Translates ALU instructions without Rd, reg case
+ */
+void armALUregNoDest(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const bool immediateForm = (instruction & DATA_PROC_IMMEDIATE_FORM_BIT);
   const u32int operandNRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
   const u32int operandMRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
+
+  DEBUG(TRANSLATION, "armALUregNoDest: translating %#.8x @ %#.8x with cond=%x, "
+        "immediateForm=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, immediateForm,
+        operandNRegister, operandMRegister);
+  DIE_NOW(0, "armALUimmNoDest UNIMPLEMENTED\n");
+/*
 
   u32int pcRegister;
   bool replaceN = operandNRegister == GPR_PC;
@@ -170,9 +210,7 @@ void armDPImmRegRSRNoDest(TranslationStore* ts, BasicBlock *block, u32int pc, u3
           operandNRegister, operandMRegister);
 
     pcRegister = immediateForm ? 0 : getOtherRegisterOf2(operandNRegister, operandMRegister);
-    DIE_NOW(0, "armDPImmRegRSRNoDest: backupRegisterToSpill stop point.\n");
-//    armBackupRegisterToSpill(ts, block, conditionCode, pcRegister);
-//    armWritePCToRegister(ts, block, conditionCode, pcRegister, pc);
+    DIE_NOW(0, "armDPImmRegRSRNoDest: backupRegisterToSpill unimplemented\n");
 
     if (replaceN)
     {
@@ -189,84 +227,100 @@ void armDPImmRegRSRNoDest(TranslationStore* ts, BasicBlock *block, u32int pc, u3
 
   if (replaceN || replaceM)
   {
-    DIE_NOW(context, "armDPImmRegRSRNoDest: armRestoreRegisterFromSpill stop point.\n");
-//    armRestoreRegisterFromSpill(ts, block, conditionCode, pcRegister);
+    DIE_NOW(context, "armDPImmRegRSRNoDest: unimplemented\n");
+  }*/
+}
+
+
+
+/* this translates LDR(B) immediate case */
+void armLdrPCImm(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+{
+  ARM_ldr_str_imm instr = {.value = instruction};
+  u32int cond = instr.fields.cond;
+  u32int Rt = instr.fields.Rt;
+  u32int Rn = instr.fields.Rn;
+
+  // Rt = PC -> hypercalls
+  // Rn left to check:
+  if (Rn == GPR_PC)
+  {
+    // Rn is PC, and Rn != Rt; so we can put correct value into Rt
+    DEBUG(TRANSLATION, "armLdrPCImm: translating %#.8x @ %#.8x with cond=%x, Rt=%x, "
+                       "Rn=%x" EOL, instruction, pc, cond, Rt, Rn);
+    armWritePCToRegister(ts, block, cond, Rt, pc);
+    instr.fields.Rn = Rt;
+  }
+  addInstructionToBlock(ts, block, instr.value);
+}
+
+
+/* this translates LDR(B) register case */
+void armLdrPCReg(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+{
+  ARM_ldr_str_reg instr = {.value = instruction};
+  u32int cond = instr.fields.cond;
+  u32int Rt = instr.fields.Rt;
+  u32int Rn = instr.fields.Rn;
+  u32int Rm = instr.fields.Rm;
+
+  u32int scratch = 0;
+  u32int pcRegister = Rt;
+  bool spill = FALSE;
+
+  // Rm = PC -> unpredictable
+  // Rt = PC -> hypercalls
+  // Rn left to check:
+  if (Rn == GPR_PC)
+  {
+    // Rn is PC, have to put correct value somewhere
+    DEBUG(TRANSLATION, "armLdrPCReg: translating %#.8x @ %#.8x with cond=%x, Rt=%x, "
+          "Rn=%x Rm=%x" EOL, instruction, pc, cond, Rt, Rn, Rm);
+
+    // if Rm = Rt we can't use Rd to store PC value in, and need to spill a reg
+    if (Rt == Rm)
+    {
+      scratch = getOtherRegisterOf2(Rt, Rm);
+      armSpillRegister(ts, block, cond, scratch, 0);
+      pcRegister = scratch;
+      spill = TRUE;
+    }
+
+    armWritePCToRegister(ts, block, cond, pcRegister, pc);
+    instr.fields.Rn = pcRegister;
+  }
+
+  addInstructionToBlock(ts, block, instr.value);
+
+  if (spill)
+  {
+    armRestoreRegister(ts, block, cond, scratch);
   }
 }
 
 
 /*
- * Translates LDR{,B,H,D} in register & immediate forms for which Rd!=PC
+ * Translates LDR(B) in register & immediate forms for which Rd!=PC
  */
 void armLdrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
-  const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction); 
-  const u32int regD = ARM_EXTRACT_REGISTER(instruction, LDR_RT_INDEX);
-  const u32int regN = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
-  const u32int regM = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
-
-  u32int scratchRegister = 0;
-  u32int pcRegister = regD;
-  bool spill = FALSE;
-
-  if (regN == GPR_PC)
+  ARM_ldr_str_imm instr = {.value = instruction};
+  if (instr.fields.I == 0)
   {
-    ASSERT(regD != GPR_PC, "Rd=PC: trap (LDR) or unpredictable (LDR[BHD])");
-
-    DEBUG(TRANSLATION, "armLdrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
-          "Rt=%x" EOL, instruction, pc, conditionCode, regD, regN);
-
-    /* In here, we know that Rd!=PC and Rn=PC; hence Rd!=Rn. 
-     * For the register case we still need to check whether Rm=Rd
-     * since Rd cannot be used to store the PC in that case. */
-    switch (instruction & LDR_LDRB_REGISTER_FORM_BITS)
-    {
-      case 0:
-      {
-        if ((instruction & LDRD_BIT))
-        {
-          // LDRD writes to 2 registers; if the first is LR the next is PC: unpredictable!
-          ASSERT(regD != GPR_LR, ERROR_UNPREDICTABLE_INSTRUCTION);
-        }
-        if ((instruction & LDRH_LDRD_IMMEDIATE_FORM_BIT))
-        {
-          break;
-        }
-      }
-      // no break
-      case LDR_LDRB_REGISTER_FORM_BITS:
-      {
-        ASSERT(regM != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-        spill = (regM == regD);
-        break;
-      }
-    }
-
-    if (spill)
-    {
-      scratchRegister = getOtherRegisterOf2(regD, regM);
-
-      // register to push in priv mode
-      u32int tempReg = (scratchRegister != GPR_R0) ? GPR_R0 : GPR_R1;
-
-      // spill register
-      printf("armLdrPCInstruction: armSpillRegister\n");
-      armSpillRegister(ts, block, conditionCode, scratchRegister, tempReg);
-
-      pcRegister = scratchRegister;
-    }
-
-    armWritePCToRegister(ts, block, conditionCode, pcRegister, pc);
-    instruction = ARM_SET_REGISTER(instruction, RN_INDEX, pcRegister);
+    armLdrPCImm(ts, block, pc, instruction);
   }
-
-  addInstructionToBlock(ts, block, instruction);
-
-  if (spill)
+  else
   {
-    // Restore register; done.
-    armRestoreRegister(ts, block, conditionCode, scratchRegister);
+    // register case
+    armLdrPCReg(ts, block, pc, instruction);
   }
+}
+
+
+
+void armLdrdhPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+{
+  DIE_NOW(0, "armLdrdhPCInstruction unimplemented\n");
 }
 
 
@@ -275,6 +329,7 @@ void armLdrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
  */
 void armMovPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
+  DIE_NOW(0, "armMovPCInstruction unimplemented\n");
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const bool setFlags = instruction & SETFLAGS_BIT;
   const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
@@ -304,39 +359,33 @@ void armMovPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
 }
 
 
-/*
- * Translates {ASR,LSL,LSR,MVN,ROR,RRX} in immediate forms for which Rd!=PC.
- *
- * These instructions are all of the form
- * cond | 0001 | 101S | (0000) | Rd | imm5 | t2 | 0 | Rm
- * The shift type is determined by 2 bits (t2). For RRX, imm5 is always 00000.
- */
-void armShiftPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+/* Translates {ASR,LSL,LSR,MVN,ROR,RRX} in immediate forms for which Rd!=PC. */
+void armShiftPCImm(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
-  const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
-  const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
-  const u32int operandRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
+  ARM_ALU_reg instr = {.value = instruction};
 
-  if (operandRegister == GPR_PC)
+  u32int cond = instr.fields.cond;
+  u32int Rd = instr.fields.Rd;
+  u32int Rm = instr.fields.Rm;
+
+  if (Rm == GPR_PC)
   {
-    // This implementation expects Rd=PC to trap
     ASSERT(destinationRegister != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
-    DEBUG(TRANSLATION, "armShiftPCInstruction: translating %08x @ %08x with cond=%x, Rd=%x, "
-          "Rm=%x" EOL, instruction, pc, conditionCode, destinationRegister, operandRegister);
+    DEBUG(TRANSLATION, "armShiftPCImm: translating %08x @ %08x with cond=%x, Rd=%x, "
+          "Rm=%x" EOL, instr.value, pc, cond, Rd, Rm);
 
-    armWritePCToRegister(ts, block, conditionCode, destinationRegister, pc);
-    instruction = ARM_SET_REGISTER(instruction, RM_INDEX, destinationRegister);
+    armWritePCToRegister(ts, block, cond, Rd, pc);
+    instr.fields.Rm = Rd;
   }
-
-  addInstructionToBlock(ts, block, instruction);
+  addInstructionToBlock(ts, block, instr.value);
 }
 
 
-void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+void armStmPC(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
-  DEBUG(TRANSLATION, "armStmPCInstruction: PC=%x, instruction %08x" EOL, pc, instruction);
-  DEBUG(TRANSLATION, "armStmPCInstruction: block %p csStart %p" EOL, block, block->codeStoreStart);
+  DEBUG(TRANSLATION, "armStmPC: PC=%x, instruction %08x" EOL, pc, instruction);
+  DEBUG(TRANSLATION, "armStmPC: block %p csStart %p" EOL, block, block->codeStoreStart);
 
   ARM_ldm_stm stm;
   stm.value = instruction;
@@ -380,7 +429,7 @@ void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
     {
       if (add)
       {
-        DIE_NOW(0, "armStmPCInstruction: add unimplemented\n");
+        DIE_NOW(0, "armStmPC: add unimplemented\n");
       }
       else
       {
@@ -401,7 +450,7 @@ void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
         }
         else
         {
-          DIE_NOW(0, "armStmPCInstruction: post unimplemented\n");
+          DIE_NOW(0, "armStmPC: post unimplemented\n");
           // STMDA (post) address offset after transfer
           // the highest register in the list (PC) is stored in Rn
         }
@@ -409,7 +458,7 @@ void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
     } // back
     else
     {
-      DIE_NOW(0, "armStmPcInstruction: wback 0 unimplemented\n");
+      DIE_NOW(0, "armStmPC: wback 0 unimplemented\n");
     }
 
     // we know where to put the correct PC value: correct it!
@@ -439,7 +488,6 @@ void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
     pop.fields.P  = 0;
     pop.fields.cond = cond;
     addInstructionToBlock(ts, block, pop.value);
-
   }
 }
 
@@ -449,86 +497,34 @@ void armStmPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
  */
 void armStrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
-  const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
-  const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, STR_RT_INDEX);
-  const u32int baseRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
-  const u32int offsetRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
+  ARM_ldr_str_reg instr = {.value = instruction};
+  u32int cond = instr.fields.cond;
+  u32int Rt = instr.fields.Rt;
+  u32int Rn = instr.fields.Rn;
+  u32int Rm = instr.fields.Rm;
 
-  const bool replaceSource = sourceRegister == GPR_PC;
-  const bool replaceBase = baseRegister == GPR_PC;
-  u32int scratchRegister;
+  const bool replaceRt = (Rt == GPR_PC);
+  const bool replaceRn = (Rn == GPR_PC);
 
-  if (replaceSource || replaceBase)
+  if (replaceRt || replaceRn)
   {
     printf("armStrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
-          "Rt=%x" EOL, instruction, pc, conditionCode, sourceRegister, baseRegister);
+          "Rt=%x" EOL, instr.value, pc, cond, Rt, Rn);
     DIE_NOW(0, "armStrPCInstruction: translate, stub\n");
-    /*
-    DEBUG(TRANSLATION, "armStrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
-          "Rt=%x" EOL, instruction, pc, conditionCode, sourceRegister, baseRegister);
-
-    if (!(instruction & STR_STRB_FORM_BITS) && (instruction & STRD_BIT))
-    {
-      // Instruction is STRD immediate or register.
-      // The immediate form uses 3 registers while the register form uses 4 of them! To arrive
-      // here, we have Rn=PC and Rt!=PC, so we omit the base register from getOtherRegisterOfN.
-      //
-      ASSERT((sourceRegister & 1) == 0, ERROR_UNPREDICTABLE_INSTRUCTION);
-      ASSERT(sourceRegister != GPR_LR, ERROR_UNPREDICTABLE_INSTRUCTION);
-
-      if (instruction & STRH_STRD_IMMEDIATE_FORM_BIT)
-      {
-        scratchRegister = getOtherRegisterOf2(sourceRegister, sourceRegister + 1);
-      }
-      else
-      {
-        ASSERT(offsetRegister != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-        scratchRegister = getOtherRegisterOf3(sourceRegister, sourceRegister + 1, offsetRegister);
-      }
-    }
-    else if ((instruction & STR_STRB_FORM_BITS) == STR_STRB_IMMEDIATE_FORM_BITS
-             || (!(instruction & STR_STRB_FORM_BITS) && (instruction & STRH_STRD_IMMEDIATE_FORM_BIT)))
-    {
-      //Instruction is STR{,B,H} immediate: only 2 registers used!
-      scratchRegister = getOtherRegisterOf2(sourceRegister, baseRegister);
-    }
-    else
-    {
-      ASSERT((instruction & STR_STRB_FORM_BITS) == STR_STRB_REGISTER_FORM_BITS ||
-             (!(instruction & STR_STRB_FORM_BITS) && !(instruction & STRH_STRD_IMMEDIATE_FORM_BIT)),
-             ERROR_BAD_ARGUMENTS);
-      // Instruction is STR{,B,H} register: 3 registers used.
-      ASSERT(offsetRegister != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-      scratchRegister = getOtherRegisterOf3(sourceRegister, baseRegister, offsetRegister);
-    }
-
-    armBackupRegisterToSpill(ts, block, conditionCode, scratchRegister);
-    armWritePCToRegister(ts, block, conditionCode, scratchRegister, pc);
-
-    if (replaceSource)
-    {
-      instruction = ARM_SET_REGISTER(instruction, STR_RT_INDEX, scratchRegister);
-    }
-
-    if (replaceBase)
-    {
-      instruction = ARM_SET_REGISTER(instruction, RN_INDEX, scratchRegister);
-    }*/
   }
 
   addInstructionToBlock(ts, block, instruction);
 
-  if (replaceSource || replaceBase)
+  if (replaceRt || replaceRn)
   {
     DIE_NOW(0, "armStrPCInstruction: restore register stub.\n");
-    // Restore register; done.
-    armRestoreRegister(ts, block, conditionCode, scratchRegister);
   }
 }
 
 
 void armStrtPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
+  DIE_NOW(0, "armStrPCInstruction unimplemented\n");
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, STR_RT_INDEX);
   const u32int baseRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);

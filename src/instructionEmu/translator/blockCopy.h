@@ -10,7 +10,6 @@
 void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int conditionCode, u32int reg, u32int tempReg);
 void armRestoreRegister(TranslationStore* ts, BasicBlock* block, u32int conditionCode, u32int reg);
 
-void armWriteSpillLocToRegister(TranslationStore* ts, BasicBlock* block, u32int conditionCode, u32int reg);
 void armWritePCToRegister(TranslationStore* ts, BasicBlock* block, u32int conditionCode, u32int reg, u32int pc);
 
 /* function to find a register that is not one of the arguments */

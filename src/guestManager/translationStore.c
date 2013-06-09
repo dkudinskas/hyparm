@@ -32,7 +32,7 @@ void initialiseTranslationStore(TranslationStore* ts)
   }
   DEBUG(TRANSLATION_STORE, "initialiseTranslationStore: basic block store @ %p\n", ts->basicBlockStore);
   memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
-  
+
   ts->write = TRUE;
 }
 
@@ -62,7 +62,7 @@ void clearTranslationsAll(TranslationStore* ts)
 
   DEBUG(TRANSLATION_STORE, "clearTranslationsAll: basic block store @ %p\n", ts->basicBlockStore);
   memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
-  
+
   ts->write = TRUE;
 }
 

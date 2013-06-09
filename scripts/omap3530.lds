@@ -69,12 +69,6 @@ SECTIONS
 	 */
 	__HYPERVISOR_END__ = .;
 
-        /* spill page */
-	. = ALIGN(4K);
-	__SPILL_PAGE_BEGIN__ = .;
-	. += 4K;
-	__SPILL_PAGE_END__ = .;
-
 	/*
 	 * Executable dynamic allocation pool (for code caches). This pool must be mapped separately,
 	 * so its size must be a multiple of the small page size.
