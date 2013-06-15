@@ -416,7 +416,9 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
       if (oldVal != value)
       {
         DEBUG(INTERPRETER_ANY_COPROC, "CP15: DACR change val %x old DACR %x" EOL, value, oldVal);
-        changeGuestDACR(context, oldVal, value);
+        DACR old = {.value = oldVal};
+        DACR new = {.value = value};
+        changeGuestDACR(context, old, new);
       }
       break;
     }

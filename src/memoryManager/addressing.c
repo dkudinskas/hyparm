@@ -46,7 +46,6 @@ void initVirtualAddressing(GCONTXT *context)
 
   mmuInit();
   mmuSetDomain(HYPERVISOR_ACCESS_DOMAIN, client);
-  mmuSetDomain(GUEST_ACCESS_DOMAIN, client);
   mmuSetTTBR0(context->hypervisorPageTable, 0);
   mmuEnableVirtAddr();
 
@@ -87,7 +86,7 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
   {
     // 1:1 Map the entire of physical memory
     mapRegion(pageTablePtr, MEMORY_START_ADDR, MEMORY_START_ADDR, HYPERVISOR_BEGIN_ADDRESS,
-              GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
+              HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, TRUE, FALSE, 0, FALSE);
 
     // 32kHz synchronized timer
     mapSmallPage(pageTablePtr, BE_TIMER32K, BE_TIMER32K,
@@ -96,7 +95,7 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
     // map in static RAM 1-2-1
     const u32int staticRamStart = 0x40200000;
     mapSection(pageTablePtr, staticRamStart, staticRamStart, HYPERVISOR_ACCESS_DOMAIN,
-                 HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
+               HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
 
   }
   else
@@ -144,7 +143,7 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
   if (target != PT_TARGET_GUEST_SHADOW_UNPRIVILEGED)
   {
     mapRegion(pageTablePtr, RAM_CODE_CACHE_POOL_BEGIN, RAM_CODE_CACHE_POOL_BEGIN, RAM_CODE_CACHE_POOL_END,
-              GUEST_ACCESS_DOMAIN, PRIV_RW_USR_RO, TRUE, FALSE, 0, FALSE);
+              HYPERVISOR_ACCESS_DOMAIN, PRIV_RW_USR_RO, TRUE, FALSE, 0, FALSE);
   }
 }
 
@@ -221,7 +220,6 @@ void guestDisableMMU(GCONTXT *context)
 
   mmuInit();
   mmuSetDomain(HYPERVISOR_ACCESS_DOMAIN, client);
-  mmuSetDomain(GUEST_ACCESS_DOMAIN, client);
   mmuSetTTBR0(context->hypervisorPageTable, 0);
 
   // turn vmem back on
@@ -364,82 +362,24 @@ void initialiseShadowPageTables(GCONTXT *gc)
 
 /**
  * guest has modified domain access control register.
- * look through any shadowed entries we must update now
+ * make sure it isnt twiddling with our reserved domain
  **/
-void changeGuestDACR(GCONTXT *context, u32int oldVal, u32int newVal)
+void changeGuestDACR(GCONTXT *context, DACR old, DACR new)
 {
-  if (context->virtAddrEnabled)
+  if (old.fields.dom15 != new.fields.dom15)
   {
-    simpleEntry* ttbrBackup = mmuGetTTBR0();
-    mmuSetTTBR0(context->hypervisorPageTable, 0x1FF);
-
-    simpleEntry* gpt = context->pageTables->guestPhysical;
-
-    // if changing DACR, may have to change access permission bits of shadowed entries
-    // this requires us to force the guest into an appropriate mode
-    u32int cpsrPriv = PSR_SVC_MODE;
-    u32int cpsrUser = PSR_USR_MODE;
-    u32int cpsrBackup = context->CPSR; 
-
-    // loop through all page table entries
-    u32int y = 0;
-    for (y = 0; y < PT1_ENTRIES; y++)
-    {
-      context->CPSR = cpsrPriv;
-      simpleEntry *shadowPriv = (simpleEntry *)&context->pageTables->shadowPriv[y];
-      // only check guest domain if the entry is shadow mapped.
-      if ((shadowPriv->type != FAULT) && (shadowPriv->type != RESERVED)
-          && (shadowPriv->domain != HYPERVISOR_ACCESS_DOMAIN))
-      {
-        simpleEntry* guest = &(gpt[y]);
-        // look for domains that had their configuration changed.
-        if ( ((oldVal >> (guest->domain*2)) & 0x3) != 
-             ((newVal >> (guest->domain*2)) & 0x3) )
-        {
-          DEBUG(MM_ADDRESSING, "changeGuestDACR: %x: sPTE %08x gPTE %08x needs AP bits remapped" EOL, y, *(u32int *)shadowPriv, *(u32int *)guest);
-          if (guest->type == SECTION)
-          {
-            mapAPBitsSection(context, (sectionEntry*)guest, shadowPriv, (y << 20));
-            DEBUG(MM_ADDRESSING, "changeGuestDACR: remapped to %08x" EOL, *(u32int*)shadowPriv);
-          }
-          else if (guest->type == PAGE_TABLE)
-          {
-            DEBUG(MM_ADDRESSING, "changeGuestDACR: remap AP for page table entry" EOL);
-            mapAPBitsPageTable(context, (pageTableEntry*)guest, (pageTableEntry*)shadowPriv);
-          }
-        } // if DACR for PT entry domain changed ends 
-      } // shadowUser
-
-
-      context->CPSR = cpsrUser;
-      simpleEntry* shadowUser = (simpleEntry*)&context->pageTables->shadowUser[y];
-      // only check guest domain if the entry is shadow mapped.
-      if ((shadowUser->type != FAULT) && (shadowUser->type != RESERVED)
-          && (shadowUser->domain != HYPERVISOR_ACCESS_DOMAIN))
-      {
-        simpleEntry* guest = &(gpt[y]);
-        // look for domains that had their configuration changed.
-        if ( ((oldVal >> (guest->domain*2)) & 0x3) != 
-             ((newVal >> (guest->domain*2)) & 0x3) )
-        {
-          DEBUG(MM_ADDRESSING, "changeGuestDACR: %x: sPTE %08x gPTE %08x needs AP bits remapped" EOL, y, *(u32int*)shadowPriv, *(u32int*)guest);
-          if (guest->type == SECTION)
-          {
-            mapAPBitsSection(context, (sectionEntry*)guest, shadowUser, (y << 20));
-            DEBUG(MM_ADDRESSING, "changeGuestDACR: remapped to %08x" EOL, *(u32int *)shadowUser);
-          }
-          else if (guest->type == PAGE_TABLE)
-          {
-            DEBUG(MM_ADDRESSING, "changeGuestDACR: remap AP for page table entry" EOL);
-            mapAPBitsPageTable(context, (pageTableEntry*)guest, (pageTableEntry*)shadowUser);
-          }
-        } // if DACR for PT entry domain changed ends 
-      } // shadowUser
-    } // loop all PT1 entries
-    context->CPSR = cpsrBackup; 
-
-    mmuSetTTBR0(ttbrBackup, 0x100 | context->pageTables->contextID);
+    DIE_NOW(0, "changeGuestDACR: changing hypervisor domain bits\n");
   }
+
+  // set hypervisor domain bits to 'client'
+  new.fields.dom15 = client;
+  __asm__ __volatile__("mcr p15, 0, %0, c3, c0, 0"
+  :
+  : "r"(new.value)
+  : "memory"
+     );
+
+  return;
 }
 
 

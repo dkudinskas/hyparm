@@ -198,12 +198,12 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
     if (peripheral)
     {
       addSectionEntry((sectionEntry*)host, sectionAddr,
-                    GUEST_ACCESS_DOMAIN, PRIV_RW_USR_NO, 0, 0, 0b000, FALSE);
+                    guest->domain, PRIV_RW_USR_NO, 0, 0, 0b000, FALSE);
     }
     else
     {
       addSectionEntry((sectionEntry*)host, sectionAddr,
-                    GUEST_ACCESS_DOMAIN, GUEST_ACCESS_BITS, 1, 0, 0b000, FALSE);
+                    guest->domain, GUEST_ACCESS_BITS, 1, 0, 0b000, FALSE);
     }
     host = (sectionEntry*)getEntryFirst(context->hypervisorPageTable, guestPhysAddr);
   }
@@ -217,14 +217,13 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
   shadow->tex = 0b100;
   shadow->nG = guest->nG;
   shadow->ns = 0;
-  shadow->domain = GUEST_ACCESS_DOMAIN;
+  shadow->domain = guest->domain;
   DEBUG(MM_SHADOWING, "shadowMapSection: Shadow entry now @ %p = %#.8x" EOL, shadow,
         *(u32int *)shadow);
 
   if (guest->xn)
   {
-    // execute never bit depends on guest entry XN and DACR
-    shadow->xn = mapExecuteNeverBit(context, guest->domain, guest->xn);
+    shadow->xn = guest->xn;
     DEBUG(MM_SHADOWING, "shadowMapSection: shadow xn bit %x" EOL, shadow->xn);
   }
 
@@ -341,7 +340,7 @@ void shadowMapPageTable(GCONTXT *context, pageTableEntry* guest, pageTableEntry*
       shadow->addr = sptPhysAddr >> 10;
       //This is just a copy of the high level descriptor
       shadow->type = PAGE_TABLE;
-      shadow->domain = GUEST_ACCESS_DOMAIN;
+      shadow->domain = guest->domain;
       shadow->ns = guest->ns;
 
       u32int mapped = ((u32int)shadow - (u32int)context->pageTables->shadowActive) << 18;
@@ -659,8 +658,7 @@ void shadowMapSmallPage(GCONTXT *context, smallPageEntry* guest, smallPageEntry*
 
   if (guest->xn)
   {
-    // execute never bit depends on guest entry XN and DACR
-    shadow->xn = mapExecuteNeverBit(context, dom, guest->xn);
+    shadow->xn = guest->xn;
     DEBUG(MM_SHADOWING, "shadowMapSmallPage: shadow xn bit %x" EOL, shadow->xn);
   }
 
@@ -1004,42 +1002,4 @@ void mapAPBitsSmallPage(GCONTXT *context, u32int dom, smallPageEntry* guest, sma
     head = head->nextEntry;
   }
   while (head != NULL);
-}
-
-
-/**
- * checks guest domain access control, and correctly maps execute never bit
- **/
-u32int mapExecuteNeverBit(GCONTXT *context, u32int guestDomain, u32int xn)
-{
-  if (!xn)
-  {
-    // guest doesnt want XN!
-    return xn;
-  }
-  else
-  {
-    u32int dacr = context->coprocRegBank[CP15_DACR].value;
-    u32int domBits = (dacr >> (guestDomain*2)) & 0x3;
-    if (domBits == DACR_MANAGER)
-    {
-      // manager access overrides any XN setting
-      return 0;
-    }
-    else
-    {
-      return xn;
-    }
-  }
-}
-
-
-/**
- * should map guest domain to host domain. currently all guest domains get squeezed
- * into one host GUEST_ACCESS_DOMAIN, so this function remains unused.
- **/
-u8int mapGuestDomain(GCONTXT *context, u8int guestDomain)
-{
-  DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
-  // may do a lot of work here... change AP bits based on DACR
 }

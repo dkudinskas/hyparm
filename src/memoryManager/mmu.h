@@ -6,6 +6,7 @@
 #include "common/types.h"
 
 #include "memoryManager/pageTable.h"
+#include "memoryManager/memoryProtection.h"
 
 
 typedef enum
@@ -153,17 +154,6 @@ enum InstructionAbortFaultStatus
   ifsTranslationTableWalk1stLvlSynchParityError = 0b11100,
   ifsTranslationTableWalk2ndLvlSynchParityError = 0b11110,
 };
-
-//access is a two bit field 00 = no access, 01=client, 10=reserved, 11=manager
-enum enum_access_type
-{
-  no_access = 0b00,
-  client,
-  reserved,
-  manager
-};
-typedef enum enum_access_type access_type;
-
 
 __macro__ bool isMmuEnabled(void);
 

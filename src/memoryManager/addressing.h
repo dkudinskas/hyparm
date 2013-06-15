@@ -6,6 +6,8 @@
 
 #include "guestManager/guestContext.h"
 
+#include "memoryManager/memoryProtection.h"
+
 
 /* Need to initialise the MMU and enable virtual addressing */
 void initVirtualAddressing(GCONTXT *context) __cold__;
@@ -24,7 +26,7 @@ void userToPrivAddressing(GCONTXT *context);
 
 void initialiseShadowPageTables(GCONTXT *gc);
 
-void changeGuestDACR(GCONTXT *context, u32int oldVal, u32int newVal);
+void changeGuestDACR(GCONTXT *context, DACR oldVal, DACR newVal);
 
 void setExceptionVector(u32int guestMode);
 

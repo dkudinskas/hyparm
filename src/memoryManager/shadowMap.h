@@ -22,8 +22,4 @@ void mapAPBitsSection(GCONTXT *context, sectionEntry* guest, simpleEntry* shadow
 void mapAPBitsPageTable(GCONTXT *context, pageTableEntry* guest, pageTableEntry* shadow);
 void mapAPBitsSmallPage(GCONTXT *context, u32int dom, smallPageEntry* guest, smallPageEntry* shadow);
 
-u32int mapExecuteNeverBit(GCONTXT *context, u32int guestDomain, u32int xn);
-
-u8int mapGuestDomain(GCONTXT *context, u8int guestDomain);
-
 #endif /* __MEMORY_MANAGER__SHADOW_MAP_H__ */

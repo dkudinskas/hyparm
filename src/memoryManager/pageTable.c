@@ -1117,7 +1117,7 @@ void editAttributesSection(GCONTXT *context, sectionEntry* oldSection, sectionEn
   // even if shadow section was split to small pages, domain bits are the same
   if (oldSection->domain != newSection->domain)
   {
-    ((sectionEntry*)shadow)->domain = mapGuestDomain(context, newSection->domain);
+    ((sectionEntry*)shadow)->domain = newSection->domain;
   }
 
   //Carefull of this one, field is used by the hypervisor
