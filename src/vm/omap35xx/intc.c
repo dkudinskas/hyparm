@@ -117,6 +117,7 @@ u32int loadIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       val = prioritySortIrqs(irqController);
       break;
     case REG_INTCPS_CONTROL:
+      DEBUG(VP_OMAP_35XX_INTC, "INTC: reading contrl reg %x\n", val);
       val = irqController->intcControl & INTCPS_CONTROL_RESERVED;
       break;
 #ifdef CONFIG_GUEST_FREERTOS
@@ -309,6 +310,12 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       {
         if (value & (1 << i))
         {
+#ifdef CONFIG_MMC_PASSTHROUGH
+          if (i == SDMA_IRQ_0)
+          {
+            unmaskInterruptBE(SDMA_IRQ_0);
+          }
+#endif
           DEBUG(VP_OMAP_35XX_INTC, "INTC: clearing mask from interrupt number %#x" EOL, i);
         }
       }
@@ -328,6 +335,12 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
             // linux unmasking gpt1 interrupt. unmask gpt2 in physical.
             unmaskInterruptBE(GPT2_IRQ);
           }
+#ifdef CONFIG_MMC_PASSTHROUGH
+          if (i+32 == I2C1_IRQ)
+          {
+            unmaskInterruptBE(I2C1_IRQ);
+          }
+#endif
           DEBUG(VP_OMAP_35XX_INTC, "INTC: clearing mask from interrupt number %#x" EOL,
               i + 32);
         }
@@ -342,6 +355,12 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       {
         if (value & (1 << i))
         {
+#ifdef CONFIG_MMC_PASSTHROUGH
+          if (i+64 == MMC1_IRQ)
+          {
+            unmaskInterruptBE(MMC1_IRQ);
+          }
+#endif
           DEBUG(VP_OMAP_35XX_INTC, "INTC: clearing mask from interrupt number %#x" EOL,
               i + 64);
         }
@@ -359,7 +378,13 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       {
         if (value & (1 << i))
         {
-          DEBUG(VP_OMAP_35XX_INTC, "INTC: setting mask for interrupt number %#x" EOL, i);
+#ifdef CONFIG_MMC_PASSTHROUGH
+          if (i == SDMA_IRQ_0)
+          {
+            maskInterruptBE(SDMA_IRQ_0);
+          }
+#endif
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: set mask for interrupt number %x\n" , i);
         }
       }
       irqController->intcMir0 |= value;
@@ -373,7 +398,13 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       {
         if (value & (1 << i))
         {
-          DEBUG(VP_OMAP_35XX_INTC, "INTC: setting mask for interrupt number %x\n", i + 32);
+#ifdef CONFIG_MMC_PASSTHROUGH
+          if (i+32 == I2C1_IRQ)
+          {
+            maskInterruptBE(I2C1_IRQ);
+          }
+#endif
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: set mask for interrupt number %x\n" , i+32);
         }
       }
       irqController->intcMir1 |= value;
@@ -387,7 +418,13 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       {
         if (value & (1 << i))
         {
-          DEBUG(VP_OMAP_35XX_INTC, "INTC: setting mask for interrupt number %x\n", i + 64);
+#ifdef CONFIG_MMC_PASSTHROUGH
+          if (i+64 == MMC1_IRQ)
+          {
+            maskInterruptBE(MMC1_IRQ);
+          }
+#endif
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: set mask for interrupt number %x\n" , i+64);
         }
       }
       irqController->intcMir2 |= value;
@@ -410,19 +447,14 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       irqController->intcIdle = value & ( INTCPS_IDLE_RESERVED|INTCPS_IDLE_FUNCIDLE );
       break;
     case REG_INTCPS_MIR1:
-      /* value can be any 32-bit number */
       irqController->intcMir1 |= value;
       irqController->intcPendingIrq1 = irqController->intcItr1 & ~irqController->intcMir1;
-      /* If guest wants to enable GPT1, then GPT2 IRQ
-      * which is dedicated to guest must be unmasked
-      */
+      // If guest wants to enable GPT1, then GPT2 IRQ which is dedicated to guest must be unmasked
       if(!(value & 0x20 )) // bit 37(GPT1_IRQ)=0 -> IRQ Enable
       {
         unmaskInterruptBE(GPT2_IRQ);
       }
-      /* If GPT1 bit is masked, then GPT2_IRQ needs to be
-      * masked
-      */
+      // If GPT1 bit is masked, then GPT2_IRQ needs to be masked
       else //bit 37(GPT1_IRQ)=1 -> IRQ Disable
       {
         maskInterruptBE(GPT2_IRQ);

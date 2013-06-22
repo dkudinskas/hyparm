@@ -371,6 +371,22 @@ void changeGuestDACR(GCONTXT *context, DACR old, DACR new)
     DIE_NOW(0, "changeGuestDACR: changing hypervisor domain bits\n");
   }
 
+  if (new.fields.dom0 == manager) {new.fields.dom0 = client; }
+  if (new.fields.dom1 == manager) {new.fields.dom1 = client; }
+  if (new.fields.dom2 == manager) {new.fields.dom2 = client; }
+  if (new.fields.dom3 == manager) {new.fields.dom3 = client; }
+  if (new.fields.dom4 == manager) {new.fields.dom4 = client; }
+  if (new.fields.dom5 == manager) {new.fields.dom5 = client; }
+  if (new.fields.dom6 == manager) {new.fields.dom6 = client; }
+  if (new.fields.dom7 == manager) {new.fields.dom7 = client; }
+  if (new.fields.dom8 == manager) {new.fields.dom8 = client; }
+  if (new.fields.dom9 == manager) {new.fields.dom9 = client; }
+  if (new.fields.dom10 == manager) {new.fields.dom10 = client; }
+  if (new.fields.dom11 == manager) {new.fields.dom11 = client; }
+  if (new.fields.dom12 == manager) {new.fields.dom12 = client; }
+  if (new.fields.dom13 == manager) {new.fields.dom13 = client; }
+  if (new.fields.dom14 == manager) {new.fields.dom14 = client; }
+
   // set hypervisor domain bits to 'client'
   new.fields.dom15 = client;
   __asm__ __volatile__("mcr p15, 0, %0, c3, c0, 0"

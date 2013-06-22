@@ -20,10 +20,6 @@
 #include "drivers/beagle/beClockMan.h"
 #include "drivers/beagle/beUart.h"
 
-#ifndef CONFIG_NO_MMC
-#include "drivers/beagle/beMMC.h"
-#endif
-
 #include "guestBoot/image.h"
 #include "guestBoot/linux.h"
 #include "guestBoot/test.h"
@@ -32,9 +28,11 @@
 
 #include "instructionEmu/scanner.h"
 
-#ifndef CONFIG_NO_MMC
+#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_MMC_PASSTHROUGH)
+#include "drivers/beagle/beMMC.h"
 #include "io/mmc.h"
 #endif
+
 #ifdef CONFIG_MMC_LOG
 #include "io/partitions.h"
 #include "io/fs/fat.h"
@@ -75,7 +73,7 @@ void main(s32int argc, char *argv[]) __cold__;
 static void processCommandLine(struct runtimeConfiguration *config, s32int argc, char *argv[]) __cold__;
 
 
-#ifndef CONFIG_NO_MMC
+#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_MMC_PASSTHROUGH)
 struct mmc *mmcDevice;
 #endif
 
@@ -99,7 +97,7 @@ void main(s32int argc, char *argv[])
   memset(&config, 0, sizeof(struct runtimeConfiguration));
   config.guestOS = GUEST_OS_LINUX;
 
-#ifndef CONFIG_NO_MMC
+#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_MMC_PASSTHROUGH)
   mmcDevice = NULL;
 #endif
 #ifdef CONFIG_MMC_LOG

@@ -127,8 +127,10 @@ void storeI2c(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, 
     case I2C_CON:
       i2c[id]->i2cCon = value;
       i2c[id]->i2cStat &= I2C_INT_EV;
+      // if start condition asserted, start
       if (value & I2C_STT)
       {
+        // slave must be configured correctly
         switch(i2c[id]->i2cSa)
         {
           case 0x48:

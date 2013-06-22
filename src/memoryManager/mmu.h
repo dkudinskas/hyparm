@@ -21,11 +21,11 @@ struct dfsr
 {
   unsigned fs3_0:4; //0-3 FS[3:0]
   unsigned domain:4; //4-7
-  unsigned : 2; //8-9 zero bits!
+  unsigned res0 : 2; //8-9 zero bits!
   unsigned fs4:1;//10
   unsigned WnR:1;//11
   unsigned ExT:1;//12
-  unsigned : 19;//12-31 more zero bits
+  unsigned res1 : 19;//12-31 more zero bits
 };
 
 struct ifsr

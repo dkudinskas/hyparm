@@ -10,22 +10,38 @@
 
 static const char *const dataAbtFaultString[] =
 {
-  "INVALID ENTRY",
-  "Alignment Fault",
-  "Debug Event",
-  "Access Flag - Section",
-  "Instruction Cache Maintenance Fault",
-  "Translation Fault - Section",
-  "Access Flag - Page",
-  "Translation Fault - Page",
-  "Synchronous External Abort",
-  "Domain Fault - Section",
-  "INVALID ENTRY",
-  "Domain Fault - Page",
-  "Translation Table Walk - 1st Level",
-  "Permission Fault - Section",
-  "Synchronous External Abort - 2nd Level",
-  "Permission Fault - Page",
+  "INVALID ENTRY",                            // 00000
+  "Alignment Fault",                          // 00001
+  "Debug Event",                              // 00010
+  "Access Flag - Section",                    // 00011
+  "Instruction Cache Maintenance Fault",      // 00100
+  "Translation Fault - Section",              // 00101
+  "Access Flag - Page",                       // 00110
+  "Translation Fault - Page",                 // 00111
+  "Synchronous External Abort",               // 01000
+  "Domain Fault - Section",                   // 01001
+  "INVALID ENTRY",                            // 01010
+  "Domain Fault - Page",                      // 01011
+  "Translation Table Walk - 1st Level",       // 01100
+  "Permission Fault - Section",               // 01101
+  "Synchronous External Abort - 2nd Level",   // 01110
+  "Permission Fault - Page",                  // 01111
+  "INVALID ENTRY",                            // 10000
+  "INVALID ENTRY",                            // 10001
+  "INVALID ENTRY",                            // 10010
+  "INVALID ENTRY",                            // 10011
+  "IMPLEMENTATION DEFINED: lockdown",         // 10100
+  "INVALID ENTRY",                            // 10101
+  "Asynchronous external abort",              // 10110
+  "INVALID ENTRY",                            // 10111
+  "Memory access asynchronous parity error",  // 11000
+  "Memory access synchronous parity error",   // 11001
+  "IMPLEMENTATION DEFINED: coproc abort",     // 11010
+  "INVALID ENTRY",                            // 11011
+  "Translation table walk - 1st level",       // 11100
+  "INVALID ENTRY",                            // 11101
+  "synchronous parity error",                 // 11110
+  "INVALID ENTRY",                            // 11111
 };
 
 static const char *const prefetchAbtFaultString[] =
@@ -499,7 +515,7 @@ void printDataAbort()
 
   printf("Data Abort Address: %08x" EOL, dfar);
   printf("Fault type: ");
-  printf("%s", dataAbtFaultString[dfsr.fs3_0]);
+  printf("%s", dataAbtFaultString[faultStatus]);
   printf(" (%x), domain %x, Write not Read: %x, External: %x" EOL,  faultStatus, dfsr.domain, dfsr.WnR, dfsr.ExT);
 }
 

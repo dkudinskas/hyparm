@@ -69,12 +69,13 @@ static inline void resetLoopDetectorIfNeeded(GCONTXT *context)
 
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 {
+  // disable possible further interrupts
+  disableInterrupts();
   bool link = TRUE;
   u32int nextPC = 0;
   bool gSVC = FALSE;
   BasicBlock* block = NULL;
 
-  disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   context->svcCount++;
 #endif
@@ -210,7 +211,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     }
     delayResetLoopDetector();
   }
-  enableInterrupts();
   return context;
 }
 
@@ -218,6 +218,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 GCONTXT *dataAbort(GCONTXT *context)
 {
   /* Make sure interrupts are disabled while we deal with data abort. */
+  disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   context->dabtCount++;
   context->dabtUser++;
@@ -270,6 +271,8 @@ GCONTXT *dataAbort(GCONTXT *context)
 
 void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 {
+  /* Make sure interrupts are disabled while we deal with data abort. */
+  disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   getActiveGuestContext()->dabtCount++;
   getActiveGuestContext()->dabtPriv++;
@@ -330,6 +333,8 @@ void undefinedPrivileged(void)
 
 GCONTXT *prefetchAbort(GCONTXT *context)
 {
+  /* Make sure interrupts are disabled while we deal with fetch abort. */
+  disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   context->pabtCount++;
   context->pabtUser++;
@@ -385,6 +390,8 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 
 void prefetchAbortPrivileged(void)
 {
+  // disable possible further interrupts
+  disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   getActiveGuestContext()->pabtCount++;
   getActiveGuestContext()->pabtPriv++;
@@ -444,11 +451,12 @@ void monitorModePrivileged(void)
 
 GCONTXT *irq(GCONTXT *context)
 {
+  // disable possible further interrupts
+  disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   getActiveGuestContext()->irqCount++;
   getActiveGuestContext()->irqUser++;
 #endif
-
   // Get the number of the highest priority active IRQ
   u32int activeIrqNumber = getIrqNumberBE();
   switch(activeIrqNumber)
@@ -502,6 +510,56 @@ GCONTXT *irq(GCONTXT *context)
       }
       break;
     }
+#ifdef CONFIG_MMC_PASSTHROUGH
+    case SDMA_IRQ_0:
+    {
+      throwInterrupt(context, activeIrqNumber);
+      BasicBlock* block = getBasicBlockStoreEntry(context->translationStore, context->lastEntryBlockIndex);
+      // now we must unlink the current block if it is in a group block.
+      // to make sure the guest isn't waiting for our deferred interrupt forever
+      if (block->type == GB_TYPE_ARM)
+      {
+        u32int index = findBlockIndexNumber(context, context->R15);
+        BasicBlock* groupblock = getBasicBlockStoreEntry(context->translationStore, index);
+        unlinkBlock(groupblock, index);
+      }
+      maskInterruptBE(SDMA_IRQ_0);
+      acknowledgeIrqBE();
+      break;
+    }
+    case I2C1_IRQ:
+    {
+      throwInterrupt(context, activeIrqNumber);
+      BasicBlock* block = getBasicBlockStoreEntry(context->translationStore, context->lastEntryBlockIndex);
+      // now we must unlink the current block if it is in a group block.
+      // to make sure the guest isn't waiting for our deferred interrupt forever
+      if (block->type == GB_TYPE_ARM)
+      {
+        u32int index = findBlockIndexNumber(context, context->R15);
+        BasicBlock* groupblock = getBasicBlockStoreEntry(context->translationStore, index);
+        unlinkBlock(groupblock, index);
+      }
+      maskInterruptBE(I2C1_IRQ);
+      acknowledgeIrqBE();
+      break;
+    }
+    case MMC1_IRQ:
+    {
+      maskInterruptBE(MMC1_IRQ);
+      throwInterrupt(context, activeIrqNumber);
+      BasicBlock* block = getBasicBlockStoreEntry(context->translationStore, context->lastEntryBlockIndex);
+      // now we must unlink the current block if it is in a group block.
+      // to make sure the guest isn't waiting for our deferred interrupt forever
+      if (block->type == GB_TYPE_ARM)
+      {
+        u32int index = findBlockIndexNumber(context, context->R15);
+        BasicBlock* groupblock = getBasicBlockStoreEntry(context->translationStore, index);
+        unlinkBlock(groupblock, index);
+      }
+      acknowledgeIrqBE();
+      break;
+    }
+#endif
     default:
     {
       printf("Received IRQ = %x" EOL, activeIrqNumber);
@@ -522,12 +580,13 @@ GCONTXT *irq(GCONTXT *context)
 
 void irqPrivileged()
 {
+  // disable possible further interrupts
+  disableInterrupts();
   GCONTXT *const context = getActiveGuestContext();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   context->irqCount++;
   context->irqPriv++;
 #endif
-
   // Get the number of the highest priority active IRQ
   u32int activeIrqNumber = getIrqNumberBE();
   switch(activeIrqNumber)
@@ -572,6 +631,29 @@ void irqPrivileged()
       }
       break;
     }
+#ifdef CONFIG_MMC_PASSTHROUGH
+    case SDMA_IRQ_0:
+    {
+      throwInterrupt(context, activeIrqNumber);
+      maskInterruptBE(SDMA_IRQ_0);
+      acknowledgeIrqBE();
+      break;
+    }
+    case I2C1_IRQ:
+    {
+      throwInterrupt(context, activeIrqNumber);
+      maskInterruptBE(I2C1_IRQ);
+      acknowledgeIrqBE();
+      break;
+    }
+    case MMC1_IRQ:
+    {
+      throwInterrupt(context, activeIrqNumber);
+      maskInterruptBE(MMC1_IRQ);
+      acknowledgeIrqBE();
+      break;
+    }
+#endif
     default:
     {
       printf("Received IRQ = %#x" EOL, activeIrqNumber);

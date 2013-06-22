@@ -565,8 +565,8 @@ i2c3Error:
 i2c2Error:
   free(i2c1);
 i2c1Error:
-  free(uart2);
 #endif
+  free(uart2);
 uart2Error:
   free(uart1);
 uart1Error:

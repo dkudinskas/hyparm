@@ -344,10 +344,15 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
       ASSERT(!(value & SYS_CTRL_HW_ACC_FLAG), ERROR_NOT_IMPLEMENTED);
       ASSERT(!(value & SYS_CTRL_VECT_INTERRUPT), ERROR_NOT_IMPLEMENTED);
 
-      if ((value & SYS_CTRL_TEX_REMAP) != 0)
+      if (((oldVal & SYS_CTRL_TEX_REMAP) == 0) && ((value & SYS_CTRL_TEX_REMAP) != 0))
       {
-//      DIE_NOW(NULL, "CP15: SysCtrl - set tex remap, investigate.\n");
+        DEBUG(INTERPRETER_ANY_COPROC, "CP15: Warning: guest enabling TEX remap" EOL);
       }
+      else if (((oldVal & SYS_CTRL_TEX_REMAP) != 0) && ((value & SYS_CTRL_TEX_REMAP) == 0))
+      {
+        DEBUG(INTERPRETER_ANY_COPROC, "CP15: Warning: guest disabling TEX remap" EOL);
+      }
+
       break;
     }
     case CP15_ACTLR:

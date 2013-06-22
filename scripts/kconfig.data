@@ -143,6 +143,9 @@ config NO_MMC
 
 config MMC_GUEST_ACCESS
   bool "Give the guest access to the physical SD/MMC"
+
+config MMC_PASSTHROUGH
+  bool "Give the guest dedicated passthrough access to SD/I2C/SDMA"
   
 config MMC_LOG
   bool "Use MMC/SD device to store debug output"

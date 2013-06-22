@@ -143,6 +143,27 @@ u32int mapRegion(simpleEntry *pageTable, u32int virtualStartAddress, u32int phys
   return physicalStartAddress;
 }
 
+#ifdef CONFIG_MMC_PASSTHROUGH
+u32int mapRegionSmallPages(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
+                 u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,
+                 bool bufferable, u8int regionAttributes, bool executeNever)
+{
+  ASSERT(isAlignedToMaskN(physicalStartAddress, SMALL_PAGE_MASK), "bad alignment");
+  /*
+   * Construct a conservative, linear mapping for the specified address range.
+   */
+  while (physicalStartAddress < physicalEndAddress)
+  {
+    /* 4 kB, map a small page -- may involve creation of an L2 table */
+    mapSmallPage(pageTable, virtualStartAddress, physicalStartAddress, domain, accessBits,
+                 cacheable, bufferable, regionAttributes, executeNever);
+    physicalStartAddress += SMALL_PAGE_SIZE;
+    virtualStartAddress += SMALL_PAGE_SIZE;
+  }
+  return physicalStartAddress;
+}
+#endif
+
 
 /**
  * Map hypervisor into given base page table in sections, 1-2-1 VA to PA
@@ -433,11 +454,8 @@ void mapSmallPage(simpleEntry *pageTable, u32int virtAddr, u32int physical,
   }
   else //Existing small or large page
   {
-    printf("mapSmallPage: Virtual %#.8x, physical %#.8x, dom: %x, AP: %x, c: %x, b: %x, tex: %x, xn: %x" EOL,
-           virtAddr, physical, domain, accessBits, c, b, tex, xn);
-    printf("mapSmallPage: first entry %#.8x @ %p" EOL, *(u32int*)first, first);
-    printf("mapSmallPage: 2nd lvl entry @ %#.8x = %#.8x" EOL, (u32int)second, *(u32int*)second);
-    DIE_NOW(NULL, "adding over existing entry");
+    DEBUG(MM_PAGE_TABLES, "mapSmallPage: 2nd Level exists, adding on top" EOL);
+    addSmallPageEntry((smallPageEntry*)second, physical, accessBits, c, b, tex, xn);
   }
 }
 

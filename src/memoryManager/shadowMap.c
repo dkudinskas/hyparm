@@ -164,8 +164,63 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
   u32int guestPhysAddr = guest->addr << 20;
   if ((guestPhysAddr < MEMORY_START_ADDR) || (guestPhysAddr >= MEMORY_END_ADDR))
   {
-    // mapping a peripheral?
     peripheral = TRUE;
+#ifdef CONFIG_MMC_PASSTHROUGH
+    if (guestPhysAddr == 0x48000000)
+    {
+      u32int pt = ((u32int)shadow) & PT1_ALIGN_MASK;
+      mapRegion((simpleEntry*)pt, virtual, guestPhysAddr, guestPhysAddr+SECTION_SIZE-1,
+                guest->domain, HYPERVISOR_ACCESS_BITS, guest->c, guest->b, guest->tex, guest->xn);
+      u32int virtualSection = (virtual & SECTION_MASK);
+      u32int sdmaVirtual = virtualSection | (SDMA & ~SECTION_MASK);
+
+      u32int i2c1Virtual = virtualSection | (I2C1 & ~SECTION_MASK);
+      u32int i2c2Virtual = virtualSection | (I2C2 & ~SECTION_MASK);
+      u32int i2c3Virtual = virtualSection | (I2C3 & ~SECTION_MASK);
+
+      u32int mmc1Virtual = virtualSection | (SD_MMC1 & ~SECTION_MASK);
+      u32int mmc2Virtual = virtualSection | (SD_MMC2 & ~SECTION_MASK);
+      u32int mmc3Virtual = virtualSection | (SD_MMC3 & ~SECTION_MASK);
+
+      mapRegionSmallPages((simpleEntry*)pt, virtual, guestPhysAddr, guestPhysAddr+SECTION_SIZE-1,
+                guest->domain, HYPERVISOR_ACCESS_BITS, guest->c, guest->b, 0b100, guest->xn);
+
+      mapSmallPage((simpleEntry*)pt, sdmaVirtual, SDMA,
+                  guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, sdmaVirtual+SMALL_PAGE_SIZE, sdmaVirtual+SMALL_PAGE_SIZE,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+
+      mapSmallPage((simpleEntry*)pt, i2c1Virtual, I2C1,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, i2c1Virtual+SMALL_PAGE_SIZE, I2C1+SMALL_PAGE_SIZE,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, i2c2Virtual, I2C2,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, i2c2Virtual+SMALL_PAGE_SIZE, I2C2+SMALL_PAGE_SIZE,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, i2c3Virtual, I2C3,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, i2c3Virtual+SMALL_PAGE_SIZE, I2C3+SMALL_PAGE_SIZE,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+
+      mapSmallPage((simpleEntry*)pt, mmc1Virtual, SD_MMC1,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, mmc1Virtual+SMALL_PAGE_SIZE, SD_MMC1+SMALL_PAGE_SIZE,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, mmc2Virtual, SD_MMC2,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, mmc2Virtual+SMALL_PAGE_SIZE, SD_MMC2+SMALL_PAGE_SIZE,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, mmc3Virtual, SD_MMC3,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, mmc3Virtual+SMALL_PAGE_SIZE, SD_MMC3+SMALL_PAGE_SIZE,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mmuDataMemoryBarrier();
+      mmuInvalidateITLB();
+      mmuInvalidateDTLB();
+      return;
+    }
+#endif
     if (shadow->type != FAULT)
     {
       DIE_NOW(context, "shadowMapSection: peripheral mapping already exists!");

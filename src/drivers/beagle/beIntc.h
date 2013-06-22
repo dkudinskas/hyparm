@@ -22,10 +22,12 @@ M_IRQ_8 Reserved      Reserved
 M_IRQ_9  SMX_DBG_IRQ     L3 Interconnect error for debug
 M_IRQ_10 SMX_APP_IRQ     L3 Interconnect error for application
 M_IRQ_11 PRCM_MPU_IRQ    PRCM module IRQ
-M_IRQ_12 SDMA_IRQ_0      System DMA request 0
-M_IRQ_13 SDMA_IRQ_1      System DMA request 1
-M_IRQ_14 SDMA_IRQ_2      System DMA request 2
-M_IRQ_15 SDMA_IRQ_3      System DMA request 3
+*/
+#define SDMA_IRQ_0      12
+#define SDMA_IRQ_1      13
+#define SDMA_IRQ_2      14
+#define SDMA_IRQ_3      15
+/*
 M_IRQ_16 MCBSP1_IRQ      McBSP module 1 IRQ
 M_IRQ_17 MCBSP2_IRQ      McBSP module 2 IRQ
 M_IRQ_18 SR1_IRQ         SmartReflexTM 1
@@ -67,13 +69,16 @@ M_IRQ_51 Reserved        Reserved
 M_IRQ_52 Reserved        Reserved
 M_IRQ_53 MG_IRQ
 M_IRQ_54 MCBSP4_IRQ_TX
-M_IRQ_55 MCBSP4_IRQ_RX
-M_IRQ_56 I2C1_IRQ
-M_IRQ_57 I2C2_IRQ
+M_IRQ_55 MCBSP4_IRQ_RX*/
+#define I2C1_IRQ       56
+#define I2C2_IRQ       57
+/*
 M_IRQ_58 HDQ_IRQ        HDQTM/ One-wireTM
 M_IRQ_59 McBSP1_IRQ_TX
 M_IRQ_60 McBSP1_IRQ_RX
-M_IRQ_61 I2C3_IRQ
+*/
+#define I2C3_IRQ       61
+/*
 M_IRQ_62 McBSP2_IRQ_TX
 M_IRQ_63 McBSP2_IRQ_RX
 M_IRQ_64 Reserved       Reserved
@@ -99,10 +104,14 @@ M_IRQ_79 Reserved       Reserved
 M_IRQ_80 Reserved       Reserved
 M_IRQ_81 MCBSP5_IRQ_TX
 M_IRQ_82 MCBSP5_IRQ_RX
-M_IRQ_83 MMC1_IRQ       MMC/SD module 1
+*/
+#define MMC1_IRQ       83 //0x53
+/*
 M_IRQ_84 MS_IRQ         MS-PROTM module
 M_IRQ_85 Reserved       Reserved
-M_IRQ_86 MMC2_IRQ       MMC/SD module 2
+*/
+#define MMC2_IRQ       86
+/*
 M_IRQ_87 MPU_ICR_IRQ    MPU ICR
 M_IRQ_88 RESERVED       Reserved
 M_IRQ_89 MCBSP3_IRQ_TX
@@ -110,7 +119,9 @@ M_IRQ_90 MCBSP3_IRQ_RX
 M_IRQ_91 SPI3_IRQ       McSPI module 3
 M_IRQ_92 HSUSB_MC_NINT  High-Speed USB OTG controller
 M_IRQ_93 HSUSB_DMA_NINT High-Speed USB OTG DMA controller
-M_IRQ_94 MMC3_IRQ       MMC/SD module 3
+*/
+#define MMC3_IRQ       94
+/*
 M_IRQ_95 Reserved       Reserved
 */
 
