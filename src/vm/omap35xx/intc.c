@@ -353,18 +353,56 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       break;
     }
     case REG_INTCPS_MIR_SET0:
+    {
+      u32int i;
+      for (i = 0; i < 32; i++)
+      {
+        if (value & (1 << i))
+        {
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: setting mask for interrupt number %#x" EOL, i);
+        }
+      }
       irqController->intcMir0 |= value;
       irqController->intcPendingIrq0 = irqController->intcItr0 & ~irqController->intcMir0;
       break;
+    }
     case REG_INTCPS_MIR_SET1:
+    {
+      u32int i;
+      for (i = 0; i < 32; i++)
+      {
+        if (value & (1 << i))
+        {
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: setting mask for interrupt number %x\n", i + 32);
+        }
+      }
       irqController->intcMir1 |= value;
       irqController->intcPendingIrq1 = irqController->intcItr1 & ~irqController->intcMir1;
       break;
+    }
     case REG_INTCPS_MIR_SET2:
+    {
+      u32int i;
+      for (i = 0; i < 32; i++)
+      {
+        if (value & (1 << i))
+        {
+          DEBUG(VP_OMAP_35XX_INTC, "INTC: setting mask for interrupt number %x\n", i + 64);
+        }
+      }
       irqController->intcMir2 |= value;
       irqController->intcPendingIrq2 = irqController->intcItr2 & ~irqController->intcMir2;
       break;
+    }
     case REG_INTCPS_CONTROL:
+      if ((value & INTCPS_CONTROL_NEWFIQAGR) != 0)
+      {
+        DEBUG(VP_OMAP_35XX_INTC, "INTC: acknowledge FIQ\n");
+      }
+      if ((value & INTCPS_CONTROL_NEWIRQAGR) != 0)
+      {
+        DEBUG(VP_OMAP_35XX_INTC, "INTC: acknowledge IRQ\n");
+      }
       irqController->intcControl = value & INTCPS_CONTROL_RESERVED;
       break;
     case REG_INTCPS_IDLE:

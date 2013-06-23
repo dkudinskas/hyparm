@@ -63,6 +63,7 @@ void deliverServiceCall(GCONTXT *context)
 
 void throwInterrupt(GCONTXT *context, u32int irqNumber)
 {
+  DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: %x\n", irqNumber);
   switch (irqNumber)
   {
     case GPT2_IRQ:
@@ -75,7 +76,6 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
-        DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: guest interrupts enabled!" EOL);
         context->guestIrqPending = TRUE;
       }
       else
