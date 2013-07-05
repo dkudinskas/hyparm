@@ -329,33 +329,33 @@ void armLdrdhPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u
  */
 void armMovPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
-  DIE_NOW(0, "armMovPCInstruction unimplemented\n");
-  const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
-  const bool setFlags = instruction & SETFLAGS_BIT;
-  const u32int destinationRegister = ARM_EXTRACT_REGISTER(instruction, RD_INDEX);
-  const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
+  ARM_ALU_reg instr = {.value = instruction};
+  u32int cond = instr.fields.cond;
+  u32int Rd = instr.fields.Rd;
+  u32int Rm = instr.fields.Rm;
+  bool S = instr.fields.S;
 
   // A MOV Rd,PC can be translated to only MOVT & MOVW.
   // MOVS requires an update of the condition flags and 
   // since MOVT does not support setting flags, an extra MOVS Rd,Rd is required.
-  if (sourceRegister == GPR_PC)
+  if (Rm == GPR_PC)
   {
     // This implementation expects Rd=PC to trap
-    ASSERT(destinationRegister != GPR_PC, ERROR_NOT_IMPLEMENTED);
+    ASSERT(Rd != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
     DEBUG(TRANSLATION, "armMovPCInstruction: translating %#.8x @ %#.8x with cond=%x, S=%x, Rd=%x, "
-          "Rm=%x" EOL, instruction, pc, conditionCode, setFlags, destinationRegister,
-          sourceRegister);
+          "Rm=%x" EOL, instruction, pc, cond, S, Rd, Rm);
 
-    armWritePCToRegister(ts, block, conditionCode, destinationRegister, pc);
-    if (!(instruction & SETFLAGS_BIT))
+    armWritePCToRegister(ts, block, cond, Rd, pc);
+
+    if (!S)
     {
       return;
     }
-    instruction = ARM_SET_REGISTER(instruction, RM_INDEX, destinationRegister);
+    instr.fields.Rm = Rd;
   }
 
-  addInstructionToBlock(ts, block, instruction);
+  addInstructionToBlock(ts, block, instr.value);
 }
 
 
@@ -501,7 +501,7 @@ void armStrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
   u32int cond = instr.fields.cond;
   u32int Rt = instr.fields.Rt;
   u32int Rn = instr.fields.Rn;
-  u32int Rm = instr.fields.Rm;
+//  u32int Rm = instr.fields.Rm;
 
   const bool replaceRt = (Rt == GPR_PC);
   const bool replaceRn = (Rn == GPR_PC);
@@ -528,7 +528,7 @@ void armStrtPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u3
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, STR_RT_INDEX);
   const u32int baseRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
-  const u32int offsetRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
+//  const u32int offsetRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
   const bool replaceSource = sourceRegister == GPR_PC;
   const bool replaceBase = baseRegister == GPR_PC;
