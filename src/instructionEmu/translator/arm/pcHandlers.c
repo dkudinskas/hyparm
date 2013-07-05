@@ -370,7 +370,7 @@ void armShiftPCImm(TranslationStore* ts, BasicBlock *block, u32int pc, u32int in
 
   if (Rm == GPR_PC)
   {
-    ASSERT(destinationRegister != GPR_PC, ERROR_NOT_IMPLEMENTED);
+    ASSERT(Rd != GPR_PC, ERROR_NOT_IMPLEMENTED);
 
     DEBUG(TRANSLATION, "armShiftPCImm: translating %08x @ %08x with cond=%x, Rd=%x, "
           "Rm=%x" EOL, instr.value, pc, cond, Rd, Rm);

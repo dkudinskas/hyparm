@@ -152,6 +152,8 @@ svcPrefetch:
 /***************************************************/
 .global svcDataAbort
 svcDataAbort:
+  /* The state of monitors is architecturally undefined after a Data Abort exception (ARM DHT 0008A). */
+  CLREX
 #ifdef CONFIG_STATS
   recordStartDabt
 #endif
