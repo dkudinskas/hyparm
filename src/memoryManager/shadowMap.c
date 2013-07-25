@@ -220,6 +220,30 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
       mmuInvalidateDTLB();
       return;
     }
+/*    else if (guestPhysAddr == 0x48300000)
+    {
+      printf("shadowMapSection: 0x48300000\n");
+      u32int pt = ((u32int)shadow) & PT1_ALIGN_MASK;
+      mapRegion((simpleEntry*)pt, virtual, guestPhysAddr, guestPhysAddr+SECTION_SIZE-1,
+                guest->domain, HYPERVISOR_ACCESS_BITS, guest->c, guest->b, guest->tex, guest->xn);
+      u32int virtualSection = (virtual & SECTION_MASK);
+      u32int timerVirtual = virtualSection | (TIMER_32K & ~SECTION_MASK);
+      printf("shadowMapSection: virtual %08x virtualSection %08x timerVirtual %08x\n", virtual, virtualSection, timerVirtual);
+
+      mapRegionSmallPages((simpleEntry*)pt, virtual, guestPhysAddr, guestPhysAddr+SECTION_SIZE-1,
+                guest->domain, HYPERVISOR_ACCESS_BITS, guest->c, guest->b, 0b100, guest->xn);
+
+      mapSmallPage((simpleEntry*)pt, timerVirtual, SDMA,
+                  guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+      mapSmallPage((simpleEntry*)pt, timerVirtual+SMALL_PAGE_SIZE, timerVirtual+SMALL_PAGE_SIZE,
+                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
+
+      mmuDataMemoryBarrier();
+      mmuInvalidateITLB();
+      mmuInvalidateDTLB();
+      return;
+    }
+*/
 #endif
     if (shadow->type != FAULT)
     {

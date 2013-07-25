@@ -154,6 +154,7 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
 void guestSetPageTableBase(GCONTXT *gc, u32int ttbr)
 {
   DEBUG(MM_ADDRESSING, "guestSetPageTableBase: ttbr %#.8x @ pc %#.8x" EOL, ttbr, gc->R15);
+  printf("guestSetPageTableBase: ttbr %#.8x @ pc %#.8x" EOL, ttbr, gc->R15);
 
   gc->pageTables->guestPhysical = (simpleEntry *)ttbr;
   gc->pageTables->guestVirtual = NULL;
@@ -335,6 +336,8 @@ void initialiseShadowPageTables(GCONTXT *gc)
   setupPageTable(gc, PT_TARGET_GUEST_SHADOW_PRIVILEGED);
   setupPageTable(gc, PT_TARGET_GUEST_SHADOW_UNPRIVILEGED);
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: allocated spt priv %p; spt usr %p" EOL,
+        gc->pageTables->shadowPriv, gc->pageTables->shadowUser);
+  printf("initialiseShadowPageTables: allocated spt priv %p; spt usr %p" EOL,
         gc->pageTables->shadowPriv, gc->pageTables->shadowUser);
 
   // which shadow PT will be in use depends on guest mode

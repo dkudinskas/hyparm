@@ -8,7 +8,7 @@
 
 #include "vm/omap35xx/sdma.h"
 #include "vm/omap35xx/sdmaInternals.h"
-#include "vm/omap35xx/timer32k.h"
+//#include "vm/omap35xx/timer32k.h"
 #include "vm/omap35xx/intc.h"
 #ifndef CONFIG_NO_MMC
 #include "vm/omap35xx/mmc.h"
