@@ -11,11 +11,12 @@
 #include "memoryManager/mmu.h"
 
 
-void translate(GCONTXT* context, BasicBlock* block, DecodedInstruction* decoding, u32int instruction)
+void translate(GCONTXT* context, BasicBlock* block, instructionReplaceCode irc, u32int instruction)
 {
-  switch (decoding->code)
+  switch (irc)
   {
     case IRC_SAFE:
+    case IRC_PATCH_PC:
     {
       // no translation required
       addInstructionToBlock(context->translationStore, block, instruction);

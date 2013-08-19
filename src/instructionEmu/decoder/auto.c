@@ -4,11 +4,12 @@
 #include "cpuArch/constants.h"
 
 #include "instructionEmu/decoder.h"
-
 #include "instructionEmu/interpreter.h"
 
+#include "instructionEmu/translator/arm/pcHandlers.h"
 
-instructionReplaceCode decodeArmInstruction(u32int instruction, InstructionHandler *handler)
+
+instructionReplaceCode decodeArmInstruction(u32int instruction, AnyHandler *handler)
 {
 #include "instructionEmu/decoder/arm/graph.inc.c"
 }
