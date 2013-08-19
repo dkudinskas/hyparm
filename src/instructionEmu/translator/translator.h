@@ -6,7 +6,7 @@
 #include "guestManager/basicBlockStore.h"
 #include "guestManager/guestContext.h"
 
-void translate(GCONTXT* context, BasicBlock* block, DecodedInstruction* decoding, u32int instruction);
+void translate(GCONTXT* context, BasicBlock* block, instructionReplaceCode irc, u32int instruction);
 
 void putBranch(u32int branchLocation, u32int branchTarget, u32int condition);
 

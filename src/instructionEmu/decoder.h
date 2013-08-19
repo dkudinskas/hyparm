@@ -16,8 +16,22 @@ typedef enum
 {
   IRC_SAFE = 0,
   IRC_REPLACE = 1,
-  IRC_REMOVE = 2
+  IRC_REMOVE = 2,
+  IRC_PATCH_PC = 4
 } instructionReplaceCode;
+
+#ifdef CONFIG_DECODER_AUTO
+
+typedef union
+{
+  void *barePtr;
+  InstructionHandler handler;
+  PCInstructionHandler pcHandler;
+} AnyHandler;
+
+instructionReplaceCode decodeArmInstruction(u32int instruction, AnyHandler *handler);
+
+#else
 
 struct decodingTableEntry
 {
@@ -31,5 +45,7 @@ struct decodingTableEntry
 typedef struct decodingTableEntry DecodedInstruction;
 
 struct decodingTableEntry *decodeArmInstruction(u32int instruction);
+
+#endif
 
 #endif
