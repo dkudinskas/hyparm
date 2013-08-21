@@ -120,8 +120,9 @@
   <instruction name="ORR PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x0180f010" code="IRC_REPLACE" handler="armOrrInstruction" />
   <instruction name="ORR Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x01800000" code="IRC_PATCH_PC" handler="armALUImmRegRSR" />
   <instruction name="ORR Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x01800010" />
-  <instruction name="MOV PC, Rm" mask="0x0deffff0" value="0x01a0f000" code="IRC_REPLACE" handler="armMovInstruction" />
-  <instruction name="MOV Rn, Rm" mask="0x0def0ff0" value="0x01a00000" code="IRC_PATCH_PC" handler="armMovPCInstruction" />
+  <!-- Adjusted mask because categories merged - must embed category mask here -->
+  <instruction name="MOV PC, Rm" mask="0x0feffff0" value="0x01a0f000" code="IRC_REPLACE" handler="armMovInstruction" />
+  <instruction name="MOV Rn, Rm" mask="0x0fef0ff0" value="0x01a00000" code="IRC_PATCH_PC" handler="armMovPCInstruction" />
   <instruction name="LSL Rd, Rm, #shamt" mask="0x0feff070" value="0x01a0f000" code="IRC_REPLACE" handler="armLslInstruction" />
   <instruction name="LSL Rd, Rm, Rshamt" mask="0x0feff0f0" value="0x01a0f010" code="IRC_REPLACE" handler="armLslInstruction" />
   <instruction name="LSL Rd, Rm, #shamt" mask="0x0fef0070" value="0x01a00000" code="IRC_PATCH_PC" handler="armShiftPCImm" />

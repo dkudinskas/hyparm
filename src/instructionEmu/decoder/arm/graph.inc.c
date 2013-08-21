@@ -20,35 +20,229 @@
 
   if ((instruction & (1u << 29)) == 0)
   {
-    goto autodecoder_arm_monolithic_616;
+    goto autodecoder_arm_monolithic_604;
   }
 
   if ((instruction & (1u << 30)) == 0)
   {
-    goto autodecoder_arm_monolithic_616;
+    goto autodecoder_arm_monolithic_604;
   }
 
   if ((instruction & (1u << 31)) == 0)
   {
-    goto autodecoder_arm_monolithic_616;
+    goto autodecoder_arm_monolithic_604;
   }
 
-  if ((instruction & (1u << 26)) == 0)
+  if ((instruction & (1u << 27)) == 0)
   {
-    goto autodecoder_arm_monolithic_581;
+    goto autodecoder_arm_monolithic_565;
   }
 
   if ((instruction & (1u << 28)) == 0)
   {
-    goto autodecoder_arm_monolithic_132;
+    goto autodecoder_arm_monolithic_59;
   }
 
-  if (instruction & (1u << 27))
+  if (instruction & (1u << 26))
   {
     goto autodecoder_arm_undefined;
   }
 
+  if (instruction & (1u << 12))
+  {
+    goto autodecoder_arm_monolithic_2;
+  }
+
+  if (instruction & (1u << 13))
+  {
+    goto autodecoder_arm_monolithic_2;
+  }
+
+  if (instruction & (1u << 14))
+  {
+    goto autodecoder_arm_monolithic_2;
+  }
+
   if ((instruction & (1u << 15)) == 0)
+  {
+    goto autodecoder_arm_monolithic_32;
+  }
+
+autodecoder_arm_monolithic_2:
+  if (instruction & (1u << 25))
+  {
+    handler->barePtr = (void *)(armBlxImmediateInstruction);
+    return IRC_REPLACE;
+  }
+  goto autodecoder_arm_undefined;
+
+autodecoder_arm_monolithic_32:
+  if ((instruction & (1u << 25)) == 0)
+  {
+    goto autodecoder_arm_monolithic_31;
+  }
+  handler->barePtr = (void *)(armBlxImmediateInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_31:
+  if ((instruction & (1u << 4)) == 0)
+  {
+    goto autodecoder_arm_monolithic_30;
+  }
+
+  if (instruction & (1u << 7))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 8))
+  {
+    goto autodecoder_arm_monolithic_14;
+  }
+  goto autodecoder_arm_undefined;
+
+autodecoder_arm_monolithic_30:
+  if (instruction & (1u << 7))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 8)) == 0)
+  {
+    goto autodecoder_arm_monolithic_28;
+  }
+
+autodecoder_arm_monolithic_14:
+  if (instruction & (1u << 11))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 9))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 22)) == 0)
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 16)) == 0)
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 19)) == 0)
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 18)) == 0)
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 17))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 20))
+  {
+    goto autodecoder_arm_undefined;
+  }
+  handler->barePtr = (void *)(armSrsInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_28:
+  if ((instruction & (1u << 11)) == 0)
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 22))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 20)) == 0)
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 3))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 1))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 2))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 0))
+  {
+    goto autodecoder_arm_undefined;
+  }
+  handler->barePtr = (void *)(armRfeInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_565:
+  if ((instruction & (1u << 28)) == 0)
+  {
+    goto autodecoder_arm_monolithic_564;
+  }
+
+  if ((instruction & (1u << 26)) == 0)
+  {
+    goto autodecoder_arm_monolithic_133;
+  }
+
+  if ((instruction & (1u << 12)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
@@ -63,14 +257,14 @@
     goto autodecoder_arm_undefined;
   }
 
-  if ((instruction & (1u << 12)) == 0)
+  if ((instruction & (1u << 15)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
 
   if ((instruction & (1u << 25)) == 0)
   {
-    goto autodecoder_arm_monolithic_44;
+    goto autodecoder_arm_monolithic_103;
   }
 
   if (instruction & (1u << 4))
@@ -80,77 +274,57 @@
 
   if (instruction & (1u << 24))
   {
-    goto autodecoder_arm_monolithic_3;
+    goto autodecoder_arm_monolithic_63;
   }
-  goto autodecoder_arm_monolithic_5;
+  goto autodecoder_arm_monolithic_65;
 
-autodecoder_arm_monolithic_44:
+autodecoder_arm_monolithic_103:
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_43;
+    goto autodecoder_arm_monolithic_102;
   }
 
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_5;
+    goto autodecoder_arm_monolithic_65;
   }
 
   if (instruction & (1u << 7))
   {
-    goto autodecoder_arm_monolithic_3;
+    goto autodecoder_arm_monolithic_63;
   }
 
   if (instruction & (1u << 8))
   {
-    goto autodecoder_arm_monolithic_3;
-  }
-
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_3;
+    goto autodecoder_arm_monolithic_63;
   }
 
   if (instruction & (1u << 11))
   {
-    goto autodecoder_arm_monolithic_3;
+    goto autodecoder_arm_monolithic_63;
+  }
+
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_63;
   }
 
   if (instruction & (1u << 9))
   {
-    goto autodecoder_arm_monolithic_3;
+    goto autodecoder_arm_monolithic_63;
   }
 
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_3;
-  }
-
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_3;
-  }
-
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_14;
+    goto autodecoder_arm_monolithic_63;
   }
 
   if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_2;
+    goto autodecoder_arm_monolithic_62;
   }
 
   if ((instruction & (1u << 22)) == 0)
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 20)) == 0)
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 3)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
@@ -175,7 +349,27 @@ autodecoder_arm_monolithic_44:
     goto autodecoder_arm_undefined;
   }
 
-  if ((instruction & (1u << 0)) == 0)
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_62;
+  }
+
+  if ((instruction & (1u << 20)) == 0)
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 3)) == 0)
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 1)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
@@ -185,7 +379,7 @@ autodecoder_arm_monolithic_44:
     goto autodecoder_arm_undefined;
   }
 
-  if ((instruction & (1u << 1)) == 0)
+  if ((instruction & (1u << 0)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
@@ -193,59 +387,56 @@ autodecoder_arm_monolithic_44:
   return IRC_REPLACE;
 
 
-autodecoder_arm_monolithic_43:
+autodecoder_arm_monolithic_102:
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_5;
+    goto autodecoder_arm_monolithic_65;
   }
 
   if (instruction & (1u << 7))
   {
-    goto autodecoder_arm_monolithic_3;
+    goto autodecoder_arm_monolithic_63;
   }
 
   if (instruction & (1u << 8))
   {
-    goto autodecoder_arm_monolithic_3;
-  }
-
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_3;
+    goto autodecoder_arm_monolithic_63;
   }
 
   if (instruction & (1u << 11))
   {
-    goto autodecoder_arm_monolithic_3;
+    goto autodecoder_arm_monolithic_63;
+  }
+
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_63;
   }
 
   if (instruction & (1u << 9))
   {
-    goto autodecoder_arm_monolithic_3;
+    goto autodecoder_arm_monolithic_63;
   }
 
-  if (instruction & (1u << 23))
+  if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_3;
+    goto autodecoder_arm_monolithic_95;
   }
 
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_3;
-  }
-
-autodecoder_arm_monolithic_14:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_2;
-  }
-
-  if ((instruction & (1u << 22)) == 0)
+autodecoder_arm_monolithic_63:
+  if (instruction & (1u << 21))
   {
     goto autodecoder_arm_undefined;
   }
+  goto autodecoder_arm_monolithic_62;
 
-  if ((instruction & (1u << 20)) == 0)
+autodecoder_arm_monolithic_95:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_62;
+  }
+
+  if ((instruction & (1u << 22)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
@@ -265,20 +456,18 @@ autodecoder_arm_monolithic_14:
     goto autodecoder_arm_undefined;
   }
 
-  if (instruction & (1u << 17))
-  {
-    return IRC_REMOVE;
-  }
-  goto autodecoder_arm_undefined;
-
-autodecoder_arm_monolithic_3:
-  if (instruction & (1u << 21))
+  if ((instruction & (1u << 17)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
-  goto autodecoder_arm_monolithic_2;
 
-autodecoder_arm_monolithic_5:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_62;
+  }
+  goto autodecoder_arm_undefined;
+
+autodecoder_arm_monolithic_65:
   if (instruction & (1u << 21))
   {
     goto autodecoder_arm_undefined;
@@ -289,7 +478,7 @@ autodecoder_arm_monolithic_5:
     goto autodecoder_arm_undefined;
   }
 
-autodecoder_arm_monolithic_2:
+autodecoder_arm_monolithic_62:
   if ((instruction & (1u << 20)) == 0)
   {
     goto autodecoder_arm_undefined;
@@ -297,217 +486,23 @@ autodecoder_arm_monolithic_2:
   return IRC_REMOVE;
 
 
-autodecoder_arm_monolithic_581:
-  if ((instruction & (1u << 28)) == 0)
-  {
-    goto autodecoder_arm_monolithic_580;
-  }
-
-  if ((instruction & (1u << 27)) == 0)
-  {
-    goto autodecoder_arm_monolithic_194;
-  }
-
-  if (instruction & (1u << 15))
-  {
-    goto autodecoder_arm_monolithic_135;
-  }
-
-  if (instruction & (1u << 13))
-  {
-    goto autodecoder_arm_monolithic_135;
-  }
-
-  if (instruction & (1u << 14))
-  {
-    goto autodecoder_arm_monolithic_135;
-  }
-
-  if ((instruction & (1u << 12)) == 0)
-  {
-    goto autodecoder_arm_monolithic_165;
-  }
-
-autodecoder_arm_monolithic_135:
-  if (instruction & (1u << 25))
-  {
-    handler->barePtr = (void *)(armBlxImmediateInstruction);
-    return IRC_REPLACE;
-  }
-  goto autodecoder_arm_undefined;
-
-autodecoder_arm_monolithic_165:
-  if ((instruction & (1u << 25)) == 0)
-  {
-    goto autodecoder_arm_monolithic_164;
-  }
-  handler->barePtr = (void *)(armBlxImmediateInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_164:
-  if ((instruction & (1u << 4)) == 0)
-  {
-    goto autodecoder_arm_monolithic_163;
-  }
-
-  if (instruction & (1u << 7))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 8))
-  {
-    goto autodecoder_arm_monolithic_147;
-  }
-  goto autodecoder_arm_undefined;
-
-autodecoder_arm_monolithic_163:
-  if (instruction & (1u << 7))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 8)) == 0)
-  {
-    goto autodecoder_arm_monolithic_161;
-  }
-
-autodecoder_arm_monolithic_147:
-  if ((instruction & (1u << 10)) == 0)
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 11))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 9))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 22)) == 0)
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 20))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 16)) == 0)
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 19)) == 0)
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 18)) == 0)
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 17))
-  {
-    goto autodecoder_arm_undefined;
-  }
-  handler->barePtr = (void *)(armSrsInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_161:
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 11)) == 0)
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 9)) == 0)
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 20)) == 0)
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 3))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 0))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 2))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 1))
-  {
-    goto autodecoder_arm_undefined;
-  }
-  handler->barePtr = (void *)(armRfeInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_194:
-  if (instruction & (1u << 15))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 13))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 14))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
+autodecoder_arm_monolithic_133:
   if (instruction & (1u << 12))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 13))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 14))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 15))
   {
     goto autodecoder_arm_undefined;
   }
@@ -522,61 +517,48 @@ autodecoder_arm_monolithic_194:
     goto autodecoder_arm_undefined;
   }
 
-  if (instruction & (1u << 10))
+  if (instruction & (1u << 11))
   {
     goto autodecoder_arm_undefined;
   }
 
-  if (instruction & (1u << 11))
+  if (instruction & (1u << 10))
   {
     goto autodecoder_arm_undefined;
   }
 
   if ((instruction & (1u << 9)) == 0)
   {
-    goto autodecoder_arm_monolithic_185;
+    goto autodecoder_arm_monolithic_124;
   }
 
   if (instruction & (1u << 23))
   {
     goto autodecoder_arm_undefined;
   }
-  goto autodecoder_arm_monolithic_177;
 
-autodecoder_arm_monolithic_185:
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_183;
-  }
-
-autodecoder_arm_monolithic_177:
   if (instruction & (1u << 21))
   {
     goto autodecoder_arm_undefined;
   }
 
   if (instruction & (1u << 22))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 20))
   {
     goto autodecoder_arm_undefined;
   }
 
   if (instruction & (1u << 16))
   {
-    goto autodecoder_arm_monolithic_173;
+    goto autodecoder_arm_monolithic_113;
   }
   goto autodecoder_arm_undefined;
 
-autodecoder_arm_monolithic_183:
+autodecoder_arm_monolithic_124:
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
   if (instruction & (1u << 21))
   {
     goto autodecoder_arm_undefined;
@@ -587,18 +569,12 @@ autodecoder_arm_monolithic_183:
     goto autodecoder_arm_undefined;
   }
 
-  if (instruction & (1u << 20))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
   if ((instruction & (1u << 16)) == 0)
   {
-    handler->barePtr = (void *)(armCpsInstruction);
-    return IRC_REPLACE;
+    goto autodecoder_arm_monolithic_120;
   }
 
-autodecoder_arm_monolithic_173:
+autodecoder_arm_monolithic_113:
   if (instruction & (1u << 19))
   {
     goto autodecoder_arm_undefined;
@@ -613,156 +589,215 @@ autodecoder_arm_monolithic_173:
   {
     goto autodecoder_arm_undefined;
   }
+
+  if (instruction & (1u << 20))
+  {
+    goto autodecoder_arm_undefined;
+  }
   handler->barePtr = (void *)(armSetendInstruction);
   return IRC_REPLACE;
 
 
-
-autodecoder_arm_monolithic_580:
-  if (instruction & (1u << 27))
+autodecoder_arm_monolithic_120:
+  if (instruction & (1u << 5))
   {
-    goto autodecoder_arm_monolithic_207;
+    goto autodecoder_arm_undefined;
   }
 
-  if ((instruction & (1u << 15)) == 0)
+  if (instruction & (1u << 20))
   {
-    goto autodecoder_arm_monolithic_578;
+    goto autodecoder_arm_undefined;
+  }
+  handler->barePtr = (void *)(armCpsInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_564:
+  if (instruction & (1u << 26))
+  {
+    goto autodecoder_arm_monolithic_215;
+  }
+
+  if ((instruction & (1u << 12)) == 0)
+  {
+    goto autodecoder_arm_monolithic_562;
   }
 
   if ((instruction & (1u << 13)) == 0)
   {
-    goto autodecoder_arm_monolithic_549;
+    goto autodecoder_arm_monolithic_533;
   }
 
   if ((instruction & (1u << 14)) == 0)
   {
-    goto autodecoder_arm_monolithic_549;
+    goto autodecoder_arm_monolithic_533;
   }
 
-  if ((instruction & (1u << 12)) == 0)
+  if ((instruction & (1u << 15)) == 0)
   {
-    goto autodecoder_arm_monolithic_549;
+    goto autodecoder_arm_monolithic_533;
   }
 
   if (instruction & (1u << 25))
   {
-    goto autodecoder_arm_monolithic_284;
+    goto autodecoder_arm_monolithic_292;
   }
 
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_495;
+    goto autodecoder_arm_monolithic_488;
   }
 
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_435;
+    goto autodecoder_arm_monolithic_427;
   }
 
   if (instruction & (1u << 7))
   {
-    goto autodecoder_arm_monolithic_341;
+    goto autodecoder_arm_monolithic_351;
   }
 
   if ((instruction & (1u << 8)) == 0)
   {
-    goto autodecoder_arm_monolithic_400;
-  }
-
-  if ((instruction & (1u << 10)) == 0)
-  {
-    goto autodecoder_arm_monolithic_400;
+    goto autodecoder_arm_monolithic_388;
   }
 
   if ((instruction & (1u << 11)) == 0)
   {
-    goto autodecoder_arm_monolithic_400;
+    goto autodecoder_arm_monolithic_388;
+  }
+
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_monolithic_388;
   }
 
   if ((instruction & (1u << 9)) == 0)
   {
-    goto autodecoder_arm_monolithic_400;
+    goto autodecoder_arm_monolithic_388;
   }
 
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_371;
+    goto autodecoder_arm_monolithic_363;
+  }
+
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return IRC_SAFE;
+  }
+
+  if (instruction & (1u << 22))
+  {
+    goto autodecoder_arm_monolithic_367;
+  }
+
+  if ((instruction & (1u << 16)) == 0)
+  {
+    goto autodecoder_arm_monolithic_378;
+  }
+
+  if ((instruction & (1u << 19)) == 0)
+  {
+    goto autodecoder_arm_monolithic_378;
+  }
+
+  if ((instruction & (1u << 18)) == 0)
+  {
+    goto autodecoder_arm_monolithic_378;
+  }
+
+  if ((instruction & (1u << 17)) == 0)
+  {
+    goto autodecoder_arm_monolithic_378;
   }
 
   if ((instruction & (1u << 5)) == 0)
   {
-    goto autodecoder_arm_monolithic_395;
+    goto autodecoder_arm_monolithic_375;
   }
 
   if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_monolithic_377;
+    goto autodecoder_arm_monolithic_369;
   }
-  goto autodecoder_arm_monolithic_385;
+  goto autodecoder_arm_monolithic_371;
 
-autodecoder_arm_monolithic_400:
+autodecoder_arm_monolithic_388:
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_371;
+    goto autodecoder_arm_monolithic_363;
   }
-  goto autodecoder_arm_monolithic_399;
+  goto autodecoder_arm_monolithic_387;
 
-autodecoder_arm_monolithic_578:
+autodecoder_arm_monolithic_562:
   if (instruction & (1u << 13))
   {
-    goto autodecoder_arm_monolithic_549;
+    goto autodecoder_arm_monolithic_533;
   }
 
   if (instruction & (1u << 14))
   {
-    goto autodecoder_arm_monolithic_549;
+    goto autodecoder_arm_monolithic_533;
   }
 
-  if ((instruction & (1u << 12)) == 0)
+  if ((instruction & (1u << 15)) == 0)
   {
-    goto autodecoder_arm_monolithic_575;
+    goto autodecoder_arm_monolithic_559;
   }
 
-autodecoder_arm_monolithic_549:
+autodecoder_arm_monolithic_533:
   if (instruction & (1u << 25))
   {
-    goto autodecoder_arm_monolithic_519;
+    goto autodecoder_arm_monolithic_500;
   }
 
   if (instruction & (1u << 4))
   {
-    goto autodecoder_arm_monolithic_524;
+    goto autodecoder_arm_monolithic_505;
   }
-  goto autodecoder_arm_monolithic_547;
+  goto autodecoder_arm_monolithic_531;
 
-autodecoder_arm_monolithic_575:
+autodecoder_arm_monolithic_559:
   if (instruction & (1u << 25))
   {
-    goto autodecoder_arm_monolithic_519;
+    goto autodecoder_arm_monolithic_500;
   }
 
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_573;
+    goto autodecoder_arm_monolithic_557;
   }
 
-autodecoder_arm_monolithic_524:
+autodecoder_arm_monolithic_505:
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_523;
+    goto autodecoder_arm_monolithic_504;
   }
 
   if (instruction & (1u << 7))
   {
-    goto autodecoder_arm_monolithic_341;
+    goto autodecoder_arm_monolithic_351;
   }
 
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_520;
+    goto autodecoder_arm_monolithic_501;
   }
 
-autodecoder_arm_monolithic_399:
+autodecoder_arm_monolithic_387:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return IRC_SAFE;
+  }
+
+  if (instruction & (1u << 22))
+  {
+    goto autodecoder_arm_monolithic_367;
+  }
+
+autodecoder_arm_monolithic_378:
   if ((instruction & (1u << 5)) == 0)
   {
     return IRC_SAFE;
@@ -773,17 +808,7 @@ autodecoder_arm_monolithic_399:
     return IRC_SAFE;
   }
 
-autodecoder_arm_monolithic_377:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    goto autodecoder_arm_monolithic_373;
-  }
-
+autodecoder_arm_monolithic_369:
   if (instruction & (1u << 20))
   {
     return IRC_SAFE;
@@ -792,7 +817,7 @@ autodecoder_arm_monolithic_377:
   return IRC_REPLACE;
 
 
-autodecoder_arm_monolithic_573:
+autodecoder_arm_monolithic_557:
   if ((instruction & (1u << 24)) == 0)
   {
     handler->barePtr = (void *)(armALUImmRegRSR);
@@ -801,42 +826,32 @@ autodecoder_arm_monolithic_573:
 
   if (instruction & (1u << 7))
   {
-    goto autodecoder_arm_monolithic_553;
+    goto autodecoder_arm_monolithic_537;
   }
 
   if (instruction & (1u << 8))
   {
-    goto autodecoder_arm_monolithic_533;
-  }
-
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_533;
+    goto autodecoder_arm_monolithic_514;
   }
 
   if (instruction & (1u << 11))
   {
-    goto autodecoder_arm_monolithic_533;
+    goto autodecoder_arm_monolithic_514;
+  }
+
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_514;
   }
 
   if (instruction & (1u << 9))
   {
-    goto autodecoder_arm_monolithic_533;
+    goto autodecoder_arm_monolithic_514;
   }
 
   if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_540;
-  }
-
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_531;
-  }
-
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_531;
+    goto autodecoder_arm_monolithic_524;
   }
 
   if ((instruction & (1u << 21)) == 0)
@@ -851,16 +866,6 @@ autodecoder_arm_monolithic_573:
     return IRC_PATCH_PC;
   }
 
-  if (instruction & (1u << 20))
-  {
-    goto autodecoder_arm_monolithic_507;
-  }
-
-  if (instruction & (1u << 3))
-  {
-    goto autodecoder_arm_monolithic_507;
-  }
-
   if (instruction & (1u << 16))
   {
     goto autodecoder_arm_undefined;
@@ -881,7 +886,31 @@ autodecoder_arm_monolithic_573:
     goto autodecoder_arm_undefined;
   }
 
-  if (instruction & (1u << 0))
+  if (instruction & (1u << 5))
+  {
+    handler->barePtr = (void *)(armShiftPCImm);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    handler->barePtr = (void *)(armShiftPCImm);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 20))
+  {
+    handler->barePtr = (void *)(armMovPCInstruction);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 3))
+  {
+    handler->barePtr = (void *)(armMovPCInstruction);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 1))
   {
     handler->barePtr = (void *)(armMovPCInstruction);
     return IRC_PATCH_PC;
@@ -893,23 +922,23 @@ autodecoder_arm_monolithic_573:
     return IRC_PATCH_PC;
   }
 
-  if (instruction & (1u << 1))
+  if (instruction & (1u << 0))
   {
     handler->barePtr = (void *)(armMovPCInstruction);
     return IRC_PATCH_PC;
   }
   return IRC_SAFE;
 
-autodecoder_arm_monolithic_616:
-  if ((instruction & (1u << 26)) == 0)
-  {
-    goto autodecoder_arm_monolithic_615;
-  }
-
-autodecoder_arm_monolithic_132:
+autodecoder_arm_monolithic_604:
   if ((instruction & (1u << 27)) == 0)
   {
-    goto autodecoder_arm_monolithic_131;
+    goto autodecoder_arm_monolithic_603;
+  }
+
+autodecoder_arm_monolithic_59:
+  if ((instruction & (1u << 26)) == 0)
+  {
+    goto autodecoder_arm_monolithic_58;
   }
 
   if ((instruction & (1u << 25)) == 0)
@@ -919,7 +948,7 @@ autodecoder_arm_monolithic_132:
 
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_56;
+    goto autodecoder_arm_monolithic_43;
   }
 
   if (instruction & (1u << 24))
@@ -938,7 +967,7 @@ autodecoder_arm_monolithic_132:
 
 
 
-autodecoder_arm_monolithic_56:
+autodecoder_arm_monolithic_43:
   if ((instruction & (1u << 24)) == 0)
   {
     goto autodecoder_arm_undefined;
@@ -947,41 +976,107 @@ autodecoder_arm_monolithic_56:
   return IRC_REPLACE;
 
 
-autodecoder_arm_monolithic_131:
+autodecoder_arm_monolithic_58:
   if ((instruction & (1u << 15)) == 0)
   {
-    goto autodecoder_arm_monolithic_127;
+    goto autodecoder_arm_monolithic_57;
+  }
+
+  if (instruction & (1u << 25))
+  {
+    handler->barePtr = (void *)(armBInstruction);
+    return IRC_REPLACE;
+  }
+
+  if (instruction & (1u << 22))
+  {
+    goto autodecoder_arm_monolithic_49;
+  }
+
+  if (instruction & (1u << 20))
+  {
+    handler->barePtr = (void *)(armLdmInstruction);
+    return IRC_REPLACE;
+  }
+  handler->barePtr = (void *)(armStmPC);
+  return IRC_PATCH_PC;
+
+autodecoder_arm_monolithic_57:
+  if ((instruction & (1u << 25)) == 0)
+  {
+    goto autodecoder_arm_monolithic_56;
+  }
+  handler->barePtr = (void *)(armBInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_56:
+  if ((instruction & (1u << 22)) == 0)
+  {
+    goto autodecoder_arm_monolithic_55;
+  }
+
+autodecoder_arm_monolithic_49:
+  if ((instruction & (1u << 20)) == 0)
+  {
+    handler->barePtr = (void *)(armStmInstruction);
+    return IRC_REPLACE;
+  }
+  handler->barePtr = (void *)(armLdmInstruction);
+  return IRC_REPLACE;
+
+
+
+autodecoder_arm_monolithic_55:
+  if (instruction & (1u << 20))
+  {
+    return IRC_SAFE;
+  }
+  handler->barePtr = (void *)(armStmPC);
+  return IRC_PATCH_PC;
+
+
+autodecoder_arm_monolithic_603:
+  if ((instruction & (1u << 26)) == 0)
+  {
+    goto autodecoder_arm_monolithic_602;
+  }
+
+autodecoder_arm_monolithic_215:
+  if ((instruction & (1u << 12)) == 0)
+  {
+    goto autodecoder_arm_monolithic_211;
   }
 
   if ((instruction & (1u << 13)) == 0)
   {
-    goto autodecoder_arm_monolithic_127;
+    goto autodecoder_arm_monolithic_211;
   }
 
   if ((instruction & (1u << 14)) == 0)
   {
-    goto autodecoder_arm_monolithic_127;
+    goto autodecoder_arm_monolithic_211;
   }
 
-  if ((instruction & (1u << 12)) == 0)
+  if ((instruction & (1u << 15)) == 0)
   {
-    goto autodecoder_arm_monolithic_127;
+    goto autodecoder_arm_monolithic_211;
   }
 
   if ((instruction & (1u << 25)) == 0)
   {
-    goto autodecoder_arm_monolithic_121;
+    goto autodecoder_arm_monolithic_205;
   }
 
   if (instruction & (1u << 4))
   {
-    goto autodecoder_arm_monolithic_113;
+    goto autodecoder_arm_monolithic_197;
   }
 
-autodecoder_arm_monolithic_121:
+autodecoder_arm_monolithic_205:
   if (instruction & (1u << 24))
   {
-    goto autodecoder_arm_monolithic_119;
+    goto autodecoder_arm_monolithic_203;
   }
 
   if (instruction & (1u << 21))
@@ -989,10 +1084,10 @@ autodecoder_arm_monolithic_121:
     return IRC_SAFE;
   }
 
-autodecoder_arm_monolithic_119:
+autodecoder_arm_monolithic_203:
   if (instruction & (1u << 22))
   {
-    goto autodecoder_arm_monolithic_116;
+    goto autodecoder_arm_monolithic_200;
   }
 
   if ((instruction & (1u << 20)) == 0)
@@ -1004,36 +1099,31 @@ autodecoder_arm_monolithic_119:
   return IRC_REPLACE;
 
 
-autodecoder_arm_monolithic_127:
+autodecoder_arm_monolithic_211:
   if ((instruction & (1u << 25)) == 0)
   {
-    goto autodecoder_arm_monolithic_125;
+    goto autodecoder_arm_monolithic_209;
   }
 
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_125;
+    goto autodecoder_arm_monolithic_209;
   }
 
-autodecoder_arm_monolithic_113:
+autodecoder_arm_monolithic_197:
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_112;
+    goto autodecoder_arm_monolithic_196;
   }
 
   if ((instruction & (1u << 7)) == 0)
   {
-    goto autodecoder_arm_monolithic_75;
+    goto autodecoder_arm_monolithic_150;
   }
 
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_64;
-  }
-
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_undefined;
+    goto autodecoder_arm_monolithic_140;
   }
 
   if (instruction & (1u << 21))
@@ -1043,229 +1133,267 @@ autodecoder_arm_monolithic_113:
 
   if (instruction & (1u << 22))
   {
-    goto autodecoder_arm_monolithic_65;
+    goto autodecoder_arm_monolithic_142;
   }
   goto autodecoder_arm_undefined;
 
-autodecoder_arm_monolithic_75:
+autodecoder_arm_monolithic_150:
   if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_74;
+    goto autodecoder_arm_monolithic_149;
   }
 
-autodecoder_arm_monolithic_64:
+autodecoder_arm_monolithic_140:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_139;
+  }
+
   if (instruction & (1u << 5))
   {
     goto autodecoder_arm_undefined;
   }
+  goto autodecoder_arm_monolithic_135;
 
-  if ((instruction & (1u << 6)) == 0)
+autodecoder_arm_monolithic_139:
+  if (instruction & (1u << 22))
   {
-    goto autodecoder_arm_monolithic_62;
-  }
-
-  if (instruction & (1u << 21))
-  {
-    return IRC_SAFE;
+    goto autodecoder_arm_monolithic_138;
   }
   goto autodecoder_arm_undefined;
 
-autodecoder_arm_monolithic_62:
+autodecoder_arm_monolithic_149:
   if (instruction & (1u << 21))
   {
     goto autodecoder_arm_undefined;
   }
 
-  if (instruction & (1u << 22))
+  if ((instruction & (1u << 22)) == 0)
   {
-    return IRC_SAFE;
-  }
-  goto autodecoder_arm_undefined;
-
-autodecoder_arm_monolithic_74:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_73;
+    goto autodecoder_arm_monolithic_146;
   }
 
-  if (instruction & (1u << 21))
+  if (instruction & (1u << 6))
   {
-    goto autodecoder_arm_undefined;
+    goto autodecoder_arm_monolithic_146;
   }
-  goto autodecoder_arm_monolithic_70;
+  return IRC_SAFE;
 
-autodecoder_arm_monolithic_73:
-  if (instruction & (1u << 21))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    return IRC_SAFE;
-  }
-  goto autodecoder_arm_monolithic_70;
-
-autodecoder_arm_monolithic_112:
+autodecoder_arm_monolithic_196:
   if ((instruction & (1u << 7)) == 0)
   {
-    goto autodecoder_arm_monolithic_111;
+    goto autodecoder_arm_monolithic_195;
   }
 
   if ((instruction & (1u << 8)) == 0)
   {
-    goto autodecoder_arm_monolithic_93;
-  }
-
-  if ((instruction & (1u << 10)) == 0)
-  {
-    goto autodecoder_arm_monolithic_93;
+    goto autodecoder_arm_monolithic_170;
   }
 
   if ((instruction & (1u << 11)) == 0)
   {
-    goto autodecoder_arm_monolithic_93;
-  }
-
-  if ((instruction & (1u << 9)) == 0)
-  {
-    goto autodecoder_arm_monolithic_93;
-  }
-
-  if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_90;
-  }
-
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_85;
-  }
-
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_82;
-  }
-
-  if (instruction & (1u << 20))
-  {
-    goto autodecoder_arm_monolithic_80;
-  }
-  goto autodecoder_arm_undefined;
-
-autodecoder_arm_monolithic_90:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_89;
-  }
-
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_87;
-  }
-  goto autodecoder_arm_undefined;
-
-autodecoder_arm_monolithic_89:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_undefined;
-  }
-  goto autodecoder_arm_monolithic_87;
-
-autodecoder_arm_monolithic_111:
-  if ((instruction & (1u << 8)) == 0)
-  {
-    goto autodecoder_arm_monolithic_110;
+    goto autodecoder_arm_monolithic_170;
   }
 
   if ((instruction & (1u << 10)) == 0)
   {
-    goto autodecoder_arm_monolithic_93;
-  }
-
-  if ((instruction & (1u << 11)) == 0)
-  {
-    goto autodecoder_arm_monolithic_93;
+    goto autodecoder_arm_monolithic_170;
   }
 
   if ((instruction & (1u << 9)) == 0)
   {
-    goto autodecoder_arm_monolithic_93;
+    goto autodecoder_arm_monolithic_170;
   }
 
   if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_87;
-  }
-
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_85;
-  }
-
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_undefined;
+    goto autodecoder_arm_monolithic_165;
   }
 
   if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_undefined;
+    goto autodecoder_arm_monolithic_161;
   }
 
-  if ((instruction & (1u << 20)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-autodecoder_arm_monolithic_80:
   if ((instruction & (1u << 16)) == 0)
   {
-    goto autodecoder_arm_undefined;
+    goto autodecoder_arm_monolithic_154;
   }
 
   if ((instruction & (1u << 19)) == 0)
   {
-    goto autodecoder_arm_undefined;
+    goto autodecoder_arm_monolithic_154;
   }
 
   if ((instruction & (1u << 18)) == 0)
   {
+    goto autodecoder_arm_monolithic_154;
+  }
+
+  if ((instruction & (1u << 17)) == 0)
+  {
+    goto autodecoder_arm_monolithic_154;
+  }
+
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_152;
+  }
+  return IRC_SAFE;
+
+autodecoder_arm_monolithic_161:
+  if (instruction & (1u << 22))
+  {
     goto autodecoder_arm_undefined;
   }
 
-  if (instruction & (1u << 17))
+  if (instruction & (1u << 5))
   {
-    return IRC_SAFE;
+    goto autodecoder_arm_monolithic_159;
+  }
+  goto autodecoder_arm_monolithic_146;
+
+autodecoder_arm_monolithic_165:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_164;
+  }
+
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_135;
+  }
+  goto autodecoder_arm_monolithic_137;
+
+autodecoder_arm_monolithic_164:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_152;
+  }
+
+autodecoder_arm_monolithic_142:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_141;
   }
   goto autodecoder_arm_undefined;
 
-autodecoder_arm_monolithic_87:
+autodecoder_arm_monolithic_152:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_undefined;
+  }
+  goto autodecoder_arm_monolithic_141;
+
+autodecoder_arm_monolithic_195:
+  if ((instruction & (1u << 8)) == 0)
+  {
+    goto autodecoder_arm_monolithic_194;
+  }
+
+  if ((instruction & (1u << 11)) == 0)
+  {
+    goto autodecoder_arm_monolithic_170;
+  }
+
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_monolithic_170;
+  }
+
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_170;
+  }
+
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_182;
+  }
+
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_168;
+  }
+
+  if ((instruction & (1u << 16)) == 0)
+  {
+    goto autodecoder_arm_monolithic_176;
+  }
+
+  if ((instruction & (1u << 19)) == 0)
+  {
+    goto autodecoder_arm_monolithic_176;
+  }
+
+  if ((instruction & (1u << 18)) == 0)
+  {
+    goto autodecoder_arm_monolithic_176;
+  }
+
+  if ((instruction & (1u << 17)) == 0)
+  {
+    goto autodecoder_arm_monolithic_176;
+  }
+
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_137;
+  }
+  return IRC_SAFE;
+
+autodecoder_arm_monolithic_176:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    return IRC_SAFE;
+  }
+
+autodecoder_arm_monolithic_159:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_undefined;
+  }
+  goto autodecoder_arm_monolithic_146;
+
+autodecoder_arm_monolithic_182:
   if (instruction & (1u << 21))
   {
     return IRC_SAFE;
   }
 
-autodecoder_arm_monolithic_65:
+autodecoder_arm_monolithic_141:
   if (instruction & (1u << 20))
   {
     return IRC_SAFE;
   }
   goto autodecoder_arm_undefined;
 
-autodecoder_arm_monolithic_110:
+autodecoder_arm_monolithic_194:
   if ((instruction & (1u << 9)) == 0)
   {
-    goto autodecoder_arm_monolithic_109;
+    goto autodecoder_arm_monolithic_193;
   }
 
-autodecoder_arm_monolithic_93:
+autodecoder_arm_monolithic_170:
   if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_168;
+  }
+
+autodecoder_arm_monolithic_154:
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_undefined;
+  }
+  return IRC_SAFE;
+
+autodecoder_arm_monolithic_168:
+  if (instruction & (1u << 22))
   {
     goto autodecoder_arm_undefined;
   }
@@ -1274,53 +1402,66 @@ autodecoder_arm_monolithic_93:
   {
     goto autodecoder_arm_undefined;
   }
-  goto autodecoder_arm_monolithic_85;
+  goto autodecoder_arm_monolithic_146;
 
-autodecoder_arm_monolithic_109:
+autodecoder_arm_monolithic_193:
   if ((instruction & (1u << 23)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
 
-  if ((instruction & (1u << 5)) == 0)
+  if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_85;
+    goto autodecoder_arm_monolithic_191;
   }
 
+  if ((instruction & (1u << 5)) == 0)
+  {
+    return IRC_SAFE;
+  }
+
+autodecoder_arm_monolithic_135:
+  if (instruction & (1u << 6))
+  {
+    return IRC_SAFE;
+  }
+  goto autodecoder_arm_undefined;
+
+autodecoder_arm_monolithic_191:
+  if ((instruction & (1u << 22)) == 0)
+  {
+    goto autodecoder_arm_monolithic_190;
+  }
+
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_188;
+  }
+  goto autodecoder_arm_undefined;
+
+autodecoder_arm_monolithic_190:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_146;
+  }
+
+autodecoder_arm_monolithic_188:
   if ((instruction & (1u << 6)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
 
-  if (instruction & (1u << 21))
-  {
-    return IRC_SAFE;
-  }
-  goto autodecoder_arm_monolithic_70;
-
-autodecoder_arm_monolithic_85:
-  if (instruction & (1u << 21))
-  {
-    return IRC_SAFE;
-  }
-
-autodecoder_arm_monolithic_82:
-  if (instruction & (1u << 22))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-autodecoder_arm_monolithic_70:
+autodecoder_arm_monolithic_146:
   if (instruction & (1u << 20))
   {
     goto autodecoder_arm_undefined;
   }
   return IRC_SAFE;
 
-autodecoder_arm_monolithic_125:
+autodecoder_arm_monolithic_209:
   if (instruction & (1u << 24))
   {
-    goto autodecoder_arm_monolithic_116;
+    goto autodecoder_arm_monolithic_200;
   }
 
   if (instruction & (1u << 21))
@@ -1328,7 +1469,7 @@ autodecoder_arm_monolithic_125:
     return IRC_SAFE;
   }
 
-autodecoder_arm_monolithic_116:
+autodecoder_arm_monolithic_200:
   if ((instruction & (1u << 20)) == 0)
   {
     handler->barePtr = (void *)(armStrPCInstruction);
@@ -1338,652 +1479,175 @@ autodecoder_arm_monolithic_116:
   return IRC_PATCH_PC;
 
 
-autodecoder_arm_monolithic_615:
-  if ((instruction & (1u << 27)) == 0)
+autodecoder_arm_monolithic_602:
+  if ((instruction & (1u << 12)) == 0)
   {
-    goto autodecoder_arm_monolithic_614;
-  }
-
-autodecoder_arm_monolithic_207:
-  if ((instruction & (1u << 15)) == 0)
-  {
-    goto autodecoder_arm_monolithic_206;
-  }
-
-  if (instruction & (1u << 25))
-  {
-    handler->barePtr = (void *)(armBInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    goto autodecoder_arm_monolithic_199;
-  }
-
-  if (instruction & (1u << 20))
-  {
-    handler->barePtr = (void *)(armLdmInstruction);
-    return IRC_REPLACE;
-  }
-  handler->barePtr = (void *)(armStmPC);
-  return IRC_PATCH_PC;
-
-autodecoder_arm_monolithic_206:
-  if ((instruction & (1u << 25)) == 0)
-  {
-    goto autodecoder_arm_monolithic_205;
-  }
-  handler->barePtr = (void *)(armBInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_205:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    goto autodecoder_arm_monolithic_204;
-  }
-
-autodecoder_arm_monolithic_199:
-  if ((instruction & (1u << 20)) == 0)
-  {
-    handler->barePtr = (void *)(armStmInstruction);
-    return IRC_REPLACE;
-  }
-  handler->barePtr = (void *)(armLdmInstruction);
-  return IRC_REPLACE;
-
-
-
-autodecoder_arm_monolithic_204:
-  if (instruction & (1u << 20))
-  {
-    return IRC_SAFE;
-  }
-  handler->barePtr = (void *)(armStmPC);
-  return IRC_PATCH_PC;
-
-
-autodecoder_arm_monolithic_614:
-  if ((instruction & (1u << 15)) == 0)
-  {
-    goto autodecoder_arm_monolithic_613;
+    goto autodecoder_arm_monolithic_601;
   }
 
   if ((instruction & (1u << 13)) == 0)
   {
-    goto autodecoder_arm_monolithic_603;
+    goto autodecoder_arm_monolithic_591;
   }
 
   if ((instruction & (1u << 14)) == 0)
   {
-    goto autodecoder_arm_monolithic_603;
+    goto autodecoder_arm_monolithic_591;
   }
 
-  if ((instruction & (1u << 12)) == 0)
+  if ((instruction & (1u << 15)) == 0)
   {
-    goto autodecoder_arm_monolithic_603;
+    goto autodecoder_arm_monolithic_591;
   }
 
   if ((instruction & (1u << 25)) == 0)
   {
-    goto autodecoder_arm_monolithic_597;
+    goto autodecoder_arm_monolithic_585;
   }
 
-autodecoder_arm_monolithic_284:
+autodecoder_arm_monolithic_292:
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_283;
+    goto autodecoder_arm_monolithic_291;
   }
 
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_255;
+    goto autodecoder_arm_monolithic_263;
   }
 
   if ((instruction & (1u << 7)) == 0)
   {
-    goto autodecoder_arm_monolithic_224;
+    goto autodecoder_arm_monolithic_232;
   }
 
   if (instruction & (1u << 8))
   {
-    goto autodecoder_arm_monolithic_224;
-  }
-
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_224;
+    goto autodecoder_arm_monolithic_232;
   }
 
   if (instruction & (1u << 11))
   {
-    goto autodecoder_arm_monolithic_224;
+    goto autodecoder_arm_monolithic_232;
+  }
+
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_232;
   }
 
   if (instruction & (1u << 9))
   {
-    goto autodecoder_arm_monolithic_224;
+    goto autodecoder_arm_monolithic_232;
   }
 
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_218;
-  }
-
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_223;
-  }
-
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_223;
+    goto autodecoder_arm_monolithic_226;
   }
 
   if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_222;
+    goto autodecoder_arm_monolithic_230;
   }
 
   if (instruction & (1u << 22))
   {
-    goto autodecoder_arm_monolithic_221;
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if (instruction & (1u << 16))
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if (instruction & (1u << 19))
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if (instruction & (1u << 18))
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if (instruction & (1u << 17))
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if ((instruction & (1u << 6)) == 0)
+  {
+    goto autodecoder_arm_monolithic_229;
   }
 
   if (instruction & (1u << 20))
   {
     handler->barePtr = (void *)(armALUImmRegRSRNoDest);
     return IRC_PATCH_PC;
-  }
-
-  if (instruction & (1u << 16))
-  {
-    handler->barePtr = (void *)(armMsrInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 19))
-  {
-    handler->barePtr = (void *)(armMsrInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 18))
-  {
-    handler->barePtr = (void *)(armMsrInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 17))
-  {
-    handler->barePtr = (void *)(armMsrInstruction);
-    return IRC_REPLACE;
   }
   handler->barePtr = (void *)(armDbgInstruction);
   return IRC_REPLACE;
 
 
-autodecoder_arm_monolithic_283:
+autodecoder_arm_monolithic_291:
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_255;
+    goto autodecoder_arm_monolithic_263;
   }
 
   if (instruction & (1u << 7))
   {
-    goto autodecoder_arm_monolithic_224;
+    goto autodecoder_arm_monolithic_232;
   }
 
   if (instruction & (1u << 8))
   {
-    goto autodecoder_arm_monolithic_224;
-  }
-
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_224;
+    goto autodecoder_arm_monolithic_232;
   }
 
   if (instruction & (1u << 11))
   {
-    goto autodecoder_arm_monolithic_224;
+    goto autodecoder_arm_monolithic_232;
+  }
+
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_232;
   }
 
   if ((instruction & (1u << 9)) == 0)
   {
-    goto autodecoder_arm_monolithic_277;
+    goto autodecoder_arm_monolithic_285;
   }
 
-autodecoder_arm_monolithic_224:
+autodecoder_arm_monolithic_232:
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_218;
-  }
-  goto autodecoder_arm_monolithic_223;
-
-autodecoder_arm_monolithic_277:
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_218;
+    goto autodecoder_arm_monolithic_226;
   }
 
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_223;
-  }
-
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_274;
-  }
-
-autodecoder_arm_monolithic_223:
   if (instruction & (1u << 21))
   {
-    goto autodecoder_arm_monolithic_221;
+    goto autodecoder_arm_monolithic_229;
   }
-  goto autodecoder_arm_monolithic_222;
+  goto autodecoder_arm_monolithic_230;
 
-autodecoder_arm_monolithic_274:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_222;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    goto autodecoder_arm_monolithic_221;
-  }
-
-  if (instruction & (1u << 20))
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
-  if (instruction & (1u << 3))
-  {
-    handler->barePtr = (void *)(armMsrInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 16))
-  {
-    handler->barePtr = (void *)(armMsrInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 19))
-  {
-    handler->barePtr = (void *)(armMsrInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 18))
-  {
-    handler->barePtr = (void *)(armMsrInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 17))
-  {
-    handler->barePtr = (void *)(armMsrInstruction);
-    return IRC_REPLACE;
-  }
-
-  if ((instruction & (1u << 0)) == 0)
-  {
-    goto autodecoder_arm_monolithic_265;
-  }
-
-  if (instruction & (1u << 2))
-  {
-    handler->barePtr = (void *)(armMsrInstruction);
-    return IRC_REPLACE;
-  }
-
-  if ((instruction & (1u << 1)) == 0)
-  {
-    handler->barePtr = (void *)(armYieldInstruction);
-    return IRC_REPLACE;
-  }
-  handler->barePtr = (void *)(armWfiInstruction);
-  return IRC_REPLACE;
-
-
-
-autodecoder_arm_monolithic_265:
-  if ((instruction & (1u << 2)) == 0)
-  {
-    goto autodecoder_arm_monolithic_264;
-  }
-
-  if (instruction & (1u << 1))
-  {
-    handler->barePtr = (void *)(armMsrInstruction);
-    return IRC_REPLACE;
-  }
-  handler->barePtr = (void *)(armSevInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_264:
-  if ((instruction & (1u << 1)) == 0)
-  {
-    return IRC_SAFE;
-  }
-  handler->barePtr = (void *)(armWfeInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_597:
-  if ((instruction & (1u << 4)) == 0)
-  {
-    goto autodecoder_arm_monolithic_495;
-  }
-
-  if ((instruction & (1u << 24)) == 0)
-  {
-    goto autodecoder_arm_monolithic_435;
-  }
-
-  if (instruction & (1u << 7))
-  {
-    goto autodecoder_arm_monolithic_341;
-  }
-
-  if ((instruction & (1u << 8)) == 0)
-  {
-    goto autodecoder_arm_monolithic_590;
-  }
-
-  if ((instruction & (1u << 10)) == 0)
-  {
-    goto autodecoder_arm_monolithic_590;
-  }
-
-  if ((instruction & (1u << 11)) == 0)
-  {
-    goto autodecoder_arm_monolithic_590;
-  }
-
-  if ((instruction & (1u << 9)) == 0)
-  {
-    goto autodecoder_arm_monolithic_590;
-  }
-
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_371;
-  }
-
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_395;
-  }
-
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_584;
-  }
-
-autodecoder_arm_monolithic_385:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    return IRC_SAFE;
-  }
-
-  if (instruction & (1u << 20))
-  {
-    return IRC_SAFE;
-  }
-
-  if ((instruction & (1u << 16)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-  if ((instruction & (1u << 19)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-  if ((instruction & (1u << 18)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-  if ((instruction & (1u << 17)) == 0)
-  {
-    return IRC_SAFE;
-  }
-  handler->barePtr = (void *)(armBlxRegisterInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_395:
-  if (instruction & (1u << 6))
-  {
-    return IRC_SAFE;
-  }
-
-  if ((instruction & (1u << 21)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    return IRC_SAFE;
-  }
-
-  if (instruction & (1u << 20))
-  {
-    return IRC_SAFE;
-  }
-
-  if ((instruction & (1u << 16)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-  if ((instruction & (1u << 19)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-  if ((instruction & (1u << 18)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-  if ((instruction & (1u << 17)) == 0)
-  {
-    return IRC_SAFE;
-  }
-  handler->barePtr = (void *)(armBxInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_590:
+autodecoder_arm_monolithic_285:
   if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_589;
+    goto autodecoder_arm_monolithic_284;
   }
 
-autodecoder_arm_monolithic_371:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_370;
-  }
-
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_354;
-  }
-
+autodecoder_arm_monolithic_226:
   if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_217;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    handler->barePtr = (void *)(armMvnInstruction);
-    return IRC_REPLACE;
-  }
-  goto autodecoder_arm_monolithic_345;
-
-autodecoder_arm_monolithic_435:
-  if (instruction & (1u << 7))
-  {
-    goto autodecoder_arm_monolithic_434;
-  }
-  goto autodecoder_arm_monolithic_255;
-
-autodecoder_arm_monolithic_495:
-  if ((instruction & (1u << 24)) == 0)
-  {
-    goto autodecoder_arm_monolithic_255;
-  }
-
-  if ((instruction & (1u << 7)) == 0)
-  {
-    goto autodecoder_arm_monolithic_493;
-  }
-
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_445;
-  }
-  goto autodecoder_arm_monolithic_449;
-
-autodecoder_arm_monolithic_493:
-  if ((instruction & (1u << 8)) == 0)
-  {
-    goto autodecoder_arm_monolithic_492;
-  }
-
-  if ((instruction & (1u << 10)) == 0)
-  {
-    goto autodecoder_arm_monolithic_462;
-  }
-
-  if ((instruction & (1u << 11)) == 0)
-  {
-    goto autodecoder_arm_monolithic_462;
-  }
-
-  if ((instruction & (1u << 9)) == 0)
-  {
-    goto autodecoder_arm_monolithic_462;
-  }
-
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_445;
-  }
-
-  if ((instruction & (1u << 5)) == 0)
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
-  if (instruction & (1u << 6))
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
-  if ((instruction & (1u << 21)) == 0)
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
-  if (instruction & (1u << 20))
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
-  if ((instruction & (1u << 16)) == 0)
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
-  if ((instruction & (1u << 19)) == 0)
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
-  if ((instruction & (1u << 18)) == 0)
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
-  if ((instruction & (1u << 17)) == 0)
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-  handler->barePtr = (void *)(armBxjInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_492:
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_462;
-  }
-
-  if (instruction & (1u << 11))
-  {
-    goto autodecoder_arm_monolithic_462;
-  }
-
-  if ((instruction & (1u << 9)) == 0)
-  {
-    goto autodecoder_arm_monolithic_489;
-  }
-
-autodecoder_arm_monolithic_462:
-  if ((instruction & (1u << 23)) == 0)
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
-autodecoder_arm_monolithic_445:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_370;
-  }
-
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_354;
-  }
-
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_217;
+    goto autodecoder_arm_monolithic_225;
   }
 
   if (instruction & (1u << 22))
@@ -1992,210 +1656,6 @@ autodecoder_arm_monolithic_445:
     return IRC_REPLACE;
   }
 
-  if (instruction & (1u << 16))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 19))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 18))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 17))
-  {
-    goto autodecoder_arm_undefined;
-  }
-  handler->barePtr = (void *)(armRorInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_370:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_362;
-  }
-
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_217;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    handler->barePtr = (void *)(armMvnInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 16))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 19))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 18))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 17))
-  {
-    goto autodecoder_arm_undefined;
-  }
-  handler->barePtr = (void *)(armLslInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_489:
-  if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_488;
-  }
-
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_474;
-  }
-
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_354;
-  }
-
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_217;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    handler->barePtr = (void *)(armMvnInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 16))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 19))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 18))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 17))
-  {
-    goto autodecoder_arm_undefined;
-  }
-  handler->barePtr = (void *)(armRrxInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_354:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_217;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    handler->barePtr = (void *)(armMvnInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 16))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 19))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 18))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 17))
-  {
-    goto autodecoder_arm_undefined;
-  }
-  handler->barePtr = (void *)(armLsrInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_474:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_218;
-  }
-
-autodecoder_arm_monolithic_362:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_217;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    handler->barePtr = (void *)(armMvnInstruction);
-    return IRC_REPLACE;
-  }
-
-  if (instruction & (1u << 16))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 19))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 18))
-  {
-    goto autodecoder_arm_undefined;
-  }
-
-  if (instruction & (1u << 17))
-  {
-    goto autodecoder_arm_undefined;
-  }
-  handler->barePtr = (void *)(armAsrInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_218:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_217;
-  }
-
-  if ((instruction & (1u << 22)) == 0)
-  {
-    goto autodecoder_arm_monolithic_213;
-  }
-  handler->barePtr = (void *)(armMvnInstruction);
-  return IRC_REPLACE;
-
-
-autodecoder_arm_monolithic_213:
   if (instruction & (1u << 16))
   {
     goto autodecoder_arm_undefined;
@@ -2218,8 +1678,511 @@ autodecoder_arm_monolithic_213:
   handler->barePtr = (void *)(armMovInstruction);
   return IRC_REPLACE;
 
+autodecoder_arm_monolithic_284:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_230;
+  }
 
-autodecoder_arm_monolithic_217:
+  if (instruction & (1u << 22))
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if (instruction & (1u << 16))
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if (instruction & (1u << 19))
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if (instruction & (1u << 18))
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if (instruction & (1u << 17))
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_229;
+  }
+
+  if (instruction & (1u << 20))
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 3))
+  {
+    handler->barePtr = (void *)(armMsrInstruction);
+    return IRC_REPLACE;
+  }
+
+  if ((instruction & (1u << 1)) == 0)
+  {
+    goto autodecoder_arm_monolithic_273;
+  }
+
+  if (instruction & (1u << 2))
+  {
+    handler->barePtr = (void *)(armMsrInstruction);
+    return IRC_REPLACE;
+  }
+
+  if ((instruction & (1u << 0)) == 0)
+  {
+    handler->barePtr = (void *)(armWfeInstruction);
+    return IRC_REPLACE;
+  }
+  handler->barePtr = (void *)(armWfiInstruction);
+  return IRC_REPLACE;
+
+
+
+autodecoder_arm_monolithic_273:
+  if ((instruction & (1u << 2)) == 0)
+  {
+    goto autodecoder_arm_monolithic_272;
+  }
+
+  if (instruction & (1u << 0))
+  {
+    handler->barePtr = (void *)(armMsrInstruction);
+    return IRC_REPLACE;
+  }
+  handler->barePtr = (void *)(armSevInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_272:
+  if ((instruction & (1u << 0)) == 0)
+  {
+    return IRC_SAFE;
+  }
+  handler->barePtr = (void *)(armYieldInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_585:
+  if ((instruction & (1u << 4)) == 0)
+  {
+    goto autodecoder_arm_monolithic_488;
+  }
+
+  if ((instruction & (1u << 24)) == 0)
+  {
+    goto autodecoder_arm_monolithic_427;
+  }
+
+  if (instruction & (1u << 7))
+  {
+    goto autodecoder_arm_monolithic_351;
+  }
+
+  if ((instruction & (1u << 8)) == 0)
+  {
+    goto autodecoder_arm_monolithic_578;
+  }
+
+  if ((instruction & (1u << 11)) == 0)
+  {
+    goto autodecoder_arm_monolithic_578;
+  }
+
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_monolithic_578;
+  }
+
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_578;
+  }
+
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_363;
+  }
+
+  if ((instruction & (1u << 21)) == 0)
+  {
+    return IRC_SAFE;
+  }
+
+  if (instruction & (1u << 22))
+  {
+    goto autodecoder_arm_monolithic_367;
+  }
+
+  if ((instruction & (1u << 16)) == 0)
+  {
+    return IRC_SAFE;
+  }
+
+  if ((instruction & (1u << 19)) == 0)
+  {
+    return IRC_SAFE;
+  }
+
+  if ((instruction & (1u << 18)) == 0)
+  {
+    return IRC_SAFE;
+  }
+
+  if ((instruction & (1u << 17)) == 0)
+  {
+    return IRC_SAFE;
+  }
+
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_375;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    return IRC_SAFE;
+  }
+
+autodecoder_arm_monolithic_371:
+  if (instruction & (1u << 20))
+  {
+    return IRC_SAFE;
+  }
+  handler->barePtr = (void *)(armBlxRegisterInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_375:
+  if (instruction & (1u << 6))
+  {
+    return IRC_SAFE;
+  }
+
+  if (instruction & (1u << 20))
+  {
+    return IRC_SAFE;
+  }
+  handler->barePtr = (void *)(armBxInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_578:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_577;
+  }
+
+autodecoder_arm_monolithic_363:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_225;
+  }
+
+  if (instruction & (1u << 22))
+  {
+    handler->barePtr = (void *)(armMvnInstruction);
+    return IRC_REPLACE;
+  }
+
+  if (instruction & (1u << 16))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 19))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 18))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 17))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_356;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    return IRC_SAFE;
+  }
+  handler->barePtr = (void *)(armLsrInstruction);
+  return IRC_REPLACE;
+
+autodecoder_arm_monolithic_427:
+  if (instruction & (1u << 7))
+  {
+    goto autodecoder_arm_monolithic_426;
+  }
+  goto autodecoder_arm_monolithic_263;
+
+autodecoder_arm_monolithic_488:
+  if ((instruction & (1u << 24)) == 0)
+  {
+    goto autodecoder_arm_monolithic_263;
+  }
+
+  if ((instruction & (1u << 7)) == 0)
+  {
+    goto autodecoder_arm_monolithic_486;
+  }
+
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_437;
+  }
+  goto autodecoder_arm_monolithic_440;
+
+autodecoder_arm_monolithic_486:
+  if ((instruction & (1u << 8)) == 0)
+  {
+    goto autodecoder_arm_monolithic_485;
+  }
+
+  if ((instruction & (1u << 11)) == 0)
+  {
+    goto autodecoder_arm_monolithic_453;
+  }
+
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_monolithic_453;
+  }
+
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_453;
+  }
+
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_437;
+  }
+
+  if ((instruction & (1u << 21)) == 0)
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 22))
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if ((instruction & (1u << 16)) == 0)
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if ((instruction & (1u << 19)) == 0)
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if ((instruction & (1u << 18)) == 0)
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if ((instruction & (1u << 17)) == 0)
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if ((instruction & (1u << 5)) == 0)
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 20))
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+  handler->barePtr = (void *)(armBxjInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_485:
+  if (instruction & (1u << 11))
+  {
+    goto autodecoder_arm_monolithic_453;
+  }
+
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_453;
+  }
+
+  if ((instruction & (1u << 9)) == 0)
+  {
+    goto autodecoder_arm_monolithic_482;
+  }
+
+autodecoder_arm_monolithic_453:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+autodecoder_arm_monolithic_437:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_225;
+  }
+
+  if (instruction & (1u << 22))
+  {
+    handler->barePtr = (void *)(armMvnInstruction);
+    return IRC_REPLACE;
+  }
+
+  if (instruction & (1u << 16))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 19))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 18))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 17))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_356;
+  }
+
+  if ((instruction & (1u << 6)) == 0)
+  {
+    handler->barePtr = (void *)(armLsrInstruction);
+    return IRC_REPLACE;
+  }
+  handler->barePtr = (void *)(armRorInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_356:
+  if (instruction & (1u << 6))
+  {
+    handler->barePtr = (void *)(armAsrInstruction);
+    return IRC_REPLACE;
+  }
+  handler->barePtr = (void *)(armLslInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_482:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_481;
+  }
+
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_225;
+  }
+
+  if ((instruction & (1u << 22)) == 0)
+  {
+    goto autodecoder_arm_monolithic_464;
+  }
+  handler->barePtr = (void *)(armMvnInstruction);
+  return IRC_REPLACE;
+
+
+autodecoder_arm_monolithic_464:
+  if (instruction & (1u << 16))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 19))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 18))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 17))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_459;
+  }
+
+  if ((instruction & (1u << 6)) == 0)
+  {
+    handler->barePtr = (void *)(armLsrInstruction);
+    return IRC_REPLACE;
+  }
+  handler->barePtr = (void *)(armRrxInstruction);
+  return IRC_REPLACE;
+
+
+
+autodecoder_arm_monolithic_459:
+  if ((instruction & (1u << 6)) == 0)
+  {
+    handler->barePtr = (void *)(armMovInstruction);
+    return IRC_REPLACE;
+  }
+  handler->barePtr = (void *)(armAsrInstruction);
+  return IRC_REPLACE;
+
+
+
+autodecoder_arm_monolithic_225:
   if ((instruction & (1u << 22)) == 0)
   {
     handler->barePtr = (void *)(armOrrInstruction);
@@ -2230,7 +2193,12 @@ autodecoder_arm_monolithic_217:
 
 
 
-autodecoder_arm_monolithic_488:
+autodecoder_arm_monolithic_481:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_480;
+  }
+
   if (instruction & (1u << 5))
   {
     handler->barePtr = (void *)(armALUImmRegRSRNoDest);
@@ -2243,12 +2211,7 @@ autodecoder_arm_monolithic_488:
     return IRC_PATCH_PC;
   }
 
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_485;
-  }
-
-autodecoder_arm_monolithic_221:
+autodecoder_arm_monolithic_229:
   if (instruction & (1u << 20))
   {
     handler->barePtr = (void *)(armALUImmRegRSRNoDest);
@@ -2258,15 +2221,15 @@ autodecoder_arm_monolithic_221:
   return IRC_REPLACE;
 
 
-autodecoder_arm_monolithic_255:
+autodecoder_arm_monolithic_263:
   if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_254;
+    goto autodecoder_arm_monolithic_262;
   }
 
   if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_246;
+    goto autodecoder_arm_monolithic_254;
   }
 
   if ((instruction & (1u << 22)) == 0)
@@ -2279,7 +2242,7 @@ autodecoder_arm_monolithic_255:
 
 
 
-autodecoder_arm_monolithic_246:
+autodecoder_arm_monolithic_254:
   if ((instruction & (1u << 22)) == 0)
   {
     handler->barePtr = (void *)(armAddInstruction);
@@ -2290,10 +2253,10 @@ autodecoder_arm_monolithic_246:
 
 
 
-autodecoder_arm_monolithic_254:
+autodecoder_arm_monolithic_262:
   if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_253;
+    goto autodecoder_arm_monolithic_261;
   }
 
   if ((instruction & (1u << 22)) == 0)
@@ -2306,7 +2269,7 @@ autodecoder_arm_monolithic_254:
 
 
 
-autodecoder_arm_monolithic_253:
+autodecoder_arm_monolithic_261:
   if ((instruction & (1u << 22)) == 0)
   {
     handler->barePtr = (void *)(armAndInstruction);
@@ -2317,34 +2280,34 @@ autodecoder_arm_monolithic_253:
 
 
 
-autodecoder_arm_monolithic_613:
+autodecoder_arm_monolithic_601:
   if (instruction & (1u << 13))
   {
-    goto autodecoder_arm_monolithic_603;
+    goto autodecoder_arm_monolithic_591;
   }
 
   if (instruction & (1u << 14))
   {
-    goto autodecoder_arm_monolithic_603;
+    goto autodecoder_arm_monolithic_591;
   }
 
-  if ((instruction & (1u << 12)) == 0)
+  if ((instruction & (1u << 15)) == 0)
   {
-    goto autodecoder_arm_monolithic_610;
+    goto autodecoder_arm_monolithic_598;
   }
 
-autodecoder_arm_monolithic_603:
+autodecoder_arm_monolithic_591:
   if (instruction & (1u << 25))
   {
-    goto autodecoder_arm_monolithic_519;
+    goto autodecoder_arm_monolithic_500;
   }
 
   if (instruction & (1u << 4))
   {
-    goto autodecoder_arm_monolithic_601;
+    goto autodecoder_arm_monolithic_589;
   }
 
-autodecoder_arm_monolithic_547:
+autodecoder_arm_monolithic_531:
   if ((instruction & (1u << 24)) == 0)
   {
     handler->barePtr = (void *)(armALUImmRegRSR);
@@ -2353,196 +2316,128 @@ autodecoder_arm_monolithic_547:
 
   if ((instruction & (1u << 7)) == 0)
   {
-    goto autodecoder_arm_monolithic_545;
+    goto autodecoder_arm_monolithic_529;
   }
 
   if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_531;
-  }
-
-autodecoder_arm_monolithic_449:
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_446;
-  }
-
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_222;
-  }
-
-  if (instruction & (1u << 22))
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-  goto autodecoder_arm_monolithic_222;
-
-autodecoder_arm_monolithic_610:
-  if ((instruction & (1u << 25)) == 0)
-  {
-    goto autodecoder_arm_monolithic_609;
-  }
-
-autodecoder_arm_monolithic_519:
-  if ((instruction & (1u << 4)) == 0)
-  {
-    goto autodecoder_arm_monolithic_518;
-  }
-
-  if (instruction & (1u << 24))
-  {
-    goto autodecoder_arm_monolithic_501;
-  }
-  handler->barePtr = (void *)(armALUImmRegRSR);
-  return IRC_PATCH_PC;
-
-autodecoder_arm_monolithic_518:
-  if ((instruction & (1u << 24)) == 0)
-  {
-    handler->barePtr = (void *)(armALUImmRegRSR);
-    return IRC_PATCH_PC;
-  }
-
-  if (instruction & (1u << 7))
-  {
-    goto autodecoder_arm_monolithic_501;
-  }
-
-  if (instruction & (1u << 8))
-  {
-    goto autodecoder_arm_monolithic_501;
-  }
-
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_501;
-  }
-
-  if (instruction & (1u << 11))
-  {
-    goto autodecoder_arm_monolithic_501;
-  }
-
-  if ((instruction & (1u << 9)) == 0)
   {
     goto autodecoder_arm_monolithic_512;
   }
 
-autodecoder_arm_monolithic_501:
-  if (instruction & (1u << 23))
+autodecoder_arm_monolithic_440:
+  if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_500;
+    goto autodecoder_arm_monolithic_230;
   }
-  goto autodecoder_arm_monolithic_446;
 
-autodecoder_arm_monolithic_512:
-  if ((instruction & (1u << 23)) == 0)
+  if (instruction & (1u << 22))
   {
-    goto autodecoder_arm_monolithic_446;
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
   }
 
   if (instruction & (1u << 5))
   {
-    goto autodecoder_arm_monolithic_500;
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
   }
+  goto autodecoder_arm_monolithic_230;
 
-  if ((instruction & (1u << 6)) == 0)
+autodecoder_arm_monolithic_598:
+  if ((instruction & (1u << 25)) == 0)
   {
-    goto autodecoder_arm_monolithic_509;
+    goto autodecoder_arm_monolithic_597;
   }
 
 autodecoder_arm_monolithic_500:
-  if (instruction & (1u << 21))
-  {
-    goto autodecoder_arm_monolithic_498;
-  }
-  handler->barePtr = (void *)(armALUImmRegRSR);
-  return IRC_PATCH_PC;
-
-autodecoder_arm_monolithic_509:
-  if ((instruction & (1u << 21)) == 0)
+  if ((instruction & (1u << 24)) == 0)
   {
     handler->barePtr = (void *)(armALUImmRegRSR);
     return IRC_PATCH_PC;
   }
 
-  if (instruction & (1u << 22))
+  if ((instruction & (1u << 23)) == 0)
   {
-    return IRC_SAFE;
+    goto autodecoder_arm_monolithic_498;
   }
-  goto autodecoder_arm_monolithic_507;
 
-autodecoder_arm_monolithic_446:
+  if (instruction & (1u << 21))
+  {
+    goto autodecoder_arm_monolithic_495;
+  }
+  handler->barePtr = (void *)(armALUImmRegRSR);
+  return IRC_PATCH_PC;
+
+autodecoder_arm_monolithic_498:
   if (instruction & (1u << 21))
   {
     handler->barePtr = (void *)(armALUImmRegRSRNoDest);
     return IRC_PATCH_PC;
   }
-  goto autodecoder_arm_monolithic_222;
+  goto autodecoder_arm_monolithic_230;
 
-autodecoder_arm_monolithic_609:
+autodecoder_arm_monolithic_597:
   if ((instruction & (1u << 4)) == 0)
   {
-    goto autodecoder_arm_monolithic_608;
+    goto autodecoder_arm_monolithic_596;
   }
 
-autodecoder_arm_monolithic_601:
+autodecoder_arm_monolithic_589:
   if ((instruction & (1u << 24)) == 0)
   {
-    goto autodecoder_arm_monolithic_523;
+    goto autodecoder_arm_monolithic_504;
   }
 
   if ((instruction & (1u << 7)) == 0)
   {
-    goto autodecoder_arm_monolithic_599;
+    goto autodecoder_arm_monolithic_587;
   }
 
-autodecoder_arm_monolithic_341:
+autodecoder_arm_monolithic_351:
   if ((instruction & (1u << 8)) == 0)
   {
-    goto autodecoder_arm_monolithic_340;
-  }
-
-  if ((instruction & (1u << 10)) == 0)
-  {
-    goto autodecoder_arm_monolithic_325;
+    goto autodecoder_arm_monolithic_350;
   }
 
   if ((instruction & (1u << 11)) == 0)
   {
-    goto autodecoder_arm_monolithic_325;
+    goto autodecoder_arm_monolithic_337;
+  }
+
+  if ((instruction & (1u << 10)) == 0)
+  {
+    goto autodecoder_arm_monolithic_337;
   }
 
   if ((instruction & (1u << 9)) == 0)
   {
-    goto autodecoder_arm_monolithic_325;
+    goto autodecoder_arm_monolithic_337;
   }
 
   if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_325;
-  }
-
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_287;
-  }
-
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_288;
+    goto autodecoder_arm_monolithic_337;
   }
 
   if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_318;
+    goto autodecoder_arm_monolithic_332;
   }
 
   if ((instruction & (1u << 22)) == 0)
   {
-    goto autodecoder_arm_monolithic_302;
+    goto autodecoder_arm_monolithic_312;
+  }
+
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_294;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    handler->barePtr = (void *)(armLdrdhPCInstruction);
+    return IRC_PATCH_PC;
   }
 
   if ((instruction & (1u << 20)) == 0)
@@ -2557,7 +2452,7 @@ autodecoder_arm_monolithic_341:
     return IRC_PATCH_PC;
   }
 
-  if ((instruction & (1u << 0)) == 0)
+  if ((instruction & (1u << 1)) == 0)
   {
     handler->barePtr = (void *)(armLdrdhPCInstruction);
     return IRC_PATCH_PC;
@@ -2569,7 +2464,7 @@ autodecoder_arm_monolithic_341:
     return IRC_PATCH_PC;
   }
 
-  if ((instruction & (1u << 1)) == 0)
+  if ((instruction & (1u << 0)) == 0)
   {
     handler->barePtr = (void *)(armLdrdhPCInstruction);
     return IRC_PATCH_PC;
@@ -2579,7 +2474,17 @@ autodecoder_arm_monolithic_341:
 
 
 
-autodecoder_arm_monolithic_302:
+autodecoder_arm_monolithic_312:
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
   if ((instruction & (1u << 20)) == 0)
   {
     handler->barePtr = (void *)(armStrexdInstruction);
@@ -2591,7 +2496,7 @@ autodecoder_arm_monolithic_302:
     goto autodecoder_arm_undefined;
   }
 
-  if ((instruction & (1u << 0)) == 0)
+  if ((instruction & (1u << 1)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
@@ -2601,7 +2506,7 @@ autodecoder_arm_monolithic_302:
     goto autodecoder_arm_undefined;
   }
 
-  if ((instruction & (1u << 1)) == 0)
+  if ((instruction & (1u << 0)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
@@ -2610,10 +2515,21 @@ autodecoder_arm_monolithic_302:
 
 
 
-autodecoder_arm_monolithic_318:
+autodecoder_arm_monolithic_332:
   if ((instruction & (1u << 22)) == 0)
   {
-    goto autodecoder_arm_monolithic_317;
+    goto autodecoder_arm_monolithic_331;
+  }
+
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_294;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    handler->barePtr = (void *)(armLdrdhPCInstruction);
+    return IRC_PATCH_PC;
   }
 
   if ((instruction & (1u << 20)) == 0)
@@ -2628,7 +2544,7 @@ autodecoder_arm_monolithic_318:
     return IRC_PATCH_PC;
   }
 
-  if ((instruction & (1u << 0)) == 0)
+  if ((instruction & (1u << 1)) == 0)
   {
     handler->barePtr = (void *)(armLdrdhPCInstruction);
     return IRC_PATCH_PC;
@@ -2640,7 +2556,7 @@ autodecoder_arm_monolithic_318:
     return IRC_PATCH_PC;
   }
 
-  if ((instruction & (1u << 1)) == 0)
+  if ((instruction & (1u << 0)) == 0)
   {
     handler->barePtr = (void *)(armLdrdhPCInstruction);
     return IRC_PATCH_PC;
@@ -2650,7 +2566,17 @@ autodecoder_arm_monolithic_318:
 
 
 
-autodecoder_arm_monolithic_317:
+autodecoder_arm_monolithic_331:
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_undefined;
+  }
+
   if ((instruction & (1u << 20)) == 0)
   {
     handler->barePtr = (void *)(armStrexInstruction);
@@ -2662,7 +2588,7 @@ autodecoder_arm_monolithic_317:
     goto autodecoder_arm_undefined;
   }
 
-  if ((instruction & (1u << 0)) == 0)
+  if ((instruction & (1u << 1)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
@@ -2672,7 +2598,7 @@ autodecoder_arm_monolithic_317:
     goto autodecoder_arm_undefined;
   }
 
-  if ((instruction & (1u << 1)) == 0)
+  if ((instruction & (1u << 0)) == 0)
   {
     goto autodecoder_arm_undefined;
   }
@@ -2681,72 +2607,49 @@ autodecoder_arm_monolithic_317:
 
 
 
-autodecoder_arm_monolithic_340:
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_325;
-  }
-
+autodecoder_arm_monolithic_350:
   if (instruction & (1u << 11))
-  {
-    goto autodecoder_arm_monolithic_325;
-  }
-
-  if ((instruction & (1u << 9)) == 0)
   {
     goto autodecoder_arm_monolithic_337;
   }
 
-autodecoder_arm_monolithic_325:
-  if (instruction & (1u << 5))
+  if (instruction & (1u << 10))
   {
-    goto autodecoder_arm_monolithic_287;
+    goto autodecoder_arm_monolithic_337;
   }
 
-  if (instruction & (1u << 6))
+  if ((instruction & (1u << 9)) == 0)
   {
-    goto autodecoder_arm_monolithic_288;
+    goto autodecoder_arm_monolithic_347;
   }
 
+autodecoder_arm_monolithic_337:
   if (instruction & (1u << 22))
   {
-    goto autodecoder_arm_monolithic_322;
+    goto autodecoder_arm_monolithic_336;
   }
   goto autodecoder_arm_undefined;
 
-autodecoder_arm_monolithic_337:
-  if ((instruction & (1u << 23)) == 0)
+autodecoder_arm_monolithic_347:
+  if (instruction & (1u << 23))
+  {
+    goto autodecoder_arm_monolithic_336;
+  }
+
+  if (instruction & (1u << 21))
   {
     goto autodecoder_arm_monolithic_336;
   }
 
   if (instruction & (1u << 5))
   {
-    goto autodecoder_arm_monolithic_286;
+    goto autodecoder_arm_monolithic_294;
   }
 
   if (instruction & (1u << 6))
   {
     handler->barePtr = (void *)(armLdrdhPCInstruction);
     return IRC_PATCH_PC;
-  }
-  goto autodecoder_arm_monolithic_322;
-
-autodecoder_arm_monolithic_336:
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_286;
-  }
-
-  if (instruction & (1u << 6))
-  {
-    handler->barePtr = (void *)(armLdrdhPCInstruction);
-    return IRC_PATCH_PC;
-  }
-
-  if (instruction & (1u << 21))
-  {
-    goto autodecoder_arm_monolithic_322;
   }
 
   if (instruction & (1u << 20))
@@ -2758,25 +2661,24 @@ autodecoder_arm_monolithic_336:
   return IRC_REPLACE;
 
 
-autodecoder_arm_monolithic_599:
+autodecoder_arm_monolithic_587:
   if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_589;
+    goto autodecoder_arm_monolithic_577;
   }
 
-autodecoder_arm_monolithic_520:
+autodecoder_arm_monolithic_501:
   if ((instruction & (1u << 21)) == 0)
   {
     return IRC_SAFE;
   }
 
-autodecoder_arm_monolithic_498:
+autodecoder_arm_monolithic_495:
   if (instruction & (1u << 22))
   {
     return IRC_SAFE;
   }
 
-autodecoder_arm_monolithic_345:
   if (instruction & (1u << 16))
   {
     goto autodecoder_arm_undefined;
@@ -2798,18 +2700,7 @@ autodecoder_arm_monolithic_345:
   }
   return IRC_SAFE;
 
-autodecoder_arm_monolithic_589:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-  if ((instruction & (1u << 6)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-autodecoder_arm_monolithic_584:
+autodecoder_arm_monolithic_577:
   if ((instruction & (1u << 21)) == 0)
   {
     return IRC_SAFE;
@@ -2820,7 +2711,17 @@ autodecoder_arm_monolithic_584:
     return IRC_SAFE;
   }
 
-autodecoder_arm_monolithic_373:
+autodecoder_arm_monolithic_367:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    return IRC_SAFE;
+  }
+
+  if ((instruction & (1u << 6)) == 0)
+  {
+    return IRC_SAFE;
+  }
+
   if (instruction & (1u << 20))
   {
     return IRC_SAFE;
@@ -2829,70 +2730,77 @@ autodecoder_arm_monolithic_373:
   return IRC_REPLACE;
 
 
-autodecoder_arm_monolithic_523:
+autodecoder_arm_monolithic_504:
   if ((instruction & (1u << 7)) == 0)
   {
     return IRC_SAFE;
   }
 
-autodecoder_arm_monolithic_434:
+autodecoder_arm_monolithic_426:
   if (instruction & (1u << 8))
   {
-    goto autodecoder_arm_monolithic_421;
-  }
-
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_421;
+    goto autodecoder_arm_monolithic_413;
   }
 
   if (instruction & (1u << 11))
   {
-    goto autodecoder_arm_monolithic_421;
+    goto autodecoder_arm_monolithic_413;
+  }
+
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_413;
   }
 
   if ((instruction & (1u << 9)) == 0)
   {
-    goto autodecoder_arm_monolithic_430;
+    goto autodecoder_arm_monolithic_422;
   }
 
-autodecoder_arm_monolithic_421:
+autodecoder_arm_monolithic_413:
   if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_420;
-  }
-
-  if (instruction & (1u << 5))
   {
     goto autodecoder_arm_monolithic_412;
   }
 
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_288;
-  }
-  return IRC_SAFE;
-
-autodecoder_arm_monolithic_420:
-  if ((instruction & (1u << 5)) == 0)
-  {
-    goto autodecoder_arm_monolithic_419;
-  }
-
-autodecoder_arm_monolithic_412:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_287;
-  }
-
   if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_287;
+    goto autodecoder_arm_monolithic_405;
   }
 
   if (instruction & (1u << 22))
   {
-    goto autodecoder_arm_monolithic_408;
+    goto autodecoder_arm_monolithic_399;
+  }
+  goto autodecoder_arm_monolithic_402;
+
+autodecoder_arm_monolithic_405:
+  if (instruction & (1u << 22))
+  {
+    goto autodecoder_arm_monolithic_404;
+  }
+  goto autodecoder_arm_monolithic_138;
+
+autodecoder_arm_monolithic_412:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_411;
+  }
+
+  if (instruction & (1u << 22))
+  {
+    goto autodecoder_arm_monolithic_409;
+  }
+
+autodecoder_arm_monolithic_402:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_137;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_undefined;
   }
 
   if (instruction & (1u << 20))
@@ -2902,68 +2810,71 @@ autodecoder_arm_monolithic_412:
   }
   goto autodecoder_arm_undefined;
 
-autodecoder_arm_monolithic_287:
+autodecoder_arm_monolithic_411:
   if (instruction & (1u << 22))
   {
-    goto autodecoder_arm_monolithic_286;
-  }
-  goto autodecoder_arm_undefined;
-
-autodecoder_arm_monolithic_419:
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_418;
+    goto autodecoder_arm_monolithic_336;
   }
 
-autodecoder_arm_monolithic_288:
-  if (instruction & (1u << 22))
-  {
-    handler->barePtr = (void *)(armLdrdhPCInstruction);
-    return IRC_PATCH_PC;
-  }
-  goto autodecoder_arm_undefined;
-
-autodecoder_arm_monolithic_430:
-  if ((instruction & (1u << 23)) == 0)
-  {
-    goto autodecoder_arm_monolithic_429;
-  }
-
+autodecoder_arm_monolithic_138:
   if (instruction & (1u << 5))
   {
-    goto autodecoder_arm_monolithic_425;
+    goto autodecoder_arm_undefined;
   }
 
+autodecoder_arm_monolithic_137:
   if (instruction & (1u << 6))
   {
-    handler->barePtr = (void *)(armLdrdhPCInstruction);
-    return IRC_PATCH_PC;
+    goto autodecoder_arm_undefined;
   }
   return IRC_SAFE;
 
-autodecoder_arm_monolithic_429:
-  if ((instruction & (1u << 5)) == 0)
+autodecoder_arm_monolithic_422:
+  if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_428;
-  }
-
-autodecoder_arm_monolithic_425:
-  if (instruction & (1u << 6))
-  {
-    goto autodecoder_arm_monolithic_286;
+    goto autodecoder_arm_monolithic_421;
   }
 
   if ((instruction & (1u << 21)) == 0)
   {
-    goto autodecoder_arm_monolithic_286;
+    goto autodecoder_arm_monolithic_404;
   }
 
   if ((instruction & (1u << 22)) == 0)
   {
-    goto autodecoder_arm_monolithic_422;
+    goto autodecoder_arm_monolithic_416;
   }
 
-autodecoder_arm_monolithic_408:
+autodecoder_arm_monolithic_399:
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_397;
+  }
+  goto autodecoder_arm_monolithic_398;
+
+autodecoder_arm_monolithic_421:
+  if ((instruction & (1u << 21)) == 0)
+  {
+    goto autodecoder_arm_monolithic_420;
+  }
+
+  if ((instruction & (1u << 22)) == 0)
+  {
+    goto autodecoder_arm_monolithic_416;
+  }
+
+autodecoder_arm_monolithic_409:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_408;
+  }
+
+autodecoder_arm_monolithic_397:
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_294;
+  }
+
   if (instruction & (1u << 20))
   {
     handler->barePtr = (void *)(armLdrhtInstruction);
@@ -2973,7 +2884,31 @@ autodecoder_arm_monolithic_408:
   return IRC_REPLACE;
 
 
-autodecoder_arm_monolithic_422:
+autodecoder_arm_monolithic_408:
+  if (instruction & (1u << 6))
+  {
+    handler->barePtr = (void *)(armLdrdhPCInstruction);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 20))
+  {
+    handler->barePtr = (void *)(armLdrdhPCInstruction);
+    return IRC_PATCH_PC;
+  }
+  return IRC_SAFE;
+
+autodecoder_arm_monolithic_416:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_398;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    goto autodecoder_arm_monolithic_294;
+  }
+
   if ((instruction & (1u << 20)) == 0)
   {
     handler->barePtr = (void *)(armStrPCInstruction);
@@ -2983,7 +2918,38 @@ autodecoder_arm_monolithic_422:
   return IRC_REPLACE;
 
 
-autodecoder_arm_monolithic_286:
+autodecoder_arm_monolithic_420:
+  if ((instruction & (1u << 22)) == 0)
+  {
+    goto autodecoder_arm_monolithic_404;
+  }
+
+autodecoder_arm_monolithic_336:
+  if (instruction & (1u << 5))
+  {
+    goto autodecoder_arm_monolithic_294;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    handler->barePtr = (void *)(armLdrdhPCInstruction);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 20))
+  {
+    handler->barePtr = (void *)(armLdrdhPCInstruction);
+    return IRC_PATCH_PC;
+  }
+  goto autodecoder_arm_undefined;
+
+autodecoder_arm_monolithic_404:
+  if ((instruction & (1u << 5)) == 0)
+  {
+    goto autodecoder_arm_monolithic_398;
+  }
+
+autodecoder_arm_monolithic_294:
   if (instruction & (1u << 20))
   {
     handler->barePtr = (void *)(armLdrdhPCInstruction);
@@ -2993,47 +2959,16 @@ autodecoder_arm_monolithic_286:
   return IRC_PATCH_PC;
 
 
-autodecoder_arm_monolithic_428:
-  if (instruction & (1u << 6))
-  {
-    handler->barePtr = (void *)(armLdrdhPCInstruction);
-    return IRC_PATCH_PC;
-  }
-
-autodecoder_arm_monolithic_418:
-  if ((instruction & (1u << 21)) == 0)
-  {
-    goto autodecoder_arm_monolithic_417;
-  }
-
-  if ((instruction & (1u << 22)) == 0)
+autodecoder_arm_monolithic_398:
+  if ((instruction & (1u << 6)) == 0)
   {
     return IRC_SAFE;
-  }
-
-  if (instruction & (1u << 20))
-  {
-    handler->barePtr = (void *)(armLdrdhPCInstruction);
-    return IRC_PATCH_PC;
-  }
-  return IRC_SAFE;
-
-autodecoder_arm_monolithic_417:
-  if ((instruction & (1u << 22)) == 0)
-  {
-    return IRC_SAFE;
-  }
-
-autodecoder_arm_monolithic_322:
-  if ((instruction & (1u << 20)) == 0)
-  {
-    goto autodecoder_arm_undefined;
   }
   handler->barePtr = (void *)(armLdrdhPCInstruction);
   return IRC_PATCH_PC;
 
 
-autodecoder_arm_monolithic_608:
+autodecoder_arm_monolithic_596:
   if ((instruction & (1u << 24)) == 0)
   {
     handler->barePtr = (void *)(armALUImmRegRSR);
@@ -3042,16 +2977,16 @@ autodecoder_arm_monolithic_608:
 
   if ((instruction & (1u << 7)) == 0)
   {
-    goto autodecoder_arm_monolithic_545;
+    goto autodecoder_arm_monolithic_529;
   }
 
-autodecoder_arm_monolithic_553:
+autodecoder_arm_monolithic_537:
   if (instruction & (1u << 23))
   {
-    goto autodecoder_arm_monolithic_531;
+    goto autodecoder_arm_monolithic_512;
   }
 
-autodecoder_arm_monolithic_222:
+autodecoder_arm_monolithic_230:
   if (instruction & (1u << 20))
   {
     handler->barePtr = (void *)(armALUImmRegRSRNoDest);
@@ -3060,52 +2995,35 @@ autodecoder_arm_monolithic_222:
   return IRC_SAFE;
 
 
-autodecoder_arm_monolithic_545:
+autodecoder_arm_monolithic_529:
   if (instruction & (1u << 8))
   {
-    goto autodecoder_arm_monolithic_533;
-  }
-
-  if (instruction & (1u << 10))
-  {
-    goto autodecoder_arm_monolithic_533;
+    goto autodecoder_arm_monolithic_514;
   }
 
   if (instruction & (1u << 11))
   {
-    goto autodecoder_arm_monolithic_533;
+    goto autodecoder_arm_monolithic_514;
+  }
+
+  if (instruction & (1u << 10))
+  {
+    goto autodecoder_arm_monolithic_514;
   }
 
   if ((instruction & (1u << 9)) == 0)
   {
-    goto autodecoder_arm_monolithic_541;
+    goto autodecoder_arm_monolithic_525;
   }
 
-autodecoder_arm_monolithic_533:
-  if (instruction & (1u << 23))
-  {
-    goto autodecoder_arm_monolithic_531;
-  }
-  handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-  return IRC_PATCH_PC;
-
-autodecoder_arm_monolithic_541:
+autodecoder_arm_monolithic_514:
   if ((instruction & (1u << 23)) == 0)
   {
-    goto autodecoder_arm_monolithic_540;
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
   }
 
-  if (instruction & (1u << 5))
-  {
-    goto autodecoder_arm_monolithic_531;
-  }
-
-  if ((instruction & (1u << 6)) == 0)
-  {
-    goto autodecoder_arm_monolithic_535;
-  }
-
-autodecoder_arm_monolithic_531:
+autodecoder_arm_monolithic_512:
   if ((instruction & (1u << 21)) == 0)
   {
     handler->barePtr = (void *)(armALUImmRegRSR);
@@ -3140,22 +3058,24 @@ autodecoder_arm_monolithic_531:
   handler->barePtr = (void *)(armShiftPCImm);
   return IRC_PATCH_PC;
 
-autodecoder_arm_monolithic_535:
+autodecoder_arm_monolithic_525:
+  if ((instruction & (1u << 23)) == 0)
+  {
+    goto autodecoder_arm_monolithic_524;
+  }
+
   if ((instruction & (1u << 21)) == 0)
   {
     handler->barePtr = (void *)(armALUImmRegRSR);
     return IRC_PATCH_PC;
   }
 
-  if ((instruction & (1u << 22)) == 0)
+  if (instruction & (1u << 22))
   {
-    goto autodecoder_arm_monolithic_507;
+    handler->barePtr = (void *)(armShiftPCImm);
+    return IRC_PATCH_PC;
   }
-  handler->barePtr = (void *)(armShiftPCImm);
-  return IRC_PATCH_PC;
 
-
-autodecoder_arm_monolithic_507:
   if (instruction & (1u << 16))
   {
     goto autodecoder_arm_undefined;
@@ -3173,45 +3093,36 @@ autodecoder_arm_monolithic_507:
 
   if ((instruction & (1u << 17)) == 0)
   {
-    handler->barePtr = (void *)(armMovPCInstruction);
-    return IRC_PATCH_PC;
+    goto autodecoder_arm_monolithic_517;
   }
   goto autodecoder_arm_undefined;
 
 
-
-autodecoder_arm_monolithic_540:
+autodecoder_arm_monolithic_517:
   if (instruction & (1u << 5))
   {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    handler->barePtr = (void *)(armShiftPCImm);
     return IRC_PATCH_PC;
   }
 
-  if (instruction & (1u << 6))
+  if ((instruction & (1u << 6)) == 0)
   {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    handler->barePtr = (void *)(armMovPCInstruction);
     return IRC_PATCH_PC;
   }
+  handler->barePtr = (void *)(armShiftPCImm);
+  return IRC_PATCH_PC;
 
+
+
+autodecoder_arm_monolithic_524:
   if (instruction & (1u << 21))
   {
     handler->barePtr = (void *)(armALUImmRegRSRNoDest);
     return IRC_PATCH_PC;
   }
 
-autodecoder_arm_monolithic_485:
-  if (instruction & (1u << 20))
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
-  if (instruction & (1u << 3))
-  {
-    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
-    return IRC_PATCH_PC;
-  }
-
+autodecoder_arm_monolithic_480:
   if ((instruction & (1u << 16)) == 0)
   {
     handler->barePtr = (void *)(armALUImmRegRSRNoDest);
@@ -3236,7 +3147,31 @@ autodecoder_arm_monolithic_485:
     return IRC_PATCH_PC;
   }
 
-  if (instruction & (1u << 0))
+  if (instruction & (1u << 5))
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 6))
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 20))
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 3))
+  {
+    handler->barePtr = (void *)(armALUImmRegRSRNoDest);
+    return IRC_PATCH_PC;
+  }
+
+  if (instruction & (1u << 1))
   {
     handler->barePtr = (void *)(armALUImmRegRSRNoDest);
     return IRC_PATCH_PC;
@@ -3248,7 +3183,7 @@ autodecoder_arm_monolithic_485:
     return IRC_PATCH_PC;
   }
 
-  if (instruction & (1u << 1))
+  if (instruction & (1u << 0))
   {
     handler->barePtr = (void *)(armALUImmRegRSRNoDest);
     return IRC_PATCH_PC;
