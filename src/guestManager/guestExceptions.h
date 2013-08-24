@@ -16,15 +16,15 @@
 
 // no need to throw a service call to guest context.
 // hypercall handler deals with it.
-void deliverServiceCall(GCONTXT *context);
+void deliverServiceCall(GCONTXT* context);
 
-void throwInterrupt(GCONTXT *context, u32int irqNumber);
-void deliverInterrupt(GCONTXT *context);
+void throwInterrupt(GCONTXT* context, u32int irqNumber);
+void deliverInterrupt(GCONTXT* context);
 
-void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isWrite, u32int domain);
-void deliverDataAbort(GCONTXT *context);
+void throwDataAbort(GCONTXT* context, u32int address, u32int faultType, bool isWrite, u32int domain);
+void deliverDataAbort(GCONTXT* context);
 
-void throwPrefetchAbort(GCONTXT *context, u32int address, u32int faultType);
-void deliverPrefetchAbort(GCONTXT *context);
+void throwPrefetchAbort(GCONTXT* context, u32int address, u32int faultType);
+void deliverPrefetchAbort(GCONTXT* context);
 
 #endif

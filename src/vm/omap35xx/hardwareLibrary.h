@@ -40,10 +40,10 @@
 #define UART2_SIZE                       0x00002000
 #define I2C1                             0x48070000
 #define I2C1_SIZE                        0x00000080
-#define I2C2                             0x48072000 
+#define I2C2                             0x48072000
 #define I2C2_SIZE                        0x00000080
 #define I2C3                             0x48060000
-#define I2C3_SIZE                        0x00000080 
+#define I2C3_SIZE                        0x00000080
 #define SD_MMC1                          0x4809C000
 #define SD_MMC1_SIZE                     0x00002000
 #define SD_MMC3                          0x480AD000
@@ -116,7 +116,7 @@
 #define Q2_SDRC_SMS                  0x80000000
 #define Q2_SDRC_SMS_SIZE             0x40000000
 
-#define QUARTER3                     0xC000000
+#define QUARTER3                     0xC0000000
 #define Q3_RESERVED                  0xC0000000
 #define Q3_RESERVED_SIZE             0x20000000
 #define Q3_SDRC_SMS                  0xE0000000

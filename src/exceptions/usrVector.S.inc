@@ -121,9 +121,16 @@ contUsrSvc:
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
   ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
 #else
+#ifdef CONFIG_HW_PASSTHROUGH
+  /* exception bits set from guset context in passthrough */
+  BIC     R0, R0, #(PSR_MODE)
+  ORR     R0, R0, #(PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
 #endif
+#endif
+
   MSR     SPSR, R0
   POP     {R0}
 #ifdef CONFIG_THUMB2
@@ -228,6 +235,7 @@ contUsrPabt:
   /* Restore general purpose registers R0--R12 */
   LDMIA   LR, {R0-R12}
 
+  /* STARFIX: IN THIS handler and other identically, push r0 and pop r0 should be removed. reorder instructions */
   PUSH    {R0}
   /* Get guest CPSR into R0 */
   LDR     R0, [LR, #GC_CPSR_OFFS]
@@ -241,9 +249,16 @@ contUsrPabt:
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
   ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
 #else
+#ifdef CONFIG_HW_PASSTHROUGH
+  /* exception bits set from guset context in passthrough */
+  BIC     R0, R0, #(PSR_MODE)
+  ORR     R0, R0, #(PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
 #endif
+#endif
+
   MSR     SPSR, R0
   POP     {R0}
 #ifdef CONFIG_THUMB2
@@ -361,9 +376,16 @@ contUsrDabt:
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
   ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
 #else
+#ifdef CONFIG_HW_PASSTHROUGH
+  /* exception bits set from guset context in passthrough */
+  BIC     R0, R0, #(PSR_MODE)
+  ORR     R0, R0, #(PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
 #endif
+#endif
+
   MSR     SPSR, R0
   POP     {R0}
 #ifdef CONFIG_THUMB2
@@ -493,8 +515,14 @@ contUsrIrq:
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
   ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
 #else
+#ifdef CONFIG_HW_PASSTHROUGH
+  /* exception bits set from guset context in passthrough */
+  BIC     R0, R0, #(PSR_MODE)
+  ORR     R0, R0, #(PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
+#endif
 #endif
 
 #ifdef CONFIG_THUMB2

@@ -318,7 +318,7 @@ void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
   // if we didnt hit the previous switch, maybe its one of the indexed registers
   u32int channelIndex = getChannelNumber(regOffs);
   u32int indexedRegOffs = (regOffs - 0x80) % 0x60;
-#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_MMC_PASSTHROUGH)
+#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_HW_PASSTHROUGH)
   bool dispatched = FALSE;
 #endif
   switch (indexedRegOffs+0x80)
@@ -328,7 +328,7 @@ void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       if ((value & SDMA_CCRi_ENABLE) == SDMA_CCRi_ENABLE)
       {
         DEBUG(VP_OMAP_35XX_SDMA, "%s: Enabling channel %x" EOL, dev->deviceName, channelIndex);
-#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_MMC_PASSTHROUGH)
+#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_HW_PASSTHROUGH)
         /* It would be cleaner to check the SDMA_SEL_SRC_DST_SYNC bit and use it to decide
            if we should decide based on source or address. However, MMC transfers with
            kernel 2.6.28-omap1 seem to sometimes synchronize on destination even if 

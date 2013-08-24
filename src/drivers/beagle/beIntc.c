@@ -51,8 +51,13 @@ void intcBEInit()
   // intc autoidle
   intcRegWriteBE(REG_INTCPS_SYSCONFIG, INTCPS_SYSCONFIG_AUTOIDLE);
 
+#ifdef CONFIG_HW_PASSTHROUGH
+  // allow user mode access to interrupt controller
+  intcRegWriteBE(REG_INTCPS_PROTECTION, 0);
+#else
   // set register access protection (priviledged modes only)!
   intcRegWriteBE(REG_INTCPS_PROTECTION, INTCPS_PROTECTION_PROTECTION);
+#endif
 
   int i;
   // mask interrupts (all)

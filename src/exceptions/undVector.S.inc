@@ -120,9 +120,16 @@ contUndSvc:
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
   ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
 #else
+#ifdef CONFIG_HW_PASSTHROUGH
+  /* exception bits set from guset context in passthrough */
+  BIC     R0, R0, #(PSR_MODE)
+  ORR     R0, R0, #(PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
 #endif
+#endif
+
   MSR     SPSR, R0
   POP     {R0}
 #ifdef CONFIG_THUMB2

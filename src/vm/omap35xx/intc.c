@@ -310,12 +310,6 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       {
         if (value & (1 << i))
         {
-#ifdef CONFIG_MMC_PASSTHROUGH
-          if (i == SDMA_IRQ_0)
-          {
-            unmaskInterruptBE(SDMA_IRQ_0);
-          }
-#endif
           DEBUG(VP_OMAP_35XX_INTC, "INTC: clearing mask from interrupt number %#x" EOL, i);
         }
       }
@@ -329,18 +323,11 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       {
         if (value & (1 << i))
         {
-          // dedicate linux physical gpt2 for now, to serve as its core (gpt1)
           if (i+32 == GPT1_IRQ)
           {
-            // linux unmasking gpt1 interrupt. unmask gpt2 in physical.
-            unmaskInterruptBE(GPT2_IRQ);
+            // linux unmasking gpt1 interrupt.
+            unmaskInterruptBE(GPT1_IRQ);
           }
-#ifdef CONFIG_MMC_PASSTHROUGH
-          if (i+32 == I2C1_IRQ)
-          {
-            unmaskInterruptBE(I2C1_IRQ);
-          }
-#endif
           DEBUG(VP_OMAP_35XX_INTC, "INTC: clearing mask from interrupt number %#x" EOL,
               i + 32);
         }
@@ -355,12 +342,6 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       {
         if (value & (1 << i))
         {
-#ifdef CONFIG_MMC_PASSTHROUGH
-          if (i+64 == MMC1_IRQ)
-          {
-            unmaskInterruptBE(MMC1_IRQ);
-          }
-#endif
           DEBUG(VP_OMAP_35XX_INTC, "INTC: clearing mask from interrupt number %#x" EOL,
               i + 64);
         }
@@ -378,12 +359,6 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       {
         if (value & (1 << i))
         {
-#ifdef CONFIG_MMC_PASSTHROUGH
-          if (i == SDMA_IRQ_0)
-          {
-            maskInterruptBE(SDMA_IRQ_0);
-          }
-#endif
           DEBUG(VP_OMAP_35XX_INTC, "INTC: set mask for interrupt number %x\n" , i);
         }
       }
@@ -398,12 +373,11 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       {
         if (value & (1 << i))
         {
-#ifdef CONFIG_MMC_PASSTHROUGH
-          if (i+32 == I2C1_IRQ)
+          if (i+32 == GPT1_IRQ)
           {
-            maskInterruptBE(I2C1_IRQ);
+            // linux unmasking gpt1 interrupt.
+            maskInterruptBE(GPT1_IRQ);
           }
-#endif
           DEBUG(VP_OMAP_35XX_INTC, "INTC: set mask for interrupt number %x\n" , i+32);
         }
       }
@@ -418,12 +392,6 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       {
         if (value & (1 << i))
         {
-#ifdef CONFIG_MMC_PASSTHROUGH
-          if (i+64 == MMC1_IRQ)
-          {
-            maskInterruptBE(MMC1_IRQ);
-          }
-#endif
           DEBUG(VP_OMAP_35XX_INTC, "INTC: set mask for interrupt number %x\n" , i+64);
         }
       }
@@ -452,12 +420,12 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       // If guest wants to enable GPT1, then GPT2 IRQ which is dedicated to guest must be unmasked
       if(!(value & 0x20 )) // bit 37(GPT1_IRQ)=0 -> IRQ Enable
       {
-        unmaskInterruptBE(GPT2_IRQ);
+        unmaskInterruptBE(GPT1_IRQ);
       }
       // If GPT1 bit is masked, then GPT2_IRQ needs to be masked
       else //bit 37(GPT1_IRQ)=1 -> IRQ Disable
       {
-        maskInterruptBE(GPT2_IRQ);
+        maskInterruptBE(GPT1_IRQ);
       }
       break;
     case REG_INTCPS_ISR_CLEAR1:
@@ -466,7 +434,7 @@ void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       /* reset timer interrupt if needed */
       if(value & 0x20)
       {
-        unmaskInterruptBE(GPT2_IRQ);
+        unmaskInterruptBE(GPT1_IRQ);
       }
       break;
     case REG_INTCPS_ILR37:

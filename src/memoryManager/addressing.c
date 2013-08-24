@@ -98,6 +98,7 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
                HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
 
   }
+#ifndef CONFIG_HW_PASSTHROUGH
   else
   {
     // no need to add other mappings for RAM addresses: if guest needs any,
@@ -122,13 +123,10 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
   mapSmallPage(pageTablePtr, BE_GPTIMER1, BE_GPTIMER1,
                HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
 
-  // gptimer2
-  mapSmallPage(pageTablePtr, BE_GPTIMER2, BE_GPTIMER2,
-               HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
-
   // MMC1 interface
   mapSmallPage(pageTablePtr, BE_MMCHS1, BE_MMCHS1,
                HYPERVISOR_ACCESS_DOMAIN, HYPERVISOR_ACCESS_BITS, 0, 0, 0, 1);
+#endif
 
 #ifdef CONFIG_PROFILER
   // gptimer3
@@ -154,7 +152,6 @@ static void setupPageTable(GCONTXT *context, PageTableTarget target)
 void guestSetPageTableBase(GCONTXT *gc, u32int ttbr)
 {
   DEBUG(MM_ADDRESSING, "guestSetPageTableBase: ttbr %#.8x @ pc %#.8x" EOL, ttbr, gc->R15);
-
   gc->pageTables->guestPhysical = (simpleEntry *)ttbr;
   gc->pageTables->guestVirtual = NULL;
 
@@ -211,6 +208,7 @@ void guestDisableMMU(GCONTXT *context)
   context->virtAddrEnabled = FALSE;
   
   // reset hypervisor page table
+  // STARFIX: remove memsets!
   memset((void*)context->hypervisorPageTable, 0, PT1_SIZE);
 
   // and set it up again

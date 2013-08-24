@@ -17,7 +17,7 @@ GCONTXT *undefined(GCONTXT *context);
 void undefinedPrivileged(void);
 
 GCONTXT *prefetchAbort(GCONTXT *context);
-void prefetchAbortPrivileged(void);
+void prefetchAbortPrivileged(u32int pc, u32int sp, u32int spsr);
 
 GCONTXT *monitorMode(GCONTXT *context);
 void monitorModePrivileged(void);

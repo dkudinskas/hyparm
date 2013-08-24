@@ -495,22 +495,68 @@ void armStmPC(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruc
 /*
  * Translates STR{,B,H,D} in register & immediate forms
  */
-void armStrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+void armStrPCImm(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
-  ARM_ldr_str_reg instr = {.value = instruction};
+  ARM_ldr_str_imm instr = {.value = instruction};
   u32int cond = instr.fields.cond;
   u32int Rt = instr.fields.Rt;
   u32int Rn = instr.fields.Rn;
-//  u32int Rm = instr.fields.Rm;
+
+  u32int scratch = 0;
+  u32int pcRegister = Rt;
+  bool spill = FALSE;
 
   const bool replaceRt = (Rt == GPR_PC);
   const bool replaceRn = (Rn == GPR_PC);
 
   if (replaceRt || replaceRn)
   {
-    printf("armStrPCInstruction: translating %#.8x @ %#.8x with cond=%x, Rd=%x, "
-          "Rt=%x" EOL, instr.value, pc, cond, Rt, Rn);
-    DIE_NOW(0, "armStrPCInstruction: translate, stub\n");
+    if (!(instruction & STR_STRB_FORM_BITS) && (instruction & STRD_BIT))
+    {
+      DIE_NOW(0, "strd");
+    }
+    else
+    {
+      //Instruction is STR{,B,H} immediate: only 2 registers used!
+      scratch = getOtherRegisterOf2(Rt, Rn);
+      armSpillRegister(ts, block, cond, scratch, 0);
+      pcRegister = scratch;
+      spill = TRUE;
+    }
+
+    armWritePCToRegister(ts, block, cond, pcRegister, pc);
+
+    if (replaceRt)
+    {
+      instr.fields.Rt = pcRegister;
+    }
+    if (replaceRn)
+    {
+      instr.fields.Rn = pcRegister;
+    }
+  }
+
+  addInstructionToBlock(ts, block, instr.value);
+
+  if (spill)
+  {
+    armRestoreRegister(ts, block, cond, scratch);
+  }
+}
+
+
+void armStrPCReg(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+{
+  ARM_ldr_str_reg instr = {.value = instruction};
+  u32int Rt = instr.fields.Rt;
+  u32int Rn = instr.fields.Rn;
+
+  const bool replaceRt = (Rt == GPR_PC);
+  const bool replaceRn = (Rn == GPR_PC);
+
+  if (replaceRt || replaceRn)
+  {
+    DIE_NOW(0, "armStrPCInstruction: spill register stub.\n");
   }
 
   addInstructionToBlock(ts, block, instruction);
@@ -522,13 +568,31 @@ void armStrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
 }
 
 
+/*
+ * Translates STR(B) in register & immediate forms for which Rd!=PC
+ */
+void armStrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
+{
+  ARM_ldr_str_imm instr = {.value = instruction};
+  if (instr.fields.I == 0)
+  {
+    armStrPCImm(ts, block, pc, instruction);
+  }
+  else
+  {
+    // register case
+    armStrPCReg(ts, block, pc, instruction);
+  }
+}
+
+
+
 void armStrtPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
   DIE_NOW(0, "armStrPCInstruction unimplemented\n");
   const u32int conditionCode = ARM_EXTRACT_CONDITION_CODE(instruction);
   const u32int sourceRegister = ARM_EXTRACT_REGISTER(instruction, STR_RT_INDEX);
   const u32int baseRegister = ARM_EXTRACT_REGISTER(instruction, RN_INDEX);
-//  const u32int offsetRegister = ARM_EXTRACT_REGISTER(instruction, RM_INDEX);
 
   const bool replaceSource = sourceRegister == GPR_PC;
   const bool replaceBase = baseRegister == GPR_PC;

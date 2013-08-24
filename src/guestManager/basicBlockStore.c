@@ -106,6 +106,7 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
       BasicBlock tempBlock = *basicBlock;
 
       // invalidate the basic block store
+      // STARFIX: remove most memsets and put one memset in naive malloc. memory isn't reused.
       memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
 
       // restore basic block store entry
@@ -124,7 +125,9 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
 
 void invalidateBlock(BasicBlock* block)
 {
+  // STARFIX: remove this. its enough to change type to invalid.
   memset(block, 0, sizeof(BasicBlock));
+  block->type = BB_TYPE_INVALID;
 }
 
 void setExecBitmap(GCONTXT* context, u32int start, u32int end)

@@ -994,6 +994,7 @@ static void setIrqFlags(GCONTXT *context, struct Uart *uart, u32int id, u32int f
     DEBUG(VP_OMAP_35XX_UART, "setIrqFlags: UART%x: : sent to sleep mode!" EOL, id + 1);
   }
 
+#ifndef CONFIG_HW_PASSTHROUGH
   // if now all irq are clear/disabled, make sure INTC line is clear
   if ((uart->iir & UART_IIR_IT_PENDING) == UART_IIR_IT_PENDING)
   {
@@ -1013,4 +1014,5 @@ static void setIrqFlags(GCONTXT *context, struct Uart *uart, u32int id, u32int f
         DIE_NOW(NULL, "store to uart: invalid uID.");
     }
   }
+#endif
 }

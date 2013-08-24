@@ -639,14 +639,21 @@ pabtHandler:
 
 .global pabtHandlerPriv
 pabtHandlerPriv:
-  /* SEGFAULT in the hypervisor */
-  PUSH   {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
+  /* we backed up the LR to hold the SPSR */
+  POP    {LR}
+  /* link register is last pc+8 */
+  SUB    LR, LR, #8
+  /* save common registers and return address. */
+  PUSH    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, LR}
   /* PC of the aborting instruction in @param1 of C handler */
-  SUB    R0, LR, #4
+  MOV    R0, LR
+  MOV    R1, SP
+  MRS    R2, SPSR
+  AND    R2, R2, #PSR_MODE
   BL     prefetchAbortPrivileged
-  /* SEGFAULT in hypervisor: should never return from that handler */
-pabtPrivLoop:
-  B      pabtPrivLoop
+  POP    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, LR}
+  MOVS   PC, LR
+
 
 .global monHandler
 monHandler:

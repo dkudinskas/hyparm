@@ -31,10 +31,12 @@ simpleEntry *newLevelOnePageTable()
     DIE_NOW(NULL, "failed to allocate L1 page table");
   }
   ASSERT(isAlignedToMask(pageTable, PT1_ALIGN_MASK), "new L1 page table is not correctly aligned");
+  // STARFIX: remove memsets!
   memset(pageTable, 0, PT1_SIZE);
   DEBUG(MM_PAGE_TABLES, "newLevelOnePageTable: Page Table base addr: %p" EOL, pageTable);
   return pageTable;
 }
+
 
 /**
  * allocate space for a new level 2 base page table
@@ -47,6 +49,7 @@ u32int *newLevelTwoPageTable()
     DIE_NOW(NULL, "failed to allocate L2 page table");
   }
   ASSERT(isAlignedToMask(pageTable, PT2_ALIGN_MASK), "new L2 page table is not correctly aligned");
+  // STARFIX; remove memsets
   memset(pageTable, 0, PT2_SIZE);
   DEBUG(MM_PAGE_TABLES, "newLevelTwoPageTable: Page Table base addr: %p" EOL, pageTable);
   return pageTable;
@@ -142,27 +145,6 @@ u32int mapRegion(simpleEntry *pageTable, u32int virtualStartAddress, u32int phys
    */
   return physicalStartAddress;
 }
-
-#ifdef CONFIG_MMC_PASSTHROUGH
-u32int mapRegionSmallPages(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
-                 u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,
-                 bool bufferable, u8int regionAttributes, bool executeNever)
-{
-  ASSERT(isAlignedToMaskN(physicalStartAddress, SMALL_PAGE_MASK), "bad alignment");
-  /*
-   * Construct a conservative, linear mapping for the specified address range.
-   */
-  while (physicalStartAddress < physicalEndAddress)
-  {
-    /* 4 kB, map a small page -- may involve creation of an L2 table */
-    mapSmallPage(pageTable, virtualStartAddress, physicalStartAddress, domain, accessBits,
-                 cacheable, bufferable, regionAttributes, executeNever);
-    physicalStartAddress += SMALL_PAGE_SIZE;
-    virtualStartAddress += SMALL_PAGE_SIZE;
-  }
-  return physicalStartAddress;
-}
-#endif
 
 
 /**

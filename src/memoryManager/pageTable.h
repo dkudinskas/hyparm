@@ -3,6 +3,7 @@
 
 #include "common/compiler.h"
 #include "common/types.h"
+#include "common/stdlib.h"
 
 #include "drivers/beagle/memoryMap.h"
 
@@ -141,8 +142,7 @@ typedef struct smallPageDescriptor smallPageEntry;
 
 void dumpTranslationTable(simpleEntry *table) __cold__;
 
-
-/*************** rewritten functions *********************/
+// STARFIX: maybe some of these can be inlined? as many other functions?
 simpleEntry *newLevelOnePageTable(void);
 u32int* newLevelTwoPageTable(void);
 void deleteLevelTwoPageTable(GCONTXT *context, pageTableEntry* pageTable);
@@ -152,11 +152,6 @@ void mapHypervisorMemory(simpleEntry* ptd);
 u32int mapRegion(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
                  u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,
                  bool bufferable, u8int regionAttributes, bool executeNever);
-#ifdef CONFIG_MMC_PASSTHROUGH
-u32int mapRegionSmallPages(simpleEntry *pageTable, u32int virtualStartAddress, u32int physicalStartAddress,
-                 u32int physicalEndAddress, u8int domain, u8int accessBits, bool cacheable,
-                 bool bufferable, u8int regionAttributes, bool executeNever);
-#endif
 
 void mapSection(simpleEntry* pageTable, u32int virtAddr, u32int physical,
                 u8int domain, u8int accessBits, bool c, bool b, u8int tex, bool executeNever);

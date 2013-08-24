@@ -24,6 +24,8 @@ void armLdrPCReg(TranslationStore* ts, BasicBlock *block, u32int pc, u32int inst
 void armLdrPCImm(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction);
 void armLdrdhPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction);
 void armLdrPCInstruction(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
+void armStrPCReg(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction);
+void armStrPCImm(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction);
 void armStrPCInstruction(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
 void armStrtPCInstruction(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
 

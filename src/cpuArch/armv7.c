@@ -123,6 +123,8 @@ int cleanupBeforeBoot()
   __asm__ __volatile__("mcr p15, 0, %0, c7, c10, 4": :"r"(0));
 
   l2_cache_enable();
+#ifndef CONFIG_HW_PASSTHROUGH
   enableInterrupts();
+#endif
   return 0;
 }

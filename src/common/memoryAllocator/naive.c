@@ -12,6 +12,8 @@ void initialiseAllocator(u32int startAddress, u32int bytes)
 {
   poolStart = (void *)startAddress;
   poolEnd = poolStart + bytes;
+  // STARFIX: memset all pool to zero
+  memset(poolStart, 0, bytes);
 }
 
 void uncheckedFree(void *ptr)

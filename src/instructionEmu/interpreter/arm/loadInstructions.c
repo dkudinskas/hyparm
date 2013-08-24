@@ -585,7 +585,7 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
       }
       if ((context->CPSR & PSR_MODE) != (modeSpsr & PSR_MODE))
       {
-        guestChangeMode(modeSpsr & PSR_MODE);
+        guestChangeMode(context, modeSpsr & PSR_MODE);
       }
       context->CPSR = modeSpsr;
     }

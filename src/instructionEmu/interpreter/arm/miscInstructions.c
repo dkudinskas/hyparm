@@ -62,11 +62,13 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
         printf("Guest enabling irqs globally!" EOL);
 #endif
-        // chech interrupt controller if there is an interrupt pending
+#ifndef CONFIG_HW_PASSTHROUGH
+        // check interrupt controller if there is an interrupt pending
         if (isIrqPending(context->vm.irqController))
         {
           context->guestIrqPending = TRUE;
         }
+#endif
       }
       oldCpsr &= ~PSR_I_BIT;
     }
@@ -77,12 +79,14 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
         printf("Guest enabling FIQs globally!" EOL);
 #endif
+#ifndef CONFIG_HW_PASSTHROUGH
         // chech interrupt controller if there is an interrupt pending
         if (isFiqPending(context->vm.irqController))
         {
           // context->guestFiqPending = TRUE; : IMPLEMENT!!
           DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
         }
+#endif
       }
       oldCpsr &= ~PSR_F_BIT;
     }
@@ -96,17 +100,6 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
     }
     if (affectI)
     {
-      if (!(oldCpsr & PSR_I_BIT)) // were enabled, now disabled
-      {
-        // chech interrupt controller if there is an interrupt pending
-        if (context->guestIrqPending)
-        {
-          /*
-           * FIXME: Niels: wtf? why do we need the if?
-           */
-          context->guestIrqPending = FALSE;
-        }
-      }
       oldCpsr |= PSR_I_BIT;
     }
     if (affectF)
@@ -124,7 +117,6 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
     oldCpsr &= ~PSR_MODE;
     oldCpsr |= newMode;
     DIE_NOW(context, "guest is changing execution modes. To What?");
-    guestChangeMode(oldCpsr & PSR_MODE);
   }
   context->CPSR = oldCpsr;
 
@@ -227,9 +219,8 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   u32int cpsrOrSpsr = (instruction & 0x00400000); // if 0 then cpsr, !0 then spsr
   u32int fieldMsk =   (instruction & 0x000F0000) >> 16;
 
-  bool changedMode = FALSE;
   u32int value = 0;
-
+  
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
     return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
@@ -296,7 +287,11 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
 
     if ((value & PSR_MODE) != (oldValue & PSR_MODE))
     {
-      changedMode = TRUE;
+      // changing modes. if in CPSR, adjust context appropriatelly
+      if (cpsrOrSpsr == 0)
+      {
+        guestChangeMode(context, value & PSR_MODE);
+      }
     }
     // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x000000FF);
@@ -346,10 +341,6 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   {
     // CPSR!
     context->CPSR = oldValue;
-    if (changedMode)
-    {
-      guestChangeMode(context->CPSR & PSR_MODE);
-    }
   }
   else
   {

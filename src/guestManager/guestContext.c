@@ -87,6 +87,7 @@ GCONTXT *createGuestContext(void)
   {
     DIE_NOW(context, "Failed to allocate page tables struct");
   }
+  // STARFIX: remove most memsets and put one memset in naive malloc. memory isn't reused.
   memset((void*)context->execBitmap, 0, SIZE_BITMAP1);
   DEBUG(GUEST_CONTEXT, "createGuestContext: execBitmap @ %p size %x" EOL, context->execBitmap, SIZE_BITMAP1);
 
@@ -115,6 +116,7 @@ void dumpGuestContext(const GCONTXT *context)
     {
       modeString = "USR";
       r13 = &(context->R13_USR);
+      spsr = 0;
       break;
     }
     case PSR_FIQ_MODE:
@@ -156,6 +158,7 @@ void dumpGuestContext(const GCONTXT *context)
     default:
     {
       modeString = "???";
+      spsr = 0;
       return;
     }
   }
@@ -174,7 +177,6 @@ void dumpGuestContext(const GCONTXT *context)
       );
 
   printf("Mode: %-35s CPSR: 0x%.8x     SPSR: ", modeString, context->CPSR);
-  spsr = 0;
   if (spsr)
   {
     printf("0x%.8x" EOL, *spsr);
@@ -405,10 +407,23 @@ void guestToPrivMode(GCONTXT *context)
 /**
  * guest is switching modes.
  **/
-void guestChangeMode(u32int guestMode)
+void guestChangeMode(GCONTXT *context, u32int newMode)
 {
   // we must make sure the correct exception vector is set.
-  setExceptionVector(guestMode);
+  setExceptionVector(newMode);
+
+  // if changing user <-> priv must change shadow page tables
+  bool privilegedBefore = isGuestInPrivMode(context);
+  context->CPSR = (context->CPSR & ~PSR_MODE) | newMode;
+  bool privilegedAfter  = isGuestInPrivMode(context);
+  if ((!privilegedBefore) && (privilegedAfter))
+  {
+    guestToPrivMode(context);
+  }
+  else if ((privilegedBefore) && (!privilegedAfter))
+  {
+    guestToUserMode(context);
+  }
 }
 
 

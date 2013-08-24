@@ -8,28 +8,30 @@
 
 #include "guestManager/guestContext.h"
 
-#include "vm/omap35xx/clockManager.h"
-#include "vm/omap35xx/gpio.h"
-#include "vm/omap35xx/gpmc.h"
-#include "vm/omap35xx/gptimer.h"
 #include "vm/omap35xx/hardwareLibrary.h"
+#ifndef CONFIG_HW_PASSTHROUGH
+#include "vm/omap35xx/clockManager.h"
+#include "vm/omap35xx/controlModule.h"
+#include "vm/omap35xx/gpio.h"
+#include "vm/omap35xx/gptimer.h"
 #include "vm/omap35xx/intc.h"
 #include "vm/omap35xx/prm.h"
 #include "vm/omap35xx/sdma.h"
-#include "vm/omap35xx/sdram.h"
-#include "vm/omap35xx/sramInternal.h"
 #include "vm/omap35xx/sysControlModule.h"
 #include "vm/omap35xx/timer32k.h"
-#include "vm/omap35xx/uart.h"
-#include "vm/omap35xx/controlModule.h"
+#include "vm/omap35xx/wdtimer.h"
 #ifdef CONFIG_MMC_GUEST_ACCESS
 #include "vm/omap35xx/i2c.h"
 #include "vm/omap35xx/mmc.h"
 #endif
+#endif
+#include "vm/omap35xx/gpmc.h"
 #include "vm/omap35xx/pm.h"
+#include "vm/omap35xx/sdram.h"
 #include "vm/omap35xx/sdrc.h"
 #include "vm/omap35xx/sms.h"
-#include "vm/omap35xx/wdtimer.h"
+#include "vm/omap35xx/sramInternal.h"
+#include "vm/omap35xx/uart.h"
 
 
 static bool attachDevice(device *parent, device *child) __cold__;
@@ -228,6 +230,7 @@ device *createHardwareLibrary(GCONTXT *context)
     goto l4IntCoreError;
   }
 
+#ifndef CONFIG_HW_PASSTHROUGH
   // L4INT_CORE: system control module
   device *sysCtrlMod = createDevice("SYSCTRL_MOD", FALSE, SYS_CONTROL_MODULE,
                                     (u32int)(SYS_CONTROL_MODULE - 1 + SYS_CONTROL_MODULE_SIZE),
@@ -256,6 +259,7 @@ device *createHardwareLibrary(GCONTXT *context)
     goto sdmaModuleError;
   }
   initSdma(&context->vm);
+#endif
 
   // L4INT_CORE: uart1
   device *uart1 = createDevice("UART1", FALSE, UART1, (u32int) (UART1 - 1 + UART1_SIZE), l4IntCore,
@@ -275,7 +279,7 @@ device *createHardwareLibrary(GCONTXT *context)
   }
   initUart(&context->vm, 2);
 
-#ifdef CONFIG_MMC_GUEST_ACCESS
+#ifndef CONFIG_HW_PASSTHROUGH
   // I2C1
   device * i2c1 = createDevice("I2C1", FALSE, I2C1, (u32int) (I2C1 - 1 + I2C1_SIZE), l4IntCore,
                                &loadI2c, &storeI2c);
@@ -329,7 +333,6 @@ device *createHardwareLibrary(GCONTXT *context)
     goto mmc3Error;
   }
   initVirtMmc(&context->vm, 3);
-#endif 
 
   // L4INT_CORE: interrupt controller
   device *intc = createDevice("INTC", FALSE, INTERRUPT_CONTROLLER,
@@ -340,6 +343,7 @@ device *createHardwareLibrary(GCONTXT *context)
     goto intcError;
   }
   initIntc(&context->vm);
+#endif
 
   // L4INT_CORE: core wakeup interconnect
   device *l4CoreWakeupInt = createDevice("L4_CORE_WAKEUP_INT", TRUE, L4_CORE_WAKEUP_INT,
@@ -351,6 +355,7 @@ device *createHardwareLibrary(GCONTXT *context)
   }
 
 
+#ifndef CONFIG_HW_PASSTHROUGH
   // L4_CORE_WAKEUP: power and reset manager
   device *prm = createDevice("PRM", FALSE, PRM, (u32int)(PRM - 1 + PRM_SIZE), l4CoreWakeupInt,
                              &loadPrm, &storePrm);
@@ -405,6 +410,7 @@ device *createHardwareLibrary(GCONTXT *context)
     goto timer32kError;
   }
   initTimer32k(&context->vm);
+#endif
 
   // L4 interconnect: L4 interconnect peripherals
   device *l4IntPer = createDevice("L4_INT_PER", TRUE, Q1_L4_INT_PER,
@@ -424,6 +430,7 @@ device *createHardwareLibrary(GCONTXT *context)
   }
   initUart(&context->vm, 3);
 
+#ifndef CONFIG_HW_PASSTHROUGH
   // L4_INT_PER: general purpose I/O 2
   device *gpio2 = createDevice("GPIO2", FALSE, GPIO2, (u32int)(GPIO2 - 1 + GPIO2_SIZE), l4IntPer,
                                &loadGpio, &storeGpio);
@@ -469,6 +476,7 @@ device *createHardwareLibrary(GCONTXT *context)
     goto gpio6Error;
   }
   initGpio(&context->vm, 6);
+#endif
 
   // QUARTER 2
   device *q2bus = createDevice("Q2Bus", TRUE, QUARTER2, (u32int) (QUARTER2 - 1 + QUARTER_SIZE),
@@ -522,6 +530,7 @@ q3busError:
 sdramModuleError:
   free(q2bus);
 q2busError:
+#ifndef CONFIG_HW_PASSTHROUGH
   free(gpio6);
 gpio6Error:
   free(gpio5);
@@ -532,10 +541,12 @@ gpio4Error:
 gpio3Error:
   free(gpio2);
 gpio2Error:
+#endif
   free(uart3);
 uart3Error:
   free(l4IntPer);
 l4IntPerError:
+#ifndef CONFIG_HW_PASSTHROUGH
   free(timer32k);
 timer32kError:
   free(gptimer1);
@@ -548,11 +559,12 @@ gpio1Error:
 ctrlModIDError:
   free(prm);
 prmError:
+#endif
   free(l4CoreWakeupInt);
 l4CoreWakeupIntError:
+#ifndef CONFIG_HW_PASSTHROUGH
   free(intc);
 intcError:
-#ifdef CONFIG_MMC_GUEST_ACCESS
   free(mmc3);
 mmc3Error:
   free(mmc2);
@@ -570,12 +582,14 @@ i2c1Error:
 uart2Error:
   free(uart1);
 uart1Error:
+#ifndef CONFIG_HW_PASSTHROUGH
   free(sdmaModule);
 sdmaModuleError:
   free(clockManager);
 clockManagerError:
   free(sysCtrlMod);
 sysCtrlModError:
+#endif
   free(l4IntCore);
 l4IntCoreError:
   free(l4Interconnect);

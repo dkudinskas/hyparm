@@ -75,7 +75,6 @@ u32int loadGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       break;
     case GPMC_SYSCONFIG:
       // TODO
-      printf("WARN reading GPMC_SYSCONFIG %#.8x" EOL, gpmc->gpmcSysConfig);
       val = gpmc->gpmcSysConfig;
       break;
     case GPMC_NAND_COMMAND_0:
@@ -170,7 +169,6 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     case GPMC_SYSCONFIG:
     {
       // TODO
-      printf("WARN writing to GPMC_SYSCONFIG %#.8x" EOL, value);
       if (value & GPMC_SYSCONFIG_SOFTRESET)
       {
         printf("WARN should do soft reset of GPMC" EOL);

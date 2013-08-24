@@ -28,7 +28,7 @@
 
 #include "instructionEmu/scanner.h"
 
-#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_MMC_PASSTHROUGH)
+#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_HW_PASSTHROUGH)
 #include "drivers/beagle/beMMC.h"
 #include "io/mmc.h"
 #endif
@@ -73,7 +73,7 @@ void main(s32int argc, char *argv[]) __cold__;
 static void processCommandLine(struct runtimeConfiguration *config, s32int argc, char *argv[]) __cold__;
 
 
-#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_MMC_PASSTHROUGH)
+#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_HW_PASSTHROUGH)
 struct mmc *mmcDevice;
 #endif
 
@@ -97,7 +97,7 @@ void main(s32int argc, char *argv[])
   memset(&config, 0, sizeof(struct runtimeConfiguration));
   config.guestOS = GUEST_OS_LINUX;
 
-#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_MMC_PASSTHROUGH)
+#if !defined(CONFIG_NO_MMC) && !defined(CONFIG_HW_PASSTHROUGH)
   mmcDevice = NULL;
 #endif
 #ifdef CONFIG_MMC_LOG
@@ -109,6 +109,7 @@ void main(s32int argc, char *argv[])
 
   initialiseAllocator(RAM_XN_POOL_BEGIN, RAM_XN_POOL_END - RAM_XN_POOL_BEGIN);
 
+#ifndef CONFIG_HW_PASSTHROUGH
   /* initialise uart backend, important to be before any debug output. */
   /* init function initialises UARTs in disabled mode. */
   /* startup fuction starts operation and enables RX IRQ generation */
@@ -120,6 +121,7 @@ void main(s32int argc, char *argv[])
   beUartStartup(3, 500000);
 #else
   beUartStartup(3, 115200);
+#endif
 #endif
 
   /*
@@ -151,6 +153,7 @@ void main(s32int argc, char *argv[])
   enterCliLoop();
 #else
 
+#ifndef CONFIG_HW_PASSTHROUGH
   /* initialise physical interrupt controller */
   intcBEInit();
 
@@ -160,8 +163,9 @@ void main(s32int argc, char *argv[])
   /* initialise physical clock manager */
   clkManBEInit();
 
-  /* initialise phyiscal GPT2, dedicated to guest1 */
-  gptBEInit(2);
+  /* initialise phyiscal GPT1, dedicated to guest1 */
+  gptBEInit(1);
+#endif
 
 #ifdef CONFIG_MMC_LOG
   u32int err = 0;

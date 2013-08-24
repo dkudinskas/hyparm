@@ -1106,7 +1106,7 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
         DEBUG(VP_OMAP_35XX_CM, "%s: unimplemented cmIclkEn1Core case %#.8x -> %#.8x" EOL, __func__,
               cm->cmIclkEn1Core, value);
       }
-#if defined(CONFIG_MMC_PASSTHROUGH)
+#if defined(CONFIG_HW_PASSTHROUGH)
       u32int mask = CM_ICLKEN1_I2C1 | CM_ICLKEN1_I2C2 | CM_ICLKEN1_I2C3 |
                     CM_ICLKEN1_MMC1 | CM_ICLKEN1_MMC2 | CM_ICLKEN1_MMC3;
       u32int reg = clkManRegReadBE(CORE_CM, CM_ICLKEN1_CORE);
@@ -1169,7 +1169,7 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
       {
         DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: unimplemented cmFclkEn1Core case %08x -> %08x\n", cm->cmIclkEn1Core, changed);
       }
-#if defined(CONFIG_MMC_PASSTHROUGH)
+#if defined(CONFIG_HW_PASSTHROUGH)
       u32int mask = CM_FCLKEN1_I2C1 | CM_FCLKEN1_I2C2 | CM_FCLKEN1_I2C3 |
                     CM_FCLKEN1_MMC1 | CM_FCLKEN1_MMC2 | CM_FCLKEN1_MMC3;
       u32int reg = clkManRegReadBE(CORE_CM, CM_FCLKEN1_CORE);

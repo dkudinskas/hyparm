@@ -22,25 +22,20 @@ static inline u32int getExceptionHandlerAddress(GCONTXT *context, u32int offset)
 void deliverServiceCall(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverServiceCall: @ PC = %#.8x" EOL, context->R15);
-  if (!isGuestInPrivMode(context))
-  {
-    guestToPrivMode(context);
-  }
-  // 2. copy guest CPSR into SPSR_SVC
+  // 1. copy guest CPSR into SPSR_SVC
   context->SPSR_SVC = context->CPSR;
-  // 3. put guest CPSR in SVC mode
-  context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_SVC_MODE;
-  guestChangeMode(context->CPSR & PSR_MODE);
-  // 4. set LR to PC+4
+  // 2. put guest CPSR in SVC mode
+  guestChangeMode(context, PSR_SVC_MODE);
+  // 3. set LR to PC+4
   context->R14_SVC = context->R15;
 #ifdef CONFIG_THUMB2
-  if (context->CPSR & PSR_T_BIT)// Were we on Thumb?
+  if (context->CPSR & PSR_T_BIT)
   {
     context->R14_SVC += T16_INSTRUCTION_SIZE;
   }
   else
   {
-#endif /* CONFIG_THUMB2 */
+#endif
     context->R14_SVC += ARM_INSTRUCTION_SIZE;
 #ifdef CONFIG_THUMB2
   }
@@ -63,13 +58,15 @@ void deliverServiceCall(GCONTXT *context)
 
 void throwInterrupt(GCONTXT *context, u32int irqNumber)
 {
+#ifdef CONFIG_HW_PASSTHROUGH
   DEBUG(GUEST_EXCEPTIONS, "throwInterrupt: %x\n", irqNumber);
+  DIE_NOW(context, "how was this called? shouldn't happen in hw passthrough\n");
+#else
   switch (irqNumber)
   {
-    case GPT2_IRQ:
+    case GPT1_IRQ:
     {
-      // gpt2 is dedicated to the guest. if irq is from gpt2
-      // set it pending in emulated interrupt controller
+      // gpt1 is dedicated to the guest.
       setInterrupt(context, GPT1_IRQ);
       // are we forwarding the interrupt event?
       if (isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0))
@@ -245,23 +242,19 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
       DIE_NOW(context, "throwInterrupt: from unknown source.");
     }
   }
+#endif
 }
 
 
 void deliverInterrupt(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverInterrupt: @ PC = %#.8x" EOL, context->R15);
-  if (!isGuestInPrivMode(context))
-  {
-    DIE_NOW(context, "guest irq in guest user mode.\n");
-  }
   // 1. reset irq pending flag.
   context->guestIrqPending = FALSE;
   // 2. copy guest CPSR into SPSR_IRQ
   context->SPSR_IRQ = context->CPSR;
   // 3. put guest CPSR in IRQ mode
-  context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_IRQ_MODE;
-  guestChangeMode(context->CPSR & PSR_MODE);
+  guestChangeMode(context, PSR_IRQ_MODE);
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
   if (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE)
@@ -285,17 +278,12 @@ void deliverInterrupt(GCONTXT *context)
 void deliverDataAbort(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverDataAbort: @ PC = %#.8x" EOL, context->R15);
-  if (!isGuestInPrivMode(context))
-  {
-    guestToPrivMode(context);
-  }
   // 1. reset abt pending flag
   context->guestDataAbtPending = FALSE;
   // 2. copy CPSR into SPSR_ABT
   context->SPSR_ABT = context->CPSR;
   // 3. put guest CPSR in ABT mode
-  context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
-  guestChangeMode(context->CPSR & PSR_MODE);
+  guestChangeMode(context, PSR_ABT_MODE);
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
   if (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE)
@@ -338,17 +326,12 @@ void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isW
 void deliverPrefetchAbort(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverPrefetchAbort: @ PC = %#.8x" EOL, context->R15);
-  if (!isGuestInPrivMode(context))
-  {
-    guestToPrivMode(context);
-  }
   // 1. reset abt pending flag
   context->guestPrefetchAbtPending = FALSE;
   // 2. copy CPSR into SPSR_ABT
   context->SPSR_ABT = context->CPSR;
   // 3. put guest CPSR in ABT mode
-  context->CPSR = (context->CPSR & ~PSR_MODE) | PSR_ABT_MODE;
-  guestChangeMode(context->CPSR & PSR_MODE);
+  guestChangeMode(context, PSR_ABT_MODE);
 #ifdef CONFIG_THUMB2
   // 4. Clear or set Thumb bit according to SCTLR.TE
   if (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE)
@@ -410,6 +393,4 @@ static inline u32int getExceptionHandlerAddress(GCONTXT *context, u32int offset)
       return vbar + offset;
     }
   }
-  // update AFI bits for SVC:
-  context->CPSR |= PSR_I_BIT;
 }

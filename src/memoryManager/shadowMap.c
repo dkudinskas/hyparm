@@ -154,6 +154,9 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
   DEBUG(MM_SHADOWING, "shadowMapSection: virtual %#.8x" EOL, virtual);
 
   bool peripheral = FALSE;
+#ifdef CONFIG_HW_PASSTHROUGH
+  bool passthrough = FALSE;
+#endif
 
   if (guest->superSection)
   {
@@ -165,60 +168,11 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
   if ((guestPhysAddr < MEMORY_START_ADDR) || (guestPhysAddr >= MEMORY_END_ADDR))
   {
     peripheral = TRUE;
-#ifdef CONFIG_MMC_PASSTHROUGH
-    if (guestPhysAddr == 0x48000000)
+#ifdef CONFIG_HW_PASSTHROUGH
+    if ((guestPhysAddr == 0x48000000) || (guestPhysAddr == 0x48200000) ||
+        (guestPhysAddr == 0x48300000) || (guestPhysAddr == 0x49000000))
     {
-      u32int pt = ((u32int)shadow) & PT1_ALIGN_MASK;
-      mapRegion((simpleEntry*)pt, virtual, guestPhysAddr, guestPhysAddr+SECTION_SIZE-1,
-                guest->domain, HYPERVISOR_ACCESS_BITS, guest->c, guest->b, guest->tex, guest->xn);
-      u32int virtualSection = (virtual & SECTION_MASK);
-      u32int sdmaVirtual = virtualSection | (SDMA & ~SECTION_MASK);
-
-      u32int i2c1Virtual = virtualSection | (I2C1 & ~SECTION_MASK);
-      u32int i2c2Virtual = virtualSection | (I2C2 & ~SECTION_MASK);
-      u32int i2c3Virtual = virtualSection | (I2C3 & ~SECTION_MASK);
-
-      u32int mmc1Virtual = virtualSection | (SD_MMC1 & ~SECTION_MASK);
-      u32int mmc2Virtual = virtualSection | (SD_MMC2 & ~SECTION_MASK);
-      u32int mmc3Virtual = virtualSection | (SD_MMC3 & ~SECTION_MASK);
-
-      mapRegionSmallPages((simpleEntry*)pt, virtual, guestPhysAddr, guestPhysAddr+SECTION_SIZE-1,
-                guest->domain, HYPERVISOR_ACCESS_BITS, guest->c, guest->b, 0b100, guest->xn);
-
-      mapSmallPage((simpleEntry*)pt, sdmaVirtual, SDMA,
-                  guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mapSmallPage((simpleEntry*)pt, sdmaVirtual+SMALL_PAGE_SIZE, sdmaVirtual+SMALL_PAGE_SIZE,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-
-      mapSmallPage((simpleEntry*)pt, i2c1Virtual, I2C1,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mapSmallPage((simpleEntry*)pt, i2c1Virtual+SMALL_PAGE_SIZE, I2C1+SMALL_PAGE_SIZE,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mapSmallPage((simpleEntry*)pt, i2c2Virtual, I2C2,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mapSmallPage((simpleEntry*)pt, i2c2Virtual+SMALL_PAGE_SIZE, I2C2+SMALL_PAGE_SIZE,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mapSmallPage((simpleEntry*)pt, i2c3Virtual, I2C3,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mapSmallPage((simpleEntry*)pt, i2c3Virtual+SMALL_PAGE_SIZE, I2C3+SMALL_PAGE_SIZE,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-
-      mapSmallPage((simpleEntry*)pt, mmc1Virtual, SD_MMC1,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mapSmallPage((simpleEntry*)pt, mmc1Virtual+SMALL_PAGE_SIZE, SD_MMC1+SMALL_PAGE_SIZE,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mapSmallPage((simpleEntry*)pt, mmc2Virtual, SD_MMC2,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mapSmallPage((simpleEntry*)pt, mmc2Virtual+SMALL_PAGE_SIZE, SD_MMC2+SMALL_PAGE_SIZE,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mapSmallPage((simpleEntry*)pt, mmc3Virtual, SD_MMC3,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mapSmallPage((simpleEntry*)pt, mmc3Virtual+SMALL_PAGE_SIZE, SD_MMC3+SMALL_PAGE_SIZE,
-                guest->domain, PRIV_RW_USR_RW, 0, 0, 0b000, guest->xn);
-      mmuDataMemoryBarrier();
-      mmuInvalidateITLB();
-      mmuInvalidateDTLB();
-      return;
+      passthrough = TRUE;
     }
 #endif
     if (shadow->type != FAULT)
@@ -252,8 +206,8 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
     // .. then add a new section 1-2-1 mapping
     if (peripheral)
     {
-      addSectionEntry((sectionEntry*)host, sectionAddr,
-                    guest->domain, PRIV_RW_USR_NO, 0, 0, 0b000, FALSE);
+      addSectionEntry((sectionEntry*)host, sectionAddr, guest->domain,
+                       PRIV_RW_USR_NO, 0, 0, 0b000, FALSE);
     }
     else
     {
@@ -269,7 +223,7 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
   shadow->c = peripheral ? 0 : guest->c;
   shadow->b = 0;
   shadow->s = 0;
-  shadow->tex = 0b100;
+  shadow->tex = peripheral ? 0b000 : 0b100;
   shadow->nG = guest->nG;
   shadow->ns = 0;
   shadow->domain = guest->domain;
@@ -290,8 +244,21 @@ void shadowMapSection(GCONTXT *context, sectionEntry* guest, sectionEntry* shado
   // maps AP bits to shadow entry, write-protects if necessary
   if (peripheral)
   {
+#ifdef CONFIG_HW_PASSTHROUGH
+    if (passthrough)
+    {
+      shadow->ap10 = PRIV_RW_USR_RW & 0x3;
+      shadow->ap2  = PRIV_RW_USR_RW >> 2;
+    }
+    else
+    {
+      shadow->ap10 = HYPERVISOR_ACCESS_BITS & 0x3;
+      shadow->ap2  = HYPERVISOR_ACCESS_BITS >> 2;
+    }
+#else
     shadow->ap10 = HYPERVISOR_ACCESS_BITS & 0x3;
     shadow->ap2  = HYPERVISOR_ACCESS_BITS >> 2;
+#endif
   }
   else
   {
@@ -386,6 +353,7 @@ void shadowMapPageTable(GCONTXT *context, pageTableEntry* guest, pageTableEntry*
       {
         DIE_NOW(context, "failed to allocate 2lvl shadow page table");
       }
+      // STARFIX: remove memsets!
       memset((void *)sptVirtAddr, 0, PT2_SIZE);
       DEBUG(MM_SHADOWING, "shadowMapPageTable: newPT2 @ %#.8x" EOL, sptVirtAddr);
 

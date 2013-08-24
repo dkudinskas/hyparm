@@ -153,7 +153,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
         }
         if ((context->CPSR & PSR_MODE) != (modeToCopy & PSR_MODE))
         {
-          guestChangeMode(modeToCopy & PSR_MODE);
+          guestChangeMode(context, modeToCopy & PSR_MODE);
         }
         context->CPSR = modeToCopy;
 

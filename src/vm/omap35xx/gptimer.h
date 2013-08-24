@@ -29,8 +29,6 @@ struct GeneralPurposeTimer
   u32int gptTcvr;
   u32int gptTocr;
   u32int gptTowr;
-  // internal variables...
-  u32int shadowValue;
 };
 
 void initGPTimer(virtualMachine *vm) __cold__;

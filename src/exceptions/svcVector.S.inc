@@ -105,15 +105,9 @@ contSvcSvc:
 
   /* Lets not loose the guest context pointer.. SP/LR are already free to use */
   MOV     LR, R0
-  /* Restore general purpose registers R0--R12 */
-  LDMIA   LR, {R0-R12}
 
-  PUSH    {R0}
   /* Get guest CPSR into R0 */
   LDR     R0, [LR, #GC_CPSR_OFFS]
-  
-    /* get next guest pc in lr */
-  LDR     LR, [LR, #GC_R15_OFFS]
   
   /* Construct SPSR in R0: set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and
     restore all other fields from the CPSR*/
@@ -121,12 +115,23 @@ contSvcSvc:
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
   ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
 #else
+#ifdef CONFIG_HW_PASSTHROUGH
+  /* exception bits set from guset context in passthrough */
+  BIC     R0, R0, #(PSR_MODE)
+  ORR     R0, R0, #(PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
 #endif
+#endif
   MSR     SPSR, R0
 
-  POP     {R0}
+  /* Restore general purpose registers R0--R12 */
+  LDMIA   LR, {R0-R12}
+
+    /* get next guest pc in lr */
+  LDR     LR, [LR, #GC_R15_OFFS]
+
   /* MOVS cannot do interworking */
 #ifdef CONFIG_THUMB2
   STMDB   SP, {LR}
@@ -250,9 +255,16 @@ contSvcDabt:
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
   ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
 #else
+#ifdef CONFIG_HW_PASSTHROUGH
+  /* exception bits set from guset context in passthrough */
+  BIC     R0, R0, #(PSR_MODE)
+  ORR     R0, R0, #(PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
 #endif
+#endif
+
   MSR     SPSR, R0
 
   POP     {R0}
@@ -383,8 +395,14 @@ contSvcIrq:
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE | PSR_F_BIT)
   ORR     R0, R0, #(PSR_A_BIT | PSR_USR_MODE)
 #else
+#ifdef CONFIG_HW_PASSTHROUGH
+  /* exception bits set from guset context in passthrough */
+  BIC     R0, R0, #(PSR_MODE)
+  ORR     R0, R0, #(PSR_USR_MODE)
+#else
   BIC     R0, R0, #(PSR_I_BIT | PSR_MODE)
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
+#endif
 #endif
 
 #ifdef CONFIG_THUMB2
