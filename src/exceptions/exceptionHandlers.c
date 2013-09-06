@@ -279,7 +279,6 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 #endif
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
-  printf("dabtPriv: dfar %08x pc %08x\n", dfar, pc);
 
   u32int faultStatus = (dfsr.fs3_0) | (dfsr.fs4 << 4);
   switch(faultStatus)
@@ -326,10 +325,9 @@ GCONTXT *undefined(GCONTXT *context)
 }
 
 
-void undefinedPrivileged(u32int pc, u32int sp, u32int spsr)
+void undefinedPrivileged(void)
 {
-  printf("undefinedPriv: pc %08x sp %08x spsr %08x\n", pc, sp, spsr);
-  DIE_NOW(context, "PANIC.\n");
+  DIE_NOW(NULL, "undefinedPrivileged: Undefined handler, privileged mode. Implement me!");
 }
 
 
@@ -390,7 +388,7 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 }
 
 
-void prefetchAbortPrivileged(u32int pc, u32int sp, u32int spsr)
+void prefetchAbortPrivileged(void)
 {
   // disable possible further interrupts
   disableInterrupts();
@@ -400,9 +398,6 @@ void prefetchAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 #endif
 
   IFSR ifsr = getIFSR();
-  u32int ifar = getIFAR();
-  printf("prefetchAbortPriv: pc %08x sp %08x spsr %08x ifar %08x\n", pc, sp, spsr, ifar);
-
   u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
   switch(faultStatus)
   {

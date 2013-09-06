@@ -20,10 +20,10 @@ void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastB
     return;
   }
 
-//  if (lastBlock->hotness < 5)
+  if (lastBlock->hotness < 5)
   {
     // last block aint hot enough
-//    return;
+    return;
   }
 
   // get next block

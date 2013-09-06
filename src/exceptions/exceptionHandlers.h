@@ -14,10 +14,10 @@ GCONTXT *dataAbort(GCONTXT *context);
 void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr);
 
 GCONTXT *undefined(GCONTXT *context);
-void undefinedPrivileged(u32int pc, u32int sp, u32int spsr);
+void undefinedPrivileged(void);
 
 GCONTXT *prefetchAbort(GCONTXT *context);
-void prefetchAbortPrivileged(u32int pc, u32int sp, u32int spsr);
+void prefetchAbortPrivileged(void);
 
 GCONTXT *monitorMode(GCONTXT *context);
 void monitorModePrivileged(void);

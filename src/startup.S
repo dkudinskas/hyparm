@@ -602,20 +602,10 @@ undHandler:
 .global undHandlerPriv
 undHandlerPriv:
   /* SEGFAULT in the hypervisor */
-  /* we backed up the LR to hold the SPSR */
-  POP    {LR}
-  /* link register is last pc+8 */
-  SUB    LR, LR, #8
-  /* save common registers and return address. */
-  PUSH    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, LR}
+  PUSH   {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
   /* PC of the aborting instruction in @param1 of C handler */
-  MOV    R0, LR
-  MOV    R1, SP
-  MRS    R2, SPSR
-  AND    R2, R2, #PSR_MODE
+  SUB    R0, LR, #4
   BL     undefinedPrivileged
-  POP    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, LR}
-  MOVS   PC, LR
   /* SEGFAULT in hypervisor: should never return from that handler */
 undPrivLoop:
   B      undPrivLoop
@@ -650,24 +640,13 @@ pabtHandler:
 .global pabtHandlerPriv
 pabtHandlerPriv:
   /* SEGFAULT in the hypervisor */
-  /* we backed up the LR to hold the SPSR */
-  POP    {LR}
-  /* link register is last pc+8 */
-  SUB    LR, LR, #8
-  /* save common registers and return address. */
-  PUSH    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, LR}
+  PUSH   {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12}
   /* PC of the aborting instruction in @param1 of C handler */
-  MOV    R0, LR
-  MOV    R1, SP
-  MRS    R2, SPSR
-  AND    R2, R2, #PSR_MODE
+  SUB    R0, LR, #4
   BL     prefetchAbortPrivileged
-  POP    {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, LR}
-  MOVS   PC, LR
   /* SEGFAULT in hypervisor: should never return from that handler */
 pabtPrivLoop:
   B      pabtPrivLoop
-
 
 .global monHandler
 monHandler:

@@ -53,7 +53,7 @@ u32int loadTimer32k(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virt
       // for now, just load the real counter value.
       volatile u32int * memPtr = (u32int*)virtAddr;
       val = *memPtr;
-      //val = val >> 5;
+      val = val >> 5;
       DEBUG(VP_OMAP_35XX_TIMER32K, "%s load counter value %#x" EOL, dev->deviceName, val);
     }
     else

@@ -40,10 +40,10 @@
 #define UART2_SIZE                       0x00002000
 #define I2C1                             0x48070000
 #define I2C1_SIZE                        0x00000080
-#define I2C2                             0x48072000
+#define I2C2                             0x48072000 
 #define I2C2_SIZE                        0x00000080
 #define I2C3                             0x48060000
-#define I2C3_SIZE                        0x00000080
+#define I2C3_SIZE                        0x00000080 
 #define SD_MMC1                          0x4809C000
 #define SD_MMC1_SIZE                     0x00002000
 #define SD_MMC3                          0x480AD000
@@ -54,8 +54,8 @@
 #define INTERRUPT_CONTROLLER_SIZE        0x00002000
 #define L4_CORE_WAKEUP_INT               0x48300000
 #define L4_CORE_WAKEUP_INT_SIZE          0x00040FFF
-#define DM_TIMER                           0x48304000   // RESERVED
-#define DM_TIMER_SIZE                      0x00001000
+#define DM_TIMER                         0x48304000   // RESERVED
+#define DM_TIMER_SIZE                    0x00001000
 #define PRM                                0x48306000
 #define PRM_SIZE                           0x00004000
 #define CONTROL_MODULE_ID                  0x4830A000
