@@ -237,17 +237,11 @@ svcThumbModeAbort:
 contSvcDabt:
   LDMIA   R2, {SP, LR}^
 
-  /* Lets not lose the guest context pointer.. */
+  /* Lets not loose the guest context pointer.. SP/LR are already free to use */
   MOV     LR, R0
-  /* Restore general purpose registers R0--R12 */
-  LDMIA   LR, {R0-R12}
 
-  PUSH    {R0}
   /* Get guest CPSR into R0 */
   LDR     R0, [LR, #GC_CPSR_OFFS]
-
-  /* Get value of PC saved in guest context into LR */
-  LDR     LR, [LR, #GC_R15_OFFS]
   
   /* Construct SPSR in R0: set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and
     restore all other fields from the CPSR*/
@@ -264,10 +258,14 @@ contSvcDabt:
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
 #endif
 #endif
-
   MSR     SPSR, R0
 
-  POP     {R0}
+  /* Restore general purpose registers R0--R12 */
+  LDMIA   LR, {R0-R12}
+
+    /* get next guest pc in lr */
+  LDR     LR, [LR, #GC_R15_OFFS]
+
 #ifdef CONFIG_THUMB2
   STMDB   SP, {LR}
   LDMDB   SP, {PC}^
@@ -379,15 +377,9 @@ contSvcIrq:
 
   /* Lets not loose the guest context pointer.. SP/LR are already free to use */
   MOV     LR, R0
-  /* Restore general purpose registers R0--R12 */
-  LDMIA   LR, {R0-R12}
 
-  PUSH    {R0}
   /* Get guest CPSR into R0 */
   LDR     R0, [LR, #GC_CPSR_OFFS]
-
-  /* Get value of PC saved in guest context into LR */
-  LDR     LR, [LR, #GC_R15_OFFS]
   
   /* Construct SPSR in R0: set user mode, disable asynchronous aborts and FIQs, but enable IRQs, and
     restore all other fields from the CPSR*/
@@ -404,13 +396,14 @@ contSvcIrq:
   ORR     R0, R0, #(PSR_A_BIT | PSR_F_BIT | PSR_USR_MODE)
 #endif
 #endif
-
-#ifdef CONFIG_THUMB2
-  TST     R0, #PSR_T_BIT
-#endif
   MSR     SPSR, R0
 
-  POP     {R0}
+  /* Restore general purpose registers R0--R12 */
+  LDMIA   LR, {R0-R12}
+
+    /* get next guest pc in lr */
+  LDR     LR, [LR, #GC_R15_OFFS]
+
 #ifdef CONFIG_THUMB2
   SUBNE   LR, LR, #2
   STMDB   SP, {LR}
