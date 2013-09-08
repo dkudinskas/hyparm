@@ -14,17 +14,11 @@ void linkBlock(GCONTXT *context, u32int nextPC, u32int lastPC, BasicBlock* lastB
   DEBUG(LINKER, "linkBlock: nextPC=%08x, lastPC %08x, lastBlock %p type %x"
         EOL, nextPC, lastPC, lastBlock, lastBlock->type);
 
-  if (lastBlock->type != BB_TYPE_ARM)
-  {
-    // last block is not for linking
-    return;
-  }
-
-  if (lastBlock->hotness < 5)
-  {
-    // last block aint hot enough
-    return;
-  }
+  // if (lastBlock->hotness < 10)
+  // {
+  //   // last block aint hot enough
+  //   return;
+  // }
 
   // get next block
   BlockInfo blockinfo = getBlockInfo(context->translationStore, nextPC);
