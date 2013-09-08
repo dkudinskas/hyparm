@@ -140,6 +140,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
       // guest was in privileged mode, after interpreting switched to user mode.
       // return from exception, CPS or MSR. act accordingly
       guestToUserMode(context);
+      DIE_NOW(0, "boot done");
     }
     else if (((cpsrOld & PSR_MODE) == PSR_USR_MODE) &&
              ((cpsrNew & PSR_MODE) != PSR_USR_MODE))
