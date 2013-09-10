@@ -1,4 +1,3 @@
-
 #ifndef __VM_OMAP_35XX__CLOCK_MANAGER_INTERNALS_H__
 #define __VM_OMAP_35XX__CLOCK_MANAGER_INTERNALS_H__
 
@@ -45,91 +44,11 @@
 #define CM_CLKSTST_MPU              0x0000004C // status of the clock activity in the domain, R/O
 // CORE_CM registers
 #define CM_FCLKEN1_CORE             0x00000000 // control functional clock activity, RW
-#define CM_FCLKEN1_RESERVED4           0x80000000
-#define CM_FCLKEN1_MMC3                0x40000000
-#define CM_FCLKEN1_RESERVED3           0x3C000000
-#define CM_FCLKEN1_MMC2                0x02000000
-#define CM_FCLKEN1_MMC1                0x01000000
-#define CM_FCLKEN1_RESERVED2           0x00800000
-#define CM_FCLKEN1_HDQ                 0x00400000
-#define CM_FCLKEN1_MCSPI4              0x00200000
-#define CM_FCLKEN1_MCSPI3              0x00100000
-#define CM_FCLKEN1_MCSPI2              0x00080000
-#define CM_FCLKEN1_MCSPI1              0x00040000
-#define CM_FCLKEN1_I2C3                0x00020000
-#define CM_FCLKEN1_I2C2                0x00010000
-#define CM_FCLKEN1_I2C1                0x00008000
-#define CM_FCLKEN1_UART2               0x00004000
-#define CM_FCLKEN1_UART1               0x00002000
-#define CM_FCLKEN1_GPT11               0x00001000
-#define CM_FCLKEN1_GPT10               0x00000800
-#define CM_FCLKEN1_MCBSP5              0x00000400
-#define CM_FCLKEN1_MCBSP1              0x00000200
-#define CM_FCLKEN1_RESERVED1           0x000001ff
 #define CM_FCLKEN3_CORE             0x00000008 // control functional clock activity, RW
 #define CM_ICLKEN1_CORE             0x00000010 // control interface clock activity, RW
-#define CM_ICLKEN1_RESERVED7           0x80000000
-#define CM_ICLKEN1_MMC3                0x40000000
-#define CM_ICLKEN1_ICR                 0x20000000
-#define CM_ICLKEN1_RESERVED6           0x1C000000
-#define CM_ICLKEN1_MMC2                0x02000000
-#define CM_ICLKEN1_MMC1                0x01000000
-#define CM_ICLKEN1_RESERVED5           0x00800000
-#define CM_ICLKEN1_HDQ                 0x00400000
-#define CM_ICLKEN1_MCSPI4              0x00200000
-#define CM_ICLKEN1_MCSPI3              0x00100000
-#define CM_ICLKEN1_MCSPI2              0x00080000
-#define CM_ICLKEN1_MCSPI1              0x00040000
-#define CM_ICLKEN1_I2C3                0x00020000
-#define CM_ICLKEN1_I2C2                0x00010000
-#define CM_ICLKEN1_I2C1                0x00008000
-#define CM_ICLKEN1_UART2               0x00004000
-#define CM_ICLKEN1_UART1               0x00002000
-#define CM_ICLKEN1_GPT11               0x00001000
-#define CM_ICLKEN1_GPT10               0x00000800
-#define CM_ICLKEN1_MCBSP5              0x00000400
-#define CM_ICLKEN1_MCBSP1              0x00000200
-#define CM_ICLKEN1_RESERVED4           0x00000100
-#define CM_ICLKEN1_MAILBOXES           0x00000080
-#define CM_ICLKEN1_OMAPCTRL            0x00000040
-#define CM_ICLKEN1_RESERVED3           0x00000020
-#define CM_ICLKEN1_HSOTGUSB            0x00000010
-#define CM_ICLKEN1_RESERVED2           0x0000000C
-#define CM_ICLKEN1_SDRC                0x00000002
-#define CM_ICLKEN1_RESERVED1           0x00000001
 #define CM_ICLKEN2_CORE             0x00000014 // control interface clock activity, RW
 #define CM_ICLKEN3_CORE             0x00000018 // control interface clock activity, RW
 #define CM_IDLEST1_CORE             0x00000020 // access availability monitoring, R/O
-#define CM_IDLEST1_RESERVED7           0x80000000
-#define CM_IDLEST1_MMC3                0x40000000
-#define CM_IDLEST1_ICR                 0x20000000
-#define CM_IDLEST1_RESERVED6           0x1C000000
-#define CM_IDLEST1_MMC2                0x02000000
-#define CM_IDLEST1_MMC1                0x01000000
-#define CM_IDLEST1_RESERVED5           0x00800000
-#define CM_IDLEST1_HDQ                 0x00400000
-#define CM_IDLEST1_MCSPI4              0x00200000
-#define CM_IDLEST1_MCSPI3              0x00100000
-#define CM_IDLEST1_MCSPI2              0x00080000
-#define CM_IDLEST1_MCSPI1              0x00040000
-#define CM_IDLEST1_I2C3                0x00020000
-#define CM_IDLEST1_I2C2                0x00010000
-#define CM_IDLEST1_I2C1                0x00008000
-#define CM_IDLEST1_UART2               0x00004000
-#define CM_IDLEST1_UART1               0x00002000
-#define CM_IDLEST1_GPT11               0x00001000
-#define CM_IDLEST1_GPT10               0x00000800
-#define CM_IDLEST1_MCBSP5              0x00000400
-#define CM_IDLEST1_MCBSP1              0x00000200
-#define CM_IDLEST1_RESERVED4           0x00000100
-#define CM_IDLEST1_MAILBOXES           0x00000080
-#define CM_IDLEST1_OMAPCTRL            0x00000040
-#define CM_IDLEST1_HSOTGUSB_IDLE       0x00000020
-#define CM_IDLEST1_HSOTGUSB_STBY       0x00000010
-#define CM_IDLEST1_RESERVED2           0x00000008
-#define CM_IDLEST1_SDMA                0x00000004
-#define CM_IDLEST1_SDRC                0x00000002
-#define CM_IDLEST1_RESERVED1           0x00000001
 #define CM_IDLEST2_CORE             0x00000024 // access availability monitoring, R/O
 #define CM_IDLEST3_CORE             0x00000028 // access availability monitoring, R/O
 #define CM_AUTOIDLE1_CORE           0x00000030 // autocontrol of interface clock, RW
@@ -139,6 +58,8 @@
 #define CM_CLKSTCTRL_CORE           0x00000048 // enable power state transition, RW
 #define CM_CLKSTST_CORE             0x0000004C // interface clock activity status, R/O
 
+#define CM_CORE_UART1               0x00002000
+#define CM_CORE_SDRC                0x00000002
 
 // SGX_CM registers
 #define CM_FCLKEN_SGX               0x00000000 // control graphics engine fclk activity, RW

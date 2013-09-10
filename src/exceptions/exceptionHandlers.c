@@ -69,8 +69,6 @@ static inline void resetLoopDetectorIfNeeded(GCONTXT *context)
 
 GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 {
-  // disable possible further interrupts
-  disableInterrupts();
   bool link = TRUE;
   u32int nextPC = 0;
   bool gSVC = FALSE;
@@ -218,8 +216,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
 GCONTXT *dataAbort(GCONTXT *context)
 {
-  /* Make sure interrupts are disabled while we deal with data abort. */
-  disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   context->dabtCount++;
   context->dabtUser++;
@@ -272,8 +268,6 @@ GCONTXT *dataAbort(GCONTXT *context)
 
 void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 {
-  /* Make sure interrupts are disabled while we deal with data abort. */
-  disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   getActiveGuestContext()->dabtCount++;
   getActiveGuestContext()->dabtPriv++;
@@ -334,13 +328,10 @@ void undefinedPrivileged(void)
 
 GCONTXT *prefetchAbort(GCONTXT *context)
 {
-  /* Make sure interrupts are disabled while we deal with fetch abort. */
-  disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   context->pabtCount++;
   context->pabtUser++;
 #endif
-  // Make sure interrupts are disabled while we deal with prefetch abort.
   IFSR ifsr = getIFSR();
   u32int ifar = getIFAR();
 
@@ -391,8 +382,6 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 
 void prefetchAbortPrivileged(void)
 {
-  // disable possible further interrupts
-  disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   getActiveGuestContext()->pabtCount++;
   getActiveGuestContext()->pabtPriv++;
@@ -452,8 +441,6 @@ void monitorModePrivileged(void)
 
 GCONTXT *irq(GCONTXT *context)
 {
-  // disable possible further interrupts
-  disableInterrupts();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   getActiveGuestContext()->irqCount++;
   getActiveGuestContext()->irqUser++;
@@ -581,8 +568,6 @@ GCONTXT *irq(GCONTXT *context)
 
 void irqPrivileged()
 {
-  // disable possible further interrupts
-  disableInterrupts();
   GCONTXT *const context = getActiveGuestContext();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   context->irqCount++;

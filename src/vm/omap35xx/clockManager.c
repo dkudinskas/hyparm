@@ -1039,156 +1039,36 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
   DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: offset %x value %#.8x" EOL, registerOffset, value);
   switch (registerOffset)
   {
-    /********************** interface clocks **********************/
     case CM_ICLKEN1_CORE:
     {
-      DEBUG(VP_OMAP_35XX_CM, "storeCorecm: store CM_ICLKEN1_CORE; current %08x\n", cm->cmIclkEn1Core);
-      if (cm->cmIclkEn1Core == value)
+      const u32int peripherals = cm->cmIclkEn1Core ^ value;
+      if (!peripherals)
       {
-        // nothing changed
         break;
       }
-      u32int changed = cm->cmIclkEn1Core ^ value;
-      DEBUG(VP_OMAP_35XX_CM, "storeCorecm: changed %08x\n", changed);
-      // if interface block is enabled to the device, it is no longer idle!
-      if (changed & CM_ICLKEN1_UART1)
+      else if (peripherals & CM_CORE_UART1)
       {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: UART1 i-clock %x\n", ((value & CM_ICLKEN1_UART1) == 0) ? 0 : 1);
-        cm->cmIdleSt1Core ^= CM_IDLEST1_UART1;
-        changed &= ~CM_ICLKEN1_UART1;
+        cm->cmIdleSt1Core ^= CM_CORE_UART1;
       }
-     
-      if (changed & CM_ICLKEN1_SDRC)
+      else if (peripherals & CM_CORE_SDRC)
       {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: SDRC i-clock %x\n", ((value & CM_ICLKEN1_SDRC) == 0) ? 0 : 1);
-        cm->cmIdleSt1Core ^= CM_IDLEST1_SDRC;
-        changed &= ~CM_ICLKEN1_SDRC;
+        cm->cmIdleSt1Core ^= CM_CORE_SDRC;
       }
-      if (changed & CM_ICLKEN1_MMC1)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: mmc1 i-clock %x\n", ((value & CM_ICLKEN1_MMC1) == 0) ? 0 : 1);
-        cm->cmIdleSt1Core ^= CM_IDLEST1_MMC1;
-        changed &= ~CM_ICLKEN1_MMC1;
-      }
-      if (changed & CM_ICLKEN1_MMC2)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: mmc2 i-clock %x\n", ((value & CM_ICLKEN1_MMC2) == 0) ? 0 : 1);
-        cm->cmIdleSt1Core ^= CM_IDLEST1_MMC2;
-        changed &= ~CM_ICLKEN1_MMC2;
-      }
-      if (changed & CM_ICLKEN1_MMC3)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: mmc3 i-clock %x\n", ((value & CM_ICLKEN1_MMC3) == 0) ? 0 : 1);
-        cm->cmIdleSt1Core ^= CM_IDLEST1_MMC3;
-        changed &= ~CM_ICLKEN1_MMC3;
-      }
-      if (changed & CM_ICLKEN1_I2C1)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: i2c1 i-clock %x\n", ((value & CM_ICLKEN1_I2C1) == 0) ? 0 : 1);
-        cm->cmIdleSt1Core ^= CM_IDLEST1_I2C1;
-        changed &= ~CM_ICLKEN1_I2C1;
-      }
-      if (changed & CM_ICLKEN1_I2C2)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: i2c2 i-clock %x\n", ((value & CM_ICLKEN1_I2C2) == 0) ? 0 : 1);
-        cm->cmIdleSt1Core ^= CM_IDLEST1_I2C2;
-        changed &= ~CM_ICLKEN1_I2C2;
-      }
-      if (changed & CM_ICLKEN1_I2C3)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: i2c3 i-clock %x\n", ((value & CM_ICLKEN1_I2C3) == 0) ? 0 : 1);
-        cm->cmIdleSt1Core ^= CM_IDLEST1_I2C3;
-        changed &= ~CM_ICLKEN1_I2C3;
-      }
-
-      if (changed != 0)
+      else
       {
         DEBUG(VP_OMAP_35XX_CM, "%s: unimplemented cmIclkEn1Core case %#.8x -> %#.8x" EOL, __func__,
               cm->cmIclkEn1Core, value);
       }
-#if defined(CONFIG_MMC_PASSTHROUGH)
-      u32int mask = CM_ICLKEN1_I2C1 | CM_ICLKEN1_I2C2 | CM_ICLKEN1_I2C3 |
-                    CM_ICLKEN1_MMC1 | CM_ICLKEN1_MMC2 | CM_ICLKEN1_MMC3;
-      u32int reg = clkManRegReadBE(CORE_CM, CM_ICLKEN1_CORE);
-
-      // clear existing bits to be passed through
-      reg &= ~mask;
-      // set the required bits
-      reg |= (value & mask);
-      // write back to host clock manager
-      clkManRegWriteBE(CORE_CM, CM_ICLKEN1_CORE, reg);
-      // set the bits in the emulated clock manager
-#endif
       cm->cmIclkEn1Core = value;
       break;
     }
-    /********************** functional clocks **********************/
     case CM_FCLKEN1_CORE:
-    {
-      DEBUG(VP_OMAP_35XX_CM, "%s: storing to CM_FCLKEN1_CORE current %08x\n", __func__, cm->cmFclkEn1Core);
-      if (cm->cmFclkEn1Core == value)
+      if (cm->cmFclkEn1Core != value)
       {
-        // nothing changed
-        break;
+        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmFclkEn1Core" EOL, __func__);
       }
-
-      u32int changed = cm->cmFclkEn1Core ^ value;
-      DEBUG(VP_OMAP_35XX_CM, "storeCorecm: changed %08x\n", changed);
-      // if interface block is enabled to the device, it is no longer idle!
-      if (changed & CM_FCLKEN1_MMC1)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: mmc1 f-clock %x\n", ((value & CM_FCLKEN1_MMC1) == 0) ? 0 : 1);
-        changed &= ~CM_FCLKEN1_MMC1;
-      }
-      if (changed & CM_FCLKEN1_MMC2)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "mmc2 f-clock %x\n", ((value & CM_FCLKEN1_MMC2) == 0) ? 0 : 1);
-        changed &= ~CM_FCLKEN1_MMC2;
-      }
-      if (changed & CM_FCLKEN1_MMC3)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "mmc3 f-clock %x\n", ((value & CM_FCLKEN1_MMC3) == 0) ? 0 : 1);
-        changed &= ~CM_FCLKEN1_MMC3;
-      }
-      if (changed & CM_FCLKEN1_I2C1)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "i2c1 i-clock %x\n", ((value & CM_FCLKEN1_I2C1) == 0) ? 0 : 1);
-        changed &= ~CM_FCLKEN1_I2C1;
-      }
-      if (changed & CM_FCLKEN1_I2C2)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: i2c2 i-clock %x\n", ((value & CM_FCLKEN1_I2C2) == 0) ? 0 : 1);
-        changed &= ~CM_FCLKEN1_I2C2;
-      }
-      if (changed & CM_FCLKEN1_I2C3)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: i2c3 i-clock %x\n", ((value & CM_FCLKEN1_I2C3) == 0) ? 0 : 1);
-        changed &= ~CM_FCLKEN1_I2C3;
-      }
-      if (changed != 0)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "storeCoreCm: unimplemented cmFclkEn1Core case %08x -> %08x\n", cm->cmIclkEn1Core, changed);
-      }
-#if defined(CONFIG_MMC_PASSTHROUGH)
-      u32int mask = CM_FCLKEN1_I2C1 | CM_FCLKEN1_I2C2 | CM_FCLKEN1_I2C3 |
-                    CM_FCLKEN1_MMC1 | CM_FCLKEN1_MMC2 | CM_FCLKEN1_MMC3;
-      u32int reg = clkManRegReadBE(CORE_CM, CM_FCLKEN1_CORE);
-      // clear existing bits to be passed through
-      reg &= ~mask;
-      // set the required bits
-      reg |= (value & mask);
-      // write back to host clock manager
-      clkManRegWriteBE(CORE_CM, CM_FCLKEN1_CORE, reg);
-      // set the bits in the emulated clock manager
-      cm->cmFclkEn1Core = value;
-#else
-      DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmFclkEn1Core" EOL, __func__);
-#endif
       break;
-    }
-
     case CM_CLKSTCTRL_CORE:
-      DEBUG(VP_OMAP_35XX_CM, "%s: storing to CM_CLKSTCTRL_CORE" EOL, __func__);
       if (cm->cmClkStCtrl != value)
       {
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmClkStCtrl" EOL, __func__);
@@ -1196,7 +1076,6 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
       break;
     case CM_AUTOIDLE1_CORE:
     {
-      DEBUG(VP_OMAP_35XX_CM, "%s: storing to CM_AUTOIDLE1_CORE" EOL, __func__);
       if (cm->cmAutoIdle1Core != value)
       {
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdle1Core" EOL, __func__);
@@ -1205,7 +1084,6 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
     }
     case CM_AUTOIDLE2_CORE:
     {
-      DEBUG(VP_OMAP_35XX_CM, "%s: storing to CM_AUTOIDLE2_CORE" EOL, __func__);
       if (cm->cmAutoIdle2Core != value)
       {
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdle2Core" EOL, __func__);
@@ -1214,7 +1092,6 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
     }
     case CM_AUTOIDLE3_CORE:
     {
-      DEBUG(VP_OMAP_35XX_CM, "%s: storing to CM_AUTOIDLE3_CORE" EOL, __func__);
       if (cm->cmAutoIdle3Core != value)
       {
         DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to cmAutoIdle3Core" EOL, __func__);
@@ -1223,12 +1100,8 @@ static void storeCoreCm(struct ClockManager *cm, u32int physicalAddress, u32int 
     }
     case CM_IDLEST1_CORE:
     {
-      DEBUG(VP_OMAP_35XX_CM, "%s: storing to CM_IDLEST1_CORE R/O register" EOL, __func__);
-      if (cm->cmIdleSt1Core != value)
-      {
-        DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to read-only register with offset %x" EOL,
-              __func__, registerOffset);
-      }
+      DEBUG(VP_OMAP_35XX_CM, "%s: ignoring store to read-only register with offset %x" EOL,
+            __func__, registerOffset);
       break;
     }
     case CM_FCLKEN3_CORE:
