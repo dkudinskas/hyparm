@@ -46,7 +46,6 @@ typedef struct BasicBlockIndexValid BlockInfo;
 
 BlockInfo getBlockInfo(struct TranslationStore* ts, u32int startAddress);
 
-u32int getBasicBlockStoreIndex(u32int startAddress);
 BasicBlock* getBasicBlockStoreEntry(struct TranslationStore* ts, u32int index);
 
 void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, u32int instruction);

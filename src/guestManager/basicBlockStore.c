@@ -10,6 +10,12 @@
 #include "memoryManager/mmu.h"
 
 
+static inline u32int getBasicBlockStoreIndex(u32int startAddress)
+{
+  return (startAddress >> 2) & (BASIC_BLOCK_STORE_SIZE - 1);
+}
+
+
 BlockInfo getBlockInfo(TranslationStore* ts, u32int startAddress)
 {
   BlockInfo info = {.blockFound = FALSE, .blockIndex = 0};
@@ -46,12 +52,6 @@ BlockInfo getBlockInfo(TranslationStore* ts, u32int startAddress)
     }
   } // really loop until block is found of placed.
   while (TRUE);
-}
-
-
-u32int getBasicBlockStoreIndex(u32int startAddress)
-{
-  return (startAddress >> 2) & (BASIC_BLOCK_STORE_SIZE - 1);
 }
 
 
@@ -106,7 +106,6 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
       BasicBlock tempBlock = *basicBlock;
 
       // invalidate the basic block store
-      // STARFIX: remove most memsets and put one memset in naive malloc. memory isn't reused.
       memset(ts->basicBlockStore, 0, BASIC_BLOCK_STORE_SIZE * sizeof(BasicBlock));
 
       // restore basic block store entry
@@ -125,8 +124,7 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
 
 void invalidateBlock(BasicBlock* block)
 {
-  // STARFIX: remove this. its enough to change type to invalid.
-  memset(block, 0, sizeof(BasicBlock));
+  // its enough to change type to invalid.
   block->type = BB_TYPE_INVALID;
 }
 
