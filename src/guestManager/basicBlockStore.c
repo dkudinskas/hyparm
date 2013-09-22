@@ -178,7 +178,6 @@ void dumpBlock(BasicBlock* block)
   printf("dumpBlock: codeStoreStart %p\n", block->codeStoreStart);
   printf("dumpBlock: codeStoreSize %d\n", block->codeStoreSize);
   printf("dumpBlock: handler %p\n", block->handler);
-  printf("dumpBlock: hotness %d\n", block->hotness);
   printf("dumpBlock: oneHypercall %x\n", block->oneHypercall);
 }
 

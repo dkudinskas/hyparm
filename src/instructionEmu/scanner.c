@@ -200,7 +200,6 @@ BasicBlock* scanBlock(GCONTXT *context, u32int startAddress)
                                        getScanBlockCounter(), startAddress);
   }
 
-
   BlockInfo blockInfo = getBlockInfo(context->translationStore, startAddress);
   u32int blockIndex = blockInfo.blockIndex;
   bool blockFound = blockInfo.blockFound;
@@ -213,11 +212,7 @@ BasicBlock* scanBlock(GCONTXT *context, u32int startAddress)
 
   if (blockFound)
   {
-    // block was found in index. If its a single block, increase hotness
-    if (basicBlock->type == BB_TYPE_ARM)
-    {
-      basicBlock->hotness++;
-    }
+    // block was found in index.
     context->R15 = (u32int)basicBlock->codeStoreStart;
     // But also the PC of the last instruction of the block should be set
     context->lastGuestPC = (u32int)basicBlock->guestEnd;
@@ -228,7 +223,6 @@ BasicBlock* scanBlock(GCONTXT *context, u32int startAddress)
     return basicBlock;
   }
 
-  basicBlock->hotness = 1;
 #ifdef CONFIG_THUMB2
   if (context->CPSR & PSR_T_BIT)
   {

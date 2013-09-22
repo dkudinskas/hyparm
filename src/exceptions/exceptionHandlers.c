@@ -142,11 +142,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     nextPC = block->handler(context, *block->guestEnd);
   }
 
-  if (nextPC == 0)
-  {
-    DIE_NOW(context, "softwareInterrupt: Invalid nextPC. Instr to implement?");
-  }
-
   traceBlock(context, nextPC);
 
   u32int lastPC = context->R15;
