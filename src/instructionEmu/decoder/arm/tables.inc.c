@@ -42,7 +42,7 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   ENTRY(IRC_SAFE, armStrhtInstruction,       NULL,                   0x006000b0, 0x0f7000f0, "STRHT instruction"),
   // load halfword and translate
   ENTRY(IRC_SAFE, armLdrhtInstruction,       NULL,                   0x003000b0, 0x0f3000f0, "LDRHT instruction"),
-  // store and load exclusive: must be emulated - user mode faults
+  // store and load exclusive: can in theory be treated as 'safe'
   ENTRY(IRC_SAFE, armLdrexbInstruction,      NULL,                   0x01d00f9f, 0x0ff00fff, "LDREXB"),
   ENTRY(IRC_SAFE, armLdrexdInstruction,      NULL,                   0x01b00f9f, 0x0ff00fff, "LDREXD"),
   ENTRY(IRC_SAFE, armLdrexhInstruction,      NULL,                   0x01f00f9f, 0x0ff00fff, "LDREXH"),
@@ -280,24 +280,24 @@ static struct decodingTableEntry armDataProcMiscInstructions_op1[] =
 static struct decodingTableEntry armLoadStoreWordByteInstructions[] =
 {
   // STRT - all trap
-  ENTRY(IRC_SAFE,    armStrtInstruction,         armStrtPCInstruction,  0x04200000, 0x0f700000, "STRT Rt, [Rn], +-imm12"),
-  ENTRY(IRC_SAFE,    armStrtInstruction,         armStrtPCInstruction,  0x06200000, 0x0f700010, "STRT Rt, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE,     armStrtInstruction,         armStrtPCInstruction,  0x04200000, 0x0f700000, "STRT Rt, [Rn], +-imm12"),
+  ENTRY(IRC_REPLACE,     armStrtInstruction,         armStrtPCInstruction,  0x06200000, 0x0f700010, "STRT Rt, [Rn], +-Rm"),
   // LDRT - all trap
-  ENTRY(IRC_SAFE,    armLdrtInstruction,         NULL,                  0x04300000, 0x0f700000, "LDRT Rd, [Rn], +-imm12"),
-  ENTRY(IRC_SAFE,    armLdrtInstruction,         NULL,                  0x06300000, 0x0f700010, "LDRT Rd, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE,     armLdrtInstruction,         NULL,                  0x04300000, 0x0f700000, "LDRT Rd, [Rn], +-imm12"),
+  ENTRY(IRC_REPLACE,     armLdrtInstruction,         NULL,                  0x06300000, 0x0f700010, "LDRT Rd, [Rn], +-Rm"),
   // STRBT - all trap
-  ENTRY(IRC_SAFE,    armStrbtInstruction,        NULL,                  0x04600000, 0x0f700000, "STRBT Rt, [Rn, +-imm12]"),
-  ENTRY(IRC_SAFE,    armStrbtInstruction,        NULL,                  0x06600000, 0x0f700010, "STRBT Rt, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE,     armStrbtInstruction,        NULL,                  0x04600000, 0x0f700000, "STRBT Rt, [Rn, +-imm12]"),
+  ENTRY(IRC_REPLACE,     armStrbtInstruction,        NULL,                  0x06600000, 0x0f700010, "STRBT Rt, [Rn], +-Rm"),
   // LDRBT - all trap
-  ENTRY(IRC_SAFE,    armLdrbtInstruction,        NULL,                  0x04700000, 0x0f700000, "LDRBT Rd, [Rn], +-imm12"),
-  ENTRY(IRC_SAFE,    armLdrbtInstruction,        NULL,                  0x06700000, 0x0f700010, "LDRBT Rd, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE,     armLdrbtInstruction,        NULL,                  0x04700000, 0x0f700000, "LDRBT Rd, [Rn], +-imm12"),
+  ENTRY(IRC_REPLACE,     armLdrbtInstruction,        NULL,                  0x06700000, 0x0f700010, "LDRBT Rd, [Rn], +-Rm"),
   // STR - all pass-through
   ENTRY(IRC_PATCH_PC,    armStrInstruction,          armStrPCInstruction,   0x04000000, 0x0e500000, "STR Rt, [Rn, +-imm12]"),
   ENTRY(IRC_PATCH_PC,    armStrInstruction,          armStrPCInstruction,   0x06000000, 0x0e500010, "STR Rt, [Rn], +-Rm"),
   // LDR traps if dest = PC, otherwise pass through
-  ENTRY(IRC_REPLACE, armLdrInstruction,          NULL,                  0x0410f000, 0x0e50f000, "LDR PC, [Rn], +-imm12"),
+  ENTRY(IRC_REPLACE,     armLdrInstruction,          NULL,                  0x0410f000, 0x0e50f000, "LDR PC, [Rn], +-imm12"),
   ENTRY(IRC_PATCH_PC,    armLdrInstruction,          armLdrPCInstruction,   0x04100000, 0x0e500000, "LDR Rd, [Rn], +-imm12"),
-  ENTRY(IRC_REPLACE, armLdrInstruction,          NULL,                  0x0610f000, 0x0e50f010, "LDR PC, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE,     armLdrInstruction,          NULL,                  0x0610f000, 0x0e50f010, "LDR PC, [Rn], +-Rm"),
   ENTRY(IRC_PATCH_PC,    armLdrInstruction,          armLdrPCInstruction,   0x06100000, 0x0e500010, "LDR Rd, [Rn], +-Rm"),
   // STRB pass through
   ENTRY(IRC_PATCH_PC,    armStrbInstruction,         armStrPCInstruction,   0x04400000, 0x0e500000, "STRB Rt, [Rn, +-imm12]"),
@@ -500,8 +500,8 @@ static struct decodingTableEntry armUnconditionalInstructions[] =
   // sync barriers
   ENTRY(IRC_REMOVE, armDsbInstruction,          NULL,                  0xf57ff040, 0xfffffff0, "DSB"),
   ENTRY(IRC_REMOVE, armIsbInstruction,          NULL,                  0xf57ff060, 0xfffffff0, "ISB"),
-  // UNIMPLEMENTED: CLREX clear exclusive
-  ENTRY(IRC_REPLACE, armClrexInstruction,        NULL,                  0xf57ff01f, 0xffffffff, "clrex"),
+  // CLREX: clear exclusive monitor, can be treated as safe.
+  ENTRY(IRC_SAFE,    armClrexInstruction,        NULL,                  0xf57ff01f, 0xffffffff, "clrex"),
   // CPS: change processor state
   ENTRY(IRC_REPLACE, armCpsInstruction,          NULL,                  0xf1080000, 0xfffffe3f, "CPSIE"),
   ENTRY(IRC_REPLACE, armCpsInstruction,          NULL,                  0xf10a0000, 0xfffffe20, "CPSIE"),
