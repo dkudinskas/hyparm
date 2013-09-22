@@ -127,15 +127,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     deliverServiceCall(context);
     nextPC = context->R15;
     link = FALSE;
-    // if (context->R7 == 120)
-    // {
-    //   resetExceptionCounters(context);
-    // }
-    // if (context->R7 == 248)
-    // {
-    //   // calling exit_group()
-    //   DIE_NOW(0, "stop");
-    // }
   }
   else
   {
@@ -147,27 +138,8 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     registerSvc(context, block->handler);
 #endif
 
-    // STARFIX: this can be removed, as all guest priv <-> user switches are handled in interpreter.
-    u32int cpsrOld = context->CPSR;
     // interpret the instruction to find the start address of next block
     nextPC = block->handler(context, *block->guestEnd);
-
-    u32int cpsrNew = context->CPSR;
-    if (((cpsrOld & PSR_MODE) != PSR_USR_MODE) &&
-        ((cpsrNew & PSR_MODE) == PSR_USR_MODE))
-    {
-      // guest was in privileged mode, after interpreting switched to user mode.
-      // return from exception, CPS or MSR. act accordingly
-      guestToUserMode(context);
-      DIE_NOW(0, "boot done");
-    }
-    else if (((cpsrOld & PSR_MODE) == PSR_USR_MODE) &&
-             ((cpsrNew & PSR_MODE) != PSR_USR_MODE))
-    {
-      // guest was in user mode. we hit a guest SVC. switch guest to privileged mode
-      // return from exception, CPS or MSR. act accordingly
-      guestToPrivMode(context);
-    }
   }
 
   if (nextPC == 0)

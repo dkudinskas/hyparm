@@ -235,12 +235,6 @@ __macro__ GCONTXT *getActiveGuestContext(void);
 /* a function to evaluate if guest is in priviledge mode or user mode */
 bool isGuestInPrivMode(GCONTXT *context);
 
-/* a function to to switch the guest to user mode */
-void guestToUserMode(GCONTXT *context);
-
-/* a function to to switch the guest to privileged mode */
-void guestToPrivMode(GCONTXT *context);
-
 /* function to call when hypervisor changes guest modes. */
 void guestChangeMode(GCONTXT *context, u32int guestMode);
 

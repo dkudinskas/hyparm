@@ -387,24 +387,6 @@ bool isGuestInPrivMode(GCONTXT * context)
 
 
 /**
- * switching from privileged to user mode
- **/
-void guestToUserMode(GCONTXT *context)
-{
-  privToUserAddressing(context);
-}
-
-
-/**
- * switching from user to privileged mode
- **/
-void guestToPrivMode(GCONTXT *context)
-{
-  userToPrivAddressing(context);
-}
-
-
-/**
  * guest is switching modes.
  **/
 void guestChangeMode(GCONTXT *context, u32int newMode)
@@ -418,11 +400,11 @@ void guestChangeMode(GCONTXT *context, u32int newMode)
   bool privilegedAfter  = isGuestInPrivMode(context);
   if ((!privilegedBefore) && (privilegedAfter))
   {
-    guestToPrivMode(context);
+    userToPrivAddressing(context);
   }
   else if ((privilegedBefore) && (!privilegedAfter))
   {
-    guestToUserMode(context);
+    privToUserAddressing(context);
   }
 }
 
