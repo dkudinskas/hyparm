@@ -347,6 +347,9 @@ BasicBlock* scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStore
   // Protect guest against self-modification.
   guestWriteProtect(context, (u32int)guestStart, (u32int)instructionPtr);
 
+  // unify L1 instruction and data caches
+  mmuUnifyCaches((u32int)basicBlock->codeStoreStart, basicBlock->codeStoreSize);
+
   setExecBitmap(context, (u32int)basicBlock->guestStart, (u32int)basicBlock->guestEnd);
   return basicBlock;
 }

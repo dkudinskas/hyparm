@@ -70,8 +70,6 @@ void addInstructionToBlock(struct TranslationStore* ts, BasicBlock* basicBlock, 
   {
     basicBlock->codeStoreSize++;
     *ts->codeStoreFreePtr = instruction;
-    mmuCleanDCacheByMVAtoPOU((u32int)ts->codeStoreFreePtr);
-    mmuInvIcacheByMVAtoPOU((u32int)ts->codeStoreFreePtr);
     DEBUG(BLOCK_STORE, "addInstructionToBlock: codeStore loc %p is now %08x\n",
                                    ts->codeStoreFreePtr, *ts->codeStoreFreePtr);
   }

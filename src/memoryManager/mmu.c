@@ -457,6 +457,20 @@ void mmuSetExceptionVector(u32int vectorBase)
   mmuInstructionSync();
 }
 
+
+void mmuUnifyCaches(u32int start, u32int size)
+{
+  u32int address = start & ~0x1f;
+  u32int end = start + size * 4;
+  while (address < end)
+  {
+    mmuCleanDCacheByMVAtoPOU(address);
+    mmuInvIcacheByMVAtoPOU(address);
+    address += 32;
+  }
+}
+
+
 u32int getDFAR()
 {
   u32int result;

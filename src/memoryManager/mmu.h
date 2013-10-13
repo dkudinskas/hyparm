@@ -206,6 +206,9 @@ void mmuSetContextID(u32int asid);
 
 void mmuSetExceptionVector(u32int vectorBase);
 
+void mmuUnifyCaches(u32int start, u32int size);
+
+
 u32int getDFAR(void);
 DFSR getDFSR(void);
 u32int getIFAR(void);
