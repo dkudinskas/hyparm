@@ -224,7 +224,7 @@ BasicBlock* scanBlock(GCONTXT *context, u32int startAddress)
   }
 
 #ifdef CONFIG_THUMB2
-  if (context->CPSR & PSR_T_BIT)
+  if (context->CPSR.bits.T)
   {
     return scanThumbBlock(context, (void*)startAddress, blockIndex);
   }
@@ -307,7 +307,7 @@ BasicBlock* scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStore
       // conditional branch, two hypercalls
       u32int hypercall = (INSTR_SWI | (blockStoreIndex+0x100)) & 0x0FFFFFFF;
       addInstructionToBlock(context->translationStore, basicBlock, hypercall | cc);
-      addInstructionToBlock(context->translationStore, basicBlock, hypercall | (CC_AL << 28));
+      addInstructionToBlock(context->translationStore, basicBlock, hypercall | (AL << 28));
       basicBlock->oneHypercall = FALSE;
     }
     else

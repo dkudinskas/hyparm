@@ -88,7 +88,7 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
 #ifdef CONFIG_THUMB2
     DEBUG(STARTUP, "bootGuest: switching to thumb mode" EOL);
     entryPoint &= ~1;
-    context->CPSR |= PSR_T_BIT;
+    context->CPSR.bits.T = 1;
 #else
     DIE_NOW(NULL, "entry point with Thumb bit set but CONFIG_THUMB2 disabled");
 #endif
@@ -122,7 +122,7 @@ void bootGuest(GCONTXT *context, enum guestOSType os, u32int entryPoint)
    * When thumb mode set LSB of entryPoint to 1.
    * In callKernel the SPSR thumb bit will be set.
    */
-  if (context->CPSR & PSR_T_BIT)
+  if (context->CPSR.bits.T)
   {
     entryPoint |= 1;
   }

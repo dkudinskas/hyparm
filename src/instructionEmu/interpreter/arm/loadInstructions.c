@@ -55,11 +55,11 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(((instruction & 0x060) >> 5),
-    ((instruction & 0xF80)>>7), &shiftAmount);
-    u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
+                                           ((instruction & 0xF80)>>7), &shiftAmount);
 
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
-    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
+    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount,
+                             context->CPSR.bits.C);
 
     // if increment then base + offset else base - offset
     if (incOrDec)
@@ -162,12 +162,10 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(((instruction & 0x060) >> 5),
-    ((instruction & 0xF80)>>7), &shiftAmount);
-    u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
-
+                                            ((instruction & 0xF80)>>7), &shiftAmount);
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
-    offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
-
+    offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount,
+                      context->CPSR.bits.C);
   } // Register case ends
 
   // if increment then base + offset else base - offset
@@ -280,10 +278,10 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
     // (shift_t, shift_n) = (SRType_LSL, 0);
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(0, 0, &shiftAmount);
-    u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
 
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
-    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
+    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount,
+                             context->CPSR.bits.C);
 
     // if increment then base + offset else base - offset
     if (incOrDec != 0)
@@ -469,7 +467,7 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
   ASSERT(regList, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   u32int baseAddress = getGPRegister(context, baseReg);
-  u32int savedCPSR = 0;
+  CPSRmode savedMode = 0;
   bool cpySpsr = FALSE;
   if (forceUser != 0)
   {
@@ -482,8 +480,8 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
     else
     {
       // force user bit set and no PC in list: LDM user mode registers
-      savedCPSR = context->CPSR;
-      context->CPSR = (context->CPSR & ~0x1f) | PSR_USR_MODE;
+      savedMode = context->CPSR.bits.mode;
+      context->CPSR.bits.mode = USR_MODE;
     }
   }
 
@@ -553,29 +551,29 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
       // ok, exception return option: restore SPSR to CPSR
       // SPSR! which?... depends what mode we are in...
       u32int modeSpsr = 0;
-      switch (context->CPSR & PSR_MODE)
+      switch (context->CPSR.bits.mode)
       {
-        case PSR_FIQ_MODE:
+        case FIQ_MODE:
         {
           modeSpsr = context->SPSR_FIQ;
           break;
         }
-        case PSR_IRQ_MODE:
+        case IRQ_MODE:
         {
           modeSpsr = context->SPSR_IRQ;
           break;
         }
-        case PSR_SVC_MODE:
+        case SVC_MODE:
         {
           modeSpsr = context->SPSR_SVC;
           break;
         }
-        case PSR_ABT_MODE:
+        case ABT_MODE:
         {
           modeSpsr = context->SPSR_ABT;
           break;
         }
-        case PSR_UND_MODE:
+        case UND_MODE:
         {
           modeSpsr = context->SPSR_UND;
           break;
@@ -583,16 +581,16 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
         default:
           DIE_NOW(context, "exception return from sys/usr mode!");
       }
-      if ((context->CPSR & PSR_MODE) != (modeSpsr & PSR_MODE))
+      if (context->CPSR.bits.mode != (modeSpsr & PSR_MODE))
       {
         guestChangeMode(context, modeSpsr & PSR_MODE);
       }
-      context->CPSR = modeSpsr;
+      context->CPSR.value = modeSpsr;
     }
     else
     {
       // we made CPSR user mode to force 'ldm user'. restore CPSR
-      context->CPSR = savedCPSR;
+      context->CPSR.bits.mode = savedMode;
     }
   }
 
@@ -607,7 +605,7 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
     if (context->R15 & 0x1)
     {
 #ifdef CONFIG_THUMB2
-      context->CPSR |= PSR_T_BIT;
+      context->CPSR.bits.T = 1;
       context->R15 &= ~1;
 #else
       DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");

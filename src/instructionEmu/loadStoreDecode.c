@@ -23,7 +23,7 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
   context->lastGuestPC = context->R15;
 
 #ifdef CONFIG_THUMB2
-  if (context->CPSR & PSR_T_BIT)
+  if (context->CPSR.bits.T)
   {
     /*
      * Guest was executing in Thumb mode

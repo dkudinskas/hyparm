@@ -12,7 +12,6 @@
 #define MRC_BASE_VALUE              0x0e100010
 #define MCR_BASE_VALUE              0x0e000010
 
-
 typedef union
 {
   struct armALUImmediateInstruction

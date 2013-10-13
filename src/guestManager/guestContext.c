@@ -38,7 +38,9 @@ GCONTXT *createGuestContext(void)
   DEBUG(GUEST_CONTEXT, "createGuestContext: @ %p; initialising..." EOL, context);
 
   // Set initial values
-  context->CPSR = (PSR_F_BIT | PSR_I_BIT | PSR_SVC_MODE);
+  context->CPSR.bits.F = 1;
+  context->CPSR.bits.I = 1;
+  context->CPSR.bits.mode = SVC_MODE;
 
   // Initialise coprocessor register bank
   context->coprocRegBank = createCRB();
@@ -109,17 +111,17 @@ void dumpGuestContext(const GCONTXT *context)
   const u32int *r8 = &(context->R8);
   const u32int *r13 = NULL;
   const u32int *spsr = NULL;
-  switch (context->CPSR & PSR_MODE)
+  switch (context->CPSR.bits.mode)
   {
-    case PSR_USR_MODE:
-    case PSR_SYS_MODE:
+    case USR_MODE:
+    case SYS_MODE:
     {
       modeString = "USR";
       r13 = &(context->R13_USR);
       spsr = 0;
       break;
     }
-    case PSR_FIQ_MODE:
+    case FIQ_MODE:
     {
       modeString = "FIQ";
       r8 = &(context->R8_FIQ);
@@ -127,28 +129,28 @@ void dumpGuestContext(const GCONTXT *context)
       spsr = &(context->SPSR_FIQ);
       break;
     }
-    case PSR_IRQ_MODE:
+    case IRQ_MODE:
     {
       modeString = "IRQ";
       r13 = &(context->R13_IRQ);
       spsr = &(context->SPSR_IRQ);
       break;
     }
-    case PSR_SVC_MODE:
+    case SVC_MODE:
     {
       modeString = "SVC";
       r13 = &(context->R13_SVC);
       spsr = &(context->SPSR_SVC);
       break;
     }
-    case PSR_ABT_MODE:
+    case ABT_MODE:
     {
       modeString = "ABT";
       r13 = &(context->R13_ABT);
       spsr = &(context->SPSR_ABT);
       break;
     }
-    case PSR_UND_MODE:
+    case UND_MODE:
     {
       modeString = "UND";
       r13 = &(context->R13_UND);
@@ -176,7 +178,7 @@ void dumpGuestContext(const GCONTXT *context)
       *(r8 + 4), r13 ? *r13 : 0, r13 ? *(r13 + 1) : 0, context->R15
       );
 
-  printf("Mode: %-35s CPSR: 0x%.8x     SPSR: ", modeString, context->CPSR);
+  printf("Mode: %-35s CPSR: 0x%.8x     SPSR: ", modeString, context->CPSR.value);
   if (spsr)
   {
     printf("0x%.8x" EOL, *spsr);
@@ -381,8 +383,7 @@ u32int getCycleCount()
 
 bool isGuestInPrivMode(GCONTXT * context)
 {
-  u32int modeField = context->CPSR & PSR_MODE;
-  return (modeField == PSR_USR_MODE) ? FALSE : TRUE;
+  return (context->CPSR.bits.mode == USR_MODE) ? FALSE : TRUE;
 }
 
 
@@ -396,13 +397,13 @@ void guestChangeMode(GCONTXT *context, u32int newMode)
 
   // if changing user <-> priv must change shadow page tables
   bool privilegedBefore = isGuestInPrivMode(context);
-  context->CPSR = (context->CPSR & ~PSR_MODE) | newMode;
+  context->CPSR.bits.mode = newMode;
   bool privilegedAfter  = isGuestInPrivMode(context);
-  if ((!privilegedBefore) && (privilegedAfter))
+  if ((!privilegedBefore) && privilegedAfter)
   {
     userToPrivAddressing(context);
   }
-  else if ((privilegedBefore) && (!privilegedAfter))
+  else if (privilegedBefore && (!privilegedAfter))
   {
     privToUserAddressing(context);
   }

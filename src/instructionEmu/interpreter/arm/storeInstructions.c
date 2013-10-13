@@ -63,10 +63,10 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(((instruction & 0x060) >> 5),
     ((instruction & 0xF80)>>7), &shiftAmount);
-    u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
 
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
-    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
+    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount,
+                             context->CPSR.bits.C);
 
     // if increment then base + offset else base - offset
     if (incOrDec != 0)
@@ -166,11 +166,11 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
     // (shift_t, shift_n) = DecodeImmShift(type, imm5)
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(((instruction & 0x060) >> 5),
-    ((instruction & 0xF80)>>7), &shiftAmount);
-    u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
+                                            ((instruction & 0xF80)>>7), &shiftAmount);
 
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
-    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
+    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount,
+                             context->CPSR.bits.C);
 
     // if increment then base + offset else base - offset
     if (incOrDec)
@@ -276,10 +276,10 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
     // (shift_t, shift_n) = (SRType_LSL, 0);
     u32int shiftAmount = 0;
     u32int shiftType = decodeShiftImmediate(0, 0, &shiftAmount);
-    u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
 
     // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
-    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount, &carryFlag);
+    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount,
+                             context->CPSR.bits.C);
 
     // if increment then base + offset else base - offset
     if (incOrDec != 0)
@@ -458,12 +458,12 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
 
   u32int baseAddress = getGPRegister(context, baseReg);
 
-  u32int savedCPSR = 0;
+  u32int savedMode = 0;
   if (forceUser != 0)
   {
     // force user bit set: STM user mode registers
-    savedCPSR = context->CPSR;
-    context->CPSR = (context->CPSR & ~0x1f) | PSR_USR_MODE;
+    savedMode = context->CPSR.bits.mode;
+    context->CPSR.bits.mode = USR_MODE;
   }
 
   u32int address = baseAddress;
@@ -518,7 +518,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
   // if we stored to user mode registers, lets restore the CPSR
   if (forceUser)
   {
-    context->CPSR = savedCPSR;
+    context->CPSR.bits.mode = savedMode;
   }
 
   return context->lastGuestPC + ARM_INSTRUCTION_SIZE;

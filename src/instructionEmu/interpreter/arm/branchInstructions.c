@@ -67,7 +67,7 @@ u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
   u32int currPC = context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   u32int offset = signExtend(((instruction & 0x00FFFFFF) << 2) | (instruction & 0x01000000) >> 23, 26);
 
-  context->CPSR |= PSR_T_BIT;
+  context->CPSR.bits.T = 1;
   setGPRegister(context, GPR_LR, currPC);
 
   return currPC + ARM_INSTRUCTION_SIZE + offset;
@@ -111,7 +111,7 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
   if (destinationAddress & 1)
   {
 #ifdef CONFIG_THUMB2
-    context->CPSR |= PSR_T_BIT;
+    context->CPSR.bits.T = 1;
     destinationAddress ^= 1;
 #else
     DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
@@ -160,7 +160,7 @@ u32int armBxInstruction(GCONTXT *context, u32int instruction)
   if (destinationAddress & 1)
   {
 #ifdef CONFIG_THUMB2
-    context->CPSR |= PSR_T_BIT;
+    context->CPSR.bits.T = 1;
     destinationAddress ^= 1;
 #else
     DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");

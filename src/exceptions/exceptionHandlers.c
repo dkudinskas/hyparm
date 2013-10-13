@@ -40,6 +40,10 @@
 static void registerSvc(GCONTXT *context, InstructionHandler handler);
 #endif
 
+#ifdef CONFIG_HW_PASSTHROUGH
+  static bool IrqBitModified;
+  static u8int oldIBit;
+#endif
 
 #ifdef CONFIG_LOOP_DETECTOR
 /*
@@ -77,11 +81,10 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   BasicBlock* block = NULL;
 
 #ifdef CONFIG_HW_PASSTHROUGH
-  if (context->IrqBitModified)
+  if (IrqBitModified)
   {
-    context->IrqBitModified = FALSE;
-    context->CPSR = context->CPSR & (~PSR_I_BIT);
-    context->CPSR |= context->oldIrqBit;
+    IrqBitModified = FALSE;
+    context->CPSR.bits.I = oldIBit;
   }
 #endif
 
@@ -94,7 +97,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 #ifdef CONFIG_THUMB2
   /* Make sure that any SVC that is not part of the scanner
    * will be delivered to the guest */
-  if (context->CPSR & PSR_T_BIT) // Thumb
+  if (context->CPSR.bits.T) // Thumb
   {
     if (code == 0) // svc in Thumb is between 0x01 and 0xFF
     {
@@ -150,7 +153,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   /* Maybe an interrupt is pending but hasn't been delivered? */
   if (context->guestIrqPending)
   {
-    if ((context->CPSR & PSR_I_BIT) == 0)
+    if (context->CPSR.bits.I == 0)
     {
       deliverInterrupt(context);
       link = FALSE;
@@ -164,7 +167,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt: Next PC = %#.8x" EOL, nextPC);
 
-  if ((context->CPSR & PSR_MODE) != PSR_USR_MODE)
+  if (context->CPSR.bits.mode != USR_MODE)
   {
     /* guest in privileged mode! scan...
      * We need to reset the loop detector here because the block trace
@@ -254,8 +257,8 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 {
   /* Make sure interrupts are disabled while we deal with data abort. */
   disableInterrupts();
-  GCONTXT* context = getActiveGuestContext();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+  GCONTXT* context = getActiveGuestContext();
   context->dabtCount++;
   context->dabtPriv++;
 #endif
@@ -455,9 +458,9 @@ GCONTXT *irq(GCONTXT *context)
     }
     // we defer until next hypercall
     context->guestIrqPending = TRUE;
-    context->IrqBitModified = TRUE;
-    context->oldIrqBit = context->CPSR & PSR_I_BIT;
-    context->CPSR |= PSR_I_BIT;
+    IrqBitModified = TRUE;
+    oldIBit = context->CPSR.bits.I;
+    context->CPSR.bits.I = 1;;
   }
   else
   {
@@ -539,8 +542,8 @@ void irqPrivileged()
 {
   // disable possible further interrupts
   disableInterrupts();
-  GCONTXT *const context = getActiveGuestContext();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
+  GCONTXT *const context = getActiveGuestContext();
   context->irqCount++;
   context->irqPriv++;
 #endif
@@ -657,7 +660,7 @@ void dabtPermissionFault(GCONTXT *gc, DFSR dfsr, u32int dfar)
   {
     // ONLY move to the next instruction, if the guest hasn't aborted...
 #ifdef CONFIG_THUMB2
-    if (gc->CPSR & PSR_T_BIT)
+    if (gc->CPSR.bits.T)
     {
       gc->R15 = gc->R15 + T16_INSTRUCTION_SIZE;
     }

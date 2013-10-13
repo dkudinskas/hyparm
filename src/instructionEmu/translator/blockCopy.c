@@ -11,7 +11,7 @@
 
 void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int cond, u32int reg, u32int tempReg)
 {
-  ASSERT(cond <= CC_AL, "invalid condition code");
+  ASSERT(cond <= AL, "invalid condition code");
   ASSERT(reg < GPR_PC, "invalid temporary register");
 
   if (getActiveGuestContext()->virtAddrEnabled)
@@ -51,7 +51,7 @@ void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int cond, u32i
 
 void armRestoreRegister(TranslationStore* ts, BasicBlock* block, u32int cond, u32int reg)
 {
-  ASSERT(cond <= CC_AL, "invalid condition code");
+  ASSERT(cond <= AL, "invalid condition code");
   ASSERT(reg < GPR_PC, "invalid temporary register");
 
   if (getActiveGuestContext()->virtAddrEnabled)

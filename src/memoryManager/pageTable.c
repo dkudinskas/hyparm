@@ -988,34 +988,32 @@ void pageTableEdit(GCONTXT *context, u32int address, u32int newVal)
     DEBUG(MM_PAGE_TABLES, "pageTableEdit: shadowPriv %#.8x shadowUser %#.8x" EOL,
           *(u32int *)shadowPriv, *(u32int *)shadowUser);
     // guest may be changing access permissions.
-    // this requires us to force the guest into an appropriate mode
-    u32int cpsrPriv = PSR_SVC_MODE;
-    u32int cpsrUser = PSR_USR_MODE;
-    u32int cpsrBackup = context->CPSR; 
+    // this requires us to force the guest into an appropriate mode temporarily
+    CPSRmode modeBackup = context->CPSR.bits.mode; 
     if (firstLevelEntry)
     {
       switch(oldGuestEntry->type)
       {
         case SECTION:
         {
-          context->CPSR = cpsrPriv; 
+          context->CPSR.bits.mode = SVC_MODE; 
           editAttributesSection(context, (sectionEntry*)oldGuestEntry, (sectionEntry*)newGuestEntry,
                                                                shadowPriv, virtualAddress);
-          context->CPSR = cpsrUser; 
+          context->CPSR.bits.mode = USR_MODE; 
           editAttributesSection(context, (sectionEntry*)oldGuestEntry, (sectionEntry*)newGuestEntry,
                                                                shadowUser, virtualAddress);
-          context->CPSR = cpsrBackup; 
+          context->CPSR.bits.mode = modeBackup; 
           break;
         }
         case PAGE_TABLE:
         {
-          context->CPSR = cpsrPriv; 
+          context->CPSR.bits.mode = SVC_MODE;
           editAttributesPageTable((pageTableEntry*)oldGuestEntry, (pageTableEntry*)newGuestEntry,
                                                     (pageTableEntry*)shadowPriv, virtualAddress);
-          context->CPSR = cpsrUser; 
+          context->CPSR.bits.mode = USR_MODE;
           editAttributesPageTable((pageTableEntry*)oldGuestEntry, (pageTableEntry*)newGuestEntry,
                                                     (pageTableEntry*)shadowUser, virtualAddress);
-          context->CPSR = cpsrBackup; 
+          context->CPSR.bits.mode = modeBackup;
           break;
         }
         case RESERVED:
@@ -1033,13 +1031,13 @@ void pageTableEdit(GCONTXT *context, u32int address, u32int newVal)
         case SMALL_PAGE:
         case SMALL_PAGE_3:
         {
-          context->CPSR = cpsrPriv; 
+          context->CPSR.bits.mode = SVC_MODE;
           editAttributesSmallPage((smallPageEntry*)oldGuestEntry, (smallPageEntry*)newGuestEntry,
                                                     (smallPageEntry*)shadowPriv, virtualAddress);
-          context->CPSR = cpsrUser; 
+          context->CPSR.bits.mode = USR_MODE;
           editAttributesSmallPage((smallPageEntry*)oldGuestEntry, (smallPageEntry*)newGuestEntry,
                                                     (smallPageEntry*)shadowUser, virtualAddress);
-          context->CPSR = cpsrBackup; 
+          context->CPSR.bits.mode = modeBackup;
           break;
         }
         case LARGE_PAGE:

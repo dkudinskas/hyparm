@@ -51,10 +51,11 @@ u32int t16ItInstruction(GCONTXT *context, u32int instruction)
   }
 
   // Update ITSTATE in CPSR
-  context->CPSR = (context->CPSR & ~(PSR_ITSTATE_7_2 | PSR_ITSTATE_1_0));
-  context->CPSR = context->CPSR
-    | maskedBitShift(itState >> countBitsSet(PSR_ITSTATE_1_0), PSR_ITSTATE_7_2)
-    | maskedBitShift(itState, PSR_ITSTATE_1_0);
+  // STARFIX: update this to use the cpsr struct fields properly someday..
+  context->CPSR.value = (context->CPSR.value & ~(PSR_ITSTATE_7_2 | PSR_ITSTATE_1_0));
+  context->CPSR.value = context->CPSR.value
+         | maskedBitShift(itState >> countBitsSet(PSR_ITSTATE_1_0), PSR_ITSTATE_7_2)
+         | maskedBitShift(itState, PSR_ITSTATE_1_0);
 
   return (u32int) end;
 }

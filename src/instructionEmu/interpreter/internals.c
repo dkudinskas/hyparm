@@ -79,7 +79,6 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
       ASSERT((instr & 0x00000010) == 0, ERROR_UNPREDICTABLE_INSTRUCTION)
       // shift amount is an immediate field
       u32int imm5 = (instr & 0xF80) >> 7;
-      u8int carryFlag = (context->CPSR & 0x20000000) >> 29;
       shiftType = decodeShiftImmediate(shiftType, imm5, &shamt);
       switch (opType)
       {
@@ -90,7 +89,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
           {
             DIE_NOW(context, "arithmetic: reg case return from exception case unimplemented.\n");
           }
-          nextPC = getGPRegister(context, regSrc) + shiftVal(getGPRegister(context, regSrc2), shiftType, shamt, &carryFlag);
+          nextPC = getGPRegister(context, regSrc) + shiftVal(getGPRegister(context, regSrc2), shiftType, shamt, context->CPSR.bits.C);
           break;
         }
         case SUB:
@@ -100,7 +99,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
           {
             DIE_NOW(context, "arithmetic: reg case return from exception case unimplemented.\n");
           }
-          nextPC = getGPRegister(context, regSrc) - shiftVal(getGPRegister(context, regSrc2), shiftType, shamt, &carryFlag);
+          nextPC = getGPRegister(context, regSrc) - shiftVal(getGPRegister(context, regSrc2), shiftType, shamt, context->CPSR.bits.C);
           break;
         }
         case MOV:
@@ -121,29 +120,29 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
       {
         u32int modeToCopy = 0;
         // copy SPSR to CPSR
-        switch (context->CPSR & PSR_MODE)
+        switch (context->CPSR.bits.mode)
         {
-          case PSR_FIQ_MODE:
+          case FIQ_MODE:
           {
             modeToCopy = context->SPSR_FIQ;
             break;
           }
-          case PSR_IRQ_MODE:
+          case IRQ_MODE:
           {
             modeToCopy = context->SPSR_IRQ;
             break;
           }
-          case PSR_SVC_MODE:
+          case SVC_MODE:
           {
             modeToCopy = context->SPSR_SVC;
             break;
           }
-          case PSR_ABT_MODE:
+          case ABT_MODE:
           {
             modeToCopy = context->SPSR_ABT;
             break;
           }
-          case PSR_UND_MODE:
+          case UND_MODE:
           {
             modeToCopy = context->SPSR_UND;
             break;
@@ -151,14 +150,14 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
           default:
             DIE_NOW(context, "arithLogicOp: no SPSR for current guest mode");
         }
-        if ((context->CPSR & PSR_MODE) != (modeToCopy & PSR_MODE))
+        if ((context->CPSR.bits.mode) != (modeToCopy & PSR_MODE))
         {
           guestChangeMode(context, modeToCopy & PSR_MODE);
         }
-        context->CPSR = modeToCopy;
+        context->CPSR.value = modeToCopy;
 
         // Align PC
-        if (context->CPSR & PSR_T_BIT)
+        if (context->CPSR.bits.T)
         {
           nextPC &= ~1;
         }
@@ -272,37 +271,35 @@ bool evaluateConditionCode(GCONTXT *context, u32int conditionCode)
 {
   switch (conditionCode)
   {
-    case CC_EQ:
-      return context->CPSR & PSR_CC_FLAG_Z_BIT;
-    case CC_NE:
-      return !(context->CPSR & PSR_CC_FLAG_Z_BIT);
-    case CC_HS:
-      return context->CPSR & PSR_CC_FLAG_C_BIT;
-    case CC_LO:
-      return !(context->CPSR & PSR_CC_FLAG_C_BIT);
-    case CC_MI:
-      return context->CPSR & PSR_CC_FLAG_N_BIT;
-    case CC_PL:
-      return !(context->CPSR & PSR_CC_FLAG_N_BIT);
-    case CC_VS:
-      return context->CPSR & PSR_CC_FLAG_V_BIT;
-    case CC_VC:
-      return !(context->CPSR & PSR_CC_FLAG_V_BIT);
-    case CC_HI:
-      return (context->CPSR & PSR_CC_FLAG_C_BIT) && !(context->CPSR & PSR_CC_FLAG_Z_BIT);
-    case CC_LS:
-      return !(context->CPSR & PSR_CC_FLAG_C_BIT) || (context->CPSR & PSR_CC_FLAG_Z_BIT);
-    case CC_GE:
-      return testBitsEqual(context->CPSR, PSR_CC_FLAG_N_BIT, PSR_CC_FLAG_V_BIT);
-    case CC_LT:
-      return testBitsNotEqual(context->CPSR, PSR_CC_FLAG_N_BIT, PSR_CC_FLAG_V_BIT);
-    case CC_GT:
-      return !(context->CPSR & PSR_CC_FLAG_Z_BIT)
-          && testBitsEqual(context->CPSR, PSR_CC_FLAG_N_BIT, PSR_CC_FLAG_V_BIT);
-    case CC_LE:
-      return (context->CPSR & PSR_CC_FLAG_Z_BIT)
-          || testBitsNotEqual(context->CPSR, PSR_CC_FLAG_N_BIT, PSR_CC_FLAG_V_BIT);
-    case CC_AL:
+    case EQ:
+      return context->CPSR.bits.Z;
+    case NE:
+      return !context->CPSR.bits.Z;
+    case HS:
+      return context->CPSR.bits.C;
+    case LO:
+      return !context->CPSR.bits.C;
+    case MI:
+      return context->CPSR.bits.N;
+    case PL:
+      return !context->CPSR.bits.N;
+    case VS:
+      return context->CPSR.bits.V;
+    case VC:
+      return !context->CPSR.bits.V;
+    case HI:
+      return context->CPSR.bits.C && !(context->CPSR.bits.Z);
+    case LS:
+      return !context->CPSR.bits.C || context->CPSR.bits.Z;
+    case GE:
+      return context->CPSR.bits.N == context->CPSR.bits.V;
+    case LT:
+      return context->CPSR.bits.N != context->CPSR.bits.V;
+    case GT:
+      return !context->CPSR.bits.Z && (context->CPSR.bits.N == context->CPSR.bits.V);
+    case LE:
+      return context->CPSR.bits.Z || context->CPSR.bits.N != context->CPSR.bits.V;
+    case AL:
       return TRUE;
     default:
       return FALSE;
@@ -332,26 +329,26 @@ u32int getGPRegister(GCONTXT *context, u32int sourceRegister)
 
 static u32int *getHighGPRegisterPointer(GCONTXT *context, u32int registerIndex)
 {
-  const u32int guestMode = context->CPSR & PSR_MODE;
+  CPSRmode guestMode = context->CPSR.bits.mode;
   if (registerIndex <= 12)
   {
-    return ((guestMode == PSR_FIQ_MODE ? &context->R8_FIQ : &context->R8) + registerIndex - 8);
+    return ((guestMode == FIQ_MODE ? &context->R8_FIQ : &context->R8) + registerIndex - 8);
   }
 
   switch (guestMode)
   {
-    case PSR_USR_MODE:
-    case PSR_SYS_MODE:
+    case USR_MODE:
+    case SYS_MODE:
       return registerIndex == 13 ? &context->R13_USR : &context->R14_USR;
-    case PSR_FIQ_MODE:
+    case FIQ_MODE:
       return registerIndex == 13 ? &context->R13_FIQ : &context->R14_FIQ;
-    case PSR_IRQ_MODE:
+    case IRQ_MODE:
       return registerIndex == 13 ? &context->R13_IRQ : &context->R14_IRQ;
-    case PSR_SVC_MODE:
+    case SVC_MODE:
       return registerIndex == 13 ? &context->R13_SVC : &context->R14_SVC;
-    case PSR_ABT_MODE:
+    case ABT_MODE:
       return registerIndex == 13 ? &context->R13_ABT : &context->R14_ABT;
-    case PSR_UND_MODE:
+    case UND_MODE:
       return registerIndex == 13 ? &context->R13_UND : &context->R14_UND;
     default:
       DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
@@ -393,7 +390,7 @@ u32int rorVal(u32int value, u32int ramt)
 }
 
 // generic any type shift function, changes input_parameter(carryFlag) value
-u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int * carryFlag)
+u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int carryFlag)
 {
   // RRX can only shift right by 1
   ASSERT((shiftType != SHIFT_TYPE_RRX) || (shamt == 1), "type rrx, but shamt not 1!");

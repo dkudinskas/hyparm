@@ -12,7 +12,7 @@ u32int t16BImmediate8Instruction(GCONTXT *context, u32int instruction)
    */
   DEBUG_TRACE(INTERPRETER_T16_BRANCH, context, instruction);
   u32int conditionCode = (instruction >> 8) & 0xF;
-  if (conditionCode == CC_AL)
+  if (conditionCode == AL)
   {
     DIE_NOW(context, "UNDEFINED");
   }
@@ -44,16 +44,15 @@ u32int t16BlxRegisterInstruction(GCONTXT *context, u32int instruction)
   nextInstrAddress |= 0x1;
   setGPRegister(context, GPR_LR, nextInstrAddress);
 
-  /*
-   * Return to ARM mode if the LSB is not set; also make sure the target address is word-aligned.
-   */
+  /* Return to ARM mode if the LSB is not set;
+   * also make sure the target address is word-aligned. */
   if (destinationAddress & 1)
   {
     destinationAddress ^= 1;
   }
   else if (!(destinationAddress & 2))
   {
-    context->CPSR ^= PSR_T_BIT;
+    context->CPSR.bits.T ^= 1;
   }
   else
   {
@@ -82,7 +81,7 @@ u32int t16BxInstruction(GCONTXT *context, u32int instruction)
   }
   else
   {
-    context->CPSR ^= PSR_T_BIT;
+    context->CPSR.bits.T ^= 1;
   }
   return destinationAddress;
 }

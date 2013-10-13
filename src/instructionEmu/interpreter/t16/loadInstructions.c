@@ -131,7 +131,7 @@ u32int t16LdmInstruction(GCONTXT *context, u32int instruction)
   }
   else if (!(nextPC & 2))
   {
-    context->CPSR ^= PSR_T_BIT;
+    context->CPSR.bits.T ^= 1;
   }
   else
   {

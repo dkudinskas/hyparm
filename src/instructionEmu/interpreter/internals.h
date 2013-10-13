@@ -31,6 +31,13 @@
 #define T16_EXTRACT_LOW_REGISTER(instructionWord, position) ((instructionWord >> position) & 0x7)
 
 
+inline bool ConditionPassed(void);
+
+inline bool ConditionPassed(void)
+{
+
+}
+
 typedef enum
 {
   ADD,
@@ -102,8 +109,8 @@ __macro__ void setLowGPRegister(GCONTXT *context, u32int destinationRegister, u3
 void setGPRegister(GCONTXT *context, u32int destinationRegister, u32int value);
 
 
-// generic any type shift function, changes input_parameter(carryFlag) value
-u32int shiftVal(u32int imm32, u8int shiftType, u32int shamt, u8int *carryFlag);
+// generic any type shift function
+u32int shiftVal(u32int imm32, u8int shiftType, u32int shamt, u8int carryFlag);
 
 
 __macro__ u32int getLowGPRegister(const GCONTXT *context, u32int sourceRegister)
@@ -117,8 +124,8 @@ __macro__ u32int getNativeProgramCounter(const GCONTXT *context)
 #ifdef CONFIG_THUMB2
     const u32int offset = 2 * ARM_INSTRUCTION_SIZE;
 #else
-    const u32int offset = 2 * (context->CPSR & PSR_T_BIT ? T16_INSTRUCTION_SIZE
-                                                         : ARM_INSTRUCTION_SIZE);
+    const u32int offset = 2 * (context->CPSR.bits.T ? T16_INSTRUCTION_SIZE
+                                                    : ARM_INSTRUCTION_SIZE);
 #endif
     return context->lastGuestPC + offset;
 }
@@ -135,8 +142,8 @@ __macro__ u32int getVirtualProgramCounter(const GCONTXT *context)
 #ifdef CONFIG_THUMB2
     const u32int offset = 2 * ARM_INSTRUCTION_SIZE;
 #else
-    const u32int offset = 2 * (context->CPSR & PSR_T_BIT ? T16_INSTRUCTION_SIZE
-                                                         : ARM_INSTRUCTION_SIZE);
+    const u32int offset = 2 * (context->CPSR.bits.T ? T16_INSTRUCTION_SIZE
+                                                    : ARM_INSTRUCTION_SIZE);
 #endif
     return getVirtualInstructionPointer(context) + offset;
 }

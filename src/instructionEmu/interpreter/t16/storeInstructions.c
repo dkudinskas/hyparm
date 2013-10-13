@@ -117,7 +117,7 @@ u32int t16PushInstruction(GCONTXT *context, u32int instruction)
   if (instruction & 0x0100) //LR is on the list
   {
     valueLoaded = getGPRegister(context, GPR_LR);
-    clearTranslationStoreByAddress(context->translationStore, address);
+    clearTranslationsByAddress(context->translationStore, address);
     vmStore(context, WORD, address, valueLoaded);
     address -= 4;
   }
@@ -131,7 +131,7 @@ u32int t16PushInstruction(GCONTXT *context, u32int instruction)
     {
       valueLoaded = getLowGPRegister(context, i);
       // emulating store. Validate cache if needed
-      clearTranslationStoreByAddress(context->translationStore, address);
+      clearTranslationsByAddress(context->translationStore, address);
       vmStore(context, WORD, address, valueLoaded);
       address -= 4;
     }

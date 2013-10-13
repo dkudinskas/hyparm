@@ -22,37 +22,22 @@ static inline u32int getExceptionHandlerAddress(GCONTXT *context, u32int offset)
 void deliverServiceCall(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverServiceCall: @ PC = %#.8x" EOL, context->R15);
-  // 1. copy guest CPSR into SPSR_SVC
-  context->SPSR_SVC = context->CPSR;
-  // 2. put guest CPSR in SVC mode
-  guestChangeMode(context, PSR_SVC_MODE);
-  // 3. set LR to PC+4
-  context->R14_SVC = context->R15;
+  // copy guest CPSR into SPSR_SVC
+  context->SPSR_SVC = context->CPSR.value;
+  // put guest CPSR in SVC mode
+  guestChangeMode(context, SVC_MODE);
+  // set LR to PC+instruction_size
 #ifdef CONFIG_THUMB2
-  if (context->CPSR & PSR_T_BIT)
-  {
-    context->R14_SVC += T16_INSTRUCTION_SIZE;
-  }
-  else
-  {
+  context->R14_SVC += (context->CPSR.bits.T) ? context->R15 + T16_INSTRUCTION_SIZE 
+                                             : context->R15 + ARM_INSTRUCTION_SIZE;
+  // Clear or set Thumb bit according to SCTLR.TE
+  context->CPSR.bits.T = (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE) ? 1 : 0;
 #endif
-    context->R14_SVC += ARM_INSTRUCTION_SIZE;
-#ifdef CONFIG_THUMB2
-  }
-  // 5. Clear or set Thumb bit according to SCTLR.TE
-  if (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE)
-  {
-    context->CPSR |= PSR_T_BIT;
-  }
-  else
-  {
-    context->CPSR &= ~PSR_T_BIT;
-  }
-#endif /* CONFIG_THUMB2 */
-  // 6. set PC to guest svc handler address
+  context->R14_SVC = context->R15 + ARM_INSTRUCTION_SIZE;
+  // set PC to guest svc handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_SVC);
   // update AFI bits for SVC:
-  context->CPSR |= PSR_I_BIT;
+  context->CPSR.bits.I = 1;
 }
 
 
@@ -69,7 +54,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
       // gpt1 is dedicated to the guest.
       setInterrupt(context, GPT1_IRQ);
       // are we forwarding the interrupt event?
-      if (isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0))
+      if (isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -85,7 +70,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, UART1_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -97,7 +82,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, UART2_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -109,7 +94,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, UART3_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -121,7 +106,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, I2C1_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -133,7 +118,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, I2C2_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -145,7 +130,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, I2C3_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -157,7 +142,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, MMC1_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -169,7 +154,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, MMC2_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -181,7 +166,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, MMC3_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -193,7 +178,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, SDMA_IRQ_0);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -205,7 +190,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, SDMA_IRQ_1);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -217,7 +202,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, SDMA_IRQ_2);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -229,7 +214,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, SDMA_IRQ_3);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR & PSR_I_BIT) == 0) )
+      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -249,58 +234,47 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
 void deliverInterrupt(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverInterrupt: @ PC = %#.8x" EOL, context->R15);
-  // 1. reset irq pending flag.
+  // reset irq pending flag.
   context->guestIrqPending = FALSE;
-  // 2. copy guest CPSR into SPSR_IRQ
-  context->SPSR_IRQ = context->CPSR;
-  // 3. put guest CPSR in IRQ mode
-  guestChangeMode(context, PSR_IRQ_MODE);
+  // copy guest CPSR into SPSR_IRQ
+  context->SPSR_IRQ = context->CPSR.value;
+  // put guest CPSR in IRQ mode
+  guestChangeMode(context, IRQ_MODE);
 #ifdef CONFIG_THUMB2
-  // 4. Clear or set Thumb bit according to SCTLR.TE
-  if (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE)
-  {
-    context->CPSR |= PSR_T_BIT;
-  }
-  else
-  {
-    context->CPSR &= ~PSR_T_BIT;
-  }
+  // Clear or set Thumb bit according to SCTLR.TE
+  context->CPSR.bits.T = (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE) ? 1 : 0;
 #endif
+
   // 5. set LR to PC+4
   context->R14_IRQ = context->R15 + LR_OFFSET_IRQ;
   // 6. set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_IRQ);
   // update AFI bits for IRQ:
-  context->CPSR |= PSR_A_BIT | PSR_I_BIT;
+  context->CPSR.bits.A = 1;
+  context->CPSR.bits.I = 1;
 }
 
 
 void deliverDataAbort(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverDataAbort: @ PC = %#.8x" EOL, context->R15);
-  // 1. reset abt pending flag
+  // reset abt pending flag
   context->guestDataAbtPending = FALSE;
-  // 2. copy CPSR into SPSR_ABT
-  context->SPSR_ABT = context->CPSR;
-  // 3. put guest CPSR in ABT mode
-  guestChangeMode(context, PSR_ABT_MODE);
+  // copy CPSR into SPSR_ABT
+  context->SPSR_ABT = context->CPSR.value;
+  // put guest CPSR in ABT mode
+  guestChangeMode(context, ABT_MODE);
 #ifdef CONFIG_THUMB2
-  // 4. Clear or set Thumb bit according to SCTLR.TE
-  if (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE)
-  {
-    context->CPSR |= PSR_T_BIT;
-  }
-  else
-  {
-    context->CPSR &= ~PSR_T_BIT;
-  }
+  // Clear or set Thumb bit according to SCTLR.TE
+  context->CPSR.bits.T = (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE) ? 1 : 0;
 #endif
-  // 5. set LR to PC+8
+  // set LR to PC+8
   context->R14_ABT = context->R15 + LR_OFFSET_DATA_ABT;
-  // 6. set PC to guest irq handler address
+  // set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_DABT);
   // update AFI bits for IRQ:
-  context->CPSR |= PSR_A_BIT | PSR_I_BIT;
+  context->CPSR.bits.A = 1;
+  context->CPSR.bits.I = 1;
 }
 
 
@@ -326,29 +300,23 @@ void throwDataAbort(GCONTXT *context, u32int address, u32int faultType, bool isW
 void deliverPrefetchAbort(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverPrefetchAbort: @ PC = %#.8x" EOL, context->R15);
-  // 1. reset abt pending flag
+  // reset abt pending flag
   context->guestPrefetchAbtPending = FALSE;
-  // 2. copy CPSR into SPSR_ABT
-  context->SPSR_ABT = context->CPSR;
-  // 3. put guest CPSR in ABT mode
-  guestChangeMode(context, PSR_ABT_MODE);
+  // copy CPSR into SPSR_ABT
+  context->SPSR_ABT = context->CPSR.value;
+  // put guest CPSR in ABT mode
+  guestChangeMode(context, ABT_MODE);
 #ifdef CONFIG_THUMB2
-  // 4. Clear or set Thumb bit according to SCTLR.TE
-  if (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE)
-  {
-    context->CPSR |= PSR_T_BIT;
-  }
-  else
-  {
-    context->CPSR &= ~PSR_T_BIT;
-  }
+  // Clear or set Thumb bit according to SCTLR.TE
+  context->CPSR.bits.T = (context->coprocRegBank[CP15_SCTRL].value & SCTLR_TE) ? 1 : 0;
 #endif
   // 5. set LR to PC+4
   context->R14_ABT = context->R15 + LR_OFFSET_PREFETCH_ABT;
   // 6. set PC to guest irq handler address
   context->R15 = getExceptionHandlerAddress(context, EXC_VECT_LOW_PABT);
   // update AFI bits for IRQ:
-  context->CPSR |= PSR_A_BIT | PSR_I_BIT;
+  context->CPSR.bits.A = 1;
+  context->CPSR.bits.I = 1;
 }
 
 

@@ -42,9 +42,9 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
   ASSERT(imod != 1, ERROR_UNPREDICTABLE_INSTRUCTION);
 
   // guest is not in privileged mode! cps should behave as a nop, but lets see what went wrong.
-  ASSERT((context->CPSR & PSR_MODE) != PSR_USR_MODE, "CPS trapped in guest user mode");
+  ASSERT(context->CPSR.bits.mode != USR_MODE, "CPS trapped in guest user mode");
 
-  u32int oldCpsr = context->CPSR;
+  CPSRreg oldCpsr = context->CPSR;
   if (imod == 0x2) // enable
   {
 #ifdef ARM_INSTR_TRACE
@@ -52,12 +52,12 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
 #endif
     if (affectA != 0)
     {
-      ASSERT((oldCpsr & PSR_A_BIT) == 0, "Guest enabling async aborts globally!");
-      oldCpsr &= ~PSR_A_BIT;
+      ASSERT(oldCpsr.bits.A == 0, "Guest enabling async aborts globally!");
+      oldCpsr.bits.A = 0;
     }
     if (affectI)
     {
-      if ((oldCpsr & PSR_I_BIT) != 0)
+      if (oldCpsr.bits.I)
       {
 #ifdef ARM_INSTR_TRACE
         printf("Guest enabling irqs globally!" EOL);
@@ -70,11 +70,11 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
         }
 #endif
       }
-      oldCpsr &= ~PSR_I_BIT;
+      oldCpsr.bits.I = 0;;
     }
     if (affectF)
     {
-      if ((oldCpsr & PSR_F_BIT) != 0)
+      if (oldCpsr.bits.I)
       {
 #ifdef ARM_INSTR_TRACE
         printf("Guest enabling FIQs globally!" EOL);
@@ -88,23 +88,23 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
         }
 #endif
       }
-      oldCpsr &= ~PSR_F_BIT;
+      oldCpsr.bits.F = 0;
     }
   }
   else if (imod == 3) // disable
   {
     if (affectA)
     {
-      ASSERT((oldCpsr & PSR_A_BIT), "Guest disabling async aborts globally!");
-      oldCpsr |= PSR_A_BIT;
+      ASSERT(oldCpsr.bits.A, "Guest disabling async aborts globally!");
+      oldCpsr.bits.A = 1;
     }
     if (affectI)
     {
-      oldCpsr |= PSR_I_BIT;
+      oldCpsr.bits.I = 1;
     }
     if (affectF)
     {
-      oldCpsr |= PSR_F_BIT;
+      oldCpsr.bits.F = 1;
     }
   }
   else
@@ -114,8 +114,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
   // ARE we switching modes?
   if (unlikely(changeMode))
   {
-    oldCpsr &= ~PSR_MODE;
-    oldCpsr |= newMode;
+    oldCpsr.bits.mode = newMode;
     DIE_NOW(context, "guest is changing execution modes. To What?");
   }
   context->CPSR = oldCpsr;
@@ -168,35 +167,35 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
   {
     u32int value;
 
-    if ((context->CPSR & PSR_MODE) == PSR_USR_MODE)
+    if (context->CPSR.bits.mode ==USR_MODE)
     {
       //SPSR read bit can not be set in USR mode
       ASSERT(!readSpsr, ERROR_UNPREDICTABLE_INSTRUCTION);
-      value = context->CPSR & PSR_APSR;
+      value = context->CPSR.value & PSR_APSR;
     }
     else
     {
       if (readSpsr)
       {
-        switch(context->CPSR & PSR_MODE)
+        switch(context->CPSR.bits.mode)
         {
-          case PSR_FIQ_MODE:
+          case FIQ_MODE:
             value = context->SPSR_FIQ;
             break;
-          case PSR_IRQ_MODE:
+          case IRQ_MODE:
             value = context->SPSR_IRQ;
             break;
-          case PSR_SVC_MODE:
+          case SVC_MODE:
             value = context->SPSR_SVC;
             break;
-          case PSR_ABT_MODE:
+          case ABT_MODE:
             value = context->SPSR_ABT;
             break;
-          case PSR_UND_MODE:
+          case UND_MODE:
             value = context->SPSR_UND;
             break;
-          case PSR_USR_MODE:
-          case PSR_SYS_MODE:
+          case USR_MODE:
+          case SYS_MODE:
           default:
             DIE_NOW(context, "cannot request spsr in user/system mode");
         }
@@ -204,7 +203,7 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
       else
       {
         // CPSR is read with execution state bits other than E masked out
-        value = context->CPSR & ~PSR_EXEC_BITS;
+        value = context->CPSR.value & ~PSR_EXEC_BITS;
       }
     }
     setGPRegister(context, regDest, value);
@@ -240,7 +239,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
     value = armExpandImm12(immediate);
   }
 
-  u32int oldValue = 0;
+  CPSRreg oldValue = {.value = 0};
   if (cpsrOrSpsr == 0)
   {
     // CPSR!
@@ -249,22 +248,22 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   else
   {
     // SPSR! which?... depends what mode we are in...
-    switch (context->CPSR & PSR_MODE)
+    switch (context->CPSR.bits.mode)
     {
-      case PSR_FIQ_MODE:
-        oldValue = context->SPSR_FIQ;
+      case FIQ_MODE:
+        oldValue.value = context->SPSR_FIQ;
         break;
-      case PSR_IRQ_MODE:
-        oldValue = context->SPSR_IRQ;
+      case IRQ_MODE:
+        oldValue.value = context->SPSR_IRQ;
         break;
-      case PSR_SVC_MODE:
-        oldValue = context->SPSR_SVC;
+      case SVC_MODE:
+        oldValue.value = context->SPSR_SVC;
         break;
-      case PSR_ABT_MODE:
-        oldValue = context->SPSR_ABT;
+      case ABT_MODE:
+        oldValue.value = context->SPSR_ABT;
         break;
-      case PSR_UND_MODE:
-        oldValue = context->SPSR_UND;
+      case UND_MODE:
+        oldValue.value = context->SPSR_UND;
         break;
       default:
         DIE_NOW(context, "invalid SPSR write for current guest mode");
@@ -278,14 +277,14 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   // - bit 3: set condition flags of cpsr
 
   // control field [7-0] set.
-  if (((fieldMsk & 0x1) == 0x1) && (context->CPSR & PSR_MODE) != PSR_USR_MODE)
+  if (((fieldMsk & 0x1) == 0x1) && (context->CPSR.bits.mode != USR_MODE))
   {
 #ifndef CONFIG_THUMB2
     // check for thumb toggle!
-    ASSERT((oldValue & PSR_T_BIT) == (value & PSR_T_BIT), "MSR toggle THUMB bit");
+    ASSERT(oldValue.bits.T == (value & PSR_T_BIT), "MSR toggle THUMB bit");
 #endif
 
-    if ((value & PSR_MODE) != (oldValue & PSR_MODE))
+    if ((value & PSR_MODE) != oldValue.bits.mode)
     {
       // changing modes. if in CPSR, adjust context appropriatelly
       if (cpsrOrSpsr == 0)
@@ -296,31 +295,31 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
     // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x000000FF);
     // clear old fields!
-    oldValue &= 0xFFFFFF00;
+    oldValue.value &= 0xFFFFFF00;
     // update old value...
-    oldValue |= appliedValue;
+    oldValue.value |= appliedValue;
   }
-  if ( ((fieldMsk & 0x2) == 0x2) && (context->CPSR & PSR_MODE) != PSR_USR_MODE)
+  if ( ((fieldMsk & 0x2) == 0x2) && (context->CPSR.bits.mode != USR_MODE))
   {
     // extension field: async abt, endianness, IT[7:2]
     // check for endiannes toggle!
-    ASSERT((oldValue & PSR_E_BIT) == (value & PSR_E_BIT), "MSR toggle endianess bit");
+    ASSERT(oldValue.bits.E == (value & PSR_E_BIT), "MSR toggle endianess bit");
     // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x0000FF00);
     // clear old fields!
-    oldValue &= 0xFFFF00FF;
+    oldValue.value &= 0xFFFF00FF;
     // update old value...
-    oldValue |= appliedValue;
+    oldValue.value |= appliedValue;
   }
-  if ( ((fieldMsk & 0x4) == 0x4) && (context->CPSR & PSR_MODE) != PSR_USR_MODE)
+  if ( ((fieldMsk & 0x4) == 0x4) && (context->CPSR.bits.mode != USR_MODE))
   {
     // status field: reserved and GE[3:0]
     // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0x00FF0000);
     // clear old fields!
-    oldValue &= 0xFF00FFFF;
+    oldValue.value &= 0xFF00FFFF;
     // update old value...
-    oldValue |= appliedValue;
+    oldValue.value |= appliedValue;
   }
   if ((fieldMsk & 0x8) == 0x8)
   {
@@ -328,9 +327,9 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
     // separate the field we're gonna update from new value
     u32int appliedValue = (value & 0xFF000000);
     // clear old fields!
-    oldValue &= 0x00FFFFFF;
+    oldValue.value &= 0x00FFFFFF;
     // update old value...
-    oldValue |= appliedValue;
+    oldValue.value |= appliedValue;
   }
 
 #ifdef ARM_INSTR_TRACE
@@ -345,22 +344,22 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   else
   {
     // SPSR! which?... depends what mode we are in...
-    switch (context->CPSR & PSR_MODE)
+    switch (context->CPSR.bits.mode)
     {
-      case PSR_FIQ_MODE:
-        context->SPSR_FIQ = oldValue;
+      case FIQ_MODE:
+        context->SPSR_FIQ = oldValue.value;
         break;
-      case PSR_IRQ_MODE:
-        context->SPSR_IRQ = oldValue;
+      case IRQ_MODE:
+        context->SPSR_IRQ = oldValue.value;
         break;
-      case PSR_SVC_MODE:
-        context->SPSR_SVC = oldValue;
+      case SVC_MODE:
+        context->SPSR_SVC = oldValue.value;
         break;
-      case PSR_ABT_MODE:
-        context->SPSR_ABT = oldValue;
+      case ABT_MODE:
+        context->SPSR_ABT = oldValue.value;
         break;
-      case PSR_UND_MODE:
-        context->SPSR_UND = oldValue;
+      case UND_MODE:
+        context->SPSR_UND = oldValue.value;
         break;
       default:
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");

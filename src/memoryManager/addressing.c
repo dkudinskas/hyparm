@@ -402,39 +402,39 @@ void setExceptionVector(u32int guestMode)
   DEBUG(MM_ADDRESSING, "setExceptionVector: mode %02x" EOL, guestMode);
   switch (guestMode)
   {
-    case PSR_USR_MODE:
+    case USR_MODE:
     {
       DEBUG(MM_ADDRESSING, "setExceptionVector: USR, vector %08x" EOL, (u32int)&usrVector);
       mmuSetExceptionVector((u32int)&usrVector);
       break;
     }
-    case PSR_IRQ_MODE:
+    case IRQ_MODE:
     {
       DEBUG(MM_ADDRESSING, "setExceptionVector: IRQ, vector %08x" EOL, (u32int)&irqVector);
       mmuSetExceptionVector((u32int)&irqVector);
       break;
     }
-    case PSR_SVC_MODE:
+    case SVC_MODE:
     {
       DEBUG(MM_ADDRESSING, "setExceptionVector: SVC, vector %08x" EOL, (u32int)&svcVector);
       mmuSetExceptionVector((u32int)&svcVector);
       break;
     }
-    case PSR_ABT_MODE:
+    case ABT_MODE:
     {
       DEBUG(MM_ADDRESSING, "setExceptionVector: ABORT, vector %08x" EOL, (u32int)&abortVector);
       mmuSetExceptionVector((u32int)&abortVector);
       break;
     }
-    case PSR_UND_MODE:
+    case UND_MODE:
     {
       DEBUG(MM_ADDRESSING, "setExceptionVector: UNDEFINED, vector %08x" EOL, (u32int)&undVector);
       mmuSetExceptionVector((u32int)&undVector);
       break;
     }
-    case PSR_FIQ_MODE:
-    case PSR_MON_MODE:
-    case PSR_SYS_MODE:
+    case FIQ_MODE:
+    case MON_MODE:
+    case SYS_MODE:
     default:
     {
       printf("setExceptionVector: guestMode %03x\n", guestMode);

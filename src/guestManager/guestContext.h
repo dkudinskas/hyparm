@@ -1,6 +1,8 @@
 #ifndef __GUEST_MANAGER__GUEST_CONTEXT_H__
 #define __GUEST_MANAGER__GUEST_CONTEXT_H__
 
+#include "cpuArch/state.h"
+
 #include "common/compiler.h"
 #include "common/types.h"
 
@@ -63,7 +65,7 @@ struct guestContext
   u32int R13_USR;
   u32int R14_USR;
   u32int R15;
-  u32int CPSR;
+  CPSRreg CPSR;
   u32int R8_FIQ;
   u32int R9_FIQ;
   u32int R10_FIQ;
@@ -123,11 +125,6 @@ struct guestContext
   u32int lastEntryBlockIndex;
 
   u8int *execBitmap;
-
-#ifdef CONFIG_HW_PASSTHROUGH
-  bool IrqBitModified;
-  u32int oldIrqBit;
-#endif
 
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   u32int svcCount;

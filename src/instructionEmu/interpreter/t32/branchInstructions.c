@@ -79,7 +79,7 @@ u32int t32BlxImmediateInstruction(GCONTXT *context, u32int instruction)
   /*
    * Switch to ARM mode
    */
-  context->CPSR ^= PSR_T_BIT;
+  context->CPSR.bits.T ^= 1;
   /*
    * In Thumb-32, R15 points to the first halfword, so LR must be 4+1(T) bytes ahead
    */
