@@ -33,7 +33,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
   }
 
 #ifdef DATA_PROC_TRACE
-  printf("%s: %#.8x @ %#.8x" EOL, instrString, instr, getNativeInstructionPointer(context));
+  printf("%s: %#.8x @ %#.8x" EOL, instrString, instr, context->lastGuestPC);
 #endif
 
   if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instr)))
@@ -179,7 +179,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
   }
   else
   {
-    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   }
 }
 
@@ -311,7 +311,7 @@ bool evaluateConditionCode(GCONTXT *context, u32int conditionCode)
 
 void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
 {
-  printf("%#.8x @ %#.8x should not have trapped!" EOL, instruction, getNativeInstructionPointer(context));
+  printf("%#.8x @ %#.8x should not have trapped!" EOL, instruction, context->lastGuestPC);
   DIE_NOW(context, message);
 }
 

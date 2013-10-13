@@ -27,7 +27,7 @@ u32int armLdc2Instruction(GCONTXT *context, u32int instruction)
 
 u32int armMcrInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_ARM_COPROC, "armMcrInstruction: %#.8x @ %#.8x" EOL, instruction, getNativeInstructionPointer(context));
+  DEBUG(INTERPRETER_ARM_COPROC, "armMcrInstruction: %#.8x @ %#.8x" EOL, instruction, context->lastGuestPC);
 
   if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
@@ -47,7 +47,7 @@ u32int armMcrInstruction(GCONTXT *context, u32int instruction)
     setCregVal(context, CRB_INDEX(cRegSrc1, opcode1, cRegSrc2, opcode2), srcVal);
   }
 
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armMcr2Instruction(GCONTXT *context, u32int instruction)
@@ -67,7 +67,7 @@ u32int armMcrr2Instruction(GCONTXT *context, u32int instruction)
 
 u32int armMrcInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_ARM_COPROC, "armMrcInstruction: %#.8x @ %#.8x" EOL, instruction, getNativeInstructionPointer(context));
+  DEBUG(INTERPRETER_ARM_COPROC, "armMrcInstruction: %#.8x @ %#.8x" EOL, instruction, context->lastGuestPC);
 
   if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
@@ -85,7 +85,7 @@ u32int armMrcInstruction(GCONTXT *context, u32int instruction)
     setGPRegister(context, regDestNr, cregVal);
   }
 
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armMrc2Instruction(GCONTXT *context, u32int instruction)

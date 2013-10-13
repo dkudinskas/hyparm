@@ -37,14 +37,14 @@ u32int armBInstruction(GCONTXT *context, u32int instruction)
 
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG(INTERPRETER_ARM_BRANCH, "armBInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
 
   u32int link = instruction & 0x0F000000;
   u32int offset = signExtend((instruction & 0x00FFFFFF) << 2, 26);
-  u32int currPC = getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  u32int currPC = context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   if (link == 0x0B000000)
   {
     setGPRegister(context, GPR_LR, currPC);
@@ -64,7 +64,7 @@ u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
   DEBUG(INTERPRETER_ARM_BRANCH, "armBlxImmediateInstruction: %#.8x @ %#.8x" EOL, instruction,
       context->R15);
 
-  u32int currPC = getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  u32int currPC = context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   u32int offset = signExtend(((instruction & 0x00FFFFFF) << 2) | (instruction & 0x01000000) >> 23, 26);
 
   context->CPSR |= PSR_T_BIT;
@@ -95,7 +95,7 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
 
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG(INTERPRETER_ARM_BRANCH, "armBlxRegisterInstruction: %#.8x @ %#.8x" EOL, instruction,
@@ -106,7 +106,7 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
   ASSERT(targetRegister != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
   u32int destinationAddress = getGPRegister(context, targetRegister);
 
-  setGPRegister(context, GPR_LR, getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE);
+  setGPRegister(context, GPR_LR, context->lastGuestPC + ARM_INSTRUCTION_SIZE);
 
   if (destinationAddress & 1)
   {
@@ -145,7 +145,7 @@ u32int armBxInstruction(GCONTXT *context, u32int instruction)
 
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG(INTERPRETER_ARM_BRANCH, "armBxInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);

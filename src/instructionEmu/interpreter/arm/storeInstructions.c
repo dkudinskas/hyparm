@@ -11,7 +11,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -97,7 +97,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
   // P = 0 and W == 1 then STR as if user mode
   if (preOrPost == 0 && writeBack != 0 && shouldDataAbort(context, FALSE, TRUE, address))
   {
-    return getNativeInstructionPointer(context);
+    return context->lastGuestPC;
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
@@ -113,7 +113,7 @@ u32int armStrInstruction(GCONTXT *context, u32int instruction)
     // Rn = offsetAddr;
     setGPRegister(context, regDst, offsetAddress);
   }
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 
@@ -121,7 +121,7 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -199,7 +199,7 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
   // P = 0 and W == 1 then STR as if user mode -- only continue if usr can write
   if (!preOrPost && writeBack && shouldDataAbort(context, FALSE, TRUE, address))
   {
-    return getNativeInstructionPointer(context);
+    return context->lastGuestPC;
   }
 
   // *storeAddress = if sourceValue is PC then valueToStore+8 else valueToStore;
@@ -215,14 +215,14 @@ u32int armStrbInstruction(GCONTXT * context, u32int instruction)
     // Rn = offsetAddr;
     setGPRegister(context, regDst, offsetAddress);
   }
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrhInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -319,7 +319,7 @@ u32int armStrhInstruction(GCONTXT *context, u32int instruction)
     // Rn = offsetAddr;
     setGPRegister(context, regDst, offsetAddress);
   }
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 
@@ -327,7 +327,7 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -414,7 +414,7 @@ u32int armStrdInstruction(GCONTXT *context, u32int instruction)
     // Rn = offsetAddr;
     setGPRegister(context, regDst, offsetAddress);
   }
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 
@@ -440,7 +440,7 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instruction);
@@ -521,5 +521,5 @@ u32int armStmInstruction(GCONTXT *context, u32int instruction)
     context->CPSR = savedCPSR;
   }
 
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }

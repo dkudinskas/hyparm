@@ -85,7 +85,6 @@ u32int getGPRegister(GCONTXT *context, u32int sourceRegister);
 
 
 /* functions to get raw instruction pointer and PC value identical to native execution of guest */
-__macro__ u32int getNativeInstructionPointer(const GCONTXT *context) __pure__;
 __macro__ u32int getNativeProgramCounter(const GCONTXT *context) __pure__;
 __macro__ u32int getVirtualInstructionPointer(const GCONTXT *context) __pure__;
 __macro__ u32int getVirtualProgramCounter(const GCONTXT *context) __pure__;
@@ -113,12 +112,6 @@ __macro__ u32int getLowGPRegister(const GCONTXT *context, u32int sourceRegister)
 }
 
 
-__macro__ u32int getNativeInstructionPointer(const GCONTXT *context)
-{
-  return context->lastGuestPC;
-}
-
-
 __macro__ u32int getNativeProgramCounter(const GCONTXT *context)
 {
 #ifdef CONFIG_THUMB2
@@ -127,7 +120,7 @@ __macro__ u32int getNativeProgramCounter(const GCONTXT *context)
     const u32int offset = 2 * (context->CPSR & PSR_T_BIT ? T16_INSTRUCTION_SIZE
                                                          : ARM_INSTRUCTION_SIZE);
 #endif
-    return getNativeInstructionPointer(context) + offset;
+    return context->lastGuestPC + offset;
 }
 
 

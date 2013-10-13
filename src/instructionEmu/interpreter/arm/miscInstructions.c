@@ -35,7 +35,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
   u32int affectF    = (instruction & 0x00000040) >>  6;
   u32int newMode    =  instruction & 0x0000001F;
 #ifdef ARM_INSTR_TRACE
-  printf("CPS instr %08x @ %08x" EOL, instruction, getNativeInstructionPointer(context));
+  printf("CPS instr %08x @ %08x" EOL, instruction, context->lastGuestPC);
 #endif
 
   ASSERT(imod != 0 || changeMode != 0, ERROR_UNPREDICTABLE_INSTRUCTION);
@@ -120,7 +120,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
   }
   context->CPSR = oldCpsr;
 
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armDbgInstruction(GCONTXT *context, u32int instruction)
@@ -134,7 +134,7 @@ u32int armDmbInstruction(GCONTXT *context, u32int instruction)
   /* DMB is weaker than DSB */
   printf("Warning: DMB (ignored)!" EOL);
 #endif
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armDsbInstruction(GCONTXT *context, u32int instruction)
@@ -142,7 +142,7 @@ u32int armDsbInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: DSB (ignored)!" EOL);
 #endif
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armIsbInstruction(GCONTXT *context, u32int instruction)
@@ -150,7 +150,7 @@ u32int armIsbInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: ISB (ignored)!" EOL);
 #endif
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armMrsInstruction(GCONTXT *context, u32int instruction)
@@ -159,7 +159,7 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
   int regDest  = (instruction & 0x0000F000) >> 12;
 
 #ifdef ARM_INSTR_TRACE
-  printf("MRS instr %08x @ %08x" EOL, instruction, getNativeInstructionPointer(context));
+  printf("MRS instr %08x @ %08x" EOL, instruction, context->lastGuestPC);
 #endif
 
   ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
@@ -210,7 +210,7 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
     setGPRegister(context, regDest, value);
   } // condition met ends
 
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armMsrInstruction(GCONTXT *context, u32int instruction)
@@ -223,7 +223,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
   }
 
   if (regOrImm == 0)
@@ -334,7 +334,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
   }
 
 #ifdef ARM_INSTR_TRACE
-  printf("MSR instr %08x @ %08x" EOL, instruction, getNativeInstructionPointer(context));
+  printf("MSR instr %08x @ %08x" EOL, instruction, context->lastGuestPC);
 #endif
   // got the final value to write in u32int oldValue. where do we write it thou..?
   if (cpsrOrSpsr == 0)
@@ -366,7 +366,7 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
     }
   }
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armPldInstruction(GCONTXT *context, u32int instruction)
@@ -374,7 +374,7 @@ u32int armPldInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: PLD!" EOL);
 #endif
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armPliInstruction(GCONTXT *context, u32int instruction)
@@ -382,7 +382,7 @@ u32int armPliInstruction(GCONTXT *context, u32int instruction)
 #ifdef ARM_INSTR_TRACE
   printf("Warning: PLI!" EOL);
 #endif
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armRfeInstruction(GCONTXT *context, u32int instruction)
@@ -419,7 +419,7 @@ u32int armWfiInstruction(GCONTXT *context, u32int instruction)
 {
   // stop guest execution...
   guestIdle(context);
-  return getNativeInstructionPointer(context) + ARM_INSTRUCTION_SIZE;
+  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armYieldInstruction(GCONTXT *context, u32int instruction)
