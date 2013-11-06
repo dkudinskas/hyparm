@@ -180,19 +180,19 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
         switch(context->CPSR.bits.mode)
         {
           case FIQ_MODE:
-            value = context->SPSR_FIQ;
+            value = context->SPSR_FIQ.value;
             break;
           case IRQ_MODE:
-            value = context->SPSR_IRQ;
+            value = context->SPSR_IRQ.value;
             break;
           case SVC_MODE:
-            value = context->SPSR_SVC;
+            value = context->SPSR_SVC.value;
             break;
           case ABT_MODE:
-            value = context->SPSR_ABT;
+            value = context->SPSR_ABT.value;
             break;
           case UND_MODE:
-            value = context->SPSR_UND;
+            value = context->SPSR_UND.value;
             break;
           case USR_MODE:
           case SYS_MODE:
@@ -251,19 +251,19 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
     switch (context->CPSR.bits.mode)
     {
       case FIQ_MODE:
-        oldValue.value = context->SPSR_FIQ;
+        oldValue.value = context->SPSR_FIQ.value;
         break;
       case IRQ_MODE:
-        oldValue.value = context->SPSR_IRQ;
+        oldValue.value = context->SPSR_IRQ.value;
         break;
       case SVC_MODE:
-        oldValue.value = context->SPSR_SVC;
+        oldValue.value = context->SPSR_SVC.value;
         break;
       case ABT_MODE:
-        oldValue.value = context->SPSR_ABT;
+        oldValue.value = context->SPSR_ABT.value;
         break;
       case UND_MODE:
-        oldValue.value = context->SPSR_UND;
+        oldValue.value = context->SPSR_UND.value;
         break;
       default:
         DIE_NOW(context, "invalid SPSR write for current guest mode");
@@ -347,19 +347,19 @@ u32int armMsrInstruction(GCONTXT *context, u32int instruction)
     switch (context->CPSR.bits.mode)
     {
       case FIQ_MODE:
-        context->SPSR_FIQ = oldValue.value;
+        context->SPSR_FIQ.value = oldValue.value;
         break;
       case IRQ_MODE:
-        context->SPSR_IRQ = oldValue.value;
+        context->SPSR_IRQ.value = oldValue.value;
         break;
       case SVC_MODE:
-        context->SPSR_SVC = oldValue.value;
+        context->SPSR_SVC.value = oldValue.value;
         break;
       case ABT_MODE:
-        context->SPSR_ABT = oldValue.value;
+        context->SPSR_ABT.value = oldValue.value;
         break;
       case UND_MODE:
-        context->SPSR_UND = oldValue.value;
+        context->SPSR_UND.value = oldValue.value;
         break;
       default:
         DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");

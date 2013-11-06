@@ -555,27 +555,27 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
       {
         case FIQ_MODE:
         {
-          modeSpsr = context->SPSR_FIQ;
+          modeSpsr = context->SPSR_FIQ.value;
           break;
         }
         case IRQ_MODE:
         {
-          modeSpsr = context->SPSR_IRQ;
+          modeSpsr = context->SPSR_IRQ.value;
           break;
         }
         case SVC_MODE:
         {
-          modeSpsr = context->SPSR_SVC;
+          modeSpsr = context->SPSR_SVC.value;
           break;
         }
         case ABT_MODE:
         {
-          modeSpsr = context->SPSR_ABT;
+          modeSpsr = context->SPSR_ABT.value;
           break;
         }
         case UND_MODE:
         {
-          modeSpsr = context->SPSR_UND;
+          modeSpsr = context->SPSR_UND.value;
           break;
         }
         default:

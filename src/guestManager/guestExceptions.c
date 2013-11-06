@@ -23,7 +23,7 @@ void deliverServiceCall(GCONTXT *context)
 {
   DEBUG(GUEST_EXCEPTIONS, "deliverServiceCall: @ PC = %#.8x" EOL, context->R15);
   // copy guest CPSR into SPSR_SVC
-  context->SPSR_SVC = context->CPSR.value;
+  context->SPSR_SVC.value = context->CPSR.value;
   // put guest CPSR in SVC mode
   guestChangeMode(context, SVC_MODE);
   // set LR to PC+instruction_size
@@ -237,7 +237,7 @@ void deliverInterrupt(GCONTXT *context)
   // reset irq pending flag.
   context->guestIrqPending = FALSE;
   // copy guest CPSR into SPSR_IRQ
-  context->SPSR_IRQ = context->CPSR.value;
+  context->SPSR_IRQ.value = context->CPSR.value;
   // put guest CPSR in IRQ mode
   guestChangeMode(context, IRQ_MODE);
 #ifdef CONFIG_THUMB2
@@ -261,7 +261,7 @@ void deliverDataAbort(GCONTXT *context)
   // reset abt pending flag
   context->guestDataAbtPending = FALSE;
   // copy CPSR into SPSR_ABT
-  context->SPSR_ABT = context->CPSR.value;
+  context->SPSR_ABT.value = context->CPSR.value;
   // put guest CPSR in ABT mode
   guestChangeMode(context, ABT_MODE);
 #ifdef CONFIG_THUMB2
@@ -303,7 +303,7 @@ void deliverPrefetchAbort(GCONTXT *context)
   // reset abt pending flag
   context->guestPrefetchAbtPending = FALSE;
   // copy CPSR into SPSR_ABT
-  context->SPSR_ABT = context->CPSR.value;
+  context->SPSR_ABT.value = context->CPSR.value;
   // put guest CPSR in ABT mode
   guestChangeMode(context, ABT_MODE);
 #ifdef CONFIG_THUMB2

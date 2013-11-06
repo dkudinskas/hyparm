@@ -73,19 +73,19 @@ struct guestContext
   u32int R12_FIQ;
   u32int R13_FIQ;
   u32int R14_FIQ;
-  u32int SPSR_FIQ;
+  CPSRreg SPSR_FIQ;
   u32int R13_SVC;
   u32int R14_SVC;
-  u32int SPSR_SVC;
+  CPSRreg SPSR_SVC;
   u32int R13_ABT;
   u32int R14_ABT;
-  u32int SPSR_ABT;
+  CPSRreg SPSR_ABT;
   u32int R13_IRQ;
   u32int R14_IRQ;
-  u32int SPSR_IRQ;
+  CPSRreg SPSR_IRQ;
   u32int R13_UND;
   u32int R14_UND;
-  u32int SPSR_UND;
+  CPSRreg SPSR_UND;
   CREG * coprocRegBank;
   TranslationStore* translationStore;
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE

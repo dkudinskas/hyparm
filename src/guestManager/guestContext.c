@@ -126,35 +126,35 @@ void dumpGuestContext(const GCONTXT *context)
       modeString = "FIQ";
       r8 = &(context->R8_FIQ);
       r13 = &(context->R13_FIQ);
-      spsr = &(context->SPSR_FIQ);
+      spsr = &(context->SPSR_FIQ.value);
       break;
     }
     case IRQ_MODE:
     {
       modeString = "IRQ";
       r13 = &(context->R13_IRQ);
-      spsr = &(context->SPSR_IRQ);
+      spsr = &(context->SPSR_IRQ.value);
       break;
     }
     case SVC_MODE:
     {
       modeString = "SVC";
       r13 = &(context->R13_SVC);
-      spsr = &(context->SPSR_SVC);
+      spsr = &(context->SPSR_SVC.value);
       break;
     }
     case ABT_MODE:
     {
       modeString = "ABT";
       r13 = &(context->R13_ABT);
-      spsr = &(context->SPSR_ABT);
+      spsr = &(context->SPSR_ABT.value);
       break;
     }
     case UND_MODE:
     {
       modeString = "UND";
       r13 = &(context->R13_UND);
-      spsr = &(context->SPSR_UND);
+      spsr = &(context->SPSR_UND.value);
       break;
     }
     default:

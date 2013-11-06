@@ -118,43 +118,43 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
     {
       if (regDest == GPR_PC)
       {
-        u32int modeToCopy = 0;
+        u32int spsrToCopy = 0;
         // copy SPSR to CPSR
         switch (context->CPSR.bits.mode)
         {
           case FIQ_MODE:
           {
-            modeToCopy = context->SPSR_FIQ;
+            spsrToCopy = context->SPSR_FIQ.value;
             break;
           }
           case IRQ_MODE:
           {
-            modeToCopy = context->SPSR_IRQ;
+            spsrToCopy = context->SPSR_IRQ.value;
             break;
           }
           case SVC_MODE:
           {
-            modeToCopy = context->SPSR_SVC;
+            spsrToCopy = context->SPSR_SVC.value;
             break;
           }
           case ABT_MODE:
           {
-            modeToCopy = context->SPSR_ABT;
+            spsrToCopy = context->SPSR_ABT.value;
             break;
           }
           case UND_MODE:
           {
-            modeToCopy = context->SPSR_UND;
+            spsrToCopy = context->SPSR_UND.value;
             break;
           }
           default:
             DIE_NOW(context, "arithLogicOp: no SPSR for current guest mode");
         }
-        if ((context->CPSR.bits.mode) != (modeToCopy & PSR_MODE))
+        if ((context->CPSR.bits.mode) != (spsrToCopy & PSR_MODE))
         {
-          guestChangeMode(context, modeToCopy & PSR_MODE);
+          guestChangeMode(context, spsrToCopy & PSR_MODE);
         }
-        context->CPSR.value = modeToCopy;
+        context->CPSR.value = spsrToCopy;
 
         // Align PC
         if (context->CPSR.bits.T)
