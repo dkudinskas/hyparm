@@ -92,10 +92,7 @@ u32int getGPRegister(GCONTXT *context, u32int sourceRegister);
 
 
 /* functions to get raw instruction pointer and PC value identical to native execution of guest */
-__macro__ u32int getNativeProgramCounter(const GCONTXT *context) __pure__;
-__macro__ u32int getVirtualInstructionPointer(const GCONTXT *context) __pure__;
-__macro__ u32int getVirtualProgramCounter(const GCONTXT *context) __pure__;
-
+__macro__ u32int PC(const GCONTXT *context) __pure__;
 
 void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
   __attribute__((noinline,noreturn));
@@ -119,7 +116,7 @@ __macro__ u32int getLowGPRegister(const GCONTXT *context, u32int sourceRegister)
 }
 
 
-__macro__ u32int getNativeProgramCounter(const GCONTXT *context)
+__macro__ u32int PC(const GCONTXT *context)
 {
 #ifdef CONFIG_THUMB2
     const u32int offset = 2 * ARM_INSTRUCTION_SIZE;
@@ -127,27 +124,8 @@ __macro__ u32int getNativeProgramCounter(const GCONTXT *context)
     const u32int offset = 2 * (context->CPSR.bits.T ? T16_INSTRUCTION_SIZE
                                                     : ARM_INSTRUCTION_SIZE);
 #endif
-    return context->lastGuestPC + offset;
+    return context->R15 + offset;
 }
-
-
-__macro__ u32int getVirtualInstructionPointer(const GCONTXT *context)
-{
-  return context->R15;
-}
-
-
-__macro__ u32int getVirtualProgramCounter(const GCONTXT *context)
-{
-#ifdef CONFIG_THUMB2
-    const u32int offset = 2 * ARM_INSTRUCTION_SIZE;
-#else
-    const u32int offset = 2 * (context->CPSR.bits.T ? T16_INSTRUCTION_SIZE
-                                                    : ARM_INSTRUCTION_SIZE);
-#endif
-    return getVirtualInstructionPointer(context) + offset;
-}
-
 
 __macro__ void setLowGPRegister(GCONTXT *context, u32int destinationRegister, u32int value)
 {

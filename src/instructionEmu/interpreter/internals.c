@@ -33,7 +33,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
   }
 
 #ifdef DATA_PROC_TRACE
-  printf("%s: %#.8x @ %#.8x" EOL, instrString, instr, context->lastGuestPC);
+  printf("%s: %#.8x @ %#.8x" EOL, instrString, instr, context->R15);
 #endif
 
   if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instr)))
@@ -178,7 +178,7 @@ u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *i
   }
   else
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 }
 
@@ -308,7 +308,7 @@ bool evaluateConditionCode(GCONTXT *context, u32int conditionCode)
 
 void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
 {
-  printf("%#.8x @ %#.8x should not have trapped!" EOL, instruction, context->lastGuestPC);
+  printf("%#.8x @ %#.8x should not have trapped!" EOL, instruction, context->R15);
   DIE_NOW(context, message);
 }
 
@@ -321,7 +321,7 @@ u32int getGPRegister(GCONTXT *context, u32int sourceRegister)
 
   if (sourceRegister == GPR_PC)
   {
-    return getNativeProgramCounter(context);
+    return PC(context);
   }
 
   return *(getHighGPRegisterPointer(context, sourceRegister));

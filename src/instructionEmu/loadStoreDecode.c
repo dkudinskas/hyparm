@@ -13,15 +13,6 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
 {
   u32int instr;
 
-  // save the lastGuestPC. The emulation functions make use of this value
-  // to calculate the next PC so R15 should be stored here temporary
-  // but after the abort the PCOfLastInstruction should be back a valid value
-  // since the next emulation function will make use of this!
-  u32int BackupLastGuestPC = context->lastGuestPC;
-
-  // emulate methods will take lastGuestPC from context, put it there
-  context->lastGuestPC = context->R15;
-
 #ifdef CONFIG_THUMB2
   if (context->CPSR.bits.T)
   {
@@ -266,5 +257,4 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
     }
   }
-  context->lastGuestPC = BackupLastGuestPC;
 }

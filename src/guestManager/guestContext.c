@@ -239,7 +239,6 @@ void dumpGuestContext(const GCONTXT *context)
   printf("translationStore->basicBlockStore: %p\n", context->translationStore->basicBlockStore);
   printf("translationStore->codeStore next: %p\n", context->translationStore->codeStore);
   printf("translationStore->codeStore next free word: %p\n", context->translationStore->codeStoreFreePtr);
-  printf("guest PC Of Last guest Instruction: %08x\n", context->lastGuestPC);
   printf("last entry block index: %08x\n", context->lastEntryBlockIndex);
   dumpSdramStats(context->vm.sdram);
 

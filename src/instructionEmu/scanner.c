@@ -214,11 +214,8 @@ BasicBlock* scanBlock(GCONTXT *context, u32int startAddress)
   {
     // block was found in index.
     context->R15 = (u32int)basicBlock->codeStoreStart;
-    // But also the PC of the last instruction of the block should be set
-    context->lastGuestPC = (u32int)basicBlock->guestEnd;
-    DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: lastGuestPC = %08x, context->R15 @ %08x"
-                                        EOL, context->lastGuestPC, context->R15);
-
+    DEBUG(SCANNER_BLOCK_TRACE, "scanBlock: context->R15 @ %08x"
+                               EOL, context->R15);
     setScanBlockCallSource(SCANNER_CALL_SOURCE_NOT_SET);
     return basicBlock;
   }
@@ -335,8 +332,6 @@ BasicBlock* scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStore
   basicBlock->handler = decodedInstr->handler;
 #endif
 
-  context->lastGuestPC = (u32int)instructionPtr;
-  DEBUG(SCANNER, "scanArmBlock: last guest PC set to %08x\n", context->lastGuestPC);
   DEBUG(SCANNER, "scanArmBlock: instr %08x @ %p SWIcode %02x hdlrFuncPtr %p" EOL,
         *instructionPtr, instructionPtr, blockStoreIndex, basicBlock->handler);
 

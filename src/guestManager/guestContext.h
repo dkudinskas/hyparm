@@ -121,7 +121,6 @@ struct guestContext
   enum guestOSType os;
 
   /* This will contain the guest PC of the last instruction in active BB*/
-  u32int lastGuestPC;
   u32int lastEntryBlockIndex;
 
   u8int *execBitmap;

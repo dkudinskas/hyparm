@@ -13,7 +13,7 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
@@ -90,7 +90,7 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
   // P = 0 and W == 1 then LDR as if user mode
   if ((preOrPost == 0) && (writeBack != 0) && shouldDataAbort(context, FALSE, FALSE, address))
   {
-    return context->lastGuestPC;
+    return context->R15;
   }
 
   // DO the actual load from memory
@@ -112,12 +112,11 @@ u32int armLdrInstruction(GCONTXT *context, u32int instruction)
   }
   if (regDst == GPR_PC)
   {
-    // can't use lastGuestPC, thats stale. use the value just loaded into PC
     return context->R15;
   }
   else
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 }
 
@@ -125,7 +124,7 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
@@ -194,7 +193,7 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
   // P = 0 and W == 1 then LDRB as if user mode
   if (!preOrPost && writeBack && shouldDataAbort(context, FALSE, FALSE, address))
   {
-    return context->lastGuestPC;
+    return context->R15;
   }
 
   // DO the actual load from memory
@@ -211,14 +210,14 @@ u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
     // Rn = offsetAddr;
     setGPRegister(context, regSrc, offsetAddress);
   }
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
@@ -324,14 +323,14 @@ u32int armLdrhInstruction(GCONTXT *context, u32int instruction)
     setGPRegister(context, regSrc, offsetAddress);
   }
 
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
@@ -425,7 +424,7 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
     // Rn = offsetAddr;
     setGPRegister(context, regSrc, offsetAddress);
   }
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 
@@ -451,7 +450,7 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
@@ -597,9 +596,6 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
   if (isPCinRegList)
   {
     /*
-     * BLOCK COPY WARNING: we must use context->R15 instead of context->lastGuestPC
-     * because we just updated the former!
-     *
      * If PC is in the list this is an interworking branch.
      */
     if (context->R15 & 0x1)
@@ -618,5 +614,5 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
     return context->R15;
   }
 
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }

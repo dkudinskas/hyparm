@@ -8,14 +8,14 @@ u32int armClrexInstruction(GCONTXT *context, u32int instruction)
   DEBUG_TRACE(INTERPRETER_ARM_SYNC, context, instruction);
   DEBUG(INTERPRETER_ARM_SYNC, "ignored!");
 
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrexInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
@@ -34,14 +34,14 @@ u32int armLdrexInstruction(GCONTXT *context, u32int instruction)
 
   setGPRegister(context, regDest, value);
 
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrexbInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
@@ -57,14 +57,14 @@ u32int armLdrexbInstruction(GCONTXT *context, u32int instruction)
   u32int value = vmLoad(context, BYTE, baseVal) & 0xFF;
   setGPRegister(context, regDest, value);
 
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
@@ -80,14 +80,14 @@ u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
   u32int value = vmLoad(context, HALFWORD, baseVal) & 0xFFFF;
   setGPRegister(context, regDest, value);
 
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
@@ -107,14 +107,14 @@ u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
   setGPRegister(context, regDest, value);
   setGPRegister(context, regDest + 1, value2);
 
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrexInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
@@ -138,14 +138,14 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
   // operation succeeded updating memory, flag regD (0 - updated, 1 - fail)
   setGPRegister(context, regD, 0);
 
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrexbInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
@@ -167,14 +167,14 @@ u32int armStrexbInstruction(GCONTXT *context, u32int instruction)
 
   setGPRegister(context, regD, 0);
 
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
@@ -186,7 +186,7 @@ u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
     // condition not met! allright, we're done here. next instruction...
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   ASSERT(regN != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
@@ -201,14 +201,14 @@ u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
   vmStore(context, HALFWORD, address, valToStore & 0xFFFF);
   setGPRegister(context, regD, 0);
 
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
 {
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
@@ -220,7 +220,7 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
   if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
   {
     // condition not met! allright, we're done here. next instruction...
-    return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+    return context->R15 + ARM_INSTRUCTION_SIZE;
   }
 
   ASSERT(regN != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
@@ -255,7 +255,7 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
   }
   setGPRegister(context, regD, 0);
 
-  return context->lastGuestPC + ARM_INSTRUCTION_SIZE;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armSwpInstruction(GCONTXT *context, u32int instruction)

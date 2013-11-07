@@ -80,6 +80,10 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   bool gSVC = FALSE;
   BasicBlock* block = NULL;
 
+  // asm context switch saved translated host pc into guest context R15
+  // it will get overwritten by following code, but needed for block linking
+  u32int lastTranslatedPC = context->R15;
+
 #ifdef CONFIG_HW_PASSTHROUGH
   if (IrqBitModified)
   {
@@ -135,7 +139,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   {
     u32int blockStoreIndex = code - 0x100;
     block = getBasicBlockStoreEntry(context->translationStore, blockStoreIndex);
-    context->lastGuestPC = (u32int)block->guestEnd;
+    context->R15 = (u32int)(block->guestEnd);
 
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
     registerSvc(context, block->handler);
@@ -146,8 +150,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   }
 
   traceBlock(context, nextPC);
-
-  u32int lastPC = context->R15;
   context->R15 = nextPC;
 
   /* Maybe an interrupt is pending but hasn't been delivered? */
@@ -185,7 +187,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
 
     if (link && isBranch(*block->guestEnd))
     {
-      linkBlock(context, context->R15, lastPC, block);
+      linkBlock(context, context->R15, lastTranslatedPC, block);
     }
 
     scanBlock(context, context->R15);
