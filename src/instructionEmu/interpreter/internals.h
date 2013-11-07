@@ -31,12 +31,7 @@
 #define T16_EXTRACT_LOW_REGISTER(instructionWord, position) ((instructionWord >> position) & 0x7)
 
 
-inline bool ConditionPassed(void);
-
-inline bool ConditionPassed(void)
-{
-
-}
+inline bool ConditionPassed(ConditionCode instructionCode);
 
 typedef enum
 {
@@ -80,7 +75,7 @@ void evaluateBreakpointValue(GCONTXT *context, u32int value);
 
 
 /* a function to evaluate if a condition value is satisfied */
-bool evaluateConditionCode(GCONTXT *context, u32int conditionCode);
+bool evaluateConditionCode(GCONTXT *context, ConditionCode conditionCode);
 
 
 /* function to load a register value from r0--r7 */
@@ -130,6 +125,18 @@ __macro__ u32int PC(const GCONTXT *context)
 __macro__ void setLowGPRegister(GCONTXT *context, u32int destinationRegister, u32int value)
 {
   *(&context->R0 + destinationRegister) = value;
+}
+
+
+// ============== INLINES =================================
+inline bool ConditionPassed(ConditionCode instructionCode)
+{
+  if ((instructionCode == AL) || (instructionCode == NV))
+    return TRUE;
+  else
+  {
+    return evaluateConditionCode(getActiveGuestContext(), instructionCode);
+  }
 }
 
 #endif /* __INSTRUCTION_EMU__INTERPRETER__INTERNALS_H__ */

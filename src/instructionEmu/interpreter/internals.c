@@ -269,41 +269,43 @@ void evaluateBreakpointValue(GCONTXT *context, u32int value)
 
 bool evaluateConditionCode(GCONTXT *context, u32int conditionCode)
 {
-  switch (conditionCode)
+  bool result;
+  // cond<3:1> switch
+  switch ((conditionCode & 0xE) >> 1)
   {
-    case EQ:
-      return context->CPSR.bits.Z;
-    case NE:
-      return !context->CPSR.bits.Z;
-    case HS:
-      return context->CPSR.bits.C;
-    case LO:
-      return !context->CPSR.bits.C;
-    case MI:
-      return context->CPSR.bits.N;
-    case PL:
-      return !context->CPSR.bits.N;
-    case VS:
-      return context->CPSR.bits.V;
-    case VC:
-      return !context->CPSR.bits.V;
-    case HI:
-      return context->CPSR.bits.C && !(context->CPSR.bits.Z);
-    case LS:
-      return !context->CPSR.bits.C || context->CPSR.bits.Z;
-    case GE:
-      return context->CPSR.bits.N == context->CPSR.bits.V;
-    case LT:
-      return context->CPSR.bits.N != context->CPSR.bits.V;
-    case GT:
-      return !context->CPSR.bits.Z && (context->CPSR.bits.N == context->CPSR.bits.V);
-    case LE:
-      return context->CPSR.bits.Z || context->CPSR.bits.N != context->CPSR.bits.V;
-    case AL:
-      return TRUE;
+    case 0:
+      result = (context->CPSR.bits.Z == 1);
+      break;
+    case 1:
+      result = (context->CPSR.bits.C == 1);
+      break;
+    case 2:
+      result = (context->CPSR.bits.N == 1);
+      break;
+    case 3:
+      result = (context->CPSR.bits.V == 1);
+      break;
+    case 4:
+      result = (context->CPSR.bits.C == 1) && (context->CPSR.bits.Z == 0);
+      break;
+    case 5:
+      result = (context->CPSR.bits.N == context->CPSR.bits.V);
+      break;
+    case 6:
+      result = (context->CPSR.bits.N == context->CPSR.bits.V) && (context->CPSR.bits.Z == 0);
+      break;
+    // this case should not be hit: handled in previous ConditionPassed()
+    case 7:
     default:
-      return FALSE;
+      result = TRUE;
   }
+  // STARFIX: once this function isn't called directly apart form ConditionPassed()
+  // remove the check for '1111'
+  if (((conditionCode & 1) == 1) && (conditionCode != NV))
+  {
+    result = !result;
+  }
+  return result;
 }
 
 void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *message)
