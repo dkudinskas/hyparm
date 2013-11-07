@@ -216,7 +216,7 @@ endif # ifneq ($(filter $(NO_BUILD_GOALS),$(MAKECMDGOALS)),)
 
 HYPARM_DIRS-y := common common/memoryAllocator cpuArch drivers/beagle exceptions guestBoot \
                  guestManager instructionEmu instructionEmu/decoder instructionEmu/interpreter \
-                 instructionEmu/translator memoryManager vm/omap35xx
+                 instructionEmu/translator memoryManager perf vm/omap35xx
 
 # sd-card
 HYPARM_DIRS-$(CONFIG_MMC_LOG) += io io/fs

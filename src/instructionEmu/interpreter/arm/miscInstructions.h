@@ -61,4 +61,11 @@ u32int armYieldInstruction(GCONTXT *context, u32int instruction);
 
 u32int armClzInstruction(GCONTXT *context, u32int instruction);
 
+u32int nopInstruction(GCONTXT *context, u32int instruction);
+
+u32int svcInstruction(GCONTXT *context, u32int instruction);
+
+u32int undefinedInstruction(GCONTXT *context, u32int instruction);
+
+
 #endif /* __INSTRUCTION_EMU__INTERPRETER__ARM__MISC_INSTRUCTIONS_H__ */

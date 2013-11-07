@@ -7,6 +7,7 @@
 
 
 u32int armBInstruction(GCONTXT *context, u32int instruction);
+u32int armBlInstruction(GCONTXT *context, u32int instruction);
 
 u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction);
 u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction);

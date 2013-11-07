@@ -60,4 +60,13 @@ typedef enum
   NV = 0xF,  // never - should not be used! only special uncond instr
 } ConditionCode;
 
+
+typedef enum
+{
+  InstrSet_ARM,
+  InstrSet_Thumb,
+  InstrSet_ThumbEE,
+  InstrSet_Jazelle,
+} InstructionSet;
+
 #endif

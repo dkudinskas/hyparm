@@ -147,4 +147,19 @@ typedef union
 } ARMMcrInstruction;
 
 
+// this union will hold possible encodings for instructions
+// each struct must be 32 bits exactly
+// instruction as a whole can be accesssed via 'raw' field
+typedef union ARMInstruction
+{
+  struct Branch
+  {
+    unsigned imm24: 24;
+    unsigned pad0:   4;
+    unsigned cc:     4;
+  } branch;
+
+  u32int raw;
+} Instruction;
+
 #endif /* __INSTRUCTION_EMU__DECODER__ARM__STRUCTS_H__ */

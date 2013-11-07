@@ -26,8 +26,10 @@ static struct decodingTableEntry armBranchBlockTransferInstructions[] =
   ENTRY(IRC_REPLACE, armLdmInstruction,         NULL,                   0x08108000, 0x0e108000, "LDM Rn, {..r15}"),
   ENTRY(IRC_SAFE,    armLdmInstruction,         NULL,                   0x08900000, 0x0f900000, "LDMIA Rn, {regList}"),
   ENTRY(IRC_SAFE,    armLdmInstruction,         NULL,                   0x08100000, 0x0e100000, "LDM Rn, {regList}"),
-  // B/BL: always hypercall! obviously.
-  ENTRY(IRC_REPLACE, armBInstruction,           NULL,                   0x0a000000, 0x0e000000, "BRANCH"),
+  // B: always hypercall! obviously.
+  ENTRY(IRC_REPLACE, armBInstruction,           NULL,                   0x0a000000, 0x0f000000, "B imm24"),
+  // BL: always hypercall! obviously.
+  ENTRY(IRC_REPLACE, armBlInstruction,          NULL,                   0x0b000000, 0x0f000000, "BL imm24"),
   ENTRY(IRC_REPLACE, undefinedInstruction,      NULL,                   0x00000000, 0x00000000, "branchBlockTransferInstructions")
 };
 

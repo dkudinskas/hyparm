@@ -113,13 +113,11 @@ __macro__ u32int getLowGPRegister(const GCONTXT *context, u32int sourceRegister)
 
 __macro__ u32int PC(const GCONTXT *context)
 {
-#ifdef CONFIG_THUMB2
-    const u32int offset = 2 * ARM_INSTRUCTION_SIZE;
+#ifndef CONFIG_THUMB2
+    return context->R15 + 2 * ARM_INSTRUCTION_SIZE;
 #else
-    const u32int offset = 2 * (context->CPSR.bits.T ? T16_INSTRUCTION_SIZE
-                                                    : ARM_INSTRUCTION_SIZE);
+    return 2 * (context->CPSR.bits.T ? T16_INSTRUCTION_SIZE : ARM_INSTRUCTION_SIZE);
 #endif
-    return context->R15 + offset;
 }
 
 __macro__ void setLowGPRegister(GCONTXT *context, u32int destinationRegister, u32int value)
