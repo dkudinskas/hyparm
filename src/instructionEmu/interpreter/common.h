@@ -11,6 +11,8 @@ void BranchWritePC(GCONTXT* context, u32int address);
 
 void BXWritePC(GCONTXT* context, u32int target);
 
+void ClearExclusiveLocal(void);
+
 bool ConditionPassed(ConditionCode instructionCode);
 
 InstructionSet CurrentInstrSet(void);
@@ -71,6 +73,12 @@ __macro__ void BXWritePC(GCONTXT* context, u32int address)
   {
     DIE_NOW(context, "BranchWritePC: other instruction sets unimplemented");
   }
+}
+
+
+__macro__ void ClearExclusiveLocal()
+{
+  // STARFIX: implement exclusive monitors. should check the flags here
 }
 
 

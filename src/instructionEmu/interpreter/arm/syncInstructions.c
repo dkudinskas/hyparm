@@ -1,3 +1,5 @@
+#include "instructionEmu/decoder/arm/structs.h"
+#include "instructionEmu/interpreter/common.h"
 #include "instructionEmu/interpreter/internals.h"
 
 #include "instructionEmu/interpreter/arm/syncInstructions.h"
@@ -6,34 +8,25 @@
 u32int armClrexInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_ARM_SYNC, context, instruction);
-  DEBUG(INTERPRETER_ARM_SYNC, "ignored!");
 
+  ClearExclusiveLocal();
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 u32int armLdrexInstruction(GCONTXT *context, u32int instruction)
 {
-  if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
-  {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
-
+  Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
 
-  u32int baseReg = ARM_EXTRACT_REGISTER(instruction, 16);
-  u32int regDest = ARM_EXTRACT_REGISTER(instruction, 12);
+  if (ConditionPassed(instr.ldrex.cc))
+  {
+    if ((instr.ldrex.Rt == GPR_PC) || (instr.ldrex.Rn == GPR_PC))
+      UNPREDICTABLE();
 
-  ASSERT(baseReg != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-  ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-
-  u32int baseVal = getGPRegister(context, baseReg);
-  u32int value = vmLoad(context, WORD, baseVal);
-
-  DEBUG(INTERPRETER_ARM_LOAD_SYNC, "armLdrexInstruction: baseVal = %#.8x loaded %#.8x store to "
-      "%#.8x" EOL, baseVal, value, regDest);
-
-  setGPRegister(context, regDest, value);
-
+    u32int address = getGPRegister(context, instr.ldrex.Rn);
+    SetExclusiveMonitors(address,4);
+    setGPRegister(context, instr.ldrex.Rt, vmLoad(context, WORD, address));
+  }
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
@@ -110,34 +103,30 @@ u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
+
 u32int armStrexInstruction(GCONTXT *context, u32int instruction)
 {
-  if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
-  {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
-
+  Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
 
-  u32int regN = ARM_EXTRACT_REGISTER(instruction, 16);
-  u32int regD = ARM_EXTRACT_REGISTER(instruction, 12);
-  u32int regT = ARM_EXTRACT_REGISTER(instruction, 0);
+  if (ConditionPassed(instr.strex.cc))
+  {
+    if ((instr.strex.Rt == GPR_PC) || (instr.strex.Rn == GPR_PC) || (instr.strex.Rd == GPR_PC))
+      UNPREDICTABLE();
+    if ((instr.strex.Rd == instr.strex.Rn) || (instr.strex.Rd == instr.strex.Rt))
+      UNPREDICTABLE();
 
-  ASSERT(regN != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-  ASSERT(regD != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-  ASSERT(regT != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-  ASSERT(regD != regN, ERROR_UNPREDICTABLE_INSTRUCTION);
-  ASSERT(regD != regT, ERROR_UNPREDICTABLE_INSTRUCTION);
-
-  u32int address = getGPRegister(context, regN);
-  u32int valToStore = getGPRegister(context, regT);
-  DEBUG(INTERPRETER_ARM_STORE_SYNC, "armStrexInstruction: address = %#.8x, valToStore = %#.8x, "
-      "valueFromReg %#.8x" EOL, address, valToStore, regT);
-
-  vmStore(context, WORD, address, valToStore);
-  // operation succeeded updating memory, flag regD (0 - updated, 1 - fail)
-  setGPRegister(context, regD, 0);
-
+    u32int address = getGPRegister(context, instr.strex.Rn);
+    if (ExclusiveMonitorsPass(address,4))
+    {
+      vmStore(context, WORD, address, getGPRegister(context, instr.strex.Rt));
+      setGPRegister(context, instr.strex.Rd, 0);
+    }
+    else
+    {
+      setGPRegister(context, instr.strex.Rd, 1);
+    }
+  }
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 

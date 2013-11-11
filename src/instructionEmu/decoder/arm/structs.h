@@ -166,6 +166,25 @@ typedef union ARMInstruction
     unsigned cc:     4;
   } BxReg;
 
+  struct Ldrex
+  {
+    unsigned pad0:  12;
+    unsigned Rt:     4;
+    unsigned Rn:     4;
+    unsigned pad1:   8;
+    unsigned cc:     4;
+  } ldrex;
+
+  struct Strex
+  {
+    unsigned Rt:     4;
+    unsigned pad0:   8;
+    unsigned Rd:     4;
+    unsigned Rn:     4;
+    unsigned pad1:   8;
+    unsigned cc:     4;
+  } strex;
+
   u32int raw;
 } Instruction;
 
