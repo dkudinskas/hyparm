@@ -544,8 +544,8 @@ void irqPrivileged()
 {
   // disable possible further interrupts
   disableInterrupts();
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   GCONTXT *const context = getActiveGuestContext();
+#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   context->irqCount++;
   context->irqPriv++;
 #endif

@@ -118,7 +118,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, I2C2_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
+      if (isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -130,7 +130,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, I2C3_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -142,7 +142,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, MMC1_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -154,7 +154,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, MMC2_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -166,7 +166,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, MMC3_IRQ);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -178,7 +178,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, SDMA_IRQ_0);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -190,7 +190,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, SDMA_IRQ_1);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -202,7 +202,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, SDMA_IRQ_2);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
@@ -214,7 +214,7 @@ void throwInterrupt(GCONTXT *context, u32int irqNumber)
     {
       setInterrupt(context, SDMA_IRQ_3);
       // are we forwarding the interrupt event?
-      if ( isIrqPending(context->vm.irqController) && ((context->CPSR.bits.I == 0))
+      if ( isIrqPending(context->vm.irqController) && (context->CPSR.bits.I == 0))
       {
         // guest has enabled interrupts globally.
         // set guest irq pending flag!
