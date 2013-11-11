@@ -159,6 +159,13 @@ typedef union ARMInstruction
     unsigned cc:     4;
   } branch;
 
+  struct BxReg
+  {
+    unsigned Rm:     4;
+    unsigned pad0:  24;
+    unsigned cc:     4;
+  } BxReg;
+
   u32int raw;
 } Instruction;
 

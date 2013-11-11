@@ -7,11 +7,15 @@
 
 
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-void countBranch(GCONTXT *context, Instruction instr);
-void countBL(GCONTXT *context, Instruction instr);
+void countBranch(GCONTXT* context, Instruction instr);
+void countBL(GCONTXT* context, Instruction instr);
+void countBLXreg(GCONTXT* context, Instruction instr);
+void countBX(GCONTXT* context, instr);
 #else
 #define countBranch(context, instr)
 #define countBL(context, instr);
+#define countBLXreg(context, instr);
+#define countBX(context, instr);
 #endif
 
 

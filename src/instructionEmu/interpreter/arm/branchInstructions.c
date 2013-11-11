@@ -7,11 +7,6 @@
 
 #include "perf/contextSwitchCounters.h"
 
-enum
-{
-  BLX_RM_INDEX = 0
-};
-
 
 u32int armBInstruction(GCONTXT *context, u32int instruction)
 {
@@ -28,11 +23,13 @@ u32int armBInstruction(GCONTXT *context, u32int instruction)
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
+
 u32int armBlInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   countBL(context, instr);
-  DEBUG(INTERPRETER_ARM_BRANCH, "armBLInstruction: %08x @ %08x\n", instr.raw, context->R15);
+  DEBUG(INTERPRETER_ARM_BRANCH, "armBLInstruction: %08x @ %08x\n",
+                                         instr.raw, context->R15);
 
   if (ConditionPassed(instr.branch.cc))
   {
@@ -47,12 +44,11 @@ u32int armBlInstruction(GCONTXT *context, u32int instruction)
 }
 
 
-
+/*
+ * NOTE: this instruction is unconditional and always switches to Thumb mode.
+ */
 u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
 {
-  /*
-   * NOTE: this instruction is unconditional and always switches to Thumb mode.
-   */
 #ifdef CONFIG_THUMB2
 
   DEBUG(INTERPRETER_ARM_BRANCH, "armBlxImmediateInstruction: %#.8x @ %#.8x" EOL, instruction,
@@ -73,106 +69,48 @@ u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
 
 u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  if ((instruction & 0xF0000000) == 0xE0000000)
+  Instruction instr = {.raw = instruction};
+  countBLXreg(context, instr);
+  DEBUG(INTERPRETER_ARM_BRANCH, "armBlxRegisterInstruction: %08x @ %08x\n",
+                                                  instr.raw, context->R15);
+  if (ConditionPassed(instr.BxReg.cc))
   {
-    context->branchNonconditional++;
+    if (instr.BxReg.Rm == GPR_PC)
+      UNPREDICTABLE();
+
+    u32int target = getGPRegister(context, instr.BxReg.Rm);
+    if (CurrentInstrSet() == InstrSet_ARM)
+      setGPRegister(context, GPR_LR, PC(context) - 4);
+    else
+      setGPRegister(context, GPR_LR, (PC(context) - 2) | 1);
+
+    BXWritePC(context, target);
+    return context->R15;
   }
-  else
-  {
-    context->branchConditional++;
-  }
-  context->branchRegister++;
-
-  context->branchLink++;
-#endif
-
-  if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
-  {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
-
-  DEBUG(INTERPRETER_ARM_BRANCH, "armBlxRegisterInstruction: %#.8x @ %#.8x" EOL, instruction,
-        context->R15);
-
-  // Rm holds target address and mode bit for interworking branch
-  const u32int targetRegister = ARM_EXTRACT_REGISTER(instruction, BLX_RM_INDEX);
-  ASSERT(targetRegister != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-  u32int destinationAddress = getGPRegister(context, targetRegister);
-
-  setGPRegister(context, GPR_LR, context->R15 + ARM_INSTRUCTION_SIZE);
-
-  if (destinationAddress & 1)
-  {
-#ifdef CONFIG_THUMB2
-    context->CPSR.bits.T = 1;
-    destinationAddress ^= 1;
-#else
-    DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
-#endif
-  }
-  else
-  {
-    // Branch to unaligned ARM address!
-    ASSERT((destinationAddress & 2) == 0, ERROR_UNPREDICTABLE_INSTRUCTION)
-  }
-
-  return destinationAddress;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 
 u32int armBxInstruction(GCONTXT *context, u32int instruction)
 {
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  if ((instruction & 0xF0000000) == 0xE0000000)
+  Instruction instr = {.raw = instruction};
+  countBX(context, instr);
+  DEBUG(INTERPRETER_ARM_BRANCH, "armBxInstruction: %08x @ %08x\n",
+                                         instr.raw, context->R15);
+
+  if (ConditionPassed(instr.BxReg.cc))
   {
-    context->branchNonconditional++;
+    BXWritePC(context, getGPRegister(context, instr.BxReg.Rm));
+    return context->R15;
   }
-  else
-  {
-    context->branchConditional++;
-  }
-
-  context->branchNonlink++;
-  context->branchRegister++;
-#endif
-
-  if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
-  {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
-
-  DEBUG(INTERPRETER_ARM_BRANCH, "armBxInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
-
-  // Rm holds target address and mode bit for interworking branch -- Rm can be PC!
-  const u32int targetRegister = ARM_EXTRACT_REGISTER(instruction, BLX_RM_INDEX);
-  u32int destinationAddress = getGPRegister(context, targetRegister);
-
-  /*
-   * Check if switching to thumb mode
-   */
-  if (destinationAddress & 1)
-  {
-#ifdef CONFIG_THUMB2
-    context->CPSR.bits.T = 1;
-    destinationAddress ^= 1;
-#else
-    DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
-#endif
-  }
-  else
-  {
-    // Branch to unaligned ARM address!
-    ASSERT((destinationAddress & 2) == 0, ERROR_UNPREDICTABLE_INSTRUCTION);
-  }
-
-  return destinationAddress;
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 
 u32int armBxjInstruction(GCONTXT *context, u32int instruction)
 {
-  DEBUG(INTERPRETER_ARM_BRANCH, "armBxjInstruction: %#.8x @ %#.8x" EOL, instruction, context->R15);
+  DEBUG(INTERPRETER_ARM_BRANCH, "armBxjInstruction: %#.8x @ %#.8x" EOL,
+                                            instruction, context->R15);
 
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
