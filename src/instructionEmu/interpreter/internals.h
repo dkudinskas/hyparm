@@ -31,8 +31,6 @@
 #define T16_EXTRACT_LOW_REGISTER(instructionWord, position) ((instructionWord >> position) & 0x7)
 
 
-inline bool ConditionPassed(ConditionCode instructionCode);
-
 typedef enum
 {
   ADD,
@@ -125,16 +123,5 @@ __macro__ void setLowGPRegister(GCONTXT *context, u32int destinationRegister, u3
   *(&context->R0 + destinationRegister) = value;
 }
 
-
-// ============== INLINES =================================
-inline bool ConditionPassed(ConditionCode instructionCode)
-{
-  if ((instructionCode == AL) || (instructionCode == NV))
-    return TRUE;
-  else
-  {
-    return evaluateConditionCode(getActiveGuestContext(), instructionCode);
-  }
-}
 
 #endif /* __INSTRUCTION_EMU__INTERPRETER__INTERNALS_H__ */

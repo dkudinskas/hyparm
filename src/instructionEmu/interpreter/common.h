@@ -3,15 +3,23 @@
 
 #include "common/types.h"
 
+#include "instructionEmu/interpreter/internals.h"
+
 #include "guestManager/guestContext.h"
 
 void BranchWritePC(GCONTXT* context, u32int address);
 
 void BXWritePC(GCONTXT* context, u32int target);
 
+bool ConditionPassed(ConditionCode instructionCode);
+
 InstructionSet CurrentInstrSet(void);
 
+bool ExclusiveMonitorsPass(u32int address, ACCESS_SIZE size);
+
 void SelectInstrSet(InstructionSet iset);
+
+void SetExclusiveMonitors(u32int address, ACCESS_SIZE size);
 
 void UNPREDICTABLE(void);
 
@@ -66,6 +74,17 @@ __macro__ void BXWritePC(GCONTXT* context, u32int address)
 }
 
 
+__macro__ bool ConditionPassed(ConditionCode instructionCode)
+{
+  if ((instructionCode == AL) || (instructionCode == NV))
+    return TRUE;
+  else
+  {
+    return evaluateConditionCode(getActiveGuestContext(), instructionCode);
+  }
+}
+
+
 __macro__ InstructionSet CurrentInstrSet()
 {
   // STARFIX: just return ARM for now. others not supported
@@ -73,10 +92,25 @@ __macro__ InstructionSet CurrentInstrSet()
 }
 
 
+__macro__ bool ExclusiveMonitorsPass(u32int address, ACCESS_SIZE size)
+{
+  // STARFIX: implement exclusive monitors. should check the flag for given
+  // address here.
+  return TRUE;
+}
+
+
 __macro__ void SelectInstrSet(InstructionSet iset)
 {
   // STARFIX: other isets not supported yet
   // do nothing
+}
+
+
+__macro__ void SetExclusiveMonitors(u32int address, ACCESS_SIZE size)
+{
+  // STARFIX: implement exclusive monitors. This should be a flag set per
+  // given address.
 }
 
 

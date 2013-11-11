@@ -26,6 +26,12 @@ typedef unsigned short      u16int;
 typedef unsigned int        u32int;
 typedef unsigned long long  u64int;
 
+typedef enum loadStoreAccessSize
+{
+  BYTE,
+  HALFWORD,
+  WORD,
+} ACCESS_SIZE;
 
 COMPILE_TIME_ASSERT(CHAR_BIT == 8, __char_not_8bit);
 

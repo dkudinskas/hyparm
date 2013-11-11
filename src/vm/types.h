@@ -4,13 +4,6 @@
 #include "common/types.h"
 
 
-typedef enum loadStoreAccessSize
-{
-  BYTE,
-  HALFWORD,
-  WORD,
-} ACCESS_SIZE;
-
 typedef struct genericDevice device;
 struct guestContext;
 
