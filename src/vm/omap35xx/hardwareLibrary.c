@@ -280,6 +280,7 @@ device *createHardwareLibrary(GCONTXT *context)
   initUart(&context->vm, 2);
 
 #ifndef CONFIG_HW_PASSTHROUGH
+#ifdef CONFIG_MMC_GUEST_ACCESS
   // I2C1
   device * i2c1 = createDevice("I2C1", FALSE, I2C1, (u32int) (I2C1 - 1 + I2C1_SIZE), l4IntCore,
                                &loadI2c, &storeI2c);
@@ -333,6 +334,7 @@ device *createHardwareLibrary(GCONTXT *context)
     goto mmc3Error;
   }
   initVirtMmc(&context->vm, 3);
+#endif
 
   // L4INT_CORE: interrupt controller
   device *intc = createDevice("INTC", FALSE, INTERRUPT_CONTROLLER,
@@ -565,6 +567,7 @@ l4CoreWakeupIntError:
 #ifndef CONFIG_HW_PASSTHROUGH
   free(intc);
 intcError:
+#ifdef CONFIG_MMC_GUEST_ACCESS
   free(mmc3);
 mmc3Error:
   free(mmc2);
@@ -577,6 +580,7 @@ i2c3Error:
 i2c2Error:
   free(i2c1);
 i2c1Error:
+#endif
 #endif
   free(uart2);
 uart2Error:
