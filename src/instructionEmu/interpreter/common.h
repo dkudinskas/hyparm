@@ -7,6 +7,8 @@
 
 #include "guestManager/guestContext.h"
 
+bool BigEndian(GCONTXT* context);
+
 void BranchWritePC(GCONTXT* context, u32int address);
 
 void BXWritePC(GCONTXT* context, u32int target);
@@ -26,6 +28,14 @@ void SetExclusiveMonitors(u32int address, ACCESS_SIZE size);
 void UNPREDICTABLE(void);
 
 /************** inlines ******************************/
+__macro__ bool BigEndian(GCONTXT* context)
+{
+  // STARFIX: This should be a dynamic check:
+  // return (ENDIANSTATE == '1');
+  // but we don't support big endian yet really. didnt see it used anywhere
+  return FALSE;
+}
+
 __macro__ void BranchWritePC(GCONTXT* context, u32int address)
 {
   if (CurrentInstrSet() == InstrSet_ARM)

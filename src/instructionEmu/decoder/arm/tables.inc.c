@@ -45,10 +45,10 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   // load halfword and translate
   ENTRY(IRC_SAFE, armLdrhtInstruction,       NULL,                   0x003000b0, 0x0f3000f0, "LDRHT instruction"),
   // store and load exclusive: can in theory be treated as 'safe'
-  ENTRY(IRC_SAFE, armLdrexbInstruction,      NULL,                   0x01d00f9f, 0x0ff00fff, "LDREXB"),
+  ENTRY(IRC_REPLACE, armLdrexbInstruction,      NULL,                   0x01d00f9f, 0x0ff00fff, "LDREXB"),
   ENTRY(IRC_SAFE, armLdrexdInstruction,      NULL,                   0x01b00f9f, 0x0ff00fff, "LDREXD"),
   ENTRY(IRC_SAFE, armLdrexhInstruction,      NULL,                   0x01f00f9f, 0x0ff00fff, "LDREXH"),
-  ENTRY(IRC_SAFE, armStrexbInstruction,      NULL,                   0x01c00f90, 0x0ff00ff0, "STREXB"),
+  ENTRY(IRC_REPLACE, armStrexbInstruction,      NULL,                   0x01c00f90, 0x0ff00ff0, "STREXB"),
   ENTRY(IRC_SAFE, armStrexdInstruction,      NULL,                   0x01a00f90, 0x0ff00ff0, "STREXD"),
   ENTRY(IRC_SAFE, armStrexhInstruction,      NULL,                   0x01e00f90, 0x0ff00ff0, "STREXH"),
   ENTRY(IRC_SAFE, armLdrexInstruction,       NULL,                   0x01900f9f, 0x0ff00fff, "LDREX"),
