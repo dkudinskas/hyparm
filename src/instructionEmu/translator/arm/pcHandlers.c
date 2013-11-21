@@ -173,8 +173,7 @@ void armALUimmNoDest(TranslationStore* ts, BasicBlock *block, u32int pc, u32int 
 
   if (instr.fields.Rn == GPR_PC)
   {
-    DEBUG(TRANSLATION, "armALUimmNoDest: translating %08x @ %08x cc=%x Rn=%x"
-          EOL, instr.value, pc, cond, Rn);
+    printf("armALUimmNoDest: translating %08x @ %08x cc=%x Rn=%x\n", instr.value, pc, cond, Rn);
     DIE_NOW(0, "armALUimmNoDest UNIMPLEMENTED\n");
     // must spill a register to put correct PC value in
     // since there is no destination register to be 'dead'
@@ -196,7 +195,7 @@ void armALUregNoDest(TranslationStore* ts, BasicBlock *block, u32int pc, u32int 
   DEBUG(TRANSLATION, "armALUregNoDest: translating %#.8x @ %#.8x with cond=%x, "
         "immediateForm=%x, Rn=%x, Rm=%x" EOL, instruction, pc, conditionCode, immediateForm,
         operandNRegister, operandMRegister);
-  DIE_NOW(0, "armALUimmNoDest UNIMPLEMENTED\n");
+  DIE_NOW(0, "armALUregNoDest UNIMPLEMENTED\n");
 /*
 
   u32int pcRegister;
@@ -320,6 +319,7 @@ void armLdrPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32
 
 void armLdrdhPCInstruction(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction)
 {
+  printf("armLdrdhPCInstruction: pc %08x instr %08x\n", pc, instruction);
   DIE_NOW(0, "armLdrdhPCInstruction unimplemented\n");
 }
 

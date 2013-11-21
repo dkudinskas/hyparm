@@ -48,12 +48,12 @@ static struct decodingTableEntry *decode(struct decodingTable *categories, u32in
    * If the mask is zero at this point, we have hit the end of the decoding table. This means we
    * do not know what to do with this instruction; dump it...
    */
-  if (entry->mask == 0)
-  {
-    printf("decode: cannot decode instruction %#.8x classified as '%s'" EOL, instruction,
-        entry->instructionString);
-    DIE_NOW(NULL, "undefined instruction");
-  }
+  // if (entry->mask == 0)
+  // {
+  //   printf("decode: cannot decode instruction %#.8x classified as '%s'" EOL, instruction,
+  //       entry->instructionString);
+  //   DIE_NOW(NULL, "undefined instruction");
+  // }
   return entry;
 }
 
