@@ -661,7 +661,7 @@ void setCregVal(GCONTXT *context, u32int registerIndex, u32int value)
 
 u32int getCregVal(GCONTXT* context, u32int registerIndex)
 {
-  const CREG* cr = context->coprocRegBank;
+  const CREG* cr = &context->coprocRegBank[registerIndex];
 
   DEBUG(INTERPRETER_ANY_COPROC, "getCreg: op1=%#x CRn=%#x CRm=%#x op2=%#x value=%#.8x valid=%x" EOL,
         CRB_INDEX_TO_OP1(registerIndex), CRB_INDEX_TO_CRN(registerIndex),
