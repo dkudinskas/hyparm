@@ -538,15 +538,15 @@ void irqPrivileged()
 {
   // disable possible further interrupts
   disableInterrupts();
-  GCONTXT *const context = getActiveGuestContext();
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  context->irqCount++;
-  context->irqPriv++;
+  getActiveGuestContext()->irqCount++;
+  getActiveGuestContext()->irqPriv++;
 #endif
 
 #ifdef CONFIG_HW_PASSTHROUGH
   DIE_NOW(0, "irqPrivileged should not be here with HW passthrough.");
 #else
+  GCONTXT *const context = getActiveGuestContext();
   // Get the number of the highest priority active IRQ
   u32int activeIrqNumber = getIrqNumberBE();
   switch(activeIrqNumber)

@@ -175,6 +175,20 @@ typedef union ARMInstruction
     unsigned cc:     4;
   } ldrex;
 
+  struct Mcr
+  {
+    unsigned CRm:    4;
+    unsigned pad0:   1;
+    unsigned opc2:   3;
+    unsigned coproc: 4;
+    unsigned Rt:     4;
+    unsigned CRn:    4;
+    unsigned pad1:   1;
+    unsigned opc1:   3;
+    unsigned pad2:   4;
+    unsigned cc:     4;
+  } mcr;
+
   struct Strex
   {
     unsigned Rt:     4;

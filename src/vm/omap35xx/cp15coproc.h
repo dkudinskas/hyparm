@@ -128,6 +128,7 @@ struct auxiliaryControlRegister
   unsigned l1HardwareResetDisable : 1;
   unsigned l2HardwareResetDisable : 1;
 };
+
 typedef union
 {
   struct auxiliaryControlRegister bits;
@@ -136,7 +137,7 @@ typedef union
 
 
 CREG *createCRB(void) __cold__;
-u32int getCregVal(CREG *registerBank, u32int registerIndex);
+u32int getCregVal(GCONTXT* context, u32int registerIndex);
 void setCregVal(GCONTXT *context, u32int registerIndex, u32int value);
 
 
