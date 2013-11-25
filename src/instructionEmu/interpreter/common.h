@@ -25,6 +25,8 @@ InstructionSet CurrentInstrSet(void);
 
 bool CurrentModeIsNotUser(GCONTXT* context);
 
+bool CurrentModeIsUserOrSystem(GCONTXT* context);
+
 bool ExclusiveMonitorsPass(u32int address, ACCESS_SIZE size);
 
 bool HaveVirtExt(void);
@@ -33,9 +35,36 @@ void SelectInstrSet(InstructionSet iset);
 
 void SetExclusiveMonitors(u32int address, ACCESS_SIZE size);
 
+CPSRreg SPSR(GCONTXT* context);
+
 void UNPREDICTABLE(void);
 
 /************** inlines ******************************/
+__macro__ bool BadMode(CPSRmode mode)
+{
+  switch (mode)
+  {
+    case USR_MODE:
+    case FIQ_MODE:
+    case IRQ_MODE:
+    case SVC_MODE:
+    case MON_MODE:
+    case ABT_MODE:
+    case UND_MODE:
+    case SYS_MODE:
+    {
+      return FALSE;
+    }
+    case HYP_MODE:
+    {
+      return !HaveVirtExt();
+    }
+    default:
+      return TRUE;
+  }
+}
+
+
 __macro__ bool BigEndian(GCONTXT* context)
 {
   // STARFIX: This should be a dynamic check:
@@ -125,6 +154,13 @@ __macro__ bool CurrentModeIsNotUser(GCONTXT* context)
 }
 
 
+__macro__ bool CurrentModeIsUserOrSystem(GCONTXT* context)
+{
+  return (context->CPSR.bits.mode == USR_MODE) ||
+         (context->CPSR.bits.mode == SYS_MODE);
+}
+
+
 __macro__ bool ExclusiveMonitorsPass(u32int address, ACCESS_SIZE size)
 {
   // STARFIX: implement exclusive monitors. should check the flag for given
@@ -151,6 +187,24 @@ __macro__ void SetExclusiveMonitors(u32int address, ACCESS_SIZE size)
   // given address.
 }
 
+
+__macro__ CPSRreg SPSR(GCONTXT* context)
+{
+  switch (context->CPSR.bits.mode)
+  {
+    case USR_MODE: DIE_NOW(context, "SPSR: read in user mode");
+    case SYS_MODE: DIE_NOW(context, "SPSR: read in system mode");
+    case FIQ_MODE: return context->SPSR_FIQ;
+    case IRQ_MODE: return context->SPSR_IRQ;
+    case SVC_MODE: return context->SPSR_SVC;
+    case MON_MODE: DIE_NOW(context, "SPSR mon unimplemented");
+    case ABT_MODE: return context->SPSR_ABT;
+    case HYP_MODE: DIE_NOW(context, "SPSR hyp unimplemented");
+    case UND_MODE: return context->SPSR_UND;
+    default:
+      DIE_NOW(context, "SPSR: invalid mode\n");
+  }
+}
 
 __macro__ void UNPREDICTABLE()
 {

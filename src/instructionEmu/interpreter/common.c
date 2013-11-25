@@ -3,30 +3,6 @@
 
 #include "vm/omap35xx/intc.h"
 
-bool BadMode(CPSRmode mode)
-{
-  switch (mode)
-  {
-    case USR_MODE:
-    case FIQ_MODE:
-    case IRQ_MODE:
-    case SVC_MODE:
-    case MON_MODE:
-    case ABT_MODE:
-    case UND_MODE:
-    case SYS_MODE:
-    {
-      return FALSE;
-    }
-    case HYP_MODE:
-    {
-      return !HaveVirtExt();
-    }
-    default:
-      return TRUE;
-  }
-}
-
 void CPSRWriteByInstr(GCONTXT* context, CPSRreg val, u8int bytemask, bool is_exc_ret)
 {
   u32int cpsr = 0;

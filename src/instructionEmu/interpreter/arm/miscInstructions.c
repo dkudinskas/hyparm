@@ -105,65 +105,40 @@ u32int armIsbInstruction(GCONTXT *context, u32int instruction)
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
+
 u32int armMrsInstruction(GCONTXT *context, u32int instruction)
 {
-  int readSpsr =  instruction & 0x00400000;
-  int regDest  = (instruction & 0x0000F000) >> 12;
+  Instruction instr = {.raw = instruction};
+  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
 
-#ifdef ARM_INSTR_TRACE
-  printf("MRS instr %08x @ %08x" EOL, instruction, context->R15);
-#endif
-
-  ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-
-  if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
+  if (ConditionPassed(instr.mrs.cc))
   {
-    u32int value;
+    u8int Rd = instr.mrs.Rd;
+    bool readSpsr = instr.mrs.R;
 
-    if (context->CPSR.bits.mode ==USR_MODE)
+    if (Rd == GPR_PC)
+      UNPREDICTABLE();
+
+    if (readSpsr)
     {
-      //SPSR read bit can not be set in USR mode
-      ASSERT(!readSpsr, ERROR_UNPREDICTABLE_INSTRUCTION);
-      value = context->CPSR.value & PSR_APSR;
-    }
-    else
-    {
-      if (readSpsr)
+      if (!CurrentModeIsUserOrSystem(context))
       {
-        switch(context->CPSR.bits.mode)
-        {
-          case FIQ_MODE:
-            value = context->SPSR_FIQ.value;
-            break;
-          case IRQ_MODE:
-            value = context->SPSR_IRQ.value;
-            break;
-          case SVC_MODE:
-            value = context->SPSR_SVC.value;
-            break;
-          case ABT_MODE:
-            value = context->SPSR_ABT.value;
-            break;
-          case UND_MODE:
-            value = context->SPSR_UND.value;
-            break;
-          case USR_MODE:
-          case SYS_MODE:
-          default:
-            DIE_NOW(context, "cannot request spsr in user/system mode");
-        }
+        setGPRegister(context, Rd, SPSR(context).value);
       }
       else
       {
-        // CPSR is read with execution state bits other than E masked out
-        value = context->CPSR.value & ~PSR_EXEC_BITS;
+        UNPREDICTABLE();
       }
     }
-    setGPRegister(context, regDest, value);
-  } // condition met ends
-
+    else
+    {
+      // CPSR is read with execution state bits other than E masked out.
+      setGPRegister(context, Rd, (context->CPSR.value & 0xf8ff03df));
+    }
+  }
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
+
 
 u32int armMsrInstruction(GCONTXT *context, u32int instruction)
 {
