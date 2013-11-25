@@ -11,6 +11,7 @@ typedef enum
   SVC_MODE = 0x13,
   MON_MODE = 0X16,
   ABT_MODE = 0x17,
+  HYP_MODE = 0x1a,
   UND_MODE = 0x1b,
   SYS_MODE = 0x1f,
 } CPSRmode;

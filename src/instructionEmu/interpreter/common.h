@@ -7,6 +7,8 @@
 
 #include "guestManager/guestContext.h"
 
+bool BadMode(CPSRmode mode);
+
 bool BigEndian(GCONTXT* context);
 
 void BranchWritePC(GCONTXT* context, u32int address);
@@ -17,9 +19,15 @@ void ClearExclusiveLocal(void);
 
 bool ConditionPassed(ConditionCode instructionCode);
 
+void CPSRWriteByInstr(GCONTXT* context, CPSRreg val, u8int bytemask, bool is_exc_ret);
+
 InstructionSet CurrentInstrSet(void);
 
+bool CurrentModeIsNotUser(GCONTXT* context);
+
 bool ExclusiveMonitorsPass(u32int address, ACCESS_SIZE size);
+
+bool HaveVirtExt(void);
 
 void SelectInstrSet(InstructionSet iset);
 
@@ -110,6 +118,13 @@ __macro__ InstructionSet CurrentInstrSet()
 }
 
 
+__macro__ bool CurrentModeIsNotUser(GCONTXT* context)
+{
+  // this returns TRUE without checking for now: we dont scan user mode code
+  return TRUE;
+}
+
+
 __macro__ bool ExclusiveMonitorsPass(u32int address, ACCESS_SIZE size)
 {
   // STARFIX: implement exclusive monitors. should check the flag for given
@@ -117,6 +132,11 @@ __macro__ bool ExclusiveMonitorsPass(u32int address, ACCESS_SIZE size)
   return TRUE;
 }
 
+
+__macro__ bool HaveVirtExt()
+{
+  return FALSE;
+}
 
 __macro__ void SelectInstrSet(InstructionSet iset)
 {

@@ -1,7 +1,8 @@
 #include "guestManager/scheduler.h"
 
+#include "instructionEmu/decoder/arm/structs.h"
+#include "instructionEmu/interpreter/common.h"
 #include "instructionEmu/interpreter/internals.h"
-
 #include "instructionEmu/interpreter/arm/miscInstructions.h"
 
 #include "vm/omap35xx/intc.h"
@@ -17,7 +18,6 @@ u32int armBkptInstruction(GCONTXT *context, u32int instruction)
     evaluateBreakpointValue(context, val);
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
-
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
@@ -28,97 +28,50 @@ u32int armClzInstruction(GCONTXT *context, u32int instruction)
 
 u32int armCpsInstruction(GCONTXT *context, u32int instruction)
 {
-  u32int imod       = (instruction & 0x000C0000) >> 18;
-  u32int changeMode = (instruction & 0x00020000) >> 17;
-  u32int affectA    = (instruction & 0x00000100) >>  8;
-  u32int affectI    = (instruction & 0x00000080) >>  7;
-  u32int affectF    = (instruction & 0x00000040) >>  6;
-  u32int newMode    =  instruction & 0x0000001F;
-#ifdef ARM_INSTR_TRACE
-  printf("CPS instr %08x @ %08x" EOL, instruction, context->R15);
-#endif
+  Instruction instr = {.raw = instruction};
+  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
 
-  ASSERT(imod != 0 || changeMode != 0, ERROR_UNPREDICTABLE_INSTRUCTION);
-  ASSERT(imod != 1, ERROR_UNPREDICTABLE_INSTRUCTION);
+  if ((instr.cps.mode != 0) && (instr.cps.M == 0))
+    UNPREDICTABLE();
+  if (((instr.cps.imod & 2) == 2) && (instr.cps.A == 0) && 
+     (instr.cps.I == 0) && (instr.cps.F == 0))
+    UNPREDICTABLE();
+  if (((instr.cps.imod & 2) == 0) && ((instr.cps.A != 0) || 
+     (instr.cps.I != 0) || (instr.cps.F != 0)))
+    UNPREDICTABLE();
+  if (((instr.cps.imod == 0) && (instr.cps.M == 0)) || (instr.cps.imod == 01))
+    UNPREDICTABLE();
 
-  // guest is not in privileged mode! cps should behave as a nop, but lets see what went wrong.
-  ASSERT(context->CPSR.bits.mode != USR_MODE, "CPS trapped in guest user mode");
+  bool enable  = instr.cps.imod == 2;
+  bool disable = instr.cps.imod == 3;
+  bool changemode = instr.cps.M;
+  bool affectA = instr.cps.A;
+  bool affectI = instr.cps.I;
+  bool affectF = instr.cps.F;
 
-  CPSRreg oldCpsr = context->CPSR;
-  if (imod == 0x2) // enable
+  // CurrentModeIsNotUser always returns TRUE atm: we dont scan user mode code
+  if (CurrentModeIsNotUser(context))
   {
-#ifdef ARM_INSTR_TRACE
-    printf("IMod: enable case" EOL);
-#endif
-    if (affectA != 0)
+    CPSRreg cpsr_val = context->CPSR;
+    if (enable)
     {
-      ASSERT(oldCpsr.bits.A == 0, "Guest enabling async aborts globally!");
-      oldCpsr.bits.A = 0;
+      if (affectA) cpsr_val.bits.A = 0;
+      if (affectI) cpsr_val.bits.I = 0;
+      if (affectF) cpsr_val.bits.F = 0;
     }
-    if (affectI)
+    if (disable)
     {
-      if (oldCpsr.bits.I)
-      {
-#ifdef ARM_INSTR_TRACE
-        printf("Guest enabling irqs globally!" EOL);
-#endif
-#ifndef CONFIG_HW_PASSTHROUGH
-        // check interrupt controller if there is an interrupt pending
-        if (isIrqPending(context->vm.irqController))
-        {
-          context->guestIrqPending = TRUE;
-        }
-#endif
-      }
-      oldCpsr.bits.I = 0;;
+      if (affectA) cpsr_val.bits.A = 1;
+      if (affectI) cpsr_val.bits.I = 1;
+      if (affectF) cpsr_val.bits.F = 1;
     }
-    if (affectF)
+    if (changemode)
     {
-      if (oldCpsr.bits.I)
-      {
-#ifdef ARM_INSTR_TRACE
-        printf("Guest enabling FIQs globally!" EOL);
-#endif
-#ifndef CONFIG_HW_PASSTHROUGH
-        // chech interrupt controller if there is an interrupt pending
-        if (isFiqPending(context->vm.irqController))
-        {
-          // context->guestFiqPending = TRUE; : IMPLEMENT!!
-          DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
-        }
-#endif
-      }
-      oldCpsr.bits.F = 0;
+      cpsr_val.bits.mode = instr.cps.mode;
     }
-  }
-  else if (imod == 3) // disable
-  {
-    if (affectA)
-    {
-      ASSERT(oldCpsr.bits.A, "Guest disabling async aborts globally!");
-      oldCpsr.bits.A = 1;
-    }
-    if (affectI)
-    {
-      oldCpsr.bits.I = 1;
-    }
-    if (affectF)
-    {
-      oldCpsr.bits.F = 1;
-    }
-  }
-  else
-  {
-    DIE_NOW(context, "CPS invalid IMOD");
-  }
-  // ARE we switching modes?
-  if (unlikely(changeMode))
-  {
-    oldCpsr.bits.mode = newMode;
-    DIE_NOW(context, "guest is changing execution modes. To What?");
-  }
-  context->CPSR = oldCpsr;
 
+    CPSRWriteByInstr(context, cpsr_val, 0xF, FALSE);
+  }
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 

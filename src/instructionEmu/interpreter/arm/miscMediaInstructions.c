@@ -91,45 +91,6 @@ u32int armSxtb16Instruction(GCONTXT *context, u32int instruction)
 u32int armSxthInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
-#if 0
-#define SXTH_R0     0
-#define SXTH_R8     8
-#define SXTH_R16   16
-#define SXTH_R24   24
-  u32int instrCC = (instruction >> 28) & 0xF;
-  u32int regSrc = (instruction & 0xF);
-  u32int regDest = (instruction & 0x0000F000) >> 12;
-  u32int rotate = (instruction & 0x00000C00) >> 10;
-  u32int value = 0;
-  ASSERT(regDest != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-  ASSERT(regSrc != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-  if (evaluateConditionCode(context, instrCC))
-  {
-    /* load the least 16bits from the source register */
-    value=(getGPRegister(context, regSrc) & 0x0000FFFF);
-    /* ARM7-A : page 729 */
-    switch (rotate)
-    {
-      case 0:
-        value = rorVal(value, SXTH_R0);
-        break;
-      case 1:
-        value = rorVal(value, SXTH_R8);
-        break;
-      case 2:
-        value = rorVal(value, SXTH_R16);
-        break;
-      case 3:
-        value = rorVal(value, SXTH_R24);
-        break;
-    }
-    /* Extend it to 32bit */
-    value = value<<16;
-    /* Store it */
-    setGPRegister(context, regDest, value);
-  }
-  return context->R15 + 4;
-#endif
 }
 
 u32int armUbfxInstruction(GCONTXT *context, u32int instruction)

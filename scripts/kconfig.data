@@ -567,6 +567,10 @@ config DEBUG_INTERPRETER_ARM_STORE_SYNC
   bool
   depends on DEBUG_INTERPRETER_ARM
 
+config DEBUG_INTERPRETER_ARM_SYSTEM
+  bool "Debug system instructions (cps, msr, ..)"
+  depends on DEBUG_INTERPRETER_ARM
+
 config DEBUG_INTERPRETER_ARM_SYNC
   bool "Debug synchronization operations"
   depends on DEBUG_INTERPRETER_ARM
