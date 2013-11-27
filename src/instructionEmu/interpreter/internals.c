@@ -314,6 +314,7 @@ void invalidDataProcTrap(GCONTXT *context, u32int instruction, const char *messa
   DIE_NOW(context, message);
 }
 
+
 u32int getGPRegister(GCONTXT *context, u32int sourceRegister)
 {
   if (sourceRegister < 8)
@@ -328,6 +329,7 @@ u32int getGPRegister(GCONTXT *context, u32int sourceRegister)
 
   return *(getHighGPRegisterPointer(context, sourceRegister));
 }
+
 
 static u32int *getHighGPRegisterPointer(GCONTXT *context, u32int registerIndex)
 {
@@ -357,6 +359,7 @@ static u32int *getHighGPRegisterPointer(GCONTXT *context, u32int registerIndex)
   } // switch ends
 }
 
+
 void setGPRegister(GCONTXT *context, u32int destinationRegister, u32int value)
 {
   if (destinationRegister < 8 || destinationRegister == GPR_PC)
@@ -368,6 +371,7 @@ void setGPRegister(GCONTXT *context, u32int destinationRegister, u32int value)
     *(getHighGPRegisterPointer(context, destinationRegister)) = value;
   }
 }
+
 
 // rotate right function
 u32int rorVal(u32int value, u32int ramt)
@@ -390,6 +394,7 @@ u32int rorVal(u32int value, u32int ramt)
   }
   return retVal;
 }
+
 
 // generic any type shift function, changes input_parameter(carryFlag) value
 u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int carryFlag)

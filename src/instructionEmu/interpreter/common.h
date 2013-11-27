@@ -7,6 +7,11 @@
 
 #include "guestManager/guestContext.h"
 
+/* expand immediate12 field of instruction */
+u32int armExpandImm(u32int imm12, bool carryIn);
+
+u32int_carry asrCarry(u32int value, u32int amount);
+
 bool BadMode(CPSRmode mode);
 
 bool BigEndian(GCONTXT* context);
@@ -19,7 +24,7 @@ void ClearExclusiveLocal(void);
 
 bool ConditionPassed(ConditionCode instructionCode);
 
-void CPSRWriteByInstr(GCONTXT* context, CPSRreg val, u8int bytemask, bool is_exc_ret);
+void CPSRWriteByInstr(GCONTXT* context, u32int val, u8int bytemask, bool is_exc_ret);
 
 InstructionSet CurrentInstrSet(void);
 
@@ -31,11 +36,25 @@ bool ExclusiveMonitorsPass(u32int address, ACCESS_SIZE size);
 
 bool HaveVirtExt(void);
 
+u32int_carry lslCarry(u32int value, u32int amount);
+
+u32int_carry lsrCarry(u32int value, u32int amount);
+
+u32int_carry rorCarry(u32int value, u32int amount);
+
+u32int_carry rrxCarry(u32int value, bool carryIn);
+
 void SelectInstrSet(InstructionSet iset);
 
 void SetExclusiveMonitors(u32int address, ACCESS_SIZE size);
 
+u32int_carry shiftCarry(u32int value, ShiftType type, u32int amount, bool carryIn);
+
 CPSRreg SPSR(GCONTXT* context);
+
+void SPSRwrite(GCONTXT* context, u32int value);
+
+void SPSRWriteByInstr(GCONTXT* context, u32int val, u8int bytemask);
 
 void UNPREDICTABLE(void);
 
@@ -174,6 +193,7 @@ __macro__ bool HaveVirtExt()
   return FALSE;
 }
 
+
 __macro__ void SelectInstrSet(InstructionSet iset)
 {
   // STARFIX: other isets not supported yet
@@ -203,6 +223,25 @@ __macro__ CPSRreg SPSR(GCONTXT* context)
     case UND_MODE: return context->SPSR_UND;
     default:
       DIE_NOW(context, "SPSR: invalid mode\n");
+  }
+}
+
+
+__macro__ void SPSRwrite(GCONTXT* context, u32int value)
+{
+  switch (context->CPSR.bits.mode)
+  {
+    case USR_MODE: DIE_NOW(context, "SPSRwrite: for user mode");
+    case SYS_MODE: DIE_NOW(context, "SPSRwrite: for system mode");
+    case FIQ_MODE: context->SPSR_FIQ.value = value; break;
+    case IRQ_MODE: context->SPSR_IRQ.value = value; break;
+    case SVC_MODE: context->SPSR_SVC.value = value; break;
+    case MON_MODE: DIE_NOW(context, "SPSRwrite: mon unimplemented");
+    case ABT_MODE: context->SPSR_ABT.value = value; break;
+    case HYP_MODE: DIE_NOW(context, "SPSRwrite: hyp unimplemented");
+    case UND_MODE: context->SPSR_UND.value = value; break;
+    default:
+      DIE_NOW(context, "SPSRwrite: invalid mode\n");
   }
 }
 

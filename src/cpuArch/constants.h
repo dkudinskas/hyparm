@@ -77,12 +77,6 @@
 #define PSR_APSR         (PSR_CC_FLAGS_NZCV | PSR_Q_BIT | PSR_SIMD_FLAGS_GE)
 #define PSR_EXEC_BITS    (PSR_ITSTATE_1_0 | PSR_ITSTATE_7_2 | PSR_J_BIT | PSR_T_BIT)
 
-#define SHIFT_TYPE_LSL    0x0
-#define SHIFT_TYPE_LSR    0x1
-#define SHIFT_TYPE_ASR    0x2
-#define SHIFT_TYPE_RRX    0x3
-#define SHIFT_TYPE_ROR    0x4
-
 // System control register
 #define SCTLR_TE    0x40000000  // Thumb Exception enable
 #define SCTLR_VE    0x01000000  // ARM fiq/irq vs. impl defined vectors (deprecated)

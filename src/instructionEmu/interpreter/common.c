@@ -3,43 +3,56 @@
 
 #include "vm/omap35xx/intc.h"
 
-void CPSRWriteByInstr(GCONTXT* context, CPSRreg val, u8int bytemask, bool is_exc_ret)
+u32int armExpandImm(u32int imm12, bool carryIn)
 {
+  return shiftCarry(imm12 & 0xFF, SHIFT_TYPE_ROR, (imm12 & 0xF00) >> 7, carryIn).val;
+}
+
+
+u32int_carry asrCarry(u32int value, u32int amount)
+{
+  DIE_NOW(0, "asrCarry unimplemented");
+}
+
+
+void CPSRWriteByInstr(GCONTXT* context, u32int val, u8int bytemask, bool is_exc_ret)
+{
+  CPSRreg newValue = {.value = val};
   u32int cpsr = 0;
   if ((bytemask & 8) != 0)
   {
-    cpsr |= val.value & 0xF8000000; // N,Z,C,V,Q flags
+    cpsr |= newValue.value & 0xF8000000; // N,Z,C,V,Q flags
     if (is_exc_ret)
     {
-      cpsr |= val.value & 0x07000000; // IT<1:0>,J execution state bits
+      cpsr |= newValue.value & 0x07000000; // IT<1:0>,J execution state bits
     }
   }
 
   if ((bytemask & 4) != 0)
   {
     // bits <23:20> are reserved SBZP bits
-    cpsr |= val.value & 0x000F0000; // GE<3:0> flags
+    cpsr |= newValue.value & 0x000F0000; // GE<3:0> flags
   }
 
   if ((bytemask & 2) != 0)
   {
     if (is_exc_ret)
     {
-      cpsr |= val.value & 0x0000FC00; // IT<7:2> execution state bits
+      cpsr |= newValue.value & 0x0000FC00; // IT<7:2> execution state bits
     }
-    cpsr |= val.value & 0x00000200; // E bit is user-writable
+    cpsr |= newValue.value & 0x00000200; // E bit is user-writable
 
     // if privileged && (IsSecure() || SCR.AW == '1' || HaveVirtExt()) then
     // privileged is TRUE, ans SCR.AW is TRUE.
-    cpsr |= val.value & 0x00000100; // 'A' interrupt mask
+    cpsr |= newValue.value & 0x00000100; // 'A' interrupt mask
   }
 
 
   if ((bytemask & 1) != 0)
   {
-    cpsr |= val.value & 0x00000080; // I interrupt mask
+    cpsr |= newValue.value & 0x00000080; // I interrupt mask
 #ifndef CONFIG_HW_PASSTHROUGH
-    if ((val.bits.I == 0) && (context->CPSR.bits.I == 1)) // enabling interrupts
+    if ((newValue.bits.I == 0) && (context->CPSR.bits.I == 1)) // enabling interrupts
     {
       // check interrupt controller if there is an interrupt pending
       if (isIrqPending(context->vm.irqController))
@@ -52,11 +65,11 @@ void CPSRWriteByInstr(GCONTXT* context, CPSRreg val, u8int bytemask, bool is_exc
     // if privileged && (!nmfi || value<6> == '0') &&
     //   (IsSecure() || SCR.FW == '1' || HaveVirtExt()) then
     // privileged TRUE, SCR.FW true. only need to check nmfi
-    if (((getCregVal(context, CP15_SCTRL) & SYS_CTRL_NON_MASK_FIQ) == 0) || (val.bits.F == 0))
+    if (((getCregVal(context, CP15_SCTRL) & SYS_CTRL_NON_MASK_FIQ) == 0) || (newValue.bits.F == 0))
     {
-      cpsr |= val.value & 0x00000040; // F interrupt mask
+      cpsr |= newValue.value & 0x00000040; // F interrupt mask
 #ifndef CONFIG_HW_PASSTHROUGH
-      if ((val.bits.F == 0) && (context->CPSR.bits.F == 1)) // enabling fiq's
+      if ((newValue.bits.F == 0) && (context->CPSR.bits.F == 1)) // enabling fiq's
       {
         DIE_NOW(context, "guest enabling fast interrupts\n");
       }
@@ -64,11 +77,11 @@ void CPSRWriteByInstr(GCONTXT* context, CPSRreg val, u8int bytemask, bool is_exc
     }
     if (is_exc_ret)
     {
-      cpsr |= val.value & 0x00000020; // T execution state bit
+      cpsr |= newValue.value & 0x00000020; // T execution state bit
     }
 
     // if privileged - but always privileged!
-    if (BadMode(val.bits.mode))
+    if (BadMode(newValue.bits.mode))
     {
       UNPREDICTABLE();
     }
@@ -86,10 +99,106 @@ void CPSRWriteByInstr(GCONTXT* context, CPSRreg val, u8int bytemask, bool is_exc
       // if !IsSecure() && CPSR.M != '11010' && value<4:0> == '11010' then UNPREDICTABLE;
       // Cannot move out of Hyp mode with this function except on an exception return
       // if CPSR.M == '11010' && value<4:0> != '11010' && !is_excpt_return then UNPREDICTABLE;
-      cpsr |= val.value & 0x1f; // CPSR<4:0>, mode bits
+      cpsr |= newValue.value & 0x1f; // CPSR<4:0>, mode bits
     }
   }
   
   context->CPSR.value = cpsr;
   return;
 }
+
+
+u32int_carry lslCarry(u32int value, u32int amount)
+{
+  DIE_NOW(0, "lslCarry unimplemented");
+}
+
+
+u32int_carry lsrCarry(u32int value, u32int amount)
+{
+  DIE_NOW(0, "lsrCarry unimplemented");
+}
+
+
+u32int_carry rorCarry(u32int value, u32int amount)
+{
+  u32int_carry result;
+  result.val = (value >> amount) | (value << (32-amount));
+  result.carry = ((result.val & 0x80000000) != 0);
+  return result;
+}
+
+
+u32int_carry rrxCarry(u32int value, bool carryIn)
+{
+  DIE_NOW(0, "rrxCarry unimplemented");
+}
+
+
+u32int_carry shiftCarry(u32int value, ShiftType type, u32int amount, bool carryIn)
+{
+  if ((type == SHIFT_TYPE_RRX) && (amount != 1))
+    UNPREDICTABLE();
+
+  u32int_carry result;
+  if (amount == 0)
+  {
+    result.val = value;
+    result.carry = carryIn;
+  }
+  else
+  {
+    switch (type)
+    {
+      case SHIFT_TYPE_LSL: result = lslCarry(value, amount); break;
+      case SHIFT_TYPE_LSR: result = lsrCarry(value, amount); break;
+      case SHIFT_TYPE_ASR: result = asrCarry(value, amount); break;
+      case SHIFT_TYPE_ROR: result = rorCarry(value, amount); break;
+      case SHIFT_TYPE_RRX: result = rrxCarry(value, carryIn); break;
+    }
+  }
+  return result;
+}
+
+
+void SPSRWriteByInstr(GCONTXT* context, u32int val, u8int bytemask)
+{
+  if (CurrentModeIsUserOrSystem(context))
+  {
+    UNPREDICTABLE();
+  }
+  u32int spsr = 0;
+
+  if ((bytemask & 8) != 0)
+  {
+    spsr |= val & 0xff000000; // N,Z,C,V,Q flags, IT<1:0>,J execution state bits
+  }
+  
+  if ((bytemask & 4) != 0)
+  {
+    // bits <23:20> are reserved SBZP bits
+    spsr |= val & 0x000f0000; // GE<3:0> flags
+  }
+
+  if ((bytemask & 2) != 0)
+  {
+    spsr |= val & 0x0000ff00; // IT<7:2> execution state bits, E bit, A interrupt mask
+  }
+
+  if ((bytemask & 1) != 0)
+  {
+    spsr |= val & 0x000000e0; // I,F interrupt masks, T execution state bit
+    if (BadMode(val & 0x0000001f))
+    {
+      UNPREDICTABLE();
+    }
+    else
+    {
+      spsr |= val & 0x0000001f; // Mode bits
+    }
+  }
+
+  SPSRwrite(context, spsr);
+  return;
+}
+

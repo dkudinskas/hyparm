@@ -82,7 +82,7 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   ENTRY(IRC_REPLACE, armRscInstruction,         NULL,                   0x00e0f000, 0x0fe0f010, "RSC PC, Rn, Rm, #shamt"),
   ENTRY(IRC_PATCH_PC,armRscInstruction,         armALUImmRegRSR,        0x00ef0000, 0x0fef0010, "RSC Rd, Rn, Rm, #shamt"),
   // MSR/MRS: always hypercall! we must hide the real state from guest.
-  ENTRY(IRC_REPLACE, armMsrInstruction,         NULL,                   0x0120f000, 0x0fb0fff0, "MSR, s/cpsr, Rn"),
+  ENTRY(IRC_REPLACE, armMsrRegInstruction,      NULL,                   0x0120f000, 0x0fb0fff0, "MSR, s/cpsr, Rn"),
   ENTRY(IRC_REPLACE, armMrsInstruction,         NULL,                   0x010f0000, 0x0fbf0fff, "MRS, Rn, s/cpsr"),
   // TST: Rn/Rm can be PC; patch
   ENTRY(IRC_PATCH_PC,armTstInstruction,         armALUregNoDest,        0x011f0000, 0x0fff0010, "TST PC, Rm, #shamt"),
@@ -165,7 +165,7 @@ static struct decodingTableEntry armDataProcMiscInstructions_op1[] =
   ENTRY(IRC_REPLACE, armRscInstruction,         NULL,                   0x02e0f000, 0x0fe0f000, "RSC PC, Rn/#imm"),
   ENTRY(IRC_PATCH_PC,armRscInstruction,         armALUImmRegRSR,        0x02ef0000, 0x0fef0000, "RSC Rd, PC, #imm"),
   // MSR: always hypercall! we must hide the real state from guest.
-  ENTRY(IRC_REPLACE, armMsrInstruction,         NULL,                   0x0320f000, 0x0fb0f000, "MSR, s/cpsr, #imm"),
+  ENTRY(IRC_REPLACE, armMsrImmInstruction,      NULL,                   0x0320f000, 0x0fb0f000, "MSR, s/cpsr, #imm"),
   // TST Rn = PC patch
   ENTRY(IRC_PATCH_PC,armTstInstruction,         armALUimmNoDest,        0x031f0000, 0x0fff0000, "TST PC, #imm"),
   // TEQ Rn = PC patch

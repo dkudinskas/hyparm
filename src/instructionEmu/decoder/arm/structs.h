@@ -221,6 +221,28 @@ typedef union ARMInstruction
     unsigned cc:     4;
   } mrs;
 
+  struct MsrImm
+  {
+    unsigned imm12: 12;
+    unsigned pad0:   4;
+    unsigned mask:   4;
+    unsigned pad1:   2;
+    unsigned R:      1;
+    unsigned pad2:   5;
+    unsigned cc:     4;
+  } msrImm;
+
+  struct MsrReg
+  {
+    unsigned Rn:     4;
+    unsigned pad0:  12;
+    unsigned mask:   4;
+    unsigned pad1:   2;
+    unsigned R:      1;
+    unsigned pad2:   5;
+    unsigned cc:     4;
+  } msrReg;
+
   struct Strex
   {
     unsigned Rt:     4;

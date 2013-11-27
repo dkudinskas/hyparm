@@ -70,7 +70,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
       cpsr_val.bits.mode = instr.cps.mode;
     }
 
-    CPSRWriteByInstr(context, cpsr_val, 0xF, FALSE);
+    CPSRWriteByInstr(context, cpsr_val.value, 0xF, FALSE);
   }
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
@@ -140,161 +140,81 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
 }
 
 
-u32int armMsrInstruction(GCONTXT *context, u32int instruction)
+u32int armMsrRegInstruction(GCONTXT *context, u32int instruction)
 {
-  u32int regOrImm =   (instruction & 0x02000000); // if 1 then imm12, 0 then Reg
-  u32int cpsrOrSpsr = (instruction & 0x00400000); // if 0 then cpsr, !0 then spsr
-  u32int fieldMsk =   (instruction & 0x000F0000) >> 16;
+  Instruction instr = {.raw = instruction};
+  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
 
-  u32int value = 0;
-  
-  if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
+  if (ConditionPassed(instr.msrReg.cc))
   {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
+    u8int Rn = instr.msrReg.Rn;
+    bool write_spsr = (instr.msrReg.R == 1);
+    if (instr.msrReg.mask == 0)
+      UNPREDICTABLE();
+    if (Rn == GPR_PC)
+      UNPREDICTABLE();
 
-  if (regOrImm == 0)
-  {
-    // register case
-    u32int regSrc = instruction & 0x0000000F;
-    ASSERT(regSrc != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-    value = getGPRegister(context, regSrc);
-  }
-  else
-  {
-    // immediate case
-    u32int immediate = instruction & 0x00000FFF;
-    value = armExpandImm12(immediate);
-  }
-
-  CPSRreg oldValue = {.value = 0};
-  if (cpsrOrSpsr == 0)
-  {
-    // CPSR!
-    oldValue = context->CPSR;
-  }
-  else
-  {
-    // SPSR! which?... depends what mode we are in...
-    switch (context->CPSR.bits.mode)
+    u32int value = getGPRegister(context, Rn);
+    if (write_spsr)
     {
-      case FIQ_MODE:
-        oldValue.value = context->SPSR_FIQ.value;
-        break;
-      case IRQ_MODE:
-        oldValue.value = context->SPSR_IRQ.value;
-        break;
-      case SVC_MODE:
-        oldValue.value = context->SPSR_SVC.value;
-        break;
-      case ABT_MODE:
-        oldValue.value = context->SPSR_ABT.value;
-        break;
-      case UND_MODE:
-        oldValue.value = context->SPSR_UND.value;
-        break;
-      default:
-        DIE_NOW(context, "invalid SPSR write for current guest mode");
+      SPSRWriteByInstr(context, value, instr.msrReg.mask);
     }
-  }
-
-  // [3:0] field mask:
-  // - bit 0: set control field (mode bits/interrupt bits)
-  // - bit 1: set extension field (??? [15:8] of cpsr)
-  // - bit 2: set status field (??? [23:16] of cpsr)
-  // - bit 3: set condition flags of cpsr
-
-  // control field [7-0] set.
-  if (((fieldMsk & 0x1) == 0x1) && (context->CPSR.bits.mode != USR_MODE))
-  {
-#ifndef CONFIG_THUMB2
-    // check for thumb toggle!
-    ASSERT(oldValue.bits.T == (value & PSR_T_BIT), "MSR toggle THUMB bit");
-#endif
-
-    if ((value & PSR_MODE) != oldValue.bits.mode)
+    else
     {
-      // changing modes. if in CPSR, adjust context appropriatelly
-      if (cpsrOrSpsr == 0)
+      if ((value & PSR_MODE) != context->CPSR.bits.mode)
       {
+        // changing modes; adjust context appropriatelly
         guestChangeMode(context, value & PSR_MODE);
       }
-    }
-    // separate the field we're gonna update from new value
-    u32int appliedValue = (value & 0x000000FF);
-    // clear old fields!
-    oldValue.value &= 0xFFFFFF00;
-    // update old value...
-    oldValue.value |= appliedValue;
-  }
-  if ( ((fieldMsk & 0x2) == 0x2) && (context->CPSR.bits.mode != USR_MODE))
-  {
-    // extension field: async abt, endianness, IT[7:2]
-    // check for endiannes toggle!
-    ASSERT(oldValue.bits.E == (value & PSR_E_BIT), "MSR toggle endianess bit");
-    // separate the field we're gonna update from new value
-    u32int appliedValue = (value & 0x0000FF00);
-    // clear old fields!
-    oldValue.value &= 0xFFFF00FF;
-    // update old value...
-    oldValue.value |= appliedValue;
-  }
-  if ( ((fieldMsk & 0x4) == 0x4) && (context->CPSR.bits.mode != USR_MODE))
-  {
-    // status field: reserved and GE[3:0]
-    // separate the field we're gonna update from new value
-    u32int appliedValue = (value & 0x00FF0000);
-    // clear old fields!
-    oldValue.value &= 0xFF00FFFF;
-    // update old value...
-    oldValue.value |= appliedValue;
-  }
-  if ((fieldMsk & 0x8) == 0x8)
-  {
-    // condition flags, q, it, J. Dont need to be priv to change those thus no check
-    // separate the field we're gonna update from new value
-    u32int appliedValue = (value & 0xFF000000);
-    // clear old fields!
-    oldValue.value &= 0x00FFFFFF;
-    // update old value...
-    oldValue.value |= appliedValue;
-  }
-
-#ifdef ARM_INSTR_TRACE
-  printf("MSR instr %08x @ %08x" EOL, instruction, context->R15);
-#endif
-  // got the final value to write in u32int oldValue. where do we write it thou..?
-  if (cpsrOrSpsr == 0)
-  {
-    // CPSR!
-    context->CPSR = oldValue;
-  }
-  else
-  {
-    // SPSR! which?... depends what mode we are in...
-    switch (context->CPSR.bits.mode)
-    {
-      case FIQ_MODE:
-        context->SPSR_FIQ.value = oldValue.value;
-        break;
-      case IRQ_MODE:
-        context->SPSR_IRQ.value = oldValue.value;
-        break;
-      case SVC_MODE:
-        context->SPSR_SVC.value = oldValue.value;
-        break;
-      case ABT_MODE:
-        context->SPSR_ABT.value = oldValue.value;
-        break;
-      case UND_MODE:
-        context->SPSR_UND.value = oldValue.value;
-        break;
-      default:
-        DIE_NOW(context, "MSR: invalid SPSR write for current guest mode.");
+      // Does not affect execution state bits other than E
+      CPSRWriteByInstr(context, value, instr.msrReg.mask, FALSE);
+      // we dont support hypervisor mode yet
+      // if ((context->CPSR.mode == HYP_MODE) && (context->CPSR.bits.J) && (context->CPSR.bits.T))
+      //   UNPREDICTABLE();
     }
   }
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
+
+
+u32int armMsrImmInstruction(GCONTXT *context, u32int instruction)
+{
+  Instruction instr = {.raw = instruction};
+  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
+
+  if (ConditionPassed(instr.msrReg.cc))
+  {
+    if ((instr.msrImm.mask == 0) && (instr.msrImm.R == 0))
+    {
+      printf("msr: see related encodings\n");
+      DIE_NOW(context, "msr unimplemented.");
+    }
+    u32int imm32 = armExpandImm(instr.msrImm.imm12, context->CPSR.bits.C);
+    bool write_spsr = instr.msrImm.R;
+    if (instr.msrImm.mask == 0)
+      UNPREDICTABLE();
+
+    if (write_spsr)
+    {
+      SPSRWriteByInstr(context, imm32, instr.msrImm.mask);
+    }
+    else
+    {
+      if ((imm32 & PSR_MODE) != context->CPSR.bits.mode)
+      {
+        // changing modes; adjust context appropriatelly
+        guestChangeMode(context, imm32 & PSR_MODE);
+      }
+      // Does not affect execution state bits other than E
+      CPSRWriteByInstr(context, imm32, instr.msrImm.mask, FALSE);
+      // we dont support hypervisor mode yet
+      // if ((context->CPSR.mode == HYP_MODE) && (context->CPSR.bits.J) && (context->CPSR.bits.T))
+      //   UNPREDICTABLE();
+    }
+  }
+  return context->R15 + ARM_INSTRUCTION_SIZE;
+}
+
 
 u32int armPldInstruction(GCONTXT *context, u32int instruction)
 {

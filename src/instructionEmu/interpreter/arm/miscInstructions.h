@@ -22,7 +22,8 @@ u32int armDsbInstruction(GCONTXT *context, u32int instruction);
 u32int armIsbInstruction(GCONTXT *context, u32int instruction);
 
 u32int armMrsInstruction(GCONTXT *context, u32int instruction);
-u32int armMsrInstruction(GCONTXT *context, u32int instruction);
+u32int armMsrImmInstruction(GCONTXT *context, u32int instruction);
+u32int armMsrRegInstruction(GCONTXT *context, u32int instruction);
 
 u32int armRfeInstruction(GCONTXT *context, u32int instruction);
 

@@ -26,6 +26,24 @@ typedef unsigned short      u16int;
 typedef unsigned int        u32int;
 typedef unsigned long long  u64int;
 
+
+typedef struct
+{
+  u32int val;
+  bool carry;
+} u32int_carry;
+
+
+typedef enum armShiftType
+{
+  SHIFT_TYPE_LSL,
+  SHIFT_TYPE_LSR,
+  SHIFT_TYPE_ASR,
+  SHIFT_TYPE_RRX,
+  SHIFT_TYPE_ROR,
+} ShiftType;
+
+
 typedef enum loadStoreAccessSize
 {
   BYTE,
