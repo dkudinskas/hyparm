@@ -7,9 +7,6 @@
   <instruction name="DSB" mask="0xfffffff0" value="0xf57ff040" code="IRC_REMOVE" />
   <instruction name="ISB" mask="0xfffffff0" value="0xf57ff060" code="IRC_REMOVE" />
   <instruction name="clrex" mask="0xffffffff" value="0xf57ff01f" />
-  <instruction name="CPSIE" mask="0xfffffe3f" value="0xf1080000" code="IRC_REPLACE" handler="armCpsInstruction" />
-  <instruction name="CPSIE" mask="0xfffffe20" value="0xf10a0000" code="IRC_REPLACE" handler="armCpsInstruction" />
-  <instruction name="CPSID" mask="0xfffffe3f" value="0xf10c0000" code="IRC_REPLACE" handler="armCpsInstruction" />
   <instruction name="CPSID" mask="0xfffffe20" value="0xf10e0000" code="IRC_REPLACE" handler="armCpsInstruction" />
   <instruction name="CPS" mask="0xfff1fe20" value="0xf1000000" code="IRC_REPLACE" handler="armCpsInstruction" />
   <instruction name="rfe%23?id%24?ba\t%16-19r%21'!" mask="0xfe50ffff" value="0xf8100a00" code="IRC_REPLACE" handler="armRfeInstruction" />
@@ -106,7 +103,7 @@
   <instruction name="RSC PC, Rn, Rm, Rshamt" mask="0x0fe0f090" value="0x00e0f010" code="IRC_REPLACE" handler="armRscInstruction" />
   <instruction name="RSC Rd, Rn, Rm, #shamt" mask="0x0fe00010" value="0x00e00000" code="IRC_PATCH_PC" handler="armALUImmRegRSR" />
   <instruction name="RSC Rd, Rn, Rm, Rshamt" mask="0x0fe00090" value="0x00e00010" />
-  <instruction name="MSR, s/cpsr, Rn" mask="0x0fb0fff0" value="0x0120f000" code="IRC_REPLACE" handler="armMsrInstruction" />
+  <instruction name="MSR, s/cpsr, Rn" mask="0x0fb0fff0" value="0x0120f000" code="IRC_REPLACE" handler="armMsrRegInstruction" />
   <instruction name="MRS, Rn, s/cpsr" mask="0x0fbf0fff" value="0x010f0000" code="IRC_REPLACE" handler="armMrsInstruction" />
   <instruction name="TST Rn, Rm, #shamt" mask="0x0fe00010" value="0x01000000" code="IRC_PATCH_PC" handler="armALUImmRegRSRNoDest" />
   <instruction name="TST Rn, Rm, Rshift" mask="0x0fe00090" value="0x01000010" />
@@ -172,7 +169,7 @@
   <instruction name="SBC Rd, Rn, #imm" mask="0x0fe00000" value="0x02c00000" code="IRC_PATCH_PC" handler="armALUImmRegRSR" />
   <instruction name="RSC PC, Rn/#imm" mask="0x0fe0f000" value="0x02e0f000" code="IRC_REPLACE" handler="armRscInstruction" />
   <instruction name="RSC Rd, Rn, #imm" mask="0x0fe00000" value="0x02e00000" code="IRC_PATCH_PC" handler="armALUImmRegRSR" />
-  <instruction name="MSR, s/cpsr, #imm" mask="0x0fb0f000" value="0x0320f000" code="IRC_REPLACE" handler="armMsrInstruction" />
+  <instruction name="MSR, s/cpsr, #imm" mask="0x0fb0f000" value="0x0320f000" code="IRC_REPLACE" handler="armMsrImmInstruction" />
   <instruction name="TST Rn, #imm" mask="0x0fe00000" value="0x03000000" code="IRC_PATCH_PC" handler="armALUImmRegRSRNoDest" />
   <instruction name="TEQ Rn, #imm" mask="0x0fe00000" value="0x03200000" code="IRC_PATCH_PC" handler="armALUImmRegRSRNoDest" />
   <instruction name="CMP Rn, #imm" mask="0x0fe00000" value="0x03400000" code="IRC_PATCH_PC" handler="armALUImmRegRSRNoDest" />
