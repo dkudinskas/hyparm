@@ -281,7 +281,8 @@ void dumpGuestContext(const GCONTXT *context)
   printf("branchRegister: %08x\n", context->branchRegister);
   printf("===========================================\n");
 
-  printf("armMsrInstruction: %08x\n", context->armMsrInstruction);
+  printf("armMsrRegInstruction: %08x\n", context->armMsrRegInstruction);
+  printf("armMsrImmInstruction: %08x\n", context->armMsrImmInstruction);
   printf("armMrsInstruction: %08x\n", context->armMrsInstruction);
   printf("armCpsInstruction: %08x\n", context->armCpsInstruction);
 
@@ -447,7 +448,8 @@ void resetExceptionCounters(GCONTXT *context)
   context->armAdcInstruction = 0;
   context->armSbcInstruction = 0;
   context->armRscInstruction = 0;
-  context->armMsrInstruction = 0;
+  context->armMsrRegInstruction = 0;
+  context->armMsrImmInstruction = 0;
   context->armMrsInstruction = 0;
   context->armOrrInstruction = 0;
   context->armMovInstruction = 0;

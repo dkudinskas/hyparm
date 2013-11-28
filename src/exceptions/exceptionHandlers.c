@@ -20,7 +20,6 @@
 #include "guestManager/scheduler.h"
 
 #include "instructionEmu/blockLinker.h"
-#include "instructionEmu/interpreter.h"
 #include "instructionEmu/loadStoreDecode.h"
 #include "instructionEmu/loopDetector.h"
 #include "instructionEmu/scanner.h"

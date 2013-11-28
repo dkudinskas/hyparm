@@ -1,4 +1,5 @@
 #include "perf/contextSwitchCounters.h"
+#include "instructionEmu/interpreter.h"
 
 void countBranch(GCONTXT *context, Instruction instr)
 {
@@ -162,9 +163,13 @@ void registerSvc(GCONTXT *context, InstructionHandler handler)
   {
     context->armRscInstruction++;
   }
-  else if (handler == armMsrInstruction)
+  else if (handler == armMsrRegInstruction)
   {
-    context->armMsrInstruction++;
+    context->armMsrRegInstruction++;
+  }
+  else if (handler == armMsrImmInstruction)
+  {
+    context->armMsrImmInstruction++;
   }
   else if (handler == armMrsInstruction)
   {

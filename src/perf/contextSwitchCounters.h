@@ -12,7 +12,7 @@ void countBL(GCONTXT* context, Instruction instr);
 void countBLXreg(GCONTXT* context, Instruction instr);
 void countBX(GCONTXT* context, Instruction instr);
 
-void registerSvc(GCONTXT *context, InstructionHandler handler)
+void registerSvc(GCONTXT *context, InstructionHandler handler);
 #else
 #define countBranch(context, instr);
 #define countBL(context, instr);

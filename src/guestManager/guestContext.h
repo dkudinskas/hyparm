@@ -140,6 +140,7 @@ struct guestContext
   u32int armLdmInstruction;
   u32int armLdrInstruction;
   u32int armBInstruction;
+  u32int armBlInstruction;
   u32int armSwpInstruction;
   u32int armLdrexbInstruction;
   u32int armLdrexdInstruction;
@@ -161,7 +162,8 @@ struct guestContext
   u32int armAdcInstruction;
   u32int armSbcInstruction;
   u32int armRscInstruction;
-  u32int armMsrInstruction;
+  u32int armMsrRegInstruction;
+  u32int armMsrImmInstruction;
   u32int armMrsInstruction;
   u32int armOrrInstruction;
   u32int armMovInstruction;
