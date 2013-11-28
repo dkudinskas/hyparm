@@ -188,6 +188,37 @@ typedef union ARMInstruction
     unsigned pad2:  12;
   } cps;
 
+  struct LoadImm
+  {
+    unsigned imm12: 12;
+    unsigned Rt:     4;
+    unsigned Rn:     4;
+    unsigned pad0:   1;
+    unsigned W:      1;
+    unsigned pad1:   1;
+    unsigned U:      1;
+    unsigned P:      1;
+    unsigned pad2:   3;
+    unsigned cc:     4;
+  } loadImm;
+
+  struct LoadReg
+  {
+    unsigned Rm:     4;
+    unsigned pad0:   1;
+    unsigned type:   2;
+    unsigned imm5:   5;
+    unsigned Rt:     4;
+    unsigned Rn:     4;
+    unsigned pad1:   1;
+    unsigned W:      1;
+    unsigned pad2:   1;
+    unsigned U:      1;
+    unsigned P:      1;
+    unsigned pad3:   3;
+    unsigned cc:     4;
+  } loadReg;
+
   struct Ldrex
   {
     unsigned pad0:  12;

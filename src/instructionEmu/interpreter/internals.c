@@ -13,9 +13,6 @@ enum guestBreakPointValues
 };
 
 
-// take shift type field from instr, return shift type
-static u32int decodeShift(u32int instrShiftType);
-
 static u32int *getHighGPRegisterPointer(GCONTXT *context, u32int registerIndex);
 
 // rotate right function
@@ -193,26 +190,10 @@ u32int armExpandImm12(u32int imm12)
   return rorVal(immVal, shamt);
 }
 
-// take shift type field from instr, return shift type
-static u32int decodeShift(u32int instrShiftType)
-{
-  instrShiftType = instrShiftType & 0x3;
-  switch (instrShiftType)
-  {
-    case 0:
-      return SHIFT_TYPE_LSL;
-    case 1:
-      return SHIFT_TYPE_LSR;
-    case 2:
-      return SHIFT_TYPE_ASR;
-    default:
-      return SHIFT_TYPE_ROR;
-  } // switch ends
-}
 
 // take the imm5 shift amount and shift type field from instr
 // returns shift type, and adjusts shift amount
-u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int * shamt)
+u32int decodeShiftImmediate(u32int instrShiftType, u32int imm5, u32int* shamt)
 {
   instrShiftType = instrShiftType & 0x3;
   *shamt = imm5 & 0x1F;

@@ -218,11 +218,15 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       // STM Rn, {reg list}
       armStmInstruction(context, instr);
     }
-    else if ((instr & LDR_MASK) == LDR_MASKED)
+    else if ((instr & LDR_REG_MASK) == LDR_REG_MASKED)
     {
-      // loads don't change memory. no need to validate cache
-      // LDR Rd, Rn/#imm12
-      armLdrInstruction(context, instr);
+      // LDR Rd, Rn, Rm
+      armLdrRegInstruction(context, instr);
+    }
+    else if ((instr & LDR_IMM_MASK) == LDR_IMM_MASKED)
+    {
+      // LDR Rd, Rn, imm12
+      armLdrImmInstruction(context, instr);
     }
     else if ((instr & LDRB_MASK) == LDRB_MASKED)
     {

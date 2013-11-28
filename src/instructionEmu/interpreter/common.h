@@ -36,6 +36,8 @@ bool ExclusiveMonitorsPass(u32int address, ACCESS_SIZE size);
 
 bool HaveVirtExt(void);
 
+void LoadWritePC(GCONTXT* context, u32int pc);
+
 u32int_carry lslCarry(u32int value, u32int amount);
 
 u32int_carry lsrCarry(u32int value, u32int amount);
@@ -191,6 +193,11 @@ __macro__ bool ExclusiveMonitorsPass(u32int address, ACCESS_SIZE size)
 __macro__ bool HaveVirtExt()
 {
   return FALSE;
+}
+
+__macro__ void LoadWritePC(GCONTXT* context, u32int pc)
+{
+  BXWritePC(context, pc);
 }
 
 

@@ -1,7 +1,7 @@
 #include "common/bit.h"
 
+#include "instructionEmu/interpreter/common.h"
 #include "instructionEmu/interpreter/internals.h"
-
 #include "instructionEmu/interpreter/arm/loadInstructions.h"
 
 #include "guestManager/guestExceptions.h"
@@ -9,116 +9,92 @@
 #include "memoryManager/memoryProtection.h"
 
 
-u32int armLdrInstruction(GCONTXT *context, u32int instruction)
+u32int armLdrImmInstruction(GCONTXT *context, u32int instruction)
 {
-  if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
-  {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
-
+  Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  u32int regOrImm = instruction & 0x02000000; // 1 = reg, 0 = imm
-  u32int preOrPost = instruction & 0x01000000; // 1 = pre, 0 = post
-  u32int incOrDec = instruction & 0x00800000; // 1 = inc, 0 = dec
-  u32int writeBack = instruction & 0x00200000; // 1 = writeBack indexing, 0 = no writeback
-  u32int regSrc = (instruction & 0x000F0000) >> 16; // Base Load address
-  u32int regDst = (instruction & 0x0000F000) >> 12; // Destination - load to this
-  u32int offsetAddress = 0;
-  u32int baseAddress = 0;
-
-  baseAddress = getGPRegister(context, regSrc);
-
-  if (!regOrImm)
+  if (ConditionPassed(instr.loadImm.cc))
   {
-    // immediate case
-    u32int imm32 = instruction & 0x00000FFF;
+    u8int Rt = instr.loadImm.Rt, Rn = instr.loadImm.Rn;
+    u32int imm32 = instr.loadImm.imm12 & 0xfff;
+    bool index = instr.loadImm.P, add = instr.loadImm.U;
+    bool wback = (!index) || instr.loadImm.W;
+    if (wback && (Rt == Rn))
+      UNPREDICTABLE();
 
-    // offsetAddress = if increment then base + imm32 else base - imm32
-    if (incOrDec)
+    u32int base = getGPRegister(context, Rn);
+    u32int offsetAddr = add ? (base + imm32) : (base - imm32);
+    u32int address = index ? offsetAddr : base;
+
+    u32int data = vmLoad(context, WORD, address);
+    if (wback)
+      setGPRegister(context, Rn, offsetAddr);
+
+    if (Rt == GPR_PC)
     {
-      offsetAddress = baseAddress + imm32;
+      if ((address & 3) == 0)
+      {
+        LoadWritePC(context, data);
+        return context->R15;
+      }
+      else
+        UNPREDICTABLE(); // unaligned value to PC
     }
     else
-    {
-      offsetAddress = baseAddress - imm32;
-    }
-  } // Immediate case ends
-  else
-  {
-    // register case
-    u32int regSrc2 = instruction & 0x0000000F;
-    ASSERT(regSrc2 != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-
-    u32int offsetRegisterValue = getGPRegister(context, regSrc2);
-
-    // (shift_t, shift_n) = DecodeImmShift(type, imm5)
-    u32int shiftAmount = 0;
-    u32int shiftType = decodeShiftImmediate(((instruction & 0x060) >> 5),
-                                           ((instruction & 0xF80)>>7), &shiftAmount);
-
-    // offset = Shift(offsetRegisterValue, shiftType, shitAmount, cFlag);
-    u32int offset = shiftVal(offsetRegisterValue, shiftType, shiftAmount,
-                             context->CPSR.bits.C);
-
-    // if increment then base + offset else base - offset
-    if (incOrDec)
-    {
-      // increment
-      offsetAddress = baseAddress + offset;
-    }
-    else
-    {
-      // decrement
-      offsetAddress = baseAddress - offset;
-    }
-  } // Register case ends
-
-  u32int address = 0;
-  // if preIndex then use offsetAddress else baseAddress
-  if (preOrPost)
-  {
-    address = offsetAddress;
+      setGPRegister(context, Rt, data);
   }
-  else
-  {
-    address = baseAddress;
-  }
-
-  ASSERT((address & 0x3) == 0, "Rd [Rn, Rm/#imm] unaligned address!");
-
-  // P = 0 and W == 1 then LDR as if user mode
-  if ((preOrPost == 0) && (writeBack != 0) && shouldDataAbort(context, FALSE, FALSE, address))
-  {
-    return context->R15;
-  }
-
-  // DO the actual load from memory
-  u32int valueLoaded = vmLoad(context, WORD, address);
-
-  // LDR loading to PC should load a word-aligned value
-  ASSERT(regDst != GPR_PC || (valueLoaded & 0x3) == 0, "loading unaligned value to PC!");
-
-  // put loaded val to reg
-  setGPRegister(context, regDst, valueLoaded);
-
-  // wback = (P = 0) or (W = 1)
-  bool wback = !preOrPost || writeBack;
-  if (wback)
-  {
-    ASSERT(regDst != regSrc, ERROR_UNPREDICTABLE_INSTRUCTION);
-    // Rn = offsetAddr;
-    setGPRegister(context, regSrc, offsetAddress);
-  }
-  if (regDst == GPR_PC)
-  {
-    return context->R15;
-  }
-  else
-  {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
+
+
+u32int armLdrRegInstruction(GCONTXT *context, u32int instruction)
+{
+  Instruction instr = {.raw = instruction};
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+
+  if (ConditionPassed(instr.loadReg.cc))
+  {
+    u8int Rt = instr.loadReg.Rt, Rn = instr.loadReg.Rn, Rm = instr.loadReg.Rm;
+    bool index = instr.loadReg.P, add = instr.loadReg.U;
+    bool wback = (!index) || instr.loadReg.W;
+    u32int shiftAmount = 0;
+    // this call also sets shiftAmount
+    u32int shiftType = decodeShiftImmediate(instr.loadReg.type, 
+                             instr.loadReg.imm5, &shiftAmount);
+    if (Rm == GPR_PC)
+      UNPREDICTABLE();
+    if (wback && ((Rn == GPR_PC) || (Rn == Rt)))
+      UNPREDICTABLE();
+
+
+    u32int base = getGPRegister(context, Rn);
+    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount,
+                                                          context->CPSR.bits.C);
+    u32int offsetAddr = add ? (base + offset) : (base - offset);
+    u32int address = index ? offsetAddr : base;
+
+    u32int data = vmLoad(context, WORD, address);
+
+    if (wback)
+      setGPRegister(context, Rn, offsetAddr);
+
+    if (Rt == GPR_PC)
+    {
+      if ((address & 3) == 0)
+      {
+        LoadWritePC(context, data);
+        return context->R15;
+      }
+      else
+        UNPREDICTABLE(); // unaligned value to PC
+    }
+    else
+      setGPRegister(context, Rt, data);
+  }
+  return context->R15 + ARM_INSTRUCTION_SIZE;
+}
+
 
 u32int armLdrbInstruction(GCONTXT *context, u32int instruction)
 {
@@ -428,9 +404,61 @@ u32int armLdrdInstruction(GCONTXT *context, u32int instruction)
 }
 
 
-u32int armLdrtInstruction(GCONTXT *context, u32int instruction)
+u32int armLdrtImmInstruction(GCONTXT *context, u32int instruction)
 {
-  return armLdrInstruction(context, instruction);
+  Instruction instr = {.raw = instruction};
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+
+  if (ConditionPassed(instr.loadImm.cc))
+  {
+    u8int Rt = instr.loadImm.Rt, Rn = instr.loadImm.Rn;
+    u32int imm32 = instr.loadImm.imm12 & 0xfff;
+    bool add = instr.loadImm.U;
+    if ((Rt == GPR_PC) || (Rn == GPR_PC) || (Rt == Rn))
+      UNPREDICTABLE();
+
+    u32int address = getGPRegister(context, Rn);
+    if (shouldDataAbort(context, FALSE, FALSE, address))
+      return context->R15; // abort!
+
+    u32int data = vmLoad(context, WORD, address);
+    setGPRegister(context, Rn, add ? (address + imm32) : (address - imm32));
+
+    setGPRegister(context, Rt, data);
+  }
+  return context->R15 + ARM_INSTRUCTION_SIZE;
+}
+
+
+u32int armLdrtRegInstruction(GCONTXT *context, u32int instruction)
+{
+  Instruction instr = {.raw = instruction};
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+
+  if (ConditionPassed(instr.loadReg.cc))
+  {
+    u8int Rt = instr.loadReg.Rt, Rn = instr.loadReg.Rn, Rm = instr.loadReg.Rm;
+    bool add = instr.loadReg.U;
+
+    u32int shiftAmount = 0;
+    // this call also sets shiftAmount
+    u32int shiftType = decodeShiftImmediate(instr.loadReg.type, 
+                             instr.loadReg.imm5, &shiftAmount);
+
+    if ((Rt == GPR_PC) || (Rn == GPR_PC) || (Rt == Rn) || (Rm == GPR_PC))
+      UNPREDICTABLE();
+
+    u32int address = getGPRegister(context, Rn);
+    if (shouldDataAbort(context, FALSE, FALSE, address))
+      return context->R15; // abort!
+
+    u32int data = vmLoad(context, WORD, address);
+    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount,
+                                                          context->CPSR.bits.C);
+    setGPRegister(context, Rn, add ? (address + offset) : (address - offset));
+    setGPRegister(context, Rt, data);
+  }
+  return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
 
