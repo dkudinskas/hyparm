@@ -20,9 +20,9 @@ typedef union
     u32int Rd : 4;
     u32int Rn : 4;
     u32int S : 1;
-    u32int pad0 : 4;
+    u32int opc0 : 4;
     u32int I : 1;
-    u32int pad1 : 2;
+    u32int opc1 : 2;
     u32int cond : 4;
   } fields;
   u32int value;
@@ -34,15 +34,15 @@ typedef union
   struct armALURegisterInstruction
   {
     u32int Rm : 4;
-    u32int pad0 : 1;
+    u32int opc0 : 1;
     u32int type : 2;
     u32int imm5 : 5;
     u32int Rd : 4;
     u32int Rn : 4;
     u32int S : 1;
-    u32int pad1 : 4;
+    u32int opc1 : 4;
     u32int I : 1;
-    u32int pad2 : 2;
+    u32int opc2 : 2;
     u32int cond : 4;
   } fields;
   u32int value;
@@ -60,7 +60,7 @@ typedef union
     u32int S : 1;
     u32int U : 1;
     u32int P : 1;
-    u32int pad : 3;
+    u32int opc : 3;
     u32int cond : 4;
   } fields;
   u32int value;
@@ -80,7 +80,7 @@ typedef union
     u32int U : 1;
     u32int P : 1;
     u32int I : 1;
-    u32int pad: 2;
+    u32int opc: 2;
     u32int cond : 4;
   } fields;
   u32int value;
@@ -92,7 +92,7 @@ typedef union
   struct armLdrStrRegister
   {
     u32int Rm : 4; // source
-    u32int pad0: 1;
+    u32int opc0: 1;
     u32int type: 2;
     u32int imm5: 5;
     u32int Rt : 4; // source
@@ -103,7 +103,7 @@ typedef union
     u32int U : 1;
     u32int P : 1;
     u32int I : 1;
-    u32int pad: 2;
+    u32int opc: 2;
     u32int cond : 4;
   } fields;
   u32int value;
@@ -114,16 +114,16 @@ typedef union
 {
   struct armMrcInstruction
   {
-    unsigned CRm : 4;
-    unsigned pad0 : 1;
-    unsigned opc2 : 3;
-    unsigned coproc : 4;
-    unsigned Rt : 4;
-    unsigned CRn : 4;
-    unsigned pad1 : 1;
-    unsigned opc1 : 3;
-    unsigned pad3 : 4;
-    unsigned cc : 4;
+    unsigned CRm:      4;
+    unsigned opcode0:  1;
+    unsigned opc2:     3;
+    unsigned coproc:   4;
+    unsigned Rt:       4;
+    unsigned CRn:      4;
+    unsigned opcode1:  1;
+    unsigned opc1:     3;
+    unsigned opcode2:  4;
+    unsigned cc:       4;
   } fields;
   u32int value;
 } ARMMrcInstruction;
@@ -132,16 +132,16 @@ typedef union
 {
   struct armMcrInstruction
   {
-    unsigned CRm : 4;
-    unsigned pad0 : 1;
-    unsigned opc2 : 3;
-    unsigned coproc : 4;
-    unsigned Rt : 4;
-    unsigned CRn : 4;
-    unsigned pad1 : 1;
-    unsigned opc1 : 3;
-    unsigned pad3 : 4;
-    unsigned cc : 4;
+    unsigned CRm:      4;
+    unsigned opcode0:  1;
+    unsigned opc2:     3;
+    unsigned coproc:   4;
+    unsigned Rt:       4;
+    unsigned CRn:      4;
+    unsigned opcode1:  1;
+    unsigned opc1:     3;
+    unsigned opcode2:  4;
+    unsigned cc:       4;
   } fields;
   u32int value;
 } ARMMcrInstruction;
@@ -155,37 +155,37 @@ typedef union ARMInstruction
   struct Breakpoint
   {
     unsigned imm4:   4;
-    unsigned pad0:   4;
+    unsigned opc0:   4;
     unsigned imm12: 12;
-    unsigned pad1:   8;
+    unsigned opc1:   8;
     unsigned cc:     4;
   } bkpt;
 
   struct Branch
   {
     unsigned imm24: 24;
-    unsigned pad0:   4;
+    unsigned opc0:   4;
     unsigned cc:     4;
   } branch;
 
   struct BxReg
   {
     unsigned Rm:     4;
-    unsigned pad0:  24;
+    unsigned opc0:  24;
     unsigned cc:     4;
   } BxReg;
 
   struct Cps
   {
     unsigned mode:   5;
-    unsigned pad0:   1;
+    unsigned opc0:   1;
     unsigned F:      1;
     unsigned I:      1;
     unsigned A:      1;
-    unsigned pad1:   8;
+    unsigned opc1:   8;
     unsigned M:      1;
     unsigned imod:   2;
-    unsigned pad2:  12;
+    unsigned opc2:  12;
   } cps;
 
   struct LoadImm
@@ -193,94 +193,125 @@ typedef union ARMInstruction
     unsigned imm12: 12;
     unsigned Rt:     4;
     unsigned Rn:     4;
-    unsigned pad0:   1;
+    unsigned opc0:   1;
     unsigned W:      1;
-    unsigned pad1:   1;
+    unsigned opc1:   1;
     unsigned U:      1;
     unsigned P:      1;
-    unsigned pad2:   3;
+    unsigned opc2:   3;
     unsigned cc:     4;
   } loadImm;
+
+  struct LoadImm2
+  {
+    unsigned imm4L:  4;
+    unsigned opc0:   4;
+    unsigned imm4H:  4;
+    unsigned Rt:     4;
+    unsigned Rn:     4;
+    unsigned opc1:   1;
+    unsigned W:      1;
+    unsigned opc2:   1;
+    unsigned U:      1;
+    unsigned P:      1;
+    unsigned opc3:   3;
+    unsigned cc:     4;
+  } loadImm2;
+
+  struct LoadReg2
+  {
+    unsigned Rm:     4;
+    unsigned opc0:   8;
+    unsigned Rt:     4;
+    unsigned Rn:     4;
+    unsigned opc1:   1;
+    unsigned W:      1;
+    unsigned opc2:   1;
+    unsigned U:      1;
+    unsigned P:      1;
+    unsigned opc3:   3;
+    unsigned cc:     4;
+  } loadReg2;
 
   struct LoadReg
   {
     unsigned Rm:     4;
-    unsigned pad0:   1;
+    unsigned opc0:   1;
     unsigned type:   2;
     unsigned imm5:   5;
     unsigned Rt:     4;
     unsigned Rn:     4;
-    unsigned pad1:   1;
+    unsigned opc1:   1;
     unsigned W:      1;
-    unsigned pad2:   1;
+    unsigned opc2:   1;
     unsigned U:      1;
     unsigned P:      1;
-    unsigned pad3:   3;
+    unsigned opc3:   3;
     unsigned cc:     4;
   } loadReg;
 
   struct Ldrex
   {
-    unsigned pad0:  12;
+    unsigned opc0:  12;
     unsigned Rt:     4;
     unsigned Rn:     4;
-    unsigned pad1:   8;
+    unsigned opc1:   8;
     unsigned cc:     4;
   } ldrex;
 
   struct Mcr
   {
     unsigned CRm:    4;
-    unsigned pad0:   1;
+    unsigned opcode0:1;
     unsigned opc2:   3;
     unsigned coproc: 4;
     unsigned Rt:     4;
     unsigned CRn:    4;
-    unsigned pad1:   1;
+    unsigned opcode1:1;
     unsigned opc1:   3;
-    unsigned pad2:   4;
+    unsigned opcode2:4;
     unsigned cc:     4;
   } mcr;
 
   struct Mrs
   {
-    unsigned pad0:  12;
+    unsigned opc0:  12;
     unsigned Rd:     4;
-    unsigned pad1:   6;
+    unsigned opc1:   6;
     unsigned R:      1;
-    unsigned pad2:   5;
+    unsigned opc2:   5;
     unsigned cc:     4;
   } mrs;
 
   struct MsrImm
   {
     unsigned imm12: 12;
-    unsigned pad0:   4;
+    unsigned opc0:   4;
     unsigned mask:   4;
-    unsigned pad1:   2;
+    unsigned opc1:   2;
     unsigned R:      1;
-    unsigned pad2:   5;
+    unsigned opc2:   5;
     unsigned cc:     4;
   } msrImm;
 
   struct MsrReg
   {
     unsigned Rn:     4;
-    unsigned pad0:  12;
+    unsigned opc0:  12;
     unsigned mask:   4;
-    unsigned pad1:   2;
+    unsigned opc1:   2;
     unsigned R:      1;
-    unsigned pad2:   5;
+    unsigned opc2:   5;
     unsigned cc:     4;
   } msrReg;
 
   struct Strex
   {
     unsigned Rt:     4;
-    unsigned pad0:   8;
+    unsigned opc0:   8;
     unsigned Rd:     4;
     unsigned Rn:     4;
-    unsigned pad1:   8;
+    unsigned opc1:   8;
     unsigned cc:     4;
   } strex;
 

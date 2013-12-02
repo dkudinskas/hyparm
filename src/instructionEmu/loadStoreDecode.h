@@ -38,13 +38,15 @@
 #define LDRH_REG_MASK   0x0e500f90
 #define LDRH_REG_MASKED 0x00100090
 // byte load
-#define LDRB_MASK       0x0c500000
-#define LDRB_MASKED     0x04500000
+#define LDRB_IMM_MASK   0x0e500000
+#define LDRB_IMM_MASKED 0x04500000
+#define LDRB_REG_MASK   0x0e500010
+#define LDRB_REG_MASKED 0x06500000
 // word load
-#define LDR_REG_MASK    0x0e500000
-#define LDR_REG_MASKED  0x06100000
 #define LDR_IMM_MASK    0x0e500000
 #define LDR_IMM_MASKED  0x04100000
+#define LDR_REG_MASK    0x0e500000
+#define LDR_REG_MASKED  0x06100000
 // dual word load
 #define LDRD_REG_MASK   0x0e500ff0
 #define LDRD_REG_MASKED 0x000000d0

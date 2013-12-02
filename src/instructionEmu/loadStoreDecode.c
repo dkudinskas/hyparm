@@ -228,22 +228,35 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
       // LDR Rd, Rn, imm12
       armLdrImmInstruction(context, instr);
     }
-    else if ((instr & LDRB_MASK) == LDRB_MASKED)
+    else if ((instr & LDRB_IMM_MASK) == LDRB_IMM_MASKED)
     {
       // LDRB Rd, [Rn, Rm/#imm12]
-      armLdrbInstruction(context, instr);
+      armLdrbImmInstruction(context, instr);
     }
-    else if (((instr & LDRH_IMM_MASK) == LDRH_IMM_MASKED) ||
-             ((instr & LDRH_REG_MASK) == LDRH_REG_MASKED))
+    else if ((instr & LDRB_REG_MASK) == LDRB_REG_MASKED)
     {
-      // LDRH Rd, [Rn, Rm/#imm12]
-      armLdrhInstruction(context, instr);
+      // LDRB Rd, [Rn, Rm/#imm12]
+      armLdrbRegInstruction(context, instr);
     }
-    else if (((instr & LDRD_IMM_MASK) == LDRD_IMM_MASKED) ||
-             ((instr & LDRD_REG_MASK) == LDRD_REG_MASKED))
+    else if ((instr & LDRH_IMM_MASK) == LDRH_IMM_MASKED)
     {
-      // LDRD Rd, [Rn, Rm/#imm12]
-      armLdrdInstruction(context, instr);
+      // LDRH Rd, [Rn, #imm12]
+      armLdrhImmInstruction(context, instr);
+    }
+    else if ((instr & LDRH_REG_MASK) == LDRH_REG_MASKED)
+    {
+      // LDRH Rd, [Rn, Rm]
+      armLdrhRegInstruction(context, instr);
+    }
+    else if ((instr & LDRD_IMM_MASK) == LDRD_IMM_MASKED)
+    {
+      // LDRD Rd, [Rn, #imm12]
+      armLdrdImmInstruction(context, instr);
+    }
+    else if ((instr & LDRD_REG_MASK) == LDRD_REG_MASKED)
+    {
+      // LDRD Rd, [Rn, Rm]
+      armLdrdRegInstruction(context, instr);
     }
     else if ((instr & LDM_MASK) == LDM_MASKED)
     {
