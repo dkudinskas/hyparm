@@ -67,6 +67,14 @@ void registerSvc(GCONTXT *context, InstructionHandler handler)
   {
     context->armLdmInstruction++;
   }
+  else if (handler == armLdmUserInstruction)
+  {
+    context->armLdmInstruction++;
+  }
+  else if (handler == armLdmExcRetInstruction)
+  {
+    context->armLdmInstruction++;
+  }
   else if (handler == armLdrImmInstruction)
   {
     context->armLdrInstruction++;

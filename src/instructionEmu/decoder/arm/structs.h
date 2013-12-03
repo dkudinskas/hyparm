@@ -188,6 +188,28 @@ typedef union ARMInstruction
     unsigned opc2:  12;
   } cps;
 
+  struct Ldrex
+  {
+    unsigned opc0:  12;
+    unsigned Rt:     4;
+    unsigned Rn:     4;
+    unsigned opc1:   8;
+    unsigned cc:     4;
+  } ldrex;
+
+  struct Ldm
+  {
+    unsigned regList:16;
+    unsigned Rn:     4;
+    unsigned opc0:   1;
+    unsigned W:      1;
+    unsigned user:   1;
+    unsigned U:      1;
+    unsigned P:      1;
+    unsigned opc1:   3;
+    unsigned cc:     4;
+  } ldm;
+
   struct LoadImm
   {
     unsigned imm12: 12;
@@ -218,21 +240,6 @@ typedef union ARMInstruction
     unsigned cc:     4;
   } loadImm2;
 
-  struct LoadReg2
-  {
-    unsigned Rm:     4;
-    unsigned opc0:   8;
-    unsigned Rt:     4;
-    unsigned Rn:     4;
-    unsigned opc1:   1;
-    unsigned W:      1;
-    unsigned opc2:   1;
-    unsigned U:      1;
-    unsigned P:      1;
-    unsigned opc3:   3;
-    unsigned cc:     4;
-  } loadReg2;
-
   struct LoadReg
   {
     unsigned Rm:     4;
@@ -250,14 +257,20 @@ typedef union ARMInstruction
     unsigned cc:     4;
   } loadReg;
 
-  struct Ldrex
+  struct LoadReg2
   {
-    unsigned opc0:  12;
+    unsigned Rm:     4;
+    unsigned opc0:   8;
     unsigned Rt:     4;
     unsigned Rn:     4;
-    unsigned opc1:   8;
+    unsigned opc1:   1;
+    unsigned W:      1;
+    unsigned opc2:   1;
+    unsigned U:      1;
+    unsigned P:      1;
+    unsigned opc3:   3;
     unsigned cc:     4;
-  } ldrex;
+  } loadReg2;
 
   struct Mcr
   {

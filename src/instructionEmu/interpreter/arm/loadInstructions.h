@@ -25,8 +25,10 @@ u32int armLdrtRegInstruction(GCONTXT *context, u32int instruction);
 // dual loads
 u32int armLdrdImmInstruction(GCONTXT* context, u32int instruction);
 u32int armLdrdRegInstruction(GCONTXT* context, u32int instruction);
-
+// multiple loads
 u32int armLdmInstruction(GCONTXT *context, u32int instruction);
+u32int armLdmUserInstruction(GCONTXT *context, u32int instruction);
+u32int armLdmExcRetInstruction(GCONTXT *context, u32int instruction);
 
 
 #endif

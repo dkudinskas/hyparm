@@ -18,11 +18,12 @@ static struct decodingTableEntry armBranchBlockTransferInstructions[] =
   // STM traps if ^ postfix, otherwise pass through
   ENTRY(IRC_REPLACE, armStmInstruction,         NULL,                   0x08400000, 0x0e500000, "STM.. {regList}^"),
   ENTRY(IRC_PATCH_PC,armStmInstruction,         armStmPC,               0x08000000, 0x0e500000, "STM.. {regList}"),
-  // POP LDM syntax, only care if PC in reglist
-  ENTRY(IRC_REPLACE, armLdmInstruction,         NULL,                   0x08bd8000, 0x0fff8000, "LDM SP, {...r15}"),
-  // LDM traps if ^ postfix and/or PC is in register list, otherwise pass through
-  ENTRY(IRC_REPLACE, armLdmInstruction,         NULL,                   0x08500000, 0x0e500000, "LDM Rn, {regList}^"),
-  ENTRY(IRC_REPLACE, armLdmInstruction,         NULL,                   0x08108000, 0x0e108000, "LDM Rn, {..r15}"),
+  // LDM exception return: trap
+  ENTRY(IRC_REPLACE, armLdmExcRetInstruction,   NULL,                   0x08508000, 0x0e508000, "LDM Rn, {..., PC}^"),
+  // LDM user mode: trap
+  ENTRY(IRC_REPLACE, armLdmUserInstruction,     NULL,                   0x08500000, 0x0e508000, "LDM Rn, {...}^"),
+  // LDM: if PC in register list, hypercall
+  ENTRY(IRC_REPLACE, armLdmInstruction,         NULL,                   0x08108000, 0x0e508000, "LDM Rn, {..r15}"),
   // B: always hypercall! obviously.
   ENTRY(IRC_REPLACE, armBInstruction,           NULL,                   0x0a000000, 0x0f000000, "B imm24"),
   // BL: always hypercall! obviously.

@@ -479,171 +479,143 @@ u32int armLdrdRegInstruction(GCONTXT* context, u32int instruction)
 /************************** multiword load ********************/
 u32int armLdmInstruction(GCONTXT *context, u32int instruction)
 {
-  if (!evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instruction)))
-  {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
-
+  Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  u32int prePost = instruction & 0x01000000;
-  u32int upDown = instruction & 0x00800000;
-  u32int forceUser = instruction & 0x00400000;
-  u32int writeback = instruction & 0x00200000;
-  u32int baseReg = (instruction & 0x000F0000) >> 16;
-  u32int regList = instruction & 0x0000FFFF;
-
-  ASSERT(baseReg != GPR_PC, ERROR_UNPREDICTABLE_INSTRUCTION);
-  ASSERT(regList, ERROR_UNPREDICTABLE_INSTRUCTION);
-
-  u32int baseAddress = getGPRegister(context, baseReg);
-  CPSRmode savedMode = 0;
-  bool cpySpsr = FALSE;
-  if (forceUser != 0)
+  if (ConditionPassed(instr.ldm.cc))
   {
-    // ok, is this exception return, or LDM user mode?
-    if ((instruction & 0x00008000) != 0)
+    u8int Rn = instr.ldm.Rn;
+    bool before = instr.ldm.P, increment = instr.ldm.U, wback = instr.ldm.W;
+    u16int registers = instr.ldm.regList;
+
+    if ((Rn == GPR_PC) || (registers == 0))
+      UNPREDICTABLE();
+    if (wback && (((registers >> Rn) & 1) == 1))
+      UNPREDICTABLE();
+
+    u32int bitCount = countBitsSet(registers);
+    u32int base = getGPRegister(context, Rn);
+    u32int address = 0;
+    if (increment && before)        // LDMIB
+      address = base + 4;
+    else if (!increment && before)  // LDMDB
+      address = base - (4 * bitCount);
+    else if (!increment && !before) // LDMDA
+      address = base - (4 * bitCount) + 4;
+    else                            // LDMIA
+      address = base;
+
+    int i = 0;
+    for (i = 0; i < 15; i++)
     {
-      // force user bit set and PC in list: exception return
-      cpySpsr = TRUE;
-    }
-    else
-    {
-      // force user bit set and no PC in list: LDM user mode registers
-      savedMode = context->CPSR.bits.mode;
-      context->CPSR.bits.mode = USR_MODE;
-    }
-  }
-
-  u32int address = 0;
-  if ((upDown == 0) && (prePost != 0)) // LDM decrement before
-  {
-    // address = baseAddress - 4*(number of registers to load);
-    address = baseAddress - 4 * countBitsSet(regList);
-  }
-  else if ((upDown == 0) && (prePost == 0)) // LDM decrement after
-  {
-    // address = baseAddress - 4*(number of registers to load) + 4;
-    address = baseAddress - 4 * countBitsSet(regList) + 4;
-  }
-  else if ((upDown != 0) && (prePost != 0)) // LDM increment before
-  {
-    // address = baseAddress + 4 - will be incremented as we go
-    address = baseAddress + 4;
-  }
-  else if ((upDown != 0) && (prePost == 0)) // LDM increment after
-  {
-    // address = baseAddress - will be incremented as we go
-    address = baseAddress;
-  }
-
-  bool isPCinRegList = FALSE;
-  int i;
-  for (i = 0; i < 16; i++)
-  {
-    // if current register set
-    if (((regList >> i) & 0x1) == 0x1)
-    {
-      if (i == 15)
+      if (((registers >> i) & 1) == 1)
       {
-        isPCinRegList = TRUE;
+        setGPRegister(context, i, vmLoad(context, WORD, address));
+        address += 4;
       }
-      // R[i] = *(address);
-      u32int valueLoaded = vmLoad(context, WORD, address);
-      setGPRegister(context, i, valueLoaded);
-      DEBUG(INTERPRETER_ARM_LOAD, "armLdmInstruction: R[%x] = *(%#.8x) = %#.8x" EOL, i, address,
-          valueLoaded);
-      address = address + 4;
     }
-  } // for ends
 
-  // if writeback then baseReg = baseReg +/- 4 * number of registers to load;
-  if (writeback != 0)
-  {
-    if (upDown == 0)
+    if (wback)
     {
-      // decrement
-      baseAddress = baseAddress - 4 * countBitsSet(regList);
+      if (increment)
+        setGPRegister(context, Rn, base + 4 * bitCount);
+      else
+        setGPRegister(context, Rn, base - 4 * bitCount);
     }
-    else
+
+    if (((registers >> 15) & 1) == 1)
     {
-      // increment
-      baseAddress = baseAddress + 4 * countBitsSet(regList);
+      LoadWritePC(context, vmLoad(context, WORD, address));
+      return context->R15;
     }
-    setGPRegister(context, baseReg, baseAddress);
+
   }
+  return context->R15 + ARM_INSTRUCTION_SIZE;
+}
 
-  if (forceUser != 0)
+
+u32int armLdmUserInstruction(GCONTXT *context, u32int instruction)
+{
+  Instruction instr = {.raw = instruction};
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+
+  if (ConditionPassed(instr.ldm.cc))
   {
-    // do we need to copy spsr? or return from userland?
-    if (cpySpsr)
+    u8int Rn = instr.ldm.Rn;
+    bool wordhigher = instr.ldm.P == instr.ldm.U, increment = instr.ldm.U;
+    u16int registers = instr.ldm.regList;
+
+    if ((Rn == GPR_PC) || (registers == 0))
+      UNPREDICTABLE();
+
+    u32int base = getGPRegister(context, Rn);
+    u32int address = increment ? base : base - 4*countBitsSet(registers);
+    if (wordhigher)
+      address += 4;
+
+    // force user bit set and no PC in list: LDM user mode registers
+    CPSRmode savedMode = context->CPSR.bits.mode;
+    context->CPSR.bits.mode = USR_MODE;
+    int i = 0;
+    for (i = 0; i < 15; i++)
     {
-      // ok, exception return option: restore SPSR to CPSR
-      // SPSR! which?... depends what mode we are in...
-      u32int modeSpsr = 0;
-      switch (context->CPSR.bits.mode)
+      if (((registers >> i) & 1) == 1)
       {
-        case FIQ_MODE:
-        {
-          modeSpsr = context->SPSR_FIQ.value;
-          break;
-        }
-        case IRQ_MODE:
-        {
-          modeSpsr = context->SPSR_IRQ.value;
-          break;
-        }
-        case SVC_MODE:
-        {
-          modeSpsr = context->SPSR_SVC.value;
-          break;
-        }
-        case ABT_MODE:
-        {
-          modeSpsr = context->SPSR_ABT.value;
-          break;
-        }
-        case UND_MODE:
-        {
-          modeSpsr = context->SPSR_UND.value;
-          break;
-        }
-        default:
-          DIE_NOW(context, "exception return from sys/usr mode!");
+        setGPRegister(context, i, vmLoad(context, WORD, address));
+        address += 4;
       }
-      if (context->CPSR.bits.mode != (modeSpsr & PSR_MODE))
-      {
-        guestChangeMode(context, modeSpsr & PSR_MODE);
-      }
-      context->CPSR.value = modeSpsr;
     }
-    else
-    {
-      // we made CPSR user mode to force 'ldm user'. restore CPSR
-      context->CPSR.bits.mode = savedMode;
-    }
+    // done loading, restore mode
+    context->CPSR.bits.mode = savedMode;
   }
+  return context->R15 + ARM_INSTRUCTION_SIZE;
+}
 
-  if (isPCinRegList)
+u32int armLdmExcRetInstruction(GCONTXT *context, u32int instruction)
+{
+  Instruction instr = {.raw = instruction};
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+
+  if (ConditionPassed(instr.ldm.cc))
   {
-    /*
-     * If PC is in the list this is an interworking branch.
-     */
-    if (context->R15 & 0x1)
+    u8int Rn = instr.ldm.Rn;
+    u16int registers = instr.ldm.regList;
+    bool wordhigher = (instr.ldm.P == instr.ldm.U);
+    bool wback = instr.ldm.W, increment = instr.ldm.U;
+
+    if (Rn == GPR_PC)
+      UNPREDICTABLE();
+    if (wback && (((registers >> Rn) & 1) == 1))
+      UNPREDICTABLE();
+
+    u32int base = getGPRegister(context, Rn);
+    u32int length = 4*countBitsSet(registers) + 4;
+    u32int address = increment ? base : base - length;
+    if (wordhigher)
+      address += 4;
+
+    int i = 0;
+    for (i = 0; i < 15; i++)
     {
-#ifdef CONFIG_THUMB2
-      context->CPSR.bits.T = 1;
-      context->R15 &= ~1;
-#else
-      DIE_NOW(context, "Thumb is disabled (CONFIG_THUMB2 not set)");
-#endif
+      if (((registers >> i) & 1) == 1)
+      {
+        setGPRegister(context, i, vmLoad(context, WORD, address));
+        address += 4;
+      }
     }
-    else
+    u32int newPcValue = vmLoad(context, WORD, address);
+
+    if (wback)
     {
-      context->R15 &= ~2;
+      if (increment)
+        setGPRegister(context, Rn, base + length);
+      else
+        setGPRegister(context, Rn, base - length);
     }
+
+    CPSRWriteByInstr(context, SPSR(context).value, 0xF, TRUE);
+    BranchWritePC(context, newPcValue);
     return context->R15;
   }
-
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }

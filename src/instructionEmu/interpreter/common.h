@@ -123,7 +123,7 @@ __macro__ void BXWritePC(GCONTXT* context, u32int address)
       SelectInstrSet(InstrSet_Thumb);
       context->R15 = (address & ~0x1);
     }
-    else if ((address & 1) == 1)
+    else if ((address & 1) == 0)
     {
       SelectInstrSet(InstrSet_ARM);
       context->R15 = address;
