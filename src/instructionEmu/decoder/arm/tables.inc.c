@@ -40,7 +40,7 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   ENTRY(IRC_REPLACE, armStrhtInstruction,       NULL,                   0x006000b0, 0x0f7000f0, "STRHT"),
   // load halfword and translate
   ENTRY(IRC_REPLACE, armLdrhtImmInstruction,    NULL,                   0x007000b0, 0x0f7000f0, "LDRHT Rt, [Rn, #imm]"),
-  ENTRY(IRC_REPLACE, armLdrhtImmInstruction,    NULL,                   0x003000b0, 0x0f700ff0, "LDRHT Rt, [Rn, Rm]"),
+  ENTRY(IRC_REPLACE, armLdrhtRegInstruction,    NULL,                   0x003000b0, 0x0f700ff0, "LDRHT Rt, [Rn, Rm]"),
   // Branch and try to exchange to ARM mode.
   ENTRY(IRC_REPLACE, armBxInstruction,          NULL,                   0x012FFF10, 0x0ffffff0, "BX"),
   // Branch and link and try to exchange to Jazelle mode.
