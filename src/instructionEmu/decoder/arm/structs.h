@@ -197,7 +197,7 @@ typedef union ARMInstruction
     unsigned cc:     4;
   } ldrex;
 
-  struct Ldm
+  struct LoadStoreMultiple
   {
     unsigned regList:16;
     unsigned Rn:     4;
@@ -208,9 +208,9 @@ typedef union ARMInstruction
     unsigned P:      1;
     unsigned opc1:   3;
     unsigned cc:     4;
-  } ldm;
+  } ldStMulti;
 
-  struct LoadImm
+  struct LoadStoreImm
   {
     unsigned imm12: 12;
     unsigned Rt:     4;
@@ -222,9 +222,9 @@ typedef union ARMInstruction
     unsigned P:      1;
     unsigned opc2:   3;
     unsigned cc:     4;
-  } loadImm;
+  } ldStImm;
 
-  struct LoadImm2
+  struct LoadStoreImm2
   {
     unsigned imm4L:  4;
     unsigned opc0:   4;
@@ -238,9 +238,9 @@ typedef union ARMInstruction
     unsigned P:      1;
     unsigned opc3:   3;
     unsigned cc:     4;
-  } loadImm2;
+  } ldStImm2;
 
-  struct LoadReg
+  struct LoadStoreReg
   {
     unsigned Rm:     4;
     unsigned opc0:   1;
@@ -255,9 +255,9 @@ typedef union ARMInstruction
     unsigned P:      1;
     unsigned opc3:   3;
     unsigned cc:     4;
-  } loadReg;
+  } ldStReg;
 
-  struct LoadReg2
+  struct LoadStoreReg2
   {
     unsigned Rm:     4;
     unsigned opc0:   8;
@@ -270,7 +270,7 @@ typedef union ARMInstruction
     unsigned P:      1;
     unsigned opc3:   3;
     unsigned cc:     4;
-  } loadReg2;
+  } ldStReg2;
 
   struct Mcr
   {

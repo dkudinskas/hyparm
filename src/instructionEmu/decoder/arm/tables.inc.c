@@ -16,7 +16,7 @@
 static struct decodingTableEntry armBranchBlockTransferInstructions[] =
 {
   // STM traps if ^ postfix, otherwise pass through
-  ENTRY(IRC_REPLACE, armStmInstruction,         NULL,                   0x08400000, 0x0e500000, "STM.. {regList}^"),
+  ENTRY(IRC_REPLACE, armStmUserInstruction,     NULL,                   0x08400000, 0x0e500000, "STM.. {regList}^"),
   ENTRY(IRC_PATCH_PC,armStmInstruction,         armStmPC,               0x08000000, 0x0e500000, "STM.. {regList}"),
   // LDM exception return: trap
   ENTRY(IRC_REPLACE, armLdmExcRetInstruction,   NULL,                   0x08508000, 0x0e508000, "LDM Rn, {..., PC}^"),
@@ -37,7 +37,8 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   // UNIMPLEMENTED: SWP swap
   ENTRY(IRC_REPLACE, armSwpInstruction,         NULL,                   0x01000090, 0x0fb00ff0, "SWP"),
   // store halfword and translate
-  ENTRY(IRC_REPLACE, armStrhtInstruction,       NULL,                   0x006000b0, 0x0f7000f0, "STRHT"),
+  ENTRY(IRC_REPLACE, armStrhtImmInstruction,    NULL,                   0x006000b0, 0x0f7000f0, "STRHT Rt, [Rn, #imm]"),
+  ENTRY(IRC_REPLACE, armStrhtRegInstruction,    NULL,                   0x004000b0, 0x0f700ff0, "STRHT Rt, [Rn, Rm]"),
   // load halfword and translate
   ENTRY(IRC_REPLACE, armLdrhtImmInstruction,    NULL,                   0x007000b0, 0x0f7000f0, "LDRHT Rt, [Rn, #imm]"),
   ENTRY(IRC_REPLACE, armLdrhtRegInstruction,    NULL,                   0x003000b0, 0x0f700ff0, "LDRHT Rt, [Rn, Rm]"),
@@ -55,11 +56,11 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   ENTRY(IRC_PATCH_PC,armLdrdImmInstruction,     armLdrdhPCInstruction,  0x014f00d0, 0x0f7f00f0, "LDRD Rt, [Rn, #imm]"),
   ENTRY(IRC_PATCH_PC,armLdrdRegInstruction,     armLdrdhPCInstruction,  0x000f00d0, 0x0e5f0ff0, "LDRD Rt, [Rn, Rm]"),
   // STRD: imm/reg case Rn = PC case patch
-  ENTRY(IRC_PATCH_PC,armStrdInstruction,        armStrPCInstruction,    0x004f00f0, 0x0e5f00f0, "STRD Rt, [Rn, #imm]"),
-  ENTRY(IRC_PATCH_PC,armStrdInstruction,        armStrPCInstruction,    0x000f00f0, 0x0e5f0ff0, "STRD Rt, [Rn, Rm]"),
+  ENTRY(IRC_PATCH_PC,armStrdImmInstruction,     armStrPCInstruction,    0x004f00f0, 0x0e5f00f0, "STRD Rt, [Rn, #imm]"),
+  ENTRY(IRC_PATCH_PC,armStrdRegInstruction,     armStrPCInstruction,    0x000f00f0, 0x0e5f0ff0, "STRD Rt, [Rn, Rm]"),
   // STRH: imm/reg case Rn = PC case patch
-  ENTRY(IRC_PATCH_PC,armStrhInstruction,        armStrPCInstruction,    0x004f00b0, 0x0e5f00f0, "STRH Rt, [Rn, #imm8]"),
-  ENTRY(IRC_PATCH_PC,armStrhInstruction,        armStrPCInstruction,    0x000f00b0, 0x0e5f0ff0, "STRH Rt, [Rn], Rm"),
+  ENTRY(IRC_PATCH_PC,armStrhImmInstruction,     armStrPCInstruction,    0x004f00b0, 0x0e5f00f0, "STRH Rt, [Rn, #imm8]"),
+  ENTRY(IRC_PATCH_PC,armStrhRegInstruction,     armStrPCInstruction,    0x000f00b0, 0x0e5f0ff0, "STRH Rt, [Rn], Rm"),
   // LDRH: imm/reg case Rn = PC case patch
   ENTRY(IRC_PATCH_PC,armLdrhImmInstruction,     armLdrdhPCInstruction,  0x005f00b0, 0x0e5f00f0, "LDRH Rt, [PC, #imm8]"),
   ENTRY(IRC_PATCH_PC,armLdrhRegInstruction,     armLdrdhPCInstruction,  0x001f00b0, 0x0e5f0ff0, "LDRH Rt, [Rn], Rm"),
@@ -197,23 +198,23 @@ static struct decodingTableEntry armDataProcMiscInstructions_op1[] =
 static struct decodingTableEntry armLoadStoreWordByteInstructions[] =
 {
   // STRT - all trap
-  ENTRY(IRC_REPLACE, armStrtInstruction,         armStrtPCInstruction,  0x04200000, 0x0f700000, "STRT Rt, [Rn], +-imm12"),
-  ENTRY(IRC_REPLACE, armStrtInstruction,         armStrtPCInstruction,  0x06200000, 0x0f700010, "STRT Rt, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE, armStrtImmInstruction,      armStrtPCInstruction,  0x04200000, 0x0f700000, "STRT Rt, [Rn], +-imm12"),
+  ENTRY(IRC_REPLACE, armStrtRegInstruction,      armStrtPCInstruction,  0x06200000, 0x0f700010, "STRT Rt, [Rn], +-Rm"),
   // LDRT - all trap
   ENTRY(IRC_REPLACE, armLdrtImmInstruction,      NULL,                  0x04300000, 0x0f700000, "LDRT Rd, [Rn], +-imm12"),
   ENTRY(IRC_REPLACE, armLdrtRegInstruction,      NULL,                  0x06300000, 0x0f700010, "LDRT Rd, [Rn], +-Rm"),
   // STRBT - all trap
-  ENTRY(IRC_REPLACE, armStrbtInstruction,        NULL,                  0x04600000, 0x0f700000, "STRBT Rt, [Rn, +-imm12]"),
-  ENTRY(IRC_REPLACE, armStrbtInstruction,        NULL,                  0x06600000, 0x0f700010, "STRBT Rt, [Rn], +-Rm"),
+  ENTRY(IRC_REPLACE, armStrbtImmInstruction,     NULL,                  0x04600000, 0x0f700000, "STRBT Rt, [Rn, +-imm12]"),
+  ENTRY(IRC_REPLACE, armStrbtRegInstruction,     NULL,                  0x06600000, 0x0f700010, "STRBT Rt, [Rn], +-Rm"),
   // LDRBT - all trap
   ENTRY(IRC_REPLACE, armLdrbtImmInstruction,     NULL,                  0x04700000, 0x0f700000, "LDRBT Rd, [Rn], +-imm12"),
   ENTRY(IRC_REPLACE, armLdrbtRegInstruction,     NULL,                  0x06700000, 0x0f700010, "LDRBT Rd, [Rn], +-Rm"),
   // STR imm: Rn/Rt can be PC, patch
-  ENTRY(IRC_PATCH_PC,armStrInstruction,          armStrPCInstruction,   0x0400f000, 0x0e50f000, "STR PC, [Rn, +-imm12]"),
-  ENTRY(IRC_PATCH_PC,armStrInstruction,          armStrPCInstruction,   0x040f0000, 0x0e5f0000, "STR Rt, [PC, +-imm12]"),
+  ENTRY(IRC_PATCH_PC,armStrImmInstruction,       armStrPCInstruction,   0x0400f000, 0x0e50f000, "STR PC, [Rn, +-imm12]"),
+  ENTRY(IRC_PATCH_PC,armStrImmInstruction,       armStrPCInstruction,   0x040f0000, 0x0e5f0000, "STR Rt, [PC, +-imm12]"),
   // STR reg: Rn/Rt can be PC, patch, Rm != PC
-  ENTRY(IRC_PATCH_PC,armStrInstruction,          armStrPCInstruction,   0x0600f000, 0x0e50f010, "STR PC, [Rn], +-Rm"),
-  ENTRY(IRC_PATCH_PC,armStrInstruction,          armStrPCInstruction,   0x060f0000, 0x0e5f0010, "STR Rt, [PC], +-Rm"),
+  ENTRY(IRC_PATCH_PC,armStrRegInstruction,       armStrPCInstruction,   0x0600f000, 0x0e50f010, "STR PC, [Rn], +-Rm"),
+  ENTRY(IRC_PATCH_PC,armStrRegInstruction,       armStrPCInstruction,   0x060f0000, 0x0e5f0010, "STR Rt, [PC], +-Rm"),
   // LDR imm: Rt = PC trap, if Rn = PC - literal case
   ENTRY(IRC_REPLACE, armLdrImmInstruction,       NULL,                  0x0410f000, 0x0e50f000, "LDR PC, [Rn], +-imm12"),
   ENTRY(IRC_PATCH_PC,armLdrImmInstruction,       armLdrPCInstruction,   0x051f0000, 0x0f7f0000, "LDR Rt, [PC], +-imm12"),
@@ -221,9 +222,9 @@ static struct decodingTableEntry armLoadStoreWordByteInstructions[] =
   ENTRY(IRC_REPLACE, armLdrRegInstruction,       NULL,                  0x0610f000, 0x0e50f010, "LDR PC, [Rn], +-Rm"),
   ENTRY(IRC_PATCH_PC,armLdrRegInstruction,       armLdrPCInstruction,   0x061f0000, 0x0e5f0010, "LDR Rd, [PC], +-Rm"),
   // STRB imm: Rt != PC; Rn = PC patch
-  ENTRY(IRC_PATCH_PC,armStrbInstruction,         armStrPCInstruction,   0x044f0000, 0x0e5f0000, "STRB Rt, [PC, +-imm12]"),
+  ENTRY(IRC_PATCH_PC,armStrbImmInstruction,      armStrPCInstruction,   0x044f0000, 0x0e5f0000, "STRB Rt, [PC, +-imm12]"),
   // STRB reg: Rt/Rm != PC; Rn = PC patch
-  ENTRY(IRC_PATCH_PC,armStrbInstruction,         armStrPCInstruction,   0x064f0000, 0x0e5f0010, "STRB Rt, [PC], +-Rm"),
+  ENTRY(IRC_PATCH_PC,armStrbRegInstruction,      armStrPCInstruction,   0x064f0000, 0x0e5f0010, "STRB Rt, [PC], +-Rm"),
   // LDRB imm: Rt != PC; Rn = PC patch (ldrb literal)
   ENTRY(IRC_PATCH_PC,armLdrbImmInstruction,      armLdrPCInstruction,   0x055f0000, 0x0f7f0000, "LDRB Rt, [PC], +-imm12"),
   // LDRB reg: Rt/Rm != PC; Rn = PC patch

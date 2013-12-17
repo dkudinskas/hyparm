@@ -15,12 +15,12 @@ u32int armLdrbImmInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadImm.cc))
+  if (ConditionPassed(instr.ldStImm.cc))
   {
-    u8int Rt = instr.loadImm.Rt, Rn = instr.loadImm.Rn;
-    u32int imm32 = instr.loadImm.imm12 & 0xfff;
-    bool index = instr.loadImm.P, add = instr.loadImm.U;
-    bool wback = (!index) || instr.loadImm.W;
+    u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
+    u32int imm32 = instr.ldStImm.imm12 & 0xfff;
+    bool index = instr.ldStImm.P, add = instr.ldStImm.U;
+    bool wback = (!index) || instr.ldStImm.W;
     if ((Rt == GPR_PC) || (wback && (Rt == Rn)))
       UNPREDICTABLE();
 
@@ -42,15 +42,15 @@ u32int armLdrbRegInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadReg.cc))
+  if (ConditionPassed(instr.ldStReg.cc))
   {
-    u8int Rt = instr.loadReg.Rt, Rn = instr.loadReg.Rn, Rm = instr.loadReg.Rm;
-    bool index = instr.loadReg.P, add = instr.loadReg.U;
-    bool wback = (!index) || instr.loadReg.W;
+    u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
+    bool index = instr.ldStReg.P, add = instr.ldStReg.U;
+    bool wback = (!index) || instr.ldStReg.W;
     u32int shiftAmount = 0;
     // this call also sets shiftAmount
-    u32int shiftType = decodeShiftImmediate(instr.loadReg.type, 
-                             instr.loadReg.imm5, &shiftAmount);
+    u32int shiftType = decodeShiftImmediate(instr.ldStReg.type, 
+                             instr.ldStReg.imm5, &shiftAmount);
     if ((Rt == GPR_PC) || (Rm == GPR_PC))
       UNPREDICTABLE();
     if (wback && ((Rn == GPR_PC) || (Rn == Rt)))
@@ -77,11 +77,11 @@ u32int armLdrbtImmInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadImm.cc))
+  if (ConditionPassed(instr.ldStImm.cc))
   {
-    u8int Rt = instr.loadImm.Rt, Rn = instr.loadImm.Rn;
-    u32int imm32 = instr.loadImm.imm12 & 0xfff;
-    bool add = instr.loadImm.U;
+    u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
+    u32int imm32 = instr.ldStImm.imm12 & 0xfff;
+    bool add = instr.ldStImm.U;
     if ((Rt == GPR_PC) || (Rn == GPR_PC) || (Rt == Rn))
       UNPREDICTABLE();
 
@@ -103,14 +103,14 @@ u32int armLdrbtRegInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadReg.cc))
+  if (ConditionPassed(instr.ldStReg.cc))
   {
-    u8int Rt = instr.loadReg.Rt, Rn = instr.loadReg.Rn, Rm = instr.loadReg.Rm;
-    bool add = instr.loadReg.U;
+    u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
+    bool add = instr.ldStReg.U;
     u32int shiftAmount = 0;
     // this call also sets shiftAmount
-    u32int shiftType = decodeShiftImmediate(instr.loadReg.type, 
-                             instr.loadReg.imm5, &shiftAmount);
+    u32int shiftType = decodeShiftImmediate(instr.ldStReg.type, 
+                             instr.ldStReg.imm5, &shiftAmount);
     if ((Rt == GPR_PC) || (Rn == GPR_PC) || (Rm == GPR_PC) || (Rt == Rn))
       UNPREDICTABLE();
 
@@ -137,12 +137,12 @@ u32int armLdrhImmInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadImm2.cc))
+  if (ConditionPassed(instr.ldStImm2.cc))
   {
-    u8int Rt = instr.loadImm2.Rt, Rn = instr.loadImm2.Rn;
-    u32int imm32 = instr.loadImm2.imm4H << 4 | instr.loadImm2.imm4L;
-    bool index = instr.loadImm2.P, add = instr.loadImm2.U;
-    bool wback = (!index) || instr.loadImm2.W;
+    u8int Rt = instr.ldStImm2.Rt, Rn = instr.ldStImm2.Rn;
+    u32int imm32 = instr.ldStImm2.imm4H << 4 | instr.ldStImm2.imm4L;
+    bool index = instr.ldStImm2.P, add = instr.ldStImm2.U;
+    bool wback = (!index) || instr.ldStImm2.W;
     if ((Rt == GPR_PC) || (wback && (Rt == Rn)))
       UNPREDICTABLE();
 
@@ -164,11 +164,11 @@ u32int armLdrhRegInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadReg2.cc))
+  if (ConditionPassed(instr.ldStReg2.cc))
   {
-    u8int Rt = instr.loadReg2.Rt, Rn = instr.loadReg2.Rn, Rm = instr.loadReg2.Rm;
-    bool index = instr.loadReg2.P, add = instr.loadReg2.U;
-    bool wback = (!index) || instr.loadReg2.W;
+    u8int Rt = instr.ldStReg2.Rt, Rn = instr.ldStReg2.Rn, Rm = instr.ldStReg2.Rm;
+    bool index = instr.ldStReg2.P, add = instr.ldStReg2.U;
+    bool wback = (!index) || instr.ldStReg2.W;
     u32int shiftAmount = 0;
     // this call also sets shiftAmount
     u32int shiftType = decodeShiftImmediate(SHIFT_TYPE_LSL, 0, &shiftAmount);
@@ -198,11 +198,11 @@ u32int armLdrhtImmInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadReg2.cc))
+  if (ConditionPassed(instr.ldStImm2.cc))
   {
-    u8int Rt = instr.loadReg2.Rt, Rn = instr.loadReg2.Rn;
-    bool add = instr.loadReg2.U;
-    u32int imm32 = instr.loadImm2.imm4H << 4 | instr.loadImm2.imm4L;
+    u8int Rt = instr.ldStImm2.Rt, Rn = instr.ldStImm2.Rn;
+    bool add = instr.ldStImm2.U;
+    u32int imm32 = instr.ldStImm2.imm4H << 4 | instr.ldStImm2.imm4L;
 
     if ((Rt == GPR_PC) || (Rn == GPR_PC) || (Rn == Rt))
       UNPREDICTABLE();
@@ -228,14 +228,13 @@ u32int armLdrhtRegInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadReg2.cc))
+  if (ConditionPassed(instr.ldStReg2.cc))
   {
-    u8int Rt = instr.loadReg2.Rt, Rn = instr.loadReg2.Rn, Rm = instr.loadReg2.Rm;
-    bool add = instr.loadReg2.U;
+    u8int Rt = instr.ldStReg2.Rt, Rn = instr.ldStReg2.Rn, Rm = instr.ldStReg2.Rm;
+    bool add = instr.ldStReg2.U;
 
     if ((Rt == GPR_PC) || (Rn == GPR_PC) || (Rm == GPR_PC) || (Rn == Rt))
       UNPREDICTABLE();
-
 
     u32int address = getGPRegister(context, Rn);
     if (shouldDataAbort(context, FALSE, FALSE, address))
@@ -260,12 +259,12 @@ u32int armLdrImmInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadImm.cc))
+  if (ConditionPassed(instr.ldStImm.cc))
   {
-    u8int Rt = instr.loadImm.Rt, Rn = instr.loadImm.Rn;
-    u32int imm32 = instr.loadImm.imm12 & 0xfff;
-    bool index = instr.loadImm.P, add = instr.loadImm.U;
-    bool wback = (!index) || instr.loadImm.W;
+    u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
+    u32int imm32 = instr.ldStImm.imm12 & 0xfff;
+    bool index = instr.ldStImm.P, add = instr.ldStImm.U;
+    bool wback = (!index) || instr.ldStImm.W;
     if (wback && (Rt == Rn))
       UNPREDICTABLE();
 
@@ -298,15 +297,15 @@ u32int armLdrRegInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadReg.cc))
+  if (ConditionPassed(instr.ldStReg.cc))
   {
-    u8int Rt = instr.loadReg.Rt, Rn = instr.loadReg.Rn, Rm = instr.loadReg.Rm;
-    bool index = instr.loadReg.P, add = instr.loadReg.U;
-    bool wback = (!index) || instr.loadReg.W;
+    u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
+    bool index = instr.ldStReg.P, add = instr.ldStReg.U;
+    bool wback = (!index) || instr.ldStReg.W;
     u32int shiftAmount = 0;
     // this call also sets shiftAmount
-    u32int shiftType = decodeShiftImmediate(instr.loadReg.type, 
-                             instr.loadReg.imm5, &shiftAmount);
+    u32int shiftType = decodeShiftImmediate(instr.ldStReg.type, 
+                             instr.ldStReg.imm5, &shiftAmount);
     if (Rm == GPR_PC)
       UNPREDICTABLE();
     if (wback && ((Rn == GPR_PC) || (Rn == Rt)))
@@ -345,21 +344,22 @@ u32int armLdrtImmInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadImm.cc))
+  if (ConditionPassed(instr.ldStImm.cc))
   {
-    u8int Rt = instr.loadImm.Rt, Rn = instr.loadImm.Rn;
-    u32int imm32 = instr.loadImm.imm12 & 0xfff;
-    bool add = instr.loadImm.U;
+    u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
+    bool add = instr.ldStImm.U;
     if ((Rt == GPR_PC) || (Rn == GPR_PC) || (Rt == Rn))
       UNPREDICTABLE();
 
+    u32int offset = instr.ldStImm.imm12 & 0xfff;
     u32int address = getGPRegister(context, Rn);
+    u32int offsetAddr = add ? (address + offset) : (address - offset);
+
     if (shouldDataAbort(context, FALSE, FALSE, address))
       return context->R15; // abort!
 
     u32int data = vmLoad(context, WORD, address);
-    setGPRegister(context, Rn, add ? (address + imm32) : (address - imm32));
-
+    setGPRegister(context, Rn, offsetAddr);
     setGPRegister(context, Rt, data);
   }
   return context->R15 + ARM_INSTRUCTION_SIZE;
@@ -371,15 +371,15 @@ u32int armLdrtRegInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadReg.cc))
+  if (ConditionPassed(instr.ldStReg.cc))
   {
-    u8int Rt = instr.loadReg.Rt, Rn = instr.loadReg.Rn, Rm = instr.loadReg.Rm;
-    bool add = instr.loadReg.U;
+    u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
+    bool add = instr.ldStReg.U;
 
     u32int shiftAmount = 0;
     // this call also sets shiftAmount
-    u32int shiftType = decodeShiftImmediate(instr.loadReg.type, 
-                             instr.loadReg.imm5, &shiftAmount);
+    u32int shiftType = decodeShiftImmediate(instr.ldStReg.type, 
+                             instr.ldStReg.imm5, &shiftAmount);
 
     if ((Rt == GPR_PC) || (Rn == GPR_PC) || (Rt == Rn) || (Rm == GPR_PC))
       UNPREDICTABLE();
@@ -405,16 +405,16 @@ u32int armLdrdImmInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadReg.cc))
+  if (ConditionPassed(instr.ldStImm2.cc))
   {
-    u8int Rt = instr.loadImm2.Rt, Rt2 = Rt + 1, Rn = instr.loadImm2.Rn;
-    bool index = instr.loadImm2.P, add = instr.loadImm2.U;
-    bool wback = (!index) || (instr.loadImm2.W);
-    u32int imm32 = instr.loadImm.imm12 & 0xfff;
+    u8int Rt = instr.ldStImm2.Rt, Rt2 = Rt + 1, Rn = instr.ldStImm2.Rn;
+    bool index = instr.ldStImm2.P, add = instr.ldStImm2.U;
+    bool wback = (!index) || (instr.ldStImm2.W);
+    u32int imm32 = ((instr.ldStImm2.imm4H << 4) | instr.ldStImm2.imm4L) & 0xff;
 
     if ((Rt & 1) == 1)
       UNPREDICTABLE();
-    if ((!index) && (instr.loadImm2.W))
+    if ((!index) && (instr.ldStImm2.W))
       UNPREDICTABLE();
     if (wback && ((Rn == Rt) || (Rn == Rt2)))
       UNPREDICTABLE();
@@ -442,16 +442,16 @@ u32int armLdrdRegInstruction(GCONTXT* context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.loadReg.cc))
+  if (ConditionPassed(instr.ldStReg2.cc))
   {
-    u8int Rt = instr.loadReg2.Rt, Rt2 = Rt + 1;
-    u8int Rm = instr.loadReg2.Rm, Rn = instr.loadReg2.Rn;
-    bool index = instr.loadReg2.P, add = instr.loadReg2.U;
-    bool wback = (!index) || (instr.loadReg2.W);
+    u8int Rt = instr.ldStReg2.Rt, Rt2 = Rt + 1;
+    u8int Rm = instr.ldStReg2.Rm, Rn = instr.ldStReg2.Rn;
+    bool index = instr.ldStReg2.P, add = instr.ldStReg2.U;
+    bool wback = (!index) || (instr.ldStReg2.W);
 
     if ((Rt & 1) == 1)
       UNPREDICTABLE();
-    if ((!index) && (instr.loadImm2.W))
+    if ((!index) && (instr.ldStReg2.W))
       UNPREDICTABLE();
 
     if (wback && ((Rn == GPR_PC) || (Rn == Rt) || (Rn == Rt2)))
@@ -482,11 +482,12 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.ldm.cc))
+  if (ConditionPassed(instr.ldStMulti.cc))
   {
-    u8int Rn = instr.ldm.Rn;
-    bool before = instr.ldm.P, increment = instr.ldm.U, wback = instr.ldm.W;
-    u16int registers = instr.ldm.regList;
+    u8int Rn = instr.ldStMulti.Rn;
+    bool before = instr.ldStMulti.P, increment = instr.ldStMulti.U;
+    bool wback = instr.ldStMulti.W;
+    u16int registers = instr.ldStMulti.regList;
 
     if ((Rn == GPR_PC) || (registers == 0))
       UNPREDICTABLE();
@@ -539,11 +540,12 @@ u32int armLdmUserInstruction(GCONTXT *context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.ldm.cc))
+  if (ConditionPassed(instr.ldStMulti.cc))
   {
-    u8int Rn = instr.ldm.Rn;
-    bool wordhigher = instr.ldm.P == instr.ldm.U, increment = instr.ldm.U;
-    u16int registers = instr.ldm.regList;
+    u8int Rn = instr.ldStMulti.Rn;
+    bool wordhigher = (instr.ldStMulti.P == instr.ldStMulti.U);
+    bool increment = instr.ldStMulti.U;
+    u16int registers = instr.ldStMulti.regList;
 
     if ((Rn == GPR_PC) || (registers == 0))
       UNPREDICTABLE();
@@ -576,12 +578,12 @@ u32int armLdmExcRetInstruction(GCONTXT *context, u32int instruction)
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
 
-  if (ConditionPassed(instr.ldm.cc))
+  if (ConditionPassed(instr.ldStMulti.cc))
   {
-    u8int Rn = instr.ldm.Rn;
-    u16int registers = instr.ldm.regList;
-    bool wordhigher = (instr.ldm.P == instr.ldm.U);
-    bool wback = instr.ldm.W, increment = instr.ldm.U;
+    u8int Rn = instr.ldStMulti.Rn;
+    u16int registers = instr.ldStMulti.regList;
+    bool wordhigher = (instr.ldStMulti.P == instr.ldStMulti.U);
+    bool wback = instr.ldStMulti.W, increment = instr.ldStMulti.U;
 
     if (Rn == GPR_PC)
       UNPREDICTABLE();

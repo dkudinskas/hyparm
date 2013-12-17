@@ -63,6 +63,10 @@ void registerSvc(GCONTXT *context, InstructionHandler handler)
   {
     context->armStmInstruction++;
   }
+  else if (handler == armStmUserInstruction)
+  {
+    context->armStmInstruction++;
+  }
   else if (handler == armLdmInstruction)
   {
     context->armLdmInstruction++;
@@ -295,15 +299,27 @@ void registerSvc(GCONTXT *context, InstructionHandler handler)
   {
     context->armPliInstruction++;
   }
-  else if (handler == armStrbtInstruction)
+  else if (handler == armStrbtImmInstruction)
   {
     context->armStrbtInstruction++;
   }
-  else if (handler == armStrhtInstruction)
+  else if (handler == armStrbtRegInstruction)
+  {
+    context->armStrbtInstruction++;
+  }
+  else if (handler == armStrhtImmInstruction)
   {
     context->armStrhtInstruction++;
   }
-  else if (handler == armStrtInstruction)
+  else if (handler == armStrhtRegInstruction)
+  {
+    context->armStrhtInstruction++;
+  }
+  else if (handler == armStrtImmInstruction)
+  {
+    context->armStrtInstruction++;
+  }
+  else if (handler == armStrtRegInstruction)
   {
     context->armStrtInstruction++;
   }

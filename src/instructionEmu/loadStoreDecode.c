@@ -172,37 +172,61 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
     // get the store instruction
     instr = *(volatile u32int *)(context->R15);
     // emulate methods will take instr from context, put it there
-    if (((instr & STR_IMM_MASK) == STR_IMM_MASKED) ||
-        ((instr & STR_REG_MASK) == STR_REG_MASKED))
+    if ((instr & STR_IMM_MASK) == STR_IMM_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STR Rd, [Rn, Rm/#imm12]
-      armStrInstruction(context, instr);
+      armStrImmInstruction(context, instr);
     }
-    else if (((instr & STRB_IMM_MASK) == STRB_IMM_MASKED) ||
-             ((instr & STRB_REG_MASK) == STRB_REG_MASKED))
+    else if ((instr & STR_REG_MASK) == STR_REG_MASKED)
+    {
+      // storing to a protected area.. adjust block cache if needed
+      clearTranslationsByAddress(context->translationStore, address);
+      // STR Rd, [Rn, Rm/#imm12]
+      armStrRegInstruction(context, instr);
+    }
+    else if ((instr & STRB_IMM_MASK) == STRB_IMM_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STRB Rd, [Rn, Rm/#imm12]
-      armStrbInstruction(context, instr);
+      armStrbImmInstruction(context, instr);
     }
-    else if (((instr & STRH_IMM_MASK) == STRH_IMM_MASKED) ||
-             ((instr & STRH_REG_MASK) == STRH_REG_MASKED))
+    else if ((instr & STRB_REG_MASK) == STRB_REG_MASKED)
+    {
+      // storing to a protected area.. adjust block cache if needed
+      clearTranslationsByAddress(context->translationStore, address);
+      // STRB Rd, [Rn, Rm/#imm12]
+      armStrbRegInstruction(context, instr);
+    }
+    else if ((instr & STRH_IMM_MASK) == STRH_IMM_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STRH Rd, [Rn, Rm/#imm12]
-      armStrhInstruction(context, instr);
+      armStrhImmInstruction(context, instr);
     }
-    else if (((instr & STRD_IMM_MASK) == STRD_IMM_MASKED) ||
-             ((instr & STRD_REG_MASK) == STRD_REG_MASKED))
+    else if ((instr & STRH_REG_MASK) == STRH_REG_MASKED)
+    {
+      // storing to a protected area.. adjust block cache if needed
+      clearTranslationsByAddress(context->translationStore, address);
+      // STRH Rd, [Rn, Rm/#imm12]
+      armStrhRegInstruction(context, instr);
+    }
+    else if ((instr & STRD_IMM_MASK) == STRD_IMM_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STRD Rd, [Rn, Rm/#imm12]
-      armStrdInstruction(context, instr);
+      armStrdImmInstruction(context, instr);
+    }
+    else if ((instr & STRD_REG_MASK) == STRD_REG_MASKED)
+    {
+      // storing to a protected area.. adjust block cache if needed
+      clearTranslationsByAddress(context->translationStore, address);
+      // STRD Rd, [Rn, Rm/#imm12]
+      armStrdRegInstruction(context, instr);
     }
     else if ((instr & STREX_MASK) == STREX_MASKED)
     {
