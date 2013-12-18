@@ -327,7 +327,7 @@
 </category>
 
 <category name="armBranchBlockTransferInstructions" mask="0x0c000000" value="0x08000000">
-  <instruction name="STM.. {regList}^" mask="0x0e500000" value="0x08400000" code="IRC_REPLACE" handler="armStmInstruction" />
+  <instruction name="STM.. {regList}^" mask="0x0e500000" value="0x08400000" code="IRC_REPLACE" handler="armStmUserInstruction" />
   <instruction name="STM.. {regList}" mask="0x0e500000" value="0x08000000" code="IRC_PATCH_PC" handler="armStmPC" />
   <instruction name="LDM Rn, {regList}^" mask="0x0e508000" value="0x08500000" code="IRC_REPLACE" handler="armLdmUserInstruction" />
   <instruction name="LDM Rn, {regList, PC}^" mask="0x0e508000" value="0x08508000" code="IRC_REPLACE" handler="armLdmExcRetInstruction" />

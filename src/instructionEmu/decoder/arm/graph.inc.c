@@ -951,7 +951,7 @@ autodecoder_arm_monolithic_20:
 
   if ((instruction & (1u << 20)) == 0)
   {
-    handler->barePtr = (void *)(armStmInstruction);
+    handler->barePtr = (void *)(armStmUserInstruction);
     return IRC_REPLACE;
   }
   handler->barePtr = (void *)(armLdmExcRetInstruction);
@@ -1021,7 +1021,7 @@ autodecoder_arm_monolithic_26:
 
   if ((instruction & (1u << 20)) == 0)
   {
-    handler->barePtr = (void *)(armStmInstruction);
+    handler->barePtr = (void *)(armStmUserInstruction);
     return IRC_REPLACE;
   }
   handler->barePtr = (void *)(armLdmUserInstruction);
