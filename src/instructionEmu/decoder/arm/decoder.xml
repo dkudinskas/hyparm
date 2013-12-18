@@ -22,7 +22,8 @@
 <category name="armDataProcMiscInstructions_merged" mask="0x0c000000" value="0x00000000">
   <instruction name="NOP" mask="0xffffffff" value="0xe1a00000" />
   <instruction name="SWP" mask="0x0fb00ff0" value="0x01000090" code="IRC_REPLACE" handler="armSwpInstruction" />
-  <instruction name="STRHT instruction" mask="0x0f7000f0" value="0x006000b0" code="IRC_REPLACE" handler="armStrhtInstruction" />
+  <instruction name="STRHT Rt, [Rn, #imm]" mask="0x0f7000f0" value="0x006000b0" code="IRC_REPLACE" handler="armStrhtImmInstruction" />
+  <instruction name="STRHT Rt, [Rn, Rm]" mask="0x0f700ff0" value="0x004000b0" code="IRC_REPLACE" handler="armStrhtRegInstruction" />
   <instruction name="LDRHT Rt, [Rn, #imm]" mask="0x0f7000f0" value="0x007000b0" code="IRC_REPLACE" handler="armLdrhtImmInstruction" />
   <instruction name="LDRHT Rt, [Rn, Rm]" mask="0x0f700ff0" value="0x003000b0" code="IRC_REPLACE" handler="armLdrhtRegInstruction" />
   <instruction name="LDREXB" mask="0x0ff00fff" value="0x01d00f9f" />
@@ -186,9 +187,9 @@
 </category>
 
 <category name="armLoadStoreWordByteInstructions" mask="0x0e000000" value="0x04000000">
-  <instruction name="STRT Rt, [Rn], +-imm12" mask="0x0f700000" value="0x04200000" />
+  <instruction name="STRT Rt, [Rn], +-imm12" mask="0x0f700000" value="0x04200000" code="IRC_REPLACE" handler="armStrtImmInstruction" />
   <instruction name="LDRT Rd, [Rn], +-imm12" mask="0x0f700000" value="0x04300000" code="IRC_REPLACE" handler="armLdrtImmInstruction" />
-  <instruction name="STRBT Rt, [Rn, +-imm12]" mask="0x0f700000" value="0x04600000" />
+  <instruction name="STRBT Rt, [Rn, +-imm12]" mask="0x0f700000" value="0x04600000" code="IRC_REPLACE" handler="armStrbtImmInstruction" />
   <instruction name="LDRBT Rd, [Rn], +-imm12" mask="0x0f700000" value="0x04700000" code="IRC_REPLACE" handler="armLdrbtImmInstruction" />
   <instruction name="STR Rt, [Rn, +-imm12]" mask="0x0e500000" value="0x04000000" code="IRC_PATCH_PC" handler="armStrPCInstruction" />
   <instruction name="LDR PC, [Rn], +-imm12" mask="0x0e50f000" value="0x0410f000" code="IRC_REPLACE" handler="armLdrImmInstruction" />
@@ -198,10 +199,10 @@
 </category>
 
 <category name="armLoadStoreWordByteInstructions" mask="0x0e000010" value="0x06000000">
-  <instruction name="STRT Rt, [Rn], +-Rm" mask="0x0f700010" value="0x06200000" code = "IRC_REPLACE" handler="armStrtInstruction"/>
-  <instruction name="LDRT Rd, [Rn], +-Rm" mask="0x0f700010" value="0x06300000" code = "IRC_REPLACE" handler="armLdrtRegInstruction"/>
-  <instruction name="STRBT Rt, [Rn], +-Rm" mask="0x0f700010" value="0x06600000" code = "IRC_REPLACE" handler="armStrbtInstruction"/>
-  <instruction name="LDRBT Rd, [Rn], +-Rm" mask="0x0f700010" value="0x06700000" code = "IRC_REPLACE" handler="armLdrbtRegInstruction"/>
+  <instruction name="STRT Rt, [Rn], +-Rm" mask="0x0f700010" value="0x06200000" code= "IRC_REPLACE" handler="armStrtRegInstruction"/>
+  <instruction name="LDRT Rd, [Rn], +-Rm" mask="0x0f700010" value="0x06300000" code= "IRC_REPLACE" handler="armLdrtRegInstruction"/>
+  <instruction name="STRBT Rt, [Rn], +-Rm" mask="0x0f700010" value="0x06600000" code= "IRC_REPLACE" handler="armStrbtRegInstruction"/>
+  <instruction name="LDRBT Rd, [Rn], +-Rm" mask="0x0f700010" value="0x06700000" code= "IRC_REPLACE" handler="armLdrbtRegInstruction"/>
   <instruction name="STR Rt, [Rn], +-Rm" mask="0x0e500010" value="0x06000000" code="IRC_PATCH_PC" handler="armStrPCInstruction" />
   <instruction name="LDR PC, [Rn], +-Rm" mask="0x0e50f010" value="0x0610f000" code="IRC_REPLACE" handler="armLdrRegInstruction" />
   <instruction name="LDR Rd, [Rn], +-Rm" mask="0x0e500010" value="0x06100000" code="IRC_PATCH_PC" handler="armLdrPCInstruction" />
