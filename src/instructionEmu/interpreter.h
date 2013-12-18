@@ -8,10 +8,6 @@
 #include "instructionEmu/interpreter/arm/dataProcessInstructions.h"
 #include "instructionEmu/interpreter/arm/loadInstructions.h"
 #include "instructionEmu/interpreter/arm/miscInstructions.h"
-#include "instructionEmu/interpreter/arm/miscMediaInstructions.h"
-#include "instructionEmu/interpreter/arm/multiplyInstructions.h"
-#include "instructionEmu/interpreter/arm/parallelAddSubInstructions.h"
-#include "instructionEmu/interpreter/arm/saturatingAddSubInstructions.h"
 #include "instructionEmu/interpreter/arm/storeInstructions.h"
 #include "instructionEmu/interpreter/arm/syncInstructions.h"
 

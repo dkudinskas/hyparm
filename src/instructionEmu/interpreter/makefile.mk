@@ -6,10 +6,6 @@ HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/coprocInstructions.c
 HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/dataProcessInstructions.c
 HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/loadInstructions.c
 HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/miscInstructions.c
-HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/miscMediaInstructions.c
-HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/multiplyInstructions.c
-HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/parallelAddSubInstructions.c
-HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/saturatingAddSubInstructions.c
 HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/storeInstructions.c
 HYPARM_SRCS_C-y += instructionEmu/interpreter/arm/syncInstructions.c
 
