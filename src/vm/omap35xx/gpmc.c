@@ -60,7 +60,7 @@ void initGpmc(virtualMachine *vm)
 }
 
 /* top load function */
-u32int loadGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadGpmc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   ASSERT(size == WORD, ERROR_BAD_ACCESS_SIZE);
 
@@ -144,21 +144,21 @@ u32int loadGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       val = gpmc->gpmcConfig7_7;
       break;
     default:
-      printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+      printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, __func__, phyAddr,
           virtAddr, (u32int)size);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   }
 
   DEBUG(VP_OMAP_35XX_GPMC, "%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %#x" EOL,
-      dev->deviceName, phyAddr, virtAddr, (u32int)size);
+      __func__, phyAddr, virtAddr, (u32int)size);
 
   return val;
 }
 
-void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeGpmc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DEBUG(VP_OMAP_35XX_GPMC, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
-      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
+      __func__, phyAddr, virtAddr, (u32int)size, value);
 
   ASSERT(size == WORD, ERROR_BAD_ACCESS_SIZE);
 
@@ -309,7 +309,7 @@ void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     }
     default:
     {
-      printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+      printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, __func__, phyAddr,
           virtAddr, (u32int)size);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }

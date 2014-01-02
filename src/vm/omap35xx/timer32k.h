@@ -14,7 +14,7 @@ struct SynchronizedTimer32k
 };
 
 void initTimer32k(virtualMachine *vm) __cold__;
-u32int loadTimer32k(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storeTimer32k(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+u32int loadTimer32k(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeTimer32k(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 #endif /* __VM__OMAP35XX__TIMER_32K_H__ */

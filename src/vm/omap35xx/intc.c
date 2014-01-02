@@ -33,7 +33,7 @@ void initIntc(virtualMachine *vm)
 }
 
 /* top load function */
-u32int loadIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadIntc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   if (size != WORD)
   {
@@ -248,17 +248,17 @@ u32int loadIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
   }
 
   DEBUG(VP_OMAP_35XX_INTC, "%s load from pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
-      dev->deviceName, phyAddr, virtAddr, (u32int)size, val);
+      __func__, phyAddr, virtAddr, (u32int)size, val);
 
   return val;
 }
 
 
 /* top store function */
-void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeIntc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DEBUG(VP_OMAP_35XX_INTC, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
-      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
+      __func__, phyAddr, virtAddr, (u32int)size, value);
 
   if (size != WORD)
   {

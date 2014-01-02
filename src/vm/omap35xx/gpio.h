@@ -35,8 +35,8 @@ void connectGpio(struct Gpio *gpio, u32int physicalGpioNumber) __cold__;
 
 void initGpio(virtualMachine *vm, u32int gpioNumber) __cold__;
 
-u32int loadGpio(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress);
+u32int loadGpio(GCONTXT *context, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress);
 
-void storeGpio(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress, u32int value);
+void storeGpio(GCONTXT *context, ACCESS_SIZE size, u32int virtualAddress, u32int physicalAddress, u32int value);
 
 #endif /* __VM__OMAP_35XX__GPIO_H__ */

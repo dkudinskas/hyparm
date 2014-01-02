@@ -32,8 +32,8 @@ struct GeneralPurposeTimer
 };
 
 void initGPTimer(virtualMachine *vm) __cold__;
-u32int loadGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storeGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+u32int loadGPTimer(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeGPTimer(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 #endif
 

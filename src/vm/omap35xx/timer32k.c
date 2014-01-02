@@ -32,13 +32,13 @@ void initTimer32k(virtualMachine *vm)
   vm->timer32k = timer32k;
 }
 
-u32int loadTimer32k(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadTimer32k(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   struct SynchronizedTimer32k *const timer32k = context->vm.timer32k;
   u32int val = 0;
 
   DEBUG(VP_OMAP_35XX_TIMER32K, "%s load from physical address: %#.8x, vAddr %#.8x, aSize %#x" EOL,
-      dev->deviceName, phyAddr, virtAddr, (u32int)size);
+      __func__, phyAddr, virtAddr, (u32int)size);
 
   if (size == WORD)
   {
@@ -46,7 +46,7 @@ u32int loadTimer32k(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virt
     if (regAddr == REG_TIMER_32K_SYSCONFIG)
     {
       val = timer32k->timer32SysconfReg;
-      DEBUG(VP_OMAP_35XX_TIMER32K, "%s load sys cfg value %#x" EOL, dev->deviceName, val);
+      DEBUG(VP_OMAP_35XX_TIMER32K, "%s load sys cfg value %#x" EOL, __func__, val);
     }
     else if (regAddr == REG_TIMER_32K_COUNTER)
     {
@@ -54,25 +54,25 @@ u32int loadTimer32k(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virt
       volatile u32int * memPtr = (u32int*)virtAddr;
       val = *memPtr;
       val = val >> 5;
-      DEBUG(VP_OMAP_35XX_TIMER32K, "%s load counter value %#x" EOL, dev->deviceName, val);
+      DEBUG(VP_OMAP_35XX_TIMER32K, "%s load counter value %#x" EOL, __func__, val);
     }
     else
     {
-      printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr,
+      printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, __func__, phyAddr,
           virtAddr);
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
     }
   }
   else
   {
-    printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr,
+    printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, __func__, phyAddr,
         virtAddr);
     DIE_NOW(NULL, "Invalid register access size (non32bit)");
   }
   return val;
 }
 
-void storeTimer32k(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeTimer32k(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
 }

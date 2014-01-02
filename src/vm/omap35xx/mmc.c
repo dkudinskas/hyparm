@@ -98,7 +98,7 @@ void initVirtMmc(virtualMachine *vm, u32int mmcNumber)
 #endif
 }
 
-u32int loadMmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadMmc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   u32int val = 0;
   int id = getMmcId(phyAddr);
@@ -247,7 +247,7 @@ void mmcStartDmaTransfer(GCONTXT *context, u32int phyAddr, u32int id, bool read)
 #endif
 }
 
-void storeMmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeMmc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   int dmaChannel = 0;
   u8int *targetAddress;

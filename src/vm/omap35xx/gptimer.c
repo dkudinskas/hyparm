@@ -54,7 +54,7 @@ void resetGPTimer(struct GeneralPurposeTimer *gptimer)
 }
 
 
-u32int loadGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadGPTimer(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   if (size == BYTE)
   {
@@ -68,19 +68,19 @@ u32int loadGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtA
     case GPT_REG_TIOCP_CFG:
     {
       val = loadFromGPTimer(1, regOffs);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load config register value %#.8x" EOL, dev->deviceName, val);
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load config register value %#.8x" EOL, __func__, val);
       break;
     }
     case GPT_REG_TISTAT:
     {
       val = loadFromGPTimer(1, regOffs);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load status register value %#.8x" EOL, dev->deviceName, val);
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load status register value %#.8x" EOL, __func__, val);
       break;
     }
     case GPT_REG_TISR:
     {
       val = loadFromGPTimer(1, regOffs);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load irq status register value %#.8x" EOL, dev->deviceName,
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load irq status register value %#.8x" EOL, __func__,
           val);
       break;
     }
@@ -88,39 +88,39 @@ u32int loadGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtA
     {
       val = loadFromGPTimer(1, regOffs);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load irq enable register value %#.8x" EOL,
-          dev->deviceName, val);
+          __func__, val);
       break;
     }
     case GPT_REG_TWER:
     {
       val = loadFromGPTimer(1, regOffs);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load wakeup enable register value %#.8x" EOL,
-          dev->deviceName, val);
+          __func__, val);
       break;
     }
     case GPT_REG_TCLR:
     {
       val = loadFromGPTimer(1, regOffs);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load conrol register value %#.8x" EOL, dev->deviceName, val);
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load conrol register value %#.8x" EOL, __func__, val);
       break;
     }
     case GPT_REG_TCRR:
     {
       val = loadFromGPTimer(1, regOffs);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load internal clock register value %#.8x" EOL,
-          dev->deviceName, val);
+          __func__, val);
       break;
     }
     case GPT_REG_TLDR:
     {
       val = loadFromGPTimer(1, regOffs);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load counter reload value %#.8x" EOL, dev->deviceName, val);
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load counter reload value %#.8x" EOL, __func__, val);
       break;
     }
     case GPT_REG_TTGR:
     {
       val = loadFromGPTimer(1, regOffs);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load trigger register value %#.8x" EOL, dev->deviceName,
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load trigger register value %#.8x" EOL, __func__,
           val);
       break;
     }
@@ -128,47 +128,47 @@ u32int loadGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtA
     {
       val = loadFromGPTimer(1, regOffs);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load write-posted pending status register value %#.8x" EOL,
-          dev->deviceName, val);
+          __func__, val);
       break;
     }
     case GPT_REG_TMAR:
     {
       val = loadFromGPTimer(1, regOffs);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load match register value %#.8x" EOL, dev->deviceName, val);
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load match register value %#.8x" EOL, __func__, val);
       break;
     }
     case GPT_REG_TCAR1:
     {
       val = loadFromGPTimer(1, regOffs);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load first captured counter value %#.8x" EOL,
-          dev->deviceName, val);
+          __func__, val);
       break;
     }
     case GPT_REG_TSICR:
     {
       val = loadFromGPTimer(1, regOffs);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load interface control register value %#.8x" EOL,
-          dev->deviceName, val);
+          __func__, val);
       break;
     }
     case GPT_REG_TCAR2:
     {
       val = loadFromGPTimer(1, regOffs);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load second captured counter value %#.8x" EOL,
-          dev->deviceName, val);
+          __func__, val);
       break;
     }
     case GPT_REG_TPIR:
     {
       val = loadFromGPTimer(1, regOffs);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load positive increment value %#.8x" EOL, dev->deviceName,
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load positive increment value %#.8x" EOL, __func__,
           val);
       break;
     }
     case GPT_REG_TNIR:
     {
       val = loadFromGPTimer(1, regOffs);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load negative increment value %#.8x" EOL, dev->deviceName,
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load negative increment value %#.8x" EOL, __func__,
           val);
       break;
     }
@@ -176,21 +176,21 @@ u32int loadGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtA
     {
       val = loadFromGPTimer(1, regOffs);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load counter pir/nir selection register value %#.8x" EOL,
-          dev->deviceName, val);
+          __func__, val);
       break;
     }
     case GPT_REG_TOCR:
     {
       val = loadFromGPTimer(1, regOffs);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load overflow masking register value %#.8x" EOL,
-          dev->deviceName, val);
+          __func__, val);
       break;
     }
     case GPT_REG_TOWR:
     {
       val = loadFromGPTimer(1, regOffs);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: load number of masked overflows value %#.8x" EOL,
-          dev->deviceName, val);
+          __func__, val);
       break;
     }
     default:
@@ -201,7 +201,7 @@ u32int loadGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtA
 }
 
 
-void storeGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeGPTimer(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   if (size == BYTE)
   {
@@ -216,41 +216,41 @@ void storeGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAd
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to config register value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TISTAT:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to status register value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TISR:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to irq status register value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TIER:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to irq enable register value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TWER:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to wakeup enable register value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TCLR:
     {
       storeToGPTimer(1, regOffs, value);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to conrol register value %#.8x" EOL, dev->deviceName,
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to conrol register value %#.8x" EOL, __func__,
           value);
       break;
     }
@@ -259,21 +259,21 @@ void storeGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAd
       u32int adjustedValue = value;
       storeToGPTimer(1, regOffs, adjustedValue);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to internal clock register value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TLDR:
     {
       u32int adjustedValue = value;
       storeToGPTimer(1, regOffs, adjustedValue);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to counter reload value %#.8x" EOL, dev->deviceName,
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to counter reload value %#.8x" EOL, __func__,
           value);
       break;
     }
     case GPT_REG_TTGR:
     {
       storeToGPTimer(1, regOffs, value);
-      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to trigger register value %#.8x" EOL, dev->deviceName,
+      DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to trigger register value %#.8x" EOL, __func__,
           value);
       break;
     }
@@ -281,7 +281,7 @@ void storeGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAd
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to write-posted pending status register value %#.8x"
-          EOL, dev->deviceName, value);
+          EOL, __func__, value);
       break;
     }
     case GPT_REG_TMAR:
@@ -299,63 +299,63 @@ void storeGPTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAd
 #endif
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to match register value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TCAR1:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to first captured counter value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TSICR:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to interface control register value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TCAR2:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to second captured counter value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TPIR:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to positive increment value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TNIR:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to negative increment value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TCVR:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to counter pir/nir selection register value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TOCR:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to overflow masking register value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     case GPT_REG_TOWR:
     {
       storeToGPTimer(1, regOffs, value);
       DEBUG(VP_OMAP_35XX_GPTIMER, "%s: store to number of masked overflows value %#.8x" EOL,
-          dev->deviceName, value);
+          __func__, value);
       break;
     }
     default:

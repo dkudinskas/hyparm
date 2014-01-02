@@ -27,13 +27,13 @@
 static void registerGuestHandler(GCONTXT *gc, u32int address, u32int value);
 
 
-u32int loadSramInternal(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadSramInternal(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   u32int val = 0;
 
   DEBUG(VP_OMAP_35XX_SRAM, "%s load from physical address: %#.8x, virtual address: %#.8x aSize %#x"
-      EOL, dev->deviceName, phyAddr, virtAddr, (u32int)size);
+      EOL, __func__, phyAddr, virtAddr, (u32int)size);
 
   switch (size)
   {
@@ -57,17 +57,17 @@ u32int loadSramInternal(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int 
     }
     default:
     {
-      printf("%s load from pAddr: %#.8x, vAddr: %#.8x" EOL, dev->deviceName, phyAddr, virtAddr);
+      printf("%s load from pAddr: %#.8x, vAddr: %#.8x" EOL, __func__, phyAddr, virtAddr);
       DIE_NOW(NULL, "Invalid access size.");
     }
   }
   return val;
 }
 
-void storeSramInternal(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeSramInternal(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DEBUG(VP_OMAP_35XX_SRAM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
-      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
+      __func__, phyAddr, virtAddr, (u32int)size, value);
 
   switch (size)
   {
@@ -88,7 +88,7 @@ void storeSramInternal(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int v
       if ( (phyAddr >= 0x4020FFC8) && (phyAddr <= 0x4020FFFE) )
       {
         printf("%s: register guest exception handler address, halfword access" EOL,
-            dev->deviceName);
+            __func__);
         DIE_NOW(NULL, "UNIMPLEMENTED");
       }
       // store the value...
@@ -100,7 +100,7 @@ void storeSramInternal(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int v
     {
       if ( (phyAddr >= 0x4020FFC8) && (phyAddr <= 0x4020FFFF) )
       {
-        printf("%s: register guest exception handler address, byte access" EOL, dev->deviceName);
+        printf("%s: register guest exception handler address, byte access" EOL, __func__);
         DIE_NOW(NULL, "UNIMPLEMENTED");
       }
       // store the value...
@@ -109,7 +109,7 @@ void storeSramInternal(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int v
       break;
     }
     default:
-      printf("%s store to pAddr %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL, dev->deviceName,
+      printf("%s store to pAddr %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL, __func__,
           phyAddr, virtAddr, (u32int)size, value);
       DIE_NOW(NULL, "Invalid access size.");
   }

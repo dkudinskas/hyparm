@@ -47,7 +47,7 @@ struct Gpmc
 
 
 void initGpmc(virtualMachine *vm) __cold__;
-u32int loadGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storeGpmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+u32int loadGpmc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeGpmc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 #endif /* __VM__OMAP_35XX__GPMC_H__ */

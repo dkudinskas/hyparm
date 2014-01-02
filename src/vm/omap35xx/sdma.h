@@ -52,8 +52,8 @@ struct Sdma
 
 
 void initSdma(virtualMachine *vm) __cold__;
-u32int loadSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+u32int loadSdma(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeSdma(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 void sdmaThrowInterrupt(GCONTXT *context, u32int dmaChannel);
 
 

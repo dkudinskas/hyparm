@@ -37,8 +37,8 @@ struct Sdrc
 
 
 void initSdrc(virtualMachine *vm) __cold__;
-u32int loadSdrc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storeSdrc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+u32int loadSdrc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeSdrc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 #endif /* __VM__OMAP_35XX__SDRC_H__ */
 

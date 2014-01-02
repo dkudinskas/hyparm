@@ -8,6 +8,8 @@ SOURCE_PATH  := src
 SCRIPT_PATH  := scripts
 OUTPUT_PATH  := build
 
+VMCG         := ext/vmcg/build/vmcg
+
 COMMA        := ,
 EMPTY        :=
 SPACE        := $(EMPTY) $(EMPTY)
@@ -229,6 +231,7 @@ HYPARM_DIRS-$(CONFIG_CLI) += cli
 HYPARM_SRCS_C-y  := main.c
 HYPARM_SRCS_S-y  :=
 HYPARM_SRCS_SX-y := startup.S debug.S
+HYPARM_VM        := $(SOURCE_PATH)/vm/omap35xx/omap3.vm.h
 
 
 # Include all makefile.mk files from HYPARM_DIRS-y
@@ -305,7 +308,7 @@ endif
 # 1) We pass -MT __out__ to the compiler so the first rule will always read
 #      __out__ : includedFile1.h ... includedFileN.h
 # 2) We use sed to replace '__out__' with 'filename.c.o filename.c.d'
-$(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_OK)
+$(SOURCE_PATH)/%.c.d: $(SOURCE_PATH)/%.c $(KCONFIG_OK) $(HYPARM_VM)
 ifneq ($(VERBOSE),)
 	@echo 'DEP      $<'
 endif
@@ -320,7 +323,15 @@ endif
 	@$(CC_GCC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
 
 
-$(SOURCE_PATH)/%.c.o: $(SOURCE_PATH)/%.c
+$(SOURCE_PATH)/%.vm: $(SOURCE_PATH)/%.vm.S
+	@echo 'CPP      $<'
+	@$(CC_GCC) $(CPPFLAGS) -E -P -o $@ $<
+
+$(SOURCE_PATH)/%.vm.h: $(SOURCE_PATH)/%.vm
+	@echo 'VMCG     $<'
+	@$(VMCG) c $< > $@
+
+$(SOURCE_PATH)/%.c.o: $(SOURCE_PATH)/%.c $(HYPARM_VM)
 	@echo 'CC       $<'
 	@$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 

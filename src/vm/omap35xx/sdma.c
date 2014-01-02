@@ -76,7 +76,7 @@ static void resetSdma(struct Sdma *sdma)
 }
 
 
-u32int loadSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadSdma(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   struct Sdma* sdma = context->vm.sdma;
 
@@ -158,7 +158,7 @@ u32int loadSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
 
   if (found)
   {
-    DEBUG(VP_OMAP_35XX_SDMA, "%s: load from address %#.8x reg %#x value %#.8x" EOL, dev->deviceName,
+    DEBUG(VP_OMAP_35XX_SDMA, "%s: load from address %#.8x reg %#x value %#.8x" EOL, __func__,
         virtAddr, regOffs, value);
     return value;
   }
@@ -205,7 +205,7 @@ u32int loadSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
   
   if (found)
   {
-    DEBUG(VP_OMAP_35XX_SDMA, "%s: load from address %#.8x reg %#x value %#.8x" EOL, dev->deviceName,
+    DEBUG(VP_OMAP_35XX_SDMA, "%s: load from address %#.8x reg %#x value %#.8x" EOL, __func__,
         virtAddr, regOffs, value);
     return value;
   }
@@ -216,14 +216,14 @@ u32int loadSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
 }
 
 
-void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeSdma(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   struct Sdma* sdma = context->vm.sdma;
 
   u32int regOffs = phyAddr - SDMA;
   bool found = FALSE;
 
-  DEBUG(VP_OMAP_35XX_SDMA, "%s: store to address %.8x reg %.8x value %.8x" EOL, dev->deviceName,
+  DEBUG(VP_OMAP_35XX_SDMA, "%s: store to address %.8x reg %.8x value %.8x" EOL, __func__,
       virtAddr, regOffs, value);
   switch (regOffs)
   {
@@ -327,7 +327,7 @@ void storeSdma(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if ((value & SDMA_CCRi_ENABLE) == SDMA_CCRi_ENABLE)
       {
-        DEBUG(VP_OMAP_35XX_SDMA, "%s: Enabling channel %x" EOL, dev->deviceName, channelIndex);
+        DEBUG(VP_OMAP_35XX_SDMA, "%s: Enabling channel %x" EOL, __func__, channelIndex);
 #if !defined(CONFIG_NO_MMC) && !defined(CONFIG_HW_PASSTHROUGH)
         /* It would be cleaner to check the SDMA_SEL_SRC_DST_SYNC bit and use it to decide
            if we should decide based on source or address. However, MMC transfers with

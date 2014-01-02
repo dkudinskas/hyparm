@@ -127,7 +127,7 @@
 #define PROFILER_SIZE             0x00002000
 #endif
 
-device *createHardwareLibrary(struct guestContext *context) __cold__;
+void createHardwareLibrary(struct guestContext *context) __cold__;
 u32int vmLoad(struct guestContext *gc, ACCESS_SIZE size, u32int virtAddr);
 void vmStore(struct guestContext *gc, ACCESS_SIZE size, u32int virtAddr, u32int value);
 

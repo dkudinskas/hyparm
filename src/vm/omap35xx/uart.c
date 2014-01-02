@@ -78,7 +78,7 @@ static void resetUart(struct Uart *uart)
 }
 
 
-u32int loadUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadUart(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   /*
    * Normally access size is a word but linux accesses in halfword and byte size too.
@@ -107,7 +107,7 @@ u32int loadUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       else
       {
         // load DLL
-        DEBUG(VP_OMAP_35XX_UART, "%s: load DLL value %#.8x" EOL, dev->deviceName, uart->dll);
+        DEBUG(VP_OMAP_35XX_UART, "%s: load DLL value %#.8x" EOL, __func__, uart->dll);
         value = uart->dll;
       }
       break;
@@ -117,14 +117,14 @@ u32int loadUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       if (uart->mode == operational)
       {
         // load IER
-        DEBUG(VP_OMAP_35XX_UART, "%s: load IRQ enable register %#.8x" EOL, dev->deviceName,
+        DEBUG(VP_OMAP_35XX_UART, "%s: load IRQ enable register %#.8x" EOL, __func__,
             uart->ier);
         value = uart->ier;
       }
       else
       {
         // load DLH
-        DEBUG(VP_OMAP_35XX_UART, "%s: load DLH register %#.8x" EOL, dev->deviceName,
+        DEBUG(VP_OMAP_35XX_UART, "%s: load DLH register %#.8x" EOL, __func__,
             uart->ier);
         value = uart->dlh;
       }
@@ -135,14 +135,14 @@ u32int loadUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       if (uart->mode == configB)
       {
         // load EFR
-        DEBUG(VP_OMAP_35XX_UART, "%s: load enhanced feature register %#.8x" EOL, dev->deviceName,
+        DEBUG(VP_OMAP_35XX_UART, "%s: load enhanced feature register %#.8x" EOL, __func__,
             uart->efr);
         value = uart->efr;
       }
       else
       {
         // load IIR
-        DEBUG(VP_OMAP_35XX_UART, "%s: load IRQ identification register %#.8x" EOL, dev->deviceName,
+        DEBUG(VP_OMAP_35XX_UART, "%s: load IRQ identification register %#.8x" EOL, __func__,
             uart->iir);
         value = uart->iir;
       }
@@ -150,7 +150,7 @@ u32int loadUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
     }
     case UART_LCR_REG:
     {
-      DEBUG(VP_OMAP_35XX_UART, "%s: load line control reg %#.8x" EOL, dev->deviceName,
+      DEBUG(VP_OMAP_35XX_UART, "%s: load line control reg %#.8x" EOL, __func__,
           uart->iir);
       value = uart->lcr;
       break;
@@ -165,7 +165,7 @@ u32int loadUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       else
       {
         // load MCR
-        DEBUG(VP_OMAP_35XX_UART, "%s: load modem control reg %#.8x" EOL, dev->deviceName,
+        DEBUG(VP_OMAP_35XX_UART, "%s: load modem control reg %#.8x" EOL, __func__,
             uart->mcr);
         value = uart->mcr;
       }
@@ -181,7 +181,7 @@ u32int loadUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       else
       {
         // load LSR
-        DEBUG(VP_OMAP_35XX_UART, "%s: load line status %#.8x" EOL, dev->deviceName, uart->lsr);
+        DEBUG(VP_OMAP_35XX_UART, "%s: load line status %#.8x" EOL, __func__, uart->lsr);
         value = uart->lsr;
       }
       break;
@@ -262,14 +262,14 @@ u32int loadUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
       DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
   } // switch ends
 
-  DEBUG(VP_OMAP_35XX_UART, "%s: load from address %#.8x reg %#x value %#.8x" EOL, dev->deviceName,
+  DEBUG(VP_OMAP_35XX_UART, "%s: load from address %#.8x reg %#x value %#.8x" EOL, __func__,
       virtAddr, regOffs, value);
 
   return value;
 }
 
 
-void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeUart(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   /*
    * Normally access size is a word but linux accesses in halfword and byte size too.
@@ -286,7 +286,7 @@ void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
   uID--; // array starts at 0
   struct Uart* uart = context->vm.uart[uID];
 
-  DEBUG(VP_OMAP_35XX_UART, "%s: store to address %#.8x reg %#x value %#.8x" EOL, dev->deviceName,
+  DEBUG(VP_OMAP_35XX_UART, "%s: store to address %#.8x reg %#x value %#.8x" EOL, __func__,
       virtAddr, regOffs, value);
   switch (regOffs)
   {
@@ -308,7 +308,7 @@ void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
         else
         {
           DEBUG(VP_OMAP_35XX_UART, "%s: storing DLL reg, 8bit LSB divisor value %#.8x" EOL,
-              dev->deviceName, value);
+              __func__, value);
           uart->dll = value;
         }
       }
@@ -331,7 +331,7 @@ void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
         }
         else
         {
-          DEBUG(VP_OMAP_35XX_UART, "%s: store DLH MSB divisor value: %#.8x" EOL, dev->deviceName,
+          DEBUG(VP_OMAP_35XX_UART, "%s: store DLH MSB divisor value: %#.8x" EOL, __func__,
               value);
           uart->dlh = value;
         }
@@ -491,7 +491,7 @@ void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     }
     case UART_MDR1_REG:
     {
-      DEBUG(VP_OMAP_35XX_UART, "%s", dev->deviceName);
+      DEBUG(VP_OMAP_35XX_UART, "%s", __func__);
       switch (value & UART_MDR_MODE_SEL)
       {
         case UART_MODE_UARTx16:
@@ -531,7 +531,7 @@ void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     {
       if ((value & UART_SYSC_REG_RESET) == UART_SYSC_REG_RESET)
       {
-        printf("%s: soft reset" EOL, dev->deviceName);
+        printf("%s: soft reset" EOL, __func__);
         resetUart(uart);
       }
       uart->sysc = value;
@@ -539,25 +539,25 @@ void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
     }
     case UART_SYSS_REG:
     {
-      printf("%s", dev->deviceName);
+      printf("%s", __func__);
       DIE_NOW(NULL, " storing to R/O register (SYSS_REG)");
       break;
     }
     case UART_UASR_REG:
     {
-      printf("%s", dev->deviceName);
+      printf("%s", __func__);
       DIE_NOW(NULL, " storing to R/O register (autobaud status)");
       break;
     }
     case UART_SSR_REG:
     {
-      printf("%s", dev->deviceName);
+      printf("%s", __func__);
       DIE_NOW(NULL, " storing to R/O register (SSR)");
       break;
     }
     case UART_MVR_REG:
     {
-      printf("%s", dev->deviceName);
+      printf("%s", __func__);
       DIE_NOW(NULL, " storing to R/O register (MVR)");
       break;
     }

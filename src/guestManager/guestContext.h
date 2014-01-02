@@ -111,7 +111,6 @@ struct guestContext
   u32int guestUnusedHandler;
   u32int guestIrqHandler;
   u32int guestFiqHandler;
-  device * hardwareLibrary;
   /* exception flags */
   bool guestIrqPending;
   bool guestDataAbtPending;

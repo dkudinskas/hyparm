@@ -170,8 +170,8 @@ void initIntc(virtualMachine *vm) __cold__;
 void intcDumpRegisters(struct InterruptController *irqController);
 bool isFiqPending(struct InterruptController *irqController);
 bool isIrqPending(struct InterruptController *irqController);
-u32int loadIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+u32int loadIntc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
 void setInterrupt(GCONTXT *context, u32int irqNum);
-void storeIntc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+void storeIntc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 #endif /* __VM__OMAP_35XX__INTC_H__ */

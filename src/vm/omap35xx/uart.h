@@ -58,8 +58,8 @@ struct Uart
 
 
 void initUart(virtualMachine *vm, u32int uartID) __cold__;
-u32int loadUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storeUart(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+u32int loadUart(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeUart(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 void uartPutRxByte(GCONTXT *context, u8int byte, u32int uardID);
 
 #endif /* __VM__OMAP35XX__UART_H__ */

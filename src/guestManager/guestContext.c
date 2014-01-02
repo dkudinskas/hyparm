@@ -72,11 +72,7 @@ GCONTXT *createGuestContext(void)
   DEBUG(GUEST_CONTEXT, "createGuestContext: virtual machine @ %p" EOL, &context->vm);
 
   // Initialise virtual hardware devices
-  context->hardwareLibrary = createHardwareLibrary(context);
-  if (context->hardwareLibrary == NULL)
-  {
-    DIE_NOW(context, "Hardware library initialisation failed.");
-  }
+  createHardwareLibrary(context);
 
 #ifdef CONFIG_GUEST_CONTEXT_BLOCK_TRACE
   // Print the address of the block trace, it may come in handy when debugging...

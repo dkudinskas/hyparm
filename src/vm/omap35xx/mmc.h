@@ -2,8 +2,8 @@
 #define __VM__OMAP_35XX__MMC_H__
 
 void initVirtMmc(virtualMachine *vm, u32int mmcNumber);
-u32int loadMmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storeMmc(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+u32int loadMmc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeMmc(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 void mmcDoDmaXfer(GCONTXT *context, int mmcId, int dmaChannelId);
 
 #define MMCHS_SYSCONFIG 0x010

@@ -55,7 +55,7 @@ void initSms(virtualMachine *vm)
 }
 
 /* top load function */
-u32int loadSms(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadSms(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   ASSERT(size == WORD, ERROR_BAD_ACCESS_SIZE);
 
@@ -201,22 +201,22 @@ u32int loadSms(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
       break;
     }
     default:
-      printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+      printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, __func__, phyAddr,
           virtAddr, (u32int)size);
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }
 
   DEBUG(VP_OMAP_35XX_SMS, "%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %#x" EOL,
-      dev->deviceName, phyAddr, virtAddr, (u32int)size);
+      __func__, phyAddr, virtAddr, (u32int)size);
 
   return value;
 }
 
 /* top store function */
-void storeSms(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeSms(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DEBUG(VP_OMAP_35XX_SMS, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
-      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
+      __func__, phyAddr, virtAddr, (u32int)size, value);
 
   struct Sms *const sms = context->vm.sms;
   u32int regOffset = phyAddr - Q1_L3_SMS;
@@ -354,7 +354,7 @@ void storeSms(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, 
       DIE_NOW(NULL, "Sms: store to read-only register");
     }
     default:
-      printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+      printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, __func__, phyAddr,
           virtAddr, (u32int)size);
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
   }

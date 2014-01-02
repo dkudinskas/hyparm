@@ -102,7 +102,7 @@ struct PowerAndResetManager
 
 
 void initPrm(virtualMachine *vm) __cold__;
-u32int loadPrm(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storePrm(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+u32int loadPrm(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storePrm(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 #endif /* __VM__OMAP_35XX__PRM_H__ */

@@ -143,10 +143,10 @@ void initPrm(virtualMachine *vm)
   vm->prMan = prm;
 }
 
-u32int loadPrm(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadPrm(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   DEBUG(VP_OMAP_35XX_PRM, "%s load from physical address: %#.8x, vAddr %#.8x, aSize %x" EOL,
-      dev->deviceName, phyAddr, virtAddr, (u32int)size);
+      __func__, phyAddr, virtAddr, (u32int)size);
 
   ASSERT(size == WORD, ERROR_BAD_ACCESS_SIZE);
 
@@ -780,10 +780,10 @@ static u32int loadWakeUpPrm(struct PowerAndResetManager *prm, u32int physicalAdd
   return value;
 }
 
-void storePrm(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storePrm(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DEBUG(VP_OMAP_35XX_PRM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %x, val %#.8x" EOL,
-      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
+      __func__, phyAddr, virtAddr, (u32int)size, value);
 
   ASSERT(size == WORD, ERROR_BAD_ACCESS_SIZE);
 

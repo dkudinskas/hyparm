@@ -113,7 +113,7 @@ struct ClockManager
 
 
 void initClockManager(virtualMachine *vm) __cold__;
-u32int loadClockManager(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storeClockManager(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+u32int loadClockManager(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeClockManager(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 #endif /* __VM_OMAP_35XX__CLOCK_MANAGER_H__ */

@@ -2,8 +2,8 @@
 #define __VM__OMAP_35XX__I2C_H__
 
 void initI2c(virtualMachine *vm, u32int i2cNumber);
-u32int loadI2c(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storeI2c(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+u32int loadI2c(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeI2c(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 #define I2C_REV     0x00
 #define I2C_IE      0x04

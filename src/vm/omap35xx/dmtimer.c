@@ -23,14 +23,14 @@
 #define DM_TIMER_RESET  0x48304014
 
 
-u32int loadDmTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadDmTimer(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   printf("loadDMTimer: VA %08x PA %08x\n", virtAddr, phyAddr);
   DIE_NOW(context, "dmtimer should not be\n");
   return 0;
 }
 
-void storeDmTimer(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeDmTimer(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   printf("storeDMTimer: VA %08x PA %08x val %08x\n", virtAddr, phyAddr, value);
   DIE_NOW(context, "dmtimer should not be\n");

@@ -53,12 +53,12 @@ void dumpSdramStats(struct SdramController *sdram)
 }
 
 
-u32int loadSdram(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadSdram(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   u32int val = 0;
 
   DEBUG(VP_OMAP_35XX_SDRAM, "%s load from physical address: %#.8x, vAddr %#.8x, access size %#x"
-      EOL, dev->deviceName, phyAddr, virtAddr, (u32int)size);
+      EOL, __func__, phyAddr, virtAddr, (u32int)size);
 
   switch (size)
   {
@@ -81,7 +81,7 @@ u32int loadSdram(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAdd
       break;
     }
     default:
-      printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, dev->deviceName, phyAddr,
+      printf("%s load from physical address: %#.8x, vAddr %#.8x" EOL, __func__, phyAddr,
           virtAddr);
       DIE_NOW(NULL, "Invalid access size.");
   }
@@ -89,14 +89,14 @@ u32int loadSdram(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAdd
 }
 
 
-void storeSdram(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeSdram(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
 #ifdef CONFIG_SDRAM_STORE_COUNTER
   struct SdramController* sdram = context->vm.sdram;
 #endif
 
   DEBUG(VP_OMAP_35XX_SDRAM, "%s store to physical address: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x"
-      EOL, dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
+      EOL, __func__, phyAddr, virtAddr, (u32int)size, value);
 
 #ifdef CONFIG_SDRAM_STORE_COUNTER
   u32int index = (virtAddr >> 20) & 0xFFF;
@@ -136,7 +136,7 @@ void storeSdram(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr
     }
     default:
       printf("%s store to physical address: %.8x, vAddr %.8x, aSize %x, val %.8x" EOL,
-          dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
+          __func__, phyAddr, virtAddr, (u32int)size, value);
       DIE_NOW(NULL, "Invalid access size.");
   }
 }

@@ -37,7 +37,7 @@ void initWDTimer2(virtualMachine *vm)
   resetWatchdogTimer(vm->wdtimer2);
 }
 
-u32int loadWDTimer2(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadWDTimer2(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   struct WatchdogTimer *const wt = context->vm.wdtimer2;
   u32int value = 0;
@@ -68,7 +68,7 @@ u32int loadWDTimer2(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virt
 }
 
 
-void storeWDTimer2(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeWDTimer2(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   struct WatchdogTimer *const wt = context->vm.wdtimer2;
   u32int reg = phyAddr - WDTIMER2;

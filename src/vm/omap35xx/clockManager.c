@@ -153,10 +153,10 @@ void initClockManager(virtualMachine *vm)
   cm->cmClkStCtrlUsb = 0;
 }
 
-u32int loadClockManager(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int physicalAddress)
+u32int loadClockManager(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int physicalAddress)
 {
   //We care about the real pAddr of the entry, not its vAddr
-  DEBUG(VP_OMAP_35XX_CM, "%s load from pAddr: %#.8x, vAddr %#.8x, aSize %x" EOL, dev->deviceName,
+  DEBUG(VP_OMAP_35XX_CM, "%s load from pAddr: %#.8x, vAddr %#.8x, aSize %x" EOL, __func__,
       physicalAddress, virtAddr, (u32int)size);
 
   ASSERT(size == WORD, ERROR_BAD_ACCESS_SIZE);
@@ -840,11 +840,11 @@ static u32int loadWkupCm(struct ClockManager *cm, u32int physicalAddress)
   return value;
 }
 
-void storeClockManager(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int physicalAddress, u32int value)
+void storeClockManager(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int physicalAddress, u32int value)
 {
   //We care about the real pAddr of the entry, not its vAddr
   DEBUG(VP_OMAP_35XX_CM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
-        dev->deviceName, physicalAddress, virtAddr, (u32int)size, value);
+        __func__, physicalAddress, virtAddr, (u32int)size, value);
 
   ASSERT(size == WORD, ERROR_BAD_ACCESS_SIZE);
 

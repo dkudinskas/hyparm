@@ -12,6 +12,26 @@
 
 <h1>Overview</h1>
 
+<p>
+Before this branch is usable, some extra steps are required to bootstrap:
+the VMCG submodule and its submodules must be checked out,
+and VMCG must be built prior to building the hypervisor.
+Outline of the required steps:
+</p>
+
+<pre>
+# git submodule init
+# git submodule update
+# cd ext/vmcg
+# git submodule init
+# git submodule update
+# ./setup-gcc
+# make -C build
+</pre>
+
+<p>
+VMCG can be built with GCC &ge; 4.7 or Clang &ge; 3.2 (using the <code>setup-clang</code> script).
+</p>
 
 </body>
 </html>

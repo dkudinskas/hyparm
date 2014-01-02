@@ -168,7 +168,7 @@ void initProtectionMechanism(virtualMachine *vm)
 }
 
 /* top load function */
-u32int loadProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadProtectionMechanism(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   if (size != WORD)
   {
@@ -220,7 +220,7 @@ u32int loadProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, 
         value = pmrt->pmAddrMatch1;
         break;
       default:
-        printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+        printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, __func__, phyAddr,
             virtAddr, (u32int)size);
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
@@ -339,7 +339,7 @@ u32int loadProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, 
         value = pmgpmc->pmAddrMatch7;
         break;
       default:
-        printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+        printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, __func__, phyAddr,
             virtAddr, (u32int)size);
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
@@ -458,7 +458,7 @@ u32int loadProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, 
         value = pmocmram->pmAddrMatch7;
         break;
       default:
-        printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+        printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, __func__, phyAddr,
             virtAddr, (u32int)size);
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
@@ -505,7 +505,7 @@ u32int loadProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, 
         value = pmocmrom->pmAddrMatch1;
         break;
       default:
-        printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+        printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, __func__, phyAddr,
             virtAddr, (u32int)size);
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
@@ -576,7 +576,7 @@ u32int loadProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, 
         value = pmiva->pmAddrMatch3;
         break;
       default:
-        printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, dev->deviceName, phyAddr,
+        printf("%s load from pAddr: %#.8x, vAddr: %#.8x, accSize %x" EOL, __func__, phyAddr,
             virtAddr, (u32int)size);
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
@@ -590,10 +590,10 @@ u32int loadProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, 
 }
 
 /* top store function */
-void storeProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeProtectionMechanism(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DEBUG(VP_OMAP_35XX_PM, "%s store to pAddr: %#.8x, vAddr %#.8x, aSize %#x, val %#.8x" EOL,
-      dev->deviceName, phyAddr, virtAddr, (u32int)size, value);
+      __func__, phyAddr, virtAddr, (u32int)size, value);
 
   u32int regOffset = 0;
 
@@ -632,7 +632,7 @@ void storeProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, u
         pmrt->pmAddrMatch1 = value;
         break;
       default:
-        printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, dev->deviceName, phyAddr,
+        printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, __func__, phyAddr,
             virtAddr, (u32int)size, value);
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
@@ -745,7 +745,7 @@ void storeProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, u
         pmgpmc->pmAddrMatch7 = value;
         break;
       default:
-        printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, dev->deviceName, phyAddr,
+        printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, __func__, phyAddr,
             virtAddr, (u32int)size, value);
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
@@ -858,7 +858,7 @@ void storeProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, u
         pmocmram->pmAddrMatch7 = value;
         break;
       default:
-        printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, dev->deviceName, phyAddr,
+        printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, __func__, phyAddr,
             virtAddr, (u32int)size, value);
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
@@ -899,7 +899,7 @@ void storeProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, u
         pmocmrom->pmAddrMatch1 = value;
         break;
       default:
-        printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, dev->deviceName, phyAddr,
+        printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, __func__, phyAddr,
             virtAddr, (u32int)size, value);
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;
@@ -964,7 +964,7 @@ void storeProtectionMechanism(GCONTXT *context, device *dev, ACCESS_SIZE size, u
         pmiva->pmAddrMatch3 = value;
         break;
       default:
-        printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, dev->deviceName, phyAddr,
+        printf("%s store to pAddr: %#.8x, vAddr: %#.8x, accSize %x, value %#.8x" EOL, __func__, phyAddr,
             virtAddr, (u32int)size, value);
         DIE_NOW(NULL, ERROR_NO_SUCH_REGISTER);
         break;

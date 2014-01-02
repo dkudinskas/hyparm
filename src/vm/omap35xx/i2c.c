@@ -50,7 +50,7 @@ void initI2c(virtualMachine *vm, u32int i2cNumber)
   }
 }
 
-u32int loadI2c(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadI2c(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   u32int val;
   int id = getI2cId(phyAddr);
@@ -109,7 +109,7 @@ u32int loadI2c(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr,
 }
 
 
-void storeI2c(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeI2c(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DEBUG(VP_OMAP_35XX_I2C, "i2c store 0x%x to 0x%x\n", value, phyAddr);
 

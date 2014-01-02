@@ -323,7 +323,7 @@ struct SystemControlModule
 
 
 void initSysControlModule(virtualMachine *vm) __cold__;
-u32int loadSysCtrlModule(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
-void storeSysCtrlModule(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
+u32int loadSysCtrlModule(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr);
+void storeSysCtrlModule(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value);
 
 #endif

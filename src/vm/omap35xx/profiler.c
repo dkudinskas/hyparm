@@ -13,7 +13,7 @@ void initProfilerInt()
   // do nothing
 }
 
-u32int loadProfilerInt(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadProfilerInt(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   u32int val;
   bool found = FALSE;
@@ -54,7 +54,7 @@ u32int loadProfilerInt(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int v
   return val;
 }
 
-void storeProfilerInt(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeProfilerInt(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   u32int reg = phyAddr - PROFILER;
   switch (reg)

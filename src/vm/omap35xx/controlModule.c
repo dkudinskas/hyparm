@@ -7,7 +7,7 @@
 #include "vm/omap35xx/controlModuleInternals.h"
 
 
-u32int loadControlModule(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
+u32int loadControlModule(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr)
 {
   const u32int registerOffset = phyAddr - CONTROL_MODULE_ID;
   u32int value = 0;
@@ -38,7 +38,7 @@ u32int loadControlModule(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int
   return value;
 }
 
-void storeControlModule(GCONTXT *context, device *dev, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
+void storeControlModule(GCONTXT *context, ACCESS_SIZE size, u32int virtAddr, u32int phyAddr, u32int value)
 {
   DIE_NOW(NULL, "read only device");
 }
