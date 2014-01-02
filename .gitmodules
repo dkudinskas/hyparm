@@ -1,0 +1,3 @@
+[submodule "ext/vmcg"]
+	path = ext/vmcg
+	url = git@bitbucket.org:npennema/vmcg.git
