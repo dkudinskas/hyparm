@@ -323,13 +323,11 @@ endif
 	@$(CC_GCC) -M $(CPPFLAGS) -MP $< -MT __out__ | sed 's,__out__[ :]*,$<.o $@ : ,g' > $@
 
 
-$(SOURCE_PATH)/%.vm: $(SOURCE_PATH)/%.vm.S
+$(SOURCE_PATH)/%.vm.h: $(SOURCE_PATH)/%.vm.S
 	@echo 'CPP      $<'
-	@$(CC_GCC) $(CPPFLAGS) -E -P -o $@ $<
-
-$(SOURCE_PATH)/%.vm.h: $(SOURCE_PATH)/%.vm
+	@$(CC_GCC) $(CPPFLAGS) -E -P -o $(OUTPUT_PATH)/hyparm.vm $<
 	@echo 'VMCG     $<'
-	@$(VMCG) c $< > $@
+	@$(VMCG) c $(OUTPUT_PATH)/hyparm.vm > $@
 
 $(SOURCE_PATH)/%.c.o: $(SOURCE_PATH)/%.c $(HYPARM_VM)
 	@echo 'CC       $<'
@@ -384,11 +382,11 @@ clean:
 	@find $(SOURCE_PATH) -name '*.c.d.*' -exec rm {} +
 	@find $(SOURCE_PATH) -name '*.o' -exec rm {} +
 	@find $(SOURCE_PATH) -name '*.S.[ds]' -exec rm {} +
-	@rm $(KCONFIG_AUTOCONFIG) $(KCONFIG_AUTOHEADER) $(KCONFIG_OK) \
+	@rm $(KCONFIG_AUTOCONFIG) $(KCONFIG_AUTOHEADER) $(KCONFIG_OK) $(HYPARM_VM) \
 	  $(OUTPUT_PATH)/$(APP_NAME).{elf,map,bin,dump} 2> /dev/null || :
 
 distclean: clean clean_kconfig
-	@rm -r $(KCONFIG_CONFIG) $(KCONFIG_CONFIG).old $(OUTPUT_PATH) 2> /dev/null || :
+	@rm -r $(KCONFIG_CONFIG) $(KCONFIG_CONFIG).old $(HYPARM_VM) $(OUTPUT_PATH) 2> /dev/null || :
 
 
 .PHONY: help
