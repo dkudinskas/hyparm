@@ -4,11 +4,13 @@
 
 #include "instructionEmu/interpreter/arm/syncInstructions.h"
 
+#include "perf/contextSwitchCounters.h"
+
 
 u32int armClrexInstruction(GCONTXT *context, u32int instruction)
 {
   DEBUG_TRACE(INTERPRETER_ARM_SYNC, context, instruction);
-
+  countClrex(context);
   ClearExclusiveLocal();
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
@@ -18,7 +20,7 @@ u32int armLdrexInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
-
+  countLdrex(context);
   if (ConditionPassed(instr.ldrex.cc))
   {
     if ((instr.ldrex.Rt == GPR_PC) || (instr.ldrex.Rn == GPR_PC))
@@ -36,7 +38,7 @@ u32int armLdrexbInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
-
+  countLdrexb(context);
   if (ConditionPassed(instr.ldrex.cc))
   {
     if ((instr.ldrex.Rt == GPR_PC) || (instr.ldrex.Rn == GPR_PC))
@@ -54,7 +56,7 @@ u32int armLdrexhInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
-
+  countLdrexh(context);
   if (ConditionPassed(instr.ldrex.cc))
   {
     if ((instr.ldrex.Rt == GPR_PC) || (instr.ldrex.Rn == GPR_PC))
@@ -72,7 +74,7 @@ u32int armLdrexdInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instruction);
-
+  countLdrexd(context);
   if (ConditionPassed(instr.ldrex.cc))
   {
     u8int Rt = instr.ldrex.Rt;
@@ -106,7 +108,7 @@ u32int armStrexInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
-
+  countStrex(context);
   if (ConditionPassed(instr.strex.cc))
   {
     u8int Rt = instr.strex.Rt;
@@ -136,7 +138,7 @@ u32int armStrexbInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
-
+  countStrexb(context);
   if (ConditionPassed(instr.strex.cc))
   {
     u8int Rt = instr.strex.Rt;
@@ -166,7 +168,7 @@ u32int armStrexhInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
-
+  countStrexh(context);
   if (ConditionPassed(instr.strex.cc))
   {
     u8int Rt = instr.strex.Rt;
@@ -196,7 +198,7 @@ u32int armStrexdInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instruction);
-
+  countStrexd(context);
   if (ConditionPassed(instr.strex.cc))
   {
     u8int Rt = instr.strex.Rt;

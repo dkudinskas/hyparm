@@ -9,6 +9,8 @@
 
 #include "memoryManager/addressing.h"
 
+#include "perf/contextSwitchCounters.h"
+
 #include "vm/omap35xx/sdram.h"
 
 
@@ -242,104 +244,9 @@ void dumpGuestContext(const GCONTXT *context)
   printf("last entry block index: %08x\n", context->lastEntryBlockIndex);
   dumpSdramStats(context->vm.sdram);
 
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  printf("====================================\n");
-  printf("svc  count: %08x\n", context->svcCount);
-  printf("====================================\n");
+  /* context switch counters */
+  dumpCounters(context);
 
-  printf("svcGuest: %08x\n", context->svcGuest);
-  printf("armStmInstruction: %08x\n", context->armStmInstruction);
-  printf("armStrbtInstruction: %08x\n", context->armStrbtInstruction);
-  printf("armStrhtInstruction: %08x\n", context->armStrhtInstruction);
-  printf("armStrtInstruction: %08x\n", context->armStrtInstruction);
-  printf("armStrexbInstruction: %08x\n", context->armStrexbInstruction);
-  printf("armStrexdInstruction: %08x\n", context->armStrexdInstruction);
-  printf("armStrexhInstruction: %08x\n", context->armStrexhInstruction);
-  printf("armStrexInstruction: %08x\n", context->armStrexInstruction);
-
-  printf("armLdmInstruction: %08x\n", context->armLdmInstruction);
-  printf("armLdrInstruction: %08x\n", context->armLdrInstruction);
-  printf("armLdrbtInstruction: %08x\n", context->armLdrbtInstruction);
-  printf("armLdrhtInstruction: %08x\n", context->armLdrhtInstruction);
-  printf("armLdrtInstruction: %08x\n", context->armLdrtInstruction);
-  printf("armLdrexbInstruction: %08x\n", context->armLdrexbInstruction);
-  printf("armLdrexdInstruction: %08x\n", context->armLdrexdInstruction);
-  printf("armLdrexhInstruction: %08x\n", context->armLdrexhInstruction);
-  printf("armLdrexInstruction: %08x\n", context->armLdrexInstruction);
-
-  printf("armBInstruction: %08x\n", context->armBInstruction);
-  printf("armBxInstruction: %08x\n", context->armBxInstruction);
-  printf("armBxjInstruction: %08x\n", context->armBxjInstruction);
-  printf("armBlxRegisterInstruction: %08x\n", context->armBlxRegisterInstruction);
-  printf("armBlxImmediateInstruction: %08x\n", context->armBlxImmediateInstruction);
-  printf("====== OF THESE, BRANCHES WERE: ==========\n");
-  printf("branchLink: %08x\n", context->branchLink);
-  printf("branchNonlink: %08x\n", context->branchNonlink);
-  printf("branchConditional: %08x\n", context->branchConditional);
-  printf("branchNonconditional: %08x\n", context->branchNonconditional);
-  printf("branchImmediate: %08x\n", context->branchImmediate);
-  printf("branchRegister: %08x\n", context->branchRegister);
-  printf("===========================================\n");
-
-  printf("armMsrRegInstruction: %08x\n", context->armMsrRegInstruction);
-  printf("armMsrImmInstruction: %08x\n", context->armMsrImmInstruction);
-  printf("armMrsInstruction: %08x\n", context->armMrsInstruction);
-  printf("armCpsInstruction: %08x\n", context->armCpsInstruction);
-
-  printf("armSwpInstruction: %08x\n", context->armSwpInstruction);
-  printf("armYieldInstruction: %08x\n", context->armYieldInstruction);
-  printf("armWfeInstruction: %08x\n", context->armWfeInstruction);
-  printf("armWfiInstruction: %08x\n", context->armWfiInstruction);
-  printf("armSevInstruction: %08x\n", context->armSevInstruction);
-  printf("armDbgInstruction: %08x\n", context->armDbgInstruction);
-
-  printf("svcInstruction: %08x\n", context->svcInstruction);
-
-  printf("armBkptInstruction: %08x\n", context->armBkptInstruction);
-  printf("armSmcInstruction: %08x\n", context->armSmcInstruction);
-  printf("armAndInstruction: %08x\n", context->armAndInstruction);
-  printf("armEorInstruction: %08x\n", context->armEorInstruction);
-  printf("armSubInstruction: %08x\n", context->armSubInstruction);
-  printf("armAddInstruction: %08x\n", context->armAddInstruction);
-  printf("armAdcInstruction: %08x\n", context->armAdcInstruction);
-  printf("armSbcInstruction: %08x\n", context->armSbcInstruction);
-  printf("armRscInstruction: %08x\n", context->armRscInstruction);
-  printf("armOrrInstruction: %08x\n", context->armOrrInstruction);
-  printf("armMovInstruction: %08x\n", context->armMovInstruction);
-  printf("armLslInstruction: %08x\n", context->armLslInstruction);
-  printf("armLsrInstruction: %08x\n", context->armLsrInstruction);
-  printf("armAsrInstruction: %08x\n", context->armAsrInstruction);
-  printf("armRrxInstruction: %08x\n", context->armRrxInstruction);
-  printf("armRorInstruction: %08x\n", context->armRorInstruction);
-  printf("armBicInstruction: %08x\n", context->armBicInstruction);
-  printf("armMvnInstruction: %08x\n", context->armMvnInstruction);
-
-  printf("armMrcInstruction: %08x\n", context->armMrcInstruction);
-  printf("armMcrInstruction: %08x\n", context->armMcrInstruction);
-  printf("armDmbInstruction: %08x\n", context->armDmbInstruction);
-  printf("armDsbInstruction: %08x\n", context->armDsbInstruction);
-  printf("armIsbInstruction: %08x\n", context->armIsbInstruction);
-  printf("armClrexInstruction: %08x\n", context->armClrexInstruction);
-
-  printf("armRfeInstruction: %08x\n", context->armRfeInstruction);
-  printf("armSetendInstruction: %08x\n", context->armSetendInstruction);
-  printf("armSrsInstruction: %08x\n", context->armSrsInstruction);
-  printf("armPldInstruction: %08x\n", context->armPldInstruction);
-  printf("armPliInstruction: %08x\n", context->armPliInstruction);
-  printf("====================================\n");
-  printf("dabt count: %08x\n", context->dabtCount);
-  printf("dabtPriv: %08x\n", context->dabtPriv);
-  printf("dabtUser: %08x\n", context->dabtUser);
-  printf("====================================\n");
-  printf("pabt count: %08x\n", context->pabtCount);
-  printf("pabtPriv: %08x\n", context->pabtPriv);
-  printf("pabtUser: %08x\n", context->pabtUser);
-  printf("====================================\n");
-  printf("irq  count: %08x\n", context->irqCount);
-  printf("irqPriv: %08x\n", context->irqPriv);
-  printf("irqUser: %08x\n", context->irqUser);
-  printf("====================================\n");
-#endif
 #ifdef CONFIG_STATS
   printf("timerTotalSvc:     %08x\n", timerTotalSvc);
   printf("timerNumberSvc:    %08x\n", timerNumberSvc);
@@ -422,69 +329,7 @@ void resetExceptionCounters(GCONTXT *context)
   context->branchImmediate = 0;
   context->branchRegister = 0;
 
-  context->svcGuest = 0;
-  context->armStmInstruction = 0;
-  context->armLdmInstruction = 0;
-  context->armLdrInstruction = 0;
-  context->armBInstruction = 0;
-  context->armSwpInstruction = 0;
-  context->armLdrexbInstruction = 0;
-  context->armLdrexdInstruction = 0;
-  context->armLdrexhInstruction = 0;
-  context->armStrexbInstruction = 0;
-  context->armStrexdInstruction = 0;
-  context->armStrexhInstruction = 0;
-  context->armLdrexInstruction = 0;
-  context->armStrexInstruction = 0;
-  context->armBxInstruction = 0;
-  context->armBxjInstruction = 0;
-  context->armBkptInstruction = 0;
-  context->armSmcInstruction = 0;
-  context->armBlxRegisterInstruction = 0;
-  context->armAndInstruction = 0;
-  context->armEorInstruction = 0;
-  context->armSubInstruction = 0;
-  context->armAddInstruction = 0;
-  context->armAdcInstruction = 0;
-  context->armSbcInstruction = 0;
-  context->armRscInstruction = 0;
-  context->armMsrRegInstruction = 0;
-  context->armMsrImmInstruction = 0;
-  context->armMrsInstruction = 0;
-  context->armOrrInstruction = 0;
-  context->armMovInstruction = 0;
-  context->armLslInstruction = 0;
-  context->armLsrInstruction = 0;
-  context->armAsrInstruction = 0;
-  context->armRrxInstruction = 0;
-  context->armRorInstruction = 0;
-  context->armBicInstruction = 0;
-  context->armMvnInstruction = 0;
-  context->armYieldInstruction = 0;
-  context->armWfeInstruction = 0;
-  context->armWfiInstruction = 0;
-  context->armSevInstruction = 0;
-  context->armDbgInstruction = 0;
-  context->svcInstruction = 0;
-  context->armMrcInstruction = 0;
-  context->armMcrInstruction = 0;
-  context->armDmbInstruction = 0;
-  context->armDsbInstruction = 0;
-  context->armIsbInstruction = 0;
-  context->armClrexInstruction = 0;
-  context->armCpsInstruction = 0;
-  context->armRfeInstruction = 0;
-  context->armSetendInstruction = 0;
-  context->armSrsInstruction = 0;
-  context->armBlxImmediateInstruction = 0;
-  context->armPldInstruction = 0;
-  context->armPliInstruction = 0;
-  context->armStrbtInstruction = 0;
-  context->armStrhtInstruction = 0;
-  context->armStrtInstruction = 0;
-  context->armLdrbtInstruction = 0;
-  context->armLdrhtInstruction = 0;
-  context->armLdrtInstruction = 0;
+  context->svc = 0;
 
   context->dabtCount = 0;
   context->dabtPriv = 0;
@@ -495,11 +340,6 @@ void resetExceptionCounters(GCONTXT *context)
   context->irqCount = 0;
   context->irqPriv = 0;
   context->irqUser = 0;
-}
-
-void dumpCounters()
-{
-  dumpGuestContext(getActiveGuestContext());
 }
 #endif
 

@@ -31,7 +31,7 @@ typedef struct
 {
   u32int val;
   bool carry;
-} u32int_carry;
+} u32int_c;
 
 
 typedef enum armShiftType

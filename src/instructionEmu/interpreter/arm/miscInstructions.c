@@ -5,6 +5,8 @@
 #include "instructionEmu/interpreter/internals.h"
 #include "instructionEmu/interpreter/arm/miscInstructions.h"
 
+#include "perf/contextSwitchCounters.h"
+
 #include "vm/omap35xx/intc.h"
 
 u32int armBkptInstruction(GCONTXT *context, u32int instruction)
@@ -30,7 +32,7 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
-
+  countCps(context, instr);
   if ((instr.cps.mode != 0) && (instr.cps.M == 0))
     UNPREDICTABLE();
   if (((instr.cps.imod & 2) == 2) && (instr.cps.A == 0) && 
@@ -80,37 +82,12 @@ u32int armDbgInstruction(GCONTXT *context, u32int instruction)
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armDmbInstruction(GCONTXT *context, u32int instruction)
-{
-#ifdef ARM_INSTR_TRACE
-  /* DMB is weaker than DSB */
-  printf("Warning: DMB (ignored)!" EOL);
-#endif
-  return context->R15 + ARM_INSTRUCTION_SIZE;
-}
-
-u32int armDsbInstruction(GCONTXT *context, u32int instruction)
-{
-#ifdef ARM_INSTR_TRACE
-  printf("Warning: DSB (ignored)!" EOL);
-#endif
-  return context->R15 + ARM_INSTRUCTION_SIZE;
-}
-
-u32int armIsbInstruction(GCONTXT *context, u32int instruction)
-{
-#ifdef ARM_INSTR_TRACE
-  printf("Warning: ISB (ignored)!" EOL);
-#endif
-  return context->R15 + ARM_INSTRUCTION_SIZE;
-}
-
 
 u32int armMrsInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
-
+  countMrs(context);
   if (ConditionPassed(instr.mrs.cc))
   {
     u8int Rd = instr.mrs.Rd;
@@ -144,7 +121,7 @@ u32int armMsrRegInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
-
+  countMsrReg(context);
   if (ConditionPassed(instr.msrReg.cc))
   {
     u8int Rn = instr.msrReg.Rn;
@@ -161,11 +138,6 @@ u32int armMsrRegInstruction(GCONTXT *context, u32int instruction)
     }
     else
     {
-      if ((value & PSR_MODE) != context->CPSR.bits.mode)
-      {
-        // changing modes; adjust context appropriatelly
-        guestChangeMode(context, value & PSR_MODE);
-      }
       // Does not affect execution state bits other than E
       CPSRWriteByInstr(context, value, instr.msrReg.mask, FALSE);
       // we dont support hypervisor mode yet
@@ -181,12 +153,12 @@ u32int armMsrImmInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
-
+  countMsrImm(context);
   if (ConditionPassed(instr.msrReg.cc))
   {
     if ((instr.msrImm.mask == 0) && (instr.msrImm.R == 0))
     {
-      printf("msr: see related encodings\n");
+      printf("msr: %08x @ %x; see related encodings\n", instr.raw, context->R15);
       DIE_NOW(context, "msr unimplemented.");
     }
     u32int imm32 = armExpandImm(instr.msrImm.imm12, context->CPSR.bits.C);
@@ -200,11 +172,6 @@ u32int armMsrImmInstruction(GCONTXT *context, u32int instruction)
     }
     else
     {
-      if ((imm32 & PSR_MODE) != context->CPSR.bits.mode)
-      {
-        // changing modes; adjust context appropriatelly
-        guestChangeMode(context, imm32 & PSR_MODE);
-      }
       // Does not affect execution state bits other than E
       CPSRWriteByInstr(context, imm32, instr.msrImm.mask, FALSE);
       // we dont support hypervisor mode yet
@@ -212,23 +179,6 @@ u32int armMsrImmInstruction(GCONTXT *context, u32int instruction)
       //   UNPREDICTABLE();
     }
   }
-  return context->R15 + ARM_INSTRUCTION_SIZE;
-}
-
-
-u32int armPldInstruction(GCONTXT *context, u32int instruction)
-{
-#ifdef ARM_INSTR_TRACE
-  printf("Warning: PLD!" EOL);
-#endif
-  return context->R15 + ARM_INSTRUCTION_SIZE;
-}
-
-u32int armPliInstruction(GCONTXT *context, u32int instruction)
-{
-#ifdef ARM_INSTR_TRACE
-  printf("Warning: PLI!" EOL);
-#endif
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
@@ -265,6 +215,7 @@ u32int armWfeInstruction(GCONTXT *context, u32int instruction)
 u32int armWfiInstruction(GCONTXT *context, u32int instruction)
 {
   // stop guest execution...
+  countWfi(context);
   guestIdle(context);
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
@@ -272,13 +223,6 @@ u32int armWfiInstruction(GCONTXT *context, u32int instruction)
 u32int armYieldInstruction(GCONTXT *context, u32int instruction)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
-}
-
-
-u32int nopInstruction(GCONTXT *context, u32int instruction)
-{
-  TRACE(context, instruction);
-  DIE_NOW(context, "nopInstruction: should not trap");
 }
 
 u32int svcInstruction(GCONTXT *context, u32int instruction)

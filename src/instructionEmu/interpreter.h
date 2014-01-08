@@ -5,7 +5,7 @@
 
 #include "instructionEmu/interpreter/arm/branchInstructions.h"
 #include "instructionEmu/interpreter/arm/coprocInstructions.h"
-#include "instructionEmu/interpreter/arm/dataProcessInstructions.h"
+#include "instructionEmu/interpreter/arm/aluInstructions.h"
 #include "instructionEmu/interpreter/arm/loadInstructions.h"
 #include "instructionEmu/interpreter/arm/miscInstructions.h"
 #include "instructionEmu/interpreter/arm/storeInstructions.h"

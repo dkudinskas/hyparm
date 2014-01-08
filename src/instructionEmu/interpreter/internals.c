@@ -3,6 +3,8 @@
 
 #include "cpuArch/constants.h"
 
+#include "instructionEmu/decoder/arm/structs.h"
+#include "instructionEmu/interpreter/common.h"
 #include "instructionEmu/interpreter/internals.h"
 
 
@@ -18,166 +20,6 @@ static u32int *getHighGPRegisterPointer(GCONTXT *context, u32int registerIndex);
 // rotate right function
 static u32int rorVal(u32int value, u32int ramt)  __constant__;
 
-
-u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *instrString)
-{
-  u32int nextPC = 0;
-  u32int regDest = (instr & 0x0000F000) >> 12;
-
-  if (regDest != GPR_PC)
-  {
-    invalidDataProcTrap(context, instr, instrString);
-  }
-
-#ifdef DATA_PROC_TRACE
-  printf("%s: %#.8x @ %#.8x" EOL, instrString, instr, context->R15);
-#endif
-
-  if (evaluateConditionCode(context, ARM_EXTRACT_CONDITION_CODE(instr)))
-  {
-    // set-flags case is tricky! depends on guest mode.
-    u32int setFlags = (instr & 0x00100000); // S bit on intruction binary respresentation
-    // source operand1
-    u32int regSrc = (instr & 0x000F0000) >> 16;
-    // source operand2 - register or immediate?
-    u32int regOrImm = instr & 0x02000000; // 1 = imm, 0 = reg
-    if (regOrImm != 0)
-    {
-      // if S bit is set, this is return from exception!
-      if (setFlags != 0)
-      {
-        DIE_NOW(context, "arithmetic: imm case return from exception case unimplemented.\n");
-      }
-
-      // source operand2 immediate: pc = regSrc +/- ror(immediate)
-      u32int imm12 = instr & 0x00000FFF;
-      switch (opType)
-      {
-        case ADD:
-        {
-          nextPC = getGPRegister(context, regSrc) + armExpandImm12(imm12);
-          break;
-        }
-        case SUB:
-        {
-          nextPC = getGPRegister(context, regSrc) - armExpandImm12(imm12);
-          break;
-        }
-        default:
-          DIE_NOW(context, "invalid arithLogicOp opType");
-      }
-    }
-    else
-    {
-      // register case: pc = regSrc + shift(regSrc2)
-      u32int regSrc2   =  instr & 0x0000000F;
-      u32int shiftType = (instr & 0x00000060) >> 5;
-      u32int shamt = 0;
-      ASSERT((instr & 0x00000010) == 0, ERROR_UNPREDICTABLE_INSTRUCTION)
-      // shift amount is an immediate field
-      u32int imm5 = (instr & 0xF80) >> 7;
-      shiftType = decodeShiftImmediate(shiftType, imm5, &shamt);
-      switch (opType)
-      {
-        case ADD:
-        {
-          // if S bit is set, this is return from exception!
-          if (setFlags != 0)
-          {
-            DIE_NOW(context, "arithmetic: reg case return from exception case unimplemented.\n");
-          }
-          nextPC = getGPRegister(context, regSrc) + shiftVal(getGPRegister(context, regSrc2), shiftType, shamt, context->CPSR.bits.C);
-          break;
-        }
-        case SUB:
-        {
-          // if S bit is set, this is return from exception!
-          if (setFlags != 0)
-          {
-            DIE_NOW(context, "arithmetic: reg case return from exception case unimplemented.\n");
-          }
-          nextPC = getGPRegister(context, regSrc) - shiftVal(getGPRegister(context, regSrc2), shiftType, shamt, context->CPSR.bits.C);
-          break;
-        }
-        case MOV:
-        {
-          // cant be shifted - mov shifted reg is a pseudo instr
-          ASSERT(shamt == 0, ERROR_BAD_ARGUMENTS);
-          nextPC = getGPRegister(context, regSrc2);
-          break;
-        }
-        default:
-          DIE_NOW(context, "invalid arithLogicOp opType");
-      }
-    }
-
-    if (setFlags)
-    {
-      if (regDest == GPR_PC)
-      {
-        u32int spsrToCopy = 0;
-        // copy SPSR to CPSR
-        switch (context->CPSR.bits.mode)
-        {
-          case FIQ_MODE:
-          {
-            spsrToCopy = context->SPSR_FIQ.value;
-            break;
-          }
-          case IRQ_MODE:
-          {
-            spsrToCopy = context->SPSR_IRQ.value;
-            break;
-          }
-          case SVC_MODE:
-          {
-            spsrToCopy = context->SPSR_SVC.value;
-            break;
-          }
-          case ABT_MODE:
-          {
-            spsrToCopy = context->SPSR_ABT.value;
-            break;
-          }
-          case UND_MODE:
-          {
-            spsrToCopy = context->SPSR_UND.value;
-            break;
-          }
-          default:
-            DIE_NOW(context, "arithLogicOp: no SPSR for current guest mode");
-        }
-        if ((context->CPSR.bits.mode) != (spsrToCopy & PSR_MODE))
-        {
-          guestChangeMode(context, spsrToCopy & PSR_MODE);
-        }
-        context->CPSR.value = spsrToCopy;
-
-        // Align PC
-        if (context->CPSR.bits.T)
-        {
-          nextPC &= ~1;
-        }
-        else
-        {
-          nextPC &= ~3;
-        }
-      }
-      else
-      {
-        // unimplemented setflags case
-        DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
-      }
-    }
-
-    ASSERT((nextPC & 1) == 0, "Interworking branch not allowed");
-    return nextPC;
-  }
-  else
-  {
-    return context->R15 + ARM_INSTRUCTION_SIZE;
-  }
-}
 
 /* expand immediate12 field of instruction */
 u32int armExpandImm12(u32int imm12)
@@ -341,19 +183,6 @@ static u32int *getHighGPRegisterPointer(GCONTXT *context, u32int registerIndex)
 }
 
 
-void setGPRegister(GCONTXT *context, u32int destinationRegister, u32int value)
-{
-  if (destinationRegister < 8 || destinationRegister == GPR_PC)
-  {
-    setLowGPRegister(context, destinationRegister, value);
-  }
-  else
-  {
-    *(getHighGPRegisterPointer(context, destinationRegister)) = value;
-  }
-}
-
-
 // rotate right function
 u32int rorVal(u32int value, u32int ramt)
 {
@@ -377,8 +206,21 @@ u32int rorVal(u32int value, u32int ramt)
 }
 
 
+void setGPRegister(GCONTXT *context, u32int destinationRegister, u32int value)
+{
+  if (destinationRegister < 8 || destinationRegister == GPR_PC)
+  {
+    setLowGPRegister(context, destinationRegister, value);
+  }
+  else
+  {
+    *(getHighGPRegisterPointer(context, destinationRegister)) = value;
+  }
+}
+
+
 // generic any type shift function, changes input_parameter(carryFlag) value
-u32int shiftVal(u32int value, u8int shiftType, u32int shamt, u8int carryFlag)
+u32int shiftVal(u32int value, u8int shiftType, u32int shamt)
 {
   // RRX can only shift right by 1
   ASSERT((shiftType != SHIFT_TYPE_RRX) || (shamt == 1), "type rrx, but shamt not 1!");

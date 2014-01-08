@@ -5,6 +5,7 @@
 
 #include "guestManager/guestContext.h"
 
+u32int nopInstruction(GCONTXT *context, u32int instruction);
 
 u32int t16ItInstruction(GCONTXT *context, u32int instruction);
 

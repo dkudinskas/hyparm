@@ -3,6 +3,8 @@
 #include "instructionEmu/interpreter/internals.h"
 #include "instructionEmu/interpreter/arm/coprocInstructions.h"
 
+#include "perf/contextSwitchCounters.h"
+
 #include "vm/omap35xx/cp15coproc.h"
 
 
@@ -30,7 +32,7 @@ u32int armMcrInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG(INTERPRETER_ARM_COPROC, "armMcrInstruction: %#.8x @ %#.8x\n", instruction, context->R15);
-
+  countMcr(context);
   if (ConditionPassed(instr.mcr.cc))
   {
     // if coproc IN "101x" then SEE "Advanced SIMD and Floating-point";
@@ -64,6 +66,7 @@ u32int armMrcInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG(INTERPRETER_ARM_COPROC, "armMcrInstruction: %#.8x @ %#.8x\n", instruction, context->R15);
+  countMrc(context);
   // can reuse mcr encoding
   if (ConditionPassed(instr.mcr.cc))
   {

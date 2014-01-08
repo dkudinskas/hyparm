@@ -12,8 +12,8 @@ void armALUImmRegRSRNoDest(TranslationStore *ts, BasicBlock *block, u32int pc, u
 
 void armALUimm(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
 void armALUimmNoDest(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction);
+
 void armALUreg(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
-void armALUregNoDest(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction);
 void armMovPCInstruction(TranslationStore *ts, BasicBlock *block, u32int pc, u32int instruction);
 void armShiftPCImm(TranslationStore* ts, BasicBlock *block, u32int pc, u32int instruction);
 

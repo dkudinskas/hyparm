@@ -127,78 +127,83 @@ struct guestContext
 
 #ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
   u32int svcCount;
-
+  // ALU exception return
+  u32int addExceptionReturn;
+  // ALU computed jumps
+  u32int addJump;
+  u32int andJump;
+  u32int movJump;
+  // branches
   u32int branchLink;
   u32int branchNonlink;
   u32int branchConditional;
   u32int branchNonconditional;
   u32int branchImmediate;
   u32int branchRegister;
+  // coprocessor instructions
+  u32int mrc;
+  u32int mcr;
+  // misc/system instructions
+  u32int svc;
+  u32int breakpoint;
+  u32int cps;
+  u32int mrs;
+  u32int msrImm;
+  u32int msrReg;
+  u32int wfi;
+  // load instructions
+  u32int ldrbImm;
+  u32int ldrbReg;
+  u32int ldrbtImm;
+  u32int ldrbtReg;
+  u32int ldrhImm;
+  u32int ldrhReg;
+  u32int ldrhtImm;
+  u32int ldrhtReg;
+  u32int ldrImm;
+  u32int ldrReg;
+  u32int ldrtImm;
+  u32int ldrtReg;
+  u32int ldrdImm;
+  u32int ldrdReg;
+  u32int ldm;
+  u32int ldmUser;
+  u32int ldmExceptionReturn;
+  // store instructions
+  u32int strbImm;
+  u32int strbReg;
+  u32int strbtImm;
+  u32int strbtReg;
+  u32int strhImm;
+  u32int strhReg;
+  u32int strhtImm;
+  u32int strhtReg;
+  u32int strImm;
+  u32int strReg;
+  u32int strtImm;
+  u32int strtReg;
+  u32int strdImm;
+  u32int strdReg;
+  u32int stm;
+  u32int stmUser;
+  // sync instructions
+  u32int clrex;
+  u32int ldrex;
+  u32int ldrexb;
+  u32int ldrexh;
+  u32int ldrexd;
+  u32int strex;
+  u32int strexb;
+  u32int strexh;
+  u32int strexd;
 
-  u32int svcGuest;
-  u32int armStmInstruction;
-  u32int armLdmInstruction;
-  u32int armLdrInstruction;
+
   u32int armBInstruction;
   u32int armBlInstruction;
-  u32int armSwpInstruction;
-  u32int armLdrexbInstruction;
-  u32int armLdrexdInstruction;
-  u32int armLdrexhInstruction;
-  u32int armStrexbInstruction;
-  u32int armStrexdInstruction;
-  u32int armStrexhInstruction;
-  u32int armLdrexInstruction;
-  u32int armStrexInstruction;
   u32int armBxInstruction;
   u32int armBxjInstruction;
-  u32int armBkptInstruction;
-  u32int armSmcInstruction;
   u32int armBlxRegisterInstruction;
-  u32int armAndInstruction;
-  u32int armEorInstruction;
-  u32int armSubInstruction;
-  u32int armAddInstruction;
-  u32int armAdcInstruction;
-  u32int armSbcInstruction;
-  u32int armRscInstruction;
-  u32int armMsrRegInstruction;
-  u32int armMsrImmInstruction;
-  u32int armMrsInstruction;
-  u32int armOrrInstruction;
-  u32int armMovInstruction;
-  u32int armLslInstruction;
-  u32int armLsrInstruction;
-  u32int armAsrInstruction;
-  u32int armRrxInstruction;
-  u32int armRorInstruction;
-  u32int armBicInstruction;
-  u32int armMvnInstruction;
-  u32int armYieldInstruction;
-  u32int armWfeInstruction;
-  u32int armWfiInstruction;
-  u32int armSevInstruction;
-  u32int armDbgInstruction;
-  u32int svcInstruction;
-  u32int armMrcInstruction;
-  u32int armMcrInstruction;
-  u32int armDmbInstruction;
-  u32int armDsbInstruction;
-  u32int armIsbInstruction;
-  u32int armClrexInstruction;
-  u32int armCpsInstruction;
-  u32int armRfeInstruction;
-  u32int armSetendInstruction;
-  u32int armSrsInstruction;
   u32int armBlxImmediateInstruction;
-  u32int armPldInstruction;
-  u32int armPliInstruction;
-  u32int armStrbtInstruction;
-  u32int armStrhtInstruction;
-  u32int armStrtInstruction;
-  u32int armLdrbtInstruction;
-  u32int armLdrhtInstruction;
-  u32int armLdrtInstruction;
   
   u32int dabtCount;
   u32int dabtPriv;
@@ -225,8 +230,6 @@ extern GCONTXT *volatile activeGuestContext;
 GCONTXT *createGuestContext(void) __cold__;
 
 void dumpGuestContext(const GCONTXT * gc) __cold__;
-
-void dumpCounters(void);
 
 __macro__ GCONTXT *getActiveGuestContext(void);
 

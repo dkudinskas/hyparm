@@ -87,10 +87,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   }
 #endif
 
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  context->svcCount++;
-#endif
-
+  registerSvc(context);
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
 
 #ifdef CONFIG_THUMB2
@@ -123,9 +120,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   // Do we need to forward it to the guest?
   if (gSVC)
   {
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-    context->svcGuest++;
-#endif
+    countSvc(context);
     deliverServiceCall(context);
     nextPC = context->R15;
     link = FALSE;
@@ -135,8 +130,6 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     u32int blockStoreIndex = code - 0x100;
     block = getBasicBlockStoreEntry(context->translationStore, blockStoreIndex);
     context->R15 = (u32int)(block->guestEnd);
-
-    registerSvc(context, block->handler);
 
     // interpret the instruction to find the start address of next block
     nextPC = block->handler(context, *block->guestEnd);
@@ -198,10 +191,7 @@ GCONTXT *dataAbort(GCONTXT *context)
 {
   /* Make sure interrupts are disabled while we deal with data abort. */
   disableInterrupts();
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  context->dabtCount++;
-  context->dabtUser++;
-#endif
+  registerDabt(context, TRUE);
   /* Encodings: Page 1289 & 1355 */
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
@@ -252,11 +242,7 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 {
   /* Make sure interrupts are disabled while we deal with data abort. */
   disableInterrupts();
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  GCONTXT* context = getActiveGuestContext();
-  context->dabtCount++;
-  context->dabtPriv++;
-#endif
+  registerDabt(getActiveGuestContext(), FALSE);
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
 
@@ -315,10 +301,7 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 {
   /* Make sure interrupts are disabled while we deal with fetch abort. */
   disableInterrupts();
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  context->pabtCount++;
-  context->pabtUser++;
-#endif
+  registerPabt(context, TRUE);
   // Make sure interrupts are disabled while we deal with prefetch abort.
   IFSR ifsr = getIFSR();
   u32int ifar = getIFAR();
@@ -370,14 +353,9 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 
 void prefetchAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 {
-  printf("prefetchAbortPrivileged pc %08x sp %08x spsr %08x\n", pc, sp, spsr);
-
   // disable possible further interrupts
   disableInterrupts();
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  getActiveGuestContext()->pabtCount++;
-  getActiveGuestContext()->pabtPriv++;
-#endif
+  registerPabt(getActiveGuestContext(), FALSE);
 
   IFSR ifsr = getIFSR();
   u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
@@ -402,6 +380,7 @@ void prefetchAbortPrivileged(u32int pc, u32int sp, u32int spsr)
     case ifsTranslationTableWalk2ndLvlSynchParityError:
     default:
     {
+      printf("prefetchAbortPrivileged pc %08x sp %08x spsr %08x\n", pc, sp, spsr);
       printPrefetchAbort();
       DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
     }
@@ -434,10 +413,7 @@ void monitorModePrivileged(void)
 GCONTXT *irq(GCONTXT *context)
 {
   disableInterrupts();
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  getActiveGuestContext()->irqCount++;
-  getActiveGuestContext()->irqUser++;
-#endif
+  registerIrq(context, TRUE);
 
 #ifdef CONFIG_HW_PASSTHROUGH
   if (isGuestInPrivMode(context))
@@ -537,10 +513,7 @@ void irqPrivileged()
 {
   // disable possible further interrupts
   disableInterrupts();
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  getActiveGuestContext()->irqCount++;
-  getActiveGuestContext()->irqPriv++;
-#endif
+  registerIrq(getActiveGuestContext(), FALSE);
 
 #ifdef CONFIG_HW_PASSTHROUGH
   DIE_NOW(0, "irqPrivileged should not be here with HW passthrough.");

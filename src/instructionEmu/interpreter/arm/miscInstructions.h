@@ -17,10 +17,6 @@ u32int armBkptInstruction(GCONTXT *context, u32int instruction);
 
 u32int armCpsInstruction(GCONTXT *context, u32int instruction);
 
-u32int armDmbInstruction(GCONTXT *context, u32int instruction);
-u32int armDsbInstruction(GCONTXT *context, u32int instruction);
-u32int armIsbInstruction(GCONTXT *context, u32int instruction);
-
 u32int armMrsInstruction(GCONTXT *context, u32int instruction);
 u32int armMsrImmInstruction(GCONTXT *context, u32int instruction);
 u32int armMsrRegInstruction(GCONTXT *context, u32int instruction);
@@ -33,13 +29,6 @@ u32int armSmcInstruction(GCONTXT *context, u32int instruction);
 
 u32int armSrsInstruction(GCONTXT *context, u32int instruction);
 
-
-/*
- * Memory hints
- */
-
-u32int armPldInstruction(GCONTXT *context, u32int instruction);
-u32int armPliInstruction(GCONTXT *context, u32int instruction);
 
 
 /*
@@ -61,8 +50,6 @@ u32int armYieldInstruction(GCONTXT *context, u32int instruction);
  */
 
 u32int armClzInstruction(GCONTXT *context, u32int instruction);
-
-u32int nopInstruction(GCONTXT *context, u32int instruction);
 
 u32int svcInstruction(GCONTXT *context, u32int instruction);
 

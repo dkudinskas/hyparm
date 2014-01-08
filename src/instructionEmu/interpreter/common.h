@@ -7,10 +7,12 @@
 
 #include "guestManager/guestContext.h"
 
+void ALUWritePC(GCONTXT* context, u32int address);
+
 /* expand immediate12 field of instruction */
 u32int armExpandImm(u32int imm12, bool carryIn);
 
-u32int_carry asrCarry(u32int value, u32int amount);
+u32int_c asrCarry(u32int value, u32int amount);
 
 bool BadMode(CPSRmode mode);
 
@@ -38,19 +40,19 @@ bool HaveVirtExt(void);
 
 void LoadWritePC(GCONTXT* context, u32int pc);
 
-u32int_carry lslCarry(u32int value, u32int amount);
+u32int_c lslCarry(u32int value, u32int amount);
 
-u32int_carry lsrCarry(u32int value, u32int amount);
+u32int_c lsrCarry(u32int value, u32int amount);
 
-u32int_carry rorCarry(u32int value, u32int amount);
+u32int_c rorCarry(u32int value, u32int amount);
 
-u32int_carry rrxCarry(u32int value, bool carryIn);
+u32int_c rrxCarry(u32int value, bool carryIn);
 
 void SelectInstrSet(InstructionSet iset);
 
 void SetExclusiveMonitors(u32int address, ACCESS_SIZE size);
 
-u32int_carry shiftCarry(u32int value, ShiftType type, u32int amount, bool carryIn);
+u32int_c shiftCarry(u32int value, ShiftType type, u32int amount, bool carryIn);
 
 CPSRreg SPSR(GCONTXT* context);
 
@@ -61,6 +63,11 @@ void SPSRWriteByInstr(GCONTXT* context, u32int val, u8int bytemask);
 void UNPREDICTABLE(void);
 
 /************** inlines ******************************/
+__macro__ void ALUWritePC(GCONTXT* context, u32int address)
+{
+  BXWritePC(context, address);
+}
+
 __macro__ bool BadMode(CPSRmode mode)
 {
   switch (mode)

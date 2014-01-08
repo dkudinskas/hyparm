@@ -23,41 +23,11 @@
   printf("%s: %#.8x @ %#.8x" EOL, __func__, context->R15, instruction);
 
 
-#define ARM_EXTRACT_CONDITION_CODE(instructionWord)         (instructionWord >> 28)
 #define ARM_EXTRACT_REGISTER(instructionWord, position)     ((instructionWord >> position) & 0xF)
 #define ARM_SET_REGISTER(instructionWord, position, value)                                         \
   ((instructionWord & ~(0xF << position)) | (value << position))
 
 #define T16_EXTRACT_LOW_REGISTER(instructionWord, position) ((instructionWord >> position) & 0x7)
-
-
-typedef enum
-{
-  ADD,
-  ADC,
-  SUB,
-  SBC,
-  RSB,
-  RSC,
-  AND,
-  ORR,
-  EOR,
-  BIC,
-  MOV,
-  MVN,
-  CMP,
-  CMN,
-  TST,
-  TEQ,
-  LSL,
-  LSR,
-  ASR,
-  RRX,
-  ROR
-} OPTYPE;
-
-
-u32int arithLogicOp(GCONTXT *context, u32int instr, OPTYPE opType, const char *instrString);
 
 /* expand immediate12 field of instruction */
 u32int armExpandImm12(u32int imm12) __constant__; // STARFIX: this will get removed
@@ -98,7 +68,7 @@ void setGPRegister(GCONTXT *context, u32int destinationRegister, u32int value);
 
 
 // generic any type shift function
-u32int shiftVal(u32int imm32, u8int shiftType, u32int shamt, u8int carryFlag);
+u32int shiftVal(u32int imm32, u8int shiftType, u32int shamt);
 
 
 /********************** inlines ***********************************************/

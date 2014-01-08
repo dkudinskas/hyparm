@@ -9,7 +9,7 @@ u32int armExpandImm(u32int imm12, bool carryIn)
 }
 
 
-u32int_carry asrCarry(u32int value, u32int amount)
+u32int_c asrCarry(u32int value, u32int amount)
 {
   DIE_NOW(0, "asrCarry unimplemented");
 }
@@ -100,6 +100,10 @@ void CPSRWriteByInstr(GCONTXT* context, u32int val, u8int bytemask, bool is_exc_
       // Cannot move out of Hyp mode with this function except on an exception return
       // if CPSR.M == '11010' && value<4:0> != '11010' && !is_excpt_return then UNPREDICTABLE;
       cpsr |= newValue.value & 0x1f; // CPSR<4:0>, mode bits
+      if (newValue.bits.mode != context->CPSR.bits.mode)
+      {
+        guestChangeMode(context, newValue.bits.mode);
+      }
     }
   }
   
@@ -108,39 +112,39 @@ void CPSRWriteByInstr(GCONTXT* context, u32int val, u8int bytemask, bool is_exc_
 }
 
 
-u32int_carry lslCarry(u32int value, u32int amount)
+u32int_c lslCarry(u32int value, u32int amount)
 {
   DIE_NOW(0, "lslCarry unimplemented");
 }
 
 
-u32int_carry lsrCarry(u32int value, u32int amount)
+u32int_c lsrCarry(u32int value, u32int amount)
 {
   DIE_NOW(0, "lsrCarry unimplemented");
 }
 
 
-u32int_carry rorCarry(u32int value, u32int amount)
+u32int_c rorCarry(u32int value, u32int amount)
 {
-  u32int_carry result;
+  u32int_c result;
   result.val = (value >> amount) | (value << (32-amount));
   result.carry = ((result.val & 0x80000000) != 0);
   return result;
 }
 
 
-u32int_carry rrxCarry(u32int value, bool carryIn)
+u32int_c rrxCarry(u32int value, bool carryIn)
 {
   DIE_NOW(0, "rrxCarry unimplemented");
 }
 
 
-u32int_carry shiftCarry(u32int value, ShiftType type, u32int amount, bool carryIn)
+u32int_c shiftCarry(u32int value, ShiftType type, u32int amount, bool carryIn)
 {
   if ((type == SHIFT_TYPE_RRX) && (amount != 1))
     UNPREDICTABLE();
 
-  u32int_carry result;
+  u32int_c result;
   if (amount == 0)
   {
     result.val = value;

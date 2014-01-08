@@ -540,6 +540,10 @@ menuconfig DEBUG_INTERPRETER_ARM
   bool "Debug ARM interpreter"
   depends on DEBUG_INTERPRETER
 
+config DEBUG_INTERPRETER_ARM_ALU
+  bool "Debug ALU operations"
+  depends on DEBUG_INTERPRETER_ARM
+
 config DEBUG_INTERPRETER_ARM_BRANCH
   bool "Debug branch operations"
   depends on DEBUG_INTERPRETER_ARM

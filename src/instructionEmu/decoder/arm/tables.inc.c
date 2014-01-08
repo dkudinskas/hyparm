@@ -64,75 +64,16 @@ static struct decodingTableEntry armDataProcMiscInstructions_op0[] =
   // LDRH: imm/reg case Rn = PC case patch
   ENTRY(IRC_PATCH_PC,armLdrhImmInstruction,     armLdrdhPCInstruction,  0x005f00b0, 0x0e5f00f0, "LDRH Rt, [PC, #imm8]"),
   ENTRY(IRC_PATCH_PC,armLdrhRegInstruction,     armLdrdhPCInstruction,  0x001f00b0, 0x0e5f0ff0, "LDRH Rt, [Rn], Rm"),
-  // AND: reg case Rd = PC replace, Rn = PC patch
-  ENTRY(IRC_REPLACE, armAndInstruction,         NULL,                   0x0000f000, 0x0fe0f010, "AND PC, Rn, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armAndInstruction,         armALUImmRegRSR,        0x000f0000, 0x0fef0010, "AND Rd, Rn, Rm, #shamt"),
-  // EOR: reg case Rd = PC replace, Rn = PC patch
-  ENTRY(IRC_REPLACE, armEorInstruction,         NULL,                   0x0020f000, 0x0fe0f010, "EOR PC, Rn, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armEorInstruction,         armALUImmRegRSR,        0x002f0000, 0x0fef0010, "EOR Rd, Rn, Rm, #shamt"),
-  // SUB: reg case Rd = PC replace, Rn = PC patch
-  ENTRY(IRC_REPLACE, armSubInstruction,         NULL,                   0x0040f000, 0x0fe0f010, "SUB PC, Rn, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armSubInstruction,         armALUImmRegRSR,        0x004f0000, 0x0fef0010, "SUB Rd, Rn, Rm, #shamt"),
-  // RSB: reg case Rd = PC replace, Rn = PC patch
-  ENTRY(IRC_REPLACE, armRsbInstruction,         NULL,                   0x0060f000, 0x0fe0f010, "RSB PC, Rn, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armRsbInstruction,         armALUImmRegRSR,        0x006f0000, 0x0fef0010, "RSB Rd, Rn, Rm, #shamt"),
-  // ADD: reg case Rd = PC replace, Rn = PC patch
-  ENTRY(IRC_REPLACE, armAddInstruction,         NULL,                   0x0080f000, 0x0fe0f010, "ADD PC, Rn, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armAddInstruction,         armALUImmRegRSR,        0x008f0000, 0x0fef0010, "ADD Rd, Rn, Rm, #shamt"),
-  // ADC: reg case Rd = PC replace, Rn = PC patch
-  ENTRY(IRC_REPLACE, armAdcInstruction,         NULL,                   0x00a0f000, 0x0fe0f010, "ADC PC, Rn, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armAdcInstruction,         armALUImmRegRSR,        0x00af0000, 0x0fef0010, "ADC Rd, Rn, Rm, #shamt"),
-  // SBC: reg case Rd = PC replace, Rn = PC patch
-  ENTRY(IRC_REPLACE, armSbcInstruction,         NULL,                   0x00c0f000, 0x0fe0f010, "SBC Rd, Rn, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armSbcInstruction,         armALUImmRegRSR,        0x00cf0000, 0x0fef0010, "SBC Rd, Rn, Rm, #shamt"),
-  // RSC: reg case Rd = PC replace, Rn = PC patch
-  ENTRY(IRC_REPLACE, armRscInstruction,         NULL,                   0x00e0f000, 0x0fe0f010, "RSC PC, Rn, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armRscInstruction,         armALUImmRegRSR,        0x00ef0000, 0x0fef0010, "RSC Rd, Rn, Rm, #shamt"),
-  // MSR/MRS: always hypercall! we must hide the real state from guest.
+
+  // MSR/MRS: always hypercall! we must hide the real state from guest. must come before 'ALU' entries
   ENTRY(IRC_REPLACE, armMsrRegInstruction,      NULL,                   0x0120f000, 0x0fb0fff0, "MSR, s/cpsr, Rn"),
   ENTRY(IRC_REPLACE, armMrsInstruction,         NULL,                   0x010f0000, 0x0fbf0fff, "MRS, Rn, s/cpsr"),
-  // TST: Rn/Rm can be PC; patch
-  ENTRY(IRC_PATCH_PC,armTstInstruction,         armALUregNoDest,        0x011f0000, 0x0fff0010, "TST PC, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armTstInstruction,         armALUregNoDest,        0x0110000f, 0x0ff0001f, "TST Rn, PC, #shamt"),
-  // TEQ: Rn/Rm can be PC; patch
-  ENTRY(IRC_PATCH_PC,armTeqInstruction,         armALUregNoDest,        0x013f0000, 0x0fff0010, "TEQ PC, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armTeqInstruction,         armALUregNoDest,        0x0130000f, 0x0ff0001f, "TEQ Rn, PC, #shamt"),
-  // CMP: Rn/Rm can be PC; patch
-  ENTRY(IRC_PATCH_PC,armCmpInstruction,         armALUregNoDest,        0x015f0000, 0x0fff0010, "CMP PC, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armCmpInstruction,         armALUregNoDest,        0x0150000f, 0x0ff0001f, "CMP Rn, PC, #shamt"),
-  // CMN: Rn/Rm can be PC; patch
-  ENTRY(IRC_PATCH_PC,armCmnInstruction,         armALUregNoDest,        0x016f0000, 0x0fff0010, "CMN PC, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armCmnInstruction,         armALUregNoDest,        0x0160000f, 0x0ff0001f, "CMN Rn, PC, #shamt"),
-  // ORR: Rd = PC end block, Rn/Rm can be PC - patch
-  ENTRY(IRC_REPLACE, armOrrInstruction,         NULL,                   0x0180f000, 0x0fe0f010, "ORR PC, Rn, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armOrrInstruction,         armALUImmRegRSR,        0x018f0000, 0x0fef0010, "ORR Rd, PC, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armOrrInstruction,         armALUImmRegRSR,        0x0180000f, 0x0fe0001f, "ORR Rd, Rn, PC, #shamt"),
-  // MOV with Rd = PC replace; Rm = PC patch
-  ENTRY(IRC_REPLACE, armMovInstruction,         NULL,                   0x01a0f000, 0x0feffff0, "MOV PC, Rm"),
-  ENTRY(IRC_PATCH_PC,armMovInstruction,         armMovPCInstruction,    0x01a0000f, 0x0fef0fff, "MOV Rn, PC"),
-  // LSL: Rd = PC replace; Rm = PC patch
-  ENTRY(IRC_REPLACE, armLslInstruction,         NULL,                   0x01a0f000, 0x0feff070, "LSL PC, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armLslInstruction,         armShiftPCImm,          0x01a0000f, 0x0fef007f, "LSL Rd, PC, #shamt"),
-  // LSR: Rd = PC replace; Rm = PC patch
-  ENTRY(IRC_REPLACE, armLsrInstruction,         NULL,                   0x01a0f020, 0x0feff070, "LSR PC, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armLsrInstruction,         armShiftPCImm,          0x01a0002f, 0x0fef007f, "LSR Rd, PC, #shamt"),
-  // ASR: Rd = PC replace; Rm = PC patch
-  ENTRY(IRC_REPLACE, armAsrInstruction,         NULL,                   0x01a0f040, 0x0feff070, "ASR PC, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armAsrInstruction,         armShiftPCImm,          0x01a0004f, 0x0fef007f, "ASR Rd, PC, #shamt"),
-  // RRX: Rd = PC replace; Rm = PC patch
-  ENTRY(IRC_REPLACE, armRrxInstruction,         NULL,                   0x01a0f060, 0x0feffff0, "RRX PC, Rm"),
-  ENTRY(IRC_PATCH_PC,armRrxInstruction,         armShiftPCImm,          0x01a0006f, 0x0fef0fff, "RRX Rd, PC"),
-  // ROR: reg case destination unpredictable. imm case dest can be PC.
-  ENTRY(IRC_REPLACE, armRorInstruction,         NULL,                   0x01a0f060, 0x0feff070, "ROR PC, Rm, #imm"),
-  ENTRY(IRC_PATCH_PC,armRorInstruction,         armShiftPCImm,          0x01a0006f, 0x0fef007f, "ROR Rd, PC, #imm"),
-  // BIC with Rd = PC end block, other are fine.
-  ENTRY(IRC_REPLACE, armBicInstruction,         NULL,                   0x01c0f000, 0x0fe0f010, "BIC PC, Rn, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armBicInstruction,         armALUImmRegRSR,        0x01cf0000, 0x0fef0010, "BIC Rd, PC, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armBicInstruction,         armALUImmRegRSR,        0x01c0000f, 0x0fe0001f, "BIC Rd, Rn, PC, #shamt"),
-  // MVN with Rd = PC end block, other are fine.
-  ENTRY(IRC_REPLACE, armMvnInstruction,         NULL,                   0x01e0f000, 0x0fe0f010, "MVN PC, Rm, #shamt"),
-  ENTRY(IRC_PATCH_PC,armMvnInstruction,         armShiftPCImm,          0x01e0000f, 0x0fe0001f, "MVN Rd, PC, #shamt"),
-
+  // ALU computed jump (or exception return): translate
+  ENTRY(IRC_REPLACE, armAluRegInstruction,      NULL,                   0x0000f000, 0x0e00f010, "ALU PC, Rn, Rm, #shamt"),
+  // ALU uses PC as operand, patch
+  ENTRY(IRC_PATCH_PC,armAluRegInstruction,      armALUreg,              0x000f0000, 0x0e0f0010, "ALU Rd, PC, Rm, #shamt"),
+  ENTRY(IRC_PATCH_PC,armAluRegInstruction,      armALUreg,              0x0000000f, 0x0e00001f, "ALU Rd, Rn, PC, #shamt"),
+  // if not hit, safe
   ENTRY(IRC_SAFE,    undefinedInstruction,      NULL,                   0x00000000, 0x00000000, "dataProcMiscInstructions_op0")
 };
 
@@ -147,51 +88,14 @@ static struct decodingTableEntry armDataProcMiscInstructions_op1[] =
   ENTRY(IRC_REPLACE, armSevInstruction,         NULL,                   0x0320f004, 0x0fffffff, "sev%c"),
   // UNIMPLEMENTED: debug hint
   ENTRY(IRC_REPLACE, armDbgInstruction,         NULL,                   0x0320f0f0, 0x0ffffff0, "dbg%c\t#%0-3d"),
-  // AND: Rd = PC end block, others are fine
-  ENTRY(IRC_REPLACE, armAndInstruction,         NULL,                   0x0200f000, 0x0fe0f000, "AND PC, Rn, #imm"),
-  ENTRY(IRC_PATCH_PC,armAndInstruction,         armALUImmRegRSR,        0x020f0000, 0x0fef0000, "AND Rd, PC, #imm"),
-  // EOR: Rd = PC end block, others are fine
-  ENTRY(IRC_REPLACE, armEorInstruction,         NULL,                   0x0220f000, 0x0fe0f000, "EOR PC, Rn, Rm/#imm"),
-  ENTRY(IRC_PATCH_PC,armEorInstruction,         armALUImmRegRSR,        0x02200000, 0x0fe00000, "EOR Rd, PC, #imm"),
-  // SUB: Rd = PC end block, others are fine
-  ENTRY(IRC_REPLACE, armSubInstruction,         NULL,                   0x0240f000, 0x0fe0f000, "SUB PC, Rn, Rm/imm"),
-  ENTRY(IRC_PATCH_PC,armSubInstruction,         armALUImmRegRSR,        0x024f0000, 0x0fef0000, "SUB Rd, PC, #imm"),
-  // RSB: Rd = PC end block, others are fine
-  ENTRY(IRC_REPLACE, armRsbInstruction,         NULL,                   0x0260f000, 0x0fe0f000, "RSB PC, Rn, Rm/imm"),
-  ENTRY(IRC_PATCH_PC,armRsbInstruction,         armALUImmRegRSR,        0x026f0000, 0x0fef0000, "RSB Rd, PC, #imm"),
-  // ADD: Rd = PC end block, others are fine
-  ENTRY(IRC_REPLACE, armAddInstruction,         NULL,                   0x0280f000, 0x0fe0f000, "ADD PC, Rn, #imm"),
-  ENTRY(IRC_PATCH_PC,armAddInstruction,         armALUImmRegRSR,        0x028f0000, 0x0fef0000, "ADD Rd, PC, #imm"),
-  // ADC: Rd = PC end block, others are fine
-  ENTRY(IRC_REPLACE, armAdcInstruction,         NULL,                   0x02a0f000, 0x0fe0f000, "ADC PC, Rn/#imm"),
-  ENTRY(IRC_PATCH_PC,armAdcInstruction,         armALUImmRegRSR,        0x02af0000, 0x0fef0000, "ADC Rd, PC, #imm"),
-  // SBC: Rd = PC end block, others are fine
-  ENTRY(IRC_REPLACE, armSbcInstruction,         NULL,                   0x02c0f000, 0x0fe0f000, "SBC PC, Rn/#imm"),
-  ENTRY(IRC_PATCH_PC,armSbcInstruction,         armALUImmRegRSR,        0x02cf0000, 0x0fef0000, "SBC Rd, PC, #imm"),
-  // RSC: Rd = PC end block, others are fine
-  ENTRY(IRC_REPLACE, armRscInstruction,         NULL,                   0x02e0f000, 0x0fe0f000, "RSC PC, Rn/#imm"),
-  ENTRY(IRC_PATCH_PC,armRscInstruction,         armALUImmRegRSR,        0x02ef0000, 0x0fef0000, "RSC Rd, PC, #imm"),
-  // MSR: always hypercall! we must hide the real state from guest.
+  // MSR: always hypercall! we must hide the real state from guest. must come before 'ALU' entries
   ENTRY(IRC_REPLACE, armMsrImmInstruction,      NULL,                   0x0320f000, 0x0fb0f000, "MSR, s/cpsr, #imm"),
-  // TST Rn = PC patch
-  ENTRY(IRC_PATCH_PC,armTstInstruction,         armALUimmNoDest,        0x031f0000, 0x0fff0000, "TST PC, #imm"),
-  // TEQ Rn = PC patch
-  ENTRY(IRC_PATCH_PC,armTeqInstruction,         armALUimmNoDest,        0x033f0000, 0x0fff0000, "TEQ PC, #imm"),
-  // CMP Rn = PC patch
-  ENTRY(IRC_PATCH_PC,armCmpInstruction,         armALUimmNoDest,        0x035f0000, 0x0fff0000, "CMP PC, #imm"),
-  // CMN Rn = PC patch
-  ENTRY(IRC_PATCH_PC,armCmnInstruction,         armALUimmNoDest,        0x037f0000, 0x0fff0000, "CMN PC, #imm"),
-  // ORR: Rd = PC end block, Rn = PC patch
-  ENTRY(IRC_REPLACE, armOrrInstruction,         NULL,                   0x0380f000, 0x0fe0f000, "ORR PC, Rn, #imm"),
-  ENTRY(IRC_PATCH_PC,armOrrInstruction,         armALUImmRegRSR,        0x038f0000, 0x0fef0000, "ORR Rd, PC, #imm"),
-  // MOV with Rd = PC end block. MOV <shifted reg> is a pseudo instr..
-  ENTRY(IRC_REPLACE, armMovInstruction,         NULL,                   0x03a0f000, 0x0feff000, "MOV PC, #imm"),
-  // BIC with Rd = PC end block, other are fine.
-  ENTRY(IRC_REPLACE, armBicInstruction,         NULL,                   0x03c0f000, 0x0fe0f000, "BIC PC, Rn, #imm"),
-  ENTRY(IRC_PATCH_PC,armBicInstruction,         armALUImmRegRSR,        0x03cf0000, 0x0fef0000, "BIC Rd, PC, #imm"),
-  // MVN with Rd = PC end block, other are fine.
-  ENTRY(IRC_REPLACE, armMvnInstruction,         NULL,                   0x03e0f000, 0x0fe0f000, "MVN PC, #imm"),
-
+  // ALU computed jump (or exception return): translate
+  ENTRY(IRC_REPLACE, armAluImmInstruction,      NULL,                   0x0200f000, 0x0e00f000, "ALU PC, Rn, #imm"),
+  // ALU uses PC as operand, patch
+  ENTRY(IRC_PATCH_PC,armAluImmInstruction,      armALUimm,              0x020f0000, 0x0e0f0000, "ALU Rd, PC, #imm"),
+  ENTRY(IRC_PATCH_PC,armAluImmInstruction,      armALUimmNoDest,        0x031f0000, 0x0f9f0000, "ALU(nodest) PC, #imm"),
+  // others are safe
   ENTRY(IRC_SAFE,    undefinedInstruction,      NULL,                   0x00000000, 0x00000000, "armDataProcMiscInstructions_op1")
 };
 
@@ -253,10 +157,10 @@ static struct decodingTableEntry armSvcCoprocInstructions[] =
 static struct decodingTableEntry armUnconditionalInstructions[] =
 {
   // UNIMPLEMENTED: data memory barrier
-  ENTRY(IRC_REMOVE,  armDmbInstruction,          NULL,                  0xf57ff050, 0xfffffff0, "dmb\t%U"),
+  ENTRY(IRC_REMOVE,  NULL,                       NULL,                  0xf57ff050, 0xfffffff0, "dmb\t%U"),
   // sync barriers
-  ENTRY(IRC_REMOVE,  armDsbInstruction,          NULL,                  0xf57ff040, 0xfffffff0, "DSB"),
-  ENTRY(IRC_REMOVE,  armIsbInstruction,          NULL,                  0xf57ff060, 0xfffffff0, "ISB"),
+  ENTRY(IRC_REMOVE,  NULL,                       NULL,                  0xf57ff040, 0xfffffff0, "DSB"),
+  ENTRY(IRC_REMOVE,  NULL,                       NULL,                  0xf57ff060, 0xfffffff0, "ISB"),
   // CPS: change processor state
   ENTRY(IRC_REPLACE, armCpsInstruction,          NULL,                  0xf1000000, 0xfff1fe20, "CPS"),
   // UNIMPLEMENTED: RFE return from exception
@@ -268,9 +172,9 @@ static struct decodingTableEntry armUnconditionalInstructions[] =
   // BLX: branch and link to Thumb subroutine
   ENTRY(IRC_REPLACE, armBlxImmediateInstruction, NULL,                  0xfa000000, 0xfe000000, "BLX #imm24"),
   // PLD: preload data
-  ENTRY(IRC_REMOVE, armPldInstruction,           NULL,                  0xf450f000, 0xfc70f000, "PLD"),
+  ENTRY(IRC_REMOVE, NULL,                        NULL,                  0xf450f000, 0xfc70f000, "PLD"),
   // PLI: preload instruction
-  ENTRY(IRC_REMOVE, armPliInstruction,           NULL,                  0xf450f000, 0xfd70f000, "PLI"),
+  ENTRY(IRC_REMOVE, NULL,                        NULL,                  0xf450f000, 0xfd70f000, "PLI"),
   ENTRY(IRC_SAFE,   undefinedInstruction,        NULL,                  0x00000000, 0x00000000, "armUnconditionalInstructions")
 };
 

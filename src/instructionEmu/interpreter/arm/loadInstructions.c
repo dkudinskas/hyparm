@@ -8,13 +8,15 @@
 
 #include "memoryManager/memoryProtection.h"
 
+#include "perf/contextSwitchCounters.h"
+
 /************************************************************/
 /************************** BYTE loads***********************/
 u32int armLdrbImmInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrbImm(context);
   if (ConditionPassed(instr.ldStImm.cc))
   {
     u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
@@ -41,7 +43,7 @@ u32int armLdrbRegInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrbReg(context);
   if (ConditionPassed(instr.ldStReg.cc))
   {
     u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
@@ -57,8 +59,7 @@ u32int armLdrbRegInstruction(GCONTXT* context, u32int instruction)
       UNPREDICTABLE();
 
     u32int base = getGPRegister(context, Rn);
-    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount,
-                                                          context->CPSR.bits.C);
+    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount);
     u32int offsetAddr = add ? (base + offset) : (base - offset);
     u32int address = index ? offsetAddr : base;
 
@@ -76,7 +77,7 @@ u32int armLdrbtImmInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrbtImm(context);
   if (ConditionPassed(instr.ldStImm.cc))
   {
     u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
@@ -102,7 +103,7 @@ u32int armLdrbtRegInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrbtReg(context);
   if (ConditionPassed(instr.ldStReg.cc))
   {
     u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
@@ -119,8 +120,7 @@ u32int armLdrbtRegInstruction(GCONTXT* context, u32int instruction)
       return context->R15; // abort!
 
     u32int data = vmLoad(context, BYTE, address);
-    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount,
-                                                          context->CPSR.bits.C);
+    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount);
     // writeback address
     setGPRegister(context, Rn, add ? (address + offset) : (address - offset));
     // write data
@@ -136,7 +136,7 @@ u32int armLdrhImmInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrhImm(context);
   if (ConditionPassed(instr.ldStImm2.cc))
   {
     u8int Rt = instr.ldStImm2.Rt, Rn = instr.ldStImm2.Rn;
@@ -163,7 +163,7 @@ u32int armLdrhRegInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrhReg(context);
   if (ConditionPassed(instr.ldStReg2.cc))
   {
     u8int Rt = instr.ldStReg2.Rt, Rn = instr.ldStReg2.Rn, Rm = instr.ldStReg2.Rm;
@@ -178,8 +178,7 @@ u32int armLdrhRegInstruction(GCONTXT* context, u32int instruction)
       UNPREDICTABLE();
 
     u32int base = getGPRegister(context, Rn);
-    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount,
-                                                          context->CPSR.bits.C);
+    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount);
     u32int offsetAddr = add ? (base + offset) : (base - offset);
     u32int address = index ? offsetAddr : base;
 
@@ -197,7 +196,7 @@ u32int armLdrhtImmInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrhtImm(context);
   if (ConditionPassed(instr.ldStImm2.cc))
   {
     u8int Rt = instr.ldStImm2.Rt, Rn = instr.ldStImm2.Rn;
@@ -227,7 +226,7 @@ u32int armLdrhtRegInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrhtReg(context);
   if (ConditionPassed(instr.ldStReg2.cc))
   {
     u8int Rt = instr.ldStReg2.Rt, Rn = instr.ldStReg2.Rn, Rm = instr.ldStReg2.Rm;
@@ -258,7 +257,7 @@ u32int armLdrImmInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrImm(context);
   if (ConditionPassed(instr.ldStImm.cc))
   {
     u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
@@ -296,7 +295,7 @@ u32int armLdrRegInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrReg(context);
   if (ConditionPassed(instr.ldStReg.cc))
   {
     u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
@@ -313,8 +312,7 @@ u32int armLdrRegInstruction(GCONTXT* context, u32int instruction)
 
 
     u32int base = getGPRegister(context, Rn);
-    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount,
-                                                          context->CPSR.bits.C);
+    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount);
     u32int offsetAddr = add ? (base + offset) : (base - offset);
     u32int address = index ? offsetAddr : base;
     u32int data = vmLoad(context, WORD, address);
@@ -343,7 +341,7 @@ u32int armLdrtImmInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrtImm(context);
   if (ConditionPassed(instr.ldStImm.cc))
   {
     u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
@@ -370,7 +368,7 @@ u32int armLdrtRegInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrtReg(context);
   if (ConditionPassed(instr.ldStReg.cc))
   {
     u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
@@ -389,8 +387,7 @@ u32int armLdrtRegInstruction(GCONTXT* context, u32int instruction)
       return context->R15; // abort!
 
     u32int data = vmLoad(context, WORD, address);
-    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount,
-                                                          context->CPSR.bits.C);
+    u32int offset = shiftVal(getGPRegister(context, Rm), shiftType, shiftAmount);
     setGPRegister(context, Rn, add ? (address + offset) : (address - offset));
     setGPRegister(context, Rt, data);
   }
@@ -404,7 +401,7 @@ u32int armLdrdImmInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrdImm(context);
   if (ConditionPassed(instr.ldStImm2.cc))
   {
     u8int Rt = instr.ldStImm2.Rt, Rt2 = Rt + 1, Rn = instr.ldStImm2.Rn;
@@ -441,7 +438,7 @@ u32int armLdrdRegInstruction(GCONTXT* context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdrdReg(context);
   if (ConditionPassed(instr.ldStReg2.cc))
   {
     u8int Rt = instr.ldStReg2.Rt, Rt2 = Rt + 1;
@@ -481,7 +478,7 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdm(context);
   if (ConditionPassed(instr.ldStMulti.cc))
   {
     u8int Rn = instr.ldStMulti.Rn;
@@ -539,7 +536,7 @@ u32int armLdmUserInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdmUser(context);
   if (ConditionPassed(instr.ldStMulti.cc))
   {
     u8int Rn = instr.ldStMulti.Rn;
@@ -577,7 +574,7 @@ u32int armLdmExcRetInstruction(GCONTXT *context, u32int instruction)
 {
   Instruction instr = {.raw = instruction};
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
-
+  countLdmExceptionReturn(context);
   if (ConditionPassed(instr.ldStMulti.cc))
   {
     u8int Rn = instr.ldStMulti.Rn;

@@ -4,6 +4,11 @@
 
 #include "instructionEmu/interpreter/t16/miscInstructions.h"
 
+u32int nopInstruction(GCONTXT *context, u32int instruction)
+{
+  TRACE(context, instruction);
+  DIE_NOW(context, "nopInstruction: should not trap");
+}
 
 u32int t16BkptInstruction(GCONTXT *context, u32int instruction)
 {

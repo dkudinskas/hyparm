@@ -152,6 +152,33 @@ typedef union
 // instruction as a whole can be accesssed via 'raw' field
 typedef union ARMInstruction
 {
+  struct ALUimm
+  {
+    unsigned imm12: 12;
+    unsigned Rd : 4;
+    unsigned Rn : 4;
+    unsigned S : 1;
+    unsigned opc0 : 4;
+    unsigned I : 1;
+    unsigned opc1 : 2;
+    unsigned cc : 4;
+  } aluImm;
+
+  struct ALUreg
+  {
+    unsigned Rm : 4;
+    unsigned opc0 : 1;
+    unsigned type : 2;
+    unsigned imm5 : 5;
+    unsigned Rd : 4;
+    unsigned Rn : 4;
+    unsigned S : 1;
+    unsigned opc1 : 4;
+    unsigned I : 1;
+    unsigned opc2 : 2;
+    unsigned cc : 4;
+  } aluReg;
+
   struct Breakpoint
   {
     unsigned imm4:   4;
