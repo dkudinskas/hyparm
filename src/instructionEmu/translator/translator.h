@@ -6,8 +6,6 @@
 #include "guestManager/basicBlockStore.h"
 #include "guestManager/guestContext.h"
 
-void translate(GCONTXT* context, BasicBlock* block, instructionReplaceCode irc, u32int instruction);
-
 void putBranch(u32int branchLocation, u32int branchTarget, u32int condition);
 
 bool isBranch(u32int instruction);

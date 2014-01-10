@@ -27,7 +27,6 @@
 
 
 static BasicBlock* scanArmBlock(GCONTXT *context, u32int *guestStart, u32int blockStoreIndex, BasicBlock* basicBlock);
-static bool armIsPCInsensitiveInstruction(u32int instruction);
 
 #ifdef CONFIG_THUMB2
 static BasicBlock* scanThumbBlock(GCONTXT *context, u16int *start, u32int metaIndex);
@@ -252,38 +251,37 @@ BasicBlock* scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStore
   // translating instructions on the fly
   u32int* instructionPtr = guestStart;
 #ifdef CONFIG_DECODER_AUTO
-  instructionReplaceCode instructionCode;
-  AnyHandler instructionHandler;
-  while ((instructionCode = decodeArmInstruction(*instructionPtr, &instructionHandler)) != IRC_REPLACE)
+  TranslateCode code;
+  AnyHandler handler;
+  while ((code = decodeArmInstruction(*instructionPtr, &handler)) != IRC_REPLACE)
   {
-    if (instructionCode != IRC_PATCH_PC || armIsPCInsensitiveInstruction(*instructionPtr))
+    if (code == IRC_SAFE)
     {
-      translate(context, basicBlock, instructionCode, *instructionPtr);
+      addInstructionToBlock(context->translationStore, block, *instructionPtr);
     }
-    else
+    else if (code == IRC_PATCH_PC)
     {
-      DEBUG(SCANNER, "scanArmBlock: instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instructionPtr, instructionPtr);
-      instructionHandler.pcHandler(context->translationStore, basicBlock, (u32int)instructionPtr, *instructionPtr);
+      handler.pcHandler(context->translationStore, basicBlock, (u32int)instructionPtr, *instructionPtr);
+    }
 #else
   DecodedInstruction *decodedInstr;
   while((decodedInstr = decodeArmInstruction(*instructionPtr))->code != IRC_REPLACE)
   {
-    if (decodedInstr->code != IRC_PATCH_PC || armIsPCInsensitiveInstruction(*instructionPtr))
+    if (decodedInstr->code == IRC_SAFE)
     {
-      translate(context, basicBlock, decodedInstr->code, *instructionPtr);
+      addInstructionToBlock(context->translationStore, basicBlock, *instructionPtr);
     }
-    else
+    else if (decodedInstr->code == IRC_PATCH_PC)
     {
-      DEBUG(SCANNER, "scanArmBlock: instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instructionPtr, instructionPtr);
       decodedInstr->pcHandler(context->translationStore, basicBlock, (u32int)instructionPtr, *instructionPtr);
-#endif
     }
+#endif
     instructionPtr++;
   }
 
   // Next instruction must be translated into hypercall.
 #ifdef CONFIG_DECODER_AUTO
-  DEBUG(SCANNER, "scanArmBlock: instruction %#.8x must be translated; handler = %p" EOL, *instructionPtr, instructionHandler.barePtr);
+  DEBUG(SCANNER, "scanArmBlock: instruction %#.8x must be translated; handler = %p" EOL, *instructionPtr, handler.barePtr);
 #else
   DEBUG(SCANNER, "scanArmBlock: instruction %s must be translated; handler = %p" EOL, decodedInstr->instructionString, decodedInstr->handler);
 #endif
@@ -327,7 +325,7 @@ BasicBlock* scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStore
   // set guest end of block address
   basicBlock->guestEnd = instructionPtr;
 #ifdef CONFIG_DECODER_AUTO
-  basicBlock->handler = instructionHandler.handler;
+  basicBlock->handler = handler.handler;
 #else
   basicBlock->handler = decodedInstr->handler;
 #endif
@@ -347,39 +345,6 @@ BasicBlock* scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStore
 
   setExecBitmap(context, (u32int)basicBlock->guestStart, (u32int)basicBlock->guestEnd);
   return basicBlock;
-}
-
-
-/*
- * armIsPCInsensitiveInstruction returns TRUE if it is CERTAIN that an instruction
- * does not depend on the current PC value.
- */
-static bool armIsPCInsensitiveInstruction(u32int instruction)
-{
-  /* STMDB and PUSH may not write PC to mem :
-   * STM   1000|10?0
-   * STMDA 1000|00?0
-   * STMDB 1001|00?0
-   * STMIB 1001|10?0
-         * --------
-         * 100?|?0?0
-   * mask    E |  5
-   * value   8 |  0
-   */
-  if ((instruction & 0x0e500000) == 0x08000000)
-  {
-    // this is an STM instruction
-    return ((instruction & 0x0E508000) != 0x08008000);
-  }
-  else
-  {
-    // not a store multiple
-    u32int rd = ARM_EXTRACT_REGISTER(instruction, 16);
-    u32int rn = ARM_EXTRACT_REGISTER(instruction, 12);
-    u32int rm = ARM_EXTRACT_REGISTER(instruction, 0);
-
-    return !((rd == GPR_PC) || (rn == GPR_PC) || (rm == GPR_PC));
-  }
 }
 
 
@@ -408,36 +373,33 @@ u32int rescanBlock(GCONTXT *context, u32int blockStoreIndex, BasicBlock* block, 
   u32int* instructionPtr = block->guestStart;
 
 #ifdef CONFIG_DECODER_AUTO
-  instructionReplaceCode instructionCode;
-  AnyHandler instructionHandler;
-  while ((instructionCode = decodeArmInstruction(*instructionPtr, &instructionHandler)) != IRC_REPLACE)
+  TranslateCode code;
+  AnyHandler handler;
+  while ((code = decodeArmInstruction(*instructionPtr, &handler)) != IRC_REPLACE)
   {
     DEBUG(SCANNER, "rescanBlock: guest instr ptr %p host %p" EOL, instructionPtr, context->translationStore->codeStoreFreePtr);
-    if (instructionCode != IRC_PATCH_PC || armIsPCInsensitiveInstruction(*instructionPtr))
+    if (code == IRC_SAFE)
     {
-      DEBUG(SCANNER, "rescanBlock: pc insensitive. instruction %08x" EOL, *instructionPtr);
-      translate(context, block, instructionCode, *instructionPtr);
+      addInstructionToBlock(context->translationStore, block, *instructionPtr);
     }
-    else
+    else if (code == IRC_PATCH_PC)
     {
-      DEBUG(SCANNER, "rescanBlock: instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instructionPtr, instructionPtr);
-      instructionHandler.pcHandler(context->translationStore, block, (u32int)instructionPtr, *instructionPtr);
+      handler.pcHandler(context->translationStore, block, (u32int)instructionPtr, *instructionPtr);
+    }
 #else
   DecodedInstruction* decodedInstr;
   while((decodedInstr = decodeArmInstruction(*instructionPtr))->code != IRC_REPLACE)
   {
     DEBUG(SCANNER, "rescanBlock: guest instr ptr %p host %p" EOL, instructionPtr, context->translationStore->codeStoreFreePtr);
-    if (decodedInstr->code != IRC_PATCH_PC || armIsPCInsensitiveInstruction(*instructionPtr))
+    if (decodedInstr->code == IRC_SAFE)
     {
-      DEBUG(SCANNER, "rescanBlock: pc insensitive. instruction %08x" EOL, *instructionPtr);
-      translate(context, block, decodedInstr->code, *instructionPtr);
+      addInstructionToBlock(context->translationStore, block, *instructionPtr);
     }
-    else
+    else if (decodedInstr->code == IRC_PATCH_PC)
     {
-      DEBUG(SCANNER, "rescanBlock: instruction %#.8x @ %p possibly uses PC as source operand" EOL, *instructionPtr, instructionPtr);
       decodedInstr->pcHandler(context->translationStore, block, (u32int)instructionPtr, *instructionPtr);
-#endif
     }
+#endif
 
     // if we reached or 'gone past' the looked for address during the scanning
     // of the last guest instruction, we found the mapping.

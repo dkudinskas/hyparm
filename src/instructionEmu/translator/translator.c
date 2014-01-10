@@ -11,35 +11,6 @@
 #include "memoryManager/mmu.h"
 
 
-void translate(GCONTXT* context, BasicBlock* block, instructionReplaceCode irc, u32int instruction)
-{
-  switch (irc)
-  {
-    case IRC_SAFE:
-    case IRC_PATCH_PC:
-    {
-      // no translation required
-      addInstructionToBlock(context->translationStore, block, instruction);
-      break;
-    }
-    case IRC_REPLACE:
-    {
-      // should never get here.
-      DIE_NOW(context, "should never hit replace case.\n");
-    }
-    case IRC_REMOVE:
-    {
-      // remove instruction from stream.
-      return;
-    }
-    default:
-    {
-      DIE_NOW(context, "Unknown instruction decode code.\n");
-    }
-  }
-}
-
-
 void putBranch(u32int branchLocation, u32int branchTarget, u32int condition)
 {
   u32int offset = branchTarget - (branchLocation + ARM_INSTRUCTION_SIZE*2);

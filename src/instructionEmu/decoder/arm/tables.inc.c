@@ -17,7 +17,7 @@ static struct decodingTableEntry armBranchBlockTransferInstructions[] =
 {
   // STM traps if ^ postfix, otherwise pass through
   ENTRY(IRC_REPLACE, armStmUserInstruction,     NULL,                   0x08400000, 0x0e500000, "STM.. {regList}^"),
-  ENTRY(IRC_PATCH_PC,armStmInstruction,         armStmPC,               0x08000000, 0x0e500000, "STM.. {regList}"),
+  ENTRY(IRC_PATCH_PC,armStmInstruction,         armStmPC,               0x08008000, 0x0e508000, "STM.. {regList}"),
   // LDM exception return: trap
   ENTRY(IRC_REPLACE, armLdmExcRetInstruction,   NULL,                   0x08508000, 0x0e508000, "LDM Rn, {..., PC}^"),
   // LDM user mode: trap

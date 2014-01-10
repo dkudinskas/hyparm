@@ -9,7 +9,7 @@
 #include "instructionEmu/translator/arm/pcHandlers.h"
 
 
-instructionReplaceCode decodeArmInstruction(u32int instruction, AnyHandler *handler)
+TranslateCode decodeArmInstruction(u32int instruction, AnyHandler *handler)
 {
 #include "instructionEmu/decoder/arm/graph.inc.c"
 }
@@ -17,18 +17,18 @@ instructionReplaceCode decodeArmInstruction(u32int instruction, AnyHandler *hand
 #ifdef CONFIG_THUMB2
 
 static inline __attribute__((always_inline))
-  instructionReplaceCode decodeT16Instruction(u32int instruction, InstructionHandler *handler)
+TranslateCode decodeT16Instruction(u32int instruction, InstructionHandler *handler)
 {
 #include "instructionEmu/decoder/t16/graph.inc.c"
 }
 
 static inline __attribute__((always_inline))
-  instructionReplaceCode decodeT32Instruction(u32int instruction, InstructionHandler *handler)
+TranslateCode decodeT32Instruction(u32int instruction, InstructionHandler *handler)
 {
 #include "instructionEmu/decoder/t32/graph.inc.c"
 }
 
-instructionReplaceCode __attribute__((flatten)) decodeThumbInstruction(u32int instruction, InstructionHandler *handler)
+TranslateCode __attribute__((flatten)) decodeThumbInstruction(u32int instruction, InstructionHandler *handler)
 {
   /*
    * For Thumb, we still need to determine which table of top-level categories to use

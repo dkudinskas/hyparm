@@ -12,140 +12,6 @@
 #define MRC_BASE_VALUE              0x0e100010
 #define MCR_BASE_VALUE              0x0e000010
 
-typedef union
-{
-  struct armALUImmediateInstruction
-  {
-    u32int imm12 : 12;
-    u32int Rd : 4;
-    u32int Rn : 4;
-    u32int S : 1;
-    u32int opc0 : 4;
-    u32int I : 1;
-    u32int opc1 : 2;
-    u32int cond : 4;
-  } fields;
-  u32int value;
-} ARM_ALU_imm;
-
-
-typedef union
-{
-  struct armALURegisterInstruction
-  {
-    u32int Rm : 4;
-    u32int opc0 : 1;
-    u32int type : 2;
-    u32int imm5 : 5;
-    u32int Rd : 4;
-    u32int Rn : 4;
-    u32int S : 1;
-    u32int opc1 : 4;
-    u32int I : 1;
-    u32int opc2 : 2;
-    u32int cond : 4;
-  } fields;
-  u32int value;
-} ARM_ALU_reg;
-
-
-typedef union
-{
-  struct armLdmStmInstruction
-  {
-    u32int register_list : 16;
-    u32int Rn : 4;
-    u32int L : 1;
-    u32int W : 1;
-    u32int S : 1;
-    u32int U : 1;
-    u32int P : 1;
-    u32int opc : 3;
-    u32int cond : 4;
-  } fields;
-  u32int value;
-} ARM_ldm_stm;
-
-
-typedef union
-{
-  struct armLdrStrImmediateInstruction
-  {
-    u32int imm12 : 12;
-    u32int Rt : 4; // source
-    u32int Rn : 4; // base
-    u32int L : 1;
-    u32int W : 1;
-    u32int B : 1;
-    u32int U : 1;
-    u32int P : 1;
-    u32int I : 1;
-    u32int opc: 2;
-    u32int cond : 4;
-  } fields;
-  u32int value;
-} ARM_ldr_str_imm;
-
-
-typedef union
-{
-  struct armLdrStrRegister
-  {
-    u32int Rm : 4; // source
-    u32int opc0: 1;
-    u32int type: 2;
-    u32int imm5: 5;
-    u32int Rt : 4; // source
-    u32int Rn : 4; // base
-    u32int L : 1;
-    u32int W : 1;
-    u32int B : 1;
-    u32int U : 1;
-    u32int P : 1;
-    u32int I : 1;
-    u32int opc: 2;
-    u32int cond : 4;
-  } fields;
-  u32int value;
-} ARM_ldr_str_reg;
-
-
-typedef union
-{
-  struct armMrcInstruction
-  {
-    unsigned CRm:      4;
-    unsigned opcode0:  1;
-    unsigned opc2:     3;
-    unsigned coproc:   4;
-    unsigned Rt:       4;
-    unsigned CRn:      4;
-    unsigned opcode1:  1;
-    unsigned opc1:     3;
-    unsigned opcode2:  4;
-    unsigned cc:       4;
-  } fields;
-  u32int value;
-} ARMMrcInstruction;
-
-typedef union
-{
-  struct armMcrInstruction
-  {
-    unsigned CRm:      4;
-    unsigned opcode0:  1;
-    unsigned opc2:     3;
-    unsigned coproc:   4;
-    unsigned Rt:       4;
-    unsigned CRn:      4;
-    unsigned opcode1:  1;
-    unsigned opc1:     3;
-    unsigned opcode2:  4;
-    unsigned cc:       4;
-  } fields;
-  u32int value;
-} ARMMcrInstruction;
-
 
 // this union will hold possible encodings for instructions
 // each struct must be 32 bits exactly
@@ -228,7 +94,7 @@ typedef union ARMInstruction
   {
     unsigned regList:16;
     unsigned Rn:     4;
-    unsigned opc0:   1;
+    unsigned load:   1;
     unsigned W:      1;
     unsigned user:   1;
     unsigned U:      1;
@@ -242,12 +108,13 @@ typedef union ARMInstruction
     unsigned imm12: 12;
     unsigned Rt:     4;
     unsigned Rn:     4;
-    unsigned opc0:   1;
+    unsigned load:   1;
     unsigned W:      1;
-    unsigned opc1:   1;
+    unsigned byte:   1;
     unsigned U:      1;
     unsigned P:      1;
-    unsigned opc2:   3;
+    unsigned I:      1;
+    unsigned opc2:   2;
     unsigned cc:     4;
   } ldStImm;
 
@@ -275,12 +142,13 @@ typedef union ARMInstruction
     unsigned imm5:   5;
     unsigned Rt:     4;
     unsigned Rn:     4;
-    unsigned opc1:   1;
+    unsigned load:   1;
     unsigned W:      1;
-    unsigned opc2:   1;
+    unsigned byte:   1;
     unsigned U:      1;
     unsigned P:      1;
-    unsigned opc3:   3;
+    unsigned I:      1;
+    unsigned opc3:   2;
     unsigned cc:     4;
   } ldStReg;
 

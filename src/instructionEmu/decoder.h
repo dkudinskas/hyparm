@@ -18,7 +18,7 @@ typedef enum
   IRC_REPLACE = 1,
   IRC_REMOVE = 2,
   IRC_PATCH_PC = 4
-} instructionReplaceCode;
+} TranslateCode;
 
 #ifdef CONFIG_DECODER_AUTO
 
@@ -29,13 +29,13 @@ typedef union
   PCInstructionHandler pcHandler;
 } AnyHandler;
 
-instructionReplaceCode decodeArmInstruction(u32int instruction, AnyHandler *handler);
+TranslateCode decodeArmInstruction(u32int instruction, AnyHandler *handler);
 
 #else
 
 struct decodingTableEntry
 {
-  instructionReplaceCode code;
+  TranslateCode code;
   InstructionHandler handler;
   PCInstructionHandler pcHandler;
   u32int value;            /* If arch == 0 then value is a sentinel.  */

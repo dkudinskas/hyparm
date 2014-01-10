@@ -17,34 +17,33 @@ void armSpillRegister(TranslationStore* ts, BasicBlock* block, u32int cond, u32i
   if (getActiveGuestContext()->virtAddrEnabled)
   {
     // push scratch register to user stack
-    ARM_ldm_stm push = {.value = LDM_STM_BASE_VALUE};
-    push.fields.register_list = 1 << reg;
-    push.fields.Rn = 13;
-    push.fields.L  = 0;
-    push.fields.W  = 1;
-    push.fields.S  = 0;
-    push.fields.U  = 0;
-    push.fields.P  = 1;
-    push.fields.cond = cond;
-    addInstructionToBlock(ts, block, push.value);
+    Instruction push = {.raw = LDM_STM_BASE_VALUE};
+    push.ldStMulti.regList = 1 << reg;
+    push.ldStMulti.Rn = 13;
+    push.ldStMulti.load = 0;
+    push.ldStMulti.W = 1;
+    push.ldStMulti.user = 0;
+    push.ldStMulti.U = 0;
+    push.ldStMulti.P = 1;
+    push.ldStMulti.cc = cond;
+    addInstructionToBlock(ts, block, push.raw);
   }
   else
   {
     // spill value to a spare reg in CP15
-    ARMMcrInstruction mcr;
-    mcr.value = MCR_BASE_VALUE;
-    mcr.fields.CRm = 13;
-    mcr.fields.opc2 = 2;
-    mcr.fields.coproc = 15;
-    mcr.fields.Rt = reg;
-    mcr.fields.CRn = 9;
-    mcr.fields.opc1 = 0;
-    mcr.fields.CRn = 13;
-    mcr.fields.CRm = 0;
-    mcr.fields.opc2 = 2;
-    mcr.fields.Rt = reg;
-    mcr.fields.cc = cond;
-    addInstructionToBlock(ts, block, mcr.value);
+    Instruction instr = {.raw = MCR_BASE_VALUE};
+    instr.mcr.CRm = 13;
+    instr.mcr.opc2 = 2;
+    instr.mcr.coproc = 15;
+    instr.mcr.Rt = reg;
+    instr.mcr.CRn = 9;
+    instr.mcr.opc1 = 0;
+    instr.mcr.CRn = 13;
+    instr.mcr.CRm = 0;
+    instr.mcr.opc2 = 2;
+    instr.mcr.Rt = reg;
+    instr.mcr.cc = cond;
+    addInstructionToBlock(ts, block, instr.raw);
   }
 }
 
@@ -57,33 +56,32 @@ void armRestoreRegister(TranslationStore* ts, BasicBlock* block, u32int cond, u3
   if (getActiveGuestContext()->virtAddrEnabled)
   {
     // pop scratch register.
-    ARM_ldm_stm pop = {.value = LDM_STM_BASE_VALUE};
-    pop.fields.register_list = 1 << reg;
-    pop.fields.Rn = 13;
-    pop.fields.L  = 1;
-    pop.fields.W  = 1;
-    pop.fields.S  = 0;
-    pop.fields.U  = 1;
-    pop.fields.P  = 0;
-    pop.fields.cond = cond;
-    addInstructionToBlock(ts, block, pop.value);
+    Instruction pop = {.raw = LDM_STM_BASE_VALUE};
+    pop.ldStMulti.regList = 1 << reg;
+    pop.ldStMulti.Rn = 13;
+    pop.ldStMulti.load = 1;
+    pop.ldStMulti.W = 1;
+    pop.ldStMulti.user = 0;
+    pop.ldStMulti.U = 1;
+    pop.ldStMulti.P = 0;
+    pop.ldStMulti.cc = cond;
+    addInstructionToBlock(ts, block, pop.raw);
   }
   else
   {
-    ARMMrcInstruction mrc;
-    mrc.value = MRC_BASE_VALUE;
-    mrc.fields.CRm = 13;
-    mrc.fields.opc2 = 2;
-    mrc.fields.coproc = 15;
-    mrc.fields.Rt = reg;
-    mrc.fields.CRn = 9;
-    mrc.fields.opc1 = 0;
-    mrc.fields.CRn = 13;
-    mrc.fields.CRm = 0;
-    mrc.fields.opc2 = 2;
-    mrc.fields.Rt = reg;
-    mrc.fields.cc = cond;
-    addInstructionToBlock(ts, block, mrc.value);
+    Instruction instr = {.raw = MRC_BASE_VALUE};
+    instr.mcr.CRm = 13;
+    instr.mcr.opc2 = 2;
+    instr.mcr.coproc = 15;
+    instr.mcr.Rt = reg;
+    instr.mcr.CRn = 9;
+    instr.mcr.opc1 = 0;
+    instr.mcr.CRn = 13;
+    instr.mcr.CRm = 0;
+    instr.mcr.opc2 = 2;
+    instr.mcr.Rt = reg;
+    instr.mcr.cc = cond;
+    addInstructionToBlock(ts, block, instr.raw);
   }
 }
 
