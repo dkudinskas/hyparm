@@ -4,10 +4,9 @@
 
 #include "perf/contextSwitchCounters.h"
 
-u32int armAluImmInstruction(GCONTXT *context, u32int instruction)
+u32int armAluImmInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_ALU, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_ALU, context, instr.raw);
   countAluInstruction(context, instr);
 
   if (ConditionPassed(instr.aluImm.cc))
@@ -35,10 +34,9 @@ u32int armAluImmInstruction(GCONTXT *context, u32int instruction)
 }
 
 
-u32int armAluRegInstruction(GCONTXT *context, u32int instruction)
+u32int armAluRegInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_ALU, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_ALU, context, instr.raw);
   countAluInstruction(context, instr);
   if (ConditionPassed(instr.aluReg.cc))
   {

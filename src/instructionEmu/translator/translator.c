@@ -23,44 +23,27 @@ void putBranch(u32int branchLocation, u32int branchTarget, u32int condition)
 }
 
 
-bool isBranch(u32int instruction)
+bool isBranch(Instruction instr)
 {
-  if ((instruction & 0x0e000000) == 0x0a000000)
-  {
-    return TRUE;
-  }
-  return FALSE;
+  return ((instr.branch.opc0) == 0x5) ? TRUE : FALSE;
 }
 
 
-bool branchLinks(u32int instruction)
+bool branchLinks(Instruction instr)
 {
-  if ((instruction & 0x01000000) == 0x01000000)
-  {
-    return TRUE;
-  }
-  return FALSE;
+  return instr.branch.link;
 }
 
-bool isServiceCall(u32int instruction)
+bool isServiceCall(Instruction instr)
 {
-  // opcode must be F, condition code must not be F.
-  if (((instruction & 0x0f000000) == 0x0f000000)
-   && ((instruction & 0xf0000000) != 0xf0000000))
-  {
-    return TRUE;
-  }
-  return FALSE;
+  return ((instr.svc.opc0 == 0xf) && (instr.svc.cc != NV));
 }
 
 
-bool isConditional(u32int instruction)
+bool isConditional(Instruction instr)
 {
-  if ((instruction & 0xF0000000) != 0xE0000000)
-  {
-    return TRUE;
-  }
-  return FALSE;
+  // can use any encoding
+  return (instr.branch.cc != AL);
 }
 
 
@@ -70,38 +53,39 @@ u32int findBlockIndexNumber(GCONTXT *context, u32int hostPC)
   bool found = FALSE;
   u32int* pc = (u32int*)hostPC;
   u32int index = 0;
+  Instruction instr;
   while (!found)
   {
-    u32int instruction = *pc;
-    if (isServiceCall(instruction))
+    instr.raw = *pc;
+    if (isServiceCall(instr))
     {
       // lets get the code from the service call.
-      index = (instruction & 0x00ffffff) - 0x100;
+      index = instr.svc.imm24 - 0x100;
       found = TRUE;
     }
-    else if (isBranch(instruction))
+    else if (isBranch(instr))
     {
       // found our first branch. skip it.
       pc++;
-      instruction = *pc;
+      instr.raw = *pc;
 
       // one branch down. lets see next one. MUST be branch, svc or the index
-      if (isBranch(instruction))
+      if (isBranch(instr))
       {
         // second branch! next word is the index 4 sure
         pc++;
         index = *pc;
       }
-      else if (isServiceCall(instruction))
+      else if (isServiceCall(instr))
       {
         // ok, branch followed by hypecall. get the code from it THIS TIME
-        index = (instruction & 0x00ffffff) - 0x100;
+        index = instr.svc.imm24 - 0x100;
       }
       else
       {
         // since we had one branch, and the next instruction is not a branch or hypercall
         // by the power of deduction and logical reasoning, we found the code.
-        index = instruction;
+        index = instr.raw;
       }
       // now we really found it.
       found = TRUE;

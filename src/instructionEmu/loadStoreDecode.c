@@ -11,9 +11,8 @@
  * access to a protected area - must emulate */
 void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
 {
-  u32int instr;
-
 #ifdef CONFIG_THUMB2
+  u32int instr;
   if (context->CPSR.bits.T)
   {
     /*
@@ -165,136 +164,135 @@ void emulateLoadStoreGeneric(GCONTXT *context, u32int address)
   }
   else
 #endif
+  Instruction instr = {.raw = *(volatile u32int *)(context->R15)};
   {
     /*
      * The guest was executing in ARM mode
      */
-    // get the store instruction
-    instr = *(volatile u32int *)(context->R15);
     // emulate methods will take instr from context, put it there
-    if ((instr & STR_IMM_MASK) == STR_IMM_MASKED)
+    if ((instr.raw & STR_IMM_MASK) == STR_IMM_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STR Rd, [Rn, Rm/#imm12]
       armStrImmInstruction(context, instr);
     }
-    else if ((instr & STR_REG_MASK) == STR_REG_MASKED)
+    else if ((instr.raw & STR_REG_MASK) == STR_REG_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STR Rd, [Rn, Rm/#imm12]
       armStrRegInstruction(context, instr);
     }
-    else if ((instr & STRB_IMM_MASK) == STRB_IMM_MASKED)
+    else if ((instr.raw & STRB_IMM_MASK) == STRB_IMM_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STRB Rd, [Rn, Rm/#imm12]
       armStrbImmInstruction(context, instr);
     }
-    else if ((instr & STRB_REG_MASK) == STRB_REG_MASKED)
+    else if ((instr.raw & STRB_REG_MASK) == STRB_REG_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STRB Rd, [Rn, Rm/#imm12]
       armStrbRegInstruction(context, instr);
     }
-    else if ((instr & STRH_IMM_MASK) == STRH_IMM_MASKED)
+    else if ((instr.raw & STRH_IMM_MASK) == STRH_IMM_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STRH Rd, [Rn, Rm/#imm12]
       armStrhImmInstruction(context, instr);
     }
-    else if ((instr & STRH_REG_MASK) == STRH_REG_MASKED)
+    else if ((instr.raw & STRH_REG_MASK) == STRH_REG_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STRH Rd, [Rn, Rm/#imm12]
       armStrhRegInstruction(context, instr);
     }
-    else if ((instr & STRD_IMM_MASK) == STRD_IMM_MASKED)
+    else if ((instr.raw & STRD_IMM_MASK) == STRD_IMM_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STRD Rd, [Rn, Rm/#imm12]
       armStrdImmInstruction(context, instr);
     }
-    else if ((instr & STRD_REG_MASK) == STRD_REG_MASKED)
+    else if ((instr.raw & STRD_REG_MASK) == STRD_REG_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STRD Rd, [Rn, Rm/#imm12]
       armStrdRegInstruction(context, instr);
     }
-    else if ((instr & STREX_MASK) == STREX_MASKED)
+    else if ((instr.raw & STREX_MASK) == STREX_MASKED)
     {
       // storing to a protected area.. adjust block cache if needed
       clearTranslationsByAddress(context->translationStore, address);
       // STREX Rd, [Rn, Rm]
       armStrexInstruction(context, instr);
     }
-    else if ((instr & STM_MASK) == STM_MASKED)
+    else if ((instr.raw & STM_MASK) == STM_MASKED)
     {
       // more tricky with cache validation! since we do this in the stmInstruction
       // per address (word in memory) depending on the length of {reg list}
       // STM Rn, {reg list}
       armStmInstruction(context, instr);
     }
-    else if ((instr & LDR_REG_MASK) == LDR_REG_MASKED)
+    else if ((instr.raw & LDR_REG_MASK) == LDR_REG_MASKED)
     {
       // LDR Rd, Rn, Rm
       armLdrRegInstruction(context, instr);
     }
-    else if ((instr & LDR_IMM_MASK) == LDR_IMM_MASKED)
+    else if ((instr.raw & LDR_IMM_MASK) == LDR_IMM_MASKED)
     {
       // LDR Rd, Rn, imm12
       armLdrImmInstruction(context, instr);
     }
-    else if ((instr & LDRB_IMM_MASK) == LDRB_IMM_MASKED)
+    else if ((instr.raw & LDRB_IMM_MASK) == LDRB_IMM_MASKED)
     {
       // LDRB Rd, [Rn, Rm/#imm12]
       armLdrbImmInstruction(context, instr);
     }
-    else if ((instr & LDRB_REG_MASK) == LDRB_REG_MASKED)
+    else if ((instr.raw & LDRB_REG_MASK) == LDRB_REG_MASKED)
     {
       // LDRB Rd, [Rn, Rm/#imm12]
       armLdrbRegInstruction(context, instr);
     }
-    else if ((instr & LDRH_IMM_MASK) == LDRH_IMM_MASKED)
+    else if ((instr.raw & LDRH_IMM_MASK) == LDRH_IMM_MASKED)
     {
       // LDRH Rd, [Rn, #imm12]
       armLdrhImmInstruction(context, instr);
     }
-    else if ((instr & LDRH_REG_MASK) == LDRH_REG_MASKED)
+    else if ((instr.raw & LDRH_REG_MASK) == LDRH_REG_MASKED)
     {
       // LDRH Rd, [Rn, Rm]
       armLdrhRegInstruction(context, instr);
     }
-    else if ((instr & LDRD_IMM_MASK) == LDRD_IMM_MASKED)
+    else if ((instr.raw & LDRD_IMM_MASK) == LDRD_IMM_MASKED)
     {
       // LDRD Rd, [Rn, #imm12]
       armLdrdImmInstruction(context, instr);
     }
-    else if ((instr & LDRD_REG_MASK) == LDRD_REG_MASKED)
+    else if ((instr.raw & LDRD_REG_MASK) == LDRD_REG_MASKED)
     {
       // LDRD Rd, [Rn, Rm]
       armLdrdRegInstruction(context, instr);
     }
-    else if ((instr & LDM_MASK) == LDM_MASKED)
+    else if ((instr.raw & LDM_MASK) == LDM_MASKED)
     {
       // LDM, Rn, {reg list}
       armLdmInstruction(context, instr);
     }
-    else if ((instr & LDREX_MASK) == LDREX_MASKED)
+    else if ((instr.raw & LDREX_MASK) == LDREX_MASKED)
     {
       // LDREX Rd, [Rn]
       armLdrexInstruction(context, instr);
     }
     else
     {
-      printf("LoadStore @ %08x instruction %08x" EOL, context->R15, instr);
+      printf("LoadStore @ %08x instruction %08x" EOL, context->R15, instr.raw);
       DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
     }
   }

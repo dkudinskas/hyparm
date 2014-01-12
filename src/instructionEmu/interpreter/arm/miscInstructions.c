@@ -1,6 +1,5 @@
 #include "guestManager/scheduler.h"
 
-#include "instructionEmu/decoder/arm/structs.h"
 #include "instructionEmu/interpreter/common.h"
 #include "instructionEmu/interpreter/internals.h"
 #include "instructionEmu/interpreter/arm/miscInstructions.h"
@@ -9,29 +8,24 @@
 
 #include "vm/omap35xx/intc.h"
 
-u32int armBkptInstruction(GCONTXT *context, u32int instruction)
+u32int armBkptInstruction(GCONTXT *context, Instruction instr)
 {
   if (unlikely(context->os == GUEST_OS_TEST))
   {
-    u32int imm4 = instruction & 0x0000000F;
-    u32int imm12 = (instruction & 0x000FFF00) >> 4;
-    u32int val = imm12 | imm4;
-
-    evaluateBreakpointValue(context, val);
+    evaluateBreakpointValue(context, instr.bkpt.imm12 << 4 | instr.bkpt.imm4);
     return context->R15 + ARM_INSTRUCTION_SIZE;
   }
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armClzInstruction(GCONTXT *context, u32int instruction)
+u32int armClzInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armCpsInstruction(GCONTXT *context, u32int instruction)
+u32int armCpsInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instr.raw);
   countCps(context, instr);
   if ((instr.cps.mode != 0) && (instr.cps.M == 0))
     UNPREDICTABLE();
@@ -77,16 +71,15 @@ u32int armCpsInstruction(GCONTXT *context, u32int instruction)
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
-u32int armDbgInstruction(GCONTXT *context, u32int instruction)
+u32int armDbgInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
 
-u32int armMrsInstruction(GCONTXT *context, u32int instruction)
+u32int armMrsInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instr.raw);
   countMrs(context);
   if (ConditionPassed(instr.mrs.cc))
   {
@@ -117,10 +110,9 @@ u32int armMrsInstruction(GCONTXT *context, u32int instruction)
 }
 
 
-u32int armMsrRegInstruction(GCONTXT *context, u32int instruction)
+u32int armMsrRegInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instr.raw);
   countMsrReg(context);
   if (ConditionPassed(instr.msrReg.cc))
   {
@@ -149,10 +141,9 @@ u32int armMsrRegInstruction(GCONTXT *context, u32int instruction)
 }
 
 
-u32int armMsrImmInstruction(GCONTXT *context, u32int instruction)
+u32int armMsrImmInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instr.raw);
   countMsrImm(context);
   if (ConditionPassed(instr.msrReg.cc))
   {
@@ -182,37 +173,37 @@ u32int armMsrImmInstruction(GCONTXT *context, u32int instruction)
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
-u32int armRfeInstruction(GCONTXT *context, u32int instruction)
+u32int armRfeInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armSetendInstruction(GCONTXT *context, u32int instruction)
+u32int armSetendInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armSevInstruction(GCONTXT *context, u32int instruction)
+u32int armSevInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armSmcInstruction(GCONTXT *context, u32int instruction)
+u32int armSmcInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armSrsInstruction(GCONTXT *context, u32int instruction)
+u32int armSrsInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armWfeInstruction(GCONTXT *context, u32int instruction)
+u32int armWfeInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armWfiInstruction(GCONTXT *context, u32int instruction)
+u32int armWfiInstruction(GCONTXT *context, Instruction instr)
 {
   // stop guest execution...
   countWfi(context);
@@ -220,19 +211,19 @@ u32int armWfiInstruction(GCONTXT *context, u32int instruction)
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
-u32int armYieldInstruction(GCONTXT *context, u32int instruction)
+u32int armYieldInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int svcInstruction(GCONTXT *context, u32int instruction)
+u32int svcInstruction(GCONTXT *context, Instruction instr)
 {
-  TRACE(context, instruction);
+  TRACE(context, instr.raw);
   DIE_NOW(context, "svcInstruction: should not invoke interpreter");
 }
 
-u32int undefinedInstruction(GCONTXT *context, u32int instruction)
+u32int undefinedInstruction(GCONTXT *context, Instruction instr)
 {
-  TRACE(context, instruction);
+  TRACE(context, instr.raw);
   DIE_NOW(context, "undefined instruction");
 }

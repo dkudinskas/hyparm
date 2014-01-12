@@ -1,4 +1,3 @@
-#include "instructionEmu/decoder/arm/structs.h"
 #include "instructionEmu/interpreter/common.h"
 #include "instructionEmu/interpreter/internals.h"
 #include "instructionEmu/interpreter/arm/coprocInstructions.h"
@@ -8,30 +7,29 @@
 #include "vm/omap35xx/cp15coproc.h"
 
 
-u32int armCdpInstruction(GCONTXT *context, u32int instruction)
+u32int armCdpInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armCdp2Instruction(GCONTXT *context, u32int instruction)
+u32int armCdp2Instruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armLdcInstruction(GCONTXT *context, u32int instruction)
+u32int armLdcInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armLdc2Instruction(GCONTXT *context, u32int instruction)
+u32int armLdc2Instruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armMcrInstruction(GCONTXT *context, u32int instruction)
+u32int armMcrInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG(INTERPRETER_ARM_COPROC, "armMcrInstruction: %#.8x @ %#.8x\n", instruction, context->R15);
+  DEBUG(INTERPRETER_ARM_COPROC, "armMcrInstruction: %#.8x @ %#.8x\n", instr.raw, context->R15);
   countMcr(context);
   if (ConditionPassed(instr.mcr.cc))
   {
@@ -47,25 +45,24 @@ u32int armMcrInstruction(GCONTXT *context, u32int instruction)
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
-u32int armMcr2Instruction(GCONTXT *context, u32int instruction)
+u32int armMcr2Instruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armMcrrInstruction(GCONTXT *context, u32int instruction)
+u32int armMcrrInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armMcrr2Instruction(GCONTXT *context, u32int instruction)
+u32int armMcrr2Instruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armMrcInstruction(GCONTXT *context, u32int instruction)
+u32int armMrcInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG(INTERPRETER_ARM_COPROC, "armMcrInstruction: %#.8x @ %#.8x\n", instruction, context->R15);
+  DEBUG(INTERPRETER_ARM_COPROC, "armMcrInstruction: %#.8x @ %#.8x\n", instr.raw, context->R15);
   countMrc(context);
   // can reuse mcr encoding
   if (ConditionPassed(instr.mcr.cc))
@@ -87,27 +84,27 @@ u32int armMrcInstruction(GCONTXT *context, u32int instruction)
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
-u32int armMrc2Instruction(GCONTXT *context, u32int instruction)
+u32int armMrc2Instruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armMrrcInstruction(GCONTXT *context, u32int instruction)
+u32int armMrrcInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armMrrc2Instruction(GCONTXT *context, u32int instruction)
+u32int armMrrc2Instruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armStcInstruction(GCONTXT *context, u32int instruction)
+u32int armStcInstruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }
 
-u32int armStc2Instruction(GCONTXT *context, u32int instruction)
+u32int armStc2Instruction(GCONTXT *context, Instruction instr)
 {
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }

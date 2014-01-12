@@ -285,8 +285,8 @@ BasicBlock* scanArmBlock(GCONTXT* context, u32int* guestStart, u32int blockStore
 #else
   DEBUG(SCANNER, "scanArmBlock: instruction %s must be translated; handler = %p" EOL, decodedInstr->instructionString, decodedInstr->handler);
 #endif
-  u32int instruction = *instructionPtr;
-  u32int cc = instruction & 0xF0000000;
+  Instruction instruction = {.raw = *instructionPtr};
+  u32int cc = instruction.raw & 0xF0000000;
 
   if (isBranch(instruction))
   {

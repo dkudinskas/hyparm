@@ -117,6 +117,8 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   }
 #endif
 
+  Instruction endInstr;
+
   // Do we need to forward it to the guest?
   if (gSVC)
   {
@@ -124,6 +126,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     deliverServiceCall(context);
     nextPC = context->R15;
     link = FALSE;
+    endInstr.raw = 0;
   }
   else
   {
@@ -131,8 +134,9 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
     block = getBasicBlockStoreEntry(context->translationStore, blockStoreIndex);
     context->R15 = (u32int)(block->guestEnd);
 
+    endInstr.raw = *block->guestEnd;
     // interpret the instruction to find the start address of next block
-    nextPC = block->handler(context, *block->guestEnd);
+    nextPC = block->handler(context, endInstr);
   }
 
   traceBlock(context, nextPC);
@@ -171,7 +175,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
       setScanBlockCallSource(SCANNER_CALL_SOURCE_SVC);
     }
 
-    if (link && isBranch(*block->guestEnd))
+    if (link && isBranch(endInstr))
     {
       linkBlock(context, context->R15, lastTranslatedPC, block);
     }

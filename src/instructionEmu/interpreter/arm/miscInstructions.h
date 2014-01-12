@@ -5,29 +5,27 @@
 
 #include "guestManager/guestContext.h"
 
-
-// uncomment me for ARM instruction trace: #define ARM_INSTR_TRACE
-
+#include "instructionEmu/decoder/arm/structs.h"
 
 /*
  * Control instructions
  */
 
-u32int armBkptInstruction(GCONTXT *context, u32int instruction);
+u32int armBkptInstruction(GCONTXT *context, Instruction instr);
 
-u32int armCpsInstruction(GCONTXT *context, u32int instruction);
+u32int armCpsInstruction(GCONTXT *context, Instruction instr);
 
-u32int armMrsInstruction(GCONTXT *context, u32int instruction);
-u32int armMsrImmInstruction(GCONTXT *context, u32int instruction);
-u32int armMsrRegInstruction(GCONTXT *context, u32int instruction);
+u32int armMrsInstruction(GCONTXT *context, Instruction instr);
+u32int armMsrImmInstruction(GCONTXT *context, Instruction instr);
+u32int armMsrRegInstruction(GCONTXT *context, Instruction instr);
 
-u32int armRfeInstruction(GCONTXT *context, u32int instruction);
+u32int armRfeInstruction(GCONTXT *context, Instruction instr);
 
-u32int armSetendInstruction(GCONTXT *context, u32int instruction);
+u32int armSetendInstruction(GCONTXT *context, Instruction instr);
 
-u32int armSmcInstruction(GCONTXT *context, u32int instruction);
+u32int armSmcInstruction(GCONTXT *context, Instruction instr);
 
-u32int armSrsInstruction(GCONTXT *context, u32int instruction);
+u32int armSrsInstruction(GCONTXT *context, Instruction instr);
 
 
 
@@ -35,25 +33,25 @@ u32int armSrsInstruction(GCONTXT *context, u32int instruction);
  * NOP hints
  */
 
-u32int armDbgInstruction(GCONTXT *context, u32int instruction);
+u32int armDbgInstruction(GCONTXT *context, Instruction instr);
 
-u32int armSevInstruction(GCONTXT *context, u32int instruction);
+u32int armSevInstruction(GCONTXT *context, Instruction instr);
 
-u32int armWfeInstruction(GCONTXT *context, u32int instruction);
-u32int armWfiInstruction(GCONTXT *context, u32int instruction);
+u32int armWfeInstruction(GCONTXT *context, Instruction instr);
+u32int armWfiInstruction(GCONTXT *context, Instruction instr);
 
-u32int armYieldInstruction(GCONTXT *context, u32int instruction);
+u32int armYieldInstruction(GCONTXT *context, Instruction instr);
 
 
 /*
  * Others
  */
 
-u32int armClzInstruction(GCONTXT *context, u32int instruction);
+u32int armClzInstruction(GCONTXT *context, Instruction instr);
 
-u32int svcInstruction(GCONTXT *context, u32int instruction);
+u32int svcInstruction(GCONTXT *context, Instruction instr);
 
-u32int undefinedInstruction(GCONTXT *context, u32int instruction);
+u32int undefinedInstruction(GCONTXT *context, Instruction instr);
 
 
 #endif /* __INSTRUCTION_EMU__INTERPRETER__ARM__MISC_INSTRUCTIONS_H__ */

@@ -3,11 +3,13 @@
 
 #include "common/types.h"
 
+#include "instructionEmu/decoder/arm/structs.h"
+
 struct guestContext;
 struct TranslationStore;
 struct BasicBlockEntry;
 
-typedef u32int (*InstructionHandler)(struct guestContext *context, u32int instruction);
+typedef u32int (*InstructionHandler)(struct guestContext *context, Instruction instr);
 
 typedef void (*PCInstructionHandler)(struct TranslationStore *ts, struct BasicBlockEntry *block,
                                      u32int pc, u32int instruction);

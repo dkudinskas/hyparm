@@ -57,7 +57,8 @@ typedef union ARMInstruction
   struct Branch
   {
     unsigned imm24: 24;
-    unsigned opc0:   4;
+    unsigned link:   1;
+    unsigned opc0:   3;
     unsigned cc:     4;
   } branch;
 
@@ -222,6 +223,13 @@ typedef union ARMInstruction
     unsigned opc1:   8;
     unsigned cc:     4;
   } strex;
+
+  struct Svc
+  {
+    unsigned imm24: 24;
+    unsigned opc0:   4;
+    unsigned cc:     4;
+  } svc;
 
   u32int raw;
 } Instruction;

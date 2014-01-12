@@ -5,24 +5,25 @@
 
 #include "guestManager/guestContext.h"
 
+#include "instructionEmu/decoder/arm/structs.h"
 
-u32int armCdpInstruction(GCONTXT *context, u32int instruction);
-u32int armCdp2Instruction(GCONTXT *context, u32int instruction);
+u32int armCdpInstruction(GCONTXT *context, Instruction instr);
+u32int armCdp2Instruction(GCONTXT *context, Instruction instr);
 
-u32int armLdcInstruction(GCONTXT *context, u32int instruction);
-u32int armLdc2Instruction(GCONTXT *context, u32int instruction);
+u32int armLdcInstruction(GCONTXT *context, Instruction instr);
+u32int armLdc2Instruction(GCONTXT *context, Instruction instr);
 
-u32int armMcrInstruction(GCONTXT *context, u32int instruction);
-u32int armMcr2Instruction(GCONTXT *context, u32int instruction);
-u32int armMcrrInstruction(GCONTXT *context, u32int instruction);
-u32int armMcrr2Instruction(GCONTXT *context, u32int instruction);
+u32int armMcrInstruction(GCONTXT *context, Instruction instr);
+u32int armMcr2Instruction(GCONTXT *context, Instruction instr);
+u32int armMcrrInstruction(GCONTXT *context, Instruction instr);
+u32int armMcrr2Instruction(GCONTXT *context, Instruction instr);
 
-u32int armMrcInstruction(GCONTXT *context, u32int instruction);
-u32int armMrc2Instruction(GCONTXT *context, u32int instruction);
-u32int armMrrcInstruction(GCONTXT *context, u32int instruction);
-u32int armMrrc2Instruction(GCONTXT *context, u32int instruction);
+u32int armMrcInstruction(GCONTXT *context, Instruction instr);
+u32int armMrc2Instruction(GCONTXT *context, Instruction instr);
+u32int armMrrcInstruction(GCONTXT *context, Instruction instr);
+u32int armMrrc2Instruction(GCONTXT *context, Instruction instr);
 
-u32int armStcInstruction(GCONTXT *context, u32int instruction);
-u32int armStc2Instruction(GCONTXT *context, u32int instruction);
+u32int armStcInstruction(GCONTXT *context, Instruction instr);
+u32int armStc2Instruction(GCONTXT *context, Instruction instr);
 
 #endif

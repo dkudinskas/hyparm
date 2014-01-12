@@ -1,6 +1,5 @@
 #include "common/bit.h"
 
-#include "instructionEmu/decoder/arm/structs.h"
 #include "instructionEmu/interpreter/common.h"
 #include "instructionEmu/interpreter/internals.h"
 #include "instructionEmu/interpreter/arm/branchInstructions.h"
@@ -8,9 +7,8 @@
 #include "perf/contextSwitchCounters.h"
 
 
-u32int armBInstruction(GCONTXT *context, u32int instruction)
+u32int armBInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
   countBranch(context, instr);
   DEBUG(INTERPRETER_ARM_BRANCH, "armBInstruction: %08x @ %08x\n", instr.raw, context->R15);
 
@@ -24,9 +22,8 @@ u32int armBInstruction(GCONTXT *context, u32int instruction)
 }
 
 
-u32int armBlInstruction(GCONTXT *context, u32int instruction)
+u32int armBlInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
   countBL(context, instr);
   DEBUG(INTERPRETER_ARM_BRANCH, "armBLInstruction: %08x @ %08x\n",
                                          instr.raw, context->R15);
@@ -47,12 +44,12 @@ u32int armBlInstruction(GCONTXT *context, u32int instruction)
 /*
  * NOTE: this instruction is unconditional and always switches to Thumb mode.
  */
-u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
+u32int armBlxImmediateInstruction(GCONTXT *context, Instruction instr)
 {
 #ifdef CONFIG_THUMB2
 
-  DEBUG(INTERPRETER_ARM_BRANCH, "armBlxImmediateInstruction: %#.8x @ %#.8x" EOL, instruction,
-      context->R15);
+  DEBUG(INTERPRETER_ARM_BRANCH, "armBlxImmediateInstruction: %08x @ %#08x\n",
+                                instr.raw, context->R15);
 
   u32int currPC = context->R15 + ARM_INSTRUCTION_SIZE;
   u32int offset = signExtend(((instruction & 0x00FFFFFF) << 2) | (instruction & 0x01000000) >> 23, 26);
@@ -67,12 +64,11 @@ u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction)
 }
 
 
-u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
+u32int armBlxRegisterInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
   countBLXreg(context, instr);
   DEBUG(INTERPRETER_ARM_BRANCH, "armBlxRegisterInstruction: %08x @ %08x\n",
-                                                  instr.raw, context->R15);
+                                 instr.raw, context->R15);
   if (ConditionPassed(instr.BxReg.cc))
   {
     if (instr.BxReg.Rm == GPR_PC)
@@ -91,9 +87,8 @@ u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction)
 }
 
 
-u32int armBxInstruction(GCONTXT *context, u32int instruction)
+u32int armBxInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
   countBX(context, instr);
   DEBUG(INTERPRETER_ARM_BRANCH, "armBxInstruction: %08x @ %08x\n",
                                          instr.raw, context->R15);
@@ -107,10 +102,10 @@ u32int armBxInstruction(GCONTXT *context, u32int instruction)
 }
 
 
-u32int armBxjInstruction(GCONTXT *context, u32int instruction)
+u32int armBxjInstruction(GCONTXT *context, Instruction instr)
 {
-  DEBUG(INTERPRETER_ARM_BRANCH, "armBxjInstruction: %#.8x @ %#.8x" EOL,
-                                            instruction, context->R15);
+  DEBUG(INTERPRETER_ARM_BRANCH, "armBxjInstruction: %08x @ %08x\n",
+                                instr.raw, context->R15);
 
   DIE_NOW(context, ERROR_NOT_IMPLEMENTED);
 }

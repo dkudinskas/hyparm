@@ -8,27 +8,27 @@
 #include "instructionEmu/decoder/arm/structs.h"
 
 // byte loads
-u32int armLdrbImmInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrbRegInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrbtImmInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrbtRegInstruction(GCONTXT *context, u32int instruction);
+u32int armLdrbImmInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrbRegInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrbtImmInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrbtRegInstruction(GCONTXT *context, Instruction instr);
 // halfword loads
-u32int armLdrhImmInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrhRegInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrhtImmInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrhtRegInstruction(GCONTXT *context, u32int instruction);
+u32int armLdrhImmInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrhRegInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrhtImmInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrhtRegInstruction(GCONTXT *context, Instruction instr);
 // word loads
-u32int armLdrImmInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrRegInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrtImmInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrtRegInstruction(GCONTXT *context, u32int instruction);
+u32int armLdrImmInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrRegInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrtImmInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrtRegInstruction(GCONTXT *context, Instruction instr);
 // dual loads
-u32int armLdrdImmInstruction(GCONTXT* context, u32int instruction);
-u32int armLdrdRegInstruction(GCONTXT* context, u32int instruction);
+u32int armLdrdImmInstruction(GCONTXT* context, Instruction instr);
+u32int armLdrdRegInstruction(GCONTXT* context, Instruction instr);
 // multiple loads
-u32int armLdmInstruction(GCONTXT *context, u32int instruction);
-u32int armLdmUserInstruction(GCONTXT *context, u32int instruction);
-u32int armLdmExcRetInstruction(GCONTXT *context, u32int instruction);
+u32int armLdmInstruction(GCONTXT *context, Instruction instr);
+u32int armLdmUserInstruction(GCONTXT *context, Instruction instr);
+u32int armLdmExcRetInstruction(GCONTXT *context, Instruction instr);
 
 
 #endif

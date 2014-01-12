@@ -12,10 +12,9 @@
 
 /************************************************************/
 /************************** BYTE loads***********************/
-u32int armLdrbImmInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrbImmInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrbImm(context);
   if (ConditionPassed(instr.ldStImm.cc))
   {
@@ -39,10 +38,9 @@ u32int armLdrbImmInstruction(GCONTXT* context, u32int instruction)
 }
 
 
-u32int armLdrbRegInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrbRegInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrbReg(context);
   if (ConditionPassed(instr.ldStReg.cc))
   {
@@ -73,10 +71,9 @@ u32int armLdrbRegInstruction(GCONTXT* context, u32int instruction)
 }
 
 
-u32int armLdrbtImmInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrbtImmInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrbtImm(context);
   if (ConditionPassed(instr.ldStImm.cc))
   {
@@ -99,10 +96,9 @@ u32int armLdrbtImmInstruction(GCONTXT* context, u32int instruction)
 }
 
 
-u32int armLdrbtRegInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrbtRegInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrbtReg(context);
   if (ConditionPassed(instr.ldStReg.cc))
   {
@@ -132,10 +128,9 @@ u32int armLdrbtRegInstruction(GCONTXT* context, u32int instruction)
 
 /****************************************************************/
 /************************** HALFWORD loads***********************/
-u32int armLdrhImmInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrhImmInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrhImm(context);
   if (ConditionPassed(instr.ldStImm2.cc))
   {
@@ -159,10 +154,9 @@ u32int armLdrhImmInstruction(GCONTXT* context, u32int instruction)
 }
 
 
-u32int armLdrhRegInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrhRegInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrhReg(context);
   if (ConditionPassed(instr.ldStReg2.cc))
   {
@@ -192,10 +186,9 @@ u32int armLdrhRegInstruction(GCONTXT* context, u32int instruction)
 }
 
 
-u32int armLdrhtImmInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrhtImmInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrhtImm(context);
   if (ConditionPassed(instr.ldStImm2.cc))
   {
@@ -222,10 +215,9 @@ u32int armLdrhtImmInstruction(GCONTXT* context, u32int instruction)
 }
 
 
-u32int armLdrhtRegInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrhtRegInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrhtReg(context);
   if (ConditionPassed(instr.ldStReg2.cc))
   {
@@ -253,10 +245,9 @@ u32int armLdrhtRegInstruction(GCONTXT* context, u32int instruction)
 
 /****************************************************************/
 /************************** WORD loads *************************/
-u32int armLdrImmInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrImmInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrImm(context);
   if (ConditionPassed(instr.ldStImm.cc))
   {
@@ -291,10 +282,9 @@ u32int armLdrImmInstruction(GCONTXT* context, u32int instruction)
 }
 
 
-u32int armLdrRegInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrRegInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrReg(context);
   if (ConditionPassed(instr.ldStReg.cc))
   {
@@ -337,10 +327,9 @@ u32int armLdrRegInstruction(GCONTXT* context, u32int instruction)
 }
 
 
-u32int armLdrtImmInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrtImmInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrtImm(context);
   if (ConditionPassed(instr.ldStImm.cc))
   {
@@ -364,10 +353,9 @@ u32int armLdrtImmInstruction(GCONTXT* context, u32int instruction)
 }
 
 
-u32int armLdrtRegInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrtRegInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrtReg(context);
   if (ConditionPassed(instr.ldStReg.cc))
   {
@@ -397,10 +385,9 @@ u32int armLdrtRegInstruction(GCONTXT* context, u32int instruction)
 
 /**************************************************************/
 /************************** DUAL WORD loads********************/
-u32int armLdrdImmInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrdImmInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrdImm(context);
   if (ConditionPassed(instr.ldStImm2.cc))
   {
@@ -434,10 +421,9 @@ u32int armLdrdImmInstruction(GCONTXT* context, u32int instruction)
 }
 
 
-u32int armLdrdRegInstruction(GCONTXT* context, u32int instruction)
+u32int armLdrdRegInstruction(GCONTXT* context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdrdReg(context);
   if (ConditionPassed(instr.ldStReg2.cc))
   {
@@ -474,10 +460,9 @@ u32int armLdrdRegInstruction(GCONTXT* context, u32int instruction)
 
 /**************************************************************/
 /************************** multiword load ********************/
-u32int armLdmInstruction(GCONTXT *context, u32int instruction)
+u32int armLdmInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdm(context);
   if (ConditionPassed(instr.ldStMulti.cc))
   {
@@ -532,10 +517,9 @@ u32int armLdmInstruction(GCONTXT *context, u32int instruction)
 }
 
 
-u32int armLdmUserInstruction(GCONTXT *context, u32int instruction)
+u32int armLdmUserInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdmUser(context);
   if (ConditionPassed(instr.ldStMulti.cc))
   {
@@ -570,10 +554,9 @@ u32int armLdmUserInstruction(GCONTXT *context, u32int instruction)
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
 
-u32int armLdmExcRetInstruction(GCONTXT *context, u32int instruction)
+u32int armLdmExcRetInstruction(GCONTXT *context, Instruction instr)
 {
-  Instruction instr = {.raw = instruction};
-  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instruction);
+  DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
   countLdmExceptionReturn(context);
   if (ConditionPassed(instr.ldStMulti.cc))
   {

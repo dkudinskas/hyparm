@@ -5,15 +5,16 @@
 
 #include "guestManager/guestContext.h"
 
+#include "instructionEmu/decoder/arm/structs.h"
 
-u32int armBInstruction(GCONTXT *context, u32int instruction);
-u32int armBlInstruction(GCONTXT *context, u32int instruction);
+u32int armBInstruction(GCONTXT *context, Instruction instr);
+u32int armBlInstruction(GCONTXT *context, Instruction instr);
 
-u32int armBlxImmediateInstruction(GCONTXT *context, u32int instruction);
-u32int armBlxRegisterInstruction(GCONTXT *context, u32int instruction);
+u32int armBlxImmediateInstruction(GCONTXT *context, Instruction instr);
+u32int armBlxRegisterInstruction(GCONTXT *context, Instruction instr);
 
-u32int armBxInstruction(GCONTXT *context, u32int instruction);
+u32int armBxInstruction(GCONTXT *context, Instruction instr);
 
-u32int armBxjInstruction(GCONTXT *context, u32int instruction);
+u32int armBxjInstruction(GCONTXT *context, Instruction instr);
 
 #endif

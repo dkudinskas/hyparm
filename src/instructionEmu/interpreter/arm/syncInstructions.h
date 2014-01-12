@@ -5,20 +5,22 @@
 
 #include "guestManager/guestContext.h"
 
+#include "instructionEmu/decoder/arm/structs.h"
 
-u32int armClrexInstruction(GCONTXT *context, u32int instruction);
 
-u32int armLdrexInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrexbInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrexhInstruction(GCONTXT *context, u32int instruction);
-u32int armLdrexdInstruction(GCONTXT *context, u32int instruction);
+u32int armClrexInstruction(GCONTXT *context, Instruction instr);
 
-u32int armStrexInstruction(GCONTXT *context, u32int instruction);
-u32int armStrexbInstruction(GCONTXT *context, u32int instruction);
-u32int armStrexhInstruction(GCONTXT *context, u32int instruction);
-u32int armStrexdInstruction(GCONTXT *context, u32int instruction);
+u32int armLdrexInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrexbInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrexhInstruction(GCONTXT *context, Instruction instr);
+u32int armLdrexdInstruction(GCONTXT *context, Instruction instr);
 
-u32int armSwpInstruction(GCONTXT *context, u32int instruction);
+u32int armStrexInstruction(GCONTXT *context, Instruction instr);
+u32int armStrexbInstruction(GCONTXT *context, Instruction instr);
+u32int armStrexhInstruction(GCONTXT *context, Instruction instr);
+u32int armStrexdInstruction(GCONTXT *context, Instruction instr);
+
+u32int armSwpInstruction(GCONTXT *context, Instruction instr);
 
 #endif
 
