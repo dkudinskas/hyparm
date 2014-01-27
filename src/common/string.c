@@ -81,7 +81,7 @@ void *memset(void *destination, s32int value, u32int count)
   /* memset should treat value as unsigned char */
   const uchar fill = (uchar)value;
   /* Test whether destination is word aligned & whether count is a multiple of 4 */
-  if (((u32int)destination & 0x3F) && ((count & 0x3) == count))
+  if (((u32int)destination & 0x3)==0 && ((count & 0xC) == count))
   {
     /* Optimize: store words instead of bytes */
     u32int *dst = (u32int *)destination;

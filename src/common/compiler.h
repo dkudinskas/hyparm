@@ -75,6 +75,9 @@
  */
 #define __malloc__    __attribute__((malloc))
 
+// Do not pattern match memset loops etc.; must be used for memset
+#define __fundamental__ __attribute__((optimize("-fno-tree-loop-distribution"),optimize("-fno-tree-loop-distribute-patterns")))
+
 #define likely(x)     __builtin_expect(!!(x), 1)
 #define unlikely(x)   __builtin_expect(!!(x), 0)
 
