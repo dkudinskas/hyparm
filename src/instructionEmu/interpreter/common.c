@@ -68,12 +68,6 @@ void CPSRWriteByInstr(GCONTXT* context, u32int val, u8int bytemask, bool is_exc_
     if (((getCregVal(context, CP15_SCTRL) & SYS_CTRL_NON_MASK_FIQ) == 0) || (newValue.bits.F == 0))
     {
       cpsr |= newValue.value & 0x00000040; // F interrupt mask
-#ifndef CONFIG_HW_PASSTHROUGH
-      if ((newValue.bits.F == 0) && (context->CPSR.bits.F == 1)) // enabling fiq's
-      {
-        DIE_NOW(context, "guest enabling fast interrupts\n");
-      }
-#endif
     }
     if (is_exc_ret)
     {

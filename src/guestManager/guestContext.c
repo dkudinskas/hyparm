@@ -13,7 +13,6 @@
 
 #include "vm/omap35xx/sdram.h"
 
-
 #ifdef CONFIG_STATS
 extern u32int timerTotalSvc;
 extern u32int timerNumberSvc;

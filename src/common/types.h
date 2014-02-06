@@ -26,6 +26,22 @@ typedef unsigned short      u16int;
 typedef unsigned int        u32int;
 typedef unsigned long long  u64int;
 
+// Signed type of difference of two pointers
+typedef __PTRDIFF_TYPE__  ptrdiff_t;
+
+// Unsigned type of `sizeof' something.
+typedef __SIZE_TYPE__     size_t;
+
+// Null pointer constant (C only) and type (C++11 only)
+#ifndef __cplusplus
+#define NULL              ((void *)0)
+#else
+typedef decltype(nullptr) nullptr_t;
+#endif
+
+// Macro to get member offset
+#define offsetof(type, member)  __builtin_offsetof(type, member)
+
 
 typedef struct
 {

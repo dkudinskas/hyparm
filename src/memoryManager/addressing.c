@@ -327,6 +327,8 @@ void initialiseShadowPageTables(GCONTXT *gc)
 
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: invalidatePageTableInfo() done." EOL);
 
+  simpleEntry* oldPriv = gc->pageTables->shadowPriv;
+  simpleEntry* oldUser = gc->pageTables->shadowUser;
   // allocate two shadow page tables and prepare the minimum for operation
   gc->pageTables->shadowPriv = (simpleEntry *)newLevelOnePageTable();
   gc->pageTables->shadowUser = (simpleEntry *)newLevelOnePageTable();
@@ -356,6 +358,10 @@ void initialiseShadowPageTables(GCONTXT *gc)
 
   //just to make sure
   mmuInstructionSync();
+
+  // free previous set of page tables
+  free((void*)oldPriv);
+  free((void*)oldUser);
 }
 
 /**

@@ -18,6 +18,8 @@
 
 #define llabs(n)  __builtin_llabs(n)
 
+#define ffs(n)    __builtin_ffs(n)
+
 #endif /* TEST */
 
 

@@ -85,6 +85,16 @@ static void banner(const char *msg)
   printf(EOL EOL "%s[%s]%s%s" EOL EOL, padding, msg, ((msgLength & 1) ? "" : "="), padding);
 }
 
+
+void abort()
+{
+  while (TRUE)
+  {
+    // do nothing
+  }
+}
+
+
 int dieFromSignal(int signal, void *origin)
 {
   dieNowF("<libgcc>", 0, "<unknown>", "caught signal %i @ %p", signal, origin);

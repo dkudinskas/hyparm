@@ -52,6 +52,8 @@ extern const char *const ERROR_NOT_IMPLEMENTED;
 extern const char *const ERROR_UNPREDICTABLE_INSTRUCTION;
 
 
+void abort(void);
+
 void dieNow(const char *file, u32int line, const char *caller, const char *message)
             __attribute__((noreturn));
 
