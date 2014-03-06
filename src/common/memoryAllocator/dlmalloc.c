@@ -79,8 +79,6 @@ void initialiseAllocator(u32int startAddress, u32int bytes)
 //void initialiseAllocator(void *start, size_t bytes)
 {
   staticPool = create_mspace_with_base((void*)startAddress, bytes, 0);
-  freeCounter = 0;
-  allocCounter = 0;
 }
 
 void free(void *ptr)
