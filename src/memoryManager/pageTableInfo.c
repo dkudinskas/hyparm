@@ -11,7 +11,7 @@ void addPageTableInfo(GCONTXT *context, pageTableEntry* entry, u32int virtual, u
   DEBUG(MM_PAGE_TABLES, "addPageTableInfo: entry %#.8x @ %p, PA %#.8x VA %#.8x, mapped %#.8x host %x" EOL,
         *(u32int *)entry, entry, physical, virtual, mapped, host);
 
-  ptInfo *newEntry = (ptInfo *)malloc(sizeof(ptInfo));
+  ptInfo *newEntry = (ptInfo *)calloc(1, sizeof(ptInfo));
   DEBUG(MM_PAGE_TABLES, "addPageTableInfo: new entry @ %p" EOL, newEntry);
   newEntry->firstLevelEntry = entry;
   newEntry->physAddr = physical;
@@ -20,25 +20,27 @@ void addPageTableInfo(GCONTXT *context, pageTableEntry* entry, u32int virtual, u
   newEntry->mappedMegabyte = mapped;
   newEntry->nextEntry = 0;
 
-  ptInfo *head = (host) ? context->pageTables->sptInfo : context->pageTables->gptInfo;
-  if (head == NULL)
+
+  ptInfo** headPtr;
+  if (!context->virtAddrEnabled)
   {
-    // first entry
-    if (host)
-    {
-      DEBUG(MM_PAGE_TABLES, "addPageTableInfo: first entry, sptInfo now %p" EOL, newEntry);
-      context->pageTables->sptInfo = newEntry;
-    }
-    else
-    {
-      DEBUG(MM_PAGE_TABLES, "addPageTableInfo: first entry, gptInfo now %p" EOL, newEntry);
-      context->pageTables->gptInfo = newEntry;
-    }
+    // virtual addressing is not enabled yet. this metadata has a special place
+    headPtr = &context->pageTables->hptInfo;
+  }
+  else
+  {
+    headPtr = (host) ? &context->pageTables->sptInfo : &context->pageTables->gptInfo;
+  }
+
+  if (*headPtr == NULL)
+  {
+    // first entry. just set head to newEntry;
+    *headPtr = newEntry;
   }
   else
   {
     // loop to the end of the list
-    DEBUG(MM_PAGE_TABLES, "addPageTableInfo: not the first entry. head %p" EOL, head);
+    ptInfo* head = *headPtr;
     while (head->nextEntry != NULL)
     {
       head = head->nextEntry;
@@ -55,8 +57,21 @@ ptInfo *getPageTableInfo(GCONTXT *context, pageTableEntry *firstLevelEntry)
   DEBUG(MM_PAGE_TABLES, "getPageTableInfo: first level entry ptr %p = %#.8x" EOL, firstLevelEntry,
         *(u32int *)firstLevelEntry);
 
+  // hpt first
+  ptInfo *head = context->pageTables->hptInfo;
+  while (head != NULL)
+  {
+    if (head->firstLevelEntry == firstLevelEntry)
+    {
+      DEBUG(MM_PAGE_TABLES, "getPageTableInfo: found spt; entry %p = %#.8x" EOL,
+            head->firstLevelEntry, *(u32int *)head->firstLevelEntry);
+      return head;
+    }
+    head = head->nextEntry;
+  }
+
   // spt first
-  ptInfo *head = context->pageTables->sptInfo;
+  head = context->pageTables->sptInfo;
   while (head != NULL)
   {
     if (head->firstLevelEntry == firstLevelEntry)

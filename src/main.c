@@ -107,6 +107,7 @@ void main(s32int argc, char *argv[])
   /* save power: cut the clocks to the display subsystem */
   cmDisableDssClocks();
 
+  memset((void*)RAM_XN_POOL_BEGIN, 0, RAM_XN_POOL_END-RAM_XN_POOL_BEGIN-1);
   initialiseAllocator(RAM_XN_POOL_BEGIN, RAM_XN_POOL_END - RAM_XN_POOL_BEGIN);
 
 #ifndef CONFIG_HW_PASSTHROUGH

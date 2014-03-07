@@ -44,6 +44,7 @@ struct VirtualMachinePageTables
   u32int contextID;
   ptInfo* sptInfo;
   ptInfo* gptInfo;
+  ptInfo* hptInfo;
 };
 
 

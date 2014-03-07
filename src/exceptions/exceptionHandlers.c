@@ -282,7 +282,7 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
     {
       printf("dataAbortPrivileged pc %08x addr %08x" EOL, pc, dfar);
       printDataAbort();
-      DIE_NOW(NULL, ERROR_NOT_IMPLEMENTED);
+      DIE_NOW(NULL, "dataAbortPrivileged: umimplemented");
       break;
     }
   }

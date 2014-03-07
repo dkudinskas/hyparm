@@ -177,7 +177,7 @@ void guestEnableMMU(GCONTXT *context)
   {
     DIE_NOW(context, "guestEnableMMU: guest virtual addressing is already enabled, mustn't happen!" EOL);
   }
-  
+
   // initialise double-shadow page tables now
   initialiseShadowPageTables(context);
   // if initializing vmem, really must clean and invalidate the TLB!

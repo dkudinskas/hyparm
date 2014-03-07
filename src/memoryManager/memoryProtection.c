@@ -40,7 +40,7 @@ void guestWriteProtect(GCONTXT *gc, u32int startAddress, u32int endAddress)
 void writeProtectRange(GCONTXT *gc, simpleEntry* pageTable, u32int start, u32int end)
 {
 #ifdef MEM_PROT_DBG
-  printf("writeProtectRange: PT %x, start %x; end %x\n", pageTable, start, end);
+  printf("writeProtectRange: PT %p, start %x; end %x\n", pageTable, start, end);
 #endif
   u32int pageStartAddress = start;
   u32int pageEndAddress;
