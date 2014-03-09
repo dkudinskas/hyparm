@@ -100,6 +100,9 @@ GCONTXT *createGuestContext(void)
   timerTotalDabt = 0;
   timerNumberDabt = 0;
 #endif
+
+  initCounters(&(context->counters));
+
   return context;
 }
 
@@ -244,7 +247,7 @@ void dumpGuestContext(const GCONTXT *context)
   dumpSdramStats(context->vm.sdram);
 
   /* context switch counters */
-  dumpCounters(context);
+  dumpCounters(&(context->counters));
 
 #ifdef CONFIG_STATS
   printf("timerTotalSvc:     %08x\n", timerTotalSvc);
@@ -314,31 +317,4 @@ void guestChangeMode(GCONTXT *context, u32int newMode)
     privToUserAddressing(context);
   }
 }
-
-
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-void resetExceptionCounters(GCONTXT *context)
-{
-  context->svcCount = 0;
-
-  context->branchLink = 0;
-  context->branchNonlink = 0;
-  context->branchConditional = 0;
-  context->branchNonconditional = 0;
-  context->branchImmediate = 0;
-  context->branchRegister = 0;
-
-  context->svc = 0;
-
-  context->dabtCount = 0;
-  context->dabtPriv = 0;
-  context->dabtUser = 0;
-  context->pabtCount = 0;
-  context->pabtPriv = 0;
-  context->pabtUser = 0;
-  context->irqCount = 0;
-  context->irqPriv = 0;
-  context->irqUser = 0;
-}
-#endif
 

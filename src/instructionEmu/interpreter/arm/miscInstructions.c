@@ -26,7 +26,7 @@ u32int armClzInstruction(GCONTXT *context, Instruction instr)
 u32int armCpsInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instr.raw);
-  countCps(context, instr);
+  countCps(&(context->counters), instr);
   if ((instr.cps.mode != 0) && (instr.cps.M == 0))
     UNPREDICTABLE();
   if (((instr.cps.imod & 2) == 2) && (instr.cps.A == 0) && 
@@ -80,7 +80,7 @@ u32int armDbgInstruction(GCONTXT *context, Instruction instr)
 u32int armMrsInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instr.raw);
-  countMrs(context);
+  countMrs(&(context->counters));
   if (ConditionPassed(instr.mrs.cc))
   {
     u8int Rd = instr.mrs.Rd;
@@ -113,7 +113,7 @@ u32int armMrsInstruction(GCONTXT *context, Instruction instr)
 u32int armMsrRegInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instr.raw);
-  countMsrReg(context);
+  countMsrReg(&(context->counters));
   if (ConditionPassed(instr.msrReg.cc))
   {
     u8int Rn = instr.msrReg.Rn;
@@ -144,7 +144,7 @@ u32int armMsrRegInstruction(GCONTXT *context, Instruction instr)
 u32int armMsrImmInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_SYSTEM, context, instr.raw);
-  countMsrImm(context);
+  countMsrImm(&(context->counters));
   if (ConditionPassed(instr.msrReg.cc))
   {
     if ((instr.msrImm.mask == 0) && (instr.msrImm.R == 0))
@@ -206,7 +206,7 @@ u32int armWfeInstruction(GCONTXT *context, Instruction instr)
 u32int armWfiInstruction(GCONTXT *context, Instruction instr)
 {
   // stop guest execution...
-  countWfi(context);
+  countWfi(&(context->counters));
   guestIdle(context);
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }

@@ -9,7 +9,7 @@
 
 u32int armBInstruction(GCONTXT *context, Instruction instr)
 {
-  countBranch(context, instr);
+  countBranch(&(context->counters), instr);
   DEBUG(INTERPRETER_ARM_BRANCH, "armBInstruction: %08x @ %08x\n", instr.raw, context->R15);
 
   if (ConditionPassed(instr.branch.cc))
@@ -24,7 +24,7 @@ u32int armBInstruction(GCONTXT *context, Instruction instr)
 
 u32int armBlInstruction(GCONTXT *context, Instruction instr)
 {
-  countBL(context, instr);
+  countBL(&(context->counters), instr);
   DEBUG(INTERPRETER_ARM_BRANCH, "armBLInstruction: %08x @ %08x\n",
                                          instr.raw, context->R15);
 
@@ -47,7 +47,6 @@ u32int armBlInstruction(GCONTXT *context, Instruction instr)
 u32int armBlxImmediateInstruction(GCONTXT *context, Instruction instr)
 {
 #ifdef CONFIG_THUMB2
-
   DEBUG(INTERPRETER_ARM_BRANCH, "armBlxImmediateInstruction: %08x @ %#08x\n",
                                 instr.raw, context->R15);
 
@@ -66,7 +65,7 @@ u32int armBlxImmediateInstruction(GCONTXT *context, Instruction instr)
 
 u32int armBlxRegisterInstruction(GCONTXT *context, Instruction instr)
 {
-  countBLXreg(context, instr);
+  countBLXreg(&(context->counters), instr);
   DEBUG(INTERPRETER_ARM_BRANCH, "armBlxRegisterInstruction: %08x @ %08x\n",
                                  instr.raw, context->R15);
   if (ConditionPassed(instr.BxReg.cc))
@@ -89,7 +88,7 @@ u32int armBlxRegisterInstruction(GCONTXT *context, Instruction instr)
 
 u32int armBxInstruction(GCONTXT *context, Instruction instr)
 {
-  countBX(context, instr);
+  countBX(&(context->counters), instr);
   DEBUG(INTERPRETER_ARM_BRANCH, "armBxInstruction: %08x @ %08x\n",
                                          instr.raw, context->R15);
 

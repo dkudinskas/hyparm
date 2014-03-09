@@ -13,6 +13,8 @@
 
 #include "memoryManager/pageTableInfo.h"
 
+#include "perf/contextSwitchCounters.h"
+
 #include "vm/omap35xx/cp15coproc.h"
 #include "vm/omap35xx/hardwareLibrary.h"
 #include "vm/omap35xx/omap35xx.h"
@@ -126,96 +128,7 @@ struct guestContext
 
   u8int *execBitmap;
 
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-  u32int svcCount;
-  // ALU exception return
-  u32int addExceptionReturn;
-  // ALU computed jumps
-  u32int addJump;
-  u32int andJump;
-  u32int movJump;
-  // branches
-  u32int branchLink;
-  u32int branchNonlink;
-  u32int branchConditional;
-  u32int branchNonconditional;
-  u32int branchImmediate;
-  u32int branchRegister;
-  // coprocessor instructions
-  u32int mrc;
-  u32int mcr;
-  // misc/system instructions
-  u32int svc;
-  u32int breakpoint;
-  u32int cps;
-  u32int mrs;
-  u32int msrImm;
-  u32int msrReg;
-  u32int wfi;
-  // load instructions
-  u32int ldrbImm;
-  u32int ldrbReg;
-  u32int ldrbtImm;
-  u32int ldrbtReg;
-  u32int ldrhImm;
-  u32int ldrhReg;
-  u32int ldrhtImm;
-  u32int ldrhtReg;
-  u32int ldrImm;
-  u32int ldrReg;
-  u32int ldrtImm;
-  u32int ldrtReg;
-  u32int ldrdImm;
-  u32int ldrdReg;
-  u32int ldm;
-  u32int ldmUser;
-  u32int ldmExceptionReturn;
-  // store instructions
-  u32int strbImm;
-  u32int strbReg;
-  u32int strbtImm;
-  u32int strbtReg;
-  u32int strhImm;
-  u32int strhReg;
-  u32int strhtImm;
-  u32int strhtReg;
-  u32int strImm;
-  u32int strReg;
-  u32int strtImm;
-  u32int strtReg;
-  u32int strdImm;
-  u32int strdReg;
-  u32int stm;
-  u32int stmUser;
-  // sync instructions
-  u32int clrex;
-  u32int ldrex;
-  u32int ldrexb;
-  u32int ldrexh;
-  u32int ldrexd;
-  u32int strex;
-  u32int strexb;
-  u32int strexh;
-  u32int strexd;
-
-
-  u32int armBInstruction;
-  u32int armBlInstruction;
-  u32int armBxInstruction;
-  u32int armBxjInstruction;
-  u32int armBlxRegisterInstruction;
-  u32int armBlxImmediateInstruction;
-  
-  u32int dabtCount;
-  u32int dabtPriv;
-  u32int dabtUser;
-  u32int pabtCount;
-  u32int pabtPriv;
-  u32int pabtUser;
-  u32int irqCount;
-  u32int irqPriv;
-  u32int irqUser;
-#endif
+  PerfCounters counters;
 };
 
 
@@ -259,9 +172,5 @@ __macro__ void traceBlock(GCONTXT *context, u32int startAddress)
   context->blockTrace[context->blockTraceIndex] = startAddress;
 #endif /* CONFIG_GUEST_CONTEXT_BLOCK_TRACE */
 }
-
-#ifdef CONFIG_CONTEXT_SWITCH_COUNTERS
-void resetExceptionCounters(GCONTXT *context);
-#endif
 
 #endif /* __GUEST_MANAGER__GUEST_CONTEXT_H__ */

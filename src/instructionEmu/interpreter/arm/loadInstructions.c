@@ -15,7 +15,7 @@
 u32int armLdrbImmInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrbImm(context);
+  countLdrbImm(&(context->counters));
   if (ConditionPassed(instr.ldStImm.cc))
   {
     u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
@@ -41,7 +41,7 @@ u32int armLdrbImmInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrbRegInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrbReg(context);
+  countLdrbReg(&(context->counters));
   if (ConditionPassed(instr.ldStReg.cc))
   {
     u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
@@ -74,7 +74,7 @@ u32int armLdrbRegInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrbtImmInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrbtImm(context);
+  countLdrbtImm(&(context->counters));
   if (ConditionPassed(instr.ldStImm.cc))
   {
     u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
@@ -99,7 +99,7 @@ u32int armLdrbtImmInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrbtRegInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrbtReg(context);
+  countLdrbtReg(&(context->counters));
   if (ConditionPassed(instr.ldStReg.cc))
   {
     u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
@@ -131,7 +131,7 @@ u32int armLdrbtRegInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrhImmInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrhImm(context);
+  countLdrhImm(&(context->counters));
   if (ConditionPassed(instr.ldStImm2.cc))
   {
     u8int Rt = instr.ldStImm2.Rt, Rn = instr.ldStImm2.Rn;
@@ -157,7 +157,7 @@ u32int armLdrhImmInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrhRegInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrhReg(context);
+  countLdrhReg(&(context->counters));
   if (ConditionPassed(instr.ldStReg2.cc))
   {
     u8int Rt = instr.ldStReg2.Rt, Rn = instr.ldStReg2.Rn, Rm = instr.ldStReg2.Rm;
@@ -189,7 +189,7 @@ u32int armLdrhRegInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrhtImmInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrhtImm(context);
+  countLdrhtImm(&(context->counters));
   if (ConditionPassed(instr.ldStImm2.cc))
   {
     u8int Rt = instr.ldStImm2.Rt, Rn = instr.ldStImm2.Rn;
@@ -218,7 +218,7 @@ u32int armLdrhtImmInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrhtRegInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrhtReg(context);
+  countLdrhtReg(&(context->counters));
   if (ConditionPassed(instr.ldStReg2.cc))
   {
     u8int Rt = instr.ldStReg2.Rt, Rn = instr.ldStReg2.Rn, Rm = instr.ldStReg2.Rm;
@@ -248,7 +248,7 @@ u32int armLdrhtRegInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrImmInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrImm(context);
+  countLdrImm(&(context->counters));
   if (ConditionPassed(instr.ldStImm.cc))
   {
     u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
@@ -285,7 +285,7 @@ u32int armLdrImmInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrRegInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrReg(context);
+  countLdrReg(&(context->counters));
   if (ConditionPassed(instr.ldStReg.cc))
   {
     u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
@@ -330,7 +330,7 @@ u32int armLdrRegInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrtImmInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrtImm(context);
+  countLdrtImm(&(context->counters));
   if (ConditionPassed(instr.ldStImm.cc))
   {
     u8int Rt = instr.ldStImm.Rt, Rn = instr.ldStImm.Rn;
@@ -356,7 +356,7 @@ u32int armLdrtImmInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrtRegInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrtReg(context);
+  countLdrtReg(&(context->counters));
   if (ConditionPassed(instr.ldStReg.cc))
   {
     u8int Rt = instr.ldStReg.Rt, Rn = instr.ldStReg.Rn, Rm = instr.ldStReg.Rm;
@@ -388,7 +388,7 @@ u32int armLdrtRegInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrdImmInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrdImm(context);
+  countLdrdImm(&(context->counters));
   if (ConditionPassed(instr.ldStImm2.cc))
   {
     u8int Rt = instr.ldStImm2.Rt, Rt2 = Rt + 1, Rn = instr.ldStImm2.Rn;
@@ -424,7 +424,7 @@ u32int armLdrdImmInstruction(GCONTXT* context, Instruction instr)
 u32int armLdrdRegInstruction(GCONTXT* context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdrdReg(context);
+  countLdrdReg(&(context->counters));
   if (ConditionPassed(instr.ldStReg2.cc))
   {
     u8int Rt = instr.ldStReg2.Rt, Rt2 = Rt + 1;
@@ -463,7 +463,7 @@ u32int armLdrdRegInstruction(GCONTXT* context, Instruction instr)
 u32int armLdmInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdm(context);
+  countLdm(&(context->counters));
   if (ConditionPassed(instr.ldStMulti.cc))
   {
     u8int Rn = instr.ldStMulti.Rn;
@@ -520,7 +520,7 @@ u32int armLdmInstruction(GCONTXT *context, Instruction instr)
 u32int armLdmUserInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdmUser(context);
+  countLdmUser(&(context->counters));
   if (ConditionPassed(instr.ldStMulti.cc))
   {
     u8int Rn = instr.ldStMulti.Rn;
@@ -557,7 +557,7 @@ u32int armLdmUserInstruction(GCONTXT *context, Instruction instr)
 u32int armLdmExcRetInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD, context, instr.raw);
-  countLdmExceptionReturn(context);
+  countLdmExceptionReturn(&(context->counters));
   if (ConditionPassed(instr.ldStMulti.cc))
   {
     u8int Rn = instr.ldStMulti.Rn;

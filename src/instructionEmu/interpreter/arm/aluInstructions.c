@@ -7,7 +7,7 @@
 u32int armAluImmInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_ALU, context, instr.raw);
-  countAluInstruction(context, instr);
+  countAluInstruction(&(context->counters), instr);
 
   if (ConditionPassed(instr.aluImm.cc))
   {
@@ -37,7 +37,7 @@ u32int armAluImmInstruction(GCONTXT *context, Instruction instr)
 u32int armAluRegInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_ALU, context, instr.raw);
-  countAluInstruction(context, instr);
+  countAluInstruction(&(context->counters), instr);
   if (ConditionPassed(instr.aluReg.cc))
   {
     // we can only get to this function if Rd == PC
@@ -52,7 +52,7 @@ u32int armAluRegInstruction(GCONTXT *context, Instruction instr)
     u32int result = 0;
     switch (instr.aluReg.opc1)
     {
-      case AND: result = operand1 & operand2; break;
+      // case AND: result = operand1 & operand2; break;
       case ADD: result = operand1 + operand2; break;
       case MOV:
         if (instr.aluReg.imm5 != 0)

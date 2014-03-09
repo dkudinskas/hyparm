@@ -9,7 +9,7 @@
 u32int armClrexInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_SYNC, context, instr.raw);
-  countClrex(context);
+  countClrex(&(context->counters));
   ClearExclusiveLocal();
   return context->R15 + ARM_INSTRUCTION_SIZE;
 }
@@ -18,7 +18,7 @@ u32int armClrexInstruction(GCONTXT *context, Instruction instr)
 u32int armLdrexInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instr.raw);
-  countLdrex(context);
+  countLdrex(&(context->counters));
   if (ConditionPassed(instr.ldrex.cc))
   {
     if ((instr.ldrex.Rt == GPR_PC) || (instr.ldrex.Rn == GPR_PC))
@@ -35,7 +35,7 @@ u32int armLdrexInstruction(GCONTXT *context, Instruction instr)
 u32int armLdrexbInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instr.raw);
-  countLdrexb(context);
+  countLdrexb(&(context->counters));
   if (ConditionPassed(instr.ldrex.cc))
   {
     if ((instr.ldrex.Rt == GPR_PC) || (instr.ldrex.Rn == GPR_PC))
@@ -52,7 +52,7 @@ u32int armLdrexbInstruction(GCONTXT *context, Instruction instr)
 u32int armLdrexhInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instr.raw);
-  countLdrexh(context);
+  countLdrexh(&(context->counters));
   if (ConditionPassed(instr.ldrex.cc))
   {
     if ((instr.ldrex.Rt == GPR_PC) || (instr.ldrex.Rn == GPR_PC))
@@ -69,7 +69,7 @@ u32int armLdrexhInstruction(GCONTXT *context, Instruction instr)
 u32int armLdrexdInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_LOAD_SYNC, context, instr.raw);
-  countLdrexd(context);
+  countLdrexd(&(context->counters));
   if (ConditionPassed(instr.ldrex.cc))
   {
     u8int Rt = instr.ldrex.Rt;
@@ -102,7 +102,7 @@ u32int armLdrexdInstruction(GCONTXT *context, Instruction instr)
 u32int armStrexInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instr.raw);
-  countStrex(context);
+  countStrex(&(context->counters));
   if (ConditionPassed(instr.strex.cc))
   {
     u8int Rt = instr.strex.Rt;
@@ -131,7 +131,7 @@ u32int armStrexInstruction(GCONTXT *context, Instruction instr)
 u32int armStrexbInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instr.raw);
-  countStrexb(context);
+  countStrexb(&(context->counters));
   if (ConditionPassed(instr.strex.cc))
   {
     u8int Rt = instr.strex.Rt;
@@ -160,7 +160,7 @@ u32int armStrexbInstruction(GCONTXT *context, Instruction instr)
 u32int armStrexhInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instr.raw);
-  countStrexh(context);
+  countStrexh(&(context->counters));
   if (ConditionPassed(instr.strex.cc))
   {
     u8int Rt = instr.strex.Rt;
@@ -189,7 +189,7 @@ u32int armStrexhInstruction(GCONTXT *context, Instruction instr)
 u32int armStrexdInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_STORE_SYNC, context, instr.raw);
-  countStrexd(context);
+  countStrexd(&(context->counters));
   if (ConditionPassed(instr.strex.cc))
   {
     u8int Rt = instr.strex.Rt;

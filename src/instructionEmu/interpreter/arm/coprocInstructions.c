@@ -30,7 +30,7 @@ u32int armLdc2Instruction(GCONTXT *context, Instruction instr)
 u32int armMcrInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG(INTERPRETER_ARM_COPROC, "armMcrInstruction: %#.8x @ %#.8x\n", instr.raw, context->R15);
-  countMcr(context);
+  countMcr(&(context->counters));
   if (ConditionPassed(instr.mcr.cc))
   {
     // if coproc IN "101x" then SEE "Advanced SIMD and Floating-point";
@@ -63,7 +63,7 @@ u32int armMcrr2Instruction(GCONTXT *context, Instruction instr)
 u32int armMrcInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG(INTERPRETER_ARM_COPROC, "armMcrInstruction: %#.8x @ %#.8x\n", instr.raw, context->R15);
-  countMrc(context);
+  countMrc(&(context->counters));
   // can reuse mcr encoding
   if (ConditionPassed(instr.mcr.cc))
   {

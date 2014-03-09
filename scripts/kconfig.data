@@ -324,9 +324,159 @@ config EMERGENCY_EXCEPTION_VECTOR
   default y
   depends on ARCH_EXT_SECURITY && DEBUGGING_HACKS
 
-config CONTEXT_SWITCH_COUNTERS
-  bool "Count number of hypercalls, data aborts, irqs and their causes"
+menuconfig CONTEXT_SWITCH_COUNTERS
+  bool "Count Instructions that cause a context switch"
+  default n
   depends on DEBUGGING_HACKS
+
+config COUNT_ALU
+  bool "Count ALU instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_BKPT
+  bool "Count BKPT instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_BRANCH
+  bool "Count BRANCH instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_BL
+  bool "Count BL instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_BLX
+  bool "Count BLX instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_BX
+  bool "Count BX instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_CLREX
+  bool "Count CLREX instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_CPS
+  bool "Count CPS instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_LDRB
+  bool "Count LDRB instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_LDRBT
+  bool "Count LDRBT instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_LDRH
+  bool "Count LDRH instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_LDRHT
+  bool "Count LDRHT instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_LDR
+  bool "Count LDR instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_LDRT
+  bool "Count LDRT instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_LDRD
+  bool "Count LDRD instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_LDM
+  bool "Count LDM instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_LDREX
+  bool "Count LDREX instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_MCR
+  bool "Count MCR instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_MRC
+  bool "Count MRC instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_MRS
+  bool "Count MRS instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_MSR
+  bool "Count MSR instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_STRB
+  bool "Count STRB instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_STRBT
+  bool "Count STRBT instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_STRH
+  bool "Count STRH instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_STRHT
+  bool "Count STRHT instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_STR
+  bool "Count STR instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_STRT
+  bool "Count STRT instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_STRD
+  bool "Count STRD instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_STM
+  bool "Count STM instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_STREX
+  bool "Count STREX instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_SVC
+  bool "Count SVC instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+config COUNT_WFI
+  bool "Count WFI instructions"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS
+
+menuconfig CONTEXT_SWITCH_COUNTERS_TOTAL
+  bool "Count total amount of context switches"
+  default n
+  depends on DEBUGGING_HACKS
+
+config REGISTER_SVC
+  bool "Count total hypercalls"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS_TOTAL
+
+config REGISTER_DABT
+  bool "Count total data aborts"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS_TOTAL
+
+config REGISTER_PABT
+  bool "Count total prefetch aborts"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS_TOTAL
+
+config REGISTER_IRQ
+  bool "Count total interrupts"
+  depends on DEBUGGING_HACKS && CONTEXT_SWITCH_COUNTERS_TOTAL
 
 config SCANNER_COUNT_BLOCKS
   bool "Count number of scanned blocks"

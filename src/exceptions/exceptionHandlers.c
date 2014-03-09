@@ -87,7 +87,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   }
 #endif
 
-  registerSvc(context);
+  registerSvc(&(context->counters));
   DEBUG(EXCEPTION_HANDLERS, "softwareInterrupt(%x)" EOL, code);
 
 #ifdef CONFIG_THUMB2
@@ -122,7 +122,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   // Do we need to forward it to the guest?
   if (gSVC)
   {
-    countSvc(context);
+    countSvc(&(context->counters));
     deliverServiceCall(context);
     nextPC = context->R15;
     link = FALSE;
@@ -185,6 +185,7 @@ GCONTXT *softwareInterrupt(GCONTXT *context, u32int code)
   else
   {
     // going to user mode.
+    DIE_NOW(context, "stop");  
     delayResetLoopDetector();
   }
   return context;
@@ -195,7 +196,7 @@ GCONTXT *dataAbort(GCONTXT *context)
 {
   /* Make sure interrupts are disabled while we deal with data abort. */
   disableInterrupts();
-  registerDabt(context, TRUE);
+  registerDabt(&(context->counters), TRUE);
   /* Encodings: Page 1289 & 1355 */
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
@@ -246,7 +247,7 @@ void dataAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 {
   /* Make sure interrupts are disabled while we deal with data abort. */
   disableInterrupts();
-  registerDabt(getActiveGuestContext(), FALSE);
+  registerDabt(&(getActiveGuestContext()->counters), FALSE);
   u32int dfar = getDFAR();
   DFSR dfsr = getDFSR();
 
@@ -305,7 +306,7 @@ GCONTXT *prefetchAbort(GCONTXT *context)
 {
   /* Make sure interrupts are disabled while we deal with fetch abort. */
   disableInterrupts();
-  registerPabt(context, TRUE);
+  registerPabt(&(context->counters), TRUE);
   // Make sure interrupts are disabled while we deal with prefetch abort.
   IFSR ifsr = getIFSR();
   u32int ifar = getIFAR();
@@ -359,7 +360,7 @@ void prefetchAbortPrivileged(u32int pc, u32int sp, u32int spsr)
 {
   // disable possible further interrupts
   disableInterrupts();
-  registerPabt(getActiveGuestContext(), FALSE);
+  registerPabt(&(getActiveGuestContext()->counters), FALSE);
 
   IFSR ifsr = getIFSR();
   u32int faultStatus = (ifsr.fs3_0) | (ifsr.fs4 << 4);
@@ -417,7 +418,7 @@ void monitorModePrivileged(void)
 GCONTXT *irq(GCONTXT *context)
 {
   disableInterrupts();
-  registerIrq(context, TRUE);
+  registerIrq(&(context->counters), TRUE);
 
 #ifdef CONFIG_HW_PASSTHROUGH
   if (isGuestInPrivMode(context))
@@ -517,7 +518,7 @@ void irqPrivileged()
 {
   // disable possible further interrupts
   disableInterrupts();
-  registerIrq(getActiveGuestContext(), FALSE);
+  registerIrq(&(getActiveGuestContext()->counters), FALSE);
 
 #ifdef CONFIG_HW_PASSTHROUGH
   DIE_NOW(0, "irqPrivileged should not be here with HW passthrough.");
