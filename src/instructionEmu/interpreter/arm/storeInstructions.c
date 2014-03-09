@@ -484,7 +484,6 @@ u32int armStmUserInstruction(GCONTXT *context, Instruction instr)
 {
   DEBUG_TRACE(INTERPRETER_ARM_STORE, context, instr.raw);
   countStmUser(&(context->counters));
-  DIE_NOW(0, "stop");
   if (ConditionPassed(instr.ldStMulti.cc))
   {
     u8int Rn = instr.ldStMulti.Rn;
