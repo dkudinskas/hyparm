@@ -178,6 +178,8 @@ void guestEnableMMU(GCONTXT *context)
     DIE_NOW(context, "guestEnableMMU: guest virtual addressing is already enabled, mustn't happen!" EOL);
   }
 
+  // mark guest virtual addressing as now enabled
+  context->virtAddrEnabled = TRUE;
   // initialise double-shadow page tables now
   initialiseShadowPageTables(context);
   // if initializing vmem, really must clean and invalidate the TLB!
@@ -340,9 +342,6 @@ void initialiseShadowPageTables(GCONTXT *gc)
   // which shadow PT will be in use depends on guest mode
   gc->pageTables->shadowActive = isGuestInPrivMode(gc) ?
      gc->pageTables->shadowPriv : gc->pageTables->shadowUser;
-
-  // mark guest virtual addressing as now enabled
-  gc->virtAddrEnabled = TRUE;
 
   DEBUG(MM_ADDRESSING, "initialiseShadowPageTables: gPT phys %p virt %p" EOL,
             gc->pageTables->guestPhysical, gc->pageTables->guestVirtual);
